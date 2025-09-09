@@ -12,6 +12,9 @@
   const app = express();
   const PORT = process.env.PORT || 3000;
 
+  // Configurar trust proxy para Railway
+  app.set('trust proxy', 1);
+
   // Seguridad y middlewares
   app.use(helmet());
   app.use(compression());
@@ -22,10 +25,11 @@
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-  // Rate limiting
+  // Rate limiting (configurado para Railway)
   const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    trustProxy: true
   });
   app.use(limiter);
 
@@ -35,8 +39,10 @@
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 3306,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    port: parseInt(process.env.DB_PORT) || 3306,
+    ssl: false,
+    connectTimeout: 10000,
+    acquireTimeout: 10000
   };
 
   // Crear conexión a base de datos
