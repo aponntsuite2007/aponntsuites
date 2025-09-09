@@ -1,4 +1,4 @@
-   const express = require('express');
+  const express = require('express');
   const cors = require('cors');
   const path = require('path');
   const mysql = require('mysql2/promise');
@@ -33,17 +33,30 @@
   });
   app.use(limiter);
 
+  // Debug: mostrar variables de entorno
+  console.log('🔍 Database config debug:');
+  console.log('DB_HOST:', process.env.DB_HOST);
+  console.log('DB_USER:', process.env.DB_USER);
+  console.log('DB_NAME:', process.env.DB_NAME);
+  console.log('DB_PORT:', process.env.DB_PORT);
+
   // Configuración de base de datos
   const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
+    host: process.env.DB_HOST || 'mysql.railway.internal',
+    user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    database: process.env.DB_NAME || 'railway',
     port: parseInt(process.env.DB_PORT) || 3306,
     ssl: false,
-    connectTimeout: 10000,
-    acquireTimeout: 10000
+    connectTimeout: 10000
   };
+
+  console.log('📋 Final dbConfig:', {
+    host: dbConfig.host,
+    user: dbConfig.user,
+    database: dbConfig.database,
+    port: dbConfig.port
+  });
 
   // Crear conexión a base de datos
   let db;
