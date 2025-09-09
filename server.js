@@ -219,3 +219,4 @@
     console.log(`🚀 AponntSuites running on port ${PORT}`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   });
+// Force redeploy with MYSQL vars - timestamp: 2025-09-09
