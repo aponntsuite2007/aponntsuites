@@ -57,6 +57,18 @@
     port: dbConfig.port
   });
 
+// Configuración temporal hardcodeada para Railway
+  const dbConfig = {
+    host: 'mysql.railway.internal',
+    user: 'root',
+    password: 'FEWWeVRNSWJuPwnFECjhwWNrKFbZeQBf',  // <-- PON TU PASSWORD AQUÍ
+    database: 'railway',
+    port: 3306,
+    ssl: false,
+    connectTimeout: 30000,
+    timeout: 30000
+  };
+
   // Crear conexión a base de datos
   let db;
   mysql.createConnection(dbConfig).then(connection => {
