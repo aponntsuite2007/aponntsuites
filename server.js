@@ -1,4 +1,4 @@
-  const express = require('express');
+ const express = require('express');
   const mysql = require('mysql2/promise');
   require('dotenv').config();
 
@@ -9,19 +9,11 @@
   app.use(express.json());
   app.use(express.static('public'));
 
-  // Configuración de base de datos (hardcodeada temporalmente)
-  const dbConfig = {
-    host: 'mysql.railway.internal',
-    user: 'root',
-    password: 'FEWWeVRNSWJuPwnFECjhwWNrKFbZeQBf', // REEMPLAZA con tu password de Railway MySQL
-    database: 'railway',
-    port: 3306,
-    ssl: false,
-    connectTimeout: 30000
-  };
+  // Configuración de base de datos con URL completa
+  const mysqlUrl = 'mysql://root:FEWWeVRNSWJuPwnFECjhwWNrKFbZeQBf@mysql.railway.internal:3306/railway';
 
   console.log('🚀 Starting AponntSuites...');
-  console.log('📋 DB Config:', { host: dbConfig.host, user: dbConfig.user, database: dbConfig.database });
+  console.log('📋 Using MySQL URL connection');
 
   // Conexión a base de datos
   let db = null;
@@ -29,11 +21,11 @@
   async function connectDB() {
     try {
       console.log('🔄 Connecting to database...');
-      db = await mysql.createConnection(dbConfig);
+      db = await mysql.createConnection(mysqlUrl);
       console.log('✅ Database connected successfully!');
     } catch (error) {
       console.error('❌ Database connection failed:', error.message);
-      setTimeout(connectDB, 5000); // Retry in 5 seconds
+      setTimeout(connectDB, 5000);
     }
   }
 
