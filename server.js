@@ -35,18 +35,17 @@
 
 // Debug: mostrar variables de entorno
   console.log('🔍 Database config debug:');
-  console.log('MYSQLHOST:', process.env.MYSQLHOST);
-  console.log('MYSQLUSER:', process.env.MYSQLUSER);
-  console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD ? 'SET' : 'UNDEFINED');
-  console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE);
+  console.log('MYSQL_HOST:', process.env.MYSQL_HOST);
+  console.log('MYSQL_USER:', process.env.MYSQL_USER);
+  console.log('MYSQL_PASSWORD:', process.env.MYSQL_PASSWORD ? 'SET' : 'UNDEFINED');
+  console.log('MYSQL_DATABASE:', process.env.MYSQL_DATABASE);
 
-  // Configuración de base de datos usando variables nativas de Railway
   const dbConfig = {
-    host: process.env.MYSQLHOST || 'mysql.railway.internal',
-    user: process.env.MYSQLUSER || 'root',
-    password: process.env.MYSQLPASSWORD,
-    database: process.env.MYSQLDATABASE || 'railway',
-    port: 3306,
+    host: process.env.MYSQL_HOST,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE || 'railway',
+    port: parseInt(process.env.MYSQL_PORT) || 3306,
     ssl: false,
     connectTimeout: 10000
   };
