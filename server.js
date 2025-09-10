@@ -13,7 +13,7 @@
   const dbConfig = {
     host: 'mysql.railway.internal',
     user: 'root',
-    password: 'TU_PASSWORD_AQUI', // REEMPLAZA con tu password de Railway MySQL
+    password: 'FEWWeVRNSWJuPwnFECjhwWNrKFbZeQBf', // REEMPLAZA con tu password de Railway MySQL
     database: 'railway',
     port: 3306,
     ssl: false,
