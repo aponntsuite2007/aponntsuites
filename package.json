@@ -4,10 +4,10 @@
   "description": "Sistema Integral de Administración de Recursos Humanos",
   "main": "backend/server.js",
   "scripts": {
-    "start": "cd backend && node server.js",
+    "start": "cd backend && npm install --production && node server.js",
     "dev": "cd backend && nodemon server.js",
-    "build": "echo 'Build completed - Static files ready'",
-    "railway:start": "cd backend && node server.js"
+    "build": "cd backend && npm install --production",
+    "railway:start": "cd backend && npm install --production && node server.js"
   },
   "keywords": [
     "rrhh",
