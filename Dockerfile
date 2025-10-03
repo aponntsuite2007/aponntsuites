@@ -1,5 +1,5 @@
 # Dockerfile para AponntSuites
-FROM node:18-alpine
+FROM node:18
 
 # Establecer directorio de trabajo
 WORKDIR /app
