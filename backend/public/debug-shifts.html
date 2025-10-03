@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Shifts</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        pre { background: #f0f0f0; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Shifts Module</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = [];
+        const resultsDiv = document.getElementById('results');
+
+        function log(msg, type = 'info') {
+            const p = document.createElement('p');
+            p.className = type;
+            p.textContent = msg;
+            resultsDiv.appendChild(p);
+            results.push({msg, type});
+        }
+
+        // Test 1: Check console for shifts.js load message
+        const originalLog = console.log;
+        let shiftsLoaded = false;
+        console.log = function(...args) {
+            if (args[0] && args[0].includes('[SHIFTS]')) {
+                shiftsLoaded = true;
+                log('✅ shifts.js console.log detected: ' + args[0], 'success');
+            }
+            originalLog.apply(console, args);
+        };
+
+        log('🔍 Starting diagnostics...');
+    </script>
+
+    <!-- Load progressiveAdmin mock -->
+    <script>
+        window.progressiveAdmin = {
+            getApiUrl: (path) => 'http://localhost:9998' + path
+        };
+        log('✅ progressiveAdmin mock created', 'success');
+    </script>
+
+    <!-- Load shifts.js -->
+    <script src="js/modules/shifts.js"></script>
+
+    <script>
+        setTimeout(() => {
+            log('--- Diagnostic Results ---', 'info');
+            log('');
+
+            // Check if console.log was called
+            if (shiftsLoaded) {
+                log('✅ shifts.js loaded successfully', 'success');
+            } else {
+                log('❌ shifts.js did NOT log to console', 'error');
+            }
+
+            // Check if function exists
+            if (typeof showShiftsContent === 'function') {
+                log('✅ showShiftsContent is a function', 'success');
+            } else {
+                log('❌ showShiftsContent is NOT a function', 'error');
+                log('   Type: ' + (typeof showShiftsContent), 'info');
+            }
+
+            // Check global scope
+            if (window.showShiftsContent) {
+                log('✅ showShiftsContent is in window scope', 'success');
+            } else {
+                log('⚠️ showShiftsContent NOT in window scope', 'error');
+            }
+
+            // Try to execute
+            const mainContent = document.createElement('div');
+            mainContent.id = 'mainContent';
+            document.body.appendChild(mainContent);
+
+            try {
+                showShiftsContent();
+                log('✅ showShiftsContent() executed successfully', 'success');
+                log('   mainContent innerHTML length: ' + mainContent.innerHTML.length, 'info');
+            } catch(err) {
+                log('❌ Error executing showShiftsContent(): ' + err.message, 'error');
+                log('   Stack: ' + err.stack, 'error');
+            }
+
+        }, 1000);
+    </script>
+</body>
+</html>

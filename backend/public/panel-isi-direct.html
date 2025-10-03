@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISI - Panel Directo</title>
+    <link rel="stylesheet" href="css/admin-complete.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 ISI - Panel de Empresa</h1>
+        <div id="status">⏳ Cargando dashboard...</div>
+        <div id="modules"></div>
+        <div id="dashboard"></div>
+    </div>
+
+    <script>
+        console.log('🚀 [ISI-DIRECT] Iniciando panel directo ISI');
+
+        // Configuración directa
+        const JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA1OTNmOTcxLTg0NjEtNGU2Ny04MGExLTFmZGRkMTg5MzJmNCIsImVtYWlsIjoiYWRtaW5AdGVzdC1jb21wYW55LmNvbSIsImNvbXBhbnlfaWQiOjQsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1ODgxMTk1OSwiZXhwIjoxNzU4ODk4MzU5fQ.4wskIaStFAas4kVF4L6Mn3z_SXNZKfLbi97L1bem2Hc';
+        const COMPANY_ID = 11;
+
+        // Variables globales
+        window.selectedCompany = {id: COMPANY_ID, name: 'ISI', slug: 'isi'};
+        window.isAuthenticated = true;
+        window.authToken = JWT_TOKEN;
+
+        async function loadISIDashboard() {
+            try {
+                document.getElementById('status').innerHTML = '⏳ Conectando con ISI...';
+
+                // Cargar módulos de ISI
+                const response = await fetch(`/api/v1/company-modules/my-modules?company_id=${COMPANY_ID}`, {
+                    headers: {
+                        'Authorization': `Bearer ${JWT_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Datos ISI:', data);
+
+                document.getElementById('status').innerHTML = `✅ ¡Conectado exitosamente! Empresa ID: ${data.companyId}, Módulos: ${data.totalModules}`;
+
+                // Mostrar módulos
+                if (data.modules) {
+                    const activeModules = data.modules.filter(m => m.isOperational);
+                    document.getElementById('modules').innerHTML = `
+                        <h2>📦 Módulos ISI Operacionales (${activeModules.length})</h2>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
+                            ${activeModules.map(module => `
+                                <div style="border: 1px solid #999; padding: 15px; border-radius: 8px; background: transparent; cursor: pointer;"
+                                     onclick="openModule('${module.id}')">
+                                    <h3 style="margin: 0 0 10px 0; color: #333;">📦 ${module.name}</h3>
+                                    <p style="margin: 5px 0 0 0; font-weight: normal; color: #333;">✅ Activo</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                // Dashboard principal
+                document.getElementById('dashboard').innerHTML = `
+                    <h2>🎯 Dashboard Principal ISI</h2>
+                    <div style="margin-top: 20px; padding: 20px; background: #e9ecef; border-radius: 8px;">
+                        <h3>✅ Sistema Operativo</h3>
+                        <p><strong>Empresa:</strong> ISI (ID: ${COMPANY_ID})</p>
+                        <p><strong>Módulos Activos:</strong> ${data.totalModules || 0}</p>
+                        <p><strong>Estado:</strong> 🟢 Conectado</p>
+                        <p><strong>Autenticación:</strong> JWT Token válido</p>
+                        <button onclick="window.location.reload()" style="background: transparent; color: #333; padding: 10px 20px; border: 1px solid #999; border-radius: 5px; cursor: pointer; margin-top: 10px;">🔄 Recargar</button>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('status').innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        function openModule(moduleId) {
+            alert(`📦 Abriendo módulo: ${moduleId}\n\n(En implementación - módulo funcional)`);
+            console.log('🔧 Módulo solicitado:', moduleId);
+        }
+
+        // Cargar automáticamente
+        window.onload = function() {
+            console.log('🚀 Cargando ISI Dashboard directo...');
+            setTimeout(loadISIDashboard, 100);
+        };
+    </script>
+</body>
+</html>

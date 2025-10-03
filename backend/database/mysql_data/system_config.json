@@ -1,0 +1,28 @@
+[
+  {
+    "id": "e7a6b29e-533b-44cc-8d4a-247011f3c30b",
+    "connectionMode": "local",
+    "toleranceMinutesEntry": 10,
+    "toleranceMinutesExit": 15,
+    "maxOvertimeHours": 3,
+    "gpsRadius": 50,
+    "requireAdminApproval": 1,
+    "sendNotifications": 1,
+    "autoBackup": 1,
+    "backupHour": 2,
+    "maxLoginAttempts": 5,
+    "lockoutDuration": 30,
+    "sessionTimeout": 24,
+    "companyName": "Mi Empresa",
+    "companyLogo": null,
+    "timezone": "America/Argentina/Buenos_Aires",
+    "locale": "es-AR",
+    "currency": "ARS",
+    "emailSettings": "{}",
+    "smsSettings": "{}",
+    "whatsappSettings": "{}",
+    "biometricSettings": "{\"fingerprintEnabled\":true,\"faceRecognitionEnabled\":true,\"maxFingerprints\":5,\"readerType\":\"zkteco\"}",
+    "createdAt": "2025-09-03 17:10:11.005 +00:00",
+    "updatedAt": "2025-09-03 17:10:11.005 +00:00"
+  }
+]

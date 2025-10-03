@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ISI - Login Forzado</title>
+    <style>body{font-family:Arial,sans-serif;padding:20px;}</style>
+</head>
+<body>
+    <h1>🚀 ISI - Login Forzado</h1>
+    <button id="btnAccess" style="padding:20px;font-size:18px;background:green;color:white;border:none;cursor:pointer;">ACCEDER COMO ISI</button>
+    <div id="result" style="margin:20px 0;"></div>
+
+    <script>
+    document.getElementById('btnAccess').onclick = async function() {
+        this.innerHTML = '⏳ Accediendo...';
+
+        try {
+            const JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA1OTNmOTcxLTg0NjEtNGU2Ny04MGExLTFmZGRkMTg5MzJmNCIsImVtYWlsIjoiYWRtaW5AdGVzdC1jb21wYW55LmNvbSIsImNvbXBhbnlfaWQiOjQsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1ODgxMTk1OSwiZXhwIjoxNzU4ODk4MzU5fQ.4wskIaStFAas4kVF4L6Mn3z_SXNZKfLbi97L1bem2Hc';
+
+            const response = await fetch('/api/v1/company-modules/my-modules?company_id=11', {
+                headers: { 'Authorization': `Bearer ${JWT_TOKEN}` }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem('authToken', JWT_TOKEN);
+                localStorage.setItem('selectedCompany', JSON.stringify({id: 11, name: 'ISI'}));
+
+                document.getElementById('result').innerHTML = `
+                    <h3>✅ ¡ÉXITO!</h3>
+                    <p>Empresa: ${data.companyId}</p>
+                    <p>Módulos: ${data.totalModules}</p>
+                    <p><a href="panel-empresa.html" style="font-size:20px;color:blue;">► IR AL PANEL PRINCIPAL</a></p>
+                `;
+
+                setTimeout(() => {
+                    window.location.href = 'panel-empresa.html';
+                }, 2000);
+
+            } else {
+                throw new Error(data.error || 'Error desconocido');
+            }
+
+        } catch (error) {
+            document.getElementById('result').innerHTML = `<h3 style="color:red;">❌ ERROR: ${error.message}</h3>`;
+        }
+
+        this.innerHTML = 'ACCEDER COMO ISI';
+    };
+    </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Debug - Detección de Dispositivos</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+        }
+        .detection-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .device-list {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+        .device-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        .console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Debug - Detección de Dispositivos Biométricos</h1>
+            <p>Herramienta para diagnosticar problemas de detección de hardware</p>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Importante:</strong> Esta página requiere permisos de cámara y micrófono para funcionar correctamente.
+            Asegúrate de permitir el acceso cuando se solicite.
+        </div>
+
+        <button class="btn" onclick="detectDevices()">🔍 Detectar Dispositivos</button>
+        <button class="btn" onclick="clearConsole()">🧹 Limpiar Consola</button>
+
+        <div class="detection-section">
+            <h3>📹 Cámaras Detectadas</h3>
+            <div id="cameras" class="device-list">
+                <em>Presiona "Detectar Dispositivos" para ver los resultados</em>
+            </div>
+        </div>
+
+        <div class="detection-section">
+            <h3>🎤 Micrófonos Detectados</h3>
+            <div id="microphones" class="device-list">
+                <em>Presiona "Detectar Dispositivos" para ver los resultados</em>
+            </div>
+        </div>
+
+        <div class="detection-section">
+            <h3>👆 Lectores de Huellas Detectados</h3>
+            <div id="fingerprints" class="device-list">
+                <em>Presiona "Detectar Dispositivos" para ver los resultados</em>
+            </div>
+        </div>
+
+        <div class="detection-section">
+            <h3>📊 Consola de Debug</h3>
+            <div id="console" class="console-output">
+                🔍 [DEBUG] Listo para detectar dispositivos...\n
+            </div>
+        </div>
+    </div>
+
+    <script src="js/services/device-detection-service.js"></script>
+    <script>
+        let deviceService = null;
+
+        // Redirigir console.log a nuestra consola de debug
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+
+            const consoleDiv = document.getElementById('console');
+            const message = args.join(' ') + '\n';
+            consoleDiv.innerHTML += message;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+
+        async function detectDevices() {
+            console.log('🚀 [DEBUG] Iniciando detección de dispositivos...');
+
+            try {
+                // Crear nueva instancia del servicio
+                deviceService = new BiometricDeviceDetectionService();
+
+                // Inicializar detección
+                const result = await deviceService.initializeDeviceDetection();
+
+                console.log('✅ [DEBUG] Detección completada exitosamente');
+
+                // Mostrar resultados en la interfaz
+                displayCameras(deviceService.devices.cameras);
+                displayMicrophones(deviceService.devices.microphones);
+                displayFingerprints(deviceService.devices.fingerprintReaders);
+
+                // Mostrar resumen
+                console.log(`📊 [RESUMEN] Detectados: ${deviceService.devices.cameras.length} cámaras, ${deviceService.devices.microphones.length} micrófonos, ${deviceService.devices.fingerprintReaders.length} lectores de huellas`);
+
+            } catch (error) {
+                console.log(`❌ [ERROR] Error en detección: ${error.message}`);
+            }
+        }
+
+        function displayCameras(cameras) {
+            const camerasDiv = document.getElementById('cameras');
+            if (cameras.length === 0) {
+                camerasDiv.innerHTML = '<em>❌ No se detectaron cámaras</em>';
+                return;
+            }
+
+            let html = `<strong>📹 ${cameras.length} cámara(s) detectada(s):</strong><br><br>`;
+            cameras.forEach((camera, index) => {
+                html += `
+                    <div class="device-item">
+                        <strong>${index + 1}. ${camera.label || 'Sin nombre'}</strong><br>
+                        📧 Device ID: <code>${camera.deviceId}</code><br>
+                        👥 Group ID: <code>${camera.groupId || 'N/A'}</code><br>
+                        📊 Calidad: ${camera.quality ? camera.quality.overallScore.toFixed(2) : 'Calculando...'}
+                    </div>
+                `;
+            });
+            camerasDiv.innerHTML = html;
+        }
+
+        function displayMicrophones(microphones) {
+            const microphonesDiv = document.getElementById('microphones');
+            if (microphones.length === 0) {
+                microphonesDiv.innerHTML = '<em>❌ No se detectaron micrófonos</em>';
+                return;
+            }
+
+            let html = `<strong>🎤 ${microphones.length} micrófono(s) detectado(s):</strong><br><br>`;
+            microphones.forEach((mic, index) => {
+                html += `
+                    <div class="device-item">
+                        <strong>${index + 1}. ${mic.label || 'Sin nombre'}</strong><br>
+                        📧 Device ID: <code>${mic.deviceId}</code><br>
+                        👥 Group ID: <code>${mic.groupId || 'N/A'}</code><br>
+                        📊 Calidad: ${mic.quality ? mic.quality.overallScore.toFixed(2) : 'Calculando...'}
+                    </div>
+                `;
+            });
+            microphonesDiv.innerHTML = html;
+        }
+
+        function displayFingerprints(fingerprints) {
+            const fingerprintsDiv = document.getElementById('fingerprints');
+            if (fingerprints.length === 0) {
+                fingerprintsDiv.innerHTML = '<div class="success">✅ <strong>CORRECTO:</strong> No se detectaron lectores de huellas (como debería ser si no tienes hardware biométrico físico)</div>';
+                return;
+            }
+
+            let html = `<strong>👆 ${fingerprints.length} lector(es) de huellas detectado(s):</strong><br><br>`;
+            fingerprints.forEach((reader, index) => {
+                html += `
+                    <div class="device-item">
+                        <strong>${index + 1}. ${reader.name}</strong><br>
+                        🆔 ID: <code>${reader.id}</code><br>
+                        🔧 Tipo: <code>${reader.type}</code><br>
+                        🔌 Interface: <code>${reader.interface}</code><br>
+                        🏭 Vendor ID: <code>0x${reader.vendorId?.toString(16) || 'N/A'}</code><br>
+                        📦 Product ID: <code>0x${reader.productId?.toString(16) || 'N/A'}</code><br>
+                        🔗 Conectado: ${reader.connected ? '✅ Sí' : '❌ No'}
+                    </div>
+                `;
+            });
+            fingerprintsDiv.innerHTML = html;
+        }
+
+        function clearConsole() {
+            document.getElementById('console').innerHTML = '🔍 [DEBUG] Consola limpiada...\n';
+        }
+
+        // Auto-detectar al cargar la página
+        window.addEventListener('load', () => {
+            console.log('🌐 [DEBUG] Página cargada - listo para detectar dispositivos');
+        });
+    </script>
+</body>
+</html>

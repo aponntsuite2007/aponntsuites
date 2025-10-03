@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISI - Acceso Directo</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; margin: 10px; }
+        .btn:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 ISI - Acceso Directo al Sistema</h1>
+
+        <div id="status" style="margin: 20px 0;"></div>
+
+        <button class="btn" onclick="accessISI()">✅ Acceder como ISI</button>
+
+        <div id="modules" style="margin-top: 30px;"></div>
+    </div>
+
+    <script>
+        const JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA1OTNmOTcxLTg0NjEtNGU2Ny04MGExLTFmZGRkMTg5MzJmNCIsImVtYWlsIjoiYWRtaW5AdGVzdC1jb21wYW55LmNvbSIsImNvbXBhbnlfaWQiOjQsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1ODgxMTk1OSwiZXhwIjoxNzU4ODk4MzU5fQ.4wskIaStFAas4kVF4L6Mn3z_SXNZKfLbi97L1bem2Hc';
+
+        async function accessISI() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '🔄 Accediendo al sistema ISI...';
+
+            try {
+                // Test token
+                const response = await fetch('/api/v1/company-modules/my-modules?company_id=11', {
+                    headers: {
+                        'Authorization': `Bearer ${JWT_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Respuesta ISI:', data);
+
+                statusDiv.innerHTML = `✅ ¡Acceso exitoso! Empresa ID: ${data.companyId}, Módulos: ${data.totalModules}`;
+
+                // Show modules
+                const modulesDiv = document.getElementById('modules');
+                if (data.modules) {
+                    const activeModules = data.modules.filter(m => m.isOperational);
+                    modulesDiv.innerHTML = `
+                        <h3>📦 Módulos Operacionales (${activeModules.length})</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+                            ${activeModules.map(module => `
+                                <div style="border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+                                    <strong>${module.name}</strong><br>
+                                    <small>${module.id}</small>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <p><a href="panel-empresa.html" class="btn">🚀 Ir al Panel Completo</a></p>
+                    `;
+                }
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

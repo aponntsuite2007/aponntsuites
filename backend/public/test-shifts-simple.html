@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Shifts Direct</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #000; color: #0f0; }
+        .error { color: #f00; font-weight: bold; }
+        .success { color: #0f0; font-weight: bold; }
+        .info { color: #ff0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Direct Shifts Test</h1>
+    <div id="log"></div>
+    <div id="mainContent" style="margin-top: 20px; background: #222; padding: 20px;"></div>
+
+    <script>
+        const log = (msg, type = 'info') => {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `${new Date().toISOString().split('T')[1]} - ${msg}`;
+            document.getElementById('log').appendChild(div);
+            console.log(msg);
+        };
+
+        log('🔍 Test iniciando...');
+
+        // Create progressiveAdmin mock
+        window.progressiveAdmin = {
+            getApiUrl: (path) => {
+                log(`✅ progressiveAdmin.getApiUrl called with: ${path}`, 'success');
+                return 'http://localhost:9998' + path;
+            }
+        };
+        log('✅ progressiveAdmin mock creado', 'success');
+
+        // Create global variables
+        window.currentUser = {
+            id: 'test',
+            company_id: 11,
+            role: 'admin'
+        };
+        window.selectedCompany = { id: 11, name: 'Test Company' };
+        log('✅ Variables globales creadas', 'success');
+
+        // Load shifts.js
+        const script = document.createElement('script');
+        script.src = 'js/modules/shifts.js';
+        script.onload = () => {
+            log('📦 shifts.js loaded', 'success');
+
+            setTimeout(() => {
+                log('--- DIAGNOSTIC RESULTS ---');
+                log(`typeof showShiftsContent: ${typeof showShiftsContent}`);
+                log(`typeof window.showShiftsContent: ${typeof window.showShiftsContent}`);
+
+                if (typeof showShiftsContent === 'function') {
+                    log('✅ showShiftsContent IS A FUNCTION', 'success');
+                    try {
+                        log('🎯 Calling showShiftsContent()...', 'info');
+                        showShiftsContent();
+                        log('✅ showShiftsContent() executed successfully', 'success');
+                        log(`mainContent HTML length: ${document.getElementById('mainContent').innerHTML.length}`, 'success');
+                    } catch(err) {
+                        log(`❌ ERROR: ${err.message}`, 'error');
+                        log(`Stack: ${err.stack}`, 'error');
+                    }
+                } else {
+                    log('❌ showShiftsContent IS NOT A FUNCTION', 'error');
+                }
+            }, 500);
+        };
+        script.onerror = () => {
+            log('❌ Failed to load shifts.js', 'error');
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

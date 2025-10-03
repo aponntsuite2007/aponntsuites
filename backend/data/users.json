@@ -1,0 +1,251 @@
+[
+  {
+    "id": 1,
+    "companyId": 1,
+    "username": "dfdfduuuuu_admin",
+    "email": "sdsds@gmail.com",
+    "firstName": "Administrador",
+    "lastName": "dfdfduuuuu",
+    "role": "company_admin",
+    "permissions": {
+      "canManageEmployees": true,
+      "canManageBranches": true,
+      "canViewReports": true,
+      "canManageSettings": true,
+      "canAccessAllModules": true
+    },
+    "isActive": true,
+    "isDeletable": false,
+    "mustChangePassword": false,
+    "isCompanyAdmin": true,
+    "metadata": {
+      "autoCreated": true,
+      "createdReason": "company_registration"
+    },
+    "created_at": "2025-09-13T06:41:40.238Z",
+    "updated_at": "2025-09-13T06:42:57.868Z",
+    "passwordHash": "$2b$10$A9F/QlyNtIlyE5dW15991eWlZKN/DfS46Wfa8gARiWiV/vXXLvan6",
+    "lastLogin": "2025-09-13T06:42:55.640Z",
+    "passwordChangedAt": "2025-09-13T06:42:57.710Z"
+  },
+  {
+    "id": 2,
+    "companyId": 2,
+    "username": "nueva_admin",
+    "email": "ssss@gmail.com",
+    "firstName": "Administrador",
+    "lastName": "nueva",
+    "role": "company_admin",
+    "permissions": {
+      "canManageEmployees": true,
+      "canManageBranches": true,
+      "canViewReports": true,
+      "canManageSettings": true,
+      "canAccessAllModules": true
+    },
+    "isActive": true,
+    "isDeletable": false,
+    "mustChangePassword": false,
+    "isCompanyAdmin": true,
+    "metadata": {
+      "autoCreated": true,
+      "createdReason": "company_registration"
+    },
+    "created_at": "2025-09-13T06:41:40.310Z",
+    "updated_at": "2025-09-14T01:37:21.901Z",
+    "passwordHash": "$2b$10$vOb2fDUkiEK3lcmi7hnBIOj2B8kHK5un44cqB7MDb7PKd40PrUaUO",
+    "passwordChangedAt": "2025-09-14T01:37:21.756Z",
+    "lastLogin": "2025-09-14T01:37:16.875Z"
+  },
+  {
+    "id": 3,
+    "companyId": 3,
+    "username": "bbbbbbbbbbbb_admin",
+    "email": "ssss@gmail.com",
+    "firstName": "Administrador",
+    "lastName": "bbbbbbbbbbbb",
+    "role": "company_admin",
+    "permissions": {
+      "canManageEmployees": true,
+      "canManageBranches": true,
+      "canViewReports": true,
+      "canManageSettings": true,
+      "canAccessAllModules": true
+    },
+    "isActive": true,
+    "isDeletable": false,
+    "mustChangePassword": true,
+    "isCompanyAdmin": true,
+    "metadata": {
+      "autoCreated": true,
+      "createdReason": "company_registration"
+    },
+    "created_at": "2025-09-13T06:41:40.369Z",
+    "updated_at": "2025-09-13T06:41:40.369Z",
+    "passwordHash": "$2b$10$sJnS/ErO/jVDldLxfBerguqY6ncb4j7IqMKLCyLPjFD.w8.qAtAau"
+  },
+  {
+    "id": 4,
+    "companyId": 4,
+    "username": "hhhhhhhhhhhhhh_admin",
+    "email": "ssss@gmail.com",
+    "firstName": "Administrador",
+    "lastName": "hhhhhhhhhhhhhh",
+    "role": "company_admin",
+    "permissions": {
+      "canManageEmployees": true,
+      "canManageBranches": true,
+      "canViewReports": true,
+      "canManageSettings": true,
+      "canAccessAllModules": true
+    },
+    "isActive": true,
+    "isDeletable": false,
+    "mustChangePassword": true,
+    "isCompanyAdmin": true,
+    "metadata": {
+      "autoCreated": true,
+      "createdReason": "company_registration"
+    },
+    "created_at": "2025-09-13T06:41:40.431Z",
+    "updated_at": "2025-09-13T06:41:40.431Z",
+    "passwordHash": "$2b$10$0RSc.xribRHMwOXYHIrgVe8mSnlpX74ak3hUEW01PHxALoLRgL.uW"
+  },
+  {
+    "id": 5,
+    "companyId": 5,
+    "username": "aponntsistemabi_admin",
+    "email": "sdsds@gmail.com",
+    "firstName": "Administrador",
+    "lastName": "Aponnt - Sistema Biométrico",
+    "role": "company_admin",
+    "permissions": {
+      "canManageEmployees": true,
+      "canManageBranches": true,
+      "canViewReports": true,
+      "canManageSettings": true,
+      "canAccessAllModules": true
+    },
+    "isActive": true,
+    "isDeletable": false,
+    "mustChangePassword": true,
+    "isCompanyAdmin": true,
+    "metadata": {
+      "autoCreated": true,
+      "createdReason": "company_registration"
+    },
+    "created_at": "2025-09-13T06:41:40.497Z",
+    "updated_at": "2025-09-13T06:41:40.497Z",
+    "passwordHash": "$2b$10$5u9Ybm6XMCqdQT81cxUnH.7exKAlEH6qCrhKyMjLrp9RVHDCqvUGa"
+  },
+  {
+    "id": 6,
+    "companyId": 6,
+    "username": "kjkhjkkk_admin",
+    "email": "sdsds@gmail.com",
+    "firstName": "Administrador",
+    "lastName": "kjkhjkkk",
+    "role": "company_admin",
+    "permissions": {
+      "canManageEmployees": true,
+      "canManageBranches": true,
+      "canViewReports": true,
+      "canManageSettings": true,
+      "canAccessAllModules": true
+    },
+    "isActive": true,
+    "isDeletable": false,
+    "mustChangePassword": true,
+    "isCompanyAdmin": true,
+    "metadata": {
+      "autoCreated": true,
+      "createdReason": "company_registration"
+    },
+    "created_at": "2025-09-13T06:41:40.559Z",
+    "updated_at": "2025-09-13T06:41:40.559Z",
+    "passwordHash": "$2b$10$3045I7uZKgmn7etl73qx6Oi0.fu7DpvpXgReKECGYp0cM6tCaBYlC"
+  },
+  {
+    "id": 7,
+    "companyId": 7,
+    "username": "ttttttttt_admin",
+    "email": "sdsds@gmail.com",
+    "firstName": "Administrador",
+    "lastName": "ttttttttt",
+    "role": "company_admin",
+    "permissions": {
+      "canManageEmployees": true,
+      "canManageBranches": true,
+      "canViewReports": true,
+      "canManageSettings": true,
+      "canAccessAllModules": true
+    },
+    "isActive": true,
+    "isDeletable": false,
+    "mustChangePassword": true,
+    "isCompanyAdmin": true,
+    "metadata": {
+      "autoCreated": true,
+      "createdReason": "company_registration"
+    },
+    "created_at": "2025-09-13T06:41:40.618Z",
+    "updated_at": "2025-09-13T06:52:20.607Z",
+    "passwordHash": "$2b$10$B7FEcfyfh0uWSeosNg/iR.KNZclYUNvZas2UYIz562.v9lDKogVca",
+    "lastLogin": "2025-09-13T06:52:20.607Z"
+  },
+  {
+    "id": 8,
+    "companyId": 8,
+    "username": "rererere_admin",
+    "email": "pepe@gmail.com",
+    "firstName": "Administrador",
+    "lastName": "rererere",
+    "role": "company_admin",
+    "permissions": {
+      "canManageEmployees": true,
+      "canManageBranches": true,
+      "canViewReports": true,
+      "canManageSettings": true,
+      "canAccessAllModules": true
+    },
+    "isActive": true,
+    "isDeletable": false,
+    "mustChangePassword": true,
+    "isCompanyAdmin": true,
+    "metadata": {
+      "autoCreated": true,
+      "createdReason": "company_registration"
+    },
+    "created_at": "2025-09-13T16:19:20.817Z",
+    "updated_at": "2025-09-13T16:19:20.817Z",
+    "passwordHash": "$2b$10$Mx47DawpdvRfzayOjkloP.zHhhOxGlj68e.uzK76dpuaxXhHGrxC2"
+  },
+  {
+    "id": 9,
+    "companyId": 8,
+    "username": "prueba_admin",
+    "email": "admin@prueba.com",
+    "firstName": "Administrador",
+    "lastName": "Prueba",
+    "role": "company_admin",
+    "permissions": {
+      "canManageEmployees": true,
+      "canManageBranches": true,
+      "canViewReports": true,
+      "canManageSettings": true,
+      "canAccessAllModules": true
+    },
+    "isActive": true,
+    "isDeletable": false,
+    "mustChangePassword": false,
+    "isCompanyAdmin": true,
+    "metadata": {
+      "autoCreated": true,
+      "createdReason": "company_registration"
+    },
+    "created_at": "2025-09-14T03:29:46.003Z",
+    "updated_at": "2025-09-14T06:25:17.078Z",
+    "passwordHash": "$2b$10$5u9Ybm6XMCqdQT81cxUnH.7exKAlEH6qCrhKyMjLrp9RVHDCqvUGa",
+    "lastLogin": "2025-09-14T06:25:17.078Z"
+  }
+]

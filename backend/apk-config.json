@@ -1,0 +1,11 @@
+{
+  "server_ip": "192.168.1.6",
+  "server_port": 9999,
+  "attendance_endpoint": "/api/v1/attendance/mobile",
+  "medical_endpoint": "/api/v1/medical",
+  "auth_endpoint": "/api/v1/auth/login",
+  "server_url": "http://192.168.1.6:9999",
+  "default_user": "GENERIC001",
+  "default_password": "generic123",
+  "last_updated": "2025-09-04T17:02:21.488Z"
+}

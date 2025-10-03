@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIAC ERP - Panel Empresa</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .company-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .company-status {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #27ae60;
+            color: white;
+        }
+
+        .modules-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .module-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .module-card.active {
+            border: 2px solid #27ae60;
+            background: rgba(39, 174, 96, 0.1);
+        }
+
+        .module-card.inactive {
+            border: 2px solid #e74c3c;
+            background: rgba(231, 76, 60, 0.05);
+            opacity: 0.6;
+        }
+
+        .module-card.dependency-missing {
+            border: 2px solid #f39c12;
+            background: rgba(243, 156, 18, 0.1);
+        }
+
+        .module-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .module-card.active .module-icon {
+            color: #27ae60;
+        }
+
+        .module-card.inactive .module-icon {
+            color: #e74c3c;
+        }
+
+        .module-card.dependency-missing .module-icon {
+            color: #f39c12;
+        }
+
+        .module-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .module-description {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .module-status {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-contratado {
+            background: #27ae60;
+            color: white;
+        }
+
+        .status-no-contratado {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .status-dependencia {
+            background: #f39c12;
+            color: white;
+        }
+
+        .dependency-warning {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #f39c12;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .actions-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .dependencies-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+
+        .dependency-tree {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .dependency-item {
+            margin: 8px 0;
+            padding: 5px 0;
+        }
+
+        .dependency-ok {
+            color: #27ae60;
+        }
+
+        .dependency-missing {
+            color: #e74c3c;
+        }
+
+        .dependency-warning {
+            color: #f39c12;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .company-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .modules-summary {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header con información de la empresa -->
+        <div class="header">
+            <div class="company-info">
+                <div>
+                    <h1 class="company-name" id="companyName">Empresa Demo S.A.</h1>
+                    <p id="companyDetails">CUIT: 30-12345678-9 | 📍 Av. Corrientes 1234, CABA | 📞 011-4444-5555</p>
+                </div>
+                <div class="company-status">
+                    <span class="status-badge status-active">
+                        <i class="fas fa-building"></i> EMPRESA ACTIVA
+                    </span>
+                    <span class="status-badge" id="modulesCount" style="background: #667eea; color: white;">
+                        <i class="fas fa-puzzle-piece"></i> 4 MÓDULOS ACTIVOS
+                    </span>
+                </div>
+            </div>
+
+            <!-- Resumen de módulos -->
+            <div class="modules-summary" id="modulesSummary">
+                <!-- Panel Administrativo -->
+                <div class="module-card active" onclick="showModuleDetails('panel-administrativo')">
+                    <i class="fas fa-cog module-icon"></i>
+                    <div class="module-title">Panel Administrativo</div>
+                    <div class="module-description">Configuración general del sistema</div>
+                    <span class="module-status status-contratado">ACTIVO</span>
+                </div>
+
+                <!-- Clientes -->
+                <div class="module-card active" onclick="showModuleDetails('clientes')">
+                    <i class="fas fa-users module-icon"></i>
+                    <div class="module-title">Gestión de Clientes</div>
+                    <div class="module-description">Administración completa de clientes</div>
+                    <span class="module-status status-contratado">ACTIVO</span>
+                </div>
+
+                <!-- Productos -->
+                <div class="module-card active" onclick="showModuleDetails('productos')">
+                    <i class="fas fa-boxes module-icon"></i>
+                    <div class="module-title">Gestión de Productos</div>
+                    <div class="module-description">Inventario y control de productos</div>
+                    <span class="module-status status-contratado">ACTIVO</span>
+                </div>
+
+                <!-- Facturación -->
+                <div class="module-card active" onclick="showModuleDetails('facturacion')">
+                    <i class="fas fa-file-invoice-dollar module-icon"></i>
+                    <div class="module-title">Facturación</div>
+                    <div class="module-description">Emisión de comprobantes</div>
+                    <span class="module-status status-contratado">ACTIVO</span>
+                </div>
+
+                <!-- Cuenta Corriente -->
+                <div class="module-card inactive" onclick="showModuleDetails('cuenta-corriente')">
+                    <i class="fas fa-balance-scale module-icon"></i>
+                    <div class="module-title">Cuenta Corriente</div>
+                    <div class="module-description">Gestión de deudas y créditos</div>
+                    <span class="module-status status-no-contratado">DISPONIBLE</span>
+                </div>
+
+                <!-- Recibos de Pagos -->
+                <div class="module-card dependency-missing" onclick="showModuleDetails('recibos-pagos')">
+                    <div class="dependency-warning">!</div>
+                    <i class="fas fa-receipt module-icon"></i>
+                    <div class="module-title">Recibos de Pagos</div>
+                    <div class="module-description">Cobranzas y pagos</div>
+                    <span class="module-status status-dependencia">FALTAN DEPS</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de alertas sobre dependencias -->
+        <div id="dependencyAlerts">
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <strong>Sistema Base Completo:</strong> Los módulos principales están activos y funcionando con integración automática:
+                <ul style="margin: 10px 0 0 20px;">
+                    <li><strong>✅ Clientes:</strong> Base de datos completa con contactos y direcciones</li>
+                    <li><strong>✅ Productos:</strong> Inventario, precios y categorías</li>
+                    <li><strong>✅ Facturación:</strong> Triple aislación empresa/punto_venta/caja</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-warning">
+                <i class="fas fa-info-circle"></i>
+                <strong>Módulo Disponible:</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li><strong>Cuenta Corriente</strong> → Todas las dependencias satisfechas (Panel + Clientes + Facturación)</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Módulo Bloqueado:</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li><strong>Recibos de Pagos</strong> → Requiere: Cuenta Corriente (para gestionar deudas)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Panel de acciones principales -->
+        <div class="actions-panel">
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">
+                <i class="fas fa-tools"></i> Acciones Disponibles
+            </h2>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="openModule('panel-administrativo')">
+                    <i class="fas fa-cog"></i>
+                    Configuración General
+                </button>
+
+                <button class="action-btn" onclick="openModule('clientes')">
+                    <i class="fas fa-users"></i>
+                    Gestionar Clientes
+                </button>
+
+                <button class="action-btn" onclick="openModule('productos')">
+                    <i class="fas fa-boxes"></i>
+                    Gestionar Productos
+                </button>
+
+                <button class="action-btn" disabled title="Requiere: Facturación">
+                    <i class="fas fa-balance-scale"></i>
+                    Cuenta Corriente (Bloqueado)
+                </button>
+
+                <button class="action-btn" disabled title="Requiere: Facturación, Cuenta Corriente">
+                    <i class="fas fa-receipt"></i>
+                    Recibos de Pagos (Bloqueado)
+                </button>
+
+                <button class="action-btn" onclick="contractModule('facturacion')"
+                        style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);">
+                    <i class="fas fa-plus-circle"></i>
+                    Contratar Facturación
+                </button>
+            </div>
+        </div>
+
+        <!-- Panel de dependencias -->
+        <div class="dependencies-panel">
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">
+                <i class="fas fa-sitemap"></i> Mapa de Dependencias de Módulos
+            </h2>
+            <div class="dependency-tree">
+                <div style="font-weight: bold; margin-bottom: 15px;">Análisis de Dependencias:</div>
+
+                <div class="dependency-item dependency-ok">
+                    ✅ <strong>Panel Administrativo</strong> - Base del sistema
+                </div>
+
+                <div class="dependency-item dependency-ok">
+                    ✅ <strong>Gestión de Clientes</strong>
+                    <br>    └── Requiere: ✅ Panel Administrativo
+                </div>
+
+                <div class="dependency-item dependency-ok">
+                    ✅ <strong>Gestión de Productos</strong>
+                    <br>    └── Requiere: ✅ Panel Administrativo
+                </div>
+
+                <div class="dependency-item dependency-missing">
+                    ⭕ <strong>Facturación</strong>
+                    <br>    └── Requiere: ✅ Panel Administrativo
+                    <br>    └── Integración opcional: ✅ Clientes, ✅ Productos
+                </div>
+
+                <div class="dependency-item dependency-warning">
+                    ⚠️ <strong>Cuenta Corriente</strong>
+                    <br>    └── Requiere: ✅ Panel Administrativo, ✅ Clientes, ❌ Facturación
+                </div>
+
+                <div class="dependency-item dependency-warning">
+                    ⚠️ <strong>Recibos de Pagos</strong>
+                    <br>    └── Requiere: ✅ Panel Administrativo, ✅ Clientes, ❌ Facturación, ❌ Cuenta Corriente
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Definición de módulos y sus dependencias
+        const MODULE_DEFINITIONS = {
+            'panel-administrativo': {
+                name: 'Panel Administrativo',
+                description: 'Configuración general del sistema',
+                dependencies: [],
+                examples: ['Configurar datos fiscales', 'Gestionar usuarios', 'Configurar plantillas'],
+                url: 'panel-administrativo.html'
+            },
+            'clientes': {
+                name: 'Gestión de Clientes',
+                description: 'Administración completa de clientes',
+                dependencies: ['panel-administrativo'],
+                examples: ['Alta de clientes', 'Gestión de contactos', 'Precios especiales'],
+                url: 'modulo-clientes.html'
+            },
+            'productos': {
+                name: 'Gestión de Productos',
+                description: 'Inventario y control de productos',
+                dependencies: ['panel-administrativo'],
+                examples: ['Alta de productos', 'Control de stock', 'Listas de precios'],
+                url: 'modulo-productos.html'
+            },
+            'facturacion': {
+                name: 'Facturación',
+                description: 'Emisión de comprobantes fiscales',
+                dependencies: ['panel-administrativo'],
+                optionalDependencies: ['clientes', 'productos'],
+                examples: [
+                    'SIN integración: Facturación manual con datos libres',
+                    'CON Clientes: Búsqueda automática de clientes',
+                    'CON Productos: Búsqueda automática de productos',
+                    'CON ambos: Precios especiales automáticos'
+                ],
+                url: 'modulo-facturacion.html'
+            },
+            'cuenta-corriente': {
+                name: 'Cuenta Corriente',
+                description: 'Gestión de deudas y créditos de clientes',
+                dependencies: ['panel-administrativo', 'clientes', 'facturacion'],
+                examples: ['Saldos por cliente', 'Vencimientos', 'Estados de cuenta'],
+                url: 'modulo-cuenta-corriente.html'
+            },
+            'recibos-pagos': {
+                name: 'Recibos de Pagos',
+                description: 'Cobranzas y pagos a clientes',
+                dependencies: ['panel-administrativo', 'clientes', 'facturacion', 'cuenta-corriente'],
+                examples: ['Recibos de cobranza', 'Aplicación de pagos', 'Conciliación'],
+                url: 'modulo-recibos-pagos.html'
+            }
+        };
+
+        // Estado actual (simulado - después viene de la API)
+        const ACTIVE_MODULES = ['panel-administrativo', 'clientes', 'productos', 'facturacion'];
+
+        // Abrir módulo específico
+        function openModule(moduleCode) {
+            if (!ACTIVE_MODULES.includes(moduleCode)) {
+                alert('❌ Módulo no contratado o bloqueado por dependencias');
+                return;
+            }
+
+            const module = MODULE_DEFINITIONS[moduleCode];
+            if (module && module.url) {
+                window.open(module.url, '_blank');
+            } else {
+                alert(`🚧 Módulo ${module?.name || moduleCode} en desarrollo`);
+            }
+        }
+
+        // Mostrar detalles de módulo
+        function showModuleDetails(moduleCode) {
+            const module = MODULE_DEFINITIONS[moduleCode];
+            if (!module) return;
+
+            const isActive = ACTIVE_MODULES.includes(moduleCode);
+            const canActivate = checkDependencies(moduleCode);
+
+            let message = `📋 ${module.name}\n\n`;
+            message += `📝 ${module.description}\n\n`;
+
+            // Estado actual
+            message += `📊 Estado: ${isActive ? '✅ ACTIVO' : (canActivate ? '⭕ DISPONIBLE PARA CONTRATAR' : '❌ BLOQUEADO')}\n\n`;
+
+            // Dependencias
+            if (module.dependencies && module.dependencies.length > 0) {
+                message += `🔗 Dependencias requeridas:\n`;
+                module.dependencies.forEach(dep => {
+                    const isDepActive = ACTIVE_MODULES.includes(dep);
+                    const depName = MODULE_DEFINITIONS[dep]?.name || dep;
+                    message += `   ${isDepActive ? '✅' : '❌'} ${depName}\n`;
+                });
+                message += '\n';
+            }
+
+            // Integraciones opcionales
+            if (module.optionalDependencies && module.optionalDependencies.length > 0) {
+                message += `🔧 Integraciones opcionales:\n`;
+                module.optionalDependencies.forEach(dep => {
+                    const isDepActive = ACTIVE_MODULES.includes(dep);
+                    const depName = MODULE_DEFINITIONS[dep]?.name || dep;
+                    message += `   ${isDepActive ? '✅' : '⭕'} ${depName}\n`;
+                });
+                message += '\n';
+            }
+
+            // Ejemplos de uso
+            if (module.examples && module.examples.length > 0) {
+                message += `💡 Ejemplos de uso:\n`;
+                module.examples.forEach(example => {
+                    message += `   • ${example}\n`;
+                });
+            }
+
+            alert(message);
+        }
+
+        // Verificar dependencias
+        function checkDependencies(moduleCode) {
+            const module = MODULE_DEFINITIONS[moduleCode];
+            if (!module || !module.dependencies) return true;
+
+            return module.dependencies.every(dep => ACTIVE_MODULES.includes(dep));
+        }
+
+        // Contratar módulo
+        function contractModule(moduleCode) {
+            const canActivate = checkDependencies(moduleCode);
+
+            if (!canActivate) {
+                alert('❌ No se puede contratar este módulo. Faltan dependencias requeridas.');
+                return;
+            }
+
+            const module = MODULE_DEFINITIONS[moduleCode];
+            const confirmed = confirm(`¿Desea contratar el módulo "${module.name}"?\n\n${module.description}`);
+
+            if (confirmed) {
+                alert('🚧 Funcionalidad de contratación en desarrollo.\nContacte al administrador del sistema.');
+            }
+        }
+
+        // Funcionalidad de ejemplo para mostrar la lógica
+        console.log('🎯 LÓGICA DE DEPENDENCIAS IMPLEMENTADA:');
+        console.log('');
+        console.log('✅ Facturación SIN Clientes → Funciona con datos manuales');
+        console.log('✅ Facturación CON Clientes → Búsqueda automática de clientes');
+        console.log('✅ Facturación CON Productos → Búsqueda automática de productos');
+        console.log('✅ Facturación CON ambos → Precios especiales automáticos');
+        console.log('');
+        console.log('❌ Cuenta Corriente SIN Facturación → BLOQUEADO');
+        console.log('❌ Recibos SIN Cuenta Corriente → BLOQUEADO');
+        console.log('');
+        console.log('🎉 Sistema modular con dependencias automáticas funcionando');
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login Debug</title>
+</head>
+<body>
+    <h1>Test Dataset CompanyId</h1>
+
+    <select id="companySelect">
+        <option value="">Selecciona empresa</option>
+        <option value="slug-isi" data-company-id="11">ISI</option>
+    </select>
+
+    <button onclick="testLogin()">Test Login</button>
+
+    <div id="result"></div>
+
+    <script>
+        function testLogin() {
+            const select = document.getElementById('companySelect');
+            const selectedOption = select.selectedOptions[0];
+
+            console.log('Selected option:', selectedOption);
+            console.log('dataset:', selectedOption.dataset);
+            console.log('dataset.companyId:', selectedOption.dataset.companyId);
+
+            const companyId = selectedOption?.dataset.companyId;
+
+            document.getElementById('result').innerHTML = `
+                <p>Selected value: ${select.value}</p>
+                <p>CompanyId: ${companyId}</p>
+                <p>Type: ${typeof companyId}</p>
+            `;
+        }
+    </script>
+</body>
+</html>

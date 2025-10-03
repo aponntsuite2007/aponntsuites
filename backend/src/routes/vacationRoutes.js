@@ -1,0 +1,669 @@
+/**
+ * Rutas para sistema de vacaciones y licencias
+ */
+
+const express = require('express');
+const router = express.Router();
+const { Op } = require('sequelize');
+const { 
+  VacationConfiguration, 
+  VacationScale, 
+  ExtraordinaryLicense, 
+  VacationRequest, 
+  TaskCompatibility,
+  User 
+} = require('../config/database');
+
+// ======== CONFIGURACIÓN DE VACACIONES ========
+
+// Obtener configuración actual de vacaciones
+router.get('/config', async (req, res) => {
+  try {
+    const config = await VacationConfiguration.findOne({
+      where: { isActive: true }
+    });
+
+    const scales = await VacationScale.findAll({
+      where: { isActive: true },
+      order: [['priority', 'ASC'], ['yearsFrom', 'ASC']]
+    });
+
+    const extraordinaryLicenses = await ExtraordinaryLicense.findAll({
+      where: { isActive: true },
+      order: [['type', 'ASC']]
+    });
+
+    res.json({
+      success: true,
+      data: {
+        configuration: config || {
+          vacationInterruptible: true,
+          minContinuousDays: 7,
+          maxFractions: 3,
+          autoSchedulingEnabled: true,
+          minAdvanceNoticeDays: 15,
+          maxSimultaneousPercentage: 30
+        },
+        vacationScales: scales,
+        extraordinaryLicenses: extraordinaryLicenses
+      },
+      message: 'Configuración de vacaciones obtenida exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo configuración:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo configuración de vacaciones',
+      error: error.message
+    });
+  }
+});
+
+// Guardar configuración de vacaciones
+router.post('/config', async (req, res) => {
+  try {
+    const {
+      vacationInterruptible,
+      minContinuousDays,
+      maxFractions,
+      autoSchedulingEnabled,
+      minAdvanceNoticeDays,
+      maxSimultaneousPercentage
+    } = req.body;
+
+    // Desactivar configuración anterior
+    await VacationConfiguration.update(
+      { isActive: false },
+      { where: { isActive: true } }
+    );
+
+    // Crear nueva configuración
+    const newConfig = await VacationConfiguration.create({
+      vacationInterruptible,
+      minContinuousDays,
+      maxFractions,
+      autoSchedulingEnabled,
+      minAdvanceNoticeDays,
+      maxSimultaneousPercentage,
+      isActive: true
+    });
+
+    res.json({
+      success: true,
+      data: newConfig,
+      message: 'Configuración de vacaciones guardada exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error guardando configuración:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error guardando configuración de vacaciones',
+      error: error.message
+    });
+  }
+});
+
+// ======== ESCALAS DE VACACIONES ========
+
+// Crear nueva escala de vacaciones
+router.post('/scales', async (req, res) => {
+  try {
+    const { yearsFrom, yearsTo, rangeDescription, vacationDays, priority } = req.body;
+
+    if (!yearsFrom || !vacationDays || !rangeDescription) {
+      return res.status(400).json({
+        success: false,
+        message: 'yearsFrom, vacationDays y rangeDescription son requeridos'
+      });
+    }
+
+    const newScale = await VacationScale.create({
+      yearsFrom,
+      yearsTo,
+      rangeDescription,
+      vacationDays,
+      priority: priority || 0,
+      isActive: true
+    });
+
+    res.status(201).json({
+      success: true,
+      data: newScale,
+      message: 'Escala de vacaciones creada exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error creando escala:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creando escala de vacaciones',
+      error: error.message
+    });
+  }
+});
+
+// Actualizar escala de vacaciones
+router.put('/scales/:id', async (req, res) => {
+  try {
+    const scale = await VacationScale.findOne({
+      where: { id: req.params.id, isActive: true }
+    });
+
+    if (!scale) {
+      return res.status(404).json({
+        success: false,
+        message: 'Escala de vacaciones no encontrada'
+      });
+    }
+
+    await scale.update(req.body);
+
+    res.json({
+      success: true,
+      data: scale,
+      message: 'Escala de vacaciones actualizada exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error actualizando escala:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error actualizando escala de vacaciones',
+      error: error.message
+    });
+  }
+});
+
+// ======== LICENCIAS EXTRAORDINARIAS ========
+
+// Crear nueva licencia extraordinaria
+router.post('/extraordinary-licenses', async (req, res) => {
+  try {
+    const {
+      type,
+      description,
+      days,
+      dayType,
+      requiresApproval,
+      requiresDocumentation,
+      maxPerYear,
+      advanceNoticeDays,
+      legalBasis
+    } = req.body;
+
+    if (!type || !days) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tipo y días son requeridos'
+      });
+    }
+
+    const newLicense = await ExtraordinaryLicense.create({
+      type,
+      description,
+      days,
+      dayType: dayType || 'habil',
+      requiresApproval: requiresApproval !== undefined ? requiresApproval : true,
+      requiresDocumentation: requiresDocumentation || false,
+      maxPerYear,
+      advanceNoticeDays: advanceNoticeDays || 0,
+      legalBasis,
+      isActive: true
+    });
+
+    res.status(201).json({
+      success: true,
+      data: newLicense,
+      message: 'Licencia extraordinaria creada exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error creando licencia:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creando licencia extraordinaria',
+      error: error.message
+    });
+  }
+});
+
+// ======== SOLICITUDES DE VACACIONES ========
+
+// Obtener solicitudes de vacaciones - Optimizado para móvil
+router.get('/requests', async (req, res) => {
+  try {
+    const { userId, status, year, month, limit, offset, source } = req.query;
+    
+    let whereClause = {};
+    
+    if (userId) {
+      whereClause.userId = userId;
+    }
+    
+    if (status) {
+      whereClause.status = status;
+    }
+    
+    if (year) {
+      const startOfYear = new Date(`${year}-01-01`);
+      const endOfYear = new Date(`${year}-12-31`);
+      whereClause.startDate = {
+        [Op.between]: [startOfYear, endOfYear]
+      };
+    }
+    
+    if (month && year) {
+      const startOfMonth = new Date(`${year}-${month}-01`);
+      const endOfMonth = new Date(year, month, 0); // último día del mes
+      whereClause.startDate = {
+        [Op.between]: [startOfMonth, endOfMonth]
+      };
+    }
+
+    // Filtrar por fuente (mobile-apk, panel-empresa, etc.)
+    if (source) {
+      whereClause.source = source;
+    }
+
+    // Configuración de paginación para móvil
+    const paginationOptions = {};
+    if (limit) {
+      paginationOptions.limit = parseInt(limit);
+    }
+    if (offset) {
+      paginationOptions.offset = parseInt(offset);
+    }
+
+    const requests = await VacationRequest.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: User,
+          as: 'employee',
+          attributes: ['id', 'name', 'email']
+        },
+        {
+          model: User,
+          as: 'approver',
+          attributes: ['id', 'name', 'email'],
+          required: false
+        },
+        {
+          model: ExtraordinaryLicense,
+          as: 'licenseType',
+          required: false
+        }
+      ],
+      order: [['startDate', 'DESC']],
+      ...paginationOptions
+    });
+
+    res.json({
+      success: true,
+      data: requests,
+      message: 'Solicitudes de vacaciones obtenidas exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo solicitudes:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo solicitudes de vacaciones',
+      error: error.message
+    });
+  }
+});
+
+// Crear nueva solicitud de vacaciones
+router.post('/requests', async (req, res) => {
+  try {
+    const {
+      userId,
+      requestType,
+      extraordinaryLicenseId,
+      startDate,
+      endDate,
+      reason
+    } = req.body;
+
+    if (!userId || !requestType || !startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'userId, requestType, startDate y endDate son requeridos'
+      });
+    }
+
+    // Calcular días totales
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+    // Verificar conflictos con otras solicitudes
+    const conflicts = await VacationRequest.findAll({
+      where: {
+        userId,
+        status: ['pending', 'approved', 'active'],
+        [Op.or]: [
+          {
+            startDate: { [Op.between]: [startDate, endDate] }
+          },
+          {
+            endDate: { [Op.between]: [startDate, endDate] }
+          },
+          {
+            [Op.and]: [
+              { startDate: { [Op.lte]: startDate } },
+              { endDate: { [Op.gte]: endDate } }
+            ]
+          }
+        ]
+      }
+    });
+
+    if (conflicts.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ya existe una solicitud de vacaciones en este período',
+        conflicts
+      });
+    }
+
+    const newRequest = await VacationRequest.create({
+      userId,
+      requestType,
+      extraordinaryLicenseId,
+      startDate,
+      endDate,
+      totalDays,
+      reason,
+      status: 'pending'
+    });
+
+    res.status(201).json({
+      success: true,
+      data: newRequest,
+      message: 'Solicitud de vacaciones creada exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error creando solicitud:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creando solicitud de vacaciones',
+      error: error.message
+    });
+  }
+});
+
+// Aprobar/Rechazar solicitud
+router.put('/requests/:id/approval', async (req, res) => {
+  try {
+    const { status, approvalComments, approvedBy } = req.body;
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Estado debe ser "approved" o "rejected"'
+      });
+    }
+
+    const request = await VacationRequest.findByPk(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: 'Solicitud no encontrada'
+      });
+    }
+
+    if (request.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Solo se pueden aprobar/rechazar solicitudes pendientes'
+      });
+    }
+
+    await request.update({
+      status,
+      approvedBy,
+      approvalDate: new Date(),
+      approvalComments
+    });
+
+    res.json({
+      success: true,
+      data: request,
+      message: `Solicitud ${status === 'approved' ? 'aprobada' : 'rechazada'} exitosamente`
+    });
+  } catch (error) {
+    console.error('❌ Error procesando aprobación:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error procesando aprobación',
+      error: error.message
+    });
+  }
+});
+
+// ======== ALGORITMO DE PROGRAMACIÓN AUTOMÁTICA ========
+
+// Generar cronograma automático
+router.post('/generate-schedule', async (req, res) => {
+  try {
+    const { year } = req.body;
+    
+    if (!year) {
+      return res.status(400).json({
+        success: false,
+        message: 'Año es requerido'
+      });
+    }
+
+    // Obtener todos los usuarios activos
+    const users = await User.findAll({
+      where: { isActive: true },
+      attributes: ['id', 'name', 'email', 'createdAt', 'departmentId']
+    });
+
+    // Obtener escalas de vacaciones
+    const scales = await VacationScale.findAll({
+      where: { isActive: true },
+      order: [['yearsFrom', 'ASC']]
+    });
+
+    // Obtener configuración
+    const config = await VacationConfiguration.findOne({
+      where: { isActive: true }
+    });
+
+    // Algoritmo de programación automática
+    const schedule = [];
+    const currentYear = new Date().getFullYear();
+    
+    for (const user of users) {
+      // Calcular antigüedad
+      const startDate = new Date(user.createdAt);
+      const yearsOfService = (new Date(`${year}-01-01`) - startDate) / (365.25 * 24 * 60 * 60 * 1000);
+      
+      // Encontrar escala aplicable
+      let vacationDays = 14; // Por defecto
+      for (const scale of scales) {
+        if (yearsOfService >= scale.yearsFrom && (!scale.yearsTo || yearsOfService <= scale.yearsTo)) {
+          vacationDays = scale.vacationDays;
+          break;
+        }
+      }
+      
+      // Generar períodos sugeridos (lógica simplificada)
+      const suggestedPeriods = generateOptimalPeriods(user.user_id, vacationDays, year, config);
+      
+      schedule.push({
+        userId: user.user_id,
+        userName: user.name,
+        vacationDays,
+        yearsOfService: Math.round(yearsOfService * 100) / 100,
+        suggestedPeriods,
+        compatibilityScore: Math.random() * 30 + 70 // Score simulado
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        year,
+        totalEmployees: users.length,
+        schedule: schedule.sort((a, b) => b.compatibilityScore - a.compatibilityScore)
+      },
+      message: 'Cronograma automático generado exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error generando cronograma:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error generando cronograma automático',
+      error: error.message
+    });
+  }
+});
+
+// Función auxiliar para generar períodos óptimos
+function generateOptimalPeriods(userId, totalDays, year, config) {
+  const periods = [];
+  let remainingDays = totalDays;
+  const minDays = config?.minContinuousDays || 7;
+  const maxFractions = config?.maxFractions || 3;
+  
+  // Generar períodos respetando configuración
+  let fractionCount = 0;
+  while (remainingDays > 0 && fractionCount < maxFractions) {
+    const daysForThisPeriod = Math.min(
+      remainingDays,
+      Math.max(minDays, Math.ceil(remainingDays / (maxFractions - fractionCount)))
+    );
+    
+    // Generar fecha aleatoria (simplificado)
+    const monthStart = Math.floor(Math.random() * 10) + 1; // Evitar diciembre
+    const dayStart = Math.floor(Math.random() * 20) + 1;
+    const startDate = new Date(year, monthStart - 1, dayStart);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + daysForThisPeriod - 1);
+    
+    periods.push({
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+      days: daysForThisPeriod,
+      type: 'vacation'
+    });
+    
+    remainingDays -= daysForThisPeriod;
+    fractionCount++;
+  }
+  
+  return periods;
+}
+
+// ======== MATRIZ DE COMPATIBILIDAD ========
+
+// Obtener matriz de compatibilidad
+router.get('/compatibility-matrix', async (req, res) => {
+  try {
+    const matrix = await TaskCompatibility.findAll({
+      where: { isActive: true },
+      include: [
+        {
+          model: User,
+          as: 'primaryUser',
+          attributes: ['id', 'name', 'email']
+        },
+        {
+          model: User,
+          as: 'coverUser',
+          attributes: ['id', 'name', 'email']
+        }
+      ],
+      order: [['compatibilityScore', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      data: matrix,
+      message: 'Matriz de compatibilidad obtenida exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo matriz:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo matriz de compatibilidad',
+      error: error.message
+    });
+  }
+});
+
+// Calcular días de vacaciones para un empleado
+router.get('/calculate-days/:userId', async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    const startDate = new Date(user.createdAt);
+    const currentDate = new Date();
+    const yearsOfService = (currentDate - startDate) / (365.25 * 24 * 60 * 60 * 1000);
+
+    // Obtener escala aplicable
+    const scales = await VacationScale.findAll({
+      where: { isActive: true },
+      order: [['yearsFrom', 'ASC']]
+    });
+
+    let vacationDays = 14;
+    let applicableScale = null;
+
+    for (const scale of scales) {
+      if (yearsOfService >= scale.yearsFrom && (!scale.yearsTo || yearsOfService <= scale.yearsTo)) {
+        vacationDays = scale.vacationDays;
+        applicableScale = scale;
+        break;
+      }
+    }
+
+    // Calcular días usados este año
+    const currentYear = currentDate.getFullYear();
+    const usedDays = await VacationRequest.sum('totalDays', {
+      where: {
+        userId: req.params.userId,
+        status: ['approved', 'active', 'completed'],
+        startDate: {
+          [Op.between]: [
+            new Date(`${currentYear}-01-01`),
+            new Date(`${currentYear}-12-31`)
+          ]
+        }
+      }
+    }) || 0;
+
+    res.json({
+      success: true,
+      data: {
+        userId: user.user_id,
+        userName: user.name,
+        yearsOfService: Math.round(yearsOfService * 100) / 100,
+        applicableScale,
+        totalVacationDays: vacationDays,
+        usedDays,
+        remainingDays: Math.max(0, vacationDays - usedDays),
+        currentYear
+      },
+      message: 'Días de vacaciones calculados exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error calculando días:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error calculando días de vacaciones',
+      error: error.message
+    });
+  }
+});
+
+module.exports = router;

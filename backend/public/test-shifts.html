@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Shifts Module</title>
+</head>
+<body>
+    <h1>Test Shifts Module</h1>
+    <div id="mainContent"></div>
+    <button onclick="testShifts()">Test showShiftsContent</button>
+    <div id="output" style="margin-top: 20px; background: #f0f0f0; padding: 10px;"></div>
+
+    <script>
+        // Minimal progressiveAdmin mock
+        window.progressiveAdmin = {
+            getApiUrl: function(path) {
+                return 'http://localhost:9998' + path;
+            }
+        };
+
+        console.log('✅ progressiveAdmin initialized');
+    </script>
+
+    <script src="js/modules/shifts.js"></script>
+
+    <script>
+        function testShifts() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<h3>Test Results:</h3>';
+
+            output.innerHTML += '<p>typeof showShiftsContent: <strong>' + (typeof showShiftsContent) + '</strong></p>';
+
+            if (typeof showShiftsContent === 'function') {
+                output.innerHTML += '<p style="color: green;">✅ Function exists!</p>';
+                try {
+                    showShiftsContent();
+                    output.innerHTML += '<p style="color: green;">✅ Function executed successfully!</p>';
+                } catch (err) {
+                    output.innerHTML += '<p style="color: red;">❌ Error executing: ' + err.message + '</p>';
+                }
+            } else {
+                output.innerHTML += '<p style="color: red;">❌ Function does not exist!</p>';
+            }
+        }
+
+        // Auto test on load
+        setTimeout(testShifts, 500);
+    </script>
+</body>
+</html>

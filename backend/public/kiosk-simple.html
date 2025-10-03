@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🏢 Aponnt - Kiosco Simple</title>
+    <meta name="theme-color" content="#667eea">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .letter-a {
+            color: #FFD700;
+            font-size: 2.5rem;
+            margin-right: 5px;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .welcome-card {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+
+        .welcome-title {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+
+        .welcome-subtitle {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .company-selector {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .company-selector select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .attendance-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 20px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-in {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-out {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-panel {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .status-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .employee-input {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .employee-input input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .employee-input input::placeholder {
+            color: #666;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .quick-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .error {
+            color: #ff6b6b;
+        }
+
+        .success {
+            color: #4CAF50;
+        }
+
+        .warning {
+            color: #FFD700;
+        }
+
+        .info {
+            color: #64B5F6;
+        }
+
+        .processing {
+            color: #FF9800;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .processing-animation {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .employee-card {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .employee-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+
+        .employee-time {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <span class="letter-a">A</span>ponnt Kiosco Simple
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Tarjeta de bienvenida -->
+        <div class="welcome-card">
+            <div class="welcome-title">🏢 Control de Asistencia</div>
+            <div class="welcome-subtitle">Ingrese su información para marcar asistencia</div>
+
+            <!-- Selector de empresa -->
+            <div class="company-selector">
+                <label for="companySelect" style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Empresa:</label>
+                <select id="companySelect">
+                    <option value="11">Empresa Demo (ID: 11)</option>
+                    <option value="1">Empresa Principal (ID: 1)</option>
+                    <option value="2">Empresa Secundaria (ID: 2)</option>
+                </select>
+            </div>
+
+            <!-- Input para empleado -->
+            <div class="employee-input">
+                <input
+                    type="text"
+                    id="employeeInput"
+                    placeholder="Ingrese su ID o nombre de empleado"
+                    autocomplete="off"
+                >
+            </div>
+
+            <!-- Botones de entrada/salida -->
+            <div class="attendance-buttons">
+                <button class="btn btn-in" onclick="markAttendance('in')">
+                    📥 ENTRADA
+                </button>
+                <button class="btn btn-out" onclick="markAttendance('out')">
+                    📤 SALIDA
+                </button>
+            </div>
+        </div>
+
+        <!-- Panel de estado -->
+        <div class="status-panel">
+            <div class="status-text" id="statusText">✨ Sistema listo para registrar asistencia</div>
+        </div>
+
+        <!-- Tarjeta de empleado (oculta inicialmente) -->
+        <div id="employeeCard" class="employee-card hidden">
+            <div class="employee-name" id="employeeName"></div>
+            <div class="employee-time" id="employeeTime"></div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="testConnection()">🔧 Probar Conexión</button>
+            <button class="quick-btn" onclick="clearData()">🗑️ Limpiar</button>
+            <button class="quick-btn" onclick="showHelp()">❓ Ayuda</button>
+        </div>
+    </div>
+
+    <script>
+        class SimpleKiosk {
+            constructor() {
+                this.currentCompanyId = '11';
+                this.lastEmployeeData = null;
+
+                console.log('🏢 [SIMPLE-KIOSK] Inicializando...');
+                this.init();
+            }
+
+            init() {
+                // Configurar selector de empresa
+                document.getElementById('companySelect').addEventListener('change', (e) => {
+                    this.currentCompanyId = e.target.value;
+                    console.log(`🏢 [SIMPLE-KIOSK] Empresa seleccionada: ${this.currentCompanyId}`);
+                    this.updateStatus('🏢 Empresa cambiada. Listo para registrar.', 'info');
+                });
+
+                // Configurar input de empleado
+                const employeeInput = document.getElementById('employeeInput');
+                employeeInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.searchEmployee();
+                    }
+                });
+
+                employeeInput.addEventListener('input', () => {
+                    this.hideEmployeeCard();
+                });
+
+                this.updateStatus('✨ Sistema listo para registrar asistencia', 'info');
+                console.log('✅ [SIMPLE-KIOSK] Sistema inicializado correctamente');
+            }
+
+            async searchEmployee() {
+                const employeeInput = document.getElementById('employeeInput');
+                const query = employeeInput.value.trim();
+
+                if (!query) {
+                    this.updateStatus('⚠️ Ingrese un ID o nombre de empleado', 'warning');
+                    return;
+                }
+
+                try {
+                    this.updateStatus('🔍 Buscando empleado...', 'processing');
+
+                    // Simular búsqueda de empleado
+                    const response = await fetch(`/api/v1/employees/search?q=${encodeURIComponent(query)}&company=${this.currentCompanyId}`, {
+                        headers: {
+                            'X-Company-Id': this.currentCompanyId,
+                            'X-Kiosk-Mode': 'true'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.employee) {
+                            this.showEmployeeCard(result.employee);
+                            this.updateStatus('👤 Empleado encontrado. Seleccione ENTRADA o SALIDA.', 'success');
+                        } else {
+                            this.updateStatus('❌ Empleado no encontrado', 'error');
+                            this.hideEmployeeCard();
+                        }
+                    } else {
+                        // Si la API no existe, simular datos
+                        this.simulateEmployeeSearch(query);
+                    }
+
+                } catch (error) {
+                    console.warn('⚠️ [SIMPLE-KIOSK] API no disponible, usando modo simulación');
+                    this.simulateEmployeeSearch(query);
+                }
+            }
+
+            simulateEmployeeSearch(query) {
+                // Simular empleados conocidos
+                const mockEmployees = {
+                    '123': { id: '123', name: 'Juan Pérez', department: 'Administración' },
+                    '456': { id: '456', name: 'María García', department: 'Ventas' },
+                    'juan': { id: '123', name: 'Juan Pérez', department: 'Administración' },
+                    'maria': { id: '456', name: 'María García', department: 'Ventas' },
+                    'demo': { id: 'demo', name: 'Usuario Demo', department: 'Pruebas' }
+                };
+
+                const employee = mockEmployees[query.toLowerCase()];
+
+                if (employee) {
+                    this.showEmployeeCard(employee);
+                    this.updateStatus('👤 Empleado encontrado (modo demo). Seleccione ENTRADA o SALIDA.', 'success');
+                } else {
+                    this.updateStatus('❌ Empleado no encontrado. Use: demo, juan, maria, 123, 456', 'error');
+                    this.hideEmployeeCard();
+                }
+            }
+
+            showEmployeeCard(employee) {
+                this.lastEmployeeData = employee;
+
+                document.getElementById('employeeName').textContent = employee.name;
+                document.getElementById('employeeTime').textContent =
+                    `ID: ${employee.id} | ${employee.department || 'Sin departamento'}`;
+
+                document.getElementById('employeeCard').classList.remove('hidden');
+            }
+
+            hideEmployeeCard() {
+                document.getElementById('employeeCard').classList.add('hidden');
+                this.lastEmployeeData = null;
+            }
+
+            async markAttendance(type) {
+                const employeeInput = document.getElementById('employeeInput');
+                const query = employeeInput.value.trim();
+
+                if (!query) {
+                    this.updateStatus('⚠️ Primero ingrese un empleado', 'warning');
+                    return;
+                }
+
+                // Si no hay empleado cargado, buscarlo primero
+                if (!this.lastEmployeeData) {
+                    await this.searchEmployee();
+                    if (!this.lastEmployeeData) {
+                        return; // Si no se encontró, salir
+                    }
+                }
+
+                try {
+                    const actionText = type === 'in' ? 'ENTRADA' : 'SALIDA';
+                    this.updateStatus(`📝 Registrando ${actionText}...`, 'processing');
+
+                    // Simular embedding biométrico
+                    const fakeEmbedding = Array.from({length: 128}, () => Math.random());
+
+                    const formData = new FormData();
+                    formData.append('embedding', JSON.stringify(fakeEmbedding));
+                    formData.append('companyId', this.currentCompanyId);
+                    formData.append('employeeId', this.lastEmployeeData.id);
+                    formData.append('attendanceType', type);
+
+                    const response = await fetch('/api/v2/biometric-attendance/verify-real', {
+                        method: 'POST',
+                        headers: {
+                            'X-Company-Id': this.currentCompanyId,
+                            'X-Kiosk-Mode': 'true'
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    console.log('📡 [SIMPLE-KIOSK] Respuesta del servidor:', result);
+
+                    if (result.success) {
+                        this.updateStatus(`✅ ${actionText} registrada exitosamente`, 'success');
+                        this.showSuccessAnimation();
+
+                        // Limpiar después de 3 segundos
+                        setTimeout(() => {
+                            this.clearData();
+                        }, 3000);
+                    } else {
+                        this.updateStatus(`❌ Error registrando ${actionText.toLowerCase()}`, 'error');
+                    }
+
+                } catch (error) {
+                    console.error('❌ [SIMPLE-KIOSK] Error:', error);
+                    this.updateStatus('❌ Error de conexión. Intente nuevamente.', 'error');
+                }
+            }
+
+            showSuccessAnimation() {
+                const statusPanel = document.querySelector('.status-panel');
+                statusPanel.style.border = '2px solid #4CAF50';
+                statusPanel.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.3)';
+
+                setTimeout(() => {
+                    statusPanel.style.border = 'none';
+                    statusPanel.style.boxShadow = 'none';
+                }, 2000);
+            }
+
+            updateStatus(message, type = 'info') {
+                const statusText = document.getElementById('statusText');
+                statusText.textContent = message;
+                statusText.className = `status-text ${type}`;
+
+                if (type === 'processing') {
+                    statusText.classList.add('processing-animation');
+                } else {
+                    statusText.classList.remove('processing-animation');
+                }
+
+                console.log(`🏢 [SIMPLE-KIOSK] ${message}`);
+            }
+
+            clearData() {
+                document.getElementById('employeeInput').value = '';
+                this.hideEmployeeCard();
+                this.updateStatus('✨ Sistema listo para registrar asistencia', 'info');
+            }
+
+            async testConnection() {
+                try {
+                    this.updateStatus('🔧 Probando conexión...', 'processing');
+                    const response = await fetch('/api/v1/health');
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.updateStatus('✅ Conexión exitosa al servidor', 'success');
+                    } else {
+                        this.updateStatus('⚠️ Servidor responde pero con errores', 'warning');
+                    }
+                } catch (error) {
+                    this.updateStatus('❌ Error de conexión con el servidor', 'error');
+                }
+            }
+
+            showHelp() {
+                alert(`🏢 AYUDA - Kiosco Simple
+
+📋 CÓMO USAR:
+1. Seleccione su empresa
+2. Ingrese su ID o nombre
+3. Presione ENTRADA o SALIDA
+
+👤 EMPLEADOS DE PRUEBA:
+• demo - Usuario Demo
+• juan o 123 - Juan Pérez
+• maria o 456 - María García
+
+🔧 SOLUCIÓN DE PROBLEMAS:
+• Use "Probar Conexión" si hay errores
+• Use "Limpiar" para reiniciar
+• Contacte al administrador si persisten los problemas
+
+📱 COMPATIBILIDAD:
+✅ Funciona en cualquier navegador
+✅ No requiere permisos especiales
+✅ Optimizado para tablets y móviles`);
+            }
+        }
+
+        // Funciones globales
+        let kioskInstance;
+
+        function markAttendance(type) {
+            kioskInstance.markAttendance(type);
+        }
+
+        function testConnection() {
+            kioskInstance.testConnection();
+        }
+
+        function clearData() {
+            kioskInstance.clearData();
+        }
+
+        function showHelp() {
+            kioskInstance.showHelp();
+        }
+
+        // Inicializar cuando carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            kioskInstance = new SimpleKiosk();
+        });
+
+        // Enviar con Enter en cualquier input
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                kioskInstance.searchEmployee();
+            }
+        });
+    </script>
+</body>
+</html>
