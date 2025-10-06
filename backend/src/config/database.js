@@ -1,13 +1,13 @@
 const { Sequelize } = require('sequelize');
 
-// CONFIGURACIÓN POSTGRESQL - Simplificado y limpio  
-const sequelize = new Sequelize(
-  process.env.POSTGRES_DB || 'attendance_system',
-  process.env.POSTGRES_USER || 'postgres',
-  process.env.POSTGRES_PASSWORD || 'Aedr15150302',
-  {
-    host: process.env.POSTGRES_HOST || 'localhost',
-    port: process.env.POSTGRES_PORT || 5432,
+// CONFIGURACIÓN POSTGRESQL - Compatible con Railway y Local
+// Railway provee DATABASE_URL, Local usa POSTGRES_*
+let sequelize;
+
+if (process.env.DATABASE_URL) {
+  // RAILWAY/PRODUCCIÓN: Usar DATABASE_URL
+  console.log('🚂 Conectando a Railway PostgreSQL via DATABASE_URL');
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     logging: process.env.DB_LOGGING === 'true' ? console.log : false,
     timezone: '+00:00',
@@ -20,13 +20,46 @@ const sequelize = new Sequelize(
       idle: 10000
     },
     dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      },
       timezone: '+00:00',
       useUTC: false,
       dateStrings: true,
       typeCast: true
     }
-  }
-);
+  });
+} else {
+  // LOCAL: Usar variables POSTGRES_* (código original sin cambios)
+  console.log('💻 Conectando a PostgreSQL local');
+  sequelize = new Sequelize(
+    process.env.POSTGRES_DB || 'attendance_system',
+    process.env.POSTGRES_USER || 'postgres',
+    process.env.POSTGRES_PASSWORD || 'Aedr15150302',
+    {
+      host: process.env.POSTGRES_HOST || 'localhost',
+      port: process.env.POSTGRES_PORT || 5432,
+      dialect: 'postgres',
+      logging: process.env.DB_LOGGING === 'true' ? console.log : false,
+      timezone: '+00:00',
+      quoteIdentifiers: true,
+      underscored: false,
+      pool: {
+        max: 10,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+      },
+      dialectOptions: {
+        timezone: '+00:00',
+        useUTC: false,
+        dateStrings: true,
+        typeCast: true
+      }
+    }
+  );
+}
 
 console.log('🐘 Configuración PostgreSQL - Sistema Optimizado');
 
