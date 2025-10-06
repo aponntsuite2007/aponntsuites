@@ -1,0 +1,10 @@
+frontend_flutter/
+.ai-development-system/
+.claude/
+node_modules/
+*.log
+*.md
+test*.html
+test*.js
+test*.sh
+nul
