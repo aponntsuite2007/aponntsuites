@@ -81,7 +81,6 @@ module.exports = (sequelize) => {
     departmentId: {
       type: DataTypes.BIGINT,
       allowNull: true,
-      field: 'department_id',
       references: {
         model: 'departments',
         key: 'id'
@@ -102,7 +101,7 @@ module.exports = (sequelize) => {
     defaultBranchId: {
       type: DataTypes.BIGINT,
       allowNull: true,
-      field: 'default_branch_id',
+      field: 'defaultBranchId',
       references: {
         model: 'branches',
         key: 'id'
@@ -112,13 +111,13 @@ module.exports = (sequelize) => {
     hireDate: {
       type: DataTypes.DATEONLY,
       allowNull: true,
-      field: 'hire_date',
+      field: 'hireDate',
       index: true
     },
     birthDate: {
       type: DataTypes.DATEONLY,
       allowNull: true,
-      field: 'birth_date'
+      field: 'birthDate'
     },
     dni: {
       type: DataTypes.STRING(20),
