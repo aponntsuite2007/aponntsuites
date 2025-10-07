@@ -208,22 +208,9 @@ async function initializeDatabase() {
 
     console.log('✅ Tablas creadas');
 
-    // Insertar empresa demo si no existe
+    // Verificar datos existentes
     const [companies] = await database.sequelize.query('SELECT COUNT(*) as count FROM companies');
-    if (companies[0].count === '0') {
-      console.log('🌱 Insertando empresa demo...');
-      await database.sequelize.query(`
-        INSERT INTO companies (name, slug, email, tax_id, is_active)
-        VALUES ('Empresa Demo', 'empresa-demo', 'demo@aponntsuites.com', '20-12345678-9', true);
-
-        INSERT INTO users ("employeeId", usuario, "firstName", "lastName", email, password, role, company_id)
-        SELECT 'ADMIN001', 'admin', 'Admin', 'Sistema', 'admin@aponntsuites.com',
-               '$2b$10$rIVkUxqV1d7xWvL5Y1k5K.vY8l5vTH5vC5vY5vY5vY5vY5vY5vY5u',
-               'super_admin', company_id
-        FROM companies WHERE slug = 'empresa-demo';
-      `);
-      console.log('✅ Empresa demo creada (usuario: admin, password: admin123)');
-    }
+    console.log(`📊 Base de datos tiene ${companies[0].count} empresas`);
 
     isDatabaseConnected = true;
     console.log('✅ PostgreSQL conectado y listo');
