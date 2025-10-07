@@ -138,11 +138,11 @@ Shift.belongsToMany(User, { through: 'UserShifts' });
 // User.belongsTo(Branch, { as: 'defaultBranch', foreignKey: 'defaultBranchId' });
 // User.belongsToMany(Branch, { through: 'UserBranches', as: 'authorizedBranches' });
 
-User.hasMany(BiometricData);
-BiometricData.belongsTo(User);
+User.hasMany(BiometricData, { foreignKey: 'user_id' });
+BiometricData.belongsTo(User, { foreignKey: 'user_id' });
 
-User.hasMany(Permission);
-Permission.belongsTo(User);
+User.hasMany(Permission, { foreignKey: 'user_id' });
+Permission.belongsTo(User, { foreignKey: 'user_id' });
 
 User.hasMany(Message, { as: 'receivedMessages', foreignKey: 'recipientId' });
 Message.belongsTo(User, { as: 'recipient', foreignKey: 'recipientId' });

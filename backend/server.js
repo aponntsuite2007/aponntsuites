@@ -120,9 +120,9 @@ async function initializeDatabase() {
     console.log('🔄 Conectando a PostgreSQL...');
     await database.connect();
 
-    // Sincronizar tablas (crear si no existen)
+    // Sincronizar tablas - Crear TODAS las tablas automáticamente
     console.log('🔧 Sincronizando tablas de base de datos...');
-    await database.sequelize.sync({ alter: false });
+    await database.sequelize.sync({ force: false, alter: false });
     console.log('✅ Tablas sincronizadas correctamente');
 
     isDatabaseConnected = true;
@@ -142,8 +142,8 @@ async function initializeDatabase() {
 
     // Funciones de creación de datos por defecto eliminadas - causaban errores de Sequelize
 
-    // Limpiar usuarios administradores sin empresa (DESACTIVADO temporalmente)
-    // await cleanOrphanedAdminUsers();
+    // Limpiar usuarios administradores sin empresa
+    await cleanOrphanedAdminUsers();
 
   } catch (error) {
     console.error('❌ Error conectando a PostgreSQL:', error.message);
