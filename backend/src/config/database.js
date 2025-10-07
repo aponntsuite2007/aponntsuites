@@ -14,10 +14,10 @@ if (process.env.DATABASE_URL) {
   console.log('🚂 Conectando a Railway PostgreSQL via DATABASE_URL');
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
-    logging: console.log, // ACTIVAR LOGGING PARA VER SQL EXACTO
+    logging: false, // DESACTIVAR logging en producción
     timezone: '+00:00',
     quoteIdentifiers: true,
-    underscored: false,
+    underscored: true, // CRÍTICO: Convertir camelCase a snake_case para Render
     pool: {
       max: 10,
       min: 0,
