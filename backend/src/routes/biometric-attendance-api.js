@@ -850,11 +850,11 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
         const today = getArgentinaDate();
 
         const [rows] = await sequelize.query(`
-          SELECT id, check_in_time, check_out_time, check_out_method
+          SELECT id, check_in, check_out, status
           FROM attendances
           WHERE user_id = :employeeId
-            AND DATE(check_in_time) = :today
-          ORDER BY check_in_time DESC
+            AND DATE(check_in) = :today
+          ORDER BY check_in DESC
           LIMIT 1
         `, {
           replacements: { employeeId: bestMatch.employeeId, today },
@@ -911,9 +911,9 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
             } else {
               // DENTRO de tolerancia o sin shift → INSERT normal
               const [insertResult] = await sequelize.query(`
-                INSERT INTO attendances (id, date, user_id, check_in_time, check_in_method, status, created_at, updated_at)
+                INSERT INTO attendances (id, date, user_id, check_in, status, status, created_at, updated_at)
                 VALUES (gen_random_uuid(), :date, :userId, :checkInTime, :checkInMethod, :status, NOW(), NOW())
-                RETURNING id, check_in_time
+                RETURNING id, check_in
               `, {
                 replacements: {
                   date: today,
@@ -960,8 +960,8 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
             timestamp = new Date();
             await sequelize.query(`
               UPDATE attendances
-              SET check_out_time = :checkOutTime,
-                  check_out_method = :checkOutMethod,
+              SET check_out = :checkOutTime,
+                  status = :checkOutMethod,
                   updated_at = NOW()
               WHERE id = :attendanceId
             `, {
@@ -986,9 +986,9 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
           if (shouldRegister) {
             // INSERT usando SQL directo con columnas camelCase (re-ingreso)
             const [reInsertResult] = await sequelize.query(`
-              INSERT INTO attendances (id, date, user_id, check_in_time, check_in_method, status, created_at, updated_at)
+              INSERT INTO attendances (id, date, user_id, check_in, status, status, created_at, updated_at)
               VALUES (gen_random_uuid(), :date, :userId, :checkInTime, :checkInMethod, :status, NOW(), NOW())
-              RETURNING id, check_in_time
+              RETURNING id, check_in
             `, {
               replacements: {
                 date: today,
@@ -1250,9 +1250,9 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
         authorized_by_user_id
       FROM attendances
       WHERE user_id = :employeeId
-        AND DATE(check_in_time) = CURRENT_DATE
+        AND DATE(check_in) = CURRENT_DATE
         AND authorization_status = 'approved'
-        AND check_in_time IS NULL
+        AND check_in IS NULL
         AND authorized_at >= :fiveMinutesAgo
       ORDER BY authorized_at DESC
       LIMIT 1
@@ -1272,8 +1272,8 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
       // Actualizar autorización completando el checkInTime (marcándola como usada)
       await sequelize.query(`
         UPDATE attendances
-        SET check_in_time = :checkInTime,
-            check_in_method = 'face',
+        SET check_in = :checkInTime,
+            status = 'face',
             status = 'present',
             updated_at = NOW()
         WHERE id = :authorizationId
@@ -1305,8 +1305,8 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
         id,
         date,
         user_id,
-        check_in_time,
-        check_in_method,
+        check_in,
+        status,
         status,
         authorization_status,
         authorization_token,

@@ -202,15 +202,15 @@ router.get('/', auth, async (req, res) => {
     const replacements = { limit: parseInt(limit), offset };
 
     if (startDate) {
-      sqlWhere += ' AND a.date >= :startDate';
+      sqlWhere += ' AND DATE(a.check_in) >= :startDate';
       replacements.startDate = startDate;
     }
     if (endDate) {
-      sqlWhere += ' AND a.date <= :endDate';
+      sqlWhere += ' AND DATE(a.check_in) <= :endDate';
       replacements.endDate = endDate;
     }
     if (branchId) {
-      sqlWhere += ' AND a.branch_id = :branchId';
+      sqlWhere += ' AND a.kiosk_id = :branchId';
       replacements.branchId = branchId;
     }
     if (status) {
@@ -231,16 +231,15 @@ router.get('/', auth, async (req, res) => {
     // Query de datos
     const attendances = await sequelize.query(`
       SELECT
-        a.id, a.date, a.check_in_time as "checkInTime", a.check_out_time as "checkOutTime",
-        a.check_in_method as "checkInMethod", a.check_out_method as "checkOutMethod", a.working_hours as "workingHours",
-        a.status, a.notes, a.branch_id as "BranchId",
-        u.user_id as "User.id", u.first_name as "User.firstName",
-        u.last_name as "User.lastName", u.employee_id as "User.employeeId",
+        a.id, a.check_in as "checkInTime", a.check_out as "checkOutTime",
+        a.status, a.kiosk_id as "kioskId",
+        u.user_id as "User.id", u.firstName as "User.firstName",
+        u.lastName as "User.lastName", u.employeeId as "User.employeeId",
         u.email as "User.email"
       FROM attendances a
       INNER JOIN users u ON a.user_id = u.user_id
       WHERE 1=1 ${sqlWhere}
-      ORDER BY a.date DESC, a.check_in_time DESC
+      ORDER BY a.check_in DESC NULLS LAST
       LIMIT :limit OFFSET :offset
     `, { replacements, type: QueryTypes.SELECT });
 
