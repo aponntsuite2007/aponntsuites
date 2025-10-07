@@ -261,12 +261,12 @@ FacialBiometricData.belongsTo(User, { foreignKey: 'userId', as: 'User' });
 User.hasMany(EmployeeLocation, { foreignKey: 'userId', as: 'locations' });
 EmployeeLocation.belongsTo(User, { foreignKey: 'userId', as: 'employee' });
 
-// Asociaciones para gestión de empresas y módulos
-Company.hasMany(CompanyModule, { foreignKey: 'companyId', as: 'modules' });
-CompanyModule.belongsTo(Company, { foreignKey: 'companyId', as: 'company' });
+// Asociaciones para gestión de empresas y módulos (usando nombres reales de columnas)
+Company.hasMany(CompanyModule, { foreignKey: 'company_id', as: 'modules' });
+CompanyModule.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
 
-SystemModule.hasMany(CompanyModule, { foreignKey: 'systemModuleId', as: 'companySubscriptions' });
-CompanyModule.belongsTo(SystemModule, { foreignKey: 'systemModuleId', as: 'systemModule' });
+SystemModule.hasMany(CompanyModule, { foreignKey: 'system_module_id', as: 'companySubscriptions' });
+CompanyModule.belongsTo(SystemModule, { foreignKey: 'system_module_id', as: 'systemModule' });
 
 // Los usuarios pertenecen a empresas
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
