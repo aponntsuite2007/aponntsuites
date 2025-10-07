@@ -210,7 +210,7 @@ router.get('/', auth, async (req, res) => {
       replacements.endDate = endDate;
     }
     if (branchId) {
-      sqlWhere += ' AND a."BranchId" = :branchId';
+      sqlWhere += ' AND a.branch_id = :branchId';
       replacements.branchId = branchId;
     }
     if (status) {
@@ -222,7 +222,7 @@ router.get('/', auth, async (req, res) => {
     const [countResult] = await sequelize.query(`
       SELECT COUNT(a.id) as total
       FROM attendances a
-      INNER JOIN users u ON a."UserId" = u.user_id
+      INNER JOIN users u ON a.user_id = u.user_id
       WHERE 1=1 ${sqlWhere}
     `, { replacements, type: QueryTypes.SELECT });
 
@@ -231,16 +231,16 @@ router.get('/', auth, async (req, res) => {
     // Query de datos
     const attendances = await sequelize.query(`
       SELECT
-        a.id, a.date, a."checkInTime", a."checkOutTime",
-        a."checkInMethod", a."checkOutMethod", a."workingHours",
-        a.status, a.notes, a."BranchId",
-        u.user_id as "User.id", u."firstName" as "User.firstName",
-        u."lastName" as "User.lastName", u."employeeId" as "User.employeeId",
+        a.id, a.date, a.check_in_time as "checkInTime", a.check_out_time as "checkOutTime",
+        a.check_in_method as "checkInMethod", a.check_out_method as "checkOutMethod", a.working_hours as "workingHours",
+        a.status, a.notes, a.branch_id as "BranchId",
+        u.user_id as "User.id", u.first_name as "User.firstName",
+        u.last_name as "User.lastName", u.employee_id as "User.employeeId",
         u.email as "User.email"
       FROM attendances a
-      INNER JOIN users u ON a."UserId" = u.user_id
+      INNER JOIN users u ON a.user_id = u.user_id
       WHERE 1=1 ${sqlWhere}
-      ORDER BY a.date DESC, a."checkInTime" DESC
+      ORDER BY a.date DESC, a.check_in_time DESC
       LIMIT :limit OFFSET :offset
     `, { replacements, type: QueryTypes.SELECT });
 
