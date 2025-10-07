@@ -145,14 +145,14 @@ router.get('/admin/operators', async (req, res) => {
                 u.phone,
                 u.role,
                 u.company_id,
-                u."isActive" as is_active,
+                u.is_active as is_active,
                 u."createdAt",
                 c.name as company_name,
                 d.name as department_name
             FROM users u
             LEFT JOIN companies c ON u.company_id = c.company_id
             LEFT JOIN departments d ON u."departmentId" = d.id
-            WHERE u."isActive" = true
+            WHERE u.is_active = true
             ORDER BY u.company_id, u.role DESC, u."firstName", u."lastName"
         `, {
             type: sequelize.QueryTypes.SELECT
@@ -436,14 +436,13 @@ router.get('/companies', async (req, res) => {
     // Usar modelo PostgreSQL unificado - Especificar campos manualmente para evitar error de email
     const companies = await sequelize.query(`
       SELECT
-        id, name, slug, email as contact_email, phone, address,
+        company_id as id, company_id, name, slug, email as contact_email, phone, address,
         tax_id, is_active, max_employees, contracted_employees,
-        modules_pricing, license_type,
-        legal_name, contact_phone, city, state as province, country,
-        active_modules
+        license_type,
+        city, country
       FROM companies
       WHERE is_active = true
-      ORDER BY id DESC
+      ORDER BY company_id DESC
     `, {
       type: sequelize.QueryTypes.SELECT
     });
