@@ -138,6 +138,51 @@ function showAttendanceContent() {
                         <canvas id="attendanceChart" width="400" height="200"></canvas>
                     </div>
                 </div>
+
+                <!-- 📊 LOGS DE DETECCIONES BIOMÉTRICAS -->
+                <div style="margin-top: 40px; border-top: 2px solid #e0e0e0; padding-top: 20px;">
+                    <h3>🔍 Logs de Detecciones Biométricas</h3>
+                    <p style="color: #666; margin-bottom: 15px;">
+                        Registro completo de TODAS las detecciones faciales (incluso las que no generaron fichada por cooldown)
+                    </p>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn btn-primary" onclick="loadDetectionLogs()">🔄 Cargar Logs</button>
+                        <button class="btn btn-info" onclick="refreshDetectionLogs()">♻️ Actualizar</button>
+                        <span style="margin-left: 15px; color: #666; font-size: 0.9em;">
+                            Límite: <select id="logsLimit" style="padding: 5px;">
+                                <option value="50">50</option>
+                                <option value="100" selected>100</option>
+                                <option value="200">200</option>
+                                <option value="500">500</option>
+                            </select> registros
+                        </span>
+                    </div>
+
+                    <div class="table-container">
+                        <table id="detection-logs-table" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>🕐 Timestamp</th>
+                                    <th>👤 Empleado</th>
+                                    <th>🏷️ Legajo</th>
+                                    <th>📊 Similitud</th>
+                                    <th>✅ Fichó?</th>
+                                    <th>🔄 Tipo</th>
+                                    <th>⏭️ Razón Skip</th>
+                                    <th>⚡ Tiempo (ms)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detection-logs-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 20px;">
+                                        Presiona "🔄 Cargar Logs" para ver el registro de detecciones
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     `;
@@ -556,14 +601,26 @@ function displayAttendanceTable(attendanceData, pagination) {
             : 'Usuario desconocido';
         const employeeId = record['User.employeeId'] || 'N/A';
 
-        // Formatear fecha
-        const date = record.date ? new Date(record.date).toLocaleDateString('es-AR') :
+        // Formatear fecha SIN conversión de zona horaria (usar la fecha tal cual)
+        const date = record.date ? record.date.split('T')[0].split('-').reverse().join('/') :
                      (record.checkInTime ? new Date(record.checkInTime).toLocaleDateString('es-AR') : '--');
 
         // Verificar si checkInTime y checkOutTime existen
-        const checkInTime = record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '--';
-        const checkOutTime = record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '--';
-        const workingHours = record.workingHours ? `${record.workingHours}h` : '--';
+        const checkInTime = record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--';
+        const checkOutTime = record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--';
+
+        // Calcular horas trabajadas si hay entrada y salida
+        let workingHours = '--';
+        if (record.checkInTime && record.checkOutTime) {
+            const checkIn = new Date(record.checkInTime);
+            const checkOut = new Date(record.checkOutTime);
+            const diffMs = checkOut - checkIn;
+            const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            workingHours = `${diffHrs}h ${diffMins}m`;
+        } else if (record.workingHours) {
+            workingHours = `${record.workingHours}h`;
+        }
         const status = translateStatus(record.status);
         const method = translateMethod(record.checkInMethod);
         const location = record.checkInLocation || 'No especificado';
@@ -830,6 +887,143 @@ async function updateChartWithRealData() {
         console.warn('⚠️ [ATTENDANCE] Error cargando datos reales del gráfico:', error);
     }
 }
+
+// ======================================================
+// 🔍 FUNCIONES PARA LOGS DE DETECCIONES BIOMÉTRICAS
+// ======================================================
+
+/**
+ * Cargar logs de detecciones biométricas desde la API
+ */
+async function loadDetectionLogs() {
+    console.log('🔍 [DETECTION-LOGS] Cargando logs de detecciones...');
+
+    const tbody = document.getElementById('detection-logs-tbody');
+    if (!tbody) {
+        console.error('❌ [DETECTION-LOGS] No se encontró tbody');
+        return;
+    }
+
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">🔄 Cargando logs...</td></tr>';
+
+    try {
+        const token = getAuthToken();
+        if (!token) {
+            console.error('❌ [DETECTION-LOGS] No hay token de autenticación');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">❌ No autenticado</td></tr>';
+            return;
+        }
+
+        // Obtener companyId del usuario actual
+        const companyId = window.currentCompany?.id || window.selectedCompany?.id;
+        if (!companyId) {
+            console.error('❌ [DETECTION-LOGS] No hay company ID');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">❌ No se detectó empresa</td></tr>';
+            return;
+        }
+
+        // Obtener límite de registros
+        const limit = document.getElementById('logsLimit')?.value || 100;
+
+        // Llamar a la API
+        const response = await fetch(`/api/v2/biometric-attendance/detection-logs?companyId=${companyId}&limit=${limit}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ [DETECTION-LOGS] Datos recibidos:', result);
+
+        if (result.success && result.data && result.data.length > 0) {
+            displayDetectionLogs(result.data);
+        } else {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">ℹ️ No hay logs de detecciones para mostrar</td></tr>';
+        }
+
+    } catch (error) {
+        console.error('❌ [DETECTION-LOGS] Error:', error);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px;">❌ Error: ${error.message}</td></tr>`;
+    }
+}
+
+/**
+ * Mostrar logs en la tabla
+ */
+function displayDetectionLogs(logs) {
+    const tbody = document.getElementById('detection-logs-tbody');
+    if (!tbody) return;
+
+    let html = '';
+
+    logs.forEach(log => {
+        // Formatear timestamp en formato 24hs
+        const timestamp = new Date(log.detection_timestamp);
+        const formattedTime = timestamp.toLocaleString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+
+        // Formatear similitud como porcentaje
+        const similarity = (log.similarity * 100).toFixed(1) + '%';
+
+        // Indicador de fichada
+        const wasRegistered = log.was_registered
+            ? '<span style="color: green; font-weight: bold;">✅ Sí</span>'
+            : '<span style="color: orange;">⏭️ No</span>';
+
+        // Tipo de operación
+        const operationType = log.operation_type
+            ? (log.operation_type === 'clock_in' ? '📥 Ingreso' : '📤 Salida')
+            : '--';
+
+        // Razón de skip
+        const skipReason = log.skip_reason || '--';
+
+        // Color de fondo según si fichó o no
+        const rowStyle = log.was_registered
+            ? 'background-color: rgba(76, 175, 80, 0.05);'
+            : '';
+
+        html += `
+            <tr style="${rowStyle}">
+                <td>${formattedTime}</td>
+                <td><strong>${log.full_name || log.employee_name}</strong></td>
+                <td>${log.legajo || 'N/A'}</td>
+                <td><span style="color: ${log.similarity >= 0.8 ? 'green' : log.similarity >= 0.75 ? 'orange' : 'red'};">${similarity}</span></td>
+                <td>${wasRegistered}</td>
+                <td>${operationType}</td>
+                <td><small>${skipReason}</small></td>
+                <td>${log.processing_time_ms || '--'}ms</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+    console.log(`✅ [DETECTION-LOGS] Mostrando ${logs.length} logs`);
+}
+
+/**
+ * Actualizar logs (alias de loadDetectionLogs)
+ */
+function refreshDetectionLogs() {
+    loadDetectionLogs();
+}
+
+// ✅ HACER FUNCIONES DISPONIBLES GLOBALMENTE
+window.loadDetectionLogs = loadDetectionLogs;
+window.refreshDetectionLogs = refreshDetectionLogs;
 
 console.log('✅ [ATTENDANCE] Módulo attendance configurado con integración PostgreSQL y gráficos');
 

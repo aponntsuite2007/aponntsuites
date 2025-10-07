@@ -889,6 +889,67 @@ async function editUser(userId) {
                     </div>
                 </div>
 
+                <!-- Configuración de Acceso a Kioscos -->
+                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                    <h4 style="margin: 0 0 15px 0; color: #333;">🔐 Configuración de Acceso</h4>
+
+                    <div style="margin: 10px 0;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="editCanUseMobileApp" ${user.canUseMobileApp !== false ? 'checked' : ''} style="margin-right: 10px; transform: scale(1.3);">
+                            <span>📱 Puede usar APK Móvil para marcar asistencia</span>
+                        </label>
+                    </div>
+
+                    <div style="margin: 10px 0;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="editCanUseKiosk" ${user.canUseKiosk !== false ? 'checked' : ''} style="margin-right: 10px; transform: scale(1.3);">
+                            <span>📟 Puede usar Kioscos para marcar asistencia</span>
+                        </label>
+                    </div>
+
+                    <div style="margin: 15px 0; padding-left: 35px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="editCanUseAllKiosks" ${user.canUseAllKiosks ? 'checked' : ''} style="margin-right: 10px; transform: scale(1.3);" onchange="toggleKiosksSelection(this.checked)">
+                            <span>✅ Puede usar TODOS los kioscos</span>
+                        </label>
+                        <small style="color: #666; font-size: 11px; display: block; margin-top: 5px; margin-left: 34px;">
+                            Si se activa, el empleado podrá marcar en cualquier kiosko de la empresa
+                        </small>
+                    </div>
+
+                    <div id="authorizedKiosksContainer" style="display: ${user.canUseAllKiosks ? 'none' : 'block'}; background: white; padding: 15px; border-radius: 8px; margin-top: 15px; margin-left: 35px;">
+                        <h5 style="margin: 0 0 10px 0; color: #555;">📟 Kioscos autorizados:</h5>
+                        <small style="color: #666; font-size: 11px; display: block; margin-bottom: 10px;">
+                            Seleccione los kioscos específicos donde puede marcar
+                        </small>
+                        <div id="editAuthorizedKiosksList" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+                            <div style="text-align: center; color: #666;">
+                                Cargando kioscos...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horario Flexible -->
+                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                    <h4 style="margin: 0 0 15px 0; color: #333;">⏰ Horario Flexible</h4>
+
+                    <div style="margin: 10px 0;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="editHasFlexibleSchedule" ${user.hasFlexibleSchedule ? 'checked' : ''} style="margin-right: 10px; transform: scale(1.3);" onchange="toggleFlexibleScheduleNotes(this.checked)">
+                            <span>✓ Horario flexible (sin restricción de horarios)</span>
+                        </label>
+                        <small style="color: #666; font-size: 11px; display: block; margin-top: 5px; margin-left: 34px;">
+                            El empleado podrá marcar a cualquier hora sin validación de turno
+                        </small>
+                    </div>
+
+                    <div id="flexibleScheduleNotesContainer" style="display: ${user.hasFlexibleSchedule ? 'block' : 'none'}; margin-top: 15px;">
+                        <label>📝 Notas/Razón del horario flexible:</label>
+                        <textarea id="editFlexibleScheduleNotes" style="width: 100%; padding: 8px; margin-top: 5px; height: 80px; resize: vertical;" placeholder="Ej: Gerente con horario libre, vendedor externo, etc.">${user.flexibleScheduleNotes || ''}</textarea>
+                    </div>
+                </div>
+
                 <!-- Botones de Acción -->
                 <div style="margin: 25px 0; text-align: center; border-top: 1px solid #ddd; padding-top: 20px;">
                     <button class="btn btn-primary" onclick="saveEditUser('${userId}')" style="margin-right: 15px; padding: 10px 25px; font-size: 16px;">💾 Guardar Cambios</button>
@@ -903,6 +964,8 @@ async function editUser(userId) {
         setTimeout(() => {
             populateDepartmentSelect('editDepartment', user.departmentId || '');
             populateAuthorizedDepartmentsList(user.authorizedDepartments || []);
+            // Cargar kioscos para configuración de acceso
+            populateKiosksList('editAuthorizedKiosksList', user.authorizedKiosks || []);
         }, 100);
 
     } catch (error) {
@@ -987,6 +1050,22 @@ async function saveEditUser(userId) {
             });
         }
 
+        // Capturar configuración de acceso a kioscos
+        const canUseMobileApp = document.getElementById('editCanUseMobileApp')?.checked !== false;
+        const canUseKiosk = document.getElementById('editCanUseKiosk')?.checked !== false;
+        const canUseAllKiosks = document.getElementById('editCanUseAllKiosks')?.checked || false;
+        const authorizedKiosks = [];
+        if (!canUseAllKiosks && canUseKiosk) {
+            const kioskCheckboxes = document.querySelectorAll('#editAuthorizedKiosksList input[type="checkbox"]:checked');
+            kioskCheckboxes.forEach(cb => {
+                authorizedKiosks.push(parseInt(cb.value));
+            });
+        }
+
+        // Capturar configuración de horario flexible
+        const hasFlexibleSchedule = document.getElementById('editHasFlexibleSchedule')?.checked || false;
+        const flexibleScheduleNotes = document.getElementById('editFlexibleScheduleNotes')?.value.trim() || null;
+
         // Validaciones obligatorias
         if (!firstName || !lastName) {
             showUserMessage('⚠️ Nombre y apellido son obligatorios', 'warning');
@@ -1030,12 +1109,22 @@ async function saveEditUser(userId) {
             allowOutsideRadius,
             // Configuración de autorizador de llegadas tardías
             canAuthorizeLateArrivals,
-            authorizedDepartments: canAuthorizeLateArrivals ? authorizedDepartments : []
+            authorizedDepartments: canAuthorizeLateArrivals ? authorizedDepartments : [],
+            // Configuración de acceso a kioscos y app móvil
+            canUseMobileApp,
+            canUseKiosk,
+            canUseAllKiosks,
+            authorizedKiosks,
+            // Configuración de horario flexible
+            hasFlexibleSchedule,
+            flexibleScheduleNotes
         };
 
-        console.log('💾 [USERS] Datos de autorizador:', {
+        console.log('💾 [USERS] Datos de usuario completos:', {
             canAuthorizeLateArrivals,
-            authorizedDepartments: updateData.authorizedDepartments
+            authorizedDepartments: updateData.authorizedDepartments,
+            accessConfig: { canUseMobileApp, canUseKiosk, canUseAllKiosks, authorizedKiosks },
+            flexibleSchedule: { hasFlexibleSchedule, flexibleScheduleNotes }
         });
         
         const apiUrl = window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`);
@@ -2663,7 +2752,69 @@ async function populateDepartmentSelect(selectId, selectedValue = '') {
     }
 }
 
-console.log('🏢 [USERS] Funciones de departamentos dinámicos agregadas');
+// Cargar kioscos para configuración de acceso
+async function populateKiosksList(containerId, authorizedKiosks = []) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '<div style="text-align: center; color: #666;">Cargando kioscos...</div>';
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const response = await fetch('/api/v1/kiosks', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Error al cargar kioscos');
+
+        const data = await response.json();
+        const kiosks = data.kiosks || [];
+
+        if (kiosks.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: #999;">No hay kioscos disponibles</div>';
+            return;
+        }
+
+        // Crear checkboxes para cada kiosko
+        container.innerHTML = kiosks.map(kiosk => `
+            <label style="display: block; padding: 8px; margin: 5px 0; border-radius: 4px; cursor: pointer; background: #f8f9fa;">
+                <input type="checkbox"
+                       value="${kiosk.id}"
+                       ${authorizedKiosks.includes(kiosk.id) ? 'checked' : ''}
+                       style="margin-right: 10px;">
+                <span>${kiosk.name}</span>
+                <small style="color: #666; margin-left: 10px;">${kiosk.location || ''}</small>
+            </label>
+        `).join('');
+
+        console.log(`✅ Se cargaron ${kiosks.length} kioscos`);
+
+    } catch (error) {
+        console.error('Error cargando kioscos:', error);
+        container.innerHTML = '<div style="text-align: center; color: #dc3545;">Error cargando kioscos</div>';
+    }
+}
+
+// Toggle para mostrar/ocultar selección de kioscos
+function toggleKiosksSelection(canUseAll) {
+    const container = document.getElementById('authorizedKiosksContainer');
+    if (container) {
+        container.style.display = canUseAll ? 'none' : 'block';
+    }
+}
+
+// Toggle para mostrar/ocultar notas de horario flexible
+function toggleFlexibleScheduleNotes(hasFlexible) {
+    const container = document.getElementById('flexibleScheduleNotesContainer');
+    if (container) {
+        container.style.display = hasFlexible ? 'block' : 'none';
+    }
+}
+
+console.log('🏢 [USERS] Funciones de departamentos y kioscos dinámicos agregadas');
 
 // User filtering functions
 function filterUsers() {

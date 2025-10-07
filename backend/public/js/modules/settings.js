@@ -5,9 +5,46 @@ console.log('⚙️ [SETTINGS] Módulo settings cargado');
 function showSettingsContent() {
     const content = document.getElementById('mainContent');
     if (!content) return;
-    
+
     content.innerHTML = `
         <div class="tab-content active" id="settings">
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h2>📡 Configuración del Servidor para APK</h2>
+                <p style="margin: 10px 0; font-size: 14px; opacity: 0.9;">
+                    Use esta información para configurar la APK Flutter manualmente
+                </p>
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 15px 0;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <label style="font-weight: bold; font-size: 12px; opacity: 0.9;">DIRECCIÓN IP DEL SERVIDOR:</label>
+                            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+                                <span id="server-ip" style="font-family: monospace; font-size: 20px; font-weight: bold;">Cargando...</span>
+                                <button onclick="copyToClipboard('server-ip')" class="btn btn-sm" style="background: rgba(255,255,255,0.3); border: none; color: white;">📋 Copiar</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-weight: bold; font-size: 12px; opacity: 0.9;">PUERTO:</label>
+                            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+                                <span id="server-port" style="font-family: monospace; font-size: 20px; font-weight: bold;">Cargando...</span>
+                                <button onclick="copyToClipboard('server-port')" class="btn btn-sm" style="background: rgba(255,255,255,0.3); border: none; color: white;">📋 Copiar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center;">
+                        <strong>URL COMPLETA:</strong>
+                        <span id="server-full-url" style="font-family: monospace; font-size: 16px; margin-left: 10px;">http://...</span>
+                        <button onclick="copyToClipboard('server-full-url')" class="btn btn-sm" style="background: rgba(255,255,255,0.3); border: none; color: white; margin-left: 10px;">📋 Copiar URL</button>
+                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; font-size: 13px;">
+                    <strong>📱 Para configurar la APK:</strong><br>
+                    1. Abrir APK → Configuración<br>
+                    2. Ingresar IP: <span id="apk-ip-hint" style="font-family: monospace; font-weight: bold;">...</span><br>
+                    3. Ingresar Puerto: <span id="apk-port-hint" style="font-family: monospace; font-weight: bold;">...</span><br>
+                    4. Guardar y usar
+                </div>
+            </div>
+
             <div class="card">
                 <h2>🏢 Datos de la Empresa</h2>
                 <div class="form-group">
@@ -344,6 +381,54 @@ function showSettingsContent() {
     
     // Load current settings
     setTimeout(loadCurrentSettings, 300);
+    setTimeout(loadServerInfo, 100);
+}
+
+// Copiar al portapapeles
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    const text = element.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        showSettingsMessage(`✅ Copiado: ${text}`, 'success');
+    }).catch(err => {
+        console.error('Error copiando:', err);
+        showSettingsMessage('❌ Error copiando al portapapeles', 'error');
+    });
+}
+
+// Cargar información del servidor
+async function loadServerInfo() {
+    try {
+        // Obtener info del servidor
+        const response = await fetch('/api/server-config');
+        const config = await response.json();
+
+        // Actualizar elementos
+        const serverIp = config.serverIP || window.location.hostname;
+        const serverPort = config.port || window.DYNAMIC_CONFIG?.port || '9998';
+
+        document.getElementById('server-ip').textContent = serverIp;
+        document.getElementById('server-port').textContent = serverPort;
+        document.getElementById('server-full-url').textContent = `http://${serverIp}:${serverPort}`;
+        document.getElementById('apk-ip-hint').textContent = serverIp;
+        document.getElementById('apk-port-hint').textContent = serverPort;
+
+        console.log('✅ [SETTINGS] Info del servidor cargada:', { serverIp, serverPort });
+    } catch (error) {
+        console.error('❌ [SETTINGS] Error cargando info servidor:', error);
+
+        // Fallback: usar configuración local
+        const serverIp = window.location.hostname || '10.168.100.5';
+        const serverPort = window.DYNAMIC_CONFIG?.port || '9998';
+
+        document.getElementById('server-ip').textContent = serverIp;
+        document.getElementById('server-port').textContent = serverPort;
+        document.getElementById('server-full-url').textContent = `http://${serverIp}:${serverPort}`;
+        document.getElementById('apk-ip-hint').textContent = serverIp;
+        document.getElementById('apk-port-hint').textContent = serverPort;
+    }
 }
 
 // Load current settings from API or localStorage
@@ -1156,5 +1241,6 @@ function closeModal(modalId) {
 }
 
 console.log('✅ [SETTINGS] Módulo settings configurado');
-// ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE
+// ✅ HACER FUNCIONES DISPONIBLES GLOBALMENTE
 window.showSettingsContent = showSettingsContent;
+window.copyToClipboard = copyToClipboard;
