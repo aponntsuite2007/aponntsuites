@@ -51,35 +51,33 @@ class NextGenDatabaseManager {
     }
 
     const dbConfig = this.getShardConfig(tenantSize);
-    const sequelize = new Sequelize(
-      `${process.env.POSTGRES_DB}${dbConfig.dbSuffix}`,
-      process.env.POSTGRES_USER || 'postgres',
-      process.env.POSTGRES_PASSWORD || 'Aedr15150302',
-      {
-        host: process.env.POSTGRES_HOST || 'localhost',
-        port: process.env.POSTGRES_PORT || 5432,
+
+    let sequelize;
+
+    if (process.env.DATABASE_URL) {
+      // PRODUCCIÓN: Usar DATABASE_URL (Render, Railway, etc.)
+      sequelize = new Sequelize(process.env.DATABASE_URL, {
         dialect: 'postgres',
 
         // 🚀 OPTIMIZACIONES PARA MILLONES DE REGISTROS
         pool: {
-          max: 50,           // Conexiones máximas por tenant
-          min: 5,            // Conexiones mínimas siempre activas
-          acquire: 10000,    // Timeout para adquirir conexión
-          idle: 5000,        // Tiempo antes de liberar conexión
-          evict: 1000        // Intervalo de limpieza
+          max: 50,
+          min: 5,
+          acquire: 10000,
+          idle: 5000,
+          evict: 1000
         },
 
-        // ⚡ CONFIGURACIÓN ULTRA-PERFORMANCE
+        // ⚡ CONFIGURACIÓN ULTRA-PERFORMANCE CON SSL
         dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          },
           statement_timeout: 30000,
           query_timeout: 30000,
           connectionTimeoutMillis: 5000,
-          idle_in_transaction_session_timeout: 10000,
-          // Configuraciones para millones de registros
-          work_mem: '256MB',
-          shared_buffers: '1GB',
-          effective_cache_size: '4GB',
-          max_connections: 200
+          idle_in_transaction_session_timeout: 10000
         },
 
         // 📊 LOGGING Y MONITORING AVANZADO
@@ -111,8 +109,70 @@ class NextGenDatabaseManager {
             await connection.query(`SET app.current_tenant_id = '${tenantId}'`);
           }
         }
-      }
-    );
+      });
+    } else {
+      // LOCAL: Usar variables POSTGRES_*
+      sequelize = new Sequelize(
+        `${process.env.POSTGRES_DB}${dbConfig.dbSuffix}`,
+        process.env.POSTGRES_USER || 'postgres',
+        process.env.POSTGRES_PASSWORD || 'Aedr15150302',
+        {
+          host: process.env.POSTGRES_HOST || 'localhost',
+          port: process.env.POSTGRES_PORT || 5432,
+          dialect: 'postgres',
+
+          // 🚀 OPTIMIZACIONES PARA MILLONES DE REGISTROS
+          pool: {
+            max: 50,
+            min: 5,
+            acquire: 10000,
+            idle: 5000,
+            evict: 1000
+          },
+
+          // ⚡ CONFIGURACIÓN ULTRA-PERFORMANCE
+          dialectOptions: {
+            statement_timeout: 30000,
+            query_timeout: 30000,
+            connectionTimeoutMillis: 5000,
+            idle_in_transaction_session_timeout: 10000,
+            work_mem: '256MB',
+            shared_buffers: '1GB',
+            effective_cache_size: '4GB',
+            max_connections: 200
+          },
+
+          // 📊 LOGGING Y MONITORING AVANZADO
+          logging: (sql, timing) => {
+            if (timing > 1000) {
+              console.warn(`🐌 Slow Query [${timing}ms]: ${sql.substring(0, 100)}...`);
+            }
+          },
+
+          // 🔄 RETRY AUTOMÁTICO PARA RESILENCIA
+          retry: {
+            max: 3,
+            timeout: 5000,
+            match: [
+              /ConnectionError/,
+              /ConnectionRefusedError/,
+              /ConnectionTimedOutError/,
+              /TimeoutError/
+            ]
+          },
+
+          // 🎯 HOOKS PARA MULTI-TENANCY
+          hooks: {
+            beforeConnect: async (config) => {
+              console.log(`🔌 Conectando tenant ${tenantId} en shard ${tenantSize}`);
+            },
+            afterConnect: async (connection, config) => {
+              await connection.query(`SET app.current_tenant_id = '${tenantId}'`);
+            }
+          }
+        }
+      );
+    }
 
     // 🛡️ MIDDLEWARE DE SEGURIDAD MULTI-TENANT
     sequelize.addHook('beforeFind', (options) => {

@@ -2,14 +2,12 @@
 const { dbManager } = require('./database-next-gen');
 const { Sequelize, DataTypes } = require('sequelize');
 
-// 🐘 CONFIGURACIÓN POSTGRESQL COMPATIBLE
-const sequelize = new Sequelize(
-  process.env.POSTGRES_DB || 'sistema_asistencia',
-  process.env.POSTGRES_USER || 'postgres',
-  process.env.POSTGRES_PASSWORD || 'SistemaAsistencia2024#',
-  {
-    host: process.env.POSTGRES_HOST || 'localhost',
-    port: process.env.POSTGRES_PORT || 5432,
+// 🐘 CONFIGURACIÓN POSTGRESQL COMPATIBLE - USA DATABASE_URL EN PRODUCCIÓN
+let sequelize;
+
+if (process.env.DATABASE_URL) {
+  // PRODUCCIÓN: Usar DATABASE_URL (Render, Railway, Heroku, etc.)
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     pool: {
@@ -18,12 +16,41 @@ const sequelize = new Sequelize(
       acquire: 30000,
       idle: 10000
     },
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
     define: {
       freezeTableName: true,
       underscored: false
     }
-  }
-);
+  });
+} else {
+  // LOCAL: Usar variables POSTGRES_*
+  sequelize = new Sequelize(
+    process.env.POSTGRES_DB || 'sistema_asistencia',
+    process.env.POSTGRES_USER || 'postgres',
+    process.env.POSTGRES_PASSWORD || 'SistemaAsistencia2024#',
+    {
+      host: process.env.POSTGRES_HOST || 'localhost',
+      port: process.env.POSTGRES_PORT || 5432,
+      dialect: 'postgres',
+      logging: process.env.NODE_ENV === 'development' ? console.log : false,
+      pool: {
+        max: 50,
+        min: 10,
+        acquire: 30000,
+        idle: 10000
+      },
+      define: {
+        freezeTableName: true,
+        underscored: false
+      }
+    }
+  );
+}
 
 // 🧠 MODELOS INTEGRADOS CON NEXT-GEN
 class DatabaseIntegration {
