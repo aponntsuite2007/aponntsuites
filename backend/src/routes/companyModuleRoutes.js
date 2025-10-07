@@ -194,8 +194,8 @@ router.get('/:companyId', async (req, res) => {
         cm.id,
         cm.company_id,
         cm.system_module_id,
-        cm.activo as is_active,
-        cm.fecha_asignacion as contracted_at,
+        cm.is_active,
+        cm.created_at as contracted_at,
         sm.module_key,
         sm.name,
         sm.description,
@@ -296,8 +296,8 @@ router.get('/my-modules', simpleAuth, async (req, res) => {
       SELECT
         cm.id,
         sm.module_key,
-        cm.activo as is_active,
-        cm.fecha_asignacion as contracted_at,
+        cm.is_active,
+        cm.created_at as contracted_at,
         null as expires_at,
         sm.name as module_name,
         sm.description as module_description,
@@ -408,8 +408,8 @@ router.get('/debug-isi', async (req, res) => {
         cm.system_module_id,
         sm.module_key,
         sm.name,
-        cm.activo,
-        cm.fecha_asignacion
+        cm.is_active,
+        cm.created_at as fecha_asignacion
       FROM company_modules cm
       INNER JOIN system_modules sm ON cm.system_module_id = sm.id
       WHERE cm.company_id = ?
@@ -447,8 +447,8 @@ router.get('/debug-isi', async (req, res) => {
       allSystemModules,
       analysis: {
         hasAllModules: contractedModules.length === allSystemModules.length,
-        activeModules: contractedModules.filter(m => m.activo).length,
-        inactiveModules: contractedModules.filter(m => !m.activo).length
+        activeModules: contractedModules.filter(m => m.is_active).length,
+        inactiveModules: contractedModules.filter(m => !m.is_active).length
       }
     });
 
