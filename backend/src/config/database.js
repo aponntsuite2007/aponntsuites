@@ -4,6 +4,11 @@ const { Sequelize } = require('sequelize');
 // Railway provee DATABASE_URL, Local usa POSTGRES_*
 let sequelize;
 
+// DEBUG: Verificar variables de entorno
+console.log('🔍 [DEBUG] DATABASE_URL exists?', !!process.env.DATABASE_URL);
+console.log('🔍 [DEBUG] DATABASE_URL value:', process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET');
+console.log('🔍 [DEBUG] NODE_ENV:', process.env.NODE_ENV);
+
 if (process.env.DATABASE_URL) {
   // RAILWAY/PRODUCCIÓN: Usar DATABASE_URL
   console.log('🚂 Conectando a Railway PostgreSQL via DATABASE_URL');
