@@ -358,8 +358,8 @@ router.get('/companies/:id/modules', async (req, res) => {
       SELECT
         cm.id,
         cm.company_id,
-        cm.activo,
-        cm.precio_mensual,
+        cm.is_active,
+        cm.contracted_price,
         sm.module_key,
         sm.name as module_name,
         sm.description,
@@ -373,8 +373,8 @@ router.get('/companies/:id/modules', async (req, res) => {
     });
 
     // Separar módulos activos e inactivos
-    const activeModules = companyModules.filter(m => m.activo);
-    const inactiveModules = companyModules.filter(m => !m.activo);
+    const activeModules = companyModules.filter(m => m.is_active);
+    const inactiveModules = companyModules.filter(m => !m.is_active);
 
     // Obtener el total de módulos disponibles en el sistema
     const [totalSystemModules] = await sequelize.query(`
@@ -384,7 +384,7 @@ router.get('/companies/:id/modules', async (req, res) => {
     });
 
     // Calcular totales
-    const monthlyTotal = activeModules.reduce((sum, module) => sum + parseFloat(module.precio_mensual || 0), 0);
+    const monthlyTotal = activeModules.reduce((sum, module) => sum + parseFloat(module.contracted_price || 0), 0);
 
     const responseData = {
       success: true,
@@ -403,7 +403,7 @@ router.get('/companies/:id/modules', async (req, res) => {
           name: module.module_name,
           description: module.description,
           category: module.category,
-          contractedPrice: parseFloat(module.precio_mensual || 0)
+          contractedPrice: parseFloat(module.contracted_price || 0)
         })),
         inactive: inactiveModules.map(module => ({
           id: module.id,
@@ -411,7 +411,7 @@ router.get('/companies/:id/modules', async (req, res) => {
           name: module.module_name,
           description: module.description,
           category: module.category,
-          contractedPrice: parseFloat(module.precio_mensual || 0)
+          contractedPrice: parseFloat(module.contracted_price || 0)
         }))
       }
     };
