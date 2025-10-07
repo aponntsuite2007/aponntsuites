@@ -120,13 +120,12 @@ async function initializeDatabase() {
     console.log('🔄 Conectando a PostgreSQL...');
     await database.connect();
 
-    // Sincronizar tablas - Crear TODAS las tablas automáticamente
-    console.log('🔧 Sincronizando tablas de base de datos...');
-    await database.sequelize.sync({ force: false, alter: false });
-    console.log('✅ Tablas sincronizadas correctamente');
+    // Sincronizar modelos con asociaciones corregidas (sourceKey/targetKey especificados)
+    console.log('🔧 Sincronizando modelos con base de datos...');
+    await database.sync();
 
     isDatabaseConnected = true;
-    console.log('✅ PostgreSQL conectado y tablas sincronizadas');
+    console.log('✅ PostgreSQL conectado y tablas sincronizadas correctamente');
 
     // 🚀 INTEGRACIÓN NEXT-GEN DESACTIVADA TEMPORALMENTE (conflictos de foreign keys en producción)
     console.log('⚠️ Integración Next-Gen desactivada - usando PostgreSQL básico');
