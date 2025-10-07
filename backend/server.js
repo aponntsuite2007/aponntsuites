@@ -15,6 +15,9 @@ require('dotenv').config();
 // Importar configuración de base de datos PostgreSQL
 const database = require('./src/config/database');
 
+// Importar middleware de autenticación
+const { auth } = require('./src/middleware/auth');
+
 // 🚀 IMPORTAR INTEGRACIÓN NEXT-GEN
 const { initialize: initializeIntegration } = require('./src/config/database-integration');
 
@@ -117,8 +120,10 @@ async function initializeDatabase() {
     console.log('🔄 Conectando a PostgreSQL...');
     await database.connect();
 
-    // Sincronización deshabilitada temporalmente por problemas con UNIQUE
-    console.log('⚠️ Sincronización automática de tablas deshabilitada');
+    // Sincronizar tablas (crear si no existen)
+    console.log('🔧 Sincronizando tablas de base de datos...');
+    await database.sequelize.sync({ alter: false });
+    console.log('✅ Tablas sincronizadas correctamente');
 
     isDatabaseConnected = true;
     console.log('✅ PostgreSQL conectado y tablas sincronizadas');
@@ -363,9 +368,9 @@ app.get(`${API_PREFIX}/departments`, async (req, res) => {
         // Fallback: intentar buscar por patrones conocidos solo como último recurso
         if (token.includes('test_admin1')) {
           try {
-            const userQuery = await sequelize.query(
+            const userQuery = await database.sequelize.query(
               'SELECT company_id FROM users WHERE username = ? OR id = ? LIMIT 1',
-              { replacements: ['admin1', 'admin1'], type: sequelize.QueryTypes.SELECT }
+              { replacements: ['admin1', 'admin1'], type: database.sequelize.QueryTypes.SELECT }
             );
             if (userQuery.length > 0) {
               companyId = userQuery[0].company_id;
@@ -448,7 +453,7 @@ app.post(`${API_PREFIX}/departments`, async (req, res) => {
     }
     
     // LÓGICA MULTI-SUCURSAL: Verificar duplicados según si la empresa tiene sucursales
-    const [branches] = await sequelize.query(
+    const [branches] = await database.sequelize.query(
       'SELECT COUNT(*) as total FROM branches WHERE company_id = 1 AND "isActive" = true'
     );
     const hasBranches = branches[0].total > 0;
@@ -780,7 +785,7 @@ app.get(`${API_PREFIX}/companies/:companyId/branches`, async (req, res) => {
     const companyId = req.params.companyId;
 
     // Obtener sucursales activas de la empresa
-    const [branches] = await sequelize.query(`
+    const [branches] = await database.sequelize.query(`
       SELECT
         b.id,
         b.name,
@@ -893,14 +898,14 @@ app.get(`${API_PREFIX}/users`, async (req, res) => {
   }
 });
 
-// Endpoint para crear usuarios
-app.post(`${API_PREFIX}/users`, async (req, res) => {
+// Endpoint para crear usuarios (requiere autenticación)
+app.post(`${API_PREFIX}/users`, auth, async (req, res) => {
   console.log(`👥 === CREAR USUARIO ===`);
   console.log(`👤 Usuario: ${req.headers.authorization}`);
   console.log(`📋 Datos:`, req.body);
   console.log(`🌐 IP: ${req.ip}`);
   console.log(`========================`);
-  
+
   if (!isDatabaseConnected) {
     return res.status(503).json({
       success: false,
@@ -908,11 +913,11 @@ app.post(`${API_PREFIX}/users`, async (req, res) => {
       message: 'PostgreSQL no está conectado'
     });
   }
-  
+
   try {
     const { User } = database;
     const userData = req.body;
-    
+
     // Validaciones básicas
     if (!userData.firstName || !userData.lastName || !userData.email) {
       return res.status(400).json({
@@ -920,22 +925,28 @@ app.post(`${API_PREFIX}/users`, async (req, res) => {
         error: 'Nombre, apellido y email son requeridos'
       });
     }
-    
+
     // Verificar email único
     const existingUser = await User.findOne({
       where: { email: userData.email.trim() }
     });
-    
+
     if (existingUser) {
       return res.status(400).json({
         success: false,
         error: 'Ya existe un usuario con ese email'
       });
     }
-    
+
+    // Generate usuario from email if not provided
+    const usuario = userData.usuario || userData.email.split('@')[0] || userData.employeeId || `user_${Date.now()}`;
+
     // Crear nuevo usuario
     const newUser = await User.create({
+      usuario: usuario,
+      companyId: req.user.company_id,
       employeeId: userData.employeeId || `EMP_${Date.now()}`,
+      dni: userData.dni || `DNI_${Date.now()}`,
       firstName: userData.firstName.trim(),
       lastName: userData.lastName.trim(),
       email: userData.email.trim(),
@@ -955,13 +966,13 @@ app.post(`${API_PREFIX}/users`, async (req, res) => {
       isActive: true
     });
     
-    console.log(`✅ Usuario "${userData.firstName} ${userData.lastName}" creado con ID: ${newUser.id}`);
-    
+    console.log(`✅ Usuario "${userData.firstName} ${userData.lastName}" creado con ID: ${newUser.user_id}`);
+
     res.status(201).json({
       success: true,
       message: 'Usuario creado exitosamente',
       user: {
-        id: newUser.id,
+        id: newUser.user_id,
         employeeId: newUser.employeeId,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
@@ -1026,7 +1037,7 @@ app.put(`${API_PREFIX}/users/:id`, async (req, res) => {
     // Validar email único si se está actualizando
     if (updateData.email && updateData.email.trim() && updateData.email.trim() !== user.email) {
       const emailCheckQuery = `
-        SELECT user_id FROM users WHERE email = ? AND id != ? LIMIT 1
+        SELECT user_id FROM users WHERE email = ? AND user_id != ? LIMIT 1
       `;
 
       const existingUsers = await database.sequelize.query(emailCheckQuery, {
@@ -1047,12 +1058,12 @@ app.put(`${API_PREFIX}/users/:id`, async (req, res) => {
     const replacements = [];
 
     if (updateData.firstName !== undefined && updateData.firstName !== user.firstName) {
-      fieldsToUpdate.push(`first_name = ?`);
+      fieldsToUpdate.push(`"firstName" = ?`);
       replacements.push(updateData.firstName?.trim() || user.firstName);
     }
 
     if (updateData.lastName !== undefined && updateData.lastName !== user.lastName) {
-      fieldsToUpdate.push(`last_name = ?`);
+      fieldsToUpdate.push(`"lastName" = ?`);
       replacements.push(updateData.lastName?.trim() || user.lastName);
     }
 
@@ -1099,7 +1110,7 @@ app.put(`${API_PREFIX}/users/:id`, async (req, res) => {
       const updateQuery = `
         UPDATE users
         SET ${fieldsToUpdate.join(', ')}
-        WHERE id = ?
+        WHERE user_id = ?
       `;
 
       await database.sequelize.query(updateQuery, {
@@ -1159,35 +1170,35 @@ app.get(`${API_PREFIX}/users/:id`, async (req, res) => {
     // Usar consulta SQL raw para evitar problemas con asociaciones
     const userQuery = `
       SELECT
-        u.id,
-        u."employeeId",
-        u.usuario,
-        u."firstName",
-        u."lastName",
-        u.email,
-        u.phone,
-        u.role,
-        u."departmentId",
-        u.company_id,
-        u."hireDate",
-        u."birthDate",
-        u.address,
-        u."emergencyContact",
-        u."emergencyPhone",
-        u.salary,
-        u.position,
-        u."isActive",
-        u.permissions,
-        u.settings,
-        u."createdAt",
-        u."updatedAt",
-        d.name as department_name,
-        d.gps_lat,
-        d.gps_lng,
-        d.coverage_radius
+        u.user_id AS user_id,
+        u."employeeId" AS "employeeId",
+        u.usuario AS usuario,
+        u."firstName" AS "firstName",
+        u."lastName" AS "lastName",
+        u.email AS email,
+        u.phone AS phone,
+        u.role AS role,
+        u."departmentId" AS "departmentId",
+        u.company_id AS company_id,
+        u."hireDate" AS "hireDate",
+        u."birthDate" AS "birthDate",
+        u.address AS address,
+        u."emergencyContact" AS "emergencyContact",
+        u."emergencyPhone" AS "emergencyPhone",
+        u.salary AS salary,
+        u.position AS position,
+        u.is_active AS "isActive",
+        u.permissions AS permissions,
+        u.settings AS settings,
+        u."createdAt" AS "createdAt",
+        u."updatedAt" AS "updatedAt",
+        d.name AS department_name,
+        d.gps_lat AS gps_lat,
+        d.gps_lng AS gps_lng,
+        d.coverage_radius AS coverage_radius
       FROM users u
       LEFT JOIN departments d ON u."departmentId" = d.id::text
-      WHERE u.id = ? AND u."isActive" = true
+      WHERE u.user_id = ? AND u.is_active = true
     `;
 
     const users = await database.sequelize.query(userQuery, {
@@ -1235,7 +1246,10 @@ app.get(`${API_PREFIX}/users/:id`, async (req, res) => {
 
     console.log(`✅ Usuario "${user.firstName} ${user.lastName}" encontrado`);
 
-    res.json(formattedUser);
+    res.json({
+      success: true,
+      user: formattedUser
+    });
 
   } catch (error) {
     console.error('❌ Error obteniendo usuario:', error);
@@ -1514,7 +1528,7 @@ app.get(`${API_PREFIX}/shifts`, (req, res) => {
   ];
   
   const allShifts = [...exampleShifts, ...createdShifts];
-  res.json(allShifts);
+  res.json({ shifts: allShifts });
 });
 
 // Endpoint para crear turnos
@@ -1551,6 +1565,88 @@ app.post(`${API_PREFIX}/shifts`, (req, res) => {
     message: 'Turno creado exitosamente',
     shift: newShift
   });
+});
+
+// Endpoint para obtener turno por ID
+app.get(`${API_PREFIX}/shifts/:id`, (req, res) => {
+  const { id } = req.params;
+
+  // Buscar en turnos de ejemplo
+  const exampleShifts = [
+    {
+      id: 'example-1',
+      name: 'Turno Mañana Estándar',
+      type: 'standard',
+      startTime: '08:00',
+      endTime: '17:00',
+      breakStartTime: '12:00',
+      breakEndTime: '13:00',
+      days: [1,2,3,4,5],
+      isActive: true,
+      employees: 12,
+      hourlyRates: { normal: 1.0, overtime: 1.5, weekend: 1.5, holiday: 2.0 }
+    },
+    {
+      id: 'example-2',
+      name: 'Turno Tarde',
+      type: 'standard',
+      startTime: '14:00',
+      endTime: '22:00',
+      days: [1,2,3,4,5],
+      isActive: true,
+      employees: 8,
+      hourlyRates: { normal: 1.0, overtime: 1.5, weekend: 1.5, holiday: 2.0 }
+    }
+  ];
+
+  const allShifts = [...exampleShifts, ...createdShifts];
+  const shift = allShifts.find(s => s.id === id);
+
+  if (!shift) {
+    return res.status(404).json({ error: 'Turno no encontrado' });
+  }
+
+  res.json({ shift });
+});
+
+// Endpoint para actualizar turno
+app.put(`${API_PREFIX}/shifts/:id`, (req, res) => {
+  const { id } = req.params;
+  const updateData = req.body;
+
+  const shiftIndex = createdShifts.findIndex(s => s.id === id);
+
+  if (shiftIndex === -1) {
+    return res.status(404).json({ error: 'Turno no encontrado' });
+  }
+
+  // Actualizar turno
+  createdShifts[shiftIndex] = {
+    ...createdShifts[shiftIndex],
+    ...updateData,
+    updatedAt: new Date().toISOString()
+  };
+
+  res.json({
+    message: 'Turno actualizado exitosamente',
+    shift: createdShifts[shiftIndex]
+  });
+});
+
+// Endpoint para eliminar turno (soft delete)
+app.delete(`${API_PREFIX}/shifts/:id`, (req, res) => {
+  const { id } = req.params;
+
+  const shiftIndex = createdShifts.findIndex(s => s.id === id);
+
+  if (shiftIndex === -1) {
+    return res.status(404).json({ error: 'Turno no encontrado' });
+  }
+
+  // Soft delete - marcar como inactivo
+  createdShifts[shiftIndex].isActive = false;
+
+  res.json({ message: 'Turno desactivado exitosamente' });
 });
 
 // PÁGINAS WEB - Redirigir a la última versión
