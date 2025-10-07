@@ -14,7 +14,7 @@ if (process.env.DATABASE_URL) {
   console.log('🚂 Conectando a Railway PostgreSQL via DATABASE_URL');
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
-    logging: process.env.DB_LOGGING === 'true' ? console.log : false,
+    logging: console.log, // ACTIVAR LOGGING PARA VER SQL EXACTO
     timezone: '+00:00',
     quoteIdentifiers: true,
     underscored: false,

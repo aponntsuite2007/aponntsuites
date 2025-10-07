@@ -120,12 +120,25 @@ async function initializeDatabase() {
     console.log('🔄 Conectando a PostgreSQL...');
     await database.connect();
 
-    // Sincronizar modelos con asociaciones corregidas (sourceKey/targetKey especificados)
-    console.log('🔧 Sincronizando modelos con base de datos...');
-    await database.sync();
+    // Inicializar schema desde SQL (más confiable que sync())
+    console.log('🔧 Inicializando schema de base de datos...');
+    const initSQL = fs.readFileSync(path.join(__dirname, 'init-database.sql'), 'utf-8');
+    await database.sequelize.query(initSQL);
+    console.log('✅ Schema de base de datos inicializado');
+
+    // Verificar si hay datos, si no, insertar datos de prueba
+    const [companies] = await database.sequelize.query('SELECT COUNT(*) as count FROM companies');
+    if (companies[0].count === '0') {
+      console.log('🌱 Base de datos vacía, insertando datos de prueba...');
+      const seedSQL = fs.readFileSync(path.join(__dirname, 'seed-database.sql'), 'utf-8');
+      await database.sequelize.query(seedSQL);
+      console.log('✅ Datos de prueba insertados correctamente');
+    } else {
+      console.log(`📊 Base de datos ya tiene datos (${companies[0].count} empresas)`);
+    }
 
     isDatabaseConnected = true;
-    console.log('✅ PostgreSQL conectado y tablas sincronizadas correctamente');
+    console.log('✅ PostgreSQL conectado y listo para usar');
 
     // 🚀 INTEGRACIÓN NEXT-GEN DESACTIVADA TEMPORALMENTE (conflictos de foreign keys en producción)
     console.log('⚠️ Integración Next-Gen desactivada - usando PostgreSQL básico');
