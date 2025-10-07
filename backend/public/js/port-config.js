@@ -9,13 +9,14 @@ window.DYNAMIC_CONFIG = {
 // Detectar puerto actual automáticamente
 window.DYNAMIC_CONFIG.port = window.location.port || '3000';
 
-// Detectar entorno de producción (Railway, Heroku, Vercel, etc.)
+// Detectar entorno de producción (Railway, Heroku, Vercel, Render, etc.)
 // Producción: NO usa puertos en URLs públicas
 // Local: SÍ usa puertos
 window.DYNAMIC_CONFIG.isProduction = !window.location.port ||
                                       window.location.hostname.includes('railway.app') ||
                                       window.location.hostname.includes('herokuapp.com') ||
-                                      window.location.hostname.includes('vercel.app');
+                                      window.location.hostname.includes('vercel.app') ||
+                                      window.location.hostname.includes('onrender.com');
 
 // Construir base URL según entorno
 if (window.DYNAMIC_CONFIG.isProduction) {
