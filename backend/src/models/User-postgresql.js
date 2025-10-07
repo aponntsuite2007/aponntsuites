@@ -18,6 +18,12 @@ module.exports = (sequelize) => {
         len: [1, 50]
       }
     },
+    legajo: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: 'legajo',
+      comment: 'Employee file number or badge number'
+    },
     usuario: {
       type: DataTypes.STRING(50),
       allowNull: false,
@@ -75,6 +81,7 @@ module.exports = (sequelize) => {
     departmentId: {
       type: DataTypes.BIGINT,
       allowNull: true,
+      field: 'department_id',
       references: {
         model: 'departments',
         key: 'id'
@@ -95,6 +102,7 @@ module.exports = (sequelize) => {
     defaultBranchId: {
       type: DataTypes.BIGINT,
       allowNull: true,
+      field: 'default_branch_id',
       references: {
         model: 'branches',
         key: 'id'
@@ -104,11 +112,13 @@ module.exports = (sequelize) => {
     hireDate: {
       type: DataTypes.DATEONLY,
       allowNull: true,
+      field: 'hire_date',
       index: true
     },
     birthDate: {
       type: DataTypes.DATEONLY,
-      allowNull: true
+      allowNull: true,
+      field: 'birth_date'
     },
     dni: {
       type: DataTypes.STRING(20),
@@ -129,6 +139,7 @@ module.exports = (sequelize) => {
     emergencyContact: {
       type: DataTypes.JSONB,
       allowNull: true,
+      field: 'emergency_contact',
       comment: 'Emergency contact information in JSON format'
     },
     salary: {
@@ -395,12 +406,14 @@ module.exports = (sequelize) => {
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW
+      defaultValue: DataTypes.NOW,
+      field: 'created_at'
     },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW
+      defaultValue: DataTypes.NOW,
+      field: 'updated_at'
     },
     version: {
       type: DataTypes.INTEGER,
@@ -410,10 +423,10 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'users',
-    underscored: false,
+    // underscored se hereda de la configuración global de Sequelize (database.js)
     timestamps: true,
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt',
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
     version: 'version',
     
     // Database-level optimizations
