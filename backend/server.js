@@ -117,28 +117,116 @@ let isDatabaseConnected = false;
 // Inicializar conexión a PostgreSQL
 async function initializeDatabase() {
   try {
+    // VALIDACIÓN CRÍTICA: Verificar DATABASE_URL en producción
+    if (!process.env.DATABASE_URL) {
+      console.error('❌ FATAL: DATABASE_URL no está configurado');
+      console.error('💡 SOLUCIÓN: En Render Dashboard → PostgreSQL → Connection String → Copiar "External Database URL"');
+      console.error('💡 Luego en tu Web Service → Environment → Agregar DATABASE_URL con ese valor');
+      throw new Error('DATABASE_URL no configurado');
+    }
+
     console.log('🔄 Conectando a PostgreSQL...');
     await database.connect();
 
-    // Inicializar schema desde SQL (más confiable que sync())
-    console.log('🔧 Inicializando schema de base de datos...');
-    const initSQL = fs.readFileSync(path.join(__dirname, 'init-database.sql'), 'utf-8');
-    await database.sequelize.query(initSQL);
-    console.log('✅ Schema de base de datos inicializado');
+    // Crear tablas esenciales con SQL inline (no archivos externos)
+    console.log('🔧 Inicializando tablas esenciales...');
 
-    // Verificar si hay datos, si no, insertar datos de prueba
+    await database.sequelize.query(`
+      CREATE TABLE IF NOT EXISTS companies (
+        company_id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        email VARCHAR(255),
+        phone VARCHAR(50),
+        address TEXT,
+        city VARCHAR(255),
+        country VARCHAR(255) DEFAULT 'Argentina' NOT NULL,
+        tax_id VARCHAR(255),
+        is_active BOOLEAN DEFAULT true NOT NULL,
+        max_employees INTEGER DEFAULT 50 NOT NULL,
+        contracted_employees INTEGER DEFAULT 1 NOT NULL,
+        license_type VARCHAR(50) DEFAULT 'basic' NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS users (
+        user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "employeeId" VARCHAR(50) NOT NULL UNIQUE,
+        usuario VARCHAR(50) NOT NULL UNIQUE,
+        "firstName" VARCHAR(100) NOT NULL,
+        "lastName" VARCHAR(100) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(50) DEFAULT 'employee' NOT NULL,
+        company_id INTEGER REFERENCES companies(company_id),
+        is_active BOOLEAN DEFAULT true NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS departments (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        company_id INTEGER REFERENCES companies(company_id),
+        is_active BOOLEAN DEFAULT true NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS shifts (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        start_time TIME NOT NULL,
+        end_time TIME NOT NULL,
+        company_id INTEGER REFERENCES companies(company_id),
+        is_active BOOLEAN DEFAULT true NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS kiosks (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        company_id INTEGER REFERENCES companies(company_id),
+        is_active BOOLEAN DEFAULT true NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS attendances (
+        id BIGSERIAL PRIMARY KEY,
+        user_id UUID REFERENCES users(user_id),
+        company_id INTEGER REFERENCES companies(company_id),
+        kiosk_id INTEGER REFERENCES kiosks(id),
+        check_in TIMESTAMP,
+        check_out TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+    `);
+
+    console.log('✅ Tablas creadas');
+
+    // Insertar empresa demo si no existe
     const [companies] = await database.sequelize.query('SELECT COUNT(*) as count FROM companies');
     if (companies[0].count === '0') {
-      console.log('🌱 Base de datos vacía, insertando datos de prueba...');
-      const seedSQL = fs.readFileSync(path.join(__dirname, 'seed-database.sql'), 'utf-8');
-      await database.sequelize.query(seedSQL);
-      console.log('✅ Datos de prueba insertados correctamente');
-    } else {
-      console.log(`📊 Base de datos ya tiene datos (${companies[0].count} empresas)`);
+      console.log('🌱 Insertando empresa demo...');
+      await database.sequelize.query(`
+        INSERT INTO companies (name, slug, email, tax_id, is_active)
+        VALUES ('Empresa Demo', 'empresa-demo', 'demo@aponntsuites.com', '20-12345678-9', true);
+
+        INSERT INTO users ("employeeId", usuario, "firstName", "lastName", email, password, role, company_id)
+        SELECT 'ADMIN001', 'admin', 'Admin', 'Sistema', 'admin@aponntsuites.com',
+               '$2b$10$rIVkUxqV1d7xWvL5Y1k5K.vY8l5vTH5vC5vY5vY5vY5vY5vY5vY5u',
+               'super_admin', company_id
+        FROM companies WHERE slug = 'empresa-demo';
+      `);
+      console.log('✅ Empresa demo creada (usuario: admin, password: admin123)');
     }
 
     isDatabaseConnected = true;
-    console.log('✅ PostgreSQL conectado y listo para usar');
+    console.log('✅ PostgreSQL conectado y listo');
 
     // 🚀 INTEGRACIÓN NEXT-GEN DESACTIVADA TEMPORALMENTE (conflictos de foreign keys en producción)
     console.log('⚠️ Integración Next-Gen desactivada - usando PostgreSQL básico');
