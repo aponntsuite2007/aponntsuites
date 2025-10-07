@@ -3540,27 +3540,45 @@
         let currentTab = 'companies';
         let currentEditingCompany = null;
 
-        // ✅ BACKEND AUTO-VERIFICATION v2.2.0 - 23/SEP/2025 15:50:00 (Admin Panel)
+        // ✅ BACKEND AUTO-VERIFICATION v2.3.0 - Railway Compatible
         async function checkBackendStatus() {
-            const BACKEND_PORT = 9999;
-            const BACKEND_URL = `http://localhost:${BACKEND_PORT}`;
+            // Detectar si estamos en producción
+            const isProduction = !window.location.port ||
+                                window.location.hostname.includes('railway.app') ||
+                                window.location.hostname.includes('herokuapp.com') ||
+                                window.location.hostname.includes('vercel.app');
+
+            let BACKEND_URL;
+
+            if (isProduction) {
+                // 🚂 PRODUCCIÓN: Usar URL base sin puerto
+                BACKEND_URL = `${window.location.protocol}//${window.location.hostname}`;
+                console.log('🚂 [BACKEND-CHECK] Verificando backend en producción:', BACKEND_URL);
+            } else {
+                // 💻 LOCAL: Usar localhost con puerto
+                const BACKEND_PORT = window.DYNAMIC_CONFIG?.port || 9999;
+                BACKEND_URL = `http://localhost:${BACKEND_PORT}`;
+                console.log('💻 [BACKEND-CHECK] Verificando backend local en puerto:', BACKEND_PORT);
+            }
 
             try {
-                console.log('🔍 [BACKEND-CHECK] Verificando backend en puerto 9999...');
                 const response = await fetch(`${BACKEND_URL}/api/v1/health`, {
                     method: 'GET',
                     timeout: 3000
                 });
 
                 if (response.ok) {
-                    console.log('✅ [BACKEND-CHECK] Backend ejecutándose correctamente en puerto 9999');
+                    console.log('✅ [BACKEND-CHECK] Backend ejecutándose correctamente');
                     return true;
                 } else {
                     throw new Error(`Backend responde con error: ${response.status}`);
                 }
             } catch (error) {
                 console.warn('❌ [BACKEND-CHECK] Backend no disponible:', error.message);
-                showBackendWarning();
+                if (!isProduction) {
+                    // Solo mostrar warning en desarrollo local
+                    showBackendWarning();
+                }
                 return false;
             }
         }

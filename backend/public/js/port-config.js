@@ -8,11 +8,30 @@ window.DYNAMIC_CONFIG = {
 
 // Detectar puerto actual automáticamente
 window.DYNAMIC_CONFIG.port = window.location.port || '3000';
-window.DYNAMIC_CONFIG.baseUrl = `${window.location.protocol}//${window.location.hostname}:${window.DYNAMIC_CONFIG.port}`;
+
+// Detectar entorno de producción (Railway, Heroku, Vercel, etc.)
+// Producción: NO usa puertos en URLs públicas
+// Local: SÍ usa puertos
+window.DYNAMIC_CONFIG.isProduction = !window.location.port ||
+                                      window.location.hostname.includes('railway.app') ||
+                                      window.location.hostname.includes('herokuapp.com') ||
+                                      window.location.hostname.includes('vercel.app');
+
+// Construir base URL según entorno
+if (window.DYNAMIC_CONFIG.isProduction) {
+    // PRODUCCIÓN: Sin puerto (Railway provee proxy automático)
+    window.DYNAMIC_CONFIG.baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+    console.log('🚂 [DYNAMIC-CONFIG] Modo PRODUCCIÓN detectado');
+} else {
+    // LOCAL: Con puerto
+    window.DYNAMIC_CONFIG.baseUrl = `${window.location.protocol}//${window.location.hostname}:${window.DYNAMIC_CONFIG.port}`;
+    console.log('💻 [DYNAMIC-CONFIG] Modo LOCAL detectado');
+}
+
 window.DYNAMIC_CONFIG.apiUrl = `${window.DYNAMIC_CONFIG.baseUrl}/api/v1`;
 window.DYNAMIC_CONFIG.initialized = true;
 
-console.log('🔧 [DYNAMIC-CONFIG] Puerto detectado automáticamente:', window.DYNAMIC_CONFIG.port);
+console.log('🔧 [DYNAMIC-CONFIG] Puerto detectado:', window.DYNAMIC_CONFIG.port);
 console.log('🌐 [DYNAMIC-CONFIG] Base URL:', window.DYNAMIC_CONFIG.baseUrl);
 console.log('🚀 [DYNAMIC-CONFIG] API URL:', window.DYNAMIC_CONFIG.apiUrl);
 
