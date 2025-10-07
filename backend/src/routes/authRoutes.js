@@ -78,15 +78,16 @@ router.post('/login', async (req, res) => {
     const tokenPayload = {
       id: user.user_id,
       role: user.role,
-      employeeId: user.employeeId
+      employeeId: user.employeeId,
+      company_id: user.company_id // CRITICAL: Multi-tenant isolation
     };
 
-    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET || 'default-secret-change-in-production', {
+      expiresIn: process.env.JWT_EXPIRES_IN || '24h'
     });
 
-    const refreshToken = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN
+    const refreshToken = jwt.sign(tokenPayload, process.env.JWT_SECRET || 'default-secret-change-in-production', {
+      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
     });
 
     res.json({
@@ -103,7 +104,9 @@ router.post('/login', async (req, res) => {
         lastname: user.lastName, // backward compatibility
         email: user.email,
         role: user.role,
-        username: user.usuario
+        username: user.usuario,
+        company_id: user.company_id, // CRITICAL: Multi-tenant isolation
+        companyId: user.company_id // backward compatibility
       }
     });
 
@@ -176,7 +179,8 @@ router.post('/biometric-login', async (req, res) => {
     const tokenPayload = {
       id: user.user_id,
       role: user.role,
-      employeeId: user.employeeId
+      employeeId: user.employeeId,
+      company_id: user.company_id // CRITICAL: Multi-tenant isolation
     };
 
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
@@ -196,7 +200,9 @@ router.post('/biometric-login', async (req, res) => {
         lastname: user.lastName, // backward compatibility
         email: user.email,
         role: user.role,
-        username: user.usuario
+        username: user.usuario,
+        company_id: user.company_id, // CRITICAL: Multi-tenant isolation
+        companyId: user.company_id // backward compatibility
       }
     });
 
@@ -235,7 +241,8 @@ router.post('/refresh', async (req, res) => {
     const tokenPayload = {
       id: user.user_id,
       role: user.role,
-      employeeId: user.employeeId
+      employeeId: user.employeeId,
+      company_id: user.company_id // CRITICAL: Multi-tenant isolation
     };
 
     const newToken = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
