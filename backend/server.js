@@ -18,8 +18,8 @@ const database = require('./src/config/database');
 // Importar middleware de autenticación
 const { auth } = require('./src/middleware/auth');
 
-// 🚀 IMPORTAR INTEGRACIÓN NEXT-GEN
-const { initialize: initializeIntegration } = require('./src/config/database-integration');
+// 🚀 INTEGRACIÓN NEXT-GEN DESACTIVADA (conflictos de foreign keys)
+// const { initialize: initializeIntegration } = require('./src/config/database-integration');
 
 // Crear aplicación Express
 const app = express();
@@ -128,20 +128,22 @@ async function initializeDatabase() {
     isDatabaseConnected = true;
     console.log('✅ PostgreSQL conectado y tablas sincronizadas');
 
-    // 🚀 INICIALIZAR INTEGRACIÓN NEXT-GEN
-    try {
-      console.log('🔄 Inicializando integración Next-Gen...');
-      await initializeIntegration();
-      console.log('✅ Integración Next-Gen inicializada correctamente');
-    } catch (intError) {
-      console.error('⚠️ Error inicializando integración Next-Gen:', intError.message);
-      // Continuar con PostgreSQL básico si falla la integración
-    }
+    // 🚀 INTEGRACIÓN NEXT-GEN DESACTIVADA TEMPORALMENTE (conflictos de foreign keys en producción)
+    console.log('⚠️ Integración Next-Gen desactivada - usando PostgreSQL básico');
+
+    // try {
+    //   console.log('🔄 Inicializando integración Next-Gen...');
+    //   await initializeIntegration();
+    //   console.log('✅ Integración Next-Gen inicializada correctamente');
+    // } catch (intError) {
+    //   console.error('⚠️ Error inicializando integración Next-Gen:', intError.message);
+    //   // Continuar con PostgreSQL básico si falla la integración
+    // }
 
     // Funciones de creación de datos por defecto eliminadas - causaban errores de Sequelize
 
-    // Limpiar usuarios administradores sin empresa
-    await cleanOrphanedAdminUsers();
+    // Limpiar usuarios administradores sin empresa (DESACTIVADO temporalmente)
+    // await cleanOrphanedAdminUsers();
 
   } catch (error) {
     console.error('❌ Error conectando a PostgreSQL:', error.message);
