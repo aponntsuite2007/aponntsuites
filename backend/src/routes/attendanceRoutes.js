@@ -233,8 +233,8 @@ router.get('/', auth, async (req, res) => {
       SELECT
         a.id, a.check_in as "checkInTime", a.check_out as "checkOutTime",
         a.status, a.kiosk_id as "kioskId",
-        u.user_id as "User.id", u.firstName as "User.firstName",
-        u.lastName as "User.lastName", u.employeeId as "User.employeeId",
+        u.user_id as "User.id", u."firstName" as "User.firstName",
+        u."lastName" as "User.lastName", u."employeeId" as "User.employeeId",
         u.email as "User.email"
       FROM attendances a
       INNER JOIN users u ON a.user_id = u.user_id

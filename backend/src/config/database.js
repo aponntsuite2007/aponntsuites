@@ -16,7 +16,7 @@ if (process.env.DATABASE_URL) {
     dialect: 'postgres',
     logging: false, // DESACTIVAR logging en producción
     timezone: '+00:00',
-    quoteIdentifiers: false, // DESACTIVAR para usar nombres exactos
+    quoteIdentifiers: true, // ACTIVAR para preservar camelCase (firstName, lastName)
     underscored: false, // DESACTIVAR - Render tiene nombres mixtos
     pool: {
       max: 10,

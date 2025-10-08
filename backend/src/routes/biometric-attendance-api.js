@@ -658,7 +658,7 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
     // Get all biometric templates for this company
     const templatesQuery = `
       SELECT bt.*, u.user_id as employee_id,
-             CONCAT(u.first_name, ' ', u.last_name) as employee_name
+             CONCAT(u."firstName", ' ', u."lastName") as employee_name
       FROM biometric_templates bt
       JOIN users u ON bt.employee_id::uuid = u.user_id
       WHERE bt.company_id = :companyId AND bt.is_active = true
@@ -1184,8 +1184,8 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
     const employeeData = await sequelize.query(`
       SELECT
         u.user_id,
-        u.first_name as first_name,
-        u.last_name as last_name,
+        u."firstName" as first_name,
+        u."lastName" as last_name,
         u.legajo,
         u.department_id,
         d.name as department_name,
@@ -1430,8 +1430,8 @@ router.get('/detection-logs', auth, async (req, res) => {
         bd.skip_reason,
         bd.detection_timestamp,
         bd.processing_time_ms,
-        u.employee_id as legajo,
-        u.first_name || ' ' || u.last_name as full_name
+        u."employeeId" as legajo,
+        u."firstName" || ' ' || u."lastName" as full_name
       FROM biometric_detections bd
       LEFT JOIN users u ON bd.employee_id::uuid = u.user_id
       ${whereClause}
