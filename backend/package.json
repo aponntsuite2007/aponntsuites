@@ -17,6 +17,7 @@
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
     "db:migrate:status": "sequelize-cli db:migrate:status",
     "db:create-migration": "sequelize-cli migration:generate --name",
+    "db:fix-render": "node execute-fix-render.js",
     "seed": "node database/seeds/seed.js",
     "backup": "node scripts/backup/backup.js"
   },
