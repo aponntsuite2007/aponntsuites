@@ -57,8 +57,8 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS has_flexible_schedule BOOLEAN DEFAULT
 ALTER TABLE users ADD COLUMN IF NOT EXISTS flexible_schedule_notes TEXT;
 
 -- Datos biométricos
-ALTER TABLE users ADD COLUMN IF NOT EXISTS "hasFingerprint" BOOLEAN DEFAULT false;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS "hasFacialData" BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS has_fingerprint BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS has_facial_data BOOLEAN DEFAULT false;
 
 -- Columnas adicionales detectadas en error 500 (defaultBranchId, etc.)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS "defaultBranchId" INTEGER;
@@ -82,7 +82,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS allowed_locations JSONB DEFAULT '[]';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS concurrent_sessions INTEGER DEFAULT 1;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_activity TIMESTAMP;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(255);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS vendorcode VARCHAR(50);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS vendor_code VARCHAR(50);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_number VARCHAR(20);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS accepts_support_packages BOOLEAN DEFAULT false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS accepts_auctions BOOLEAN DEFAULT false;
