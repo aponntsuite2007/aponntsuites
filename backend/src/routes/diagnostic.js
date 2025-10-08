@@ -149,36 +149,36 @@ router.post('/create-test-user', async (req, res) => {
 
     console.log('👤 [CREATE-USER] Creando usuario de prueba...');
 
-    // Verificar si ya existe la empresa
-    const [companies] = await sequelize.query(`
-      SELECT company_id FROM companies WHERE slug = 'test-company' LIMIT 1
+    // Usar la primera empresa disponible o crear una
+    const companies = await sequelize.query(`
+      SELECT company_id FROM companies LIMIT 1
     `, { type: QueryTypes.SELECT });
 
     let companyId;
-    if (!companies) {
-      console.log('📦 Creando empresa de prueba...');
-      const [result] = await sequelize.query(`
+    if (companies.length === 0) {
+      const result = await sequelize.query(`
         INSERT INTO companies (name, slug, email, is_active, max_employees, contracted_employees, license_type, created_at, updated_at)
         VALUES ('Test Company', 'test-company', 'test@test.com', true, 100, 10, 'premium', NOW(), NOW())
         RETURNING company_id
-      `, { type: QueryTypes.SELECT });
-      companyId = result.company_id;
+      `, { type: QueryTypes.INSERT });
+      companyId = result[0][0].company_id;
     } else {
-      companyId = companies.company_id;
+      companyId = companies[0].company_id;
     }
 
     // Verificar si ya existe el usuario
-    const [existingUsers] = await sequelize.query(`
+    const existingUsers = await sequelize.query(`
       SELECT user_id, email FROM users WHERE email = 'admin@test.com' LIMIT 1
     `, { type: QueryTypes.SELECT });
 
-    if (existingUsers) {
+    if (existingUsers.length > 0) {
       return res.json({
         success: true,
         message: 'Usuario ya existe',
         credentials: {
           email: 'admin@test.com',
           password: 'admin123',
+          companyId: companyId,
           note: 'Usuario ya creado anteriormente'
         }
       });
@@ -206,20 +206,16 @@ router.post('/create-test-user', async (req, res) => {
         'admin',
         'Admin',
         'Test',
-        :email,
-        :password,
+        'admin@test.com',
+        $1,
         'admin',
-        :companyId,
+        $2,
         true,
         NOW(),
         NOW()
       )
     `, {
-      replacements: {
-        email: 'admin@test.com',
-        password: hashedPassword,
-        companyId: companyId
-      },
+      bind: [hashedPassword, companyId],
       type: QueryTypes.INSERT
     });
 
@@ -239,7 +235,7 @@ router.post('/create-test-user', async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message,
-      details: error.stack
+      details: process.env.NODE_ENV === 'production' ? undefined : error.stack
     });
   }
 });
