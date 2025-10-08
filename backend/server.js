@@ -128,33 +128,37 @@ async function initializeDatabase() {
     console.log('🔄 Conectando a PostgreSQL...');
     await database.connect();
 
-    // Ejecutar migraciones automáticamente (actualización dinámica de schema)
-    console.log('🔧 Ejecutando migraciones de base de datos...');
+    // MIGRACIONES DESACTIVADAS: render.yaml ejecuta execute-fix-render.js con IF NOT EXISTS
+    // Las migraciones de sequelize-cli no son idempotentes y fallan en redeploys
+    console.log('ℹ️ Migraciones automáticas desactivadas (usar npm run db:fix-render en Render)');
 
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
-    const env = process.env.DATABASE_URL ? 'production' : 'development';
-
-    try {
-      const { stdout, stderr } = await execPromise(`npx sequelize-cli db:migrate --env ${env}`, {
-        cwd: __dirname
-      });
-
-      if (stdout) console.log(stdout);
-      if (stderr && !stderr.includes('No migrations were executed')) console.warn(stderr);
-
-      console.log('✅ Migraciones ejecutadas correctamente');
-    } catch (migrationError) {
-      // Si falla por tabla SequelizeMeta, es la primera vez - está ok
-      if (migrationError.message.includes('SequelizeMeta')) {
-        console.log('⚠️ Primera ejecución - creando tabla de migraciones...');
-      } else {
-        console.error('❌ Error en migraciones:', migrationError.message);
-        throw migrationError;
-      }
-    }
+    // // Ejecutar migraciones automáticamente (actualización dinámica de schema)
+    // console.log('🔧 Ejecutando migraciones de base de datos...');
+    //
+    // const { exec } = require('child_process');
+    // const util = require('util');
+    // const execPromise = util.promisify(exec);
+    //
+    // const env = process.env.DATABASE_URL ? 'production' : 'development';
+    //
+    // try {
+    //   const { stdout, stderr } = await execPromise(`npx sequelize-cli db:migrate --env ${env}`, {
+    //     cwd: __dirname
+    //   });
+    //
+    //   if (stdout) console.log(stdout);
+    //   if (stderr && !stderr.includes('No migrations were executed')) console.warn(stderr);
+    //
+    //   console.log('✅ Migraciones ejecutadas correctamente');
+    // } catch (migrationError) {
+    //   // Si falla por tabla SequelizeMeta, es la primera vez - está ok
+    //   if (migrationError.message.includes('SequelizeMeta')) {
+    //     console.log('⚠️ Primera ejecución - creando tabla de migraciones...');
+    //   } else {
+    //     console.error('❌ Error en migraciones:', migrationError.message);
+    //     throw migrationError;
+    //   }
+    // }
 
     // Verificar datos existentes
     try {
