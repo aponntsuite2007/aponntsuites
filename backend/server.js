@@ -1781,6 +1781,7 @@ const transportTripsRoutes = require('./src/routes/transportTripsRoutes');
 const siacConfiguradorRoutes = require('./src/routes/siac/configurador');
 const siacSesionesRoutes = require('./src/routes/siac/sesiones');
 const siacTaxTemplatesRoutes = require('./src/routes/siac/taxTemplates');
+const debugDbRoutes = require('./src/routes/debug-db');
 const siacClientesRoutes = require('./src/routes/siac/clientes');
 const siacFacturacionRoutes = require('./src/routes/siac/facturacion');
 
@@ -1886,6 +1887,7 @@ console.log('   📋 /api/transport/* - Rutas principales');
 console.log('   🚗 /api/transport/fleet/* - Gestión de flota');
 
 // 💼 CONFIGURAR API DE SIAC ERP
+app.use('/api/debug', debugDbRoutes);
 app.use('/api/siac/configurador', siacConfiguradorRoutes);
 app.use('/api/siac/sesiones', siacSesionesRoutes);
 app.use('/api/siac/tax-templates', siacTaxTemplatesRoutes);
