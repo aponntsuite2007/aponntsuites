@@ -201,6 +201,21 @@ router.get('/', auth, async (req, res) => {
     let sqlWhere = '';
     const replacements = { limit: parseInt(limit), offset };
 
+    // CRÍTICO: Filtrar por empresa del usuario autenticado
+    if (req.user && req.user.company_id) {
+      sqlWhere += ' AND u.company_id = :companyId';
+      replacements.companyId = req.user.company_id;
+    }
+
+    // Filtrar por usuario específico (empleados solo ven sus registros)
+    if (req.user.role === 'employee') {
+      sqlWhere += ' AND a.user_id = :userId';
+      replacements.userId = req.user.user_id;
+    } else if (userId) {
+      sqlWhere += ' AND a.user_id = :userId';
+      replacements.userId = userId;
+    }
+
     if (startDate) {
       sqlWhere += ' AND DATE(a.check_in) >= :startDate';
       replacements.startDate = startDate;
@@ -388,27 +403,33 @@ router.get('/stats/summary', auth, async (req, res) => {
     let sqlWhere = '';
     const replacements = {};
 
+    // CRÍTICO: Filtrar por empresa del usuario autenticado
+    if (req.user && req.user.company_id) {
+      sqlWhere += ' AND a.company_id = :companyId';
+      replacements.companyId = req.user.company_id;
+    }
+
     // Filtros de fecha - por defecto hoy
     const start = startDate || today;
     const end = endDate || today;
 
-    sqlWhere += ' AND DATE(check_in) >= :startDate AND DATE(check_in) <= :endDate';
+    sqlWhere += ' AND DATE(a.check_in) >= :startDate AND DATE(a.check_in) <= :endDate';
     replacements.startDate = start;
     replacements.endDate = end;
 
     if (kioskId) {
-      sqlWhere += ' AND kiosk_id = :kioskId';
+      sqlWhere += ' AND a.kiosk_id = :kioskId';
       replacements.kioskId = kioskId;
     }
 
     const [stats] = await sequelize.query(`
       SELECT
-        COUNT(id) as "totalRecords",
-        COUNT(CASE WHEN status = 'present' THEN 1 END) as "presentCount",
-        COUNT(CASE WHEN status = 'late' THEN 1 END) as "lateCount",
-        COUNT(CASE WHEN status = 'absent' THEN 1 END) as "absentCount",
+        COUNT(a.id) as "totalRecords",
+        COUNT(CASE WHEN a.status = 'present' THEN 1 END) as "presentCount",
+        COUNT(CASE WHEN a.status = 'late' THEN 1 END) as "lateCount",
+        COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as "absentCount",
         0 as "avgWorkingHours"
-      FROM attendances
+      FROM attendances a
       WHERE 1=1 ${sqlWhere}
     `, { replacements, type: QueryTypes.SELECT });
 
