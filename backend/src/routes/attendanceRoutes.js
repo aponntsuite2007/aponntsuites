@@ -24,12 +24,12 @@ router.post('/checkin', auth, async (req, res) => {
     // Verificar si ya existe registro para hoy
     const existingRecord = await Attendance.findOne({
       where: {
-        UserId: req.user.user_id,
+        user_id: req.user.user_id,
         date: today
       }
     });
 
-    if (existingRecord && existingRecord.checkInTime) {
+    if (existingRecord && existingRecord.check_in) {
       return res.status(409).json({
         error: 'Ya existe un registro de entrada para hoy'
       });
@@ -39,22 +39,22 @@ router.post('/checkin', auth, async (req, res) => {
     let attendance;
     if (!existingRecord) {
       attendance = await Attendance.create({
-        UserId: req.user.user_id,
+        user_id: req.user.user_id,
         date: today,
-        checkInTime: now,
+        check_in: now,
         checkInMethod: method,
         checkInLocation: location,
-        BranchId: branchId,
+        kiosk_id: branchId,
         notes,
         isManualEntry: method === 'manual'
       });
     } else {
       // Actualizar registro existente
       attendance = await existingRecord.update({
-        checkInTime: now,
+        check_in: now,
         checkInMethod: method,
         checkInLocation: location,
-        BranchId: branchId || existingRecord.BranchId,
+        kiosk_id: branchId || existingRecord.kiosk_id,
         notes: existingRecord.notes ? `${existingRecord.notes}\n${notes}` : notes,
         isManualEntry: method === 'manual'
       });
@@ -95,7 +95,7 @@ router.post('/checkout', auth, async (req, res) => {
     // Buscar registro de hoy
     const attendance = await Attendance.findOne({
       where: {
-        UserId: req.user.user_id,
+        user_id: req.user.user_id,
         date: today
       }
     });
@@ -106,13 +106,13 @@ router.post('/checkout', auth, async (req, res) => {
       });
     }
 
-    if (!attendance.checkInTime) {
+    if (!attendance.check_in) {
       return res.status(400).json({
         error: 'Debe registrar entrada antes de la salida'
       });
     }
 
-    if (attendance.checkOutTime) {
+    if (attendance.check_out) {
       return res.status(409).json({
         error: 'Ya existe un registro de salida para hoy'
       });
@@ -120,7 +120,7 @@ router.post('/checkout', auth, async (req, res) => {
 
     // Actualizar con datos de salida
     await attendance.update({
-      checkOutTime: now,
+      check_out: now,
       checkOutMethod: method,
       checkOutLocation: location,
       notes: attendance.notes ? `${attendance.notes}\n${notes}` : notes
@@ -171,9 +171,9 @@ router.get('/', auth, async (req, res) => {
 
     // Los empleados solo pueden ver sus propios registros
     if (req.user.role === 'employee') {
-      where.UserId = req.user.user_id;
+      where.user_id = req.user.user_id;
     } else if (userId) {
-      where.UserId = userId;
+      where.user_id = userId;
     }
 
     // Filtros de fecha
@@ -297,7 +297,7 @@ router.get('/:id', auth, async (req, res) => {
     }
 
     // Los empleados solo pueden ver sus propios registros
-    if (req.user.role === 'employee' && attendance.UserId !== req.user.user_id) {
+    if (req.user.role === 'employee' && attendance.user_id !== req.user.user_id) {
       return res.status(403).json({
         error: 'Acceso denegado'
       });
@@ -321,17 +321,17 @@ router.get('/today/status', auth, async (req, res) => {
 
     const attendance = await Attendance.findOne({
       where: {
-        UserId: req.user.user_id,
+        user_id: req.user.user_id,
         date: today
       }
     });
 
     const status = {
-      hasCheckedIn: !!(attendance && attendance.checkInTime),
-      hasCheckedOut: !!(attendance && attendance.checkOutTime),
+      hasCheckedIn: !!(attendance && attendance.check_in),
+      hasCheckedOut: !!(attendance && attendance.check_out),
       attendance: attendance || null,
       canCheckIn: true,
-      canCheckOut: !!(attendance && attendance.checkInTime && !attendance.checkOutTime)
+      canCheckOut: !!(attendance && attendance.check_in && !attendance.check_out)
     };
 
     res.json(status);
@@ -365,8 +365,8 @@ router.put('/:id', auth, supervisorOrAdmin, async (req, res) => {
     }
 
     const updateData = {
-      ...(checkInTime && { checkInTime: new Date(checkInTime) }),
-      ...(checkOutTime && { checkOutTime: new Date(checkOutTime) }),
+      ...(checkInTime && { check_in: new Date(checkInTime) }),
+      ...(checkOutTime && { check_out: new Date(checkOutTime) }),
       ...(notes && { notes }),
       ...(status && { status }),
       ...(manualEntryReason && { manualEntryReason, isManualEntry: true })
@@ -551,10 +551,10 @@ router.get('/stats/chart', auth, async (req, res) => {
  * Función auxiliar para calcular estadísticas de asistencia
  */
 async function calculateAttendanceStats(attendance) {
-  if (!attendance.checkInTime) return;
+  if (!attendance.check_in) return;
 
-  const checkIn = moment(attendance.checkInTime);
-  const checkOut = attendance.checkOutTime ? moment(attendance.checkOutTime) : null;
+  const checkIn = moment(attendance.check_in);
+  const checkOut = attendance.check_out ? moment(attendance.check_out) : null;
 
   // Calcular horas trabajadas
   if (checkOut) {
@@ -617,14 +617,14 @@ router.post('/mobile', async (req, res) => {
       // Verificar si ya existe registro de entrada para hoy
       const existingRecord = await Attendance.findOne({
         where: {
-          UserId: foundUser.id,
+          user_id: foundUser.id,
           date: today
         },
-        attributes: ['id', 'date', 'checkInTime', 'checkOutTime', 'checkInMethod', 'checkOutMethod', 
-                    'workingHours', 'status', 'notes', 'BranchId', 'UserId', 'createdAt', 'updatedAt']
+        attributes: ['id', 'date', 'check_in', 'check_out', 'checkInMethod', 'checkOutMethod',
+                    'workingHours', 'status', 'notes', 'kiosk_id', 'user_id', 'createdAt', 'updatedAt']
       });
 
-      if (existingRecord && existingRecord.checkInTime) {
+      if (existingRecord && existingRecord.check_in) {
         return res.status(409).json({
           error: 'Ya existe un registro de entrada para hoy',
           attendance: existingRecord
@@ -634,18 +634,18 @@ router.post('/mobile', async (req, res) => {
       let attendance;
       if (!existingRecord) {
         attendance = await Attendance.create({
-          UserId: foundUser.id,
+          user_id: foundUser.id,
           date: today,
-          checkInTime: recordTime,
+          check_in: recordTime,
           checkInMethod: method.toLowerCase(),
           notes: `Registrado desde aplicación móvil - ${method}`
         });
       } else {
         attendance = await existingRecord.update({
-          checkInTime: recordTime,
+          check_in: recordTime,
           checkInMethod: method.toLowerCase(),
-          notes: existingRecord.notes ? 
-            `${existingRecord.notes}\nEntrada: ${method} desde móvil` : 
+          notes: existingRecord.notes ?
+            `${existingRecord.notes}\nEntrada: ${method} desde móvil` :
             `Registrado desde aplicación móvil - ${method}`
         });
       }
@@ -663,11 +663,11 @@ router.post('/mobile', async (req, res) => {
       // Buscar registro de entrada de hoy
       const attendance = await Attendance.findOne({
         where: {
-          UserId: foundUser.id,
+          user_id: foundUser.id,
           date: today
         },
-        attributes: ['id', 'date', 'checkInTime', 'checkOutTime', 'checkInMethod', 'checkOutMethod', 
-                    'workingHours', 'status', 'notes', 'BranchId', 'UserId', 'createdAt', 'updatedAt']
+        attributes: ['id', 'date', 'check_in', 'check_out', 'checkInMethod', 'checkOutMethod',
+                    'workingHours', 'status', 'notes', 'kiosk_id', 'user_id', 'createdAt', 'updatedAt']
       });
 
       if (!attendance) {
@@ -676,13 +676,13 @@ router.post('/mobile', async (req, res) => {
         });
       }
 
-      if (!attendance.checkInTime) {
+      if (!attendance.check_in) {
         return res.status(400).json({
           error: 'Debe registrar entrada antes de la salida'
         });
       }
 
-      if (attendance.checkOutTime) {
+      if (attendance.check_out) {
         return res.status(409).json({
           error: 'Ya existe un registro de salida para hoy',
           attendance: attendance
@@ -690,7 +690,7 @@ router.post('/mobile', async (req, res) => {
       }
 
       await attendance.update({
-        checkOutTime: recordTime,
+        check_out: recordTime,
         checkOutMethod: method.toLowerCase(),
         notes: attendance.notes ? 
           `${attendance.notes}\nSalida: ${method} desde móvil` : 
