@@ -78,14 +78,32 @@ router.post('/execute-fix-schema', async (req, res) => {
     const sqlPath = path.join(__dirname, '../../migrations/fix-schema-minimal.sql');
     const sqlScript = fs.readFileSync(sqlPath, 'utf8');
 
-    console.log('📄 [FIX-SCHEMA] Script SQL cargado, ejecutando...');
+    console.log('📄 [FIX-SCHEMA] Script SQL cargado, ejecutando línea por línea...');
 
-    // Ejecutar el script completo
-    await sequelize.query(sqlScript, {
-      type: QueryTypes.RAW
-    });
+    // Separar el script en statements individuales y ejecutar uno por uno
+    const statements = sqlScript
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s.length > 0 && !s.startsWith('--'));
 
-    console.log('✅ [FIX-SCHEMA] Script ejecutado exitosamente');
+    let executed = 0;
+    for (const statement of statements) {
+      if (statement.includes('ALTER TABLE') || statement.includes('DO $$')) {
+        try {
+          await sequelize.query(statement, {
+            type: QueryTypes.RAW
+          });
+          executed++;
+        } catch (err) {
+          // Ignorar errores de columnas que ya existen
+          if (!err.message.includes('already exists')) {
+            console.warn('⚠️ Error ejecutando statement:', err.message);
+          }
+        }
+      }
+    }
+
+    console.log(`✅ [FIX-SCHEMA] ${executed} statements ejecutados exitosamente`);
 
     // Verificar resultados
     const usersColumns = await sequelize.query(`
