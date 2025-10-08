@@ -74,8 +74,8 @@ router.post('/execute-fix-schema', async (req, res) => {
     const fs = require('fs');
     const path = require('path');
 
-    // Leer el script SQL
-    const sqlPath = path.join(__dirname, '../../migrations/fix-schema-complete.sql');
+    // Leer el script SQL minimal (sin transacciones explícitas)
+    const sqlPath = path.join(__dirname, '../../migrations/fix-schema-minimal.sql');
     const sqlScript = fs.readFileSync(sqlPath, 'utf8');
 
     console.log('📄 [FIX-SCHEMA] Script SQL cargado, ejecutando...');
