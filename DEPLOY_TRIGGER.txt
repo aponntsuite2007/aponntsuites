@@ -1,5 +1,5 @@
-Deploy trigger: 2025-10-07 23:30 UTC
+Deploy trigger: 2025-10-07 23:45 UTC
 Latest changes:
-- Fixed PostgreSQL column quoting for camelCase columns
-- Added migrations for attendances and departments
-- All SQL queries updated to match Render schema
+- Fixed attendanceRoutes stats/summary endpoint (raw SQL)
+- Fixed attendanceRoutes stats/chart endpoint (DATE(check_in))
+- All endpoints now use correct PostgreSQL column names
