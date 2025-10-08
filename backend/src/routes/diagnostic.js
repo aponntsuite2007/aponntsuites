@@ -62,4 +62,62 @@ router.get('/migrations-status', async (req, res) => {
   }
 });
 
+/**
+ * ENDPOINT TEMPORAL - Ejecutar script SQL de corrección
+ * USAR SOLO UNA VEZ PARA CORREGIR SCHEMA EN PRODUCCIÓN
+ * ELIMINAR DESPUÉS DE EJECUTAR
+ */
+router.post('/execute-fix-schema', async (req, res) => {
+  try {
+    console.log('🔧 [FIX-SCHEMA] Iniciando corrección de schema...');
+
+    const fs = require('fs');
+    const path = require('path');
+
+    // Leer el script SQL
+    const sqlPath = path.join(__dirname, '../../migrations/fix-schema-complete.sql');
+    const sqlScript = fs.readFileSync(sqlPath, 'utf8');
+
+    console.log('📄 [FIX-SCHEMA] Script SQL cargado, ejecutando...');
+
+    // Ejecutar el script completo
+    await sequelize.query(sqlScript, {
+      type: QueryTypes.RAW
+    });
+
+    console.log('✅ [FIX-SCHEMA] Script ejecutado exitosamente');
+
+    // Verificar resultados
+    const usersColumns = await sequelize.query(`
+      SELECT COUNT(*) as count FROM information_schema.columns WHERE table_name = 'users'
+    `, { type: QueryTypes.SELECT });
+
+    const attendancesColumns = await sequelize.query(`
+      SELECT COUNT(*) as count FROM information_schema.columns WHERE table_name = 'attendances'
+    `, { type: QueryTypes.SELECT });
+
+    const departmentsColumns = await sequelize.query(`
+      SELECT COUNT(*) as count FROM information_schema.columns WHERE table_name = 'departments'
+    `, { type: QueryTypes.SELECT });
+
+    res.json({
+      success: true,
+      message: 'Schema corregido exitosamente',
+      verification: {
+        users_columns: usersColumns[0].count,
+        attendances_columns: attendancesColumns[0].count,
+        departments_columns: departmentsColumns[0].count
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [FIX-SCHEMA] Error ejecutando script:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      details: error.stack
+    });
+  }
+});
+
 module.exports = router;
