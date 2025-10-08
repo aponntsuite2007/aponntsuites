@@ -1,6 +1,9 @@
-Deploy trigger: 2025-10-08 02:00 UTC
-Latest changes:
-- Fixed Mixed Content error (HTTP on HTTPS page)
-- Added Render.com to production detection
-- progressiveAdmin.getApiUrl now uses HTTPS in production
-- All API calls will use correct protocol
+Deploy trigger: 2025-10-08 02:30 UTC
+CRITICAL FIXES:
+- Added company_id filters to ALL attendance SQL queries
+- Added status column migration for attendances table
+- Fixed multi-tenant security (queries were searching ALL companies)
+- Fixed GET /api/v1/attendance endpoint
+- Fixed GET /api/v1/attendance/stats/summary endpoint
+
+These changes fix ALL 500 errors in attendance module.
