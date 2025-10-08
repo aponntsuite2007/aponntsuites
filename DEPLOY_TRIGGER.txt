@@ -1,5 +1,6 @@
-Deploy trigger: 2025-10-07 23:45 UTC
+Deploy trigger: 2025-10-08 02:00 UTC
 Latest changes:
-- Fixed attendanceRoutes stats/summary endpoint (raw SQL)
-- Fixed attendanceRoutes stats/chart endpoint (DATE(check_in))
-- All endpoints now use correct PostgreSQL column names
+- Fixed Mixed Content error (HTTP on HTTPS page)
+- Added Render.com to production detection
+- progressiveAdmin.getApiUrl now uses HTTPS in production
+- All API calls will use correct protocol
