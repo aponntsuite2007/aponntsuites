@@ -382,68 +382,56 @@ router.put('/:id', auth, supervisorOrAdmin, async (req, res) => {
  */
 router.get('/stats/summary', auth, async (req, res) => {
   try {
-    const { startDate, endDate, branchId } = req.query;
+    const { startDate, endDate, kioskId } = req.query;
+    const today = new Date().toISOString().split('T')[0];
 
-    console.log('📊 [ATTENDANCE STATS] Solicitando estadísticas para empresa:', req.user.company_id);
-
-    const where = {};
+    let sqlWhere = '';
+    const replacements = {};
 
     // Filtros de fecha - por defecto hoy
-    if (startDate) {
-      where.date = { [Op.gte]: startDate };
-    } else {
-      // Por defecto, estadísticas de hoy
-      const today = new Date().toISOString().split('T')[0];
-      where.date = { [Op.gte]: today };
+    const start = startDate || today;
+    const end = endDate || today;
+
+    sqlWhere += ' AND DATE(check_in) >= :startDate AND DATE(check_in) <= :endDate';
+    replacements.startDate = start;
+    replacements.endDate = end;
+
+    if (kioskId) {
+      sqlWhere += ' AND kiosk_id = :kioskId';
+      replacements.kioskId = kioskId;
     }
 
-    if (endDate) {
-      where.date = { ...where.date, [Op.lte]: endDate };
-    } else if (!startDate) {
-      // Si no hay startDate, solo hoy
-      const today = new Date().toISOString().split('T')[0];
-      where.date = today;
-    }
+    const [stats] = await sequelize.query(`
+      SELECT
+        COUNT(id) as "totalRecords",
+        COUNT(CASE WHEN status = 'present' THEN 1 END) as "presentCount",
+        COUNT(CASE WHEN status = 'late' THEN 1 END) as "lateCount",
+        COUNT(CASE WHEN status = 'absent' THEN 1 END) as "absentCount",
+        0 as "avgWorkingHours"
+      FROM attendances
+      WHERE 1=1 ${sqlWhere}
+    `, { replacements, type: QueryTypes.SELECT });
 
-    if (branchId) where.BranchId = branchId;
-
-    console.log('📊 [ATTENDANCE STATS] Query WHERE:', where);
-
-    const stats = await Attendance.findAll({
-      where,
-      attributes: [
-        [Attendance.sequelize.fn('COUNT', Attendance.sequelize.col('id')), 'totalRecords'],
-        [Attendance.sequelize.fn('COUNT', Attendance.sequelize.literal('CASE WHEN status = \'present\' THEN 1 END')), 'presentCount'],
-        [Attendance.sequelize.fn('COUNT', Attendance.sequelize.literal('CASE WHEN status = \'late\' THEN 1 END')), 'lateCount'],
-        [Attendance.sequelize.fn('COUNT', Attendance.sequelize.literal('CASE WHEN status = \'absent\' THEN 1 END')), 'absentCount'],
-        [Attendance.sequelize.fn('AVG', Attendance.sequelize.col('workingHours')), 'avgWorkingHours']
-      ],
-      raw: true
-    });
-
-    const result = stats[0] || {
+    const result = stats || {
       totalRecords: 0,
       presentCount: 0,
       lateCount: 0,
       absentCount: 0,
-      avgWorkingHours: 0,
-      totalOvertimeHours: 0
+      avgWorkingHours: 0
     };
-
-    console.log('📊 [ATTENDANCE STATS] Resultado:', result);
 
     res.json({
       success: true,
       data: result,
-      filters: { startDate, endDate, branchId, companyId: req.user.company_id }
+      filters: { startDate: start, endDate: end, kioskId }
     });
 
   } catch (error) {
-    console.error('❌ [ATTENDANCE STATS] Error obteniendo estadísticas:', error);
+    console.error('❌ [ATTENDANCE STATS] Error:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor',
-      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: error.message
     });
   }
 });
@@ -468,17 +456,17 @@ router.get('/stats/chart', auth, async (req, res) => {
     // Query para obtener datos agrupados por fecha y estado
     const chartData = await sequelize.query(`
       SELECT
-        a.date,
+        DATE(a.check_in) as date,
         COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count,
         COUNT(CASE WHEN a.status = 'late' THEN 1 END) as late_count,
         COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_count
       FROM attendances a
-      INNER JOIN users u ON a."UserId" = u.user_id
+      INNER JOIN users u ON a.user_id = u.user_id
       WHERE u.company_id = :companyId
-        AND a.date >= :startDate
-        AND a.date <= :endDate
-      GROUP BY a.date
-      ORDER BY a.date ASC
+        AND DATE(a.check_in) >= :startDate
+        AND DATE(a.check_in) <= :endDate
+      GROUP BY DATE(a.check_in)
+      ORDER BY DATE(a.check_in) ASC
     `, {
       replacements: {
         companyId: req.user.company_id,
