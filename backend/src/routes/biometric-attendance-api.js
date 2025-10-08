@@ -1439,7 +1439,7 @@ router.get('/detection-logs', auth, async (req, res) => {
       LIMIT :limit
     `;
 
-    const [result] = await sequelize.query(query, {
+    const result = await sequelize.query(query, {
       replacements,
       type: QueryTypes.SELECT,
       raw: true
