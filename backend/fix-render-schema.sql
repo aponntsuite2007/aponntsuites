@@ -60,6 +60,42 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS flexible_schedule_notes TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS "hasFingerprint" BOOLEAN DEFAULT false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS "hasFacialData" BOOLEAN DEFAULT false;
 
+-- Columnas adicionales detectadas en error 500 (defaultBranchId, etc.)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS "defaultBranchId" INTEGER;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS "birthDate" DATE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS dni VARCHAR(20);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS cuil VARCHAR(20);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS emergency_contact JSONB;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS salary DECIMAL(12, 2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS work_schedule JSONB;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_secret VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS biometric_last_updated TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS gps_enabled BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS allowed_locations JSONB DEFAULT '[]';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS concurrent_sessions INTEGER DEFAULT 1;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_activity TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS vendorcode VARCHAR(50);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_number VARCHAR(20);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS accepts_support_packages BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS accepts_auctions BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS accepts_email_notifications BOOLEAN DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS accepts_whatsapp_notifications BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS accepts_sms_notifications BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS communication_consent_date TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS global_rating DECIMAL(3, 2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS cbu VARCHAR(50);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bank_name VARCHAR(100);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1;
+
 -- =====================================================
 -- TABLA: departments - Agregar columnas faltantes
 -- =====================================================
