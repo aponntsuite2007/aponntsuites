@@ -138,4 +138,110 @@ router.post('/execute-fix-schema', async (req, res) => {
   }
 });
 
+/**
+ * ENDPOINT TEMPORAL - Crear usuario de prueba
+ * USAR SOLO PARA TESTING
+ * ELIMINAR DESPUÉS DE USAR
+ */
+router.post('/create-test-user', async (req, res) => {
+  try {
+    const bcrypt = require('bcryptjs');
+
+    console.log('👤 [CREATE-USER] Creando usuario de prueba...');
+
+    // Verificar si ya existe la empresa
+    const [companies] = await sequelize.query(`
+      SELECT company_id FROM companies WHERE slug = 'test-company' LIMIT 1
+    `, { type: QueryTypes.SELECT });
+
+    let companyId;
+    if (!companies) {
+      console.log('📦 Creando empresa de prueba...');
+      const [result] = await sequelize.query(`
+        INSERT INTO companies (name, slug, email, is_active, max_employees, contracted_employees, license_type, created_at, updated_at)
+        VALUES ('Test Company', 'test-company', 'test@test.com', true, 100, 10, 'premium', NOW(), NOW())
+        RETURNING company_id
+      `, { type: QueryTypes.SELECT });
+      companyId = result.company_id;
+    } else {
+      companyId = companies.company_id;
+    }
+
+    // Verificar si ya existe el usuario
+    const [existingUsers] = await sequelize.query(`
+      SELECT user_id, email FROM users WHERE email = 'admin@test.com' LIMIT 1
+    `, { type: QueryTypes.SELECT });
+
+    if (existingUsers) {
+      return res.json({
+        success: true,
+        message: 'Usuario ya existe',
+        credentials: {
+          email: 'admin@test.com',
+          password: 'admin123',
+          note: 'Usuario ya creado anteriormente'
+        }
+      });
+    }
+
+    // Crear usuario admin
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+
+    await sequelize.query(`
+      INSERT INTO users (
+        "employeeId",
+        usuario,
+        "firstName",
+        "lastName",
+        email,
+        password,
+        role,
+        company_id,
+        is_active,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        'ADMIN001',
+        'admin',
+        'Admin',
+        'Test',
+        :email,
+        :password,
+        'admin',
+        :companyId,
+        true,
+        NOW(),
+        NOW()
+      )
+    `, {
+      replacements: {
+        email: 'admin@test.com',
+        password: hashedPassword,
+        companyId: companyId
+      },
+      type: QueryTypes.INSERT
+    });
+
+    res.json({
+      success: true,
+      message: 'Usuario creado exitosamente',
+      credentials: {
+        email: 'admin@test.com',
+        password: 'admin123',
+        companyId: companyId,
+        role: 'admin'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [CREATE-USER] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      details: error.stack
+    });
+  }
+});
+
 module.exports = router;
