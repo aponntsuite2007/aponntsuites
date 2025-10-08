@@ -2,7 +2,7 @@ services:
   - type: web
     name: aponntsuites
     env: node
-    buildCommand: cd backend && npm install
+    buildCommand: cd backend && npm install && npm run db:migrate
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
