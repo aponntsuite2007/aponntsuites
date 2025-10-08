@@ -3,99 +3,81 @@ const { Sequelize } = require('sequelize');
 /**
  * PostgreSQL Database Configuration
  * Optimized for high concurrency (100k-200k concurrent users)
+ *
+ * Soporta dos modos de conexión:
+ * 1. DATABASE_URL (para Render/producción) - URL completa
+ * 2. Variables individuales (para desarrollo local)
  */
 
-const sequelize = new Sequelize(
-  process.env.POSTGRES_DB || process.env.DB_NAME || 'attendance_system',
-  process.env.POSTGRES_USER || process.env.DB_USER || 'postgres',
-  process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD || 'Aedr15150302',
-  {
-    host: process.env.POSTGRES_HOST || process.env.DB_HOST || 'localhost',
-    port: process.env.POSTGRES_PORT || process.env.DB_PORT || 5432,
-    dialect: 'postgres',
-    logging: process.env.DB_LOGGING === 'true' ? console.log : false,
-    timezone: '+00:00',
-    
-    // Optimized connection pool for high concurrency
-    pool: {
-      max: 50,        // Maximum connections (increased for high load)
-      min: 10,        // Minimum connections (keep warm connections)
-      acquire: 60000, // Maximum time to wait for connection
-      idle: 30000,    // Maximum time connection can be idle
-      evict: 10000    // Check for idle connections every 10s
-    },
-    
-    // PostgreSQL specific optimizations
-    dialectOptions: {
-      timezone: '+00:00',
-      useUTC: false,
-      dateStrings: true,
-      typeCast: true,
-      connectTimeout: 60000,
-      acquireTimeout: 60000,
-      timeout: 60000,
-      // Enable prepared statements for better performance
-      statement_timeout: 30000,
-      query_timeout: 30000
-    },
-    
-    // Query optimizations
-    define: {
-      underscored: true,
-      timestamps: true,
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
-      // Use BIGINT for IDs to handle large datasets
-      defaultScope: {
-        raw: false
+// Configuración de conexión
+const connectionConfig = process.env.DATABASE_URL
+  ? {
+      // Modo producción: usa DATABASE_URL de Render
+      connectionString: process.env.DATABASE_URL,
+      dialect: 'postgres',
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        },
+        timezone: '+00:00',
+        useUTC: false,
+        dateStrings: true,
+        typeCast: true,
+        connectTimeout: 60000,
+        acquireTimeout: 60000,
+        timeout: 60000,
+        statement_timeout: 30000,
+        query_timeout: 30000
+      },
+      logging: false,
+      pool: {
+        max: 50,
+        min: 10,
+        acquire: 60000,
+        idle: 30000,
+        evict: 10000
       }
-    },
-    
-    // Benchmarking and monitoring
-    benchmark: process.env.NODE_ENV === 'development',
-    
-    // Query retry configuration
-    retry: {
-      max: 3,
-      match: [
-        /ConnectionError/,
-        /ConnectionRefusedError/,
-        /ConnectionTimedOutError/,
-        /TimeoutError/
-      ]
-    },
-    
-    // Additional PostgreSQL optimizations
-    logQueryParameters: process.env.NODE_ENV === 'development',
-    transactionType: 'IMMEDIATE',
-    isolationLevel: 'READ_COMMITTED',
-    
-    // Custom hooks for optimization
-    hooks: {
-      beforeConnect: async (config) => {
-        console.log('🔄 Connecting to PostgreSQL with optimized settings...');
-      }
-      // afterConnect hook disabled to prevent connection errors
-      // afterConnect: async (connection, config) => {
-      //   // Set session-level optimizations
-      //   await connection.query(`
-      //     SET work_mem = '256MB';
-      //     SET maintenance_work_mem = '1GB';
-      //     SET effective_cache_size = '4GB';
-      //     SET random_page_cost = 1.1;
-      //     SET cpu_tuple_cost = 0.01;
-      //     SET cpu_index_tuple_cost = 0.005;
-      //     SET cpu_operator_cost = 0.0025;
-      //     SET default_statistics_target = 1000;
-      //     SET checkpoint_completion_target = 0.9;
-      //     SET wal_buffers = '64MB';
-      //     SET shared_preload_libraries = 'pg_stat_statements';
-      //   `);
-      //   console.log('✅ PostgreSQL session optimized for high concurrency');
-      // }
     }
-  }
-);
+  : {
+      // Modo desarrollo: usa variables individuales
+      database: process.env.POSTGRES_DB || process.env.DB_NAME || 'attendance_system',
+      username: process.env.POSTGRES_USER || process.env.DB_USER || 'postgres',
+      password: process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD || 'Aedr15150302',
+      host: process.env.POSTGRES_HOST || process.env.DB_HOST || 'localhost',
+      port: process.env.POSTGRES_PORT || process.env.DB_PORT || 5432,
+      dialect: 'postgres',
+      logging: process.env.DB_LOGGING === 'true' ? console.log : false,
+      timezone: '+00:00',
+      dialectOptions: {
+        timezone: '+00:00',
+        useUTC: false,
+        dateStrings: true,
+        typeCast: true,
+        connectTimeout: 60000,
+        acquireTimeout: 60000,
+        timeout: 60000,
+        statement_timeout: 30000,
+        query_timeout: 30000
+      },
+      pool: {
+        max: 50,
+        min: 10,
+        acquire: 60000,
+        idle: 30000,
+        evict: 10000
+      }
+    };
+
+// Crear instancia de Sequelize
+const sequelize = new Sequelize(connectionConfig);
+
+// Log de configuración
+if (process.env.DATABASE_URL) {
+  console.log('🚀 PostgreSQL: Usando DATABASE_URL (modo producción/Render)');
+} else {
+  console.log('🚀 PostgreSQL: Usando variables individuales (modo desarrollo)');
+}
 
 console.log('🚀 PostgreSQL Configuration - Optimized for High Concurrency (100k-200k users)');
 
