@@ -8,20 +8,35 @@ module.exports = (sequelize) => {
       autoIncrement: true
     },
     user_id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.UUID,
       allowNull: false,
+      field: 'user_id',
       references: {
         model: 'users',
-        key: 'id'
+        key: 'user_id'
       },
       // Index for fast user lookups
-      index: true
+      index: true,
+      comment: 'UUID reference to users table'
+    },
+    company_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'company_id',
+      references: {
+        model: 'companies',
+        key: 'company_id'
+      },
+      index: true,
+      comment: 'Multi-tenant: company this attendance belongs to'
     },
     employee_id: {
       type: DataTypes.STRING(50),
-      allowNull: false,
+      allowNull: true,
+      field: 'employee_id',
       // Denormalized field for faster queries
-      index: true
+      index: true,
+      comment: 'Denormalized employee ID for faster queries'
     },
     branch_id: {
       type: DataTypes.BIGINT,
@@ -32,16 +47,20 @@ module.exports = (sequelize) => {
       },
       index: true
     },
-    clock_in: {
+    check_in: {
       type: DataTypes.DATE,
       allowNull: false,
+      field: 'check_in',
       // Partitioning key for time-based partitioning
-      index: true
+      index: true,
+      comment: 'Check-in timestamp (real column name in production)'
     },
-    clock_out: {
+    check_out: {
       type: DataTypes.DATE,
       allowNull: true,
-      index: true
+      field: 'check_out',
+      index: true,
+      comment: 'Check-out timestamp (real column name in production)'
     },
     break_out: {
       type: DataTypes.DATE,
@@ -70,16 +89,32 @@ module.exports = (sequelize) => {
       index: true,
       comment: 'Origen del registro de asistencia'
     },
+    checkInLocation: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      field: 'checkInLocation',
+      comment: 'Check-in location description or coordinates (real column name in production)'
+    },
+    checkOutLocation: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      field: 'checkOutLocation',
+      comment: 'Check-out location description or coordinates'
+    },
     clock_in_location: {
       type: DataTypes.GEOMETRY('POINT'),
       allowNull: true,
+      field: 'clock_in_location',
       // Spatial index for location-based queries
-      spatialIndex: true
+      spatialIndex: true,
+      comment: 'GPS coordinates for check-in (PostGIS)'
     },
     clock_out_location: {
       type: DataTypes.GEOMETRY('POINT'),
       allowNull: true,
-      spatialIndex: true
+      field: 'clock_out_location',
+      spatialIndex: true,
+      comment: 'GPS coordinates for check-out (PostGIS)'
     },
     clock_in_ip: {
       type: DataTypes.INET,
@@ -89,28 +124,32 @@ module.exports = (sequelize) => {
       type: DataTypes.INET,
       allowNull: true
     },
-    clock_in_method: {
-      type: DataTypes.ENUM('fingerprint', 'facial', 'manual', 'gps', 'app', 'web'),
-      allowNull: false,
-      defaultValue: 'manual',
-      index: true
-    },
-    clock_out_method: {
-      type: DataTypes.ENUM('fingerprint', 'facial', 'manual', 'gps', 'app', 'web'),
+    checkInMethod: {
+      type: DataTypes.STRING(50),
       allowNull: true,
-      index: true
+      field: 'checkInMethod',
+      index: true,
+      comment: 'Method used for check-in (fingerprint, facial, manual, etc.)'
+    },
+    checkOutMethod: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: 'checkOutMethod',
+      index: true,
+      comment: 'Method used for check-out'
     },
     status: {
-      type: DataTypes.ENUM('present', 'absent', 'late', 'early_departure', 'overtime'),
-      allowNull: false,
-      defaultValue: 'present',
-      index: true
-    },
-    work_hours: {
-      type: DataTypes.DECIMAL(5, 2),
+      type: DataTypes.STRING(50),
       allowNull: true,
-      // Computed field for reporting
-      comment: 'Calculated work hours'
+      field: 'status',
+      index: true,
+      comment: 'Attendance status: present, absent, late, etc.'
+    },
+    workingHours: {
+      type: DataTypes.NUMERIC,
+      allowNull: true,
+      field: 'workingHours',
+      comment: 'Calculated work hours (real column name in production)'
     },
     break_time: {
       type: DataTypes.INTEGER,
@@ -160,11 +199,20 @@ module.exports = (sequelize) => {
       comment: 'Queue number for processing order'
     },
     // Denormalized fields for faster reporting
+    date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      field: 'date',
+      index: true,
+      comment: 'Date of attendance (real column name in production)'
+    },
     work_date: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
-      // Computed from clock_in date
-      index: true
+      allowNull: true,
+      field: 'work_date',
+      // Computed from check_in date
+      index: true,
+      comment: 'Work date calculated from check_in'
     },
     department_id: {
       type: DataTypes.BIGINT,
