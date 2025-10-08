@@ -1018,7 +1018,8 @@
                 const isProduction = !window.location.port ||
                                     window.location.hostname.includes('railway.app') ||
                                     window.location.hostname.includes('herokuapp.com') ||
-                                    window.location.hostname.includes('vercel.app');
+                                    window.location.hostname.includes('vercel.app') ||
+                                    window.location.hostname.includes('onrender.com');
 
                 if (isProduction) {
                     // 🚂 PRODUCCIÓN: Usar la URL actual sin puerto
@@ -4281,11 +4282,12 @@
         const currentPort = window.location.port || '9999';
         const currentProtocol = window.location.protocol;
 
-        // Detectar si estamos en producción (Railway, Heroku, Vercel, etc.)
+        // Detectar si estamos en producción (Railway, Heroku, Vercel, Render, etc.)
         const isProduction = !window.location.port ||
                             currentHost.includes('railway.app') ||
                             currentHost.includes('herokuapp.com') ||
-                            currentHost.includes('vercel.app');
+                            currentHost.includes('vercel.app') ||
+                            currentHost.includes('onrender.com');
 
         let endpoints = [];
 
@@ -5405,16 +5407,31 @@
         // Inicializar objeto progressiveAdmin para los módulos
         window.progressiveAdmin = {
             getApiUrl: function(endpoint) {
-                // Usar la configuración guardada si existe
-                if (savedNetworkConfig.serverHost && savedNetworkConfig.serverPort) {
-                    const baseUrl = `http://${savedNetworkConfig.serverHost}:${savedNetworkConfig.serverPort}`;
+                const protocol = window.location.protocol;
+
+                // Detectar si estamos en producción
+                const isProduction = !window.location.port ||
+                                    window.location.hostname.includes('railway.app') ||
+                                    window.location.hostname.includes('herokuapp.com') ||
+                                    window.location.hostname.includes('vercel.app') ||
+                                    window.location.hostname.includes('onrender.com');
+
+                if (isProduction) {
+                    // PRODUCCIÓN: usar URL sin puerto
+                    const baseUrl = `${protocol}//${window.location.hostname}`;
                     return `${baseUrl}${endpoint}`;
                 }
-                
+
+                // LOCAL: Usar la configuración guardada si existe
+                if (savedNetworkConfig.serverHost && savedNetworkConfig.serverPort) {
+                    const baseUrl = `${protocol}//${savedNetworkConfig.serverHost}:${savedNetworkConfig.serverPort}`;
+                    return `${baseUrl}${endpoint}`;
+                }
+
                 // Si no hay configuración, usar el puerto actual de la página
-                const currentPort = window.location.port || '80';
+                const currentPort = window.location.port || '9999';
                 const currentHost = window.location.hostname || 'localhost';
-                const baseUrl = `http://${currentHost}:${currentPort}`;
+                const baseUrl = `${protocol}//${currentHost}:${currentPort}`;
                 return `${baseUrl}${endpoint}`;
             },
             getServerConfig: function() {
