@@ -22,8 +22,7 @@ const sequelize = new Sequelize(
       min: 10,        // Minimum connections (keep warm connections)
       acquire: 60000, // Maximum time to wait for connection
       idle: 30000,    // Maximum time connection can be idle
-      evict: 10000,   // Check for idle connections every 10s
-      validate: true  // Validate connections before use
+      evict: 10000    // Check for idle connections every 10s
     },
     
     // PostgreSQL specific optimizations

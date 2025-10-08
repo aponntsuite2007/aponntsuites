@@ -1,29 +1,46 @@
-const { sequelize } = require('./src/config/database');
+const { Sequelize } = require('sequelize');
+const bcrypt = require('bcryptjs');
+
+const sequelize = new Sequelize('attendance_system', 'postgres', 'Aedr15150302', {
+  host: 'localhost',
+  port: 5432,
+  dialect: 'postgres',
+  logging: false
+});
 
 async function createTestUser() {
   try {
-    const passwordHash = '$2a$10$Jgx83uFjuDHU9dq6gz3uBObkFLaSTqsDOajx6av2YQ.GDAsdDySQK'; // test123
+    console.log('🔐 Actualizando contraseña del usuario admin...\n');
 
-    // Primero eliminar usuarios de prueba existentes
-    await sequelize.query(`
-      DELETE FROM users WHERE usuario = 'testuser' OR email = 'test@example.com' OR dni = '12345678';
-    `);
+    // Hash de la password "123456"
+    const hashedPassword = await bcrypt.hash('123456', 10);
 
-    // Insertar usuario de prueba nuevo
-    await sequelize.query(`
-      INSERT INTO users (user_id, "employeeId", usuario, email, password, "firstName", "lastName", dni, role, company_id, is_active, "createdAt", "updatedAt")
-      VALUES (gen_random_uuid(), 'TEST001', 'testuser', 'test@example.com', '${passwordHash}', 'Test', 'User', '12345678', 'admin', 11, true, NOW(), NOW());
-    `);
+    // Actualizar el usuario admin
+    const [results] = await sequelize.query(`
+      UPDATE users
+      SET password = :password, is_active = true
+      WHERE usuario = 'admin' AND company_id = 11
+      RETURNING user_id, usuario, email
+    `, {
+      replacements: { password: hashedPassword }
+    });
 
-    console.log('✅ Usuario de prueba creado exitosamente:');
-    console.log('   Usuario: testuser');
-    console.log('   Password: test123');
-    console.log('   Company ID: 11');
-    console.log('   Role: admin');
+    if (results.length > 0) {
+      console.log('✅ Contraseña actualizada exitosamente!');
+      console.log(`Usuario: ${results[0].usuario}`);
+      console.log(`Email: ${results[0].email}`);
+      console.log(`Password: 123456`);
+      console.log(`\n📝 Credenciales de prueba:`);
+      console.log(`   identifier: "admin"`);
+      console.log(`   password: "123456"`);
+      console.log(`   companyId: 11`);
+    } else {
+      console.log('❌ No se encontró el usuario admin');
+    }
 
-    process.exit(0);
+    await sequelize.close();
   } catch (error) {
-    console.error('❌ Error creando usuario:', error);
+    console.error('❌ Error:', error.message);
     process.exit(1);
   }
 }

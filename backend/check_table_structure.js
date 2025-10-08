@@ -1,36 +1,47 @@
-#!/usr/bin/env node
-/**
- * Script para verificar estructura de tablas
- */
+const { Sequelize } = require('sequelize');
+const sequelize = new Sequelize('attendance_system', 'postgres', 'Aedr15150302', {
+  host: 'localhost',
+  port: 5432,
+  dialect: 'postgres',
+  logging: false
+});
 
-const { sequelize } = require("./src/config/database");
+async function checkTables() {
+  try {
+    // Check departments
+    const [depts] = await sequelize.query(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'departments' 
+      ORDER BY ordinal_position;
+    `);
+    console.log('📋 Columnas de departments:');
+    depts.forEach(col => console.log(`  - ${col.column_name}: ${col.data_type}`));
 
-async function checkTableStructure() {
-    try {
-        console.log("🔍 [CHECK] Verificando estructura de tablas...");
+    // Check kiosks
+    const [kiosks] = await sequelize.query(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'kiosks' 
+      ORDER BY ordinal_position;
+    `);
+    console.log('\n📋 Columnas de kiosks:');
+    kiosks.forEach(col => console.log(`  - ${col.column_name}: ${col.data_type}`));
 
-        const companyModulesColumns = await sequelize.query(
-            `SELECT column_name, data_type, is_nullable
-             FROM information_schema.columns
-             WHERE table_name = "company_modules"
-             ORDER BY ordinal_position`,
-            { type: sequelize.QueryTypes.SELECT }
-        );
+    // Check attendances
+    const [att] = await sequelize.query(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'attendances' 
+      ORDER BY ordinal_position LIMIT 10;
+    `);
+    console.log('\n📋 Columnas de attendances (primeras 10):');
+    att.forEach(col => console.log(`  - ${col.column_name}: ${col.data_type}`));
 
-        console.log("\n📋 [company_modules] Columnas:");
-        companyModulesColumns.forEach(col => {
-            console.log(`  - ${col.column_name} (${col.data_type})`);
-        });
-
-    } catch (error) {
-        console.error("❌ [CHECK] Error:", error.message);
-        throw error;
-    }
+    await sequelize.close();
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
 }
 
-checkTableStructure()
-    .then(() => process.exit(0))
-    .catch(error => {
-        console.error("💥 [CHECK] Error:", error.message);
-        process.exit(1);
-    });
+checkTables();

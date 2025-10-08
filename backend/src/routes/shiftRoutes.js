@@ -20,7 +20,7 @@ router.get('/', auth, async (req, res) => {
       order: [['name', 'ASC']]
     });
 
-    res.json(shifts);
+    res.json({ shifts });
 
   } catch (error) {
     console.error('Error obteniendo turnos:', error);
@@ -47,7 +47,7 @@ router.get('/:id', auth, async (req, res) => {
       });
     }
 
-    res.json(shift);
+    res.json({ shift });
 
   } catch (error) {
     console.error('Error obteniendo turno:', error);

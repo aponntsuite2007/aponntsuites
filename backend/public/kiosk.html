@@ -166,6 +166,18 @@
             100% { transform: translate(-50%, -50%) scale(1); }
         }
 
+        .warning-match {
+            border-color: #FF9800 !important;
+            box-shadow: 0 0 30px rgba(255, 152, 0, 0.8);
+            animation: warning-pulse 0.5s ease-out 3;
+        }
+
+        @keyframes warning-pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
         .status-panel {
             background: rgba(0, 0, 0, 0.4);
             padding: 25px;
@@ -314,13 +326,255 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
+
+        /* Estilos para modal de configuración de kiosko */
+        .config-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .config-modal.active {
+            display: flex;
+        }
+
+        .config-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            margin: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .config-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .config-header h2 {
+            margin-bottom: 10px;
+        }
+
+        .current-kiosk-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .kiosk-list {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .kiosk-item {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .kiosk-item:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateX(5px);
+        }
+
+        .kiosk-item.selected {
+            background: #4CAF50;
+            color: white;
+            border: 2px solid #FFD700;
+        }
+
+        .kiosk-item-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .kiosk-item-location {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .config-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .config-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .config-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .config-btn.cancel {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
+
+        .kiosk-info-badge {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid #FFD700;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        /* Estilos para modal de registro de visitantes */
+        .visitor-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .visitor-modal.active {
+            display: flex;
+        }
+
+        .visitor-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            margin: 20px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .visitor-form-group {
+            margin-bottom: 20px;
+        }
+
+        .visitor-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .visitor-form-group input,
+        .visitor-form-group select,
+        .visitor-form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .visitor-form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .visitor-photo-capture {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .visitor-photo-preview {
+            width: 200px;
+            height: 200px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .visitor-photo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+
+        .visitor-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .visitor-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .visitor-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .visitor-btn.secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+        }
+
+        .visitor-btn.cancel {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <!-- MediaPipe Face Detection (Google) - 60fps, 468 landmarks -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
 </head>
 <body>
     <div class="header">
         <div class="logo">
             <span class="letter-a">A</span>ponnt Kiosco Automático
+        </div>
+        <div id="kioskInfoHeader" style="font-size: 0.9rem; margin-top: 8px; opacity: 0.9;">
+            📍 <span id="currentKioskName">No configurado</span>
         </div>
     </div>
 
@@ -351,9 +605,12 @@
 
         <!-- Controles (solo debug) -->
         <div class="controls">
+            <button class="control-btn" onclick="openVisitorRegistration()">📝 Visitante</button>
+            <button class="control-btn" onclick="openKioskConfig()">⚙️ Configurar</button>
             <button class="control-btn" onclick="toggleDetection()">⏸️ Pausar</button>
             <button class="control-btn" onclick="testConnection()">🔧 Test</button>
             <button class="control-btn" onclick="showLogs()">📋 Logs</button>
+            <button class="control-btn" onclick="exitApp()" style="background: rgba(255, 0, 0, 0.3);">🚪 Salir</button>
         </div>
     </div>
 
@@ -384,13 +641,247 @@
         </div>
     </div>
 
+    <!-- Modal de configuración de kiosko -->
+    <div id="configModal" class="config-modal">
+        <div class="config-content">
+            <div class="config-header">
+                <h2>⚙️ Configuración de Kiosko</h2>
+                <p style="opacity: 0.9; font-size: 0.95rem;">Seleccione qué kiosco físico representa este dispositivo</p>
+            </div>
+
+            <!-- Configuración de IP del Servidor -->
+            <div class="current-kiosk-info" style="background: rgba(100, 181, 246, 0.1);">
+                <div style="font-weight: bold; margin-bottom: 8px;">🌐 Dirección del Servidor:</div>
+                <input type="text" id="serverUrlInput"
+                       placeholder="http://192.168.1.100:9999"
+                       style="width: 100%; padding: 10px; border-radius: 8px; border: none; margin-bottom: 10px; box-sizing: border-box; font-size: 0.9rem;">
+                <button class="config-btn" onclick="testAndSaveServerUrl()" style="padding: 8px 15px; font-size: 0.85rem;">
+                    🔧 Probar Conexión
+                </button>
+                <div id="serverTestResult" style="margin-top: 8px; font-size: 0.85rem;"></div>
+            </div>
+
+            <!-- Información del kiosko actual -->
+            <div class="current-kiosk-info">
+                <div style="font-weight: bold; margin-bottom: 8px;">📍 Kiosko Actual:</div>
+                <div id="currentConfigKioskName" style="font-size: 1.2rem; color: #FFD700;">
+                    No configurado
+                </div>
+                <div id="currentConfigKioskLocation" style="font-size: 0.9rem; opacity: 0.8; margin-top: 5px;">
+                    Seleccione un kiosco de la lista
+                </div>
+            </div>
+
+            <!-- Lista de kioscos disponibles -->
+            <div class="kiosk-list">
+                <div style="font-weight: bold; margin-bottom: 10px; text-align: center;">
+                    Kioscos Disponibles:
+                </div>
+                <div id="kioskListContainer">
+                    <div style="text-align: center; padding: 20px; opacity: 0.7;">
+                        ⏳ Cargando kioscos...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="config-actions">
+                <button class="config-btn" onclick="saveKioskConfig()">💾 Guardar</button>
+                <button class="config-btn cancel" onclick="closeKioskConfig()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de registro de visitantes -->
+    <div id="visitorModal" class="visitor-modal">
+        <div class="visitor-content">
+            <div class="config-header">
+                <h2>📝 Registro de Visitante</h2>
+                <p style="opacity: 0.9; font-size: 0.95rem;">Complete la información del visitante</p>
+            </div>
+
+            <form id="visitorForm">
+                <!-- Información personal -->
+                <div class="visitor-form-group">
+                    <label for="visitorFullName">Nombre Completo *</label>
+                    <input type="text" id="visitorFullName" required placeholder="Juan Pérez">
+                </div>
+
+                <div class="visitor-form-group">
+                    <label for="visitorIdNumber">Documento de Identidad *</label>
+                    <input type="text" id="visitorIdNumber" required placeholder="12345678">
+                </div>
+
+                <div class="visitor-form-group">
+                    <label for="visitorCompany">Empresa/Organización</label>
+                    <input type="text" id="visitorCompany" placeholder="Empresa ABC">
+                </div>
+
+                <div class="visitor-form-group">
+                    <label for="visitorPhone">Teléfono</label>
+                    <input type="tel" id="visitorPhone" placeholder="+54 11 1234-5678">
+                </div>
+
+                <div class="visitor-form-group">
+                    <label for="visitorEmail">Email</label>
+                    <input type="email" id="visitorEmail" placeholder="visitante@email.com">
+                </div>
+
+                <!-- Propósito de la visita -->
+                <div class="visitor-form-group">
+                    <label for="visitorPurpose">Propósito de Visita *</label>
+                    <textarea id="visitorPurpose" required placeholder="Reunión con..."></textarea>
+                </div>
+
+                <div class="visitor-form-group">
+                    <label for="visitorEmployee">Empleado a Visitar *</label>
+                    <select id="visitorEmployee" required>
+                        <option value="">Seleccione un empleado...</option>
+                    </select>
+                </div>
+
+                <div class="visitor-form-group">
+                    <label for="visitorDepartment">Departamento</label>
+                    <select id="visitorDepartment">
+                        <option value="">Seleccione departamento...</option>
+                    </select>
+                </div>
+
+                <!-- Fecha y hora programada -->
+                <div class="visitor-form-group">
+                    <label for="visitorScheduledDate">Fecha y Hora de Visita *</label>
+                    <input type="datetime-local" id="visitorScheduledDate" required>
+                </div>
+
+                <!-- Captura de foto (opcional) -->
+                <div class="visitor-photo-capture">
+                    <div style="font-weight: bold; margin-bottom: 10px;">📷 Foto del Visitante (Opcional)</div>
+                    <div class="visitor-photo-preview" id="visitorPhotoPreview">
+                        <span style="opacity: 0.5;">Sin foto</span>
+                    </div>
+                    <button type="button" class="visitor-btn secondary" onclick="captureVisitorPhoto()">
+                        📸 Capturar Foto
+                    </button>
+                </div>
+
+                <!-- Acciones -->
+                <div class="visitor-actions">
+                    <button type="submit" class="visitor-btn">💾 Registrar Visitante</button>
+                    <button type="button" class="visitor-btn cancel" onclick="closeVisitorRegistration()">❌ Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        // === SMART CAPTURE - Detección continua con MediaPipe (Google) ===
+        class SmartCapture {
+            constructor() {
+                this.lastCapture = 0;
+                this.minInterval = 300; // MediaPipe es más rápido: 300ms entre capturas
+                this.qualityThreshold = 0.65; // umbral de calidad (0-1)
+                this.isProcessing = false;
+                this.continuousDetectionActive = false;
+                this.detectionFrameId = null;
+            }
+
+            shouldCapture() {
+                const now = Date.now();
+
+                // No capturar si está procesando
+                if (this.isProcessing) {
+                    return false;
+                }
+
+                // No capturar si pasó muy poco tiempo
+                if (now - this.lastCapture < this.minInterval) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            async calculateQuality(video, mediaPipeResults) {
+                try {
+                    // Si no hay detección, calidad básica
+                    if (!mediaPipeResults || !mediaPipeResults.detections || mediaPipeResults.detections.length === 0) {
+                        // Calidad básica: verificar que el video esté activo
+                        if (video && video.videoWidth > 0 && video.readyState >= 2) {
+                            return 0.50; // Calidad básica baja (esperamos detección real)
+                        }
+                        return 0;
+                    }
+
+                    const detection = mediaPipeResults.detections[0]; // Primera detección
+                    let sizeScore = 0;
+                    let angleScore = 0;
+                    let confidenceScore = 0;
+
+                    // 1. Confidence score de MediaPipe (muy importante)
+                    if (detection.score) {
+                        confidenceScore = detection.score[0]; // 0-1
+                    }
+
+                    // 2. Tamaño del rostro (más grande = mejor)
+                    if (detection.boundingBox) {
+                        const box = detection.boundingBox;
+                        const faceArea = box.width * box.height;
+                        const imageArea = video.videoWidth * video.videoHeight;
+                        const faceSizeRatio = faceArea / imageArea;
+                        sizeScore = Math.min(faceSizeRatio * 8, 1); // Normalizar a 0-1
+                    }
+
+                    // 3. Ángulo frontal (usando keypoints de MediaPipe: 6 puntos)
+                    // MediaPipe retorna: rightEye, leftEye, noseTip, mouth, rightEarTragion, leftEarTragion
+                    if (detection.landmarks && detection.landmarks.length >= 6) {
+                        const rightEye = detection.landmarks[0];
+                        const leftEye = detection.landmarks[1];
+                        const nose = detection.landmarks[2];
+
+                        if (rightEye && leftEye && nose) {
+                            // Verificar que la nariz esté centrada entre los ojos
+                            const eyesCenterX = (leftEye.x + rightEye.x) / 2;
+                            const noseOffsetX = Math.abs(nose.x - eyesCenterX);
+                            const eyesDistance = Math.abs(rightEye.x - leftEye.x);
+
+                            if (eyesDistance > 0) {
+                                // Score basado en qué tan centrada está la nariz
+                                angleScore = Math.max(0, 1 - (noseOffsetX / (eyesDistance * 0.4)));
+                            }
+                        }
+                    }
+
+                    // Combinar scores (MediaPipe confidence es muy confiable)
+                    const quality = (confidenceScore * 0.5) + (sizeScore * 0.3) + (angleScore * 0.2);
+
+                    if (Math.random() < 0.1) { // Log cada ~10% de intentos
+                        console.log(`📊 [MEDIAPIPE-QUALITY] Confidence: ${confidenceScore.toFixed(2)}, Size: ${sizeScore.toFixed(2)}, Angle: ${angleScore.toFixed(2)} => Total: ${quality.toFixed(2)}`);
+                    }
+
+                    return quality;
+
+                } catch (error) {
+                    console.error('❌ [QUALITY] Error calculando calidad:', error);
+                    return 0;
+                }
+            }
+
+            markCapture() {
+                this.lastCapture = Date.now();
+            }
+
+            setProcessing(processing) {
+                this.isProcessing = processing;
+            }
+        }
+
         class AutoKiosk {
             constructor() {
                 this.video = document.getElementById('video');
                 this.canvas = document.getElementById('canvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.faceApiLoaded = false;
+                this.mediaPipeLoaded = false;
+                this.faceDetection = null; // MediaPipe FaceDetection instance
                 this.isDetecting = false;
                 this.isPaused = false;
                 this.currentCompanyId = '11';
@@ -399,6 +890,21 @@
                 this.faceGuide = document.getElementById('faceGuide');
                 this.cameraInitialized = false;
                 this.renderingActive = false;
+
+                // Instancia de SmartCapture para detección continua
+                this.smartCapture = new SmartCapture();
+
+                // Configuración de kiosko
+                this.currentKioskId = null;
+                this.currentKioskName = null;
+                this.currentKioskLocation = null;
+                this.availableKiosks = [];
+                this.selectedKioskId = null;
+
+                // Registro de visitantes
+                this.visitorPhotoData = null;
+                this.availableEmployees = [];
+                this.availableDepartments = [];
 
                 console.log('🤖 [AUTO-KIOSK] Inicializando sistema automático...');
                 this.init();
@@ -411,6 +917,9 @@
                         this.currentCompanyId = e.target.value;
                         console.log(`🏢 [AUTO-KIOSK] Empresa seleccionada: ${this.currentCompanyId}`);
                     });
+
+                    // Cargar configuración guardada de kiosko
+                    this.loadSavedKioskConfig();
 
                     // Detectar dispositivo móvil y mostrar instrucciones específicas
                     this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -536,10 +1045,10 @@
                             this.video.style.height = '100%';
 
                             console.log(`✅ [AUTO-KIOSK] Video inicializado: ${this.video.videoWidth}x${this.video.videoHeight}`);
-                            this.updateStatus('🎥', 'Cámara activa', 'success', 'Detectando rostros...');
+                            this.updateStatus('🎥', 'Cámara activa', 'success', 'Cargando MediaPipe...');
 
-                            // Saltar Face-API y usar detección simple
-                            this.startSimpleDetection();
+                            // Inicializar MediaPipe Face Detection
+                            this.startMediaPipe();
                             return true;
                         } else if (this.video.readyState >= 1) {
                             // Si tenemos metadatos pero no dimensiones, forzar
@@ -628,7 +1137,7 @@
                     const backupTimers = [500, 1000, 2000, 3000];
                     backupTimers.forEach(delay => {
                         setTimeout(() => {
-                            if (!this.faceApiLoaded && this.video.videoWidth > 0) {
+                            if (!this.mediaPipeLoaded && this.video.videoWidth > 0) {
                                 console.log(`🔄 [BACKUP-${delay}ms] Intentando inicialización`);
                                 if (initializeVideo()) {
                                     console.log(`✅ [BACKUP-${delay}ms] Inicialización exitosa`);
@@ -666,81 +1175,114 @@
                 }
             }
 
-            async startFaceAPI() {
+            async startMediaPipe() {
                 try {
-                    this.updateStatus('🤖', 'Cargando modelos de IA...', 'processing');
+                    this.updateStatus('🤖', 'Cargando MediaPipe...', 'processing');
 
-                    // URLs de modelos Face-api.js
-                    const modelPath = '/models';
+                    // Inicializar MediaPipe Face Detection
+                    this.faceDetection = new FaceDetection({
+                        locateFile: (file) => {
+                            return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`;
+                        }
+                    });
 
-                    await Promise.all([
-                        faceapi.nets.tinyFaceDetector.loadFromUri(modelPath),
-                        faceapi.nets.faceLandmark68Net.loadFromUri(modelPath),
-                        faceapi.nets.faceRecognitionNet.loadFromUri(modelPath)
-                    ]);
+                    // Configurar opciones de detección
+                    this.faceDetection.setOptions({
+                        model: 'short', // 'short' para distancias < 2m, 'full' para > 2m
+                        minDetectionConfidence: 0.5
+                    });
 
-                    this.faceApiLoaded = true;
-                    console.log('✅ [AUTO-KIOSK] Face-api.js cargado exitosamente');
+                    // Callback cuando MediaPipe detecta rostros
+                    this.faceDetection.onResults((results) => {
+                        this.handleMediaPipeResults(results);
+                    });
 
-                    this.updateStatus('👁️', 'Sistema activo - Detectando presencia...', 'scanning');
-                    this.startDetection();
+                    this.mediaPipeLoaded = true;
+                    console.log('✅ [MEDIAPIPE] MediaPipe Face Detection cargado exitosamente');
+
+                    this.updateStatus('👁️', 'MediaPipe activo - Detectando en movimiento...', 'scanning');
+                    this.startContinuousDetection();
 
                 } catch (error) {
-                    console.error('❌ [AUTO-KIOSK] Error cargando Face-api.js:', error);
-                    this.updateStatus('⚠️', 'Modo básico activado', 'warning', 'Funcionando sin IA avanzada');
-                    this.startBasicDetection();
+                    console.error('❌ [MEDIAPIPE] Error cargando MediaPipe:', error);
+                    this.updateStatus('⚠️', 'Error en MediaPipe', 'warning', error.message);
                 }
             }
 
-            async startDetection() {
-                if (!this.faceApiLoaded) return;
-
-                this.isDetecting = true;
-                this.detectFaces();
+            // Callback para procesar resultados de MediaPipe
+            handleMediaPipeResults(results) {
+                // Guardar resultados para SmartCapture
+                this.lastMediaPipeResults = results;
             }
 
-            async detectFaces() {
-                if (!this.isDetecting || this.isPaused || this.video.paused || this.video.ended) {
-                    setTimeout(() => this.detectFaces(), 500);
+            // Iniciar detección continua con MediaPipe usando Camera
+            async startContinuousDetection() {
+                try {
+                    if (!this.mediaPipeLoaded) {
+                        console.error('❌ [MEDIAPIPE] MediaPipe no está cargado');
+                        return;
+                    }
+
+                    this.isDetecting = true;
+                    this.smartCapture.continuousDetectionActive = true;
+
+                    console.log('🚀 [MEDIAPIPE] Iniciando detección continua (60fps)...');
+
+                    // Usar Camera de MediaPipe para procesamiento continuo
+                    const camera = new Camera(this.video, {
+                        onFrame: async () => {
+                            if (this.isPaused || !this.isDetecting) return;
+                            await this.faceDetection.send({ image: this.video });
+                        },
+                        width: 640,
+                        height: 480
+                    });
+
+                    camera.start();
+                    console.log('✅ [MEDIAPIPE] Cámara iniciada - procesando frames');
+
+                    // Loop de evaluación de calidad
+                    this.qualityEvaluationLoop();
+
+                } catch (error) {
+                    console.error('❌ [MEDIAPIPE] Error en detección continua:', error);
+                    this.updateStatus('⚠️', 'Error iniciando detección', 'warning');
+                }
+            }
+
+            // Loop para evaluar calidad y capturar cuando sea óptima
+            async qualityEvaluationLoop() {
+                if (!this.isDetecting || this.isPaused || !this.smartCapture.continuousDetectionActive) {
+                    setTimeout(() => this.qualityEvaluationLoop(), 500);
                     return;
                 }
 
                 try {
-                    // Usar canvas si está disponible (mejor para Android)
-                    const sourceElement = this.canvas || this.video;
-                    const detections = await faceapi.detectAllFaces(
-                        sourceElement,
-                        new faceapi.TinyFaceDetectorOptions()
-                    ).withFaceLandmarks().withFaceDescriptors();
+                    // Verificar si debemos evaluar calidad
+                    if (this.smartCapture.shouldCapture() && this.lastMediaPipeResults) {
+                        const quality = await this.smartCapture.calculateQuality(this.video, this.lastMediaPipeResults);
 
-                    if (detections.length > 0) {
-                        console.log('👤 [AUTO-KIOSK] Rostro detectado');
+                        // Si la calidad es óptima, capturar y procesar
+                        if (quality >= this.smartCapture.qualityThreshold) {
+                            console.log(`✅ [MEDIAPIPE] Calidad óptima (${quality.toFixed(2)}) - Capturando...`);
 
-                        // Verificar cooldown
-                        const now = Date.now();
-                        if (now - this.lastDetectionTime < this.detectionCooldown) {
-                            console.log('⏱️ [AUTO-KIOSK] En cooldown, ignorando detección');
-                            setTimeout(() => this.detectFaces(), 100);
-                            return;
+                            this.smartCapture.setProcessing(true);
+                            this.smartCapture.markCapture();
+                            this.faceGuide.classList.add('scanning-active');
+
+                            // Capturar imagen y obtener embedding usando backend
+                            await this.captureAndProcessMediaPipe();
+
+                            this.faceGuide.classList.remove('scanning-active');
+                            this.smartCapture.setProcessing(false);
                         }
-
-                        this.lastDetectionTime = now;
-                        this.faceGuide.classList.add('scanning-active');
-                        this.updateStatus('🔍', 'Rostro detectado - Analizando...', 'processing');
-
-                        // Obtener embedding
-                        const embedding = Array.from(detections[0].descriptor);
-                        await this.processDetection(embedding);
-
-                        this.faceGuide.classList.remove('scanning-active');
                     }
-
                 } catch (error) {
-                    console.error('❌ [AUTO-KIOSK] Error en detección:', error);
+                    console.error('❌ [MEDIAPIPE] Error en evaluación de calidad:', error);
                 }
 
-                // Continuar detección
-                setTimeout(() => this.detectFaces(), 100);
+                // Continuar loop (cada 100ms para balance CPU/velocidad)
+                setTimeout(() => this.qualityEvaluationLoop(), 100);
             }
 
             async processDetection(embedding) {
@@ -768,6 +1310,13 @@
                     console.log('📡 [AUTO-KIOSK] Respuesta:', result);
 
                     if (result.success && result.employee) {
+                        // Verificar si el empleado está de licencia
+                        const isOnLeave = await this.checkEmployeeLeaveStatus(result.employee.id);
+                        if (isOnLeave) {
+                            this.showEmployeeOnLeaveWarning(result.employee);
+                            return;
+                        }
+
                         this.showSuccessfulAttendance(result);
                     } else {
                         this.showUnrecognizedFace();
@@ -807,38 +1356,6 @@
                 }, 2000);
             }
 
-            startBasicDetection() {
-                // Modo con Face-API.js real
-                this.updateStatus('👁️', 'Sistema real - Detectando rostros reales...', 'info');
-
-                document.addEventListener('click', async () => {
-                    if (!this.isPaused && this.stream) {
-                        await this.captureRealEmbedding();
-                    }
-                });
-            }
-
-            startSimpleDetection() {
-                // 🟡 SEMÁFORO AMARILLO - Standby
-                this.updateStatus('🟡', '', 'scanning', '');
-                this.isDetecting = true;
-                this.faceGuide.style.display = 'block';
-
-                // Detección automática cada 3 segundos
-                setInterval(async () => {
-                    if (!this.isPaused && this.isDetecting && this.stream) {
-                        const now = Date.now();
-                        if (now - this.lastDetectionTime > this.detectionCooldown) {
-                            console.log('👤 [DETECTION] Iniciando reconocimiento...');
-                            this.lastDetectionTime = now;
-                            this.faceGuide.classList.add('scanning-active');
-
-                            // Capturar y procesar
-                            await this.captureRealEmbedding();
-                        }
-                    }
-                }, 3000);
-            }
 
             startCanvasRendering() {
                 if (this.renderingActive) {
@@ -933,12 +1450,9 @@
                 }
             }
 
-            async captureRealEmbedding() {
+            async captureAndProcessMediaPipe() {
                 try {
-                    if (!this.faceApiLoaded) {
-                        console.warn('⚠️ [KIOSK] Face-API no disponible, omitiendo captura real');
-                        return;
-                    }
+                    this.updateStatus('📸', 'Capturando imagen...', 'processing');
 
                     // Crear canvas temporal para captura
                     const canvas = document.createElement('canvas');
@@ -947,33 +1461,556 @@
                     canvas.height = this.video.videoHeight;
                     ctx.drawImage(this.video, 0, 0);
 
-                    // Detectar rostro con Face-API.js REAL
-                    const detection = await faceapi
-                        .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
-                        .withFaceDescriptor();
+                    // Convertir canvas a blob
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
 
-                    if (detection && detection.descriptor) {
-                        console.log('✅ [KIOSK] Embedding real capturado con Face-API.js');
-                        const realEmbedding = Array.from(detection.descriptor);
-                        this.processDetection(realEmbedding);
+                    console.log('📤 [MEDIAPIPE] Enviando imagen al backend para verificación...');
+
+                    // Enviar imagen al backend para obtener embedding y verificar
+                    const formData = new FormData();
+                    formData.append('biometricImage', blob, 'capture.jpg');
+                    formData.append('embedding', '[]'); // Backend generará el embedding
+
+                    const response = await fetch('/api/v2/biometric-attendance/verify-real', {
+                        method: 'POST',
+                        headers: {
+                            'X-Company-Id': this.currentCompanyId,
+                            'X-Kiosk-Mode': 'true'
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    console.log('📡 [MEDIAPIPE] Respuesta del backend:', result);
+
+                    if (result.success && result.employee) {
+                        // Verificar si el empleado está de licencia
+                        const isOnLeave = await this.checkEmployeeLeaveStatus(result.employee.id);
+                        if (isOnLeave) {
+                            this.showEmployeeOnLeaveWarning(result.employee);
+                            return;
+                        }
+
+                        this.showSuccessfulAttendance(result);
                     } else {
-                        console.log('⚠️ [KIOSK] No se detectó rostro válido en frame actual');
-                        this.updateStatus('👁️', 'Esperando rostro válido...', 'scanning');
+                        this.showUnrecognizedFace();
                     }
 
                 } catch (error) {
-                    console.error('❌ [KIOSK] Error capturando embedding real:', error);
-                    this.updateStatus('⚠️', 'Error en detección - reintentando...', 'warning');
+                    console.error('❌ [MEDIAPIPE] Error capturando/procesando:', error);
+                    this.updateStatus('⚠️', 'Error en captura - reintentando...', 'warning');
                 }
             }
+
+            // === MÉTODOS DE CONFIGURACIÓN DE KIOSKO ===
+
+            loadSavedKioskConfig() {
+                try {
+                    const savedKiosk = localStorage.getItem('kioskConfig');
+                    if (savedKiosk) {
+                        const config = JSON.parse(savedKiosk);
+                        this.currentKioskId = config.id;
+                        this.currentKioskName = config.name;
+                        this.currentKioskLocation = config.location;
+                        this.updateKioskDisplay();
+                        console.log('✅ [KIOSK-CONFIG] Configuración cargada:', config);
+                    } else {
+                        console.log('⚠️ [KIOSK-CONFIG] No hay configuración guardada');
+                    }
+                } catch (error) {
+                    console.error('❌ [KIOSK-CONFIG] Error cargando configuración:', error);
+                }
+            }
+
+            updateKioskDisplay() {
+                const headerName = document.getElementById('currentKioskName');
+                if (this.currentKioskName) {
+                    headerName.textContent = `${this.currentKioskName}${this.currentKioskLocation ? ' - ' + this.currentKioskLocation : ''}`;
+                } else {
+                    headerName.textContent = 'No configurado';
+                }
+            }
+
+            async openKioskConfigModal() {
+                try {
+                    const modal = document.getElementById('configModal');
+                    modal.classList.add('active');
+
+                    // Cargar URL del servidor en el input
+                    const serverUrlInput = document.getElementById('serverUrlInput');
+                    serverUrlInput.value = window.kioskServerUrl || window.location.origin;
+
+                    // Mostrar información actual
+                    const currentName = document.getElementById('currentConfigKioskName');
+                    const currentLocation = document.getElementById('currentConfigKioskLocation');
+
+                    if (this.currentKioskName) {
+                        currentName.textContent = this.currentKioskName;
+                        currentLocation.textContent = this.currentKioskLocation || 'Sin ubicación especificada';
+                        this.selectedKioskId = this.currentKioskId;
+                    } else {
+                        currentName.textContent = 'No configurado';
+                        currentLocation.textContent = 'Seleccione un kiosco de la lista';
+                        this.selectedKioskId = null;
+                    }
+
+                    // Cargar kioscos disponibles
+                    await this.loadAvailableKiosks();
+
+                } catch (error) {
+                    console.error('❌ [KIOSK-CONFIG] Error abriendo modal:', error);
+                }
+            }
+
+            closeKioskConfigModal() {
+                const modal = document.getElementById('configModal');
+                modal.classList.remove('active');
+                this.selectedKioskId = null;
+            }
+
+            async loadAvailableKiosks() {
+                try {
+                    const container = document.getElementById('kioskListContainer');
+                    container.innerHTML = '<div style="text-align: center; padding: 20px; opacity: 0.7;">⏳ Cargando kioscos...</div>';
+
+                    // Obtener token (puede no haber si es kiosko público)
+                    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+
+                    const response = await fetch(`/api/v1/kiosks?companyId=${this.currentCompanyId}`, {
+                        method: 'GET',
+                        headers: headers
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    this.availableKiosks = data.kiosks || [];
+
+                    if (this.availableKiosks.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 20px; opacity: 0.7;">⚠️ No hay kioscos disponibles para esta empresa</div>';
+                        return;
+                    }
+
+                    // Renderizar lista de kioscos
+                    const html = this.availableKiosks.map(kiosk => {
+                        const isSelected = this.selectedKioskId === kiosk.id;
+                        return `
+                            <div class="kiosk-item ${isSelected ? 'selected' : ''}"
+                                 onclick="kioskInstance.selectKioskFromList(${kiosk.id})">
+                                <div class="kiosk-item-name">${kiosk.name}</div>
+                                <div class="kiosk-item-location">
+                                    📍 ${kiosk.location || 'Sin ubicación'}
+                                    ${kiosk.gpsLat && kiosk.gpsLng ? `• GPS: ${kiosk.gpsLat}, ${kiosk.gpsLng}` : ''}
+                                </div>
+                                ${isSelected ? '<div style="margin-top: 5px;">✅ Seleccionado</div>' : ''}
+                            </div>
+                        `;
+                    }).join('');
+
+                    container.innerHTML = html;
+
+                } catch (error) {
+                    console.error('❌ [KIOSK-CONFIG] Error cargando kioscos:', error);
+                    const container = document.getElementById('kioskListContainer');
+                    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">❌ Error cargando kioscos</div>';
+                }
+            }
+
+            selectKioskFromList(kioskId) {
+                const kiosk = this.availableKiosks.find(k => k.id === kioskId);
+                if (!kiosk) {
+                    console.error('❌ [KIOSK-CONFIG] Kiosko no encontrado:', kioskId);
+                    return;
+                }
+
+                this.selectedKioskId = kioskId;
+
+                // Actualizar información en el modal
+                document.getElementById('currentConfigKioskName').textContent = kiosk.name;
+                document.getElementById('currentConfigKioskLocation').textContent = kiosk.location || 'Sin ubicación especificada';
+
+                // Actualizar clases CSS de los items
+                document.querySelectorAll('.kiosk-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                event.target.closest('.kiosk-item').classList.add('selected');
+
+                console.log('✅ [KIOSK-CONFIG] Kiosko seleccionado:', kiosk);
+            }
+
+            saveKioskConfiguration() {
+                try {
+                    if (!this.selectedKioskId) {
+                        alert('⚠️ Por favor seleccione un kiosco primero');
+                        return;
+                    }
+
+                    const kiosk = this.availableKiosks.find(k => k.id === this.selectedKioskId);
+                    if (!kiosk) {
+                        alert('❌ Error: Kiosko no encontrado');
+                        return;
+                    }
+
+                    // Guardar en localStorage
+                    const config = {
+                        id: kiosk.id,
+                        name: kiosk.name,
+                        location: kiosk.location,
+                        gpsLat: kiosk.gpsLat,
+                        gpsLng: kiosk.gpsLng,
+                        savedAt: new Date().toISOString()
+                    };
+
+                    localStorage.setItem('kioskConfig', JSON.stringify(config));
+
+                    // Actualizar propiedades de instancia
+                    this.currentKioskId = config.id;
+                    this.currentKioskName = config.name;
+                    this.currentKioskLocation = config.location;
+
+                    // Actualizar display
+                    this.updateKioskDisplay();
+
+                    // Cerrar modal
+                    this.closeKioskConfigModal();
+
+                    // Mostrar confirmación
+                    this.updateStatus('✅', `Kiosco configurado: ${kiosk.name}`, 'success');
+                    setTimeout(() => {
+                        this.updateStatus('👁️', 'Sistema listo - Detectando presencia...', 'scanning');
+                    }, 2000);
+
+                    console.log('✅ [KIOSK-CONFIG] Configuración guardada:', config);
+
+                } catch (error) {
+                    console.error('❌ [KIOSK-CONFIG] Error guardando configuración:', error);
+                    alert('❌ Error guardando configuración');
+                }
+            }
+
+            // === FIN MÉTODOS DE CONFIGURACIÓN DE KIOSKO ===
+
+            // === MÉTODOS DE REGISTRO DE VISITANTES ===
+
+            async openVisitorRegistrationModal() {
+                try {
+                    const modal = document.getElementById('visitorModal');
+                    modal.classList.add('active');
+
+                    // Resetear formulario
+                    document.getElementById('visitorForm').reset();
+                    this.visitorPhotoData = null;
+                    document.getElementById('visitorPhotoPreview').innerHTML = '<span style="opacity: 0.5;">Sin foto</span>';
+
+                    // Establecer fecha/hora por defecto (ahora)
+                    const now = new Date();
+                    const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    document.getElementById('visitorScheduledDate').value = localDateTime;
+
+                    // Cargar empleados y departamentos
+                    await Promise.all([
+                        this.loadEmployeesForVisitor(),
+                        this.loadDepartmentsForVisitor()
+                    ]);
+
+                    // Configurar submit del formulario
+                    const form = document.getElementById('visitorForm');
+                    form.onsubmit = (e) => {
+                        e.preventDefault();
+                        this.submitVisitorRegistration();
+                    };
+
+                    console.log('✅ [VISITOR] Modal de registro abierto');
+
+                } catch (error) {
+                    console.error('❌ [VISITOR] Error abriendo modal:', error);
+                }
+            }
+
+            closeVisitorRegistrationModal() {
+                const modal = document.getElementById('visitorModal');
+                modal.classList.remove('active');
+                document.getElementById('visitorForm').reset();
+                this.visitorPhotoData = null;
+            }
+
+            async loadEmployeesForVisitor() {
+                try {
+                    const select = document.getElementById('visitorEmployee');
+                    select.innerHTML = '<option value="">Cargando empleados...</option>';
+
+                    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                    const response = await fetch(`/api/v1/users?companyId=${this.currentCompanyId}`, {
+                        method: 'GET',
+                        headers: headers
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const data = await response.json();
+                    this.availableEmployees = data.users || data || [];
+
+                    if (this.availableEmployees.length === 0) {
+                        select.innerHTML = '<option value="">No hay empleados disponibles</option>';
+                        return;
+                    }
+
+                    const options = this.availableEmployees.map(emp => {
+                        const name = `${emp.firstName || emp.first_name || ''} ${emp.lastName || emp.last_name || ''}`.trim();
+                        return `<option value="${emp.id}">${name || 'Sin nombre'} ${emp.position ? '- ' + emp.position : ''}</option>`;
+                    }).join('');
+
+                    select.innerHTML = '<option value="">Seleccione un empleado...</option>' + options;
+
+                } catch (error) {
+                    console.error('❌ [VISITOR] Error cargando empleados:', error);
+                    document.getElementById('visitorEmployee').innerHTML = '<option value="">Error cargando empleados</option>';
+                }
+            }
+
+            async loadDepartmentsForVisitor() {
+                try {
+                    const select = document.getElementById('visitorDepartment');
+                    select.innerHTML = '<option value="">Cargando departamentos...</option>';
+
+                    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                    const response = await fetch(`/api/v1/departments?companyId=${this.currentCompanyId}`, {
+                        method: 'GET',
+                        headers: headers
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const data = await response.json();
+                    this.availableDepartments = data.departments || data || [];
+
+                    if (this.availableDepartments.length === 0) {
+                        select.innerHTML = '<option value="">No hay departamentos disponibles</option>';
+                        return;
+                    }
+
+                    const options = this.availableDepartments.map(dept =>
+                        `<option value="${dept.id}">${dept.name}</option>`
+                    ).join('');
+
+                    select.innerHTML = '<option value="">Seleccione departamento...</option>' + options;
+
+                } catch (error) {
+                    console.error('❌ [VISITOR] Error cargando departamentos:', error);
+                    document.getElementById('visitorDepartment').innerHTML = '<option value="">Error cargando</option>';
+                }
+            }
+
+            captureVisitorPhotoFromCamera() {
+                try {
+                    if (!this.cameraInitialized || !this.video.videoWidth) {
+                        alert('⚠️ La cámara no está activa. Active la cámara primero.');
+                        return;
+                    }
+
+                    // Crear canvas temporal para captura
+                    const canvas = document.createElement('canvas');
+                    canvas.width = this.video.videoWidth;
+                    canvas.height = this.video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(this.video, 0, 0);
+
+                    // Convertir a base64
+                    this.visitorPhotoData = canvas.toDataURL('image/jpeg', 0.8);
+
+                    // Mostrar preview
+                    const preview = document.getElementById('visitorPhotoPreview');
+                    preview.innerHTML = `<img src="${this.visitorPhotoData}" alt="Foto del visitante">`;
+
+                    console.log('✅ [VISITOR] Foto capturada exitosamente');
+
+                } catch (error) {
+                    console.error('❌ [VISITOR] Error capturando foto:', error);
+                    alert('❌ Error capturando foto');
+                }
+            }
+
+            async submitVisitorRegistration() {
+                try {
+                    // Recopilar datos del formulario
+                    const fullName = document.getElementById('visitorFullName').value.trim();
+                    const idNumber = document.getElementById('visitorIdNumber').value.trim();
+                    const company = document.getElementById('visitorCompany').value.trim();
+                    const phone = document.getElementById('visitorPhone').value.trim();
+                    const email = document.getElementById('visitorEmail').value.trim();
+                    const purpose = document.getElementById('visitorPurpose').value.trim();
+                    const responsibleEmployeeId = parseInt(document.getElementById('visitorEmployee').value);
+                    const visitingDepartmentId = document.getElementById('visitorDepartment').value ?
+                        parseInt(document.getElementById('visitorDepartment').value) : null;
+                    const scheduledVisitDate = document.getElementById('visitorScheduledDate').value;
+
+                    // Validaciones
+                    if (!fullName || !idNumber || !purpose || !responsibleEmployeeId || !scheduledVisitDate) {
+                        alert('⚠️ Por favor complete todos los campos obligatorios');
+                        return;
+                    }
+
+                    // Preparar datos
+                    const visitorData = {
+                        companyId: parseInt(this.currentCompanyId),
+                        kioskId: this.currentKioskId,
+                        fullName,
+                        idNumber,
+                        company: company || null,
+                        phone: phone || null,
+                        email: email || null,
+                        purpose,
+                        responsibleEmployeeId,
+                        visitingDepartmentId,
+                        scheduledVisitDate: new Date(scheduledVisitDate).toISOString(),
+                        photoData: this.visitorPhotoData,
+                        authorizationStatus: 'pending'
+                    };
+
+                    // Obtener token
+                    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                    // Enviar al servidor
+                    const response = await fetch('/api/v1/visitors', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(visitorData)
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Error registrando visitante');
+                    }
+
+                    const result = await response.json();
+
+                    // Cerrar modal
+                    this.closeVisitorRegistrationModal();
+
+                    // Mostrar confirmación
+                    this.updateStatus('✅', `Visitante registrado: ${fullName}`, 'success');
+                    setTimeout(() => {
+                        this.updateStatus('👁️', 'Sistema listo - Detectando presencia...', 'scanning');
+                    }, 3000);
+
+                    console.log('✅ [VISITOR] Visitante registrado exitosamente:', result);
+
+                } catch (error) {
+                    console.error('❌ [VISITOR] Error registrando visitante:', error);
+                    alert(`❌ Error: ${error.message}`);
+                }
+            }
+
+            // === FIN MÉTODOS DE REGISTRO DE VISITANTES ===
+
+            // === MÉTODOS DE VERIFICACIÓN DE LICENCIAS ===
+
+            async checkEmployeeLeaveStatus(employeeId) {
+                try {
+                    console.log(`🔍 [LEAVE-CHECK] Verificando estado de licencia para empleado ${employeeId}...`);
+
+                    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                    const response = await fetch(`/api/v1/users/${employeeId}/check-leave-status`, {
+                        method: 'GET',
+                        headers: headers
+                    });
+
+                    if (!response.ok) {
+                        console.error('❌ [LEAVE-CHECK] Error en API:', response.status);
+                        // Si falla la API, permitir el acceso (fail open)
+                        return false;
+                    }
+
+                    const data = await response.json();
+                    console.log('📋 [LEAVE-CHECK] Respuesta:', data);
+
+                    // TODO: Cuando se implemente el módulo de licencias real, verificar data.isOnLeave
+                    // Por ahora, la API siempre devuelve { isOnLeave: false }
+                    return data.isOnLeave || false;
+
+                } catch (error) {
+                    console.error('❌ [LEAVE-CHECK] Error verificando licencia:', error);
+                    // Si hay error, permitir el acceso (fail open)
+                    return false;
+                }
+            }
+
+            showEmployeeOnLeaveWarning(employee) {
+                // 🟡 SEMÁFORO AMARILLO - Empleado reconocido pero está de licencia
+                this.faceGuide.classList.add('warning-match');
+
+                const employeeName = `${employee.firstName || employee.first_name || ''} ${employee.lastName || employee.last_name || ''}`.trim();
+
+                this.updateStatus(
+                    '⚠️',
+                    `${employeeName}`,
+                    'warning',
+                    '🏖️ EMPLEADO DE LICENCIA - Acceso bloqueado'
+                );
+
+                console.log('⚠️ [AUTO-KIOSK] Empleado de licencia detectado:', employeeName);
+
+                // Reproducir sonido de advertencia si está disponible
+                if (window.AudioContext || window.webkitAudioContext) {
+                    try {
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+
+                        oscillator.frequency.value = 800; // Frecuencia de advertencia
+                        oscillator.type = 'sine';
+
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + 0.5);
+                    } catch (error) {
+                        console.warn('⚠️ No se pudo reproducir sonido de advertencia:', error);
+                    }
+                }
+
+                // Resetear después de 3 segundos
+                setTimeout(() => {
+                    this.faceGuide.classList.remove('warning-match');
+                    this.updateStatus('👁️', 'Sistema listo - Detectando presencia...', 'scanning');
+                }, 3000);
+            }
+
+            // === FIN MÉTODOS DE VERIFICACIÓN DE LICENCIAS ===
 
             showLogs() {
                 const logs = [
                     'Sistema iniciado correctamente',
                     `Empresa activa: ${this.currentCompanyId}`,
                     `Cámara: ${this.cameraInitialized ? 'Activa' : 'Inactiva'}`,
-                    `Face-api.js: ${this.faceApiLoaded ? 'Cargado' : 'No disponible'}`,
+                    `MediaPipe: ${this.mediaPipeLoaded ? 'Cargado ✅' : 'No disponible'}`,
                     `Detección: ${this.isDetecting ? 'Activa' : 'Inactiva'}`,
+                    `Smart Capture: ${this.smartCapture.continuousDetectionActive ? 'Activo (60fps)' : 'Inactivo'}`,
                     `Pausado: ${this.isPaused ? 'Sí' : 'No'}`,
                     `Última detección: ${this.lastDetectionTime ? new Date(this.lastDetectionTime).toLocaleTimeString() : 'Ninguna'}`
                 ];
@@ -998,8 +2035,179 @@
             kioskInstance.showLogs();
         }
 
+        function openKioskConfig() {
+            kioskInstance.openKioskConfigModal();
+        }
+
+        function closeKioskConfig() {
+            kioskInstance.closeKioskConfigModal();
+        }
+
+        function saveKioskConfig() {
+            kioskInstance.saveKioskConfiguration();
+        }
+
+        function openVisitorRegistration() {
+            kioskInstance.openVisitorRegistrationModal();
+        }
+
+        function closeVisitorRegistration() {
+            kioskInstance.closeVisitorRegistrationModal();
+        }
+
+        function captureVisitorPhoto() {
+            kioskInstance.captureVisitorPhotoFromCamera();
+        }
+
+        function exitApp() {
+            if (confirm('¿Está seguro de que desea salir de la aplicación?')) {
+                // Detener cámara
+                if (kioskInstance && kioskInstance.video && kioskInstance.video.srcObject) {
+                    const tracks = kioskInstance.video.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                }
+
+                // Intentar cerrar la ventana/app
+                try {
+                    // Para Android WebView
+                    if (typeof Android !== 'undefined' && Android.closeApp) {
+                        Android.closeApp();
+                    }
+                    // Para navegador normal
+                    else {
+                        window.close();
+                        // Si window.close() no funciona (bloqueado por navegador)
+                        setTimeout(() => {
+                            window.location.href = 'about:blank';
+                        }, 100);
+                    }
+                } catch (e) {
+                    console.log('No se pudo cerrar automáticamente');
+                    alert('Por favor cierre la aplicación manualmente');
+                }
+            }
+        }
+
+        // === AUTODETECCIÓN DE SERVIDOR ===
+        async function autoDetectServer() {
+            try {
+                console.log('🔍 [AUTO-DETECT] Iniciando autodetección de servidor...');
+
+                // Intentar obtener configuración del servidor
+                const savedServerUrl = localStorage.getItem('kioskServerUrl');
+
+                if (savedServerUrl) {
+                    console.log('✅ [AUTO-DETECT] URL guardada encontrada:', savedServerUrl);
+                    window.kioskServerUrl = savedServerUrl;
+                    return savedServerUrl;
+                }
+
+                // Intentar autodetección via endpoint local
+                try {
+                    const response = await fetch('/api/v1/config/mobile-connection', {
+                        method: 'GET',
+                        timeout: 2000
+                    });
+
+                    if (response.ok) {
+                        const config = await response.json();
+                        const serverUrl = config.apiUrl || config.baseUrl || window.location.origin;
+                        console.log('✅ [AUTO-DETECT] Servidor detectado:', serverUrl);
+                        localStorage.setItem('kioskServerUrl', serverUrl);
+                        window.kioskServerUrl = serverUrl;
+                        return serverUrl;
+                    }
+                } catch (e) {
+                    console.log('⚠️ [AUTO-DETECT] No se pudo obtener config automática, usando origen actual');
+                }
+
+                // Fallback: usar el origen actual (funciona si está en el mismo servidor)
+                const fallbackUrl = window.location.origin;
+                console.log('✅ [AUTO-DETECT] Usando URL de origen:', fallbackUrl);
+                window.kioskServerUrl = fallbackUrl;
+                localStorage.setItem('kioskServerUrl', fallbackUrl);
+                return fallbackUrl;
+
+            } catch (error) {
+                console.error('❌ [AUTO-DETECT] Error en autodetección:', error);
+                window.kioskServerUrl = window.location.origin;
+                return window.kioskServerUrl;
+            }
+        }
+
+        async function testAndSaveServerUrl() {
+            const input = document.getElementById('serverUrlInput');
+            const resultDiv = document.getElementById('serverTestResult');
+            let serverUrl = input.value.trim();
+
+            if (!serverUrl) {
+                resultDiv.innerHTML = '⚠️ Por favor ingrese una URL';
+                resultDiv.style.color = '#FFD700';
+                return;
+            }
+
+            // Normalizar URL (agregar http:// si falta)
+            if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://')) {
+                serverUrl = 'http://' + serverUrl;
+                input.value = serverUrl;
+            }
+
+            // Remover trailing slash
+            serverUrl = serverUrl.replace(/\/$/, '');
+
+            resultDiv.innerHTML = '⏳ Probando conexión...';
+            resultDiv.style.color = '#64B5F6';
+
+            try {
+                const response = await fetch(serverUrl + '/api/v1/health', {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
+
+                if (response.ok) {
+                    // Guardar URL
+                    localStorage.setItem('kioskServerUrl', serverUrl);
+                    window.kioskServerUrl = serverUrl;
+
+                    resultDiv.innerHTML = '✅ Conexión exitosa - Servidor configurado';
+                    resultDiv.style.color = '#4CAF50';
+
+                    console.log('✅ [CONFIG] Servidor configurado:', serverUrl);
+
+                    // Recargar kioscos disponibles con el nuevo servidor
+                    if (kioskInstance) {
+                        setTimeout(() => {
+                            kioskInstance.loadAvailableKiosks();
+                        }, 1000);
+                    }
+                } else {
+                    throw new Error('Servidor respondió con error: ' + response.status);
+                }
+            } catch (error) {
+                console.error('❌ [CONFIG] Error probando servidor:', error);
+                resultDiv.innerHTML = '❌ Error de conexión - Verifique la URL y que el servidor esté activo';
+                resultDiv.style.color = '#ff6b6b';
+            }
+        }
+
+        // Helper para construir URLs completas
+        function getApiUrl(path) {
+            // Si hay servidor configurado, usarlo
+            if (window.kioskServerUrl && window.kioskServerUrl !== window.location.origin) {
+                return window.kioskServerUrl + path;
+            }
+            // Sino, usar URL relativa (funciona si está en el mismo servidor)
+            return path;
+        }
+
         // Inicializar cuando carga la página
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Autodetectar servidor primero
+            await autoDetectServer();
+            console.log('🌐 [KIOSK] Servidor configurado:', window.kioskServerUrl);
+
+            // Luego inicializar kiosk
             kioskInstance = new AutoKiosk();
         });
     </script>

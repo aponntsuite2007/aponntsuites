@@ -59,7 +59,7 @@ router.get('/dashboard/:companyId', async (req, res) => {
           0 as scans_today,
           0 as pending_ai_analysis
         FROM users u
-        WHERE u.company_id = :companyId AND u."isActive" = true
+        WHERE u.company_id = :companyId AND u.is_active = true
       `, {
         replacements: { companyId },
         type: sequelize.QueryTypes.SELECT
@@ -164,7 +164,7 @@ router.get('/templates/:companyId', async (req, res) => {
         u.biometric_quality_avg, u.last_biometric_scan,
         u.ai_analysis_enabled, u.fatigue_monitoring, u.emotion_monitoring
       FROM users u
-      WHERE u.company_id = :companyId AND u."isActive" = true
+      WHERE u.company_id = :companyId AND u.is_active = true
       ORDER BY u.biometric_enrolled DESC, u.last_biometric_scan DESC
       LIMIT :limit OFFSET :offset
     `, {
@@ -745,9 +745,9 @@ router.get('/employees/:companyId', async (req, res) => {
         u.user_id as id, u."firstName", u."lastName", u."employeeId",
         u.biometric_enrolled, u.biometric_templates_count,
         u.biometric_quality_avg, u.last_biometric_scan,
-        u."isActive", u.email, u.position
+        u.is_active, u.email, u.position
       FROM users u
-      WHERE u.company_id = :companyId AND u."isActive" = true
+      WHERE u.company_id = :companyId AND u.is_active = true
       ORDER BY u."firstName", u."lastName"
     `, {
       replacements: { companyId: companyIdNum },

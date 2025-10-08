@@ -747,4 +747,273 @@ router.get('/status/:employeeId', async (req, res) => {
   }
 });
 
+/**
+ * @route POST /api/v1/biometric/fingerprint/enroll
+ * @desc Enrollar huellas dactilares de un empleado
+ */
+router.post('/fingerprint/enroll', auth, async (req, res) => {
+  try {
+    const {
+      user_id,
+      company_id,
+      employee_id,
+      fingerprints,
+      device_id,
+      enrollment_timestamp
+    } = req.body;
+
+    console.log(`🔐 [FINGERPRINT-ENROLL] Iniciando registro para user: ${user_id}, company: ${company_id}`);
+
+    // Validaciones
+    if (!user_id || !company_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id y company_id son requeridos'
+      });
+    }
+
+    if (!fingerprints || !Array.isArray(fingerprints) || fingerprints.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Se requiere al menos una huella dactilar'
+      });
+    }
+
+    // Verificar que el usuario existe y pertenece a la empresa
+    const user = await User.findOne({
+      where: {
+        user_id: user_id,
+        company_id: company_id,
+        is_active: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado o inactivo'
+      });
+    }
+
+    // Usar sequelize directamente para insertar en fingerprint_biometric_data
+    const { sequelize } = require('../config/database-postgresql');
+
+    // Eliminar huellas antiguas del mismo dispositivo (re-enrollment)
+    await sequelize.query(`
+      DELETE FROM fingerprint_biometric_data
+      WHERE user_id = :userId
+        AND company_id = :companyId
+        AND device_info->>'device_id' = :deviceId
+    `, {
+      replacements: {
+        userId: user_id,
+        companyId: company_id,
+        deviceId: device_id
+      },
+      type: sequelize.QueryTypes.DELETE
+    });
+
+    // Insertar nuevas huellas
+    const insertedFingerprints = [];
+
+    for (const fp of fingerprints) {
+      const result = await sequelize.query(`
+        INSERT INTO fingerprint_biometric_data (
+          id,
+          user_id,
+          company_id,
+          finger_position,
+          template_data,
+          minutiae_data,
+          quality_score,
+          capture_timestamp,
+          is_active,
+          device_info,
+          created_at,
+          updated_at
+        ) VALUES (
+          gen_random_uuid(),
+          :userId,
+          :companyId,
+          :fingerPosition,
+          decode(:templateData, 'hex'),
+          :minutiaeData::jsonb,
+          :qualityScore,
+          :captureTimestamp,
+          true,
+          :deviceInfo::jsonb,
+          NOW(),
+          NOW()
+        ) RETURNING id
+      `, {
+        replacements: {
+          userId: user_id,
+          companyId: company_id,
+          fingerPosition: fp.finger_position,
+          templateData: Buffer.from(fp.template_data, 'utf8').toString('hex'),
+          minutiaeData: JSON.stringify(fp.minutiae_data),
+          qualityScore: fp.quality_score,
+          captureTimestamp: fp.capture_timestamp,
+          deviceInfo: JSON.stringify({
+            device_id: device_id,
+            ...fp.device_info
+          })
+        },
+        type: sequelize.QueryTypes.INSERT
+      });
+
+      insertedFingerprints.push({
+        id: result[0][0].id,
+        finger_position: fp.finger_position,
+        quality_score: fp.quality_score
+      });
+    }
+
+    // Actualizar flags en la tabla users
+    await sequelize.query(`
+      UPDATE users
+      SET
+        has_fingerprint = true,
+        biometric_enrolled = true,
+        biometric_templates_count = COALESCE(biometric_templates_count, 0) + :count,
+        last_biometric_scan = NOW(),
+        biometric_last_updated = NOW()
+      WHERE user_id = :userId
+    `, {
+      replacements: {
+        userId: user_id,
+        count: fingerprints.length
+      },
+      type: sequelize.QueryTypes.UPDATE
+    });
+
+    console.log(`✅ [FINGERPRINT-ENROLL] Registradas ${fingerprints.length} huellas para user ${user_id}`);
+
+    res.status(201).json({
+      success: true,
+      message: `${fingerprints.length} huellas registradas exitosamente`,
+      data: {
+        user_id: user_id,
+        fingerprints_enrolled: insertedFingerprints.length,
+        fingerprints: insertedFingerprints,
+        enrollment_timestamp: enrollment_timestamp,
+        device_id: device_id
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [FINGERPRINT-ENROLL] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al registrar huellas dactilares',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route POST /api/v1/biometric/fingerprint/verify
+ * @desc Verificar huella dactilar de un empleado
+ */
+router.post('/fingerprint/verify', auth, async (req, res) => {
+  try {
+    const {
+      user_id,
+      company_id,
+      device_id,
+      authenticated
+    } = req.body;
+
+    console.log(`🔐 [FINGERPRINT-VERIFY] Verificando user: ${user_id}, company: ${company_id}`);
+
+    // Validaciones
+    if (!user_id || !company_id || !device_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id, company_id y device_id son requeridos'
+      });
+    }
+
+    const { sequelize } = require('../config/database-postgresql');
+
+    // Verificar que el usuario tiene huellas registradas en este dispositivo
+    const [fingerprints] = await sequelize.query(`
+      SELECT
+        id,
+        finger_position,
+        quality_score,
+        capture_timestamp
+      FROM fingerprint_biometric_data
+      WHERE user_id = :userId
+        AND company_id = :companyId
+        AND device_info->>'device_id' = :deviceId
+        AND is_active = true
+      ORDER BY capture_timestamp DESC
+    `, {
+      replacements: {
+        userId: user_id,
+        companyId: company_id,
+        deviceId: device_id
+      },
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    if (!fingerprints || fingerprints.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No hay huellas registradas para este dispositivo',
+        action: 'enroll_required'
+      });
+    }
+
+    // Si la autenticación fue exitosa (verificado por local_auth)
+    if (authenticated === true) {
+      // Actualizar último escaneo
+      await sequelize.query(`
+        UPDATE users
+        SET last_biometric_scan = NOW()
+        WHERE user_id = :userId
+      `, {
+        replacements: { userId: user_id },
+        type: sequelize.QueryTypes.UPDATE
+      });
+
+      // Obtener datos del usuario
+      const user = await User.findOne({
+        where: { user_id: user_id, company_id: company_id },
+        attributes: ['user_id', 'employeeId', 'firstName', 'lastName', 'email', 'role']
+      });
+
+      console.log(`✅ [FINGERPRINT-VERIFY] Verificación exitosa para user ${user_id}`);
+
+      return res.json({
+        success: true,
+        message: 'Huella verificada correctamente',
+        data: {
+          user_id: user_id,
+          employee_id: user.employeeId,
+          full_name: `${user.firstName} ${user.lastName}`,
+          fingerprints_count: fingerprints.length,
+          verified_at: new Date().toISOString()
+        }
+      });
+    } else {
+      console.log(`❌ [FINGERPRINT-VERIFY] Verificación fallida para user ${user_id}`);
+
+      return res.status(401).json({
+        success: false,
+        message: 'Huella no reconocida'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ [FINGERPRINT-VERIFY] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al verificar huella dactilar',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

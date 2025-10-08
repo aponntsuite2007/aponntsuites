@@ -336,13 +336,13 @@ router.get('/users-isi', auth, async (req, res) => {
         u.phone,
         u.role,
         u.company_id,
-        u."isActive",
+        u.is_active,
         u."createdAt",
         bt.id as template_id,
         bt.created_at as biometric_registered
       FROM users u
       LEFT JOIN biometric_templates bt ON u.user_id::text = bt.employee_id AND bt.company_id = u.company_id
-      WHERE u.company_id = 11 AND u."isActive" = true
+      WHERE u.company_id = 11 AND u.is_active = true
       ORDER BY u."firstName", u."lastName"
     `, { type: sequelize.QueryTypes.SELECT });
 

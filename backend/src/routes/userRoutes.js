@@ -34,7 +34,7 @@ function formatUserForFrontend(user) {
     email: userData.email,
     role: userData.role,
     isActive: userData.isActive !== undefined ? userData.isActive : true,
-    company_id: userData.company_id, // CRITICAL: Agregar company_id explícitamente
+    company_id: userData.companyId, // FIXED: Use companyId from Sequelize model
     createdAt: userData.createdAt,
     updatedAt: userData.updatedAt,
     // Add computed fields
@@ -43,10 +43,11 @@ function formatUserForFrontend(user) {
   };
 
   // Add optional fields (mix of camelCase and snake_case due to migration)
+  if (userData.legajo !== undefined) formatted.legajo = userData.legajo;
   if (userData.phone !== undefined) formatted.phone = userData.phone;
   if (userData.department_id !== undefined) formatted.departmentId = userData.department_id;
   if (userData.departmentId !== undefined) formatted.departmentId = userData.departmentId;
-  if (userData.company_id !== undefined) formatted.companyId = userData.company_id;
+  if (userData.companyId !== undefined) formatted.companyId = userData.companyId; // FIXED: Use companyId from Sequelize
   if (userData.defaultBranchId !== undefined) formatted.defaultBranchId = userData.defaultBranchId;
   if (userData.default_branch_id !== undefined) formatted.defaultBranchId = userData.default_branch_id;
   if (userData.hireDate !== undefined) formatted.hireDate = userData.hireDate;
@@ -74,6 +75,28 @@ function formatUserForFrontend(user) {
     formatted.allowOutsideRadius = userData.allowed_locations?.length > 0;
   }
   if (userData.allowOutsideRadius !== undefined) formatted.allowOutsideRadius = userData.allowOutsideRadius;
+
+  // Configuración de acceso a kioscos y app móvil
+  if (userData.canUseMobileApp !== undefined) formatted.canUseMobileApp = userData.canUseMobileApp;
+  if (userData.can_use_mobile_app !== undefined) formatted.canUseMobileApp = userData.can_use_mobile_app;
+  if (userData.canUseKiosk !== undefined) formatted.canUseKiosk = userData.canUseKiosk;
+  if (userData.can_use_kiosk !== undefined) formatted.canUseKiosk = userData.can_use_kiosk;
+  if (userData.canUseAllKiosks !== undefined) formatted.canUseAllKiosks = userData.canUseAllKiosks;
+  if (userData.can_use_all_kiosks !== undefined) formatted.canUseAllKiosks = userData.can_use_all_kiosks;
+  if (userData.authorizedKiosks !== undefined) formatted.authorizedKiosks = userData.authorizedKiosks;
+  if (userData.authorized_kiosks !== undefined) formatted.authorizedKiosks = userData.authorized_kiosks;
+
+  // Horario flexible
+  if (userData.hasFlexibleSchedule !== undefined) formatted.hasFlexibleSchedule = userData.hasFlexibleSchedule;
+  if (userData.has_flexible_schedule !== undefined) formatted.hasFlexibleSchedule = userData.has_flexible_schedule;
+  if (userData.flexibleScheduleNotes !== undefined) formatted.flexibleScheduleNotes = userData.flexibleScheduleNotes;
+  if (userData.flexible_schedule_notes !== undefined) formatted.flexibleScheduleNotes = userData.flexible_schedule_notes;
+
+  // Autorización de llegadas tardías
+  if (userData.canAuthorizeLateArrivals !== undefined) formatted.canAuthorizeLateArrivals = userData.canAuthorizeLateArrivals;
+  if (userData.can_authorize_late_arrivals !== undefined) formatted.canAuthorizeLateArrivals = userData.can_authorize_late_arrivals;
+  if (userData.authorizedDepartments !== undefined) formatted.authorizedDepartments = userData.authorizedDepartments;
+  if (userData.authorized_departments !== undefined) formatted.authorizedDepartments = userData.authorized_departments;
 
   // Default values for required frontend fields
   formatted.department = userData.departmentId ? { name: 'Departamento' } : null;
@@ -118,8 +141,8 @@ router.get('/', auth, supervisorOrAdmin, async (req, res) => {
     const where = {};
 
     // Filter by company for multi-tenant security
-    if (req.user.company_id) {
-      where.company_id = req.user.company_id;
+    if (req.user.companyId) {
+      where.companyId = req.user.companyId;
     }
 
     if (search) {
@@ -138,11 +161,31 @@ router.get('/', auth, supervisorOrAdmin, async (req, res) => {
 
     const { count, rows: users } = await User.findAndCountAll({
       where,
-      attributes: { exclude: ['password'] },
+      attributes: {
+        exclude: ['password'],
+        include: [
+          'can_use_mobile_app',
+          'can_use_kiosk',
+          'can_use_all_kiosks',
+          'authorized_kiosks',
+          'has_flexible_schedule',
+          'flexible_schedule_notes',
+          'can_authorize_late_arrivals',
+          'authorized_departments'
+        ]
+      },
       limit: parseInt(limit),
       offset,
       order: [['createdAt', 'DESC']]
     });
+
+    // DEBUG: Log raw user data
+    if (users[0]) {
+      console.log('🔍 DEBUG: Raw user data from Sequelize:');
+      console.log('  - can_use_mobile_app:', users[0].can_use_mobile_app);
+      console.log('  - can_use_kiosk:', users[0].can_use_kiosk);
+      console.log('  - dataValues:', Object.keys(users[0].dataValues || {}));
+    }
 
     // Format users for frontend
     const formattedUsers = users.map(formatUserForFrontend);
@@ -241,8 +284,13 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
     // Hash de la contraseña
     const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_ROUNDS));
 
+    // Generate usuario from email if not provided
+    const usuario = req.body.usuario || email.split('@')[0] || employeeId;
+
     // Convert frontend fields to database fields
     const newUser = await User.create({
+      usuario: usuario,
+      companyId: req.user.companyId,
       employeeId: employeeId,
       firstName: firstName,
       lastName: lastName,
@@ -479,14 +527,14 @@ router.put('/:id/access-config', auth, async (req, res) => {
       authorizedKiosks
     } = req.body;
 
-    const companyId = req.user?.company_id || 1;
+    const companyId = req.user?.companyId || 1;
 
     console.log('🔐 [ACCESS-CONFIG] Actualizando configuración de acceso para usuario:', req.params.id);
 
     const user = await User.findOne({
       where: {
         id: req.params.id,
-        company_id: companyId
+        companyId: companyId
       }
     });
 
@@ -557,14 +605,14 @@ router.put('/:id/flexible-schedule', auth, async (req, res) => {
       flexibleScheduleNotes
     } = req.body;
 
-    const companyId = req.user?.company_id || 1;
+    const companyId = req.user?.companyId || 1;
 
     console.log('⏰ [FLEXIBLE-SCHEDULE] Actualizando horario flexible para usuario:', req.params.id);
 
     const user = await User.findOne({
       where: {
         id: req.params.id,
-        company_id: companyId
+        companyId: companyId
       }
     });
 
@@ -615,12 +663,12 @@ router.put('/:id/flexible-schedule', auth, async (req, res) => {
  */
 router.get('/:id/check-leave-status', auth, async (req, res) => {
   try {
-    const companyId = req.user?.company_id || 1;
+    const companyId = req.user?.companyId || 1;
 
     const user = await User.findOne({
       where: {
         id: req.params.id,
-        company_id: companyId
+        companyId: companyId
       }
     });
 
@@ -647,6 +695,79 @@ router.get('/:id/check-leave-status', auth, async (req, res) => {
     res.status(500).json({
       error: 'Error interno del servidor',
       success: false
+    });
+  }
+});
+
+/**
+ * @route GET /api/v1/users/by-employee-id/:employeeId
+ * @desc Buscar usuario por employeeId (legajo)
+ */
+router.get('/by-employee-id/:employeeId', auth, async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const { companyId } = req.query;
+
+    console.log(`🔍 [USER-BY-EMPLOYEE-ID] Buscando employeeId: ${employeeId}, company: ${companyId}`);
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'companyId es requerido'
+      });
+    }
+
+    const user = await User.findOne({
+      where: {
+        employeeId: employeeId,
+        company_id: parseInt(companyId),
+        is_active: true
+      },
+      attributes: [
+        'user_id',
+        'employeeId',
+        'firstName',
+        'lastName',
+        'email',
+        'role',
+        'company_id',
+        'has_fingerprint',
+        'has_facial_data',
+        'biometric_enrolled'
+      ]
+    });
+
+    if (!user) {
+      console.log(`❌ [USER-BY-EMPLOYEE-ID] No encontrado: ${employeeId}`);
+      return res.status(404).json({
+        success: false,
+        error: 'Empleado no encontrado'
+      });
+    }
+
+    console.log(`✅ [USER-BY-EMPLOYEE-ID] Encontrado: ${user.firstName} ${user.lastName}`);
+
+    res.json({
+      success: true,
+      data: {
+        user_id: user.user_id,
+        employeeId: user.employeeId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        company_id: user.company_id,
+        has_fingerprint: user.has_fingerprint || false,
+        has_facial_data: user.has_facial_data || false,
+        biometric_enrolled: user.biometric_enrolled || false
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [USER-BY-EMPLOYEE-ID] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
     });
   }
 });
