@@ -4524,6 +4524,16 @@
                 
                 script.onload = () => {
                     console.log(`✅ [PROGRESSIVE] Módulo ${tabName} cargado`);
+
+                    // FORCE HIDE ALL MODALS GLOBALLY (Render cache workaround)
+                    setTimeout(() => {
+                        document.querySelectorAll('.modal').forEach(modal => {
+                            if (modal && modal.style.display !== 'none') {
+                                modal.style.setProperty('display', 'none', 'important');
+                                console.log('🔒🔒🔒 [GLOBAL-FORCE-HIDE] Modal ocultado:', modal.id);
+                            }
+                        });
+                    }, 200);
                     
                     // Debug específico para notifications
                     if (tabName === 'notifications') {
