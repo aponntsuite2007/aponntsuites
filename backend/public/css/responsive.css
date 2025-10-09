@@ -1,0 +1,235 @@
+/**
+ * 📱 RESPONSIVE CSS - Mobile First
+ * Adaptación automática para móviles/tablets
+ * NO modifica estilos desktop existentes
+ */
+
+/* ====================================
+   TABLET (hasta 1024px)
+   ==================================== */
+@media screen and (max-width: 1024px) {
+    /* Sidebar más estrecho en tablet */
+    .sidebar {
+        width: 200px !important;
+    }
+
+    .main-content {
+        margin-left: 200px !important;
+    }
+}
+
+/* ====================================
+   MÓVIL (hasta 768px)
+   ==================================== */
+@media screen and (max-width: 768px) {
+    /* Ocultar sidebar en móvil por defecto */
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        width: 280px !important;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+    }
+
+    /* Sidebar visible cuando está activo */
+    .sidebar.active {
+        left: 0 !important;
+    }
+
+    /* Contenido principal ocupa todo el ancho */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 10px !important;
+    }
+
+    /* Header responsive */
+    .header {
+        padding: 10px !important;
+    }
+
+    .header-left {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .logo-container img {
+        max-height: 40px !important;
+    }
+
+    /* Botón hamburguesa para abrir sidebar */
+    .mobile-menu-btn {
+        display: block !important;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 1001;
+        background: #2c3e50;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 20px;
+    }
+
+    /* Overlay cuando sidebar está abierto */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+        display: block !important;
+    }
+
+    /* Module grid responsive */
+    .module-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+        padding: 10px !important;
+    }
+
+    .module-card {
+        min-height: auto !important;
+    }
+
+    /* Tablas horizontalmente scrolleables */
+    .table-container,
+    table {
+        overflow-x: auto !important;
+        display: block !important;
+    }
+
+    table {
+        min-width: 600px;
+    }
+
+    /* Formularios responsive */
+    .form-row {
+        flex-direction: column !important;
+    }
+
+    .form-group {
+        width: 100% !important;
+        margin-bottom: 15px !important;
+    }
+
+    /* Botones más grandes para touch */
+    button,
+    .btn {
+        min-height: 44px !important;
+        padding: 12px 20px !important;
+        font-size: 16px !important;
+    }
+
+    /* Filtros en columna */
+    .filters-container,
+    .filter-row {
+        flex-direction: column !important;
+    }
+
+    .filter-group {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* Stats cards en columna */
+    .stats-container {
+        flex-direction: column !important;
+    }
+
+    .stat-card {
+        width: 100% !important;
+        margin-bottom: 15px !important;
+    }
+
+    /* Modales centrados */
+    .modal-content {
+        width: 95% !important;
+        margin: 10px auto !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+    }
+
+    /* Charts responsive */
+    canvas {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+}
+
+/* ====================================
+   MÓVIL PEQUEÑO (hasta 480px)
+   ==================================== */
+@media screen and (max-width: 480px) {
+    /* Textos más pequeños */
+    body {
+        font-size: 14px !important;
+    }
+
+    h1 {
+        font-size: 24px !important;
+    }
+
+    h2 {
+        font-size: 20px !important;
+    }
+
+    h3 {
+        font-size: 18px !important;
+    }
+
+    /* Padding reducido */
+    .container {
+        padding: 5px !important;
+    }
+
+    /* Botones full width */
+    .btn-group {
+        flex-direction: column !important;
+    }
+
+    .btn-group button {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* Inputs más grandes */
+    input,
+    select,
+    textarea {
+        font-size: 16px !important; /* Evita zoom en iOS */
+        padding: 12px !important;
+    }
+}
+
+/* ====================================
+   UTILIDADES RESPONSIVE
+   ==================================== */
+.hide-mobile {
+    @media screen and (max-width: 768px) {
+        display: none !important;
+    }
+}
+
+.show-mobile {
+    display: none !important;
+    @media screen and (max-width: 768px) {
+        display: block !important;
+    }
+}
+
+.hide-desktop {
+    @media screen and (min-width: 769px) {
+        display: none !important;
+    }
+}

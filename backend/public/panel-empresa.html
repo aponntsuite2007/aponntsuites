@@ -569,8 +569,18 @@
             color: #0066CC;
         }
     </style>
+
+    <!-- 📱 Responsive CSS para móviles/tablets -->
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
+    <!-- 📱 Botón menú móvil (solo visible en móvil) -->
+    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" style="display: none;">
+        ☰
+    </button>
+
+    <!-- 📱 Overlay para cerrar sidebar en móvil -->
+    <div class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
 
     <!-- 🏢 MODAL DE LOGIN MULTI-TENANT PROFESIONAL -->
     <div id="loginContainer" class="login-container">
@@ -6136,6 +6146,42 @@
     }
 
     console.log('✅ Sistema Multi-Tenant inicializado');
+    </script>
+
+    <!-- 📱 Script para menú móvil responsive -->
+    <script>
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            if (sidebar && overlay) {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            if (sidebar && overlay) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        }
+
+        // Cerrar sidebar al hacer click en un link del menú (en móvil)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.innerWidth <= 768) {
+                const sidebarLinks = document.querySelectorAll('.sidebar a');
+                sidebarLinks.forEach(link => {
+                    link.addEventListener('click', closeMobileSidebar);
+                });
+            }
+        });
+
+        // Cerrar sidebar al cambiar de orientación
+        window.addEventListener('orientationchange', closeMobileSidebar);
     </script>
 </body>
 </html>
