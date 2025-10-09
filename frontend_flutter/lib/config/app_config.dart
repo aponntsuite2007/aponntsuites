@@ -9,8 +9,8 @@ class AppConfig {
   
   // API Configuration
   static const String baseUrl = 'http://localhost:3001'; // Para web y desarrollo
-  // Emulador Android debe usar 10.0.2.2 para acceder al host
-  static const String baseUrlProd = 'http://10.0.2.2:3001'; // Para emulador/dispositivo en desarrollo
+  // PRODUCCIÓN: URL de Render pre-configurada
+  static const String baseUrlProd = 'https://aponntsuites.onrender.com'; // Producción Render
   static const String apiVersion = 'v1';
   static String get apiBaseUrl => '${getBaseUrl()}/api/$apiVersion';
   

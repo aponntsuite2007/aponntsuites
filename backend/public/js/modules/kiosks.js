@@ -27,9 +27,12 @@ async function showKiosksContent() {
                     <h2>📟 Gestión de Kioscos</h2>
                     <p>Administra los kioscos físicos para control de asistencia</p>
                 </div>
-                <div class="module-header-actions">
+                <div class="module-header-actions" style="display: flex; gap: 10px;">
+                    <a href="/downloads/kiosk-app.apk" download class="btn btn-success btn-sm" style="text-decoration: none;">
+                        📱 Descargar APK Kiosko
+                    </a>
                     <button onclick="showAddKioskModal()" class="btn btn-primary btn-sm">
-                        ➕ Nuevo
+                        ➕ Nuevo Kiosko
                     </button>
                 </div>
             </div>
