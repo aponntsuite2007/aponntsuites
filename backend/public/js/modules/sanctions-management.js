@@ -69,7 +69,7 @@ function showSanctionsManagementContent() {
         </div>
 
         <!-- Modal para nueva sanción -->
-        <div id="newSanctionModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
+        <div id="newSanctionModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
             <div class="modal-content" style="position: relative; margin: 1% auto; width: 95%; max-width: 1200px; background: white; border-radius: 12px; max-height: 95vh; overflow-y: auto;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0;">🚨 Nueva Sanción Disciplinaria</h3>
@@ -82,7 +82,7 @@ function showSanctionsManagementContent() {
         </div>
 
         <!-- Modal para detalles de sanción -->
-        <div id="sanctionDetailsModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9997;">
+        <div id="sanctionDetailsModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9997;">
             <div class="modal-content" style="position: relative; margin: 2% auto; width: 90%; max-width: 900px; background: white; border-radius: 12px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0;">📋 Detalles de Sanción</h3>
@@ -484,11 +484,13 @@ function getNewSanctionForm() {
 
 // Modal functions
 function showNewSanctionModal() {
-    document.getElementById('newSanctionModal').style.display = 'block';
+    const modal = document.getElementById('newSanctionModal');
+    modal.style.setProperty('display', 'block', 'important');
 }
 
 function closeNewSanctionModal() {
-    document.getElementById('newSanctionModal').style.display = 'none';
+    const modal = document.getElementById('newSanctionModal');
+    modal.style.setProperty('display', 'none', 'important');
 }
 
 function showSanctionDetails(sanctionId) {
@@ -556,11 +558,12 @@ function showSanctionDetails(sanctionId) {
         </div>
     `;
 
-    modal.style.display = 'block';
+    modal.style.setProperty('display', 'block', 'important');
 }
 
 function closeSanctionDetailsModal() {
-    document.getElementById('sanctionDetailsModal').style.display = 'none';
+    const modal = document.getElementById('sanctionDetailsModal');
+    modal.style.setProperty('display', 'none', 'important');
 }
 
 // Load functions
