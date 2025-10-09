@@ -9,11 +9,10 @@ const { Sequelize } = require('sequelize');
  * 2. Variables individuales (para desarrollo local)
  */
 
-// Configuración de conexión
-const connectionConfig = process.env.DATABASE_URL
-  ? {
+// Crear instancia de Sequelize según el modo
+const sequelize = process.env.DATABASE_URL
+  ? new Sequelize(process.env.DATABASE_URL, {
       // Modo producción: usa DATABASE_URL de Render
-      connectionString: process.env.DATABASE_URL,
       dialect: 'postgres',
       dialectOptions: {
         ssl: {
@@ -38,39 +37,38 @@ const connectionConfig = process.env.DATABASE_URL
         idle: 30000,
         evict: 10000
       }
-    }
-  : {
+    })
+  : new Sequelize(
       // Modo desarrollo: usa variables individuales
-      database: process.env.POSTGRES_DB || process.env.DB_NAME || 'attendance_system',
-      username: process.env.POSTGRES_USER || process.env.DB_USER || 'postgres',
-      password: process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD || 'Aedr15150302',
-      host: process.env.POSTGRES_HOST || process.env.DB_HOST || 'localhost',
-      port: process.env.POSTGRES_PORT || process.env.DB_PORT || 5432,
-      dialect: 'postgres',
-      logging: process.env.DB_LOGGING === 'true' ? console.log : false,
-      timezone: '+00:00',
-      dialectOptions: {
+      process.env.POSTGRES_DB || process.env.DB_NAME || 'attendance_system',
+      process.env.POSTGRES_USER || process.env.DB_USER || 'postgres',
+      process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD || 'Aedr15150302',
+      {
+        host: process.env.POSTGRES_HOST || process.env.DB_HOST || 'localhost',
+        port: process.env.POSTGRES_PORT || process.env.DB_PORT || 5432,
+        dialect: 'postgres',
+        logging: process.env.DB_LOGGING === 'true' ? console.log : false,
         timezone: '+00:00',
-        useUTC: false,
-        dateStrings: true,
-        typeCast: true,
-        connectTimeout: 60000,
-        acquireTimeout: 60000,
-        timeout: 60000,
-        statement_timeout: 30000,
-        query_timeout: 30000
-      },
-      pool: {
-        max: 50,
-        min: 10,
-        acquire: 60000,
-        idle: 30000,
-        evict: 10000
+        dialectOptions: {
+          timezone: '+00:00',
+          useUTC: false,
+          dateStrings: true,
+          typeCast: true,
+          connectTimeout: 60000,
+          acquireTimeout: 60000,
+          timeout: 60000,
+          statement_timeout: 30000,
+          query_timeout: 30000
+        },
+        pool: {
+          max: 50,
+          min: 10,
+          acquire: 60000,
+          idle: 30000,
+          evict: 10000
+        }
       }
-    };
-
-// Crear instancia de Sequelize
-const sequelize = new Sequelize(connectionConfig);
+    );
 
 // Log de configuración
 if (process.env.DATABASE_URL) {
