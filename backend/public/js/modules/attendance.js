@@ -363,15 +363,16 @@ async function loadEmployeeFilter() {
             // Limpiar opciones existentes (excepto "Todos")
             employeeSelect.innerHTML = '<option value="">Todos los empleados</option>';
 
-            if (result.success && result.data && Array.isArray(result.data)) {
-                result.data.forEach(user => {
+            // El endpoint devuelve { users: [...] }
+            if (result.users && Array.isArray(result.users)) {
+                result.users.forEach(user => {
                     const option = document.createElement('option');
-                    option.value = user.user_id;
-                    option.textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.usuario;
+                    option.value = user.id;  // Usar 'id' del usuario
+                    option.textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.employeeId;
                     employeeSelect.appendChild(option);
                 });
 
-                console.log(`✅ [ATTENDANCE] Cargados ${result.data.length} empleados en filtro`);
+                console.log(`✅ [ATTENDANCE] Cargados ${result.users.length} empleados en filtro`);
             } else {
                 console.warn('⚠️ [ATTENDANCE] Formato inesperado de empleados:', result);
             }
