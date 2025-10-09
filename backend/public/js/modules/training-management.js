@@ -632,10 +632,21 @@ function showTrainingManagementContent() {
     
     // Add custom styles
     addTrainingStyles();
-    
+
+    // FORCE HIDE ALL MODALS (fix for Render cache issue)
+    setTimeout(() => {
+        const modals = document.querySelectorAll('#trainingModal, #trainingDetailsModal, #evaluationModal, #employeeProgressModal');
+        modals.forEach(modal => {
+            if (modal) {
+                modal.style.setProperty('display', 'none', 'important');
+                console.log('🔒 [FORCE-HIDE] Modal ocultado:', modal.id);
+            }
+        });
+    }, 100);
+
     // Initialize with dashboard view
     switchTrainingView('dashboard');
-    
+
     // Load initial data
     loadTrainingData();
 }

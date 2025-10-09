@@ -97,6 +97,17 @@ function showVacationManagementContent() {
 
     console.log('✅ [VACATION-MANAGEMENT] Contenido renderizado exitosamente');
 
+    // FORCE HIDE ALL MODALS (fix for Render cache issue)
+    setTimeout(() => {
+        const modals = document.querySelectorAll('#newVacationModal, #vacationDetailsModal, #editVacationModal');
+        modals.forEach(modal => {
+            if (modal) {
+                modal.style.setProperty('display', 'none', 'important');
+                console.log('🔒 [FORCE-HIDE] Modal ocultado:', modal.id);
+            }
+        });
+    }, 100);
+
     // Initialize vacation data
     loadVacationRequests();
 }

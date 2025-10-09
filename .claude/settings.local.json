@@ -73,7 +73,13 @@
       "Bash(echo:*)",
       "Bash(flutter:*)",
       "Bash(C:/Users/notebook/AppData/Local/Android/Sdk/emulator/emulator.exe -list-avds)",
-      "Bash(C:/Users/notebook/AppData/Local/Android/Sdk/emulator/emulator.exe -avd Medium_Phone_API_36.0 -no-snapshot-load)"
+      "Bash(C:/Users/notebook/AppData/Local/Android/Sdk/emulator/emulator.exe -avd Medium_Phone_API_36.0 -no-snapshot-load)",
+      "Bash(start https://aponntsuites.onrender.com/panel-empresa.html)",
+      "Bash(git fetch:*)",
+      "Bash(git config:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(git log:*)",
+      "Bash(git ls-tree:*)"
     ],
     "deny": [],
     "ask": []
