@@ -714,7 +714,7 @@ async function requestEmployeePhoto(employeeId) {
     const employee = mockEmployees.find(emp => emp.id === employeeId) || { name: `Empleado ${employeeId}` };
     
     const modalContent = `
-        <div class="modal" style="display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; overflow-y: auto;">
+        <div class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; overflow-y: auto;">
             <div class="modal-content" style="background: white; margin: 2% auto; padding: 30px; border-radius: 10px; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="color: #2c3e50; margin: 0;">📷 Solicitar Foto Médica</h2>
@@ -858,7 +858,7 @@ async function requestEmployeeStudy(employeeId) {
     const employee = mockEmployees.find(emp => emp.id === employeeId) || { name: `Empleado ${employeeId}` };
     
     const modalContent = `
-        <div class="modal" style="display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; overflow-y: auto;">
+        <div class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; overflow-y: auto;">
             <div class="modal-content" style="background: white; margin: 2% auto; padding: 30px; border-radius: 10px; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="color: #2c3e50; margin: 0;">🩺 Solicitar Estudio Médico</h2>
@@ -952,7 +952,7 @@ async function requestEmployeeCertificate(employeeId) {
     const employee = mockEmployees.find(emp => emp.id === employeeId) || { name: `Empleado ${employeeId}` };
     
     const modalContent = `
-        <div class="modal" style="display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; overflow-y: auto;">
+        <div class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; overflow-y: auto;">
             <div class="modal-content" style="background: white; margin: 2% auto; padding: 30px; border-radius: 10px; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="color: #2c3e50; margin: 0;">📄 Solicitar Certificado Médico</h2>
@@ -2004,7 +2004,7 @@ async function requestEmployeePrescription(employeeId) {
     const employee = mockEmployees.find(emp => emp.id === employeeId) || { name: `Empleado ${employeeId}` };
     
     const modalContent = `
-        <div class="modal" style="display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; overflow-y: auto;">
+        <div class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; overflow-y: auto;">
             <div class="modal-content" style="background: white; margin: 2% auto; padding: 30px; border-radius: 10px; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="color: #2c3e50; margin: 0;">💊 Solicitar Receta Médica</h2>

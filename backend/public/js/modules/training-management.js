@@ -1735,7 +1735,7 @@ function viewTrainingDetails(trainingId) {
     };
     
     const detailsHtml = `
-        <div class="modal" id="trainingDetailsModal" style="display: block;">
+        <div class="modal" id="trainingDetailsModal" style="display: none !important;">
             <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h3>${category?.icon || '📚'} Detalles: ${training.title}</h3>
@@ -1953,7 +1953,7 @@ function viewTrainingParticipants(trainingId) {
     };
     
     const participantsHtml = `
-        <div class="modal" id="trainingParticipantsModal" style="display: block;">
+        <div class="modal" id="trainingDetailsModal" style="display: none !important;">
             <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h3>👥 Participantes: ${training.title}</h3>
@@ -2942,7 +2942,7 @@ function viewEvaluationDetails(evaluationId) {
     const training = allTrainings.find(t => t.id === evaluation.trainingId);
     
     const detailsHtml = `
-        <div class="modal" id="evaluationDetailsModal" style="display: block;">
+        <div class="modal" id="trainingDetailsModal" style="display: none !important;">
             <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h3>📋 Detalles de Evaluación: ${evaluation.title}</h3>
@@ -3030,7 +3030,7 @@ function previewEvaluation(evaluationId) {
     
     // Create preview modal
     const previewHtml = `
-        <div class="modal" id="evaluationPreviewModal" style="display: block;">
+        <div class="modal" id="trainingDetailsModal" style="display: none !important;">
             <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h3>👁️ Vista Previa: ${evaluation.title}</h3>
@@ -3530,7 +3530,7 @@ function exportEmployeeReport() {
 
 function viewTopPerformers() {
     const topPerformersHtml = `
-        <div class="modal" id="topPerformersModal" style="display: block;">
+        <div class="modal" id="trainingDetailsModal" style="display: none !important;">
             <div class="modal-content" style="max-width: 800px;">
                 <div class="modal-header">
                     <h3>🏆 Top Performers del Mes</h3>
@@ -3999,7 +3999,7 @@ function generateDetailedReport(reportType) {
     // Simulate report generation
     setTimeout(() => {
         const reportModal = `
-            <div class="modal" id="detailedReportModal" style="display: block;">
+            <div class="modal" id="trainingDetailsModal" style="display: none !important;">
                 <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
                     <div class="modal-header">
                         <h3>📋 ${title}</h3>
@@ -4542,7 +4542,7 @@ function showEventDetails(eventId) {
     if (!event) return;
     
     const eventDetailsHtml = `
-        <div class="modal" id="eventDetailsModal" style="display: block;">
+        <div class="modal" id="trainingDetailsModal" style="display: none !important;">
             <div class="modal-content" style="max-width: 600px;">
                 <div class="modal-header">
                     <h3>📅 Detalles del Evento</h3>
@@ -4639,7 +4639,7 @@ function generateCertificates(trainingId) {
     // Simulate certificate generation
     setTimeout(() => {
         const certificateHtml = `
-            <div class="modal" id="certificateGenerationModal" style="display: block;">
+            <div class="modal" id="trainingDetailsModal" style="display: none !important;">
                 <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
                     <div class="modal-header">
                         <h3>🏆 Generación de Certificados</h3>
@@ -4752,7 +4752,7 @@ function previewCertificate(participantId, trainingId) {
     });
     
     const certificateHtml = `
-        <div class="modal" id="certificatePreviewModal" style="display: block;">
+        <div class="modal" id="trainingDetailsModal" style="display: none !important;">
             <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h3>🏆 Vista Previa del Certificado</h3>
