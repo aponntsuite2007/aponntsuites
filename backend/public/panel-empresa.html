@@ -3638,13 +3638,6 @@
                             showModuleFallback(moduleId, moduleName, 'employee-map.js no cargado');
                         }
                         break;
-                    case 'google-maps-integration':
-                        if (typeof showGoogleMapsIntegrationContent === 'function') {
-                            showGoogleMapsIntegrationContent();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'google-maps-integration.js no cargado');
-                        }
-                        break;
                     case 'legal-dashboard':
                         if (typeof showLegalDashboardContent === 'function') {
                             showLegalDashboardContent();
@@ -3719,7 +3712,7 @@
                         break;
                     default:
                         console.log(`❌ [SWITCH-DEBUG] NO SE ENCONTRÓ CASE para moduleId: "${moduleId}"`);
-                        console.log(`📝 [SWITCH-DEBUG] Cases disponibles: training, medical, medical-dashboard, psychological, psychological-assessment, sanctions, sanctions-management, vacation, vacation-management, dashboard, attendance, users, access-control, notifications, notifications-complete, absence-notifications, fehaciente-consent, biometric, departments, siac-admin-panel, siac-clients, siac-products, siac-billing, clientes, facturacion, plantillas-fiscales, job-postings, training-management, document-management, employee-map, google-maps-integration, legal-dashboard, licensing-management, payroll-liquidation, art-management, network, settings, shifts, terms-conditions, permissions-test`);
+                        console.log(`📝 [SWITCH-DEBUG] Cases disponibles: training, medical, medical-dashboard, psychological, psychological-assessment, sanctions, sanctions-management, vacation, vacation-management, dashboard, attendance, users, access-control, notifications, notifications-complete, absence-notifications, fehaciente-consent, biometric, departments, siac-admin-panel, siac-clients, siac-products, siac-billing, clientes, facturacion, plantillas-fiscales, job-postings, training-management, document-management, employee-map, legal-dashboard, licensing-management, payroll-liquidation, art-management, network, settings, shifts, terms-conditions, permissions-test`);
                         // Para módulos que no tienen implementación específica aún
                         showModuleFallback(moduleId, moduleName, `ID no encontrado: "${moduleId}"`);
                 }
