@@ -410,12 +410,12 @@ async function loadEmployeeLocations() {
     }
     
     try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
         const response = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/location/current'), {
+            method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            credentials: 'include'
         });
         
         if (response.ok) {
@@ -442,12 +442,12 @@ async function loadEmployeeLocations() {
 // Load real employee locations from database
 async function loadRealEmployeeLocations() {
     try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        const response = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/employees'), {
+        const response = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/users'), {
+            method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            credentials: 'include'
         });
         
         if (response.ok) {
@@ -1123,12 +1123,12 @@ function getTimeAgo(date) {
 // Show location statistics
 async function showLocationStats() {
     try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
         const response = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/location/stats'), {
+            method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            credentials: 'include'
         });
         
         let stats;

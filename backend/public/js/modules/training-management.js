@@ -7,7 +7,7 @@ let allEvaluations = [];
 let allIndependentEvaluations = []; // 🆕 Evaluaciones independientes (sin capacitación vinculada)
 let employeeTrainings = [];
 
-// LocalStorage keys for persistence
+// LocalStorage keys for persistence (LEGACY - ahora usa API)
 const STORAGE_KEYS = {
     TRAININGS: 'aponnt_trainings',
     EVALUATIONS: 'aponnt_evaluations',
@@ -16,7 +16,148 @@ const STORAGE_KEYS = {
 };
 
 // ===============================================
-// 💾 FUNCIONES DE PERSISTENCIA DE DATOS
+// 🌐 FUNCIONES DE API REST (NUEVA IMPLEMENTACIÓN)
+// ===============================================
+
+// Helper: Get API base URL
+function getApiUrl(endpoint) {
+    if (typeof window.progressiveAdmin !== 'undefined' && window.progressiveAdmin.getApiUrl) {
+        return window.progressiveAdmin.getApiUrl(endpoint);
+    }
+    return endpoint;
+}
+
+// GET - Obtener todas las capacitaciones
+async function fetchTrainingsFromAPI() {
+    try {
+        console.log('🌐 [TRAINING-API] Cargando capacitaciones desde servidor...');
+        const response = await fetch(getApiUrl('/api/v1/trainings'), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [TRAINING-API] Capacitaciones cargadas:', data.count);
+        return data.trainings || [];
+    } catch (error) {
+        console.error('❌ [TRAINING-API] Error cargando capacitaciones:', error);
+        showTrainingMessage('❌ Error cargando capacitaciones del servidor', 'error');
+        return [];
+    }
+}
+
+// POST - Crear nueva capacitación
+async function createTrainingAPI(trainingData) {
+    try {
+        console.log('🌐 [TRAINING-API] Creando capacitación:', trainingData.title);
+        const response = await fetch(getApiUrl('/api/v1/trainings'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(trainingData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [TRAINING-API] Capacitación creada:', data.training.id);
+        return data.training;
+    } catch (error) {
+        console.error('❌ [TRAINING-API] Error creando capacitación:', error);
+        showTrainingMessage('❌ Error creando capacitación en el servidor', 'error');
+        return null;
+    }
+}
+
+// PUT - Actualizar capacitación existente
+async function updateTrainingAPI(trainingId, trainingData) {
+    try {
+        console.log('🌐 [TRAINING-API] Actualizando capacitación:', trainingId);
+        const response = await fetch(getApiUrl(`/api/v1/trainings/${trainingId}`), {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(trainingData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [TRAINING-API] Capacitación actualizada:', trainingId);
+        return data.training;
+    } catch (error) {
+        console.error('❌ [TRAINING-API] Error actualizando capacitación:', error);
+        showTrainingMessage('❌ Error actualizando capacitación en el servidor', 'error');
+        return null;
+    }
+}
+
+// DELETE - Eliminar capacitación
+async function deleteTrainingAPI(trainingId) {
+    try {
+        console.log('🌐 [TRAINING-API] Eliminando capacitación:', trainingId);
+        const response = await fetch(getApiUrl(`/api/v1/trainings/${trainingId}`), {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [TRAINING-API] Capacitación eliminada:', trainingId);
+        return true;
+    } catch (error) {
+        console.error('❌ [TRAINING-API] Error eliminando capacitación:', error);
+        showTrainingMessage('❌ Error eliminando capacitación del servidor', 'error');
+        return false;
+    }
+}
+
+// GET - Obtener estadísticas de dashboard
+async function fetchTrainingStatsAPI() {
+    try {
+        const response = await fetch(getApiUrl('/api/v1/trainings/stats/dashboard'), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.stats || {};
+    } catch (error) {
+        console.error('❌ [TRAINING-API] Error cargando estadísticas:', error);
+        return {};
+    }
+}
+
+// ===============================================
+// 💾 FUNCIONES DE PERSISTENCIA DE DATOS (LEGACY)
 // ===============================================
 
 // Guardar datos en localStorage
@@ -835,11 +976,19 @@ function showTrainingsManagement() {
 }
 
 // Load initial training data
-function loadTrainingData() {
+async function loadTrainingData() {
     console.log('📚 [TRAINING] Cargando datos iniciales de capacitaciones');
-    
-    // Cargar datos desde localStorage
-    loadAllTrainingData();
+
+    // Cargar datos desde API REST
+    allTrainings = await fetchTrainingsFromAPI();
+
+    // Actualizar contadores y vistas
+    updateTrainingCounters();
+
+    // Si no hay capacitaciones, mostrar mensaje de bienvenida
+    if (allTrainings.length === 0) {
+        console.log('ℹ️ [TRAINING] No hay capacitaciones. Base de datos vacía.');
+    }
 }
 
 // Inicializar datos de demostración para capacitaciones
@@ -1177,13 +1326,13 @@ function closeModal(modalId) {
 }
 
 // Save training
-function saveTraining(event, status = 'active') {
+async function saveTraining(event, status = 'active') {
     event.preventDefault();
-    
+
     const form = document.getElementById('trainingForm');
     const editId = form.getAttribute('data-edit-id');
     const isEditing = editId && editId !== 'null';
-    
+
     const formData = {
         title: document.getElementById('training-title').value,
         category: document.getElementById('training-category').value,
@@ -1198,69 +1347,56 @@ function saveTraining(event, status = 'active') {
         attempts: parseInt(document.getElementById('training-attempts').value) || 2,
         mandatory: document.getElementById('training-mandatory').checked,
         certificate: document.getElementById('training-certificate').checked,
-        status: isEditing ? undefined : status // Don't change status when editing unless explicitly requested
+        status: isEditing ? undefined : status
     };
-    
+
     // Validate required fields
     if (!formData.title || !formData.category || !formData.type) {
         showTrainingMessage('❌ Complete los campos obligatorios', 'error');
         return;
     }
-    
+
     if (isEditing) {
-        // Update existing training
-        const trainingIndex = allTrainings.findIndex(t => t.id == editId);
-        if (trainingIndex > -1) {
-            const existingTraining = allTrainings[trainingIndex];
-            allTrainings[trainingIndex] = {
-                ...existingTraining,
-                ...formData,
-                updatedAt: new Date()
-            };
-            
-            // Guardar en localStorage
-            saveTrainingsToStorage();
-            
+        // Update existing training via API
+        const updatedTraining = await updateTrainingAPI(editId, formData);
+
+        if (updatedTraining) {
+            // Update local array
+            const trainingIndex = allTrainings.findIndex(t => t.id == editId);
+            if (trainingIndex > -1) {
+                allTrainings[trainingIndex] = updatedTraining;
+            }
+
             // Clear edit state
             form.removeAttribute('data-edit-id');
             document.getElementById('trainingModalTitle').textContent = '📚 Nueva Capacitación';
-            
+
             closeModal('trainingModal');
             showTrainingMessage('✅ Capacitación actualizada exitosamente', 'success');
         }
     } else {
-        // Create new training
-        const newTraining = {
-            id: Date.now(),
-            ...formData,
-            participants: 0,
-            completed: 0,
-            progress: 0,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
-        
-        allTrainings.push(newTraining);
-        
-        // Guardar en localStorage
-        saveTrainingsToStorage();
-        
-        // Send notifications if active
-        if (status === 'active') {
-            sendTrainingAssignmentNotifications(newTraining);
-            
-            // Update employee scoring
-            updateEmployeeScoringForTraining(newTraining);
+        // Create new training via API
+        const newTraining = await createTrainingAPI(formData);
+
+        if (newTraining) {
+            // Add to local array
+            allTrainings.push(newTraining);
+
+            // Send notifications if active
+            if (status === 'active') {
+                sendTrainingAssignmentNotifications(newTraining);
+                updateEmployeeScoringForTraining(newTraining);
+            }
+
+            closeModal('trainingModal');
+            showTrainingMessage('✅ Capacitación creada exitosamente', 'success');
         }
-        
-        closeModal('trainingModal');
-        showTrainingMessage('✅ Capacitación creada exitosamente', 'success');
     }
-    
+
     // Refresh current view
     const activeView = document.querySelector('.training-nav-btn.active')?.getAttribute('data-view') || 'trainings';
     switchTrainingView(activeView);
-    
+
     // Update counters
     updateTrainingCounters();
 }
@@ -2030,21 +2166,25 @@ function activateTraining(trainingId) {
     }
 }
 
-function deleteTraining(trainingId) {
+async function deleteTraining(trainingId) {
     console.log('🗑️ [TRAINING] Eliminar capacitación:', trainingId);
-    
+
     if (confirm('¿Está seguro de eliminar esta capacitación? Esta acción no se puede deshacer.')) {
         const index = allTrainings.findIndex(t => t.id === trainingId);
         if (index > -1) {
             const deletedTraining = allTrainings[index];
-            allTrainings.splice(index, 1);
-            
-            // Guardar en localStorage
-            saveTrainingsToStorage();
-            
-            updateTrainingCounters();
-            loadTrainingsList();
-            showTrainingMessage(`✅ Capacitación "${deletedTraining.title}" eliminada exitosamente`, 'success');
+
+            // Eliminar vía API
+            const success = await deleteTrainingAPI(trainingId);
+
+            if (success) {
+                // Eliminar del array local
+                allTrainings.splice(index, 1);
+
+                updateTrainingCounters();
+                loadTrainingsList();
+                showTrainingMessage(`✅ Capacitación "${deletedTraining.title}" eliminada exitosamente`, 'success');
+            }
         }
     }
 }
