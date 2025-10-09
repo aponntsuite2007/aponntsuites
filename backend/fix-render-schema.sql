@@ -125,6 +125,25 @@ ALTER TABLE departments ADD COLUMN IF NOT EXISTS manager_id UUID REFERENCES user
 ALTER TABLE departments ADD COLUMN IF NOT EXISTS budget DECIMAL(12, 2);
 
 -- =====================================================
+-- TABLA: kiosks - Agregar columnas faltantes
+-- =====================================================
+
+-- description
+ALTER TABLE kiosks ADD COLUMN IF NOT EXISTS description TEXT;
+
+-- device_id
+ALTER TABLE kiosks ADD COLUMN IF NOT EXISTS device_id VARCHAR(100);
+
+-- gps_lat
+ALTER TABLE kiosks ADD COLUMN IF NOT EXISTS gps_lat DECIMAL(10, 8);
+
+-- gps_lng
+ALTER TABLE kiosks ADD COLUMN IF NOT EXISTS gps_lng DECIMAL(11, 8);
+
+-- is_configured
+ALTER TABLE kiosks ADD COLUMN IF NOT EXISTS is_configured BOOLEAN DEFAULT false;
+
+-- =====================================================
 -- TABLA: biometric_detections - Crear tabla completa
 -- =====================================================
 
