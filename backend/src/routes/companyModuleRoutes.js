@@ -194,7 +194,7 @@ router.get('/:companyId', async (req, res) => {
         cm.id,
         cm.company_id,
         cm.system_module_id,
-        cm.is_active,
+        sm.is_active,
         cm.created_at as contracted_at,
         sm.module_key,
         sm.name,
