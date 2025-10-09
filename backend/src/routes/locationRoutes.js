@@ -27,6 +27,7 @@ router.post('/report', auth, async (req, res) => {
     } = req.body;
 
     const userId = req.user.user_id; // Get from authenticated user
+    const companyId = req.user?.company_id || 11;
 
     // Validate required fields
     if (!latitude || !longitude) {
@@ -50,6 +51,7 @@ router.post('/report', auth, async (req, res) => {
     // Create location record
     const location = await EmployeeLocation.create({
       userId,
+      company_id: companyId,
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
       accuracy: accuracy ? parseFloat(accuracy) : null,
@@ -101,14 +103,17 @@ router.get('/current', auth, async (req, res) => {
       });
     }
 
+    const companyId = req.user?.company_id || 11;
+
     // Get latest location for each user in working hours
     const currentLocations = await EmployeeLocation.findAll({
       attributes: [
-        'id', 'userId', 'latitude', 'longitude', 'accuracy', 
+        'id', 'userId', 'latitude', 'longitude', 'accuracy',
         'currentActivity', 'isWorkingHours', 'isOnBreak', 'isInGeofence',
         'batteryLevel', 'connectionType', 'address', 'reportedAt'
       ],
       where: {
+        company_id: companyId,
         isWorkingHours: true,
         reportedAt: {
           [require('sequelize').Op.gte]: new Date(Date.now() - 10 * 60 * 1000) // Last 10 minutes

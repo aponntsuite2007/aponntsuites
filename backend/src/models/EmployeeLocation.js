@@ -12,7 +12,15 @@ module.exports = (sequelize) => {
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id'
+        key: 'user_id'
+      }
+    },
+    company_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'companies',
+        key: 'company_id'
       }
     },
     // Coordenadas GPS
@@ -138,15 +146,19 @@ module.exports = (sequelize) => {
   }, {
     tableName: 'employee_locations',
     timestamps: true,
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
     indexes: [
       { fields: ['userId'] },
+      { fields: ['company_id'] },
       { fields: ['reportedAt'] },
       { fields: ['isWorkingHours'] },
       { fields: ['isInGeofence'] },
       { fields: ['currentActivity'] },
       { fields: ['userId', 'reportedAt'] },
       { fields: ['latitude', 'longitude'] },
-      { fields: ['createdAt'] }
+      { fields: ['createdAt'] },
+      { fields: ['company_id', 'reportedAt'] }
     ]
   });
 

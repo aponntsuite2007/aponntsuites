@@ -208,8 +208,183 @@ FROM information_schema.columns
 WHERE table_name = 'departments'
 ORDER BY ordinal_position;
 
+-- =====================================================
+-- TABLA: employee_locations - Tracking GPS de empleados
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS employee_locations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "userId" UUID NOT NULL REFERENCES users(user_id),
+  company_id INTEGER NOT NULL,
+
+  -- Coordenadas GPS
+  latitude DECIMAL(10, 8) NOT NULL,
+  longitude DECIMAL(11, 8) NOT NULL,
+  accuracy FLOAT,
+  altitude FLOAT,
+  heading FLOAT,
+  speed FLOAT,
+
+  -- Información contextual
+  "isWorkingHours" BOOLEAN DEFAULT false,
+  "isOnBreak" BOOLEAN DEFAULT false,
+  "isInGeofence" BOOLEAN DEFAULT false,
+  "currentActivity" VARCHAR(20) DEFAULT 'idle',
+
+  -- Información del dispositivo
+  "deviceId" VARCHAR(255),
+  "appVersion" VARCHAR(50),
+  "batteryLevel" INTEGER,
+  "connectionType" VARCHAR(20) DEFAULT 'unknown',
+
+  -- Información adicional
+  address TEXT,
+  "nearbyLandmarks" JSONB,
+  "weatherConditions" JSONB,
+
+  -- Privacidad
+  "isPrivacyMode" BOOLEAN DEFAULT false,
+  "sharingLevel" VARCHAR(30) DEFAULT 'full',
+
+  -- Timestamps
+  "reportedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW()
+);
+
+-- Índices para employee_locations
+CREATE INDEX IF NOT EXISTS idx_employee_locations_user ON employee_locations("userId");
+CREATE INDEX IF NOT EXISTS idx_employee_locations_company ON employee_locations(company_id);
+CREATE INDEX IF NOT EXISTS idx_employee_locations_reported ON employee_locations("reportedAt");
+CREATE INDEX IF NOT EXISTS idx_employee_locations_working ON employee_locations("isWorkingHours");
+CREATE INDEX IF NOT EXISTS idx_employee_locations_coords ON employee_locations(latitude, longitude);
+
+-- =====================================================
+-- TABLA: trainings - Capacitaciones
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS trainings (
+  id BIGSERIAL PRIMARY KEY,
+  company_id INTEGER NOT NULL,
+
+  -- Información básica
+  title VARCHAR(255) NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  description TEXT,
+  type VARCHAR(50) NOT NULL, -- 'video', 'pdf', 'external_link', 'scorm', etc.
+
+  -- Contenido
+  content_url TEXT,
+  duration DECIMAL(5,2) DEFAULT 1, -- horas
+
+  -- Fechas
+  start_date DATE,
+  deadline DATE,
+
+  -- Instructor/Responsable
+  instructor VARCHAR(255),
+
+  -- Evaluación
+  max_score INTEGER DEFAULT 100,
+  min_score INTEGER DEFAULT 70,
+  attempts INTEGER DEFAULT 2,
+
+  -- Configuración
+  mandatory BOOLEAN DEFAULT false,
+  certificate BOOLEAN DEFAULT false,
+  status VARCHAR(20) DEFAULT 'active', -- 'draft', 'active', 'archived'
+
+  -- Estadísticas
+  participants INTEGER DEFAULT 0,
+  completed INTEGER DEFAULT 0,
+  progress INTEGER DEFAULT 0,
+
+  -- Timestamps
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Índices para trainings
+CREATE INDEX IF NOT EXISTS idx_trainings_company ON trainings(company_id);
+CREATE INDEX IF NOT EXISTS idx_trainings_status ON trainings(status);
+CREATE INDEX IF NOT EXISTS idx_trainings_category ON trainings(category);
+CREATE INDEX IF NOT EXISTS idx_trainings_deadline ON trainings(deadline);
+
+-- =====================================================
+-- TABLA: training_assignments - Asignaciones de capacitaciones
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS training_assignments (
+  id BIGSERIAL PRIMARY KEY,
+  company_id INTEGER NOT NULL,
+  training_id BIGINT NOT NULL REFERENCES trainings(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+
+  -- Estado
+  status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'in_progress', 'completed', 'failed', 'expired'
+
+  -- Progreso
+  progress_percentage INTEGER DEFAULT 0,
+  time_spent_minutes INTEGER DEFAULT 0,
+
+  -- Fechas
+  assigned_at TIMESTAMP DEFAULT NOW(),
+  started_at TIMESTAMP,
+  completed_at TIMESTAMP,
+  due_date DATE,
+
+  -- Timestamps
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+
+  UNIQUE(training_id, user_id)
+);
+
+-- Índices para training_assignments
+CREATE INDEX IF NOT EXISTS idx_assignments_company ON training_assignments(company_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_training ON training_assignments(training_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_user ON training_assignments(user_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_status ON training_assignments(status);
+
+-- =====================================================
+-- TABLA: training_progress - Progreso detallado de capacitaciones
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS training_progress (
+  id BIGSERIAL PRIMARY KEY,
+  company_id INTEGER NOT NULL,
+  assignment_id BIGINT NOT NULL REFERENCES training_assignments(id) ON DELETE CASCADE,
+
+  -- Evaluación
+  attempt_number INTEGER DEFAULT 1,
+  score INTEGER,
+  passed BOOLEAN DEFAULT false,
+
+  -- Respuestas (si hay evaluación)
+  answers JSONB,
+
+  -- Certificado
+  certificate_url TEXT,
+  certificate_issued_at TIMESTAMP,
+
+  -- Feedback
+  instructor_feedback TEXT,
+  student_feedback TEXT,
+
+  -- Timestamps
+  started_at TIMESTAMP DEFAULT NOW(),
+  completed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Índices para training_progress
+CREATE INDEX IF NOT EXISTS idx_progress_company ON training_progress(company_id);
+CREATE INDEX IF NOT EXISTS idx_progress_assignment ON training_progress(assignment_id);
+CREATE INDEX IF NOT EXISTS idx_progress_passed ON training_progress(passed);
+
 -- Mensaje final
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Schema corregido - Todas las columnas agregadas';
+    RAISE NOTICE '✅ Schema corregido - Todas las columnas y tablas agregadas (employee_locations, trainings, training_assignments, training_progress)';
 END $$;

@@ -110,6 +110,11 @@ const FacialBiometricData = require('../models/FacialBiometricData')(sequelize);
 // Modelo de ubicaciones de empleados
 const EmployeeLocation = require('../models/EmployeeLocation')(sequelize);
 
+// Modelos de capacitaciones
+const Training = require('../models/Training-postgresql')(sequelize);
+const TrainingAssignment = require('../models/TrainingAssignment-postgresql')(sequelize);
+const TrainingProgress = require('../models/TrainingProgress-postgresql')(sequelize);
+
 // Modelo de Kiosks para control de acceso
 const Kiosk = require('../models/Kiosk-postgresql')(sequelize);
 
@@ -263,6 +268,19 @@ FacialBiometricData.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id'
 User.hasMany(EmployeeLocation, { foreignKey: 'userId', sourceKey: 'user_id', as: 'locations' });
 EmployeeLocation.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id', as: 'employee' });
 
+// Asociaciones de capacitaciones
+Company.hasMany(Training, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'trainings' });
+Training.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+Training.hasMany(TrainingAssignment, { foreignKey: 'training_id', as: 'assignments' });
+TrainingAssignment.belongsTo(Training, { foreignKey: 'training_id', as: 'training' });
+
+User.hasMany(TrainingAssignment, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'trainingAssignments' });
+TrainingAssignment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+TrainingAssignment.hasMany(TrainingProgress, { foreignKey: 'assignment_id', as: 'progressRecords' });
+TrainingProgress.belongsTo(TrainingAssignment, { foreignKey: 'assignment_id', as: 'assignment' });
+
 // Asociaciones para gestión de empresas y módulos (usando nombres reales de columnas)
 Company.hasMany(CompanyModule, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'modules' });
 CompanyModule.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
@@ -366,6 +384,9 @@ module.exports = {
   TaskCompatibility,
   FacialBiometricData,
   EmployeeLocation,
+  Training,
+  TrainingAssignment,
+  TrainingProgress,
   Company,
   SystemModule,
   CompanyModule,

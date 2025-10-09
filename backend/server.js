@@ -1873,6 +1873,14 @@ app.use('/api/admin', adminRouter);
 const biometricManagementRouter = require('./src/routes/biometric-management-routes');
 app.use('/api/v1/biometric-management', biometricManagementRouter);
 
+// 📚 CONFIGURAR API DE CAPACITACIONES
+const trainingRoutes = require('./src/routes/trainingRoutes');
+app.use('/api/v1/trainings', trainingRoutes);
+
+// 📍 CONFIGURAR API DE UBICACIONES DE EMPLEADOS
+const locationRoutes = require('./src/routes/locationRoutes');
+app.use('/api/v1/location', locationRoutes);
+
 // 📱 CONFIGURAR API DE APK
 const apkRoutes = require('./src/routes/apkRoutes');
 app.use('/api/apk', apkRoutes);
