@@ -3716,6 +3716,15 @@
                         // Para módulos que no tienen implementación específica aún
                         showModuleFallback(moduleId, moduleName, `ID no encontrado: "${moduleId}"`);
                 }
+
+                // Scroll automático al inicio del contenido del módulo
+                setTimeout(() => {
+                    const mainContent = document.getElementById('mainContent');
+                    if (mainContent) {
+                        mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 100);
+
             } catch (error) {
                 console.error(`❌ Error cargando módulo ${moduleId}:`, error);
                 showModuleFallback(moduleId, moduleName, `Error: ${error.message}`);
@@ -4893,6 +4902,14 @@
                 }
             }
         }, 100);
+
+        // Scroll automático al inicio del contenido del módulo
+        setTimeout(() => {
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) {
+                mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 200);
     }
 
     // Default content display
