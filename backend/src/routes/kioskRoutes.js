@@ -31,19 +31,19 @@ function formatKiosk(kiosk) {
 router.get('/', auth, async (req, res) => {
   try {
     // Obtener company_id del usuario autenticado
-    const companyId = req.user?.company_id || 1;
+    const companyId = req.user?.company_id || req.user?.companyId || 1;
 
     console.log(`📟 [KIOSKS] Obteniendo kioscos para empresa ${companyId}`);
+    console.log(`📟 [KIOSKS] Usuario:`, req.user?.user_id, 'Company:', companyId);
 
     const kiosks = await Kiosk.findAll({
       where: {
-        is_active: true,
         company_id: companyId
       },
       order: [['name', 'ASC']]
     });
 
-    console.log(`✅ [KIOSKS] Encontrados ${kiosks.length} kioscos`);
+    console.log(`✅ [KIOSKS] Encontrados ${kiosks.length} kioscos activos/inactivos`);
 
     // Transformar datos al formato que espera el frontend
     const formattedKiosks = kiosks.map(formatKiosk);
