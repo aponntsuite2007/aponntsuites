@@ -4510,12 +4510,13 @@
                 
                 // Load module-specific JavaScript
                 const script = document.createElement('script');
+                const cacheBuster = Date.now(); // Force cache refresh
                 // Usar versión completa para notifications
                 if (tabName === 'notifications') {
-                    script.src = `js/modules/${tabName}-complete.js`;
+                    script.src = `js/modules/${tabName}-complete.js?v=${cacheBuster}`;
                     console.log(`📦 [PROGRESSIVE] Usando versión COMPLETA para notifications`);
                 } else {
-                    script.src = `js/modules/${tabName}.js`;
+                    script.src = `js/modules/${tabName}.js?v=${cacheBuster}`;
                 }
                 
                 console.log(`📦 [PROGRESSIVE] Script creado con src: ${script.src}`);
