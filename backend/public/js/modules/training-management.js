@@ -434,7 +434,7 @@ function showTrainingManagementContent() {
         </div>
         
         <!-- Training Creation Modal -->
-        <div id="trainingModal" class="modal" style="display: none;">
+        <div id="trainingModal" class="modal" style="display: none !important;">
             <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h3 id="trainingModalTitle">📚 Nueva Capacitación</h3>
@@ -562,7 +562,7 @@ function showTrainingManagementContent() {
         </div>
         
         <!-- Evaluation Modal -->
-        <div id="evaluationModal" class="modal" style="display: none;">
+        <div id="evaluationModal" class="modal" style="display: none !important;">
             <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h3>📋 Crear Evaluación</h3>
@@ -617,7 +617,7 @@ function showTrainingManagementContent() {
         </div>
         
         <!-- Employee Progress Modal -->
-        <div id="employeeProgressModal" class="modal" style="display: none;">
+        <div id="employeeProgressModal" class="modal" style="display: none !important;">
             <div class="modal-content" style="max-width: 1000px;">
                 <div class="modal-header">
                     <h3>👤 Progreso del Empleado</h3>
@@ -1274,7 +1274,7 @@ function loadCategoryProgress() {
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-        modal.style.display = 'block';
+        modal.style.setProperty('display', 'block', 'important');
         document.body.style.overflow = 'hidden';
         
         // Focus first input
@@ -1291,7 +1291,7 @@ function closeModal(modalId) {
     
     const modal = document.getElementById(modalId);
     if (modal) {
-        modal.style.display = 'none';
+        modal.style.setProperty('display', 'none', 'important');
         modal.style.visibility = 'hidden';
         modal.style.opacity = '0';
         
@@ -1310,7 +1310,7 @@ function closeModal(modalId) {
         const overlays = document.querySelectorAll('.modal-overlay');
         overlays.forEach(overlay => {
             if (overlay.style.display !== 'none') {
-                overlay.style.display = 'none';
+                overlay.style.setProperty('display', 'none', 'important');
             }
         });
         
@@ -1581,12 +1581,12 @@ function showTrainingMessage(message, type = 'info') {
         info: '#17a2b8'
     };
     messageEl.style.background = colors[type] || colors.info;
-    messageEl.style.display = 'block';
+    messageEl.style.setProperty('display', 'block', 'important');
     
     // Auto hide after 4 seconds
     setTimeout(() => {
         if (messageEl) {
-            messageEl.style.display = 'none';
+            messageEl.style.setProperty('display', 'none', 'important');
         }
     }, 4000);
 }
@@ -5275,9 +5275,9 @@ function updateExamQuestionsVisibility() {
     const emptyState = document.getElementById('exam-questions-empty');
     
     if (container.children.length === 0) {
-        emptyState.style.display = 'block';
+        emptyState.style.setProperty('display', 'block', 'important');
     } else {
-        emptyState.style.display = 'none';
+        emptyState.style.setProperty('display', 'none', 'important');
     }
 }
 

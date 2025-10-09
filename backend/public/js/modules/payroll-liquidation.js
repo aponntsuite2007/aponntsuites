@@ -880,7 +880,7 @@ function calculateConcepts() {
             </div>
         </div>
     `;
-    resultDiv.style.display = 'block';
+    resultDiv.style.setProperty('display', 'block', 'important');
 }
 
 // Añadir estilos específicos para liquidación
@@ -1135,7 +1135,7 @@ function showPayrollTemplatesTab() {
             </div>
 
             <!-- Modal para Nueva/Editar Plantilla -->
-            <div id="template-modal" class="modal" style="display: none;">
+            <div id="template-modal" class="modal" style="display: none !important;">
                 <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
                     <span class="close" onclick="closeTemplateModal()">&times;</span>
                     <h3 id="template-modal-title">📋 Nueva Plantilla de Liquidación</h3>
@@ -1202,7 +1202,7 @@ function showPayrollTemplatesTab() {
             </div>
 
             <!-- Modal para Aplicación Masiva -->
-            <div id="massive-apply-modal" class="modal" style="display: none;">
+            <div id="massive-apply-modal" class="modal" style="display: none !important;">
                 <div class="modal-content" style="max-width: 700px;">
                     <span class="close" onclick="closeMassiveApplyModal()">&times;</span>
                     <h3>⚡ Aplicación Masiva de Plantilla</h3>
@@ -1337,7 +1337,7 @@ function createNewTemplate() {
     document.getElementById('template-form').reset();
     document.getElementById('template-items-container').innerHTML = '';
     document.getElementById('apply-filters').innerHTML = '';
-    document.getElementById('template-modal').style.display = 'block';
+    document.getElementById('template-modal').style.setProperty('display', 'block', 'important');
 }
 
 // Agregar concepto a plantilla
@@ -1385,8 +1385,8 @@ function editTemplate(id) { alert('Editar plantilla: ' + id); }
 function cloneTemplate(id) { alert('Clonar plantilla: ' + id); }
 function applyMassive(id) { alert('Aplicación masiva de plantilla: ' + id); }
 function deleteTemplate(id) { if(confirm('¿Eliminar plantilla?')) alert('Eliminado: ' + id); }
-function closeTemplateModal() { document.getElementById('template-modal').style.display = 'none'; }
-function closeMassiveApplyModal() { document.getElementById('massive-apply-modal').style.display = 'none'; }
+function closeTemplateModal() { document.getElementById('template-modal').style.setProperty('display', 'none', 'important'); }
+function closeMassiveApplyModal() { document.getElementById('massive-apply-modal').style.setProperty('display', 'none', 'important'); }
 function refreshTemplates() { loadPayrollTemplates(); }
 function removeTemplateItem(id) { document.getElementById(`item-${id}`).remove(); }
 function saveTemplate(event) { event.preventDefault(); alert('Funcionalidad en desarrollo'); }

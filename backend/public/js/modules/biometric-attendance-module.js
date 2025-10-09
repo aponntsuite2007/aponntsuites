@@ -194,7 +194,7 @@ class BiometricAttendanceModule {
     // Create canvas for processing
     this.canvasElement = document.createElement('canvas');
     this.canvasElement.id = 'attendance-canvas';
-    this.canvasElement.style.display = 'none';
+    this.canvasElement.style.setProperty('display', 'none', 'important');
 
     // Create overlay for feedback
     this.overlayElement = document.createElement('div');
@@ -977,7 +977,7 @@ class BiometricAttendanceModule {
   hideManualCaptureButton() {
     const button = document.getElementById('manual-capture-btn');
     if (button) {
-      button.style.display = 'none';
+      button.style.setProperty('display', 'none', 'important');
     }
   }
 

@@ -167,7 +167,7 @@ FIRMA: _______________</textarea>
             </div>
             
             <!-- Modal para Vista Previa de Términos -->
-            <div id="terms-preview-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000;">
+            <div id="terms-preview-modal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000;">
                 <div class="modal-content" style="background: white; margin: 2% auto; padding: 20px; border-radius: 10px; max-width: 800px; max-height: 90vh; overflow-y: auto;">
                     <div class="modal-header" style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                         <h3>👁️ Vista Previa de Términos y Condiciones</h3>
@@ -388,12 +388,12 @@ function previewTerms() {
     const previewContent = document.getElementById('terms-preview-content');
     previewContent.innerHTML = `<h2>${title}</h2><p><strong>Versión:</strong> ${version}</p><hr><div>${content}</div>`;
     
-    document.getElementById('terms-preview-modal').style.display = 'block';
+    document.getElementById('terms-preview-modal').style.setProperty('display', 'block', 'important');
 }
 
 // Cerrar vista previa
 function closeTermsPreview() {
-    document.getElementById('terms-preview-modal').style.display = 'none';
+    document.getElementById('terms-preview-modal').style.setProperty('display', 'none', 'important');
 }
 
 // Generar PDF de términos

@@ -200,7 +200,7 @@ function showDocumentManagementContent() {
         </div>
         
         <!-- Modal para crear solicitud -->
-        <div id="create-request-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000;">
+        <div id="create-request-modal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000;">
             <div class="modal-content" style="background: white; margin: 5% auto; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
                 <div class="modal-header" style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                     <h3>➕ Nueva Solicitud de Documento</h3>
@@ -282,9 +282,9 @@ function showDocumentTab(tabName, element) {
     
     // Update tab content
     document.querySelectorAll('.medical-tab-content').forEach(content => {
-        content.style.display = 'none';
+        content.style.setProperty('display', 'none', 'important');
     });
-    document.getElementById(`document-${tabName}`).style.display = 'block';
+    document.getElementById(`document-${tabName}`).style.setProperty('display', 'block', 'important');
     
     // Load data based on tab
     switch(tabName) {
@@ -623,12 +623,12 @@ function showCreateDocumentRequestDialog() {
     tomorrow.setDate(tomorrow.getDate() + 1);
     document.getElementById('request-due-date').min = tomorrow.toISOString().split('T')[0];
     
-    document.getElementById('create-request-modal').style.display = 'block';
+    document.getElementById('create-request-modal').style.setProperty('display', 'block', 'important');
 }
 
 // Cerrar modal de crear solicitud
 function closeCreateRequestModal() {
-    document.getElementById('create-request-modal').style.display = 'none';
+    document.getElementById('create-request-modal').style.setProperty('display', 'none', 'important');
     document.getElementById('create-request-form').reset();
 }
 

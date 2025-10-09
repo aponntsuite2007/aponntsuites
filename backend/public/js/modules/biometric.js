@@ -2727,7 +2727,7 @@ async function initiateBiometricEnrollment(userId) {
             // Actualizar automáticamente la lista de templates
             setTimeout(() => {
                 loadTemplatesData();
-                document.getElementById('biometric-message').style.display = 'none';
+                document.getElementById('biometric-message').style.setProperty('display', 'none', 'important');
             }, 3000);
         }, 1000);
 
@@ -2790,7 +2790,7 @@ async function exportTemplatesReport() {
         `, 'success');
 
         setTimeout(() => {
-            document.getElementById('biometric-message').style.display = 'none';
+            document.getElementById('biometric-message').style.setProperty('display', 'none', 'important');
         }, 3000);
     }, 2000);
 }
@@ -2858,7 +2858,7 @@ async function runBiometricAnalysis() {
         `, 'info');
 
         setTimeout(() => {
-            document.getElementById('biometric-message').style.display = 'none';
+            document.getElementById('biometric-message').style.setProperty('display', 'none', 'important');
         }, 8000);
     }, 1000);
 }
@@ -2934,7 +2934,7 @@ async function runDeepEmotionAnalysis() {
         `, 'success');
 
         setTimeout(() => {
-            document.getElementById('biometric-message').style.display = 'none';
+            document.getElementById('biometric-message').style.setProperty('display', 'none', 'important');
         }, 10000);
     }, 1000);
 }
@@ -3008,7 +3008,7 @@ async function runFatigueDetection() {
         `, 'success');
 
         setTimeout(() => {
-            document.getElementById('biometric-message').style.display = 'none';
+            document.getElementById('biometric-message').style.setProperty('display', 'none', 'important');
         }, 8000);
     }, 1000);
 }
@@ -3078,7 +3078,7 @@ async function runBehaviorAnalysis() {
         `, 'success');
 
         setTimeout(() => {
-            document.getElementById('biometric-message').style.display = 'none';
+            document.getElementById('biometric-message').style.setProperty('display', 'none', 'important');
         }, 8000);
     }, 1000);
 }
@@ -3152,7 +3152,7 @@ async function runWHOAssessment() {
         `, 'info');
 
         setTimeout(() => {
-            document.getElementById('biometric-message').style.display = 'none';
+            document.getElementById('biometric-message').style.setProperty('display', 'none', 'important');
         }, 8000);
     }, 1000);
 }
@@ -3537,7 +3537,7 @@ function showBiometricMessage(message, type = 'info') {
         </div>
     `;
 
-    messageContainer.style.display = 'block';
+    messageContainer.style.setProperty('display', 'block', 'important');
 
     // Auto-ocultar después de 6 segundos para mensajes normales
     setTimeout(() => {
@@ -3545,7 +3545,7 @@ function showBiometricMessage(message, type = 'info') {
             messageContainer.style.opacity = '0';
             setTimeout(() => {
                 if (messageContainer) {
-                    messageContainer.style.display = 'none';
+                    messageContainer.style.setProperty('display', 'none', 'important');
                     messageContainer.style.opacity = '1';
                 }
             }, 300);
@@ -4378,7 +4378,7 @@ function showVerificationTab(tabName) {
         const content = document.getElementById(`${tab}-content`);
         const button = document.getElementById(`tab-${tab}`);
 
-        if (content) content.style.display = 'none';
+        if (content) content.style.setProperty('display', 'none', 'important');
         if (button) {
             button.style.background = '#f8f9fa';
             button.style.color = '#666';
@@ -4389,7 +4389,7 @@ function showVerificationTab(tabName) {
     const selectedContent = document.getElementById(`${tabName}-content`);
     const selectedButton = document.getElementById(`tab-${tabName}`);
 
-    if (selectedContent) selectedContent.style.display = 'block';
+    if (selectedContent) selectedContent.style.setProperty('display', 'block', 'important');
     if (selectedButton) {
         const colors = {
             face: '#667eea',
@@ -6316,7 +6316,7 @@ function showSimpleQualityInfo(containerId, quality) {
     const container = document.getElementById(containerId);
     if (!container || !quality) return;
 
-    container.style.display = 'block';
+    container.style.setProperty('display', 'block', 'important');
 
     // Limpiar contenido previo
     while (container.firstChild) {
@@ -6334,7 +6334,7 @@ function showQualityValidationPanel(validation) {
     const panel = document.getElementById('quality-validation-panel');
     if (!panel) return;
 
-    panel.style.display = 'block';
+    panel.style.setProperty('display', 'block', 'important');
     panel.style.background = validation.passesMinimumThreshold ? '#d4edda' : '#fff3cd';
     panel.style.borderColor = validation.passesMinimumThreshold ? '#c3e6cb' : '#ffeaa7';
 
@@ -6372,7 +6372,7 @@ function showBestPracticesPanelSafely() {
         }
 
         // Mostrar el panel
-        panel.style.display = 'block';
+        panel.style.setProperty('display', 'block', 'important');
 
         // Limpiar contenido previo
         while (content.firstChild) {
@@ -6458,7 +6458,7 @@ function updateCameraInterface(cameras, selectedCamera) {
 
     // Mostrar información de calidad de la cámara seleccionada
     if (selectedCamera && selectedCamera.quality) {
-        qualityInfo.style.display = 'block';
+        qualityInfo.style.setProperty('display', 'block', 'important');
         qualityInfo.innerHTML = `
             <strong>📊 Calidad de Cámara:</strong><br>
             • Resolución: ${selectedCamera.quality.resolution.width}x${selectedCamera.quality.resolution.height} (${(selectedCamera.quality.resolution.score * 100).toFixed(0)}%)<br>
@@ -6512,7 +6512,7 @@ function updateMicrophoneInterface(microphones, selectedMicrophone) {
 
     // Mostrar información de calidad del micrófono seleccionado
     if (selectedMicrophone && selectedMicrophone.quality) {
-        qualityInfo.style.display = 'block';
+        qualityInfo.style.setProperty('display', 'block', 'important');
         qualityInfo.innerHTML = `
             <strong>📊 Calidad de Micrófono:</strong><br>
             • Sample Rate: ${selectedMicrophone.quality.sampleRate}Hz • Canales: ${selectedMicrophone.quality.channelCount}<br>
@@ -6563,7 +6563,7 @@ function updateFingerprintInterface(readers, selectedReader) {
     `;
 
     if (selectedReader) {
-        qualityInfo.style.display = 'block';
+        qualityInfo.style.setProperty('display', 'block', 'important');
         qualityInfo.innerHTML = `
             <strong>📊 Lector de Huellas:</strong><br>
             • Tipo: ${selectedReader.type} • Resolución: ${selectedReader.quality.resolution}dpi<br>
@@ -6578,7 +6578,7 @@ function updateQualityValidation(validation) {
 
     if (!panel || !results) return;
 
-    panel.style.display = 'block';
+    panel.style.setProperty('display', 'block', 'important');
 
     let validationHTML = '';
 
@@ -6674,7 +6674,7 @@ function showBestPracticesPanel() {
     practicesHTML += '</div>';
 
     content.innerHTML = practicesHTML;
-    panel.style.display = 'block';
+    panel.style.setProperty('display', 'block', 'important');
 }
 
 function handleDeviceChange(devices, currentDevices) {
@@ -6780,7 +6780,7 @@ function loadEmployeeBiometricProfile() {
     // Mostrar resumen del empleado
     const summaryElement = document.getElementById('employee-profile-summary');
     if (summaryElement) {
-        summaryElement.style.display = 'block';
+        summaryElement.style.setProperty('display', 'block', 'important');
         summaryElement.innerHTML = `
             <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 15px; align-items: center;">
                 <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold;">
@@ -7246,7 +7246,7 @@ async function detectBiometricDevices() {
 
         // Mostrar container de resultados
         if (detectedContainer) {
-            detectedContainer.style.display = 'block';
+            detectedContainer.style.setProperty('display', 'block', 'important');
         }
 
     } catch (error) {
@@ -7520,7 +7520,7 @@ function updateQualityIndicator(validation, indicatorElement) {
     const qualityText = overallQuality ? 'ÓPTIMA' : 'REQUIERE ATENCIÓN';
     const qualityIcon = overallQuality ? '✅' : '⚠️';
 
-    indicatorElement.style.display = 'block';
+    indicatorElement.style.setProperty('display', 'block', 'important');
     indicatorElement.style.background = qualityColor;
     indicatorElement.style.color = 'white';
     indicatorElement.innerHTML = `${qualityIcon} Calidad ${qualityText}`;
@@ -7528,10 +7528,10 @@ function updateQualityIndicator(validation, indicatorElement) {
     // Mostrar recomendaciones si la calidad no es óptima
     const recommendationsContainer = document.getElementById('quality-recommendations');
     if (recommendationsContainer && !overallQuality) {
-        recommendationsContainer.style.display = 'block';
+        recommendationsContainer.style.setProperty('display', 'block', 'important');
         displayQualityRecommendations(validation);
     } else if (recommendationsContainer) {
-        recommendationsContainer.style.display = 'none';
+        recommendationsContainer.style.setProperty('display', 'none', 'important');
     }
 }
 
@@ -9442,7 +9442,7 @@ function createAdvancedCaptureModal(type, options) {
     video.className = 'capture-video';
     video.autoplay = true;
     video.muted = true;
-    video.style.display = 'none';
+    video.style.setProperty('display', 'none', 'important');
 
     videoContainer.appendChild(canvas);
     videoContainer.appendChild(ovalCanvas);
@@ -9899,7 +9899,7 @@ function createCaptureModal(type, title, icon) {
     video.className = 'capture-video';
     video.autoplay = true;
     video.muted = true;
-    video.style.display = 'none';
+    video.style.setProperty('display', 'none', 'important');
 
     // Canvas overlay para landmarks REALES
     const landmarksOverlay = document.createElement('canvas');

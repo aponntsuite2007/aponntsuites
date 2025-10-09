@@ -465,7 +465,7 @@ function filterUsers() {
         if (userName.includes(searchTerm) || userEmail.includes(searchTerm) || userDept.includes(searchTerm)) {
             item.style.display = 'flex';
         } else {
-            item.style.display = 'none';
+            item.style.setProperty('display', 'none', 'important');
         }
     });
 }
@@ -3086,7 +3086,7 @@ function closeEmployeeFile() {
 function showFileTab(tabName, button) {
     // Ocultar todos los tabs
     document.querySelectorAll('.file-tab-content').forEach(tab => {
-        tab.style.display = 'none';
+        tab.style.setProperty('display', 'none', 'important');
     });
     
     // Remover clase active de todos los botones
@@ -3095,7 +3095,7 @@ function showFileTab(tabName, button) {
     });
     
     // Mostrar tab seleccionado
-    document.getElementById(`${tabName}-tab`).style.display = 'block';
+    document.getElementById(`${tabName}-tab`).style.setProperty('display', 'block', 'important');
     button.classList.add('active');
 }
 
@@ -4264,7 +4264,7 @@ function editMaritalStatus(userId) {
         document.getElementById('spouse-dependent').textContent = dependentText;
         
         if (['married', 'common_law'].includes(status) && spouseName) {
-            document.getElementById('spouse-details').style.display = 'block';
+            document.getElementById('spouse-details').style.setProperty('display', 'block', 'important');
             document.getElementById('spouse-name').textContent = spouseName;
             document.getElementById('spouse-surname').textContent = spouseSurname;
             document.getElementById('spouse-dni').textContent = spouseDni;
@@ -4278,7 +4278,7 @@ function editMaritalStatus(userId) {
             };
             document.getElementById('spouse-coverage').textContent = coverageText[spouseCoverage] || '-';
         } else {
-            document.getElementById('spouse-details').style.display = 'none';
+            document.getElementById('spouse-details').style.setProperty('display', 'none', 'important');
         }
         
         closeModal('maritalStatusModal');
@@ -6992,7 +6992,7 @@ async function changeUserPhoto(userId) {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.style.display = 'none';
+    input.style.setProperty('display', 'none', 'important');
     
     input.onchange = async function(event) {
         const file = event.target.files[0];

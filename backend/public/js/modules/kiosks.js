@@ -190,7 +190,7 @@ async function showKiosksContent() {
     const kioskModal = document.getElementById('kioskModal');
     if (kioskModal) {
         kioskModal.classList.remove('show');
-        kioskModal.style.display = 'none';
+        kioskModal.style.setProperty('display', 'none', 'important');
         kioskModal.setAttribute('aria-hidden', 'true');
 
         // Limpiar cualquier backdrop residual
@@ -350,7 +350,7 @@ function openModal(modalId) {
     } else {
         // Fallback manual
         modalEl.classList.add('show');
-        modalEl.style.display = 'block';
+        modalEl.style.setProperty('display', 'block', 'important');
         document.body.classList.add('modal-open');
         const backdrop = document.createElement('div');
         backdrop.className = 'modal-backdrop fade show';
@@ -397,7 +397,7 @@ function closeModal(modalId) {
         // Remover clases y display
         modalEl.classList.remove('show');
         modalEl.classList.remove('force-show'); // Por si acaso
-        modalEl.style.display = 'none';
+        modalEl.style.setProperty('display', 'none', 'important');
         modalEl.setAttribute('aria-hidden', 'true');
         modalEl.removeAttribute('aria-modal');
 
@@ -426,7 +426,7 @@ function showAddKioskModal() {
     document.getElementById('kioskForm').reset();
 
     // Ocultar sección GPS para nuevo kiosko
-    document.getElementById('gpsInfoSection').style.display = 'none';
+    document.getElementById('gpsInfoSection').style.setProperty('display', 'none', 'important');
 
     // Habilitar campos para nuevo registro
     document.getElementById('kioskName').disabled = false;
@@ -458,11 +458,11 @@ function editKiosk(kioskId) {
 
     // Mostrar GPS solo si existe
     if (kiosk.gpsLocation?.lat && kiosk.gpsLocation?.lng) {
-        document.getElementById('gpsInfoSection').style.display = 'block';
+        document.getElementById('gpsInfoSection').style.setProperty('display', 'block', 'important');
         document.getElementById('kioskLatDisplay').value = kiosk.gpsLocation.lat.toFixed(8);
         document.getElementById('kioskLngDisplay').value = kiosk.gpsLocation.lng.toFixed(8);
     } else {
-        document.getElementById('gpsInfoSection').style.display = 'none';
+        document.getElementById('gpsInfoSection').style.setProperty('display', 'none', 'important');
     }
 
     openModal('kioskModal');
@@ -497,11 +497,11 @@ function viewKiosk(kioskId) {
 
     // Mostrar GPS solo si existe
     if (kiosk.gpsLocation?.lat && kiosk.gpsLocation?.lng) {
-        document.getElementById('gpsInfoSection').style.display = 'block';
+        document.getElementById('gpsInfoSection').style.setProperty('display', 'block', 'important');
         document.getElementById('kioskLatDisplay').value = kiosk.gpsLocation.lat.toFixed(8);
         document.getElementById('kioskLngDisplay').value = kiosk.gpsLocation.lng.toFixed(8);
     } else {
-        document.getElementById('gpsInfoSection').style.display = 'none';
+        document.getElementById('gpsInfoSection').style.setProperty('display', 'none', 'important');
     }
 
     // DESHABILITAR todos los campos (solo lectura)
@@ -512,7 +512,7 @@ function viewKiosk(kioskId) {
 
     // OCULTAR botón guardar
     const saveBtn = document.querySelector('#kioskModal button[onclick="saveKiosk()"]');
-    if (saveBtn) saveBtn.style.display = 'none';
+    if (saveBtn) saveBtn.style.setProperty('display', 'none', 'important');
 
     openModal('kioskModal');
 }

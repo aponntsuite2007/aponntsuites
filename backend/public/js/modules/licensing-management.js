@@ -113,7 +113,7 @@ function renderLicensingInterface() {
         </div>
 
         <!-- Modal para agregar empresa -->
-        <div id="addCompanyModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div id="addCompanyModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
             <div class="modal-content" style="position: relative; margin: 5% auto; width: 90%; max-width: 800px; background: white; border-radius: 12px; max-height: 85vh; overflow-y: auto;">
                 <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0; color: #0066CC;">➕ Agregar Nueva Empresa</h3>
@@ -509,7 +509,7 @@ function switchLicensingView(view) {
 function showAddCompanyModal() {
     const modal = document.getElementById('addCompanyModal');
     if (modal) {
-        modal.style.display = 'block';
+        modal.style.setProperty('display', 'block', 'important');
         document.body.style.overflow = 'hidden';
     }
 }
@@ -517,7 +517,7 @@ function showAddCompanyModal() {
 function closeAddCompanyModal() {
     const modal = document.getElementById('addCompanyModal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.style.setProperty('display', 'none', 'important');
         document.body.style.overflow = 'auto';
         document.getElementById('addCompanyForm').reset();
     }

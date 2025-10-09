@@ -11,7 +11,7 @@ function showPsychologicalAssessmentContent() {
         return;
     }
 
-    content.style.display = 'block';
+    content.style.setProperty('display', 'block', 'important');
 
     content.innerHTML = `
         <div class="tab-content active">
@@ -64,7 +64,7 @@ function showPsychologicalAssessmentContent() {
         </div>
 
         <!-- Modal para nueva evaluación -->
-        <div id="newAssessmentModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
+        <div id="newAssessmentModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
             <div class="modal-content" style="position: relative; margin: 1% auto; width: 95%; max-width: 1200px; background: white; border-radius: 12px; max-height: 95vh; overflow-y: auto;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0;">🧠 Nueva Evaluación Psicológica</h3>
@@ -77,7 +77,7 @@ function showPsychologicalAssessmentContent() {
         </div>
 
         <!-- Modal para alertas críticas -->
-        <div id="criticalAlertModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9997;">
+        <div id="criticalAlertModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9997;">
             <div class="modal-content" style="position: relative; margin: 2% auto; width: 95%; max-width: 800px; background: white; border-radius: 12px; max-height: 90vh; overflow-y: auto; border: 3px solid #e74c3c;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0;">🚨 Alerta Crítica - Requiere Atención Inmediata</h3>
@@ -387,11 +387,11 @@ function getNewAssessmentForm() {
 
 // Modal functions
 function showNewAssessmentModal() {
-    document.getElementById('newAssessmentModal').style.display = 'block';
+    document.getElementById('newAssessmentModal').style.setProperty('display', 'block', 'important');
 }
 
 function closeNewAssessmentModal() {
-    document.getElementById('newAssessmentModal').style.display = 'none';
+    document.getElementById('newAssessmentModal').style.setProperty('display', 'none', 'important');
 }
 
 function showCriticalAlertModal(alertData) {
@@ -431,11 +431,11 @@ function showCriticalAlertModal(alertData) {
         </div>
     `;
 
-    modal.style.display = 'block';
+    modal.style.setProperty('display', 'block', 'important');
 }
 
 function closeCriticalAlertModal() {
-    document.getElementById('criticalAlertModal').style.display = 'none';
+    document.getElementById('criticalAlertModal').style.setProperty('display', 'none', 'important');
 }
 
 // Load functions

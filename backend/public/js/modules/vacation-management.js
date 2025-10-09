@@ -11,7 +11,7 @@ function showVacationManagementContent() {
         return;
     }
 
-    content.style.display = 'block';
+    content.style.setProperty('display', 'block', 'important');
 
     content.innerHTML = `
         <div class="tab-content active">
@@ -69,7 +69,7 @@ function showVacationManagementContent() {
         </div>
 
         <!-- Modal para nueva solicitud -->
-        <div id="newVacationModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
+        <div id="newVacationModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
             <div class="modal-content" style="position: relative; margin: 1% auto; width: 95%; max-width: 1000px; background: white; border-radius: 12px; max-height: 95vh; overflow-y: auto;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0;">🏖️ Nueva Solicitud de Vacaciones/Permiso</h3>
@@ -82,7 +82,7 @@ function showVacationManagementContent() {
         </div>
 
         <!-- Modal para detalles de solicitud -->
-        <div id="vacationDetailsModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9997;">
+        <div id="vacationDetailsModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9997;">
             <div class="modal-content" style="position: relative; margin: 2% auto; width: 90%; max-width: 800px; background: white; border-radius: 12px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0;">📋 Detalles de Solicitud</h3>
@@ -436,11 +436,13 @@ function getNewVacationForm() {
 
 // Modal functions
 function showNewVacationModal() {
-    document.getElementById('newVacationModal').style.display = 'block';
+    const modal = document.getElementById('newVacationModal');
+    modal.style.setProperty('display', 'block', 'important');
 }
 
 function closeNewVacationModal() {
-    document.getElementById('newVacationModal').style.display = 'none';
+    const modal = document.getElementById('newVacationModal');
+    modal.style.setProperty('display', 'none', 'important');
 }
 
 function showVacationDetails(requestId) {
@@ -511,11 +513,12 @@ function showVacationDetails(requestId) {
         </div>
     `;
 
-    modal.style.display = 'block';
+    modal.style.setProperty('display', 'block', 'important');
 }
 
 function closeVacationDetailsModal() {
-    document.getElementById('vacationDetailsModal').style.display = 'none';
+    const modal = document.getElementById('vacationDetailsModal');
+    modal.style.setProperty('display', 'none', 'important');
 }
 
 // Load functions

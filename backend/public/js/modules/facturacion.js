@@ -27,7 +27,7 @@ function showFacturacionContent() {
         }
     }
 
-    content.style.display = 'block';
+    content.style.setProperty('display', 'block', 'important');
     content.style.visibility = 'visible';
     content.style.opacity = '1';
 
@@ -293,7 +293,7 @@ function updateStatistics() {
 // Funciones de acciones
 function nuevaFactura() {
     const panel = document.getElementById('nuevaFacturaPanel');
-    panel.style.display = 'block';
+    panel.style.setProperty('display', 'block', 'important');
     panel.scrollIntoView({ behavior: 'smooth' });
 
     // Generar próximo número
@@ -301,7 +301,7 @@ function nuevaFactura() {
 }
 
 function cancelarFactura() {
-    document.getElementById('nuevaFacturaPanel').style.display = 'none';
+    document.getElementById('nuevaFacturaPanel').style.setProperty('display', 'none', 'important');
 }
 
 function guardarFacturaTemporal() {
@@ -398,7 +398,7 @@ function goBackToModules() {
     const moduleGrid = document.querySelector('.module-grid');
 
     if (mainContent) {
-        mainContent.style.display = 'none';
+        mainContent.style.setProperty('display', 'none', 'important');
     }
 
     if (moduleGrid) {

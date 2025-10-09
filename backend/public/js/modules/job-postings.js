@@ -11,7 +11,7 @@ function showJobPostingsContent() {
         return;
     }
     
-    content.style.display = 'block';
+    content.style.setProperty('display', 'block', 'important');
     
     content.innerHTML = `
         <div class="tab-content active">
@@ -64,7 +64,7 @@ function showJobPostingsContent() {
         </div>
 
         <!-- Modal para crear oferta laboral -->
-        <div id="createJobModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
+        <div id="createJobModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
             <div class="modal-content" style="position: relative; margin: 2% auto; width: 95%; max-width: 1200px; background: white; border-radius: 12px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0;">💼 Crear Nueva Oferta Laboral</h3>
@@ -77,7 +77,7 @@ function showJobPostingsContent() {
         </div>
 
         <!-- Modal para postularse -->
-        <div id="applyJobModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
+        <div id="applyJobModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
             <div class="modal-content" style="position: relative; margin: 2% auto; width: 95%; max-width: 800px; background: white; border-radius: 12px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0;">🎯 Postularme a Oferta</h3>
@@ -627,11 +627,11 @@ function getCreateJobForm() {
 
 // Modal functions
 function showCreateJobModal() {
-    document.getElementById('createJobModal').style.display = 'block';
+    document.getElementById('createJobModal').style.setProperty('display', 'block', 'important');
 }
 
 function closeCreateJobModal() {
-    document.getElementById('createJobModal').style.display = 'none';
+    document.getElementById('createJobModal').style.setProperty('display', 'none', 'important');
 }
 
 function showApplyJobModal(jobId) {
@@ -639,11 +639,11 @@ function showApplyJobModal(jobId) {
     const content = document.getElementById('applyJobContent');
     
     content.innerHTML = getApplicationForm(jobId);
-    modal.style.display = 'block';
+    modal.style.setProperty('display', 'block', 'important');
 }
 
 function closeApplyJobModal() {
-    document.getElementById('applyJobModal').style.display = 'none';
+    document.getElementById('applyJobModal').style.setProperty('display', 'none', 'important');
 }
 
 // Get application form for candidates
@@ -1011,7 +1011,7 @@ function downloadCV(filename, applicationId) {
     const link = document.createElement('a');
     link.href = downloadUrl;
     link.download = filename;
-    link.style.display = 'none';
+    link.style.setProperty('display', 'none', 'important');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

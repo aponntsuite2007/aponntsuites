@@ -198,7 +198,7 @@ class RealBiometricEnterprise {
     this.context = this.canvas.getContext('2d');
 
     // Hide canvas (used for processing only)
-    this.canvas.style.display = 'none';
+    this.canvas.style.setProperty('display', 'none', 'important');
     document.body.appendChild(this.canvas);
 
     console.log('🎨 [UI] Processing canvas created');

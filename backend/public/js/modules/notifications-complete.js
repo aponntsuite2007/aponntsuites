@@ -50,7 +50,7 @@ function showNotificationsContent() {
 
     console.log('✅ [NOTIFICATIONS] Contenedor encontrado:', content.id || content.className);
 
-    content.style.display = 'block';
+    content.style.setProperty('display', 'block', 'important');
     content.style.visibility = 'visible';
     content.style.opacity = '1';
     
@@ -1013,7 +1013,7 @@ function goBackToModules() {
     const moduleGrid = document.querySelector('.module-grid');
 
     if (mainContent) {
-        mainContent.style.display = 'none';
+        mainContent.style.setProperty('display', 'none', 'important');
     }
 
     if (moduleGrid) {

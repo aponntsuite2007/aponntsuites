@@ -837,7 +837,7 @@ async function loadDepartmentsAndEmployees() {
 function openVisitorModal() {
     const modal = document.getElementById('visitorModal');
     modal.classList.add('force-show');
-    modal.style.display = 'block';
+    modal.style.setProperty('display', 'block', 'important');
     document.body.classList.add('modal-open');
 
     const backdrop = document.createElement('div');
@@ -852,7 +852,7 @@ function openVisitorModal() {
 function closeVisitorModal() {
     const modal = document.getElementById('visitorModal');
     modal.classList.remove('force-show');
-    modal.style.display = 'none';
+    modal.style.setProperty('display', 'none', 'important');
     document.body.classList.remove('modal-open');
 
     const backdrop = document.getElementById('visitorModalBackdrop');

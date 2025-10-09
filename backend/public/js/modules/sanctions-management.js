@@ -11,7 +11,7 @@ function showSanctionsManagementContent() {
         return;
     }
 
-    content.style.display = 'block';
+    content.style.setProperty('display', 'block', 'important');
 
     content.innerHTML = `
         <div class="tab-content active">

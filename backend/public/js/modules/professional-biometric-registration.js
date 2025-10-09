@@ -199,7 +199,7 @@ class ProfessionalBiometricRegistration {
     // Create canvas for processing
     this.canvasElement = document.createElement('canvas');
     this.canvasElement.id = 'biometric-canvas';
-    this.canvasElement.style.display = 'none';
+    this.canvasElement.style.setProperty('display', 'none', 'important');
 
     // Create overlay for real-time feedback
     this.overlayElement = document.createElement('div');

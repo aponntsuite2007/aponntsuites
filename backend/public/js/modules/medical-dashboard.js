@@ -1805,7 +1805,7 @@ Contenido simulado para fines de demostración.`;
     
     link.href = url;
     link.download = fileName;
-    link.style.display = 'none';
+    link.style.setProperty('display', 'none', 'important');
     
     document.body.appendChild(link);
     link.click();
@@ -2621,7 +2621,7 @@ function exportMedicalConfig() {
     const link = document.createElement('a');
     link.href = url;
     link.download = 'configuracion-medica.json';
-    link.style.display = 'none';
+    link.style.setProperty('display', 'none', 'important');
 
     document.body.appendChild(link);
     link.click();

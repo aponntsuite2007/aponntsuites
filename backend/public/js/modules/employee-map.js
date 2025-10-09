@@ -137,8 +137,8 @@ async function initializeRealMap() {
         const placeholder = document.getElementById('mapPlaceholder');
         const googleContainer = document.getElementById('google-map-container');
         
-        if (placeholder) placeholder.style.display = 'none';
-        if (googleContainer) googleContainer.style.display = 'block';
+        if (placeholder) placeholder.style.setProperty('display', 'none', 'important');
+        if (googleContainer) googleContainer.style.setProperty('display', 'block', 'important');
         
         showMapMessage('🔄 Inicializando mapa interactivo...', 'info');
         
@@ -173,9 +173,9 @@ function initializeAlternativeMap() {
     const placeholder = document.getElementById('mapPlaceholder');
     const googleContainer = document.getElementById('google-map-container');
     
-    if (placeholder) placeholder.style.display = 'none';
+    if (placeholder) placeholder.style.setProperty('display', 'none', 'important');
     if (googleContainer) {
-        googleContainer.style.display = 'block';
+        googleContainer.style.setProperty('display', 'block', 'important');
         
         // Crear un mapa real con OpenStreetMap/Leaflet
         googleContainer.innerHTML = `
@@ -297,8 +297,8 @@ function initializeFallbackMap() {
     const canvas = document.getElementById('employeeMapCanvas');
     
     if (placeholder && canvas) {
-        placeholder.style.display = 'none';
-        canvas.style.display = 'block';
+        placeholder.style.setProperty('display', 'none', 'important');
+        canvas.style.setProperty('display', 'block', 'important');
         
         // Initialize canvas-based map (simple simulation)
         const ctx = canvas.getContext('2d');

@@ -422,7 +422,7 @@ function resetearConfiguracion() {
 function goBackToModules() {
     const mainContent = document.getElementById('mainContent');
     const moduleGrid = document.querySelector('.module-grid');
-    if (mainContent) mainContent.style.display = 'none';
+    if (mainContent) mainContent.style.setProperty('display', 'none', 'important');
     if (moduleGrid) moduleGrid.style.display = 'grid';
 }
 

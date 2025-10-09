@@ -488,7 +488,7 @@ function renderPagination() {
 // Event Handlers
 
 async function showCreateCommunicationModal() {
-    document.getElementById('createCommunicationModal').style.display = 'block';
+    document.getElementById('createCommunicationModal').style.setProperty('display', 'block', 'important');
 }
 
 async function createCommunication(event) {
@@ -698,7 +698,7 @@ function formatDate(dateString) {
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    document.getElementById(modalId).style.setProperty('display', 'none', 'important');
 }
 
 function showSuccess(message) {

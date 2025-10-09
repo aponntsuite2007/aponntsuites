@@ -322,7 +322,7 @@ async function showAddDepartment() {
 
     if (branches && branches.length > 0) {
         // La empresa tiene sucursales, mostrar selector
-        branchContainer.style.display = 'block';
+        branchContainer.style.setProperty('display', 'block', 'important');
 
         // Limpiar opciones existentes y agregar sucursales
         branchSelect.innerHTML = '<option value="">Seleccione una sucursal...</option>';
@@ -336,7 +336,7 @@ async function showAddDepartment() {
         console.log(`✅ ${branches.length} sucursales cargadas`);
     } else {
         // Sin sucursales, ocultar selector
-        branchContainer.style.display = 'none';
+        branchContainer.style.setProperty('display', 'none', 'important');
         console.log('ℹ️ Empresa sin sucursales - modo tradicional');
     }
 
