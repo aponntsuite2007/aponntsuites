@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🤖 AI Autonomous Development - Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 1.1em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    .card-title {
+      font-size: 1.3em;
+      font-weight: bold;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-icon {
+      font-size: 1.5em;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .metric:last-child {
+      border-bottom: none;
+    }
+
+    .metric-label {
+      color: #666;
+    }
+
+    .metric-value {
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .metric-value.success {
+      color: #10b981;
+    }
+
+    .metric-value.error {
+      color: #ef4444;
+    }
+
+    .metric-value.warning {
+      color: #f59e0b;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: bold;
+    }
+
+    .status-badge.healthy {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .status-badge.degraded {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .status-badge.critical {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .status-badge.unknown {
+      background: #e5e7eb;
+      color: #6b7280;
+    }
+
+    .button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin: 5px;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .button:active {
+      transform: translateY(0);
+    }
+
+    .button.secondary {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    }
+
+    .logs-section {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      margin-top: 30px;
+    }
+
+    .logs-container {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 15px;
+    }
+
+    .log-line {
+      margin-bottom: 5px;
+      line-height: 1.4;
+    }
+
+    .log-line.error {
+      color: #f87171;
+    }
+
+    .log-line.warning {
+      color: #fbbf24;
+    }
+
+    .log-line.success {
+      color: #34d399;
+    }
+
+    .sessions-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    .sessions-table th,
+    .sessions-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .sessions-table th {
+      background: #f9fafb;
+      font-weight: bold;
+      color: #374151;
+    }
+
+    .sessions-table tr:hover {
+      background: #f9fafb;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 30px;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 20px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -25px;
+      top: 5px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #667eea;
+      border: 3px solid white;
+      box-shadow: 0 0 0 2px #667eea;
+    }
+
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 17px;
+      width: 2px;
+      height: calc(100% - 12px);
+      background: #e5e7eb;
+    }
+
+    .timeline-item:last-child::after {
+      display: none;
+    }
+
+    .timeline-time {
+      font-size: 0.85em;
+      color: #9ca3af;
+      margin-bottom: 5px;
+    }
+
+    .timeline-content {
+      background: #f9fafb;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border-left: 3px solid #667eea;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🤖 AI Autonomous Development Dashboard</h1>
+      <p>Sistema de Testing y Desarrollo Autónomo - Monitoreo en Tiempo Real</p>
+    </div>
+
+    <!-- System Status Cards -->
+    <div class="grid">
+      <!-- Backend Status -->
+      <div class="card">
+        <div class="card-title">
+          <span class="card-icon">🌐</span>
+          Backend
+        </div>
+        <div class="metric">
+          <span class="metric-label">Estado:</span>
+          <span id="backend-status" class="status-badge unknown">Verificando...</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Puerto:</span>
+          <span class="metric-value" id="backend-port">3001</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">URL:</span>
+          <span class="metric-value" id="backend-url">localhost:3001</span>
+        </div>
+      </div>
+
+      <!-- Emulator Status -->
+      <div class="card">
+        <div class="card-title">
+          <span class="card-icon">📱</span>
+          Emulador
+        </div>
+        <div class="metric">
+          <span class="metric-label">Estado:</span>
+          <span id="emulator-status" class="status-badge unknown">Verificando...</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Dispositivo:</span>
+          <span class="metric-value" id="emulator-device">-</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">APK:</span>
+          <span class="metric-value" id="apk-version">-</span>
+        </div>
+      </div>
+
+      <!-- Testing Status -->
+      <div class="card">
+        <div class="card-title">
+          <span class="card-icon">🧪</span>
+          Testing
+        </div>
+        <div class="metric">
+          <span class="metric-label">Última sesión:</span>
+          <span class="metric-value" id="last-session">-</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Tests exitosos:</span>
+          <span class="metric-value success" id="tests-success">0</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Errores detectados:</span>
+          <span class="metric-value error" id="tests-errors">0</span>
+        </div>
+      </div>
+
+      <!-- Build Status -->
+      <div class="card">
+        <div class="card-title">
+          <span class="card-icon">🔨</span>
+          Compilación
+        </div>
+        <div class="metric">
+          <span class="metric-label">Última build:</span>
+          <span class="metric-value" id="last-build">-</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Duración:</span>
+          <span class="metric-value" id="build-duration">-</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Tamaño APK:</span>
+          <span class="metric-value" id="apk-size">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-icon">⚙️</span>
+        Controles
+      </div>
+      <div class="controls">
+        <button class="button" onclick="runFullCycle()">
+          🚀 Ciclo Completo
+        </button>
+        <button class="button secondary" onclick="runHealthCheck()">
+          🏥 Health Check
+        </button>
+        <button class="button secondary" onclick="compileAPK()">
+          🔨 Compilar APK
+        </button>
+        <button class="button secondary" onclick="testAPK()">
+          🧪 Testear APK
+        </button>
+        <button class="button secondary" onclick="loadLatestLogs()">
+          📋 Ver Logs
+        </button>
+        <button class="button secondary" onclick="refreshDashboard()">
+          🔄 Actualizar
+        </button>
+      </div>
+      <div id="progress-container" class="hidden">
+        <div class="progress-bar">
+          <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-icon">⏱️</span>
+        Actividad Reciente
+      </div>
+      <div id="timeline" class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">Esperando actividad...</div>
+          <div class="timeline-content">Dashboard inicializado</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logs Section -->
+    <div class="logs-section">
+      <div class="card-title">
+        <span class="card-icon">📄</span>
+        Logs en Tiempo Real
+      </div>
+      <div id="logs-container" class="logs-container">
+        <div class="log-line">Esperando logs...</div>
+      </div>
+    </div>
+
+    <!-- Sessions Table -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-icon">📊</span>
+        Sesiones de Testing
+      </div>
+      <table class="sessions-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Duración</th>
+            <th>Errores</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="sessions-tbody">
+          <tr>
+            <td colspan="5" style="text-align: center; color: #9ca3af;">No hay sesiones disponibles</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let currentSession = null;
+    let refreshInterval = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      refreshDashboard();
+      startAutoRefresh();
+    });
+
+    // Auto-refresh every 30s
+    function startAutoRefresh() {
+      refreshInterval = setInterval(refreshDashboard, 30000);
+    }
+
+    // Refresh dashboard
+    async function refreshDashboard() {
+      addLog('🔄 Actualizando dashboard...');
+      await loadSystemStatus();
+      await loadSessions();
+      addLog('✅ Dashboard actualizado');
+    }
+
+    // Load system status
+    async function loadSystemStatus() {
+      // Mock data - In production, this would fetch from backend
+      updateStatus('backend-status', 'healthy', 'Running');
+      updateStatus('emulator-status', 'healthy', 'Active');
+
+      document.getElementById('backend-port').textContent = '3001';
+      document.getElementById('backend-url').textContent = 'localhost:3001';
+      document.getElementById('emulator-device').textContent = 'Medium_Phone_API_36.0';
+      document.getElementById('apk-version').textContent = 'debug';
+    }
+
+    // Load sessions
+    async function loadSessions() {
+      // Mock data - In production, this would load from logs/
+      const sessions = [
+        {
+          id: 'session-2025-10-01-143022',
+          date: '01/10/2025 14:30',
+          duration: '45.2s',
+          errors: 0,
+          status: 'success'
+        }
+      ];
+
+      const tbody = document.getElementById('sessions-tbody');
+      tbody.innerHTML = sessions.map(s => `
+        <tr>
+          <td>${s.id}</td>
+          <td>${s.date}</td>
+          <td>${s.duration}</td>
+          <td><span class="metric-value ${s.errors > 0 ? 'error' : 'success'}">${s.errors}</span></td>
+          <td><span class="status-badge ${s.status === 'success' ? 'healthy' : 'critical'}">${s.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // Update status badge
+    function updateStatus(elementId, status, text) {
+      const el = document.getElementById(elementId);
+      el.className = `status-badge ${status}`;
+      el.textContent = text;
+    }
+
+    // Add log line
+    function addLog(message, type = 'info') {
+      const container = document.getElementById('logs-container');
+      const line = document.createElement('div');
+      line.className = `log-line ${type}`;
+      const timestamp = new Date().toLocaleTimeString();
+      line.textContent = `[${timestamp}] ${message}`;
+
+      container.insertBefore(line, container.firstChild);
+
+      // Limit to 100 lines
+      while (container.children.length > 100) {
+        container.removeChild(container.lastChild);
+      }
+    }
+
+    // Add timeline item
+    function addTimelineItem(content) {
+      const timeline = document.getElementById('timeline');
+      const item = document.createElement('div');
+      item.className = 'timeline-item';
+
+      const time = new Date().toLocaleTimeString();
+      item.innerHTML = `
+        <div class="timeline-time">${time}</div>
+        <div class="timeline-content">${content}</div>
+      `;
+
+      timeline.insertBefore(item, timeline.firstChild);
+
+      // Limit to 10 items
+      while (timeline.children.length > 10) {
+        timeline.removeChild(timeline.lastChild);
+      }
+    }
+
+    // Progress bar
+    function showProgress(percentage) {
+      document.getElementById('progress-container').classList.remove('hidden');
+      document.getElementById('progress-bar-fill').style.width = `${percentage}%`;
+    }
+
+    function hideProgress() {
+      document.getElementById('progress-container').classList.add('hidden');
+    }
+
+    // Actions
+    async function runFullCycle() {
+      addLog('🚀 Iniciando ciclo completo...', 'info');
+      addTimelineItem('Ciclo completo iniciado');
+
+      showProgress(0);
+
+      // Simulate progress
+      showProgress(20);
+      addLog('🏥 Health check...', 'info');
+      await sleep(1000);
+
+      showProgress(40);
+      addLog('🔨 Compilando APK...', 'info');
+      await sleep(2000);
+
+      showProgress(60);
+      addLog('📦 Instalando APK...', 'info');
+      await sleep(1000);
+
+      showProgress(80);
+      addLog('🧪 Ejecutando tests...', 'info');
+      await sleep(2000);
+
+      showProgress(100);
+      addLog('✅ Ciclo completado exitosamente', 'success');
+      addTimelineItem('Ciclo completo finalizado - 0 errores');
+
+      setTimeout(hideProgress, 1000);
+
+      // In production: Execute node automation-cli.js full-cycle
+      alert('⚠️ En producción, esto ejecutará:\nnode automation-cli.js full-cycle');
+    }
+
+    async function runHealthCheck() {
+      addLog('🏥 Ejecutando health check...', 'info');
+      addTimelineItem('Health check iniciado');
+
+      // In production: Execute node automation-cli.js health
+      await sleep(1000);
+
+      addLog('✅ Health check completado', 'success');
+      addTimelineItem('Health check: todos los componentes OK');
+
+      alert('⚠️ En producción, esto ejecutará:\nnode automation-cli.js health');
+    }
+
+    async function compileAPK() {
+      addLog('🔨 Compilando APK...', 'info');
+      addTimelineItem('Compilación de APK iniciada');
+
+      // In production: Execute node automation-cli.js compile
+      await sleep(2000);
+
+      addLog('✅ APK compilado exitosamente', 'success');
+      document.getElementById('last-build').textContent = new Date().toLocaleTimeString();
+      document.getElementById('build-duration').textContent = '28.3s';
+      document.getElementById('apk-size').textContent = '45.2 MB';
+      addTimelineItem('APK compilado: 45.2 MB en 28.3s');
+
+      alert('⚠️ En producción, esto ejecutará:\nnode automation-cli.js compile');
+    }
+
+    async function testAPK() {
+      addLog('🧪 Testeando APK...', 'info');
+      addTimelineItem('Testing de APK iniciado');
+
+      // In production: Execute node automation-cli.js test-only
+      await sleep(1500);
+
+      addLog('✅ Testing completado', 'success');
+      document.getElementById('tests-success').textContent = '12';
+      document.getElementById('tests-errors').textContent = '0';
+      addTimelineItem('Testing completado: 12 tests OK');
+
+      alert('⚠️ En producción, esto ejecutará:\nnode automation-cli.js test-only');
+    }
+
+    async function loadLatestLogs() {
+      addLog('📋 Cargando logs...', 'info');
+
+      // In production: Load from logs/ directory
+      await sleep(500);
+
+      addLog('✅ Logs cargados', 'success');
+      addLog('[KIOSK] Cámara inicializada', 'success');
+      addLog('[KIOSK] Servidor: http://10.0.2.2:3001', 'info');
+      addLog('[KIOSK] Capturando rostro...', 'info');
+
+      alert('⚠️ En producción, esto cargaría los logs reales del directorio logs/');
+    }
+
+    // Utility
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>

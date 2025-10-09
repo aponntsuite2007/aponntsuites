@@ -1,0 +1,55 @@
+Name: Medium_Phone_API_36.0
+CPU/ABI: x86_64
+Path: C:\Users\notebook\.android\avd\Medium_Phone.avd
+Target: google_apis_playstore [Google Play] (API level 36)
+Skin: 1080x2400
+SD Card: 512M
+AvdId: Medium_Phone_API_36.0
+PlayStore.enabled: true
+avd.ini.displayname: Medium Phone API 36.0
+avd.ini.encoding: UTF-8
+disk.dataPartition.size: 6G
+fastboot.chosenSnapshotFile: 
+fastboot.forceChosenSnapshotBoot: no
+fastboot.forceColdBoot: no
+fastboot.forceFastBoot: yes
+hw.accelerometer: yes
+hw.arc: false
+hw.audioInput: yes
+hw.battery: yes
+hw.camera.back: virtualscene
+hw.camera.front: emulated
+hw.cpu.ncore: 2
+hw.dPad: no
+hw.device.hash2: MD5:2016577e1656e8e7c2adb0fac972beea
+hw.device.manufacturer: Generic
+hw.device.name: medium_phone
+hw.gps: yes
+hw.gpu.enabled: yes
+hw.gpu.mode: auto
+hw.gyroscope: yes
+hw.initialOrientation: portrait
+hw.keyboard: yes
+hw.lcd.density: 420
+hw.lcd.height: 2400
+hw.lcd.width: 1080
+hw.mainKeys: no
+hw.ramSize: 2048
+hw.sdCard: yes
+hw.sensors.light: yes
+hw.sensors.magnetic_field: yes
+hw.sensors.orientation: yes
+hw.sensors.pressure: yes
+hw.sensors.proximity: yes
+hw.trackBall: no
+image.sysdir.1: system-images\android-36\google_apis_playstore\x86_64\
+runtime.network.latency: none
+runtime.network.speed: full
+showDeviceFrame: yes
+skin.dynamic: yes
+tag.display: Google Play
+tag.displaynames: Google Play
+tag.id: google_apis_playstore
+tag.ids: google_apis_playstore
+target: android-36
+vm.heapSize: 336

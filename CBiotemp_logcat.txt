@@ -1,0 +1,21 @@
+--------- beginning of main
+10-01 19:45:13.146   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+10-01 19:45:19.515  1080  1310 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+10-01 19:45:21.082   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+10-01 19:45:29.275   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+10-01 19:45:29.516  1080  1310 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+10-01 19:45:37.211   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+10-01 19:45:39.517  1080  1310 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+10-01 19:45:39.925  1481  1900 I bbax    : (REDACTED) getHotwordActive::active query: %s, watch: %s, devices connected: %s
+10-01 19:45:45.150   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+10-01 19:45:49.517  1080  1310 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+10-01 19:45:53.084   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+10-01 19:45:59.517  1080  1310 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+10-01 19:46:01.275   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+10-01 19:46:09.211   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+10-01 19:46:09.516  1080  1310 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+10-01 19:46:17.147   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+10-01 19:46:19.516  1080  1310 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+10-01 19:46:25.083   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 
+10-01 19:46:29.518  1080  1310 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+10-01 19:46:33.276   941   941 I wpa_supplicant: wlan0: CTRL-EVENT-BEACON-LOSS 

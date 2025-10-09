@@ -1,0 +1,360 @@
+#
+# 🔴 REDIS CLUSTER PROFESSIONAL - FASE 5
+# =======================================
+# Redis Cluster para cache distribuido y session store
+# Alta disponibilidad, particionado automático
+# Fecha: 2025-09-26
+# Versión: 2.0.0
+#
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: redis
+  labels:
+    app: redis-cluster
+    version: v7.2.0
+
+---
+# ConfigMap para configuración de Redis
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-cluster-config
+  namespace: redis
+data:
+  redis.conf: |
+    # Redis Cluster Configuration
+    port 6379
+    cluster-enabled yes
+    cluster-config-file nodes.conf
+    cluster-node-timeout 5000
+    cluster-announce-ip ${POD_IP}
+    cluster-announce-port 6379
+    cluster-announce-bus-port 16379
+    appendonly yes
+    appendfsync everysec
+
+    # Memory optimizations
+    maxmemory 2gb
+    maxmemory-policy allkeys-lru
+
+    # Security
+    protected-mode no
+    requirepass ${REDIS_PASSWORD}
+
+    # Performance
+    tcp-keepalive 60
+    tcp-backlog 511
+    timeout 300
+
+    # Persistence
+    save 900 1
+    save 300 10
+    save 60 10000
+
+    # Logging
+    loglevel notice
+
+    # Biometric-specific optimizations
+    hash-max-ziplist-entries 512
+    hash-max-ziplist-value 64
+    set-max-intset-entries 512
+
+---
+# Headless Service para Redis Cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cluster
+  namespace: redis
+  labels:
+    app: redis-cluster
+spec:
+  clusterIP: None
+  selector:
+    app: redis-cluster
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: client
+  - port: 16379
+    targetPort: 16379
+    protocol: TCP
+    name: gossip
+
+---
+# Service para acceso externo al cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cluster-service
+  namespace: redis
+  labels:
+    app: redis-cluster
+spec:
+  selector:
+    app: redis-cluster
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  type: ClusterIP
+
+---
+# StatefulSet para Redis Cluster
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-cluster
+  namespace: redis
+  labels:
+    app: redis-cluster
+spec:
+  serviceName: redis-cluster
+  replicas: 6  # 3 masters + 3 slaves
+  selector:
+    matchLabels:
+      app: redis-cluster
+  template:
+    metadata:
+      labels:
+        app: redis-cluster
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9121"
+        prometheus.io/path: "/metrics"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - redis-cluster
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: redis
+        image: redis:7.2.0-alpine
+        ports:
+        - containerPort: 6379
+          name: client
+        - containerPort: 16379
+          name: gossip
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretRef:
+              name: redis-secrets
+              key: redis-password
+        command:
+        - redis-server
+        - /etc/redis/redis.conf
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -a
+            - $(REDIS_PASSWORD)
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -a
+            - $(REDIS_PASSWORD)
+            - ping
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        volumeMounts:
+        - name: redis-config
+          mountPath: /etc/redis/
+        - name: redis-data
+          mountPath: /data
+        - name: redis-logs
+          mountPath: /var/log/redis
+
+      # Redis Exporter para métricas
+      - name: redis-exporter
+        image: oliver006/redis_exporter:v1.55.0
+        ports:
+        - containerPort: 9121
+          name: metrics
+        env:
+        - name: REDIS_ADDR
+          value: "redis://localhost:6379"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretRef:
+              name: redis-secrets
+              key: redis-password
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+
+      volumes:
+      - name: redis-config
+        configMap:
+          name: redis-cluster-config
+      - name: redis-logs
+        emptyDir: {}
+
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: ssd-retain
+      resources:
+        requests:
+          storage: 10Gi
+
+---
+# Secret para credenciales de Redis
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-secrets
+  namespace: redis
+type: Opaque
+stringData:
+  redis-password: "redis_cluster_password_2025_biometric"
+
+---
+# Job para inicializar el cluster
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-cluster-init
+  namespace: redis
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: redis-cluster-init
+        image: redis:7.2.0-alpine
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretRef:
+              name: redis-secrets
+              key: redis-password
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for Redis pods to be ready..."
+          sleep 60
+
+          echo "Initializing Redis Cluster..."
+          redis-cli --cluster create \
+            redis-cluster-0.redis-cluster.redis.svc.cluster.local:6379 \
+            redis-cluster-1.redis-cluster.redis.svc.cluster.local:6379 \
+            redis-cluster-2.redis-cluster.redis.svc.cluster.local:6379 \
+            redis-cluster-3.redis-cluster.redis.svc.cluster.local:6379 \
+            redis-cluster-4.redis-cluster.redis.svc.cluster.local:6379 \
+            redis-cluster-5.redis-cluster.redis.svc.cluster.local:6379 \
+            --cluster-replicas 1 \
+            --cluster-yes \
+            -a ${REDIS_PASSWORD}
+
+          echo "Redis Cluster initialized successfully!"
+
+---
+# PodDisruptionBudget para alta disponibilidad
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis-cluster-pdb
+  namespace: redis
+spec:
+  minAvailable: 4  # Mínimo 4 pods disponibles (2 masters + 2 slaves)
+  selector:
+    matchLabels:
+      app: redis-cluster
+
+---
+# ServiceMonitor para Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: redis-cluster-monitor
+  namespace: redis
+  labels:
+    app: redis-cluster
+spec:
+  selector:
+    matchLabels:
+      app: redis-cluster
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+# NetworkPolicy para seguridad
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-cluster-network-policy
+  namespace: redis
+spec:
+  podSelector:
+    matchLabels:
+      app: redis-cluster
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: biometric-system
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+  - from:
+    - podSelector:
+        matchLabels:
+          app: redis-cluster  # Permitir comunicación entre pods del cluster
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis-cluster  # Permitir comunicación entre pods del cluster
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53

@@ -1,0 +1,128 @@
+name: attendance_system
+description: Sistema de Control de Asistencia Biométrico con IA Avanzada
+publish_to: 'none'
+version: 2.0.0+1
+
+environment:
+  sdk: ">=3.1.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # 🎭 ARQUITECTURA BIOMÉTRICA PROFESIONAL - CORE ESTABLE
+  # ======================================================
+
+  # UI & Design
+  cupertino_icons: ^1.0.6
+
+  # State Management
+  provider: ^6.1.1
+
+  # Storage & Security
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+
+  # Date & Time
+  intl: ^0.20.2
+
+  # 📸 CAPTURA BIOMÉTRICA IA - VERSIONES ESTABLES
+  # ===============================================
+
+  # Camera & Images
+  camera: ^0.10.5+7
+  image_picker: ^1.0.5
+  image: ^4.1.3
+
+  # ML Kit Google (versiones compatibles) - HABILITADO para detección ultra-rápida
+  google_mlkit_face_detection: ^0.10.0
+
+  # Template Generation & Math
+  vector_math: ^2.1.4
+  crypto: ^3.0.3
+  encrypt: ^5.0.1
+
+  # Network & HTTP
+  dio: ^5.3.3
+  http: ^1.1.0
+  multicast_dns: ^0.3.2+3
+
+  # Biometric & Auth
+  local_auth: ^2.1.7
+
+  # 📱 PROFESSIONAL MOBILE FEATURES
+  # ================================
+
+  # QR Code - Solo generación para kiosko
+  qr_flutter: ^4.1.0
+
+  # Location & GPS
+  geolocator: ^10.1.0
+  geocoding: ^2.1.1
+
+  # Permissions
+  permission_handler: ^11.1.0
+  device_info_plus: ^9.1.1
+  # wakelock_plus: ^1.2.0  # REMOVIDO - Causaba crashes
+
+  # 🔊 Audio & Voice - Solo TTS para feedback del kiosko
+  flutter_tts: ^3.8.5
+
+  # 🔔 Notifications - Solo locales para kiosko
+  # flutter_local_notifications: ^16.3.2
+
+  # 🎨 Enhanced UI/UX Professional
+  lottie: ^2.7.0
+  animated_text_kit: ^4.2.2
+  shimmer: ^3.0.0
+
+  # 📡 Real-time Communication
+  web_socket_channel: ^2.4.0
+
+  # 🎯 Advanced Authentication
+  pattern_lock: ^2.0.0
+  pin_code_fields: ^8.0.1
+
+  # 📊 Analytics & Monitoring - Removido para compilación simplificada
+
+  # 🧠 AI & ML Professional
+  quiver: ^3.2.1
+
+  # 🔐 JWT Multi-Tenant
+  dart_jsonwebtoken: ^2.12.2
+
+  # 🔧 Missing Dependencies for Kiosk
+  google_fonts: ^6.1.0
+  # file_picker: ^6.1.1
+  socket_io_client: ^2.0.3+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  build_runner: ^2.4.7
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/animations/
+    - assets/fonts/
+    - assets/ai_models/
+    - assets/certificates/
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  adaptive_icon_background: "#1976D2"
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/icons/app_icon.png"

@@ -1,0 +1,89 @@
+/**
+ * @route GET /api/v1/attendance/stats/chart
+ * @desc Obtener datos para el gráfico de asistencia (últimos 30 días)
+ */
+router.get('/stats/chart', auth, async (req, res) => {
+  try {
+    console.log('📊 [ATTENDANCE CHART] Solicitando datos de gráfico para empresa:', req.user.company_id);
+
+    // Calcular rango de fechas (últimos 30 días)
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 29); // 30 días incluyendo hoy
+
+    // Formatear fechas para SQL
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    // Query para obtener datos agrupados por fecha y estado
+    const chartData = await sequelize.query(`
+      SELECT
+        a.date,
+        COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count,
+        COUNT(CASE WHEN a.status = 'late' THEN 1 END) as late_count,
+        COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_count
+      FROM attendances a
+      INNER JOIN users u ON a."UserId" = u.user_id
+      WHERE u.company_id = :companyId
+        AND a.date >= :startDate
+        AND a.date <= :endDate
+      GROUP BY a.date
+      ORDER BY a.date ASC
+    `, {
+      replacements: {
+        companyId: req.user.company_id,
+        startDate: startDateStr,
+        endDate: endDateStr
+      },
+      type: QueryTypes.SELECT
+    });
+
+    // Crear arrays para los últimos 30 días (incluso si no hay datos para algunos días)
+    const labels = [];
+    const presentData = [];
+    const lateArrivalsData = [];
+    const absencesData = [];
+
+    // Generar todos los días en el rango
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+
+      // Formatear label como DD/MM
+      const [year, month, day] = dateStr.split('-');
+      labels.push(`${day}/${month}`);
+
+      // Buscar datos para este día
+      const dayData = chartData.find(d => d.date === dateStr);
+
+      presentData.push(dayData ? parseInt(dayData.present_count) : 0);
+      lateArrivalsData.push(dayData ? parseInt(dayData.late_count) : 0);
+      absencesData.push(dayData ? parseInt(dayData.absent_count) : 0);
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    console.log('✅ [ATTENDANCE CHART] Datos generados:', {
+      days: labels.length,
+      totalPresent: presentData.reduce((a, b) => a + b, 0),
+      totalLate: lateArrivalsData.reduce((a, b) => a + b, 0),
+      totalAbsent: absencesData.reduce((a, b) => a + b, 0)
+    });
+
+    res.json({
+      success: true,
+      labels,
+      present: presentData,
+      lateArrivals: lateArrivalsData,
+      absences: absencesData
+    });
+
+  } catch (error) {
+    console.error('❌ [ATTENDANCE CHART] Error obteniendo datos del gráfico:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});

@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "Sistema de Asistencia Biométrico",
+    "description": "Sistema multi-tenant de asistencia biométrica con reconocimiento facial",
+    "type": "flutter_apk + node_backend",
+    "backend": {
+      "path": "../backend",
+      "port": 3001,
+      "healthEndpoint": "/api/v1/health",
+      "startCommand": "PORT=3001 npm start"
+    },
+    "frontend": {
+      "type": "flutter",
+      "path": "../frontend_flutter",
+      "buildCommand": "flutter build apk --debug",
+      "buildPath": "build/app/outputs/flutter-apk/app-debug.apk",
+      "mainFile": "lib/main.dart"
+    },
+    "database": {
+      "type": "postgresql",
+      "host": "localhost",
+      "port": 5432,
+      "database": "attendance_system"
+    },
+    "emulator": {
+      "name": "Medium_Phone_API_36.0",
+      "package": "com.example.attendance_system",
+      "mainActivity": ".MainActivity"
+    }
+  },
+  "testing": {
+    "autoConfig": true,
+    "autoLogin": true,
+    "testUser": {
+      "username": "testuser",
+      "password": "test123",
+      "companyId": "11"
+    },
+    "captureLogsDelay": 8000,
+    "maxIterations": 10,
+    "screenshotCompression": true
+  },
+  "ai": {
+    "tool": "Claude Code",
+    "todoTracking": true,
+    "autoFix": true,
+    "backupBeforeFix": true,
+    "logFormat": "structured_json"
+  },
+  "paths": {
+    "adb": "C:\\Users\\notebook\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe",
+    "emulator": "C:\\Users\\notebook\\AppData\\Local\\Android\\Sdk\\emulator\\emulator.exe",
+    "flutter": "flutter",
+    "node": "node"
+  },
+  "notifications": {
+    "enabled": false,
+    "slack": {
+      "webhook": ""
+    },
+    "discord": {
+      "webhook": ""
+    }
+  }
+}

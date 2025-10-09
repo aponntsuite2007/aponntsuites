@@ -1,0 +1,506 @@
+#
+# 🚀 PROFESSIONAL KUBERNETES DEPLOYMENT - FASE 5
+# =============================================
+# Kubernetes deployment para sistema biométrico profesional
+# Auto-scaling, multi-tenant, alta disponibilidad
+# Fecha: 2025-09-26
+# Versión: 2.0.0
+#
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: biometric-system
+  labels:
+    app: siac-biometric
+    version: v2.0.0
+    tier: production
+
+---
+# ConfigMap para configuración del sistema
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: biometric-config
+  namespace: biometric-system
+data:
+  NODE_ENV: "production"
+  API_VERSION: "2.0"
+  DATABASE_HOST: "postgresql-cluster.biometric-system.svc.cluster.local"
+  DATABASE_NAME: "siac_biometric"
+  REDIS_CLUSTER_HOST: "redis-cluster.biometric-system.svc.cluster.local"
+  KAFKA_BROKERS: "kafka-cluster.biometric-system.svc.cluster.local:9092"
+  AI_ANALYSIS_ENABLED: "true"
+  HARVARD_EMOTINET_ENABLED: "true"
+  MIT_BEHAVIOR_ENABLED: "true"
+  STANFORD_FACIAL_ENABLED: "true"
+  WHO_GDHI_ENABLED: "true"
+  WEBSOCKET_ENABLED: "true"
+  MONITORING_ENABLED: "true"
+  LOG_LEVEL: "info"
+  METRICS_PORT: "9090"
+
+---
+# Secret para credenciales sensibles
+apiVersion: v1
+kind: Secret
+metadata:
+  name: biometric-secrets
+  namespace: biometric-system
+type: Opaque
+stringData:
+  DATABASE_PASSWORD: "biometric_secure_password_2025"
+  JWT_SECRET: "biometric_jwt_super_secret_key_v2"
+  REDIS_PASSWORD: "redis_cluster_password_2025"
+  HARVARD_EMOTINET_KEY: "harvard_api_key_demo"
+  MIT_BEHAVIOR_KEY: "mit_api_key_demo"
+  STANFORD_FACIAL_KEY: "stanford_api_key_demo"
+  WHO_GDHI_KEY: "who_gdhi_api_key_demo"
+  ENCRYPTION_KEY: "aes256_encryption_key_biometric"
+
+---
+# Deployment principal del backend biométrico
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: biometric-backend
+  namespace: biometric-system
+  labels:
+    app: biometric-backend
+    version: v2.0.0
+    tier: backend
+spec:
+  replicas: 5  # Alta disponibilidad
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: biometric-backend
+  template:
+    metadata:
+      labels:
+        app: biometric-backend
+        version: v2.0.0
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: biometric-service-account
+      containers:
+      - name: biometric-backend
+        image: siac/biometric-backend:2.0.0
+        ports:
+        - containerPort: 3000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        envFrom:
+        - configMapRef:
+            name: biometric-config
+        - secretRef:
+            name: biometric-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /api/v2/biometric/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v2/biometric/health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        volumeMounts:
+        - name: ai-models
+          mountPath: /app/ai_models
+          readOnly: true
+        - name: certificates
+          mountPath: /app/certificates
+          readOnly: true
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: ai-models
+        persistentVolumeClaim:
+          claimName: ai-models-pvc
+      - name: certificates
+        secret:
+          secretName: biometric-tls-certs
+      - name: logs
+        emptyDir: {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - biometric-backend
+              topologyKey: kubernetes.io/hostname
+
+---
+# Service para el backend
+apiVersion: v1
+kind: Service
+metadata:
+  name: biometric-backend-service
+  namespace: biometric-system
+  labels:
+    app: biometric-backend
+    version: v2.0.0
+spec:
+  selector:
+    app: biometric-backend
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  type: ClusterIP
+
+---
+# Deployment para procesamiento IA
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: biometric-ai-processor
+  namespace: biometric-system
+  labels:
+    app: biometric-ai-processor
+    version: v2.0.0
+    tier: ai
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: biometric-ai-processor
+  template:
+    metadata:
+      labels:
+        app: biometric-ai-processor
+        version: v2.0.0
+        tier: ai
+    spec:
+      containers:
+      - name: ai-processor
+        image: siac/biometric-ai:2.0.0
+        ports:
+        - containerPort: 8080
+          name: grpc
+        envFrom:
+        - configMapRef:
+            name: biometric-config
+        - secretRef:
+            name: biometric-secrets
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+            nvidia.com/gpu: 1  # GPU para procesamiento IA
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: ai-models
+          mountPath: /models
+          readOnly: true
+      volumes:
+      - name: ai-models
+        persistentVolumeClaim:
+          claimName: ai-models-pvc
+      nodeSelector:
+        nvidia.com/gpu: "true"  # Nodos con GPU
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+
+---
+# Service para AI Processor
+apiVersion: v1
+kind: Service
+metadata:
+  name: biometric-ai-service
+  namespace: biometric-system
+spec:
+  selector:
+    app: biometric-ai-processor
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: grpc
+  type: ClusterIP
+
+---
+# HorizontalPodAutoscaler para backend
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: biometric-backend-hpa
+  namespace: biometric-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: biometric-backend
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: biometric_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "100"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+
+---
+# HorizontalPodAutoscaler para AI Processor
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: biometric-ai-hpa
+  namespace: biometric-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: biometric-ai-processor
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  - type: Resource
+    resource:
+      name: nvidia.com/gpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# Ingress para acceso externo
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: biometric-ingress
+  namespace: biometric-system
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "1000"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/websocket-services: "biometric-backend-service"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  tls:
+  - hosts:
+    - biometric.siac.com
+    - api.biometric.siac.com
+    secretName: biometric-tls
+  rules:
+  - host: biometric.siac.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: biometric-backend-service
+            port:
+              number: 80
+  - host: api.biometric.siac.com
+    http:
+      paths:
+      - path: /api/v2/biometric
+        pathType: Prefix
+        backend:
+          service:
+            name: biometric-backend-service
+            port:
+              number: 80
+
+---
+# NetworkPolicy para seguridad
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: biometric-network-policy
+  namespace: biometric-system
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+  - from:
+    - podSelector:
+        matchLabels:
+          app: biometric-backend
+    - podSelector:
+        matchLabels:
+          app: biometric-ai-processor
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: database
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: redis
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kafka
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 443
+
+---
+# PersistentVolumeClaim para modelos IA
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-models-pvc
+  namespace: biometric-system
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: ssd-retain
+
+---
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: biometric-service-account
+  namespace: biometric-system
+
+---
+# Role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: biometric-system
+  name: biometric-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch"]
+
+---
+# RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: biometric-rolebinding
+  namespace: biometric-system
+subjects:
+- kind: ServiceAccount
+  name: biometric-service-account
+  namespace: biometric-system
+roleRef:
+  kind: Role
+  name: biometric-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ServiceMonitor para Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: biometric-backend-monitor
+  namespace: biometric-system
+  labels:
+    app: biometric-backend
+spec:
+  selector:
+    matchLabels:
+      app: biometric-backend
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s

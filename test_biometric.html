@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Biometric Save</title>
+</head>
+<body>
+    <h1>Test Biometric Save</h1>
+    <button onclick="testSave()">Test Save</button>
+    <div id="result"></div>
+
+    <script>
+    async function testSave() {
+        try {
+            // Crear FormData simulando la captura biométrica
+            const formData = new FormData();
+            formData.append('type', 'facial');
+            formData.append('quality', '0.85');
+            formData.append('employeeId', '766de495-e4f3-4e91-a509-1a495c52e15c');
+            formData.append('companyId', '11');
+
+            // Crear un blob simulado (imagen pequeña)
+            const blob = new Blob(['fake image data'], { type: 'image/jpeg' });
+            formData.append('biometricData', blob, 'facial_capture.jpg');
+
+            console.log('Enviando datos de prueba...');
+
+            const response = await fetch('http://localhost:9998/api/v1/biometric/save', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            console.log('Resultado:', result);
+            document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('result').innerHTML = 'Error: ' + error.message;
+        }
+    }
+    </script>
+</body>
+</html>
