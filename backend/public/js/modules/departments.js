@@ -278,49 +278,69 @@ async function showAddDepartment() {
                 <input type="text" id="newDeptAddress" style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;" placeholder="Ej: Oficina Principal - Piso 2">
             </div>
             
-            <div style="margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-                <label><strong>🗺️ Ubicación GPS (opcional):</strong></label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                    <div>
-                        <label>Latitud:</label>
-                        <input type="number" id="newDeptLat" step="0.000001" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px;" placeholder="-34.603722">
-                    </div>
-                    <div>
-                        <label>Longitud:</label>
-                        <input type="number" id="newDeptLng" step="0.000001" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px;" placeholder="-58.381592">
+            <!-- Checkbox: Permitir GPS desde APK -->
+            <div style="margin-bottom: 25px; padding: 20px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: bold; margin-bottom: 10px;">
+                    <input type="checkbox" id="deptAllowGpsAttendance" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span>📱 Permitir marcado por GPS desde APK Empleado</span>
+                </label>
+                <small style="color: #666; display: block; margin-left: 30px;">
+                    Si se activa, los empleados podrán marcar asistencia desde su celular (APK) cuando estén dentro del radio de cobertura del departamento
+                </small>
+            </div>
+
+            <!-- Sección GPS (solo visible si se permite GPS) -->
+            <div id="gpsConfigSection" style="display: none; margin-bottom: 25px; padding: 20px; background: #f0f8ff; border-radius: 8px;">
+                <label><strong>📍 Ubicación GPS del Departamento:</strong></label>
+                <small style="color: #666; display: block; margin-bottom: 15px;">
+                    ⚠️ Selecciona la ubicación EXACTA del departamento físico (no tu ubicación actual). Usa el mapa o ingresa coordenadas manualmente.
+                </small>
+
+                <!-- Mapa Google Maps -->
+                <div id="departmentMap" style="width: 100%; height: 300px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 15px; position: relative;">
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; color: #999;">
+                        🗺️ Cargando Google Maps...
                     </div>
                 </div>
-                <div style="margin-top: 10px;">
-                    <button class="btn btn-info btn-sm" onclick="getCurrentLocation()">📍 Usar mi ubicación actual</button>
-                    <small style="display: block; margin-top: 5px; color: #666;">
-                        💡 La ubicación GPS permite validar asistencia por proximidad
+
+                <!-- Coordenadas manuales + Radio -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-size: 13px; color: #555; font-weight: bold;">Latitud:</label>
+                        <input type="number" id="newDeptLat" step="0.00000001" placeholder="-34.603722" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div>
+                    <div>
+                        <label style="font-size: 13px; color: #555; font-weight: bold;">Longitud:</label>
+                        <input type="number" id="newDeptLng" step="0.00000001" placeholder="-58.381592" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div>
+                    <div>
+                        <label style="font-size: 13px; color: #555; font-weight: bold;">📏 Radio (m):</label>
+                        <input type="number" id="newDeptRadius" min="10" max="1000" value="50" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div>
+                </div>
+
+                <div style="padding: 12px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                    <small style="color: #856404;">
+                        💡 <strong>Tip:</strong> Arrastra el marcador 📍 en el mapa para ajustar la ubicación. El círculo amarillo muestra el radio de cobertura (área donde se puede marcar).
                     </small>
                 </div>
             </div>
-            
-            <div style="margin-bottom: 25px;">
-                <label><strong>📏 Radio de cobertura (metros):</strong></label>
-                <input type="number" id="newDeptRadius" min="10" max="1000" value="50" style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;">
-                <small style="color: #666;">
-                    📐 Distancia máxima desde el punto GPS para permitir registro de asistencia
-                </small>
-            </div>
 
+            <!-- Sección Kiosks Autorizados -->
             <div style="margin-bottom: 25px; padding: 20px; background: #e3f2fd; border-radius: 8px;">
-                <label><strong>🖥️ Kiosks Autorizados (opcional):</strong></label>
+                <label><strong>🖥️ Kiosks Físicos Autorizados (opcional):</strong></label>
                 <small style="color: #666; display: block; margin-bottom: 12px;">
-                    📍 Selecciona en qué kiosks los empleados de este departamento pueden marcar asistencia
+                    📍 Selecciona en qué kiosks físicos los empleados pueden marcar asistencia (además del GPS si está habilitado)
                 </small>
-
-                <div style="margin-bottom: 12px; padding: 10px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
-                        <input type="checkbox" id="deptGpsOnly" style="width: 18px; height: 18px; cursor: pointer;">
-                        <span>📱 Solo GPS (APK Empleado) - No usar kiosks</span>
-                    </label>
-                </div>
 
                 <div id="deptKiosksCheckboxContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 12px; background: white; border-radius: 5px;">
                     <p style="margin: 0; color: #999;">Cargando kiosks...</p>
+                </div>
+
+                <div style="margin-top: 12px; padding: 10px; background: #e1f5fe; border-radius: 5px;">
+                    <small style="color: #01579b;">
+                        ℹ️ <strong>Modo Mixto:</strong> Puedes activar GPS + Kiosks. Los empleados podrán usar cualquier opción habilitada.
+                    </small>
                 </div>
             </div>
 
@@ -389,15 +409,6 @@ async function showAddDepartment() {
         kioskContainer.innerHTML = checkboxesHTML;
         console.log(`✅ ${kiosks.length} kiosks cargados como checkboxes`);
 
-        // Lógica para "Solo GPS" deshabilita kiosks
-        document.getElementById('deptGpsOnly').addEventListener('change', function(e) {
-            const kioskCheckboxes = document.querySelectorAll('.dept-kiosk-checkbox, .dept-kiosk-all');
-            kioskCheckboxes.forEach(cb => {
-                cb.disabled = e.target.checked;
-                if (e.target.checked) cb.checked = false;
-            });
-        });
-
         // Lógica para "Todos los kiosks" marca/desmarca todos
         document.getElementById('deptAllKiosks').addEventListener('change', function(e) {
             const individualCheckboxes = document.querySelectorAll('.dept-kiosk-checkbox');
@@ -417,7 +428,109 @@ async function showAddDepartment() {
         kioskContainer.innerHTML = '<p style="margin: 0; color: #999;">No hay kiosks disponibles</p>';
     }
 
+    // Lógica para mostrar/ocultar sección GPS
+    document.getElementById('deptAllowGpsAttendance').addEventListener('change', function(e) {
+        const gpsSection = document.getElementById('gpsConfigSection');
+        if (e.target.checked) {
+            gpsSection.style.display = 'block';
+            // Inicializar Google Maps si está disponible
+            if (typeof google !== 'undefined' && google.maps) {
+                initDepartmentMap();
+            } else {
+                console.warn('⚠️ Google Maps no está cargado. El mapa no estará disponible.');
+            }
+        } else {
+            gpsSection.style.display = 'none';
+        }
+    });
+
     document.getElementById('newDeptName').focus();
+}
+
+// Variable global para el mapa
+let departmentMap = null;
+let departmentMarker = null;
+let departmentCircle = null;
+
+// Inicializar Google Maps
+function initDepartmentMap() {
+    const mapContainer = document.getElementById('departmentMap');
+    if (!mapContainer) return;
+
+    // Coordenadas por defecto (Buenos Aires - Obelisco)
+    const defaultLat = -34.603722;
+    const defaultLng = -58.381592;
+
+    const lat = parseFloat(document.getElementById('newDeptLat').value) || defaultLat;
+    const lng = parseFloat(document.getElementById('newDeptLng').value) || defaultLng;
+    const radius = parseInt(document.getElementById('newDeptRadius').value) || 50;
+
+    try {
+        // Crear mapa
+        departmentMap = new google.maps.Map(mapContainer, {
+            center: { lat, lng },
+            zoom: 18,
+            mapTypeId: 'satellite', // Vista satelital para mejor precisión
+            tilt: 0
+        });
+
+        // Crear marcador draggable
+        departmentMarker = new google.maps.Marker({
+            position: { lat, lng },
+            map: departmentMap,
+            draggable: true,
+            title: 'Ubicación del Departamento'
+        });
+
+        // Crear círculo de cobertura
+        departmentCircle = new google.maps.Circle({
+            map: departmentMap,
+            center: { lat, lng },
+            radius: radius,
+            strokeColor: '#FFC107',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#FFC107',
+            fillOpacity: 0.2
+        });
+
+        // Actualizar inputs al arrastrar marcador
+        departmentMarker.addListener('dragend', function(event) {
+            const newLat = event.latLng.lat();
+            const newLng = event.latLng.lng();
+            document.getElementById('newDeptLat').value = newLat.toFixed(8);
+            document.getElementById('newDeptLng').value = newLng.toFixed(8);
+            departmentCircle.setCenter({ lat: newLat, lng: newLng });
+        });
+
+        // Actualizar marcador y círculo al cambiar inputs manualmente
+        document.getElementById('newDeptLat').addEventListener('input', updateMapFromInputs);
+        document.getElementById('newDeptLng').addEventListener('input', updateMapFromInputs);
+        document.getElementById('newDeptRadius').addEventListener('input', function() {
+            const newRadius = parseInt(this.value) || 50;
+            if (departmentCircle) {
+                departmentCircle.setRadius(newRadius);
+            }
+        });
+
+        console.log('✅ Google Maps inicializado correctamente');
+    } catch (error) {
+        console.error('❌ Error inicializando Google Maps:', error);
+        mapContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">⚠️ Error cargando el mapa. Usa las coordenadas manuales.</div>';
+    }
+}
+
+// Actualizar mapa desde inputs
+function updateMapFromInputs() {
+    const lat = parseFloat(document.getElementById('newDeptLat').value);
+    const lng = parseFloat(document.getElementById('newDeptLng').value);
+
+    if (!isNaN(lat) && !isNaN(lng) && departmentMarker && departmentMap && departmentCircle) {
+        const newPos = { lat, lng };
+        departmentMarker.setPosition(newPos);
+        departmentCircle.setCenter(newPos);
+        departmentMap.setCenter(newPos);
+    }
 }
 
 // Cerrar modal de departamentos
@@ -481,10 +594,10 @@ async function saveNewDepartment() {
     const branchContainer = document.getElementById('branchSelectorContainer');
     const hasBranches = branchContainer.style.display !== 'none';
 
-    // Recolectar kiosks autorizados seleccionados
-    const gpsOnlyChecked = document.getElementById('deptGpsOnly')?.checked || false;
+    // Recolectar opciones de asistencia
+    const allowGpsAttendance = document.getElementById('deptAllowGpsAttendance')?.checked || false;
     const selectedKioskCheckboxes = document.querySelectorAll('.dept-kiosk-checkbox:checked');
-    const authorizedKiosks = gpsOnlyChecked ? [] : Array.from(selectedKioskCheckboxes).map(cb => parseInt(cb.value));
+    const authorizedKiosks = Array.from(selectedKioskCheckboxes).map(cb => parseInt(cb.value));
     
     // Validaciones
     if (hasBranches && !branchId) {
@@ -504,32 +617,45 @@ async function saveNewDepartment() {
         document.getElementById('newDeptName').focus();
         return;
     }
-    
-    if (!radius || radius < 10 || radius > 1000) {
-        alert('❌ El radio de cobertura debe estar entre 10 y 1000 metros');
-        document.getElementById('newDeptRadius').focus();
+
+    // Validar que al menos UNA opción esté habilitada
+    if (!allowGpsAttendance && authorizedKiosks.length === 0) {
+        alert('❌ Debe habilitar al menos UNA opción:\n- Permitir GPS desde APK, O\n- Seleccionar al menos un kiosk físico autorizado');
         return;
     }
-    
+
+    // Si se permite GPS, validar coordenadas y radio
+    if (allowGpsAttendance) {
+        if (!lat || !lng) {
+            alert('❌ Si permites GPS, debes ingresar las coordenadas de ubicación del departamento.\nUsa el mapa o ingresa las coordenadas manualmente.');
+            document.getElementById('newDeptLat').focus();
+            return;
+        }
+        if (!radius || radius < 10 || radius > 1000) {
+            alert('❌ Si permites GPS, el radio de cobertura debe estar entre 10 y 1000 metros');
+            document.getElementById('newDeptRadius').focus();
+            return;
+        }
+    }
+
     // Preparar datos
     const deptData = {
         name,
         description,
         address,
-        coverageRadius: parseInt(radius),
+        coverageRadius: parseInt(radius) || 50,
         gpsLocation: {
             lat: lat ? parseFloat(lat) : null,
             lng: lng ? parseFloat(lng) : null
-        }
+        },
+        allow_gps_attendance: allowGpsAttendance,
+        authorized_kiosks: authorizedKiosks
     };
 
     // Agregar branchId solo si la empresa tiene sucursales
     if (hasBranches && branchId) {
         deptData.branchId = branchId;
     }
-
-    // Agregar authorized_kiosks (puede ser array vacío si "Solo GPS")
-    deptData.authorized_kiosks = authorizedKiosks;
 
     try {
         const response = await fetch('/api/v1/departments', {

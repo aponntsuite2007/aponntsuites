@@ -79,6 +79,13 @@ module.exports = (sequelize) => {
       allowNull: true,
       defaultValue: [],
       comment: 'Array de kiosk_id autorizados para este departamento. Si está vacío, solo pueden marcar por GPS. Ejemplo: [9, 10, 17]'
+    },
+    // Permitir marcado por GPS desde APK Empleado
+    allow_gps_attendance: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      comment: 'Si true, empleados pueden marcar asistencia desde APK cuando estén dentro del radio de cobertura GPS'
     }
   }, {
     tableName: 'departments',

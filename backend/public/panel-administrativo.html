@@ -2430,6 +2430,19 @@
         }
 
     </style>
+
+    <!-- Google Maps API (para módulo de Departamentos) -->
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"
+            onload="console.log('✅ Google Maps cargado correctamente')"
+            onerror="console.error('❌ Error cargando Google Maps')">
+    </script>
+    <script>
+        // Callback dummy para Google Maps
+        function initMap() {
+            console.log('🗺️ Google Maps API inicializada');
+        }
+    </script>
 </head>
 <body>
     <div class="dashboard-header">
