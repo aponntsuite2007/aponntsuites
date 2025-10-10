@@ -625,14 +625,22 @@ router.post('/compatibility-matrix', async (req, res) => {
 
     // Verificar que ambos usuarios existan y pertenezcan a la empresa
     const [primaryUser, coverUser] = await Promise.all([
-      User.findOne({ where: { user_id: primaryUserId, company_id: companyId } }),
-      User.findOne({ where: { user_id: coverUserId, company_id: companyId } })
+      User.findByPk(primaryUserId),
+      User.findByPk(coverUserId)
     ]);
 
     if (!primaryUser || !coverUser) {
       return res.status(404).json({
         success: false,
-        message: 'Uno o ambos empleados no fueron encontrados en esta empresa'
+        message: 'Uno o ambos empleados no fueron encontrados'
+      });
+    }
+
+    // Verificar que pertenezcan a la misma empresa
+    if (primaryUser.company_id !== companyId || coverUser.company_id !== companyId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Los empleados no pertenecen a esta empresa'
       });
     }
 
