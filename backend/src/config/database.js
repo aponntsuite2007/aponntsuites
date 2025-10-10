@@ -118,6 +118,9 @@ const TrainingProgress = require('../models/TrainingProgress-postgresql')(sequel
 // Modelo de Kiosks para control de acceso
 const Kiosk = require('../models/Kiosk-postgresql')(sequelize);
 
+// Modelo de Sanciones
+const Sanction = require('../models/Sanction-postgresql')(sequelize);
+
 // Modelos para control de acceso de visitantes
 const Visitor = require('../models/Visitor-postgresql')(sequelize);
 const VisitorGpsTracking = require('../models/VisitorGpsTracking-postgresql')(sequelize);
@@ -357,6 +360,7 @@ module.exports = {
   Branch,
   Department,
   Kiosk,
+  Sanction,
   Visitor,
   VisitorGpsTracking,
   AccessNotification,

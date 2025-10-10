@@ -1852,6 +1852,10 @@ app.use('/api/v1/attendance', attendanceRoutes);
 const kioskRoutes = require('./src/routes/kioskRoutes');
 app.use('/api/v1/kiosks', kioskRoutes);
 
+// 🚨 CONFIGURAR API DE SANCIONES
+const sanctionRoutes = require('./src/routes/sanctionRoutes');
+app.use('/api/v1/sanctions', sanctionRoutes);
+
 // 👥 CONFIGURAR API DE VISITANTES
 const visitorRoutes = require('./src/routes/visitorRoutes');
 app.use('/api/v1/visitors', visitorRoutes);
