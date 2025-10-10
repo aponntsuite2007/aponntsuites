@@ -305,7 +305,17 @@ async function showAddDepartment() {
                     📐 Distancia máxima desde el punto GPS para permitir registro de asistencia
                 </small>
             </div>
-            
+
+            <div style="margin-bottom: 25px; padding: 20px; background: #e3f2fd; border-radius: 8px;">
+                <label><strong>🖥️ Kiosk por Defecto (opcional):</strong></label>
+                <select id="newDeptDefaultKiosk" style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;">
+                    <option value="">Ninguno (empleados marcan por GPS)</option>
+                </select>
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    📍 Kiosk donde los empleados de este departamento deben marcar asistencia
+                </small>
+            </div>
+
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px;">
                 <button class="btn btn-secondary" onclick="closeDepartmentModal()">❌ Cancelar</button>
                 <button class="btn btn-primary" onclick="saveNewDepartment()">💾 Crear Departamento</button>
@@ -338,6 +348,19 @@ async function showAddDepartment() {
         // Sin sucursales, ocultar selector
         branchContainer.style.setProperty('display', 'none', 'important');
         console.log('ℹ️ Empresa sin sucursales - modo tradicional');
+    }
+
+    // Cargar kiosks para selector
+    const kiosks = await loadKiosksForSelector();
+    const kioskSelect = document.getElementById('newDeptDefaultKiosk');
+    if (kiosks && kiosks.length > 0) {
+        kiosks.forEach(kiosk => {
+            const option = document.createElement('option');
+            option.value = kiosk.id;
+            option.textContent = `${kiosk.name}${kiosk.location ? ' - ' + kiosk.location : ''}`;
+            kioskSelect.appendChild(option);
+        });
+        console.log(`✅ ${kiosks.length} kiosks cargados para selector`);
     }
 
     document.getElementById('newDeptName').focus();
@@ -399,6 +422,7 @@ async function saveNewDepartment() {
     const radius = document.getElementById('newDeptRadius').value;
     const branchSelect = document.getElementById('newDeptBranch');
     const branchId = branchSelect.value;
+    const defaultKioskId = document.getElementById('newDeptDefaultKiosk').value;
 
     // Verificar si el selector de sucursales está visible (empresa tiene sucursales)
     const branchContainer = document.getElementById('branchSelectorContainer');
@@ -444,6 +468,11 @@ async function saveNewDepartment() {
     // Agregar branchId solo si la empresa tiene sucursales
     if (hasBranches && branchId) {
         deptData.branchId = branchId;
+    }
+
+    // Agregar default_kiosk_id si se seleccionó un kiosk
+    if (defaultKioskId) {
+        deptData.default_kiosk_id = parseInt(defaultKioskId);
     }
 
     try {
@@ -717,6 +746,33 @@ function exportDepartments() {
     document.body.removeChild(link);
     
     alert('✅ Departamentos exportados exitosamente');
+}
+
+// Cargar kiosks para selector
+async function loadKiosksForSelector() {
+    try {
+        const response = await fetch('/api/v1/kiosks', {
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.kiosks) {
+            return data.kiosks.filter(k => k.is_active);
+        }
+
+        return [];
+    } catch (error) {
+        console.error('Error cargando kiosks:', error);
+        return [];
+    }
 }
 
 console.log('🏢 [DEPARTMENTS] Todas las funciones de departamentos cargadas');
