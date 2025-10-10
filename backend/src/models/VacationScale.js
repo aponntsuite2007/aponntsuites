@@ -55,7 +55,8 @@ module.exports = (sequelize) => {
   }, {
     tableName: 'vacation_scales',
     timestamps: true,
-    createdAt: 'createdAt',
+    underscored: true,
+    createdAt: 'created_at',
     updatedAt: 'updatedAt',
     indexes: [
       {

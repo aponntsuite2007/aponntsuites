@@ -81,7 +81,8 @@ module.exports = (sequelize) => {
   }, {
     tableName: 'extraordinary_licenses',
     timestamps: true,
-    createdAt: 'createdAt',
+    underscored: true,
+    createdAt: 'created_at',
     updatedAt: 'updatedAt',
     indexes: [
       {

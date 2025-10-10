@@ -59,8 +59,9 @@ module.exports = (sequelize) => {
   }, {
     tableName: 'vacation_configurations',
     timestamps: true,
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    underscored: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
   return VacationConfiguration;

@@ -165,8 +165,9 @@ module.exports = (sequelize) => {
   }, {
     tableName: 'vacation_requests',
     timestamps: true,
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt',
+    underscored: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
     indexes: [
       {
         name: 'idx_vacation_req_user_status',
