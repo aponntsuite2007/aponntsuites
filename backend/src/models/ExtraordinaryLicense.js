@@ -83,7 +83,7 @@ module.exports = (sequelize) => {
     timestamps: true,
     underscored: true,
     createdAt: 'created_at',
-    updatedAt: 'updatedAt',
+    updatedAt: 'updated_at',
     indexes: [
       {
         name: 'idx_extraordinary_license_type',

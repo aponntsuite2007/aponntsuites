@@ -57,7 +57,7 @@ module.exports = (sequelize) => {
     timestamps: true,
     underscored: true,
     createdAt: 'created_at',
-    updatedAt: 'updatedAt',
+    updatedAt: 'updated_at',
     indexes: [
       {
         name: 'idx_vacation_scale_range',

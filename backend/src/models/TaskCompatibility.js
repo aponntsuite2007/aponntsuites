@@ -54,20 +54,6 @@ module.exports = (sequelize) => {
       comment: 'Array de tareas que puede cubrir con sus niveles de competencia'
     },
     
-    // Tareas que NO puede cubrir
-    nonCoverableTasks: {
-      type: DataTypes.JSON,
-      defaultValue: [],
-      comment: 'Array de tareas que NO puede cubrir'
-    },
-    
-    // Disponibilidad y restricciones
-    availabilityRestrictions: {
-      type: DataTypes.JSON,
-      defaultValue: {},
-      comment: 'Restricciones de disponibilidad (horarios, fechas específicas)'
-    },
-    
     // Capacidad máxima
     maxCoverageHours: {
       type: DataTypes.INTEGER,

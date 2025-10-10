@@ -64,13 +64,7 @@ module.exports = (sequelize) => {
       field: 'total_days',
       comment: 'Total de días solicitados'
     },
-    
-    businessDays: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      comment: 'Días hábiles dentro del período'
-    },
-    
+
     // Información de la solicitud
     reason: {
       type: DataTypes.TEXT,
