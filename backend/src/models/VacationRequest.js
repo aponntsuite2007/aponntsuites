@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
 
     // Relación con empleado
     userId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       field: 'user_id',
       comment: 'ID del usuario/empleado que solicita'
@@ -87,7 +87,7 @@ module.exports = (sequelize) => {
     
     // Información de aprobación/rechazo
     approvedBy: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
       field: 'approved_by',
       comment: 'ID del usuario que aprobó/rechazó'

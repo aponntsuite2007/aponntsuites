@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
 
     // Empleado principal (que se ausenta)
     primaryUserId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       field: 'primary_user_id',
       comment: 'ID del empleado principal que se ausenta'
@@ -31,7 +31,7 @@ module.exports = (sequelize) => {
 
     // Empleado que puede cubrir
     coverUserId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       field: 'cover_user_id',
       comment: 'ID del empleado que puede cubrir las tareas'
