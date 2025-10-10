@@ -999,9 +999,7 @@ async function loadCompatibilityMatrix() {
                 <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 10px;">
                     <h4>No hay reglas de compatibilidad configuradas</h4>
                     <p style="color: #666;">Agrega reglas para definir qué empleados pueden cubrir a otros durante vacaciones</p>
-                    <button onclick="addCompatibilityRule()" style="background: #27ae60; color: white; border: none; padding: 12px 24px; margin-top: 15px; border-radius: 6px; cursor: pointer;">
-                        ➕ Crear Primera Regla
-                    </button>
+                    <p style="color: #999; margin-top: 10px;">Usa el botón "➕ Agregar Regla" en la parte superior</p>
                 </div>
             `;
             return;
@@ -1018,6 +1016,7 @@ async function loadCompatibilityMatrix() {
                 };
             }
             grouped[primaryId].covers.push({
+                id: item.id,
                 coverUser: item.coverUser,
                 score: item.compatibilityScore,
                 tasks: item.coverableTasks || [],
@@ -1028,16 +1027,21 @@ async function loadCompatibilityMatrix() {
         container.innerHTML = Object.values(grouped).map(group => `
             <div style="background: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #27ae60;">
                 <h4 style="margin: 0 0 15px 0; color: #2c3e50;">
-                    👤 ${group.user.name} (${group.user.email})
+                    👤 ${group.user.firstName} ${group.user.lastName} <span style="color: #666; font-size: 14px;">(${group.user.email})</span>
                 </h4>
 
                 <div style="margin-top: 10px;">
                     <strong>Puede ser cubierto por:</strong>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 10px;">
                         ${group.covers.map(cover => `
-                            <div style="background: ${getScoreColor(cover.score)}20; padding: 15px; border-radius: 8px; border-left: 3px solid ${getScoreColor(cover.score)};">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <strong>${cover.coverUser.name}</strong>
+                            <div style="background: ${getScoreColor(cover.score)}20; padding: 15px; border-radius: 8px; border-left: 3px solid ${getScoreColor(cover.score)}; position: relative;">
+                                <button onclick="deleteCompatibilityRule(${cover.id})"
+                                        style="position: absolute; top: 8px; right: 8px; background: #e74c3c; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 16px; line-height: 1; padding: 0;"
+                                        title="Eliminar regla">
+                                    ×
+                                </button>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-right: 30px;">
+                                    <strong>${cover.coverUser.firstName} ${cover.coverUser.lastName}</strong>
                                     <span style="background: ${getScoreColor(cover.score)}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">
                                         ${cover.score}%
                                     </span>
@@ -1045,7 +1049,7 @@ async function loadCompatibilityMatrix() {
                                 <div style="font-size: 12px; color: #666;">
                                     ${cover.coverUser.email}
                                 </div>
-                                ${cover.maxHours ? `<div style="font-size: 11px; color: #888; margin-top: 5px;">Máx: ${cover.maxHours}h</div>` : ''}
+                                ${cover.maxHours ? `<div style="font-size: 11px; color: #888; margin-top: 5px;">Máx: ${cover.maxHours}h/día</div>` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -1066,8 +1070,149 @@ function getScoreColor(score) {
     return '#e74c3c';
 }
 
-function addCompatibilityRule() {
-    alert('Funcionalidad de agregar regla de compatibilidad en desarrollo');
+async function addCompatibilityRule() {
+    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
+
+    // Obtener lista de empleados
+    const response = await fetch(`/api/v1/users?company_id=${companyId}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const usersResult = await response.json();
+    const users = usersResult.users || usersResult.data || [];
+
+    const modalHTML = `
+        <div id="compatibilityRuleModal" class="modal" style="display: flex !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9998; align-items: center; justify-content: center;">
+            <div class="modal-content" style="background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">➕ Nueva Regla de Compatibilidad</h3>
+                    <button onclick="closeCompatibilityRuleModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 30px;">
+                    <form id="compatibilityRuleForm">
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Empleado Principal (que se ausenta):</label>
+                            <select id="primaryUserId" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="">Seleccionar empleado...</option>
+                                ${users.map(u => `<option value="${u.user_id}">${u.firstName} ${u.lastName} (${u.email})</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Empleado que Cubre:</label>
+                            <select id="coverUserId" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="">Seleccionar empleado...</option>
+                                ${users.map(u => `<option value="${u.user_id}">${u.firstName} ${u.lastName} (${u.email})</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Puntuación de Compatibilidad (0-100%):</label>
+                            <input type="number" id="compatibilityScore" min="0" max="100" value="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                            <small style="color: #666;">Mayor puntuación = Mayor compatibilidad</small>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Máximo de Horas de Cobertura por Día:</label>
+                            <input type="number" id="maxCoverageHours" min="1" max="24" placeholder="Opcional" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Máximo de Tareas Simultáneas:</label>
+                            <input type="number" id="maxConcurrentTasks" min="1" value="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Notas:</label>
+                            <textarea id="manualNotes" rows="3" placeholder="Notas adicionales sobre esta compatibilidad..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;"></textarea>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" onclick="closeCompatibilityRuleModal()" style="padding: 10px 20px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer;">
+                                Cancelar
+                            </button>
+                            <button type="submit" style="padding: 10px 20px; border: none; background: #27ae60; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                ✓ Crear Regla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    document.getElementById('compatibilityRuleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const data = {
+            company_id: companyId,
+            primaryUserId: document.getElementById('primaryUserId').value,
+            coverUserId: document.getElementById('coverUserId').value,
+            compatibilityScore: parseFloat(document.getElementById('compatibilityScore').value),
+            maxCoverageHours: document.getElementById('maxCoverageHours').value ? parseInt(document.getElementById('maxCoverageHours').value) : null,
+            maxConcurrentTasks: parseInt(document.getElementById('maxConcurrentTasks').value),
+            manualNotes: document.getElementById('manualNotes').value || null
+        };
+
+        try {
+            const response = await fetch('/api/v1/vacation/compatibility-matrix', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✓ Regla de compatibilidad creada exitosamente');
+                closeCompatibilityRuleModal();
+                loadCompatibilityMatrix();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error creando regla:', error);
+            alert('Error creando regla de compatibilidad');
+        }
+    });
+}
+
+function closeCompatibilityRuleModal() {
+    const modal = document.getElementById('compatibilityRuleModal');
+    if (modal) modal.remove();
+}
+
+async function deleteCompatibilityRule(ruleId) {
+    if (!confirm('¿Está seguro de eliminar esta regla de compatibilidad?')) return;
+
+    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
+
+    try {
+        const response = await fetch(`/api/v1/vacation/compatibility-matrix/${ruleId}?company_id=${companyId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('✓ Regla eliminada exitosamente');
+            loadCompatibilityMatrix();
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error eliminando regla:', error);
+        alert('Error eliminando regla de compatibilidad');
+    }
 }
 
 // ==================== PROGRAMACIÓN AUTOMÁTICA ====================

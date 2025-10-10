@@ -602,6 +602,198 @@ router.get('/compatibility-matrix', async (req, res) => {
   }
 });
 
+// Crear regla de compatibilidad
+router.post('/compatibility-matrix', async (req, res) => {
+  try {
+    const companyId = req.user?.company_id || req.body.company_id || 1;
+    const { primaryUserId, coverUserId, compatibilityScore, coverableTasks, maxCoverageHours, maxConcurrentTasks, manualNotes } = req.body;
+
+    // Validaciones
+    if (!primaryUserId || !coverUserId) {
+      return res.status(400).json({
+        success: false,
+        message: 'primaryUserId y coverUserId son requeridos'
+      });
+    }
+
+    if (primaryUserId === coverUserId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Un empleado no puede cubrirse a sí mismo'
+      });
+    }
+
+    // Verificar que ambos usuarios existan y pertenezcan a la empresa
+    const [primaryUser, coverUser] = await Promise.all([
+      User.findOne({ where: { user_id: primaryUserId, company_id: companyId } }),
+      User.findOne({ where: { user_id: coverUserId, company_id: companyId } })
+    ]);
+
+    if (!primaryUser || !coverUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Uno o ambos empleados no fueron encontrados en esta empresa'
+      });
+    }
+
+    // Verificar que no exista ya esta regla
+    const existing = await TaskCompatibility.findOne({
+      where: {
+        company_id: companyId,
+        primaryUserId,
+        coverUserId
+      }
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ya existe una regla de compatibilidad entre estos empleados'
+      });
+    }
+
+    // Crear regla
+    const rule = await TaskCompatibility.create({
+      company_id: companyId,
+      primaryUserId,
+      coverUserId,
+      compatibilityScore: compatibilityScore || 0,
+      coverableTasks: coverableTasks || [],
+      maxCoverageHours: maxCoverageHours || null,
+      maxConcurrentTasks: maxConcurrentTasks || 3,
+      isActive: true,
+      isAutoCalculated: false,
+      lastCalculationDate: new Date(),
+      manualNotes: manualNotes || null
+    });
+
+    // Cargar con datos de usuarios
+    const ruleWithUsers = await TaskCompatibility.findByPk(rule.id, {
+      include: [
+        {
+          model: User,
+          as: 'primaryUser',
+          attributes: ['user_id', 'firstName', 'lastName', 'email']
+        },
+        {
+          model: User,
+          as: 'coverUser',
+          attributes: ['user_id', 'firstName', 'lastName', 'email']
+        }
+      ]
+    });
+
+    res.status(201).json({
+      success: true,
+      data: ruleWithUsers,
+      message: 'Regla de compatibilidad creada exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error creando regla de compatibilidad:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creando regla de compatibilidad',
+      error: error.message
+    });
+  }
+});
+
+// Actualizar regla de compatibilidad
+router.put('/compatibility-matrix/:id', async (req, res) => {
+  try {
+    const companyId = req.user?.company_id || req.body.company_id || 1;
+    const { compatibilityScore, coverableTasks, maxCoverageHours, maxConcurrentTasks, manualNotes, isActive } = req.body;
+
+    const rule = await TaskCompatibility.findOne({
+      where: {
+        id: req.params.id,
+        company_id: companyId
+      }
+    });
+
+    if (!rule) {
+      return res.status(404).json({
+        success: false,
+        message: 'Regla de compatibilidad no encontrada'
+      });
+    }
+
+    // Actualizar campos
+    if (compatibilityScore !== undefined) rule.compatibilityScore = compatibilityScore;
+    if (coverableTasks !== undefined) rule.coverableTasks = coverableTasks;
+    if (maxCoverageHours !== undefined) rule.maxCoverageHours = maxCoverageHours;
+    if (maxConcurrentTasks !== undefined) rule.maxConcurrentTasks = maxConcurrentTasks;
+    if (manualNotes !== undefined) rule.manualNotes = manualNotes;
+    if (isActive !== undefined) rule.isActive = isActive;
+
+    await rule.save();
+
+    // Cargar con datos de usuarios
+    const ruleWithUsers = await TaskCompatibility.findByPk(rule.id, {
+      include: [
+        {
+          model: User,
+          as: 'primaryUser',
+          attributes: ['user_id', 'firstName', 'lastName', 'email']
+        },
+        {
+          model: User,
+          as: 'coverUser',
+          attributes: ['user_id', 'firstName', 'lastName', 'email']
+        }
+      ]
+    });
+
+    res.json({
+      success: true,
+      data: ruleWithUsers,
+      message: 'Regla de compatibilidad actualizada exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error actualizando regla:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error actualizando regla de compatibilidad',
+      error: error.message
+    });
+  }
+});
+
+// Eliminar regla de compatibilidad
+router.delete('/compatibility-matrix/:id', async (req, res) => {
+  try {
+    const companyId = req.user?.company_id || req.query.company_id || 1;
+
+    const rule = await TaskCompatibility.findOne({
+      where: {
+        id: req.params.id,
+        company_id: companyId
+      }
+    });
+
+    if (!rule) {
+      return res.status(404).json({
+        success: false,
+        message: 'Regla de compatibilidad no encontrada'
+      });
+    }
+
+    await rule.destroy();
+
+    res.json({
+      success: true,
+      message: 'Regla de compatibilidad eliminada exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error eliminando regla:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error eliminando regla de compatibilidad',
+      error: error.message
+    });
+  }
+});
+
 // Calcular días de vacaciones para un empleado
 router.get('/calculate-days/:userId', async (req, res) => {
   try {
