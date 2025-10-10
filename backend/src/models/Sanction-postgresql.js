@@ -16,7 +16,7 @@ module.exports = (sequelize) => {
       }
     },
     employee_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
@@ -74,7 +74,7 @@ module.exports = (sequelize) => {
       defaultValue: false
     },
     created_by: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
