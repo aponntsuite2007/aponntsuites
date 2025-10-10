@@ -64,7 +64,7 @@ module.exports = (sequelize) => {
         key: 'id'
       }
     },
-    // Kiosk por defecto donde este departamento debe marcar
+    // Kiosk por defecto donde este departamento debe marcar (DEPRECADO - usar authorized_kiosks)
     default_kiosk_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -72,6 +72,13 @@ module.exports = (sequelize) => {
         model: 'kiosks',
         key: 'id'
       }
+    },
+    // Kiosks autorizados donde empleados de este departamento pueden marcar
+    authorized_kiosks: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+      comment: 'Array de kiosk_id autorizados para este departamento. Si está vacío, solo pueden marcar por GPS. Ejemplo: [9, 10, 17]'
     }
   }, {
     tableName: 'departments',

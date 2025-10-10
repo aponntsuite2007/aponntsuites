@@ -307,13 +307,21 @@ async function showAddDepartment() {
             </div>
 
             <div style="margin-bottom: 25px; padding: 20px; background: #e3f2fd; border-radius: 8px;">
-                <label><strong>🖥️ Kiosk por Defecto (opcional):</strong></label>
-                <select id="newDeptDefaultKiosk" style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;">
-                    <option value="">Ninguno (empleados marcan por GPS)</option>
-                </select>
-                <small style="color: #666; display: block; margin-top: 5px;">
-                    📍 Kiosk donde los empleados de este departamento deben marcar asistencia
+                <label><strong>🖥️ Kiosks Autorizados (opcional):</strong></label>
+                <small style="color: #666; display: block; margin-bottom: 12px;">
+                    📍 Selecciona en qué kiosks los empleados de este departamento pueden marcar asistencia
                 </small>
+
+                <div style="margin-bottom: 12px; padding: 10px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+                        <input type="checkbox" id="deptGpsOnly" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>📱 Solo GPS (APK Empleado) - No usar kiosks</span>
+                    </label>
+                </div>
+
+                <div id="deptKiosksCheckboxContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 12px; background: white; border-radius: 5px;">
+                    <p style="margin: 0; color: #999;">Cargando kiosks...</p>
+                </div>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px;">
@@ -350,17 +358,63 @@ async function showAddDepartment() {
         console.log('ℹ️ Empresa sin sucursales - modo tradicional');
     }
 
-    // Cargar kiosks para selector
+    // Cargar kiosks y generar checkboxes
     const kiosks = await loadKiosksForSelector();
-    const kioskSelect = document.getElementById('newDeptDefaultKiosk');
+    const kioskContainer = document.getElementById('deptKiosksCheckboxContainer');
+
     if (kiosks && kiosks.length > 0) {
+        // Agregar checkbox "Todos los kiosks"
+        let checkboxesHTML = `
+            <div style="margin-bottom: 12px; padding: 8px; background: #e8f5e9; border-radius: 4px; border-left: 3px solid #4caf50;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold;">
+                    <input type="checkbox" id="deptAllKiosks" class="dept-kiosk-all" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span>✅ Todos los kiosks</span>
+                </label>
+            </div>
+            <hr style="margin: 12px 0; border-color: #ddd;">
+        `;
+
+        // Agregar checkboxes individuales
         kiosks.forEach(kiosk => {
-            const option = document.createElement('option');
-            option.value = kiosk.id;
-            option.textContent = `${kiosk.name}${kiosk.location ? ' - ' + kiosk.location : ''}`;
-            kioskSelect.appendChild(option);
+            checkboxesHTML += `
+                <div style="margin-bottom: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+                        <input type="checkbox" value="${kiosk.id}" class="dept-kiosk-checkbox" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>${kiosk.name}${kiosk.location ? ' - ' + kiosk.location : ''}</span>
+                    </label>
+                </div>
+            `;
         });
-        console.log(`✅ ${kiosks.length} kiosks cargados para selector`);
+
+        kioskContainer.innerHTML = checkboxesHTML;
+        console.log(`✅ ${kiosks.length} kiosks cargados como checkboxes`);
+
+        // Lógica para "Solo GPS" deshabilita kiosks
+        document.getElementById('deptGpsOnly').addEventListener('change', function(e) {
+            const kioskCheckboxes = document.querySelectorAll('.dept-kiosk-checkbox, .dept-kiosk-all');
+            kioskCheckboxes.forEach(cb => {
+                cb.disabled = e.target.checked;
+                if (e.target.checked) cb.checked = false;
+            });
+        });
+
+        // Lógica para "Todos los kiosks" marca/desmarca todos
+        document.getElementById('deptAllKiosks').addEventListener('change', function(e) {
+            const individualCheckboxes = document.querySelectorAll('.dept-kiosk-checkbox');
+            individualCheckboxes.forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        });
+
+        // Lógica para desmarcar "Todos" si se desmarca alguno individual
+        document.querySelectorAll('.dept-kiosk-checkbox').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const allChecked = Array.from(document.querySelectorAll('.dept-kiosk-checkbox')).every(c => c.checked);
+                document.getElementById('deptAllKiosks').checked = allChecked;
+            });
+        });
+    } else {
+        kioskContainer.innerHTML = '<p style="margin: 0; color: #999;">No hay kiosks disponibles</p>';
     }
 
     document.getElementById('newDeptName').focus();
@@ -422,11 +476,15 @@ async function saveNewDepartment() {
     const radius = document.getElementById('newDeptRadius').value;
     const branchSelect = document.getElementById('newDeptBranch');
     const branchId = branchSelect.value;
-    const defaultKioskId = document.getElementById('newDeptDefaultKiosk').value;
 
     // Verificar si el selector de sucursales está visible (empresa tiene sucursales)
     const branchContainer = document.getElementById('branchSelectorContainer');
     const hasBranches = branchContainer.style.display !== 'none';
+
+    // Recolectar kiosks autorizados seleccionados
+    const gpsOnlyChecked = document.getElementById('deptGpsOnly')?.checked || false;
+    const selectedKioskCheckboxes = document.querySelectorAll('.dept-kiosk-checkbox:checked');
+    const authorizedKiosks = gpsOnlyChecked ? [] : Array.from(selectedKioskCheckboxes).map(cb => parseInt(cb.value));
     
     // Validaciones
     if (hasBranches && !branchId) {
@@ -470,10 +528,8 @@ async function saveNewDepartment() {
         deptData.branchId = branchId;
     }
 
-    // Agregar default_kiosk_id si se seleccionó un kiosk
-    if (defaultKioskId) {
-        deptData.default_kiosk_id = parseInt(defaultKioskId);
-    }
+    // Agregar authorized_kiosks (puede ser array vacío si "Solo GPS")
+    deptData.authorized_kiosks = authorizedKiosks;
 
     try {
         const response = await fetch('/api/v1/departments', {
@@ -751,26 +807,40 @@ function exportDepartments() {
 // Cargar kiosks para selector
 async function loadKiosksForSelector() {
     try {
+        console.log('🔍 [DEPARTMENTS] Cargando kiosks para selector...');
+
+        // Obtener token válido (intentar múltiples fuentes)
+        let token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || window.authToken || authToken;
+
+        if (!token) {
+            console.warn('⚠️ [DEPARTMENTS] No hay token disponible');
+            return [];
+        }
+
         const response = await fetch('/api/v1/kiosks', {
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         });
 
         if (!response.ok) {
+            console.error(`❌ [DEPARTMENTS] HTTP ${response.status} al cargar kiosks`);
             throw new Error(`HTTP ${response.status}`);
         }
 
         const data = await response.json();
 
         if (data.success && data.kiosks) {
-            return data.kiosks.filter(k => k.is_active);
+            const activeKiosks = data.kiosks.filter(k => k.is_active || k.isActive);
+            console.log(`✅ [DEPARTMENTS] ${activeKiosks.length} kiosks activos cargados`);
+            return activeKiosks;
         }
 
+        console.warn('⚠️ [DEPARTMENTS] Respuesta sin kiosks:', data);
         return [];
     } catch (error) {
-        console.error('Error cargando kiosks:', error);
+        console.error('❌ [DEPARTMENTS] Error cargando kiosks:', error);
         return [];
     }
 }
