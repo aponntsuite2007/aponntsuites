@@ -280,12 +280,12 @@ router.get('/requests', async (req, res) => {
         {
           model: User,
           as: 'employee',
-          attributes: ['user_id', 'name', 'email']
+          attributes: ['user_id', 'firstName', 'lastName', 'email']
         },
         {
           model: User,
           as: 'approver',
-          attributes: ['user_id', 'name', 'email'],
+          attributes: ['user_id', 'firstName', 'lastName', 'email'],
           required: false
         },
         {
@@ -461,7 +461,7 @@ router.post('/generate-schedule', async (req, res) => {
     // Obtener todos los usuarios activos de la empresa
     const users = await User.findAll({
       where: { isActive: true, company_id: companyId },
-      attributes: ['user_id', 'name', 'email', 'createdAt', 'departmentId']
+      attributes: ['user_id', 'firstName', 'lastName', 'email', 'createdAt', 'departmentId']
     });
 
     // Obtener escalas de vacaciones
@@ -574,13 +574,13 @@ router.get('/compatibility-matrix', async (req, res) => {
         {
           model: User,
           as: 'primaryUser',
-          attributes: ['user_id', 'name', 'email'],
+          attributes: ['user_id', 'firstName', 'lastName', 'email'],
           where: { company_id: companyId }
         },
         {
           model: User,
           as: 'coverUser',
-          attributes: ['user_id', 'name', 'email'],
+          attributes: ['user_id', 'firstName', 'lastName', 'email'],
           where: { company_id: companyId }
         }
       ],
