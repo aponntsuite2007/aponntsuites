@@ -11,18 +11,29 @@ module.exports = (sequelize) => {
       primaryKey: true,
       autoIncrement: true
     },
-    
+
+    // Multi-tenancy
+    companyId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
+      field: 'company_id',
+      comment: 'ID de la empresa'
+    },
+
     // Empleado principal (que se ausenta)
     primaryUserId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
+      field: 'primary_user_id',
       comment: 'ID del empleado principal que se ausenta'
     },
-    
+
     // Empleado que puede cubrir
     coverUserId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
+      field: 'cover_user_id',
       comment: 'ID del empleado que puede cubrir las tareas'
     },
     
@@ -31,13 +42,15 @@ module.exports = (sequelize) => {
       type: DataTypes.DECIMAL(5, 2),
       allowNull: false,
       defaultValue: 0.00,
+      field: 'compatibility_score',
       comment: 'Puntuación de compatibilidad (0-100)'
     },
-    
+
     // Tareas que puede cubrir
     coverableTasks: {
       type: DataTypes.JSON,
       defaultValue: [],
+      field: 'coverable_tasks',
       comment: 'Array de tareas que puede cubrir con sus niveles de competencia'
     },
     
@@ -59,12 +72,14 @@ module.exports = (sequelize) => {
     maxCoverageHours: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      field: 'max_coverage_hours',
       comment: 'Máximo de horas que puede cubrir por día'
     },
-    
+
     maxConcurrentTasks: {
       type: DataTypes.INTEGER,
       defaultValue: 3,
+      field: 'max_concurrent_tasks',
       comment: 'Máximo de tareas que puede manejar simultáneamente'
     },
     
@@ -110,6 +125,7 @@ module.exports = (sequelize) => {
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
+      field: 'is_active',
       comment: 'Si esta relación de compatibilidad está activa'
     },
     

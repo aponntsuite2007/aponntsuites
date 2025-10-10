@@ -12,10 +12,20 @@ module.exports = (sequelize) => {
       autoIncrement: true
     },
     
+    // Multi-tenancy
+    companyId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
+      field: 'company_id',
+      comment: 'ID de la empresa'
+    },
+
     // Relación con empleado
     userId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
+      field: 'user_id',
       comment: 'ID del usuario/empleado que solicita'
     },
     
@@ -29,6 +39,7 @@ module.exports = (sequelize) => {
     extraordinaryLicenseId: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      field: 'extraordinary_license_id',
       comment: 'ID del tipo de licencia extraordinaria (si aplica)'
     },
     
@@ -36,18 +47,21 @@ module.exports = (sequelize) => {
     startDate: {
       type: DataTypes.DATE,
       allowNull: false,
+      field: 'start_date',
       comment: 'Fecha de inicio del período'
     },
-    
+
     endDate: {
       type: DataTypes.DATE,
       allowNull: false,
+      field: 'end_date',
       comment: 'Fecha de fin del período'
     },
-    
+
     totalDays: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: 'total_days',
       comment: 'Total de días solicitados'
     },
     
@@ -73,21 +87,32 @@ module.exports = (sequelize) => {
     
     // Información de aprobación/rechazo
     approvedBy: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: true,
+      field: 'approved_by',
       comment: 'ID del usuario que aprobó/rechazó'
     },
-    
+
     approvalDate: {
       type: DataTypes.DATE,
       allowNull: true,
+      field: 'approval_date',
       comment: 'Fecha de aprobación/rechazo'
     },
-    
+
     approvalComments: {
       type: DataTypes.TEXT,
       allowNull: true,
+      field: 'approval_comments',
       comment: 'Comentarios de la aprobación/rechazo'
+    },
+
+    // Fuente de la solicitud (web, mobile)
+    source: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: 'web',
+      comment: 'Fuente de la solicitud: web, mobile, system'
     },
     
     // Cobertura de tareas
