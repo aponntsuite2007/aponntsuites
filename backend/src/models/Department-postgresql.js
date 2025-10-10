@@ -63,6 +63,15 @@ module.exports = (sequelize) => {
         model: 'companies',
         key: 'id'
       }
+    },
+    // Kiosk por defecto donde este departamento debe marcar
+    default_kiosk_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'kiosks',
+        key: 'id'
+      }
     }
   }, {
     tableName: 'departments',

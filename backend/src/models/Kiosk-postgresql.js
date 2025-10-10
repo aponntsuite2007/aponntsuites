@@ -66,6 +66,13 @@ module.exports = (sequelize) => {
         model: 'companies',
         key: 'id'
       }
+    },
+    // Departamentos autorizados extra además del default
+    authorized_departments: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+      comment: 'Array de department_id que pueden usar este kiosk además de su kiosk por defecto. Ejemplo: [1, 2, 5]'
     }
   }, {
     tableName: 'kiosks',
