@@ -119,6 +119,16 @@ async function showKiosksContent() {
                                 <strong>ℹ️ Importante</strong><br>
                                 Las coordenadas GPS se configurarán automáticamente cuando instale el dispositivo kiosko en su ubicación física y este se conecte al sistema.
                             </div>
+
+                            <div class="mb-3" style="background: #e8f5e9; padding: 15px; border-radius: 8px;">
+                                <label class="form-label"><strong>👥 Departamentos Autorizados Extra (Opcional)</strong></label>
+                                <div id="kioskDepartmentsCheckboxes" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: white; border-radius: 5px;">
+                                    <p class="text-muted" style="margin: 0;">Cargando departamentos...</p>
+                                </div>
+                                <small class="form-text text-muted d-block mt-2">
+                                    📍 Selecciona qué departamentos pueden usar este kiosk además de su kiosk por defecto
+                                </small>
+                            </div>
                         </form>
                     </div>
                     <div class="modal-footer" style="flex-shrink: 0; padding: 0.75rem 1rem;">
@@ -333,6 +343,77 @@ function renderKiosksTable() {
     }).join('');
 }
 
+// Cargar departamentos para checkboxes (multi-select)
+async function loadDepartmentsForCheckboxes() {
+    try {
+        console.log('👥 [KIOSKS] Cargando departamentos para checkboxes...');
+
+        const token = await getValidToken();
+        if (!token) {
+            throw new Error('No se pudo obtener token de autenticación');
+        }
+
+        const response = await fetch('/api/v1/departments', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.departments) {
+            const activeDepts = data.departments.filter(d => d.is_active);
+            console.log(`✅ [KIOSKS] ${activeDepts.length} departamentos activos cargados para checkboxes`);
+            return activeDepts;
+        }
+
+        return [];
+    } catch (error) {
+        console.error('❌ [KIOSKS] Error cargando departamentos:', error);
+        return [];
+    }
+}
+
+// Poblar checkboxes de departamentos en modal kiosk
+async function populateKioskDepartmentCheckboxes(selectedDepartmentIds = []) {
+    const container = document.getElementById('kioskDepartmentsCheckboxes');
+    if (!container) {
+        console.warn('⚠️ [KIOSKS] Container kioskDepartmentsCheckboxes no encontrado');
+        return;
+    }
+
+    // Mostrar loading
+    container.innerHTML = '<p class="text-muted" style="margin: 0;">Cargando departamentos...</p>';
+
+    const departments = await loadDepartmentsForCheckboxes();
+
+    if (departments.length === 0) {
+        container.innerHTML = '<p class="text-muted" style="margin: 0;">No hay departamentos disponibles</p>';
+        return;
+    }
+
+    // Generar checkboxes
+    container.innerHTML = departments.map(dept => {
+        const isChecked = selectedDepartmentIds.includes(dept.id);
+        return `
+            <div class="form-check" style="margin-bottom: 8px;">
+                <input class="form-check-input" type="checkbox" value="${dept.id}"
+                       id="dept_${dept.id}" ${isChecked ? 'checked' : ''}>
+                <label class="form-check-label" for="dept_${dept.id}">
+                    ${dept.name}
+                </label>
+            </div>
+        `;
+    }).join('');
+
+    console.log(`✅ [KIOSKS] ${departments.length} departamentos renderizados como checkboxes (${selectedDepartmentIds.length} pre-seleccionados)`);
+}
+
 // Helper para abrir modal (compatible con Bootstrap 3, 4, 5 y jQuery)
 function openModal(modalId) {
     console.log('🔓 [KIOSKS] openModal() llamado para:', modalId);
@@ -420,7 +501,7 @@ function closeModal(modalId) {
 }
 
 // Mostrar modal para agregar kiosko
-function showAddKioskModal() {
+async function showAddKioskModal() {
     console.log('🔔 [KIOSKS] showAddKioskModal() llamado');
     console.trace('Stack trace:'); // Para ver desde dónde se llama
 
@@ -442,10 +523,13 @@ function showAddKioskModal() {
     if (saveBtn) saveBtn.style.display = '';
 
     openModal('kioskModal');
+
+    // Poblar checkboxes de departamentos (sin pre-seleccionar ninguno)
+    await populateKioskDepartmentCheckboxes([]);
 }
 
 // Editar kiosko
-function editKiosk(kioskId) {
+async function editKiosk(kioskId) {
     const kiosk = kiosksList.find(k => k.id === kioskId);
     if (!kiosk) {
         alert('Kiosko no encontrado');
@@ -479,6 +563,10 @@ function editKiosk(kioskId) {
     // Mostrar botón guardar
     const saveBtn = document.querySelector('#kioskModal button[onclick="saveKiosk()"]');
     if (saveBtn) saveBtn.style.display = '';
+
+    // Poblar checkboxes de departamentos con los departamentos autorizados
+    const authorizedDepts = kiosk.authorizedDepartments || kiosk.authorized_departments || [];
+    await populateKioskDepartmentCheckboxes(authorizedDepts);
 }
 
 // Ver kiosko (modo solo lectura)
@@ -546,11 +634,16 @@ async function saveKiosk() {
             return;
         }
 
+        // Obtener departamentos autorizados seleccionados
+        const checkboxes = document.querySelectorAll('#kioskDepartmentsCheckboxes input[type="checkbox"]:checked');
+        const authorizedDepartments = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
         const kioskData = {
             name,
             description,
             location,
-            deviceId: deviceId || null
+            deviceId: deviceId || null,
+            authorized_departments: authorizedDepartments
         };
 
         const url = editingKiosk
