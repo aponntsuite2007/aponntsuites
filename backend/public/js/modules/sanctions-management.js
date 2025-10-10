@@ -193,29 +193,29 @@ function getActiveSanctionsContent() {
             </div>
 
             <!-- Resumen estadísticas -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+            <div id="sanctions-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
                 <div style="background: #fff3cd; padding: 20px; border-radius: 10px; text-align: center; border-left: 4px solid #f39c12;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #f39c12;">12</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: #f39c12;" id="stat-active">-</div>
                     <div style="color: #8d6e08; font-weight: 600;">Sanciones Activas</div>
                 </div>
                 <div style="background: #f8d7da; padding: 20px; border-radius: 10px; text-align: center; border-left: 4px solid #e74c3c;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #e74c3c;">5</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: #e74c3c;" id="stat-major">-</div>
                     <div style="color: #a12622; font-weight: 600;">Sanciones Mayores</div>
                 </div>
                 <div style="background: #d1ecf1; padding: 20px; border-radius: 10px; text-align: center; border-left: 4px solid #17a2b8;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #17a2b8;">3</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: #17a2b8;" id="stat-appealed">-</div>
                     <div style="color: #105a68; font-weight: 600;">En Apelación</div>
                 </div>
                 <div style="background: #d4edda; padding: 20px; border-radius: 10px; text-align: center; border-left: 4px solid #28a745;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #28a745;">8</div>
-                    <div style="color: #1d5929; font-weight: 600;">Automáticas por IA</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: #28a745;" id="stat-total">-</div>
+                    <div style="color: #1d5929; font-weight: 600;">Total Sanciones</div>
                 </div>
             </div>
 
             <!-- Lista de sanciones activas -->
             <div id="sanctions-list">
                 <div style="text-align: center; padding: 40px;">
-                    🔄 Cargando sanciones activas...
+                    🔄 Cargando sanciones desde API...
                 </div>
             </div>
         </div>
@@ -579,58 +579,59 @@ function closeSanctionDetailsModal() {
 
 // Load functions
 async function loadActiveSanctions() {
-    console.log('🚨 [SANCTIONS-MANAGEMENT] Cargando sanciones activas...');
+    console.log('🚨 [SANCTIONS-MANAGEMENT] Cargando sanciones desde API...');
 
     const container = document.getElementById('sanctions-list');
     if (!container) return;
 
-    // Mock data
-    const sanctions = [
-        {
-            id: 1,
-            employee: 'Carlos Rodriguez',
-            legajo: 'EMP003',
-            type: 'training',
-            severity: 'major',
-            reason: 'No completó capacitaciones obligatorias de seguridad',
-            supervisor: 'Roberto Manager',
-            effectiveDate: '2025-09-15',
-            duration: 30,
-            scoringImpact: -15,
-            status: 'active',
-            daysRemaining: 22
-        },
-        {
-            id: 2,
-            employee: 'María González',
-            legajo: 'EMP002',
-            type: 'attendance',
-            severity: 'minor',
-            reason: 'Llegadas tarde reiteradas (5 en 30 días)',
-            supervisor: 'Patricia Supervisor',
-            effectiveDate: '2025-09-10',
-            duration: 15,
-            scoringImpact: -10,
-            status: 'active',
-            daysRemaining: 8
-        },
-        {
-            id: 3,
-            employee: 'Luis López',
-            legajo: 'EMP005',
-            type: 'behavior',
-            severity: 'major',
-            reason: 'Comportamiento inadecuado detectado por IA biométrica',
-            supervisor: 'Antonio Jefe',
-            effectiveDate: '2025-09-18',
-            duration: 45,
-            scoringImpact: -20,
-            status: 'appealed',
-            daysRemaining: 40
-        }
-    ];
+    try {
+        // Obtener token de autenticación
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || window.authToken;
 
-    displayActiveSanctions(sanctions);
+        if (!token) {
+            console.error('❌ [SANCTIONS] No hay token de autenticación');
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error: No hay sesión activa</div>';
+            return;
+        }
+
+        // Llamar a la API
+        const response = await fetch('/api/v1/sanctions', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [SANCTIONS] Sanciones cargadas:', data);
+
+        // Actualizar estadísticas
+        if (data.stats) {
+            document.getElementById('stat-active').textContent = data.stats.active || 0;
+            document.getElementById('stat-major').textContent = data.stats.major || 0;
+            document.getElementById('stat-appealed').textContent = data.stats.appealed || 0;
+            document.getElementById('stat-total').textContent = data.stats.total || 0;
+        }
+
+        // Mostrar sanciones
+        if (data.sanctions && data.sanctions.length > 0) {
+            displayActiveSanctions(data.sanctions);
+        } else {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">✅ No hay sanciones activas en tu empresa</div>';
+        }
+
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error cargando sanciones:', error);
+        container.innerHTML = `<div style="text-align: center; padding: 40px; color: #e74c3c;">
+            ❌ Error cargando sanciones: ${error.message}
+            <br><small>Revisa la consola para más detalles</small>
+        </div>`;
+    }
 }
 
 function displayActiveSanctions(sanctions) {
@@ -640,14 +641,30 @@ function displayActiveSanctions(sanctions) {
         return;
     }
 
-    container.innerHTML = sanctions.map(sanction => `
+    container.innerHTML = sanctions.map(sanction => {
+        // Calcular días restantes si hay fecha de expiración
+        let daysRemaining = '-';
+        let duration = '-';
+        if (sanction.expiration_date) {
+            const expirationDate = new Date(sanction.expiration_date);
+            const sanctionDate = new Date(sanction.sanction_date);
+            const today = new Date();
+
+            duration = Math.ceil((expirationDate - sanctionDate) / (1000 * 60 * 60 * 24));
+            daysRemaining = Math.max(0, Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24)));
+        }
+
+        // Formatear fecha
+        const formattedDate = new Date(sanction.sanction_date).toLocaleDateString('es-AR');
+
+        return `
         <div class="sanction-card" style="border: 2px solid ${getSeverityColor(sanction.severity)}; padding: 20px; margin-bottom: 15px; border-radius: 10px; background: white;">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
                 <div>
-                    <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${sanction.employee} (${sanction.legajo})</h4>
+                    <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${sanction.employee_name}${sanction.employee_department ? ` - ${sanction.employee_department}` : ''}</h4>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <span style="background: ${getSanctionTypeColor(sanction.type)}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
-                            ${getSanctionTypeText(sanction.type)}
+                        <span style="background: ${getSanctionTypeColor(sanction.sanction_type)}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                            ${getSanctionTypeText(sanction.sanction_type)}
                         </span>
                         <span style="background: ${getSeverityColor(sanction.severity)}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
                             ${getSanctionSeverityText(sanction.severity)}
@@ -655,29 +672,32 @@ function displayActiveSanctions(sanctions) {
                         <span style="background: ${getStatusColor(sanction.status)}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
                             ${getSanctionStatusText(sanction.status)}
                         </span>
+                        ${sanction.is_automatic ? '<span style="background: #9b59b6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">🤖 Automática</span>' : ''}
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-size: 18px; font-weight: bold; color: ${sanction.scoringImpact < 0 ? '#e74c3c' : '#27ae60'};">${sanction.scoringImpact}</div>
-                    <div style="font-size: 12px; color: #666;">Impacto Score</div>
+                    <div style="font-size: 18px; font-weight: bold; color: ${sanction.points_deducted < 0 ? '#e74c3c' : '#27ae60'};">${sanction.points_deducted || 0}</div>
+                    <div style="font-size: 12px; color: #666;">Puntos Deducidos</div>
                 </div>
             </div>
 
             <div style="margin-bottom: 15px;">
-                <strong>Motivo:</strong> ${sanction.reason}
+                <strong>Título:</strong> ${sanction.title}<br>
+                <strong>Descripción:</strong> ${sanction.description || 'Sin descripción'}
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <div>
-                    <strong>Supervisor:</strong> ${sanction.supervisor}<br>
-                    <strong>Fecha:</strong> ${sanction.effectiveDate}
+                    <strong>Fecha:</strong> ${formattedDate}
                 </div>
+                ${daysRemaining !== '-' ? `
                 <div style="text-align: right;">
-                    <div style="color: ${sanction.daysRemaining <= 5 ? '#e74c3c' : '#f39c12'}; font-weight: bold;">
-                        ${sanction.daysRemaining} días restantes
+                    <div style="color: ${daysRemaining <= 5 ? '#e74c3c' : '#f39c12'}; font-weight: bold;">
+                        ${daysRemaining} días restantes
                     </div>
-                    <div style="font-size: 12px; color: #666;">de ${sanction.duration} días total</div>
+                    <div style="font-size: 12px; color: #666;">de ${duration} días total</div>
                 </div>
+                ` : ''}
             </div>
 
             <div style="text-align: right;">
@@ -698,7 +718,8 @@ function displayActiveSanctions(sanctions) {
                 `}
             </div>
         </div>
-    `).join('');
+        `
+    }).join('');
 }
 
 // Utility functions
