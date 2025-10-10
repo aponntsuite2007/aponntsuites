@@ -19,17 +19,19 @@ const {
 // Obtener configuración actual de vacaciones
 router.get('/config', async (req, res) => {
   try {
+    const companyId = req.user?.company_id || req.query.company_id || 1;
+
     const config = await VacationConfiguration.findOne({
-      where: { isActive: true }
+      where: { isActive: true, company_id: companyId }
     });
 
     const scales = await VacationScale.findAll({
-      where: { isActive: true },
+      where: { isActive: true, company_id: companyId },
       order: [['priority', 'ASC'], ['yearsFrom', 'ASC']]
     });
 
     const extraordinaryLicenses = await ExtraordinaryLicense.findAll({
-      where: { isActive: true },
+      where: { isActive: true, company_id: companyId },
       order: [['type', 'ASC']]
     });
 
@@ -230,17 +232,18 @@ router.post('/extraordinary-licenses', async (req, res) => {
 router.get('/requests', async (req, res) => {
   try {
     const { userId, status, year, month, limit, offset, source } = req.query;
-    
-    let whereClause = {};
-    
+    const companyId = req.user?.company_id || req.query.company_id || 1;
+
+    let whereClause = { company_id: companyId };
+
     if (userId) {
       whereClause.userId = userId;
     }
-    
+
     if (status) {
       whereClause.status = status;
     }
-    
+
     if (year) {
       const startOfYear = new Date(`${year}-01-01`);
       const endOfYear = new Date(`${year}-12-31`);
@@ -248,7 +251,7 @@ router.get('/requests', async (req, res) => {
         [Op.between]: [startOfYear, endOfYear]
       };
     }
-    
+
     if (month && year) {
       const startOfMonth = new Date(`${year}-${month}-01`);
       const endOfMonth = new Date(year, month, 0); // último día del mes
@@ -446,7 +449,8 @@ router.put('/requests/:id/approval', async (req, res) => {
 router.post('/generate-schedule', async (req, res) => {
   try {
     const { year } = req.body;
-    
+    const companyId = req.user?.company_id || req.body.company_id || 1;
+
     if (!year) {
       return res.status(400).json({
         success: false,
@@ -454,21 +458,21 @@ router.post('/generate-schedule', async (req, res) => {
       });
     }
 
-    // Obtener todos los usuarios activos
+    // Obtener todos los usuarios activos de la empresa
     const users = await User.findAll({
-      where: { isActive: true },
+      where: { isActive: true, company_id: companyId },
       attributes: ['id', 'name', 'email', 'createdAt', 'departmentId']
     });
 
     // Obtener escalas de vacaciones
     const scales = await VacationScale.findAll({
-      where: { isActive: true },
+      where: { isActive: true, company_id: companyId },
       order: [['yearsFrom', 'ASC']]
     });
 
     // Obtener configuración
     const config = await VacationConfiguration.findOne({
-      where: { isActive: true }
+      where: { isActive: true, company_id: companyId }
     });
 
     // Algoritmo de programación automática
@@ -562,18 +566,22 @@ function generateOptimalPeriods(userId, totalDays, year, config) {
 // Obtener matriz de compatibilidad
 router.get('/compatibility-matrix', async (req, res) => {
   try {
+    const companyId = req.user?.company_id || req.query.company_id || 1;
+
     const matrix = await TaskCompatibility.findAll({
-      where: { isActive: true },
+      where: { isActive: true, company_id: companyId },
       include: [
         {
           model: User,
           as: 'primaryUser',
-          attributes: ['id', 'name', 'email']
+          attributes: ['id', 'name', 'email'],
+          where: { company_id: companyId }
         },
         {
           model: User,
           as: 'coverUser',
-          attributes: ['id', 'name', 'email']
+          attributes: ['id', 'name', 'email'],
+          where: { company_id: companyId }
         }
       ],
       order: [['compatibilityScore', 'DESC']]

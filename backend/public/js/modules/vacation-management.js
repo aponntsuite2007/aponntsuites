@@ -58,6 +58,21 @@ function showVacationManagementContent() {
                                 style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
                             📊 Análisis
                         </button>
+                        <button onclick="switchVacationTab('compatibility')" id="tab-compatibility"
+                                class="vacation-tab"
+                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
+                            🔄 Matriz Compatibilidad
+                        </button>
+                        <button onclick="switchVacationTab('scheduler')" id="tab-scheduler"
+                                class="vacation-tab"
+                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
+                            🤖 Programación Auto
+                        </button>
+                        <button onclick="switchVacationTab('config')" id="tab-config"
+                                class="vacation-tab"
+                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
+                            ⚙️ Configuración
+                        </button>
                     </div>
                 </div>
 
@@ -150,6 +165,17 @@ function switchVacationTab(tabName) {
         case 'analytics':
             contentDiv.innerHTML = getVacationAnalyticsContent();
             loadVacationAnalytics();
+            break;
+        case 'compatibility':
+            contentDiv.innerHTML = getCompatibilityMatrixContent();
+            loadCompatibilityMatrix();
+            break;
+        case 'scheduler':
+            contentDiv.innerHTML = getAutoSchedulerContent();
+            break;
+        case 'config':
+            contentDiv.innerHTML = getVacationConfigContent();
+            loadVacationConfig();
             break;
     }
 }
@@ -882,5 +908,497 @@ window.submitVacationRequest = submitVacationRequest;
 window.approveVacationRequest = approveVacationRequest;
 window.rejectVacationRequest = rejectVacationRequest;
 window.updateVacationFields = updateVacationFields;
+window.loadCompatibilityMatrix = loadCompatibilityMatrix;
+window.generateAutoSchedule = generateAutoSchedule;
+window.addCompatibilityRule = addCompatibilityRule;
 
 console.log('✅ [VACATION-MANAGEMENT] Módulo completamente cargado y funcional');
+// ==================== FUNCIONALIDADES REALES CON BACKEND ====================
+
+// Stub functions placeholder
+function loadVacationCalendar() {
+    console.log('📅 Cargando calendario');
+}
+
+function loadVacationPolicies() {
+    console.log('📜 Cargando políticas');
+}
+
+function loadVacationBalance() {
+    console.log('💰 Cargando balance');
+    loadRealEmployeeBalance();
+}
+
+function loadVacationAnalytics() {
+    console.log('📊 Cargando analytics');
+}
+
+function filterVacationRequests() {
+    loadVacationRequests();
+}
+
+function searchVacationRequests() {
+    loadVacationRequests();
+}
+
+function searchEmployeeBalance() {
+    loadRealEmployeeBalance();
+}
+
+function generateVacationReport(id) {
+    alert(`Generar reporte ${id} (próximamente)`);
+}
+
+function changeCalendarMonth(dir) {
+    console.log('Cambiar mes:', dir);
+}
+
+// ==================== MATRIZ DE COMPATIBILIDAD ====================
+function getCompatibilityMatrixContent() {
+    return `
+        <div class="compatibility-matrix-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <div>
+                    <h3 style="margin: 0;">🔄 Matriz de Compatibilidad de Tareas</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Sistema de cobertura entre empleados basado en habilidades y roles</p>
+                </div>
+                <button onclick="addCompatibilityRule()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                    ➕ Agregar Regla
+                </button>
+            </div>
+
+            <div id="compatibility-matrix-list">
+                <div style="text-align: center; padding: 40px;">
+                    🔄 Cargando matriz de compatibilidad...
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function loadCompatibilityMatrix() {
+    const container = document.getElementById('compatibility-matrix-list');
+    if (!container) return;
+
+    try {
+        const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
+
+        const response = await fetch(`/api/v1/vacation/compatibility-matrix?company_id=${companyId}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (!response.ok) throw new Error('Error cargando matriz');
+
+        const result = await response.json();
+        const matrix = result.data || [];
+
+        if (matrix.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 10px;">
+                    <h4>No hay reglas de compatibilidad configuradas</h4>
+                    <p style="color: #666;">Agrega reglas para definir qué empleados pueden cubrir a otros durante vacaciones</p>
+                    <button onclick="addCompatibilityRule()" style="background: #27ae60; color: white; border: none; padding: 12px 24px; margin-top: 15px; border-radius: 6px; cursor: pointer;">
+                        ➕ Crear Primera Regla
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // Agrupar por usuario primario
+        const grouped = {};
+        matrix.forEach(item => {
+            const primaryId = item.primaryUserId;
+            if (!grouped[primaryId]) {
+                grouped[primaryId] = {
+                    user: item.primaryUser,
+                    covers: []
+                };
+            }
+            grouped[primaryId].covers.push({
+                coverUser: item.coverUser,
+                score: item.compatibilityScore,
+                tasks: item.coverableTasks || [],
+                maxHours: item.maxCoverageHours
+            });
+        });
+
+        container.innerHTML = Object.values(grouped).map(group => `
+            <div style="background: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #27ae60;">
+                <h4 style="margin: 0 0 15px 0; color: #2c3e50;">
+                    👤 ${group.user.name} (${group.user.email})
+                </h4>
+
+                <div style="margin-top: 10px;">
+                    <strong>Puede ser cubierto por:</strong>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 10px;">
+                        ${group.covers.map(cover => `
+                            <div style="background: ${getScoreColor(cover.score)}20; padding: 15px; border-radius: 8px; border-left: 3px solid ${getScoreColor(cover.score)};">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong>${cover.coverUser.name}</strong>
+                                    <span style="background: ${getScoreColor(cover.score)}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">
+                                        ${cover.score}%
+                                    </span>
+                                </div>
+                                <div style="font-size: 12px; color: #666;">
+                                    ${cover.coverUser.email}
+                                </div>
+                                ${cover.maxHours ? `<div style="font-size: 11px; color: #888; margin-top: 5px;">Máx: ${cover.maxHours}h</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error('❌ Error:', error);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error cargando matriz. Verifica tu conexión.</div>';
+    }
+}
+
+function getScoreColor(score) {
+    if (score >= 80) return '#27ae60';
+    if (score >= 60) return '#f39c12';
+    if (score >= 40) return '#e67e22';
+    return '#e74c3c';
+}
+
+function addCompatibilityRule() {
+    alert('Funcionalidad de agregar regla de compatibilidad en desarrollo');
+}
+
+// ==================== PROGRAMACIÓN AUTOMÁTICA ====================
+function getAutoSchedulerContent() {
+    return `
+        <div class="auto-scheduler-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <div>
+                    <h3 style="margin: 0;">🤖 Programación Automática de Vacaciones</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Genera cronogramas óptimos considerando antigüedad, roles y cobertura</p>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 25px;">
+                <h4 style="margin: 0 0 15px 0;">⚙️ Generar Nuevo Cronograma</h4>
+
+                <div style="display: flex; gap: 15px; align-items: end;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Año:</label>
+                        <select id="scheduleYear" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 150px;">
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                    </div>
+
+                    <button onclick="generateAutoSchedule()" style="background: #27ae60; color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        🚀 Generar Cronograma
+                    </button>
+                </div>
+            </div>
+
+            <div id="auto-schedule-result">
+                <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 10px;">
+                    <h4>Selecciona un año y genera el cronograma automático</h4>
+                    <p style="color: #666;">El sistema considerará antigüedad, compatibilidad de tareas y dotación mínima</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function generateAutoSchedule() {
+    const yearSelect = document.getElementById('scheduleYear');
+    const resultDiv = document.getElementById('auto-schedule-result');
+
+    if (!yearSelect || !resultDiv) return;
+
+    const year = yearSelect.value;
+
+    resultDiv.innerHTML = '<div style="text-align: center; padding: 40px;">🔄 Generando cronograma automático...</div>';
+
+    try {
+        const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
+
+        const response = await fetch(`/api/v1/vacation/generate-schedule`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ year: parseInt(year), company_id: companyId })
+        });
+
+        if (!response.ok) throw new Error('Error generando cronograma');
+
+        const result = await response.json();
+        const schedule = result.data.schedule || [];
+
+        resultDiv.innerHTML = `
+            <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h4 style="margin: 0 0 20px 0;">📊 Cronograma ${year} - ${result.data.totalEmployees} Empleados</h4>
+
+                ${schedule.map(item => `
+                    <div style="background: #f8f9fa; padding: 20px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid ${getScoreColor(item.compatibilityScore)};">
+                        <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 15px;">
+                            <div style="flex: 1;">
+                                <h5 style="margin: 0 0 5px 0;">${item.userName}</h5>
+                                <div style="font-size: 13px; color: #666;">
+                                    Antigüedad: ${item.yearsOfService} años |
+                                    Días asignados: ${item.vacationDays} |
+                                    Score: <strong style="color: ${getScoreColor(item.compatibilityScore)};">${Math.round(item.compatibilityScore)}%</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 10px;">
+                            <strong>Períodos sugeridos:</strong>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
+                                ${item.suggestedPeriods.map(period => `
+                                    <div style="background: white; padding: 10px 15px; border-radius: 6px; border: 1px solid #ddd;">
+                                        <div style="font-weight: 600; color: #27ae60;">${period.days} días</div>
+                                        <div style="font-size: 12px; color: #666;">${period.startDate} → ${period.endDate}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('❌ Error:', error);
+        resultDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error generando cronograma. Verifica tu conexión.</div>';
+    }
+}
+
+// ==================== CONFIGURACIÓN ====================
+function getVacationConfigContent() {
+    return `
+        <div class="vacation-config-container">
+            <h3 style="margin: 0 0 20px 0;">⚙️ Configuración de Vacaciones</h3>
+
+            <div id="vacation-config-form">
+                <div style="text-align: center; padding: 40px;">
+                    🔄 Cargando configuración...
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function loadVacationConfig() {
+    const container = document.getElementById('vacation-config-form');
+    if (!container) return;
+
+    try {
+        const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
+
+        const response = await fetch(`/api/v1/vacation/config?company_id=${companyId}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (!response.ok) throw new Error('Error cargando configuración');
+
+        const result = await response.json();
+        const config = result.data.configuration || {};
+        const scales = result.data.vacationScales || [];
+        const licenses = result.data.extraordinaryLicenses || [];
+
+        container.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+                <!-- Configuración General -->
+                <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin: 0 0 20px 0; color: #27ae60;">📋 Configuración General</h4>
+
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                            <span><strong>Vacaciones Interrumpibles:</strong></span>
+                            <span style="color: ${config.vacationInterruptible ? '#27ae60' : '#e74c3c'}; font-weight: 700;">
+                                ${config.vacationInterruptible ? '✅ Sí' : '❌ No'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                            <span><strong>Días Continuos Mínimos:</strong></span>
+                            <span style="color: #27ae60; font-weight: 700;">${config.minContinuousDays || 7} días</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                            <span><strong>Máximo de Fracciones:</strong></span>
+                            <span style="color: #27ae60; font-weight: 700;">${config.maxFractions || 3}</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                            <span><strong>Días de Anticipación:</strong></span>
+                            <span style="color: #27ae60; font-weight: 700;">${config.minAdvanceNoticeDays || 15} días</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px; padding: 15px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #f39c12;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>🎯 Dotación Mínima</strong>
+                                <div style="font-size: 12px; color: #666; margin-top: 3px;">Máximo % simultáneo de vacaciones</div>
+                            </div>
+                            <span style="color: #f39c12; font-weight: 700; font-size: 24px;">${config.maxSimultaneousPercentage || 30}%</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                            <span><strong>Programación Automática:</strong></span>
+                            <span style="color: ${config.autoSchedulingEnabled ? '#27ae60' : '#e74c3c'}; font-weight: 700;">
+                                ${config.autoSchedulingEnabled ? '✅ Habilitada' : '❌ Deshabilitada'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Escalas de Vacaciones -->
+                <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin: 0 0 20px 0; color: #27ae60;">📈 Escalas de Vacaciones por Antigüedad</h4>
+
+                    ${scales.length > 0 ? scales.map(scale => `
+                        <div style="padding: 12px; background: #e8f5e8; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #27ae60;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>${scale.rangeDescription || `${scale.yearsFrom}-${scale.yearsTo || '∞'} años`}</strong>
+                                    <div style="font-size: 12px; color: #666;">Prioridad: ${scale.priority}</div>
+                                </div>
+                                <span style="background: #27ae60; color: white; padding: 6px 12px; border-radius: 12px; font-weight: 700;">
+                                    ${scale.vacationDays} días
+                                </span>
+                            </div>
+                        </div>
+                    `).join('') : '<div style="text-align: center; color: #666;">No hay escalas configuradas</div>'}
+                </div>
+
+                <!-- Licencias Extraordinarias -->
+                <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin: 0 0 20px 0; color: #27ae60;">📝 Licencias Extraordinarias</h4>
+
+                    ${licenses.length > 0 ? licenses.map(license => `
+                        <div style="padding: 12px; background: #f8f9fa; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #3498db;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <strong>${license.type}</strong>
+                                    <div style="font-size: 12px; color: #666; margin-top: 3px;">${license.description}</div>
+                                    ${license.legalBasis ? `<div style="font-size: 11px; color: #888; margin-top: 3px;">Base legal: ${license.legalBasis}</div>` : ''}
+                                </div>
+                                <span style="background: #3498db; color: white; padding: 6px 12px; border-radius: 12px; font-weight: 700; white-space: nowrap; margin-left: 10px;">
+                                    ${license.days} días
+                                </span>
+                            </div>
+                        </div>
+                    `).join('') : '<div style="text-align: center; color: #666;">No hay licencias extraordinarias configuradas</div>'}
+                </div>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('❌ Error:', error);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error cargando configuración. Verifica tu conexión.</div>';
+    }
+}
+
+// ==================== BALANCE REAL POR EMPLEADO ====================
+async function loadRealEmployeeBalance() {
+    const container = document.getElementById('vacation-balance-list');
+    if (!container) return;
+
+    try {
+        const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
+
+        // Obtener usuarios de la empresa
+        const usersRes = await fetch(`/api/v1/users?company_id=${companyId}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (!usersRes.ok) throw new Error('Error cargando usuarios');
+
+        const usersData = await usersRes.json();
+        const users = usersData.users || usersData.data || [];
+
+        // Calcular balance para cada usuario
+        const balancePromises = users.map(async (user) => {
+            try {
+                const balanceRes = await fetch(`/api/v1/vacation/calculate-days/${user.id}?company_id=${companyId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (balanceRes.ok) {
+                    const balanceData = await balanceRes.json();
+                    return {
+                        user,
+                        balance: balanceData.data || {}
+                    };
+                }
+            } catch (err) {
+                console.error(`Error calculando balance para ${user.name}:`, err);
+            }
+            return null;
+        });
+
+        const balances = (await Promise.all(balancePromises)).filter(b => b !== null);
+
+        // Mostrar balances
+        container.innerHTML = balances.map(item => `
+            <div style="background: white; padding: 20px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid ${item.balance.remainingDays > 10 ? '#27ae60' : item.balance.remainingDays > 5 ? '#f39c12' : '#e74c3c'};">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${item.user.firstName} ${item.user.lastName}</h4>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 10px;">
+                            ${item.user.email} | Legajo: ${item.user.employeeId || 'N/A'}
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;">
+                            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #999; margin-bottom: 3px;">Antigüedad</div>
+                                <div style="font-weight: 700; font-size: 16px; color: #3498db;">${item.balance.yearsOfService || 0} años</div>
+                            </div>
+                            <div style="background: #e8f5e8; padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #999; margin-bottom: 3px;">Total Anual</div>
+                                <div style="font-weight: 700; font-size: 16px; color: #27ae60;">${item.balance.totalVacationDays || 0} días</div>
+                            </div>
+                            <div style="background: #fff3cd; padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #999; margin-bottom: 3px;">Usados</div>
+                                <div style="font-weight: 700; font-size: 16px; color: #f39c12;">${item.balance.usedDays || 0} días</div>
+                            </div>
+                            <div style="background: #d1ecf1; padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #999; margin-bottom: 3px;">Disponibles</div>
+                                <div style="font-weight: 700; font-size: 16px; color: #17a2b8;">${item.balance.remainingDays || 0} días</div>
+                            </div>
+                        </div>
+                        ${item.balance.applicableScale ? `
+                            <div style="margin-top: 10px; padding: 8px; background: #f0f0f0; border-radius: 4px; font-size: 12px;">
+                                <strong>Escala:</strong> ${item.balance.applicableScale.rangeDescription} 
+                                (${item.balance.applicableScale.yearsFrom}-${item.balance.applicableScale.yearsTo || '∞'} años → ${item.balance.applicableScale.vacationDays} días)
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error('❌ Error:', error);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error cargando balances. Verifica tu conexión.</div>';
+    }
+}
+
