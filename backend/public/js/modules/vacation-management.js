@@ -1095,7 +1095,7 @@ async function addCompatibilityRule() {
                             <label style="display: block; margin-bottom: 5px; font-weight: 600;">Empleado Principal (que se ausenta):</label>
                             <select id="primaryUserId" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
                                 <option value="">Seleccionar empleado...</option>
-                                ${users.map(u => `<option value="${u.user_id}">${u.firstName} ${u.lastName} (${u.email})</option>`).join('')}
+                                ${users.map(u => `<option value="${u.id}">${u.firstName} ${u.lastName} (${u.email})</option>`).join('')}
                             </select>
                         </div>
 
@@ -1103,7 +1103,7 @@ async function addCompatibilityRule() {
                             <label style="display: block; margin-bottom: 5px; font-weight: 600;">Empleado que Cubre:</label>
                             <select id="coverUserId" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
                                 <option value="">Seleccionar empleado...</option>
-                                ${users.map(u => `<option value="${u.user_id}">${u.firstName} ${u.lastName} (${u.email})</option>`).join('')}
+                                ${users.map(u => `<option value="${u.id}">${u.firstName} ${u.lastName} (${u.email})</option>`).join('')}
                             </select>
                         </div>
 
