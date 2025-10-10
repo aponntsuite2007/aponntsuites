@@ -746,49 +746,93 @@ function editDepartment(deptId) {
     modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10000;';
     
     modal.innerHTML = `
-        <div class="modal-content" style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
                 <h2 style="margin: 0; color: #333;">✏️ Editar Departamento</h2>
                 <button onclick="closeDepartmentModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✖️</button>
             </div>
-            
+
             <div style="margin-bottom: 20px;">
                 <label><strong>🏢 Nombre del Departamento *:</strong></label>
                 <input type="text" id="editDeptName" value="${dept.name}" style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;">
             </div>
-            
+
             <div style="margin-bottom: 20px;">
                 <label><strong>📝 Descripción:</strong></label>
                 <textarea id="editDeptDescription" style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;" rows="3">${dept.description || ''}</textarea>
             </div>
-            
+
             <div style="margin-bottom: 20px;">
                 <label><strong>📍 Dirección física:</strong></label>
                 <input type="text" id="editDeptAddress" value="${dept.address || ''}" style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;">
             </div>
-            
-            <div style="margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-                <label><strong>🗺️ Ubicación GPS:</strong></label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                    <div>
-                        <label>Latitud:</label>
-                        <input type="number" id="editDeptLat" step="0.000001" value="${dept.gpsLocation?.lat || ''}" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px;">
-                    </div>
-                    <div>
-                        <label>Longitud:</label>
-                        <input type="number" id="editDeptLng" step="0.000001" value="${dept.gpsLocation?.lng || ''}" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px;">
+
+            <!-- Checkbox: Permitir GPS desde APK -->
+            <div style="margin-bottom: 25px; padding: 20px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: bold; margin-bottom: 10px;">
+                    <input type="checkbox" id="editDeptAllowGpsAttendance" style="width: 20px; height: 20px; cursor: pointer;" ${dept.allow_gps_attendance || dept.allowGpsAttendance ? 'checked' : ''}>
+                    <span>📱 Permitir marcado por GPS desde APK Empleado</span>
+                </label>
+                <small style="color: #666; display: block; margin-left: 30px;">
+                    Si se activa, los empleados podrán marcar asistencia desde su celular (APK) cuando estén dentro del radio de cobertura del departamento
+                </small>
+            </div>
+
+            <!-- Sección GPS (solo visible si se permite GPS) -->
+            <div id="editGpsConfigSection" style="display: ${dept.allow_gps_attendance || dept.allowGpsAttendance ? 'block' : 'none'}; margin-bottom: 25px; padding: 20px; background: #f0f8ff; border-radius: 8px;">
+                <label><strong>📍 Ubicación GPS del Departamento:</strong></label>
+                <small style="color: #666; display: block; margin-bottom: 15px;">
+                    ⚠️ Selecciona la ubicación EXACTA del departamento físico (no tu ubicación actual). Usa el mapa o ingresa coordenadas manualmente.
+                </small>
+
+                <!-- Mapa Google Maps -->
+                <div id="editDepartmentMap" style="width: 100%; height: 300px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 15px; position: relative;">
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; color: #999;">
+                        🗺️ Cargando Google Maps...
                     </div>
                 </div>
-                <div style="margin-top: 10px;">
-                    <button class="btn btn-info btn-sm" onclick="getCurrentLocation()">📍 Usar mi ubicación actual</button>
+
+                <!-- Coordenadas manuales + Radio -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-size: 13px; color: #555; font-weight: bold;">Latitud:</label>
+                        <input type="number" id="editDeptLat" step="0.00000001" value="${dept.gpsLocation?.lat || ''}" placeholder="-34.603722" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div>
+                    <div>
+                        <label style="font-size: 13px; color: #555; font-weight: bold;">Longitud:</label>
+                        <input type="number" id="editDeptLng" step="0.00000001" value="${dept.gpsLocation?.lng || ''}" placeholder="-58.381592" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div>
+                    <div>
+                        <label style="font-size: 13px; color: #555; font-weight: bold;">📏 Radio (m):</label>
+                        <input type="number" id="editDeptRadius" min="10" max="1000" value="${dept.coverageRadius || 50}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div>
+                </div>
+
+                <div style="padding: 12px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                    <small style="color: #856404;">
+                        💡 <strong>Tip:</strong> Arrastra el marcador 📍 en el mapa para ajustar la ubicación. El círculo amarillo muestra el radio de cobertura (área donde se puede marcar).
+                    </small>
                 </div>
             </div>
-            
-            <div style="margin-bottom: 25px;">
-                <label><strong>📏 Radio de cobertura (metros):</strong></label>
-                <input type="number" id="editDeptRadius" min="10" max="1000" value="${dept.coverageRadius}" style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;">
+
+            <!-- Sección Kiosks Autorizados -->
+            <div style="margin-bottom: 25px; padding: 20px; background: #e3f2fd; border-radius: 8px;">
+                <label><strong>🖥️ Kiosks Físicos Autorizados (opcional):</strong></label>
+                <small style="color: #666; display: block; margin-bottom: 12px;">
+                    📍 Selecciona en qué kiosks físicos los empleados pueden marcar asistencia (además del GPS si está habilitado)
+                </small>
+
+                <div id="editDeptKiosksCheckboxContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 12px; background: white; border-radius: 5px;">
+                    <p style="margin: 0; color: #999;">Cargando kiosks...</p>
+                </div>
+
+                <div style="margin-top: 12px; padding: 10px; background: #e1f5fe; border-radius: 5px;">
+                    <small style="color: #01579b;">
+                        ℹ️ <strong>Modo Mixto:</strong> Puedes activar GPS + Kiosks. Los empleados podrán usar cualquier opción habilitada.
+                    </small>
+                </div>
             </div>
-            
+
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px;">
                 <button class="btn btn-secondary" onclick="closeDepartmentModal()">❌ Cancelar</button>
                 <button class="btn btn-primary" onclick="updateDepartment('${dept.id}')">💾 Guardar Cambios</button>
@@ -797,7 +841,171 @@ function editDepartment(deptId) {
     `;
     
     document.body.appendChild(modal);
+
+    // Cargar kiosks y poblar checkboxes
+    (async () => {
+        const kiosks = await loadKiosksForSelector();
+        const kioskContainer = document.getElementById('editDeptKiosksCheckboxContainer');
+
+        if (kiosks && kiosks.length > 0) {
+            // Obtener kiosks autorizados del departamento
+            const authorizedKiosks = dept.authorized_kiosks || dept.authorizedKiosks || [];
+
+            // Agregar checkbox "Todos los kiosks"
+            let checkboxesHTML = `
+                <div style="margin-bottom: 12px; padding: 8px; background: #e8f5e9; border-radius: 4px; border-left: 3px solid #4caf50;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold;">
+                        <input type="checkbox" id="editDeptAllKiosks" class="edit-dept-kiosk-all" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>✅ Todos los kiosks</span>
+                    </label>
+                </div>
+                <hr style="margin: 12px 0; border-color: #ddd;">
+            `;
+
+            // Agregar checkboxes individuales
+            kiosks.forEach(kiosk => {
+                const isChecked = authorizedKiosks.includes(kiosk.id);
+                checkboxesHTML += `
+                    <div style="margin-bottom: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+                            <input type="checkbox" value="${kiosk.id}" class="edit-dept-kiosk-checkbox" style="width: 18px; height: 18px; cursor: pointer;" ${isChecked ? 'checked' : ''}>
+                            <span>${kiosk.name}${kiosk.location ? ' - ' + kiosk.location : ''}</span>
+                        </label>
+                    </div>
+                `;
+            });
+
+            kioskContainer.innerHTML = checkboxesHTML;
+
+            // Actualizar "Todos" si todos están marcados
+            const allChecked = Array.from(document.querySelectorAll('.edit-dept-kiosk-checkbox')).every(c => c.checked);
+            document.getElementById('editDeptAllKiosks').checked = allChecked;
+
+            // Lógica para "Todos los kiosks"
+            document.getElementById('editDeptAllKiosks').addEventListener('change', function(e) {
+                document.querySelectorAll('.edit-dept-kiosk-checkbox').forEach(cb => {
+                    cb.checked = e.target.checked;
+                });
+            });
+
+            // Lógica para desmarcar "Todos" si se desmarca alguno individual
+            document.querySelectorAll('.edit-dept-kiosk-checkbox').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const allChecked = Array.from(document.querySelectorAll('.edit-dept-kiosk-checkbox')).every(c => c.checked);
+                    document.getElementById('editDeptAllKiosks').checked = allChecked;
+                });
+            });
+
+            console.log(`✅ ${kiosks.length} kiosks cargados para edición (${authorizedKiosks.length} pre-seleccionados)`);
+        } else {
+            kioskContainer.innerHTML = '<p style="margin: 0; color: #999;">No hay kiosks disponibles</p>';
+        }
+
+        // Lógica toggle para mostrar/ocultar sección GPS
+        document.getElementById('editDeptAllowGpsAttendance').addEventListener('change', function(e) {
+            const gpsSection = document.getElementById('editGpsConfigSection');
+            if (e.target.checked) {
+                gpsSection.style.display = 'block';
+                // Inicializar Google Maps si está disponible
+                if (typeof google !== 'undefined' && google.maps) {
+                    initEditDepartmentMap();
+                } else {
+                    console.warn('⚠️ Google Maps no está cargado');
+                }
+            } else {
+                gpsSection.style.display = 'none';
+            }
+        });
+
+        // Si ya tiene GPS habilitado, inicializar el mapa
+        if (dept.allow_gps_attendance || dept.allowGpsAttendance) {
+            if (typeof google !== 'undefined' && google.maps) {
+                initEditDepartmentMap();
+            }
+        }
+    })();
+
     document.getElementById('editDeptName').focus();
+}
+
+// Inicializar Google Maps para modal de EDICIÓN
+function initEditDepartmentMap() {
+    const mapContainer = document.getElementById('editDepartmentMap');
+    if (!mapContainer) return;
+
+    const defaultLat = -34.603722;
+    const defaultLng = -58.381592;
+
+    const lat = parseFloat(document.getElementById('editDeptLat').value) || defaultLat;
+    const lng = parseFloat(document.getElementById('editDeptLng').value) || defaultLng;
+    const radius = parseInt(document.getElementById('editDeptRadius').value) || 50;
+
+    try {
+        // Crear mapa
+        departmentMap = new google.maps.Map(mapContainer, {
+            center: { lat, lng },
+            zoom: 18,
+            mapTypeId: 'satellite',
+            tilt: 0
+        });
+
+        // Crear marcador draggable
+        departmentMarker = new google.maps.Marker({
+            position: { lat, lng },
+            map: departmentMap,
+            draggable: true,
+            title: 'Ubicación del Departamento'
+        });
+
+        // Crear círculo de cobertura
+        departmentCircle = new google.maps.Circle({
+            map: departmentMap,
+            center: { lat, lng },
+            radius: radius,
+            strokeColor: '#FFC107',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#FFC107',
+            fillOpacity: 0.2
+        });
+
+        // Actualizar inputs al arrastrar marcador
+        departmentMarker.addListener('dragend', function(event) {
+            const newLat = event.latLng.lat();
+            const newLng = event.latLng.lng();
+            document.getElementById('editDeptLat').value = newLat.toFixed(8);
+            document.getElementById('editDeptLng').value = newLng.toFixed(8);
+            departmentCircle.setCenter({ lat: newLat, lng: newLng });
+        });
+
+        // Actualizar marcador y círculo al cambiar inputs manualmente
+        document.getElementById('editDeptLat').addEventListener('input', updateMapFromEditInputs);
+        document.getElementById('editDeptLng').addEventListener('input', updateMapFromEditInputs);
+        document.getElementById('editDeptRadius').addEventListener('input', function() {
+            const newRadius = parseInt(this.value) || 50;
+            if (departmentCircle) {
+                departmentCircle.setRadius(newRadius);
+            }
+        });
+
+        console.log('✅ Google Maps (edición) inicializado correctamente');
+    } catch (error) {
+        console.error('❌ Error inicializando Google Maps (edición):', error);
+        mapContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">⚠️ Error cargando el mapa. Usa las coordenadas manuales.</div>';
+    }
+}
+
+// Actualizar mapa desde inputs (modal edición)
+function updateMapFromEditInputs() {
+    const lat = parseFloat(document.getElementById('editDeptLat').value);
+    const lng = parseFloat(document.getElementById('editDeptLng').value);
+
+    if (!isNaN(lat) && !isNaN(lng) && departmentMarker && departmentMap && departmentCircle) {
+        const newPos = { lat, lng };
+        departmentMarker.setPosition(newPos);
+        departmentCircle.setCenter(newPos);
+        departmentMap.setCenter(newPos);
+    }
 }
 
 // Actualizar departamento
@@ -808,20 +1016,39 @@ async function updateDepartment(deptId) {
     const lat = document.getElementById('editDeptLat').value;
     const lng = document.getElementById('editDeptLng').value;
     const radius = document.getElementById('editDeptRadius').value;
-    
+
+    // Recoger nuevos campos de GPS y kiosks
+    const allowGpsAttendance = document.getElementById('editDeptAllowGpsAttendance')?.checked || false;
+    const selectedKioskCheckboxes = document.querySelectorAll('.edit-dept-kiosk-checkbox:checked');
+    const authorizedKiosks = Array.from(selectedKioskCheckboxes).map(cb => parseInt(cb.value));
+
     // Validaciones
     if (!name) {
         alert('❌ El nombre del departamento es obligatorio');
         document.getElementById('editDeptName').focus();
         return;
     }
-    
+
     if (!radius || radius < 10 || radius > 1000) {
         alert('❌ El radio de cobertura debe estar entre 10 y 1000 metros');
         document.getElementById('editDeptRadius').focus();
         return;
     }
-    
+
+    // Validación: Si GPS está habilitado, coordenadas son obligatorias
+    if (allowGpsAttendance) {
+        if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
+            alert('❌ Si habilita marcado por GPS, debe proporcionar coordenadas válidas.');
+            return;
+        }
+    }
+
+    // Validación: Al menos UNA opción debe estar habilitada
+    if (!allowGpsAttendance && authorizedKiosks.length === 0) {
+        alert('❌ Debe habilitar al menos UNA opción:\n- Marcado por GPS desde APK\n- Al menos un kiosk autorizado');
+        return;
+    }
+
     // Preparar datos
     const deptData = {
         name,
@@ -831,7 +1058,9 @@ async function updateDepartment(deptId) {
         gpsLocation: {
             lat: lat ? parseFloat(lat) : null,
             lng: lng ? parseFloat(lng) : null
-        }
+        },
+        allow_gps_attendance: allowGpsAttendance,
+        authorized_kiosks: authorizedKiosks
     };
     
     try {

@@ -19,7 +19,9 @@ function formatDepartment(dept) {
     isActive: deptData.is_active,
     createdAt: deptData.created_at,
     updatedAt: deptData.updated_at,
-    companyId: deptData.company_id
+    companyId: deptData.company_id,
+    allow_gps_attendance: deptData.allow_gps_attendance,
+    authorized_kiosks: deptData.authorized_kiosks || []
   };
 }
 
@@ -106,7 +108,9 @@ router.post('/', auth, async (req, res) => {
       gps_lng,
       coverage_radius,
       coverageRadius,
-      gpsLocation
+      gpsLocation,
+      allow_gps_attendance,
+      authorized_kiosks
     } = req.body;
 
     const companyId = req.user?.company_id || 1;
@@ -139,7 +143,9 @@ router.post('/', auth, async (req, res) => {
       gps_lng: gpsLocation?.lng || gps_lng || null,
       coverage_radius: coverageRadius || coverage_radius || 50,
       is_active: true,
-      company_id: companyId
+      company_id: companyId,
+      allow_gps_attendance: allow_gps_attendance || false,
+      authorized_kiosks: authorized_kiosks || []
     };
 
     console.log('📝 [DEPARTMENTS] Datos procesados:', departmentData);
@@ -193,7 +199,9 @@ router.put('/:id', auth, async (req, res) => {
       gps_lng,
       coverage_radius,
       coverageRadius,
-      gpsLocation
+      gpsLocation,
+      allow_gps_attendance,
+      authorized_kiosks
     } = req.body;
 
     const companyId = req.user?.company_id || 1;
@@ -234,6 +242,14 @@ router.put('/:id', auth, async (req, res) => {
     // Actualizar radio de cobertura
     if (coverageRadius !== undefined || coverage_radius !== undefined) {
       updateData.coverage_radius = coverageRadius || coverage_radius;
+    }
+
+    // Actualizar nuevos campos de autorización
+    if (allow_gps_attendance !== undefined) {
+      updateData.allow_gps_attendance = allow_gps_attendance;
+    }
+    if (authorized_kiosks !== undefined) {
+      updateData.authorized_kiosks = authorized_kiosks;
     }
 
     console.log('✏️ [DEPARTMENTS] Datos a actualizar:', updateData);
