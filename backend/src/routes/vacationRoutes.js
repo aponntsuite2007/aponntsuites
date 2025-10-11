@@ -110,6 +110,7 @@ router.post('/config', async (req, res) => {
 // Crear nueva escala de vacaciones
 router.post('/scales', async (req, res) => {
   try {
+    const companyId = req.user?.company_id || req.body.company_id || 1;
     const { yearsFrom, yearsTo, rangeDescription, vacationDays, priority } = req.body;
 
     if (!yearsFrom || !vacationDays || !rangeDescription) {
@@ -120,6 +121,7 @@ router.post('/scales', async (req, res) => {
     }
 
     const newScale = await VacationScale.create({
+      company_id: companyId,
       yearsFrom,
       yearsTo,
       rangeDescription,
@@ -146,8 +148,9 @@ router.post('/scales', async (req, res) => {
 // Actualizar escala de vacaciones
 router.put('/scales/:id', async (req, res) => {
   try {
+    const companyId = req.user?.company_id || req.body.company_id || 1;
     const scale = await VacationScale.findOne({
-      where: { id: req.params.id, isActive: true }
+      where: { id: req.params.id, company_id: companyId, isActive: true }
     });
 
     if (!scale) {
@@ -179,6 +182,7 @@ router.put('/scales/:id', async (req, res) => {
 // Crear nueva licencia extraordinaria
 router.post('/extraordinary-licenses', async (req, res) => {
   try {
+    const companyId = req.user?.company_id || req.body.company_id || 1;
     const {
       type,
       description,
@@ -199,6 +203,7 @@ router.post('/extraordinary-licenses', async (req, res) => {
     }
 
     const newLicense = await ExtraordinaryLicense.create({
+      company_id: companyId,
       type,
       description,
       days,
@@ -221,6 +226,38 @@ router.post('/extraordinary-licenses', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error creando licencia extraordinaria',
+      error: error.message
+    });
+  }
+});
+
+// Actualizar licencia extraordinaria
+router.put('/extraordinary-licenses/:id', async (req, res) => {
+  try {
+    const companyId = req.user?.company_id || req.body.company_id || 1;
+    const license = await ExtraordinaryLicense.findOne({
+      where: { id: req.params.id, company_id: companyId }
+    });
+
+    if (!license) {
+      return res.status(404).json({
+        success: false,
+        message: 'Licencia extraordinaria no encontrada'
+      });
+    }
+
+    await license.update(req.body);
+
+    res.json({
+      success: true,
+      data: license,
+      message: 'Licencia extraordinaria actualizada exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error actualizando licencia:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error actualizando licencia extraordinaria',
       error: error.message
     });
   }

@@ -20,14 +20,18 @@ class _ConfigScreenState extends State<ConfigScreen> {
   final _portController = TextEditingController();
   final _companyNameController = TextEditingController();
   final _companyIdController = TextEditingController();
-  final _kioskNameController = TextEditingController();
 
   bool _isLoading = false;
   bool _testingConnection = false;
   bool _gettingLocation = false;
+  bool _loadingKiosks = false;
   String? _connectionStatus;
   double? _latitude;
   double? _longitude;
+
+  // Lista de kioscos disponibles
+  List<Map<String, dynamic>> _availableKiosks = [];
+  Map<String, dynamic>? _selectedKiosk;
 
   // External fingerprint reader configuration
   bool _hasExternalReader = false;
@@ -47,13 +51,98 @@ class _ConfigScreenState extends State<ConfigScreen> {
   }
 
   Future<void> _loadCurrentConfig() async {
-    final config = await ConfigService.getConfig();
+    // SIEMPRE usar defaults de Render primero, independiente de lo guardado
     setState(() {
-      _baseUrlController.text = config['baseUrl']!;
-      _portController.text = config['port']!;
-      _companyNameController.text = config['companyName']!;
-      _companyIdController.text = config['companyId']!;
+      _baseUrlController.text = ConfigService.DEFAULT_BASE_URL; // aponntsuites.onrender.com
+      _portController.text = ConfigService.DEFAULT_PORT; // vacío para HTTPS
+      _companyNameController.text = 'Mi Empresa'; // Placeholder genérico
+      _companyIdController.text = ''; // Usuario debe ingresar el suyo
     });
+  }
+
+  Future<void> _loadAvailableKiosks() async {
+    final companyId = _companyIdController.text.trim();
+
+    if (companyId.isEmpty || int.tryParse(companyId) == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Primero ingrese un ID de empresa válido'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _loadingKiosks = true;
+      _availableKiosks = [];
+      _selectedKiosk = null;
+    });
+
+    try {
+      final baseUrl = _baseUrlController.text.trim();
+      final port = _portController.text.trim();
+
+      final isRender = baseUrl.contains('.onrender.com') ||
+                       baseUrl.contains('.herokuapp.com') ||
+                       baseUrl.contains('.vercel.app') ||
+                       baseUrl.contains('.netlify.app');
+
+      final protocol = isRender ? 'https' : 'http';
+      final portSuffix = (port.isEmpty || port == '443' || port == '80') ? '' : ':$port';
+      final url = '$protocol://$baseUrl$portSuffix/api/v1/kiosks/available?company_id=$companyId';
+
+      print('📟 [KIOSK-LOAD] Cargando kioscos desde: $url');
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _availableKiosks = List<Map<String, dynamic>>.from(data['kiosks'] ?? []);
+        });
+
+        if (_availableKiosks.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('⚠️ No hay kioscos disponibles para esta empresa.\nCree kioscos desde el panel web.'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('✅ ${_availableKiosks.length} kiosco(s) disponible(s)'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        }
+      } else {
+        throw Exception('Error ${response.statusCode}: ${response.body}');
+      }
+    } catch (e) {
+      print('❌ [KIOSK-LOAD] Error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error cargando kioscos: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _loadingKiosks = false;
+      });
+    }
   }
 
   Future<void> _testConnection() async {
@@ -67,9 +156,20 @@ class _ConfigScreenState extends State<ConfigScreen> {
     try {
       final baseUrl = _baseUrlController.text.trim();
       final port = _portController.text.trim();
-      final testUrl = 'http://$baseUrl:$port/api/v1/health';
 
-      // Hacer petición HTTP real con timeout
+      // Detectar si es Render u otro hosting con dominio (usa HTTPS)
+      final isRender = baseUrl.contains('.onrender.com') ||
+                       baseUrl.contains('.herokuapp.com') ||
+                       baseUrl.contains('.vercel.app') ||
+                       baseUrl.contains('.netlify.app');
+
+      final protocol = isRender ? 'https' : 'http';
+      final portSuffix = (port.isEmpty || port == '443' || port == '80') ? '' : ':$port';
+      final testUrl = '$protocol://$baseUrl$portSuffix/api/v1/health';
+
+      print('🔍 [TEST] Probando conexión: $testUrl');
+
+      // Hacer petición HTTP/HTTPS real con timeout
       final response = await http.get(
         Uri.parse(testUrl),
         headers: {'Content-Type': 'application/json'},
@@ -79,8 +179,9 @@ class _ConfigScreenState extends State<ConfigScreen> {
         try {
           final data = json.decode(response.body);
           setState(() {
-            _connectionStatus = '✅ Conexión exitosa - Servidor respondiendo';
+            _connectionStatus = '✅ Conexión exitosa - Servidor respondiendo correctamente';
           });
+          print('✅ [TEST] Conexión exitosa a $testUrl');
         } catch (e) {
           setState(() {
             _connectionStatus = '✅ Conexión exitosa - Servidor encontrado';
@@ -94,13 +195,14 @@ class _ConfigScreenState extends State<ConfigScreen> {
     } catch (e) {
       setState(() {
         if (e.toString().contains('timeout')) {
-          _connectionStatus = '❌ Timeout: Servidor no responde';
+          _connectionStatus = '❌ Timeout: Servidor no responde en 10 segundos';
         } else if (e.toString().contains('Connection refused') || e.toString().contains('No route to host')) {
           _connectionStatus = '❌ No se puede conectar al servidor';
         } else {
           _connectionStatus = '❌ Error de conexión: ${e.toString()}';
         }
       });
+      print('❌ [TEST] Error: $e');
     } finally {
       setState(() {
         _testingConnection = false;
@@ -181,7 +283,15 @@ class _ConfigScreenState extends State<ConfigScreen> {
       final port = _portController.text.trim();
       final companyId = _companyIdController.text.trim();
 
-      final configUrl = 'http://$baseUrl:$port/api/v1/kiosks/configure-security';
+      // Detectar protocolo correcto
+      final isRender = baseUrl.contains('.onrender.com') ||
+                       baseUrl.contains('.herokuapp.com') ||
+                       baseUrl.contains('.vercel.app') ||
+                       baseUrl.contains('.netlify.app');
+
+      final protocol = isRender ? 'https' : 'http';
+      final portSuffix = (port.isEmpty || port == '443' || port == '80') ? '' : ':$port';
+      final configUrl = '$protocol://$baseUrl$portSuffix/api/v1/kiosks/configure-security';
 
       final response = await http.post(
         Uri.parse(configUrl),
@@ -328,9 +438,11 @@ class _ConfigScreenState extends State<ConfigScreen> {
                           TextFormField(
                             controller: _baseUrlController,
                             decoration: InputDecoration(
-                              labelText: 'Dirección IP del Servidor',
-                              hintText: 'Ej: 192.168.1.9',
-                              prefixIcon: const Icon(Icons.computer),
+                              labelText: 'URL/IP del Servidor',
+                              hintText: 'Ej: aponntsuites.onrender.com',
+                              helperText: 'Render/Vercel: dominio sin http:// | Red local: IP (192.168.x.x)',
+                              helperMaxLines: 2,
+                              prefixIcon: const Icon(Icons.cloud),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -339,10 +451,10 @@ class _ConfigScreenState extends State<ConfigScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Por favor ingrese la dirección IP';
+                                return 'Por favor ingrese la URL o IP del servidor';
                               }
                               if (!ConfigService.isValidUrl(value)) {
-                                return 'Dirección IP inválida';
+                                return 'URL/IP inválida';
                               }
                               return null;
                             },
@@ -354,8 +466,10 @@ class _ConfigScreenState extends State<ConfigScreen> {
                           TextFormField(
                             controller: _portController,
                             decoration: InputDecoration(
-                              labelText: 'Puerto',
-                              hintText: 'Ej: 9900',
+                              labelText: 'Puerto (opcional para hosting)',
+                              hintText: 'Vacío para Render | 9998 para local',
+                              helperText: 'Dejar vacío si usa Render, Heroku, Vercel, etc.',
+                              helperMaxLines: 2,
                               prefixIcon: const Icon(Icons.settings_ethernet),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -365,8 +479,9 @@ class _ConfigScreenState extends State<ConfigScreen> {
                             ),
                             keyboardType: TextInputType.number,
                             validator: (value) {
+                              // Puerto es opcional ahora (vacío para HTTPS/hosting)
                               if (value == null || value.isEmpty) {
-                                return 'Por favor ingrese el puerto';
+                                return null; // Permitir vacío
                               }
                               if (!ConfigService.isValidPort(value)) {
                                 return 'Puerto inválido (1-65535)';
@@ -404,9 +519,11 @@ class _ConfigScreenState extends State<ConfigScreen> {
                           TextFormField(
                             controller: _companyIdController,
                             decoration: InputDecoration(
-                              labelText: 'ID de Empresa',
-                              hintText: 'Ej: 11',
-                              prefixIcon: const Icon(Icons.tag),
+                              labelText: 'ID de Empresa (configurable)',
+                              hintText: 'Ingrese el ID de su empresa',
+                              helperText: 'Número único de su empresa en el sistema',
+                              helperMaxLines: 2,
+                              prefixIcon: const Icon(Icons.business_center),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -419,7 +536,11 @@ class _ConfigScreenState extends State<ConfigScreen> {
                                 return 'Por favor ingrese el ID de la empresa';
                               }
                               if (int.tryParse(value) == null) {
-                                return 'El ID debe ser un número';
+                                return 'El ID debe ser un número válido';
+                              }
+                              final id = int.parse(value);
+                              if (id < 1) {
+                                return 'El ID debe ser mayor a 0';
                               }
                               return null;
                             },
@@ -454,20 +575,84 @@ class _ConfigScreenState extends State<ConfigScreen> {
                                 ),
                                 const SizedBox(height: 16),
 
-                                // Kiosk Name Field
-                                TextFormField(
-                                  controller: _kioskNameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Nombre del Kiosko',
-                                    hintText: 'Ej: Kiosko Entrada Principal',
-                                    prefixIcon: const Icon(Icons.storefront),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                // Botón para cargar kioscos disponibles
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: _loadingKiosks ? null : _loadAvailableKiosks,
+                                    icon: _loadingKiosks
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                          )
+                                        : const Icon(Icons.refresh),
+                                    label: Text(_loadingKiosks ? 'Cargando...' : 'Cargar Kioscos Disponibles'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.orange.shade700,
+                                      side: BorderSide(color: Colors.orange.shade700),
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
                                     ),
-                                    filled: true,
-                                    fillColor: Colors.white,
                                   ),
                                 ),
+
+                                const SizedBox(height: 12),
+
+                                // Dropdown de kioscos disponibles
+                                if (_availableKiosks.isNotEmpty) ...[
+                                  DropdownButtonFormField<int>(
+                                    value: _selectedKiosk?['id'],
+                                    decoration: InputDecoration(
+                                      labelText: 'Seleccionar Kiosko',
+                                      prefixIcon: const Icon(Icons.storefront),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                    ),
+                                    items: _availableKiosks.map((kiosk) {
+                                      return DropdownMenuItem<int>(
+                                        value: kiosk['id'],
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              kiosk['name'] ?? 'Sin nombre',
+                                              style: const TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                            if (kiosk['location'] != null)
+                                              Text(
+                                                kiosk['location'],
+                                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                              ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _selectedKiosk = _availableKiosks.firstWhere((k) => k['id'] == value);
+                                        // Autocompletar GPS del kiosko
+                                        if (_selectedKiosk?['gpsLocation'] != null) {
+                                          _latitude = _selectedKiosk!['gpsLocation']['lat']?.toDouble();
+                                          _longitude = _selectedKiosk!['gpsLocation']['lng']?.toDouble();
+                                        }
+                                      });
+                                    },
+                                    validator: (value) {
+                                      if (_availableKiosks.isNotEmpty && value == null) {
+                                        return 'Seleccione un kiosko';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
 
                                 const SizedBox(height: 12),
 
@@ -568,7 +753,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
 
                           const SizedBox(height: 24),
 
-                          // Instrucción para obtener IP:Puerto
+                          // Instrucciones
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -581,7 +766,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                                 Icon(Icons.info_outline, color: Colors.blue.shade700, size: 36),
                                 const SizedBox(height: 12),
                                 Text(
-                                  '📡 ¿Cómo obtener IP y Puerto?',
+                                  '📡 Configuración del Servidor',
                                   style: TextStyle(
                                     color: Colors.blue.shade900,
                                     fontWeight: FontWeight.bold,
@@ -591,13 +776,21 @@ class _ConfigScreenState extends State<ConfigScreen> {
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
-                                  '1. En el navegador web, ir a:\nhttp://[IP-SERVIDOR]/panel-empresa.html\n\n2. Login con sus credenciales\n\n3. Ir al módulo "Configuración"\n\n4. Copiar IP y Puerto mostrados\n\n5. Ingresar aquí arriba ↑',
+                                  '🌐 HOSTING EN LA NUBE (Render/Heroku/Vercel):\n'
+                                  '   • URL: aponntsuites.onrender.com (sin http://)\n'
+                                  '   • Puerto: Dejar vacío\n'
+                                  '   • Company ID: El de tu empresa\n\n'
+                                  '🏢 RED LOCAL:\n'
+                                  '   1. Ir a: http://[IP-SERVIDOR]/panel-empresa.html\n'
+                                  '   2. Login → Configuración\n'
+                                  '   3. Copiar IP y Puerto\n'
+                                  '   4. Ingresar aquí ↑',
                                   style: TextStyle(
                                     color: Colors.blue.shade700,
-                                    fontSize: 13,
+                                    fontSize: 12,
                                     height: 1.5,
                                   ),
-                                  textAlign: TextAlign.center,
+                                  textAlign: TextAlign.left,
                                 ),
                               ],
                             ),
@@ -743,7 +936,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
     _portController.dispose();
     _companyNameController.dispose();
     _companyIdController.dispose();
-    _kioskNameController.dispose();
     super.dispose();
   }
 }

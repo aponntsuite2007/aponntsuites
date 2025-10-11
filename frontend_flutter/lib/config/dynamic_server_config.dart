@@ -23,8 +23,8 @@ class DynamicServerConfig {
       'protocol': 'http'
     },
     'production': {
-      'name': 'Producción',
-      'host': 'tu-dominio.com', // Cambiar por el dominio real
+      'name': 'Producción Render',
+      'host': 'aponntsuites.onrender.com',
       'port': 443,
       'protocol': 'https'
     }

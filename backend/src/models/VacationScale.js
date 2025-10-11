@@ -11,7 +11,14 @@ module.exports = (sequelize) => {
       primaryKey: true,
       autoIncrement: true
     },
-    
+
+    // Multi-tenant
+    company_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      comment: 'ID de la empresa (multi-tenant)'
+    },
+
     // Rango de antigüedad
     yearsFrom: {
       type: DataTypes.DECIMAL(4, 2),

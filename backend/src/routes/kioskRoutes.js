@@ -25,6 +25,51 @@ function formatKiosk(kiosk) {
 }
 
 /**
+ * @route GET /api/v1/kiosks/available
+ * @desc Obtener kioscos disponibles (no activos) para configurar - SIN AUTH
+ */
+router.get('/available', async (req, res) => {
+  try {
+    const { company_id } = req.query;
+
+    if (!company_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'company_id es requerido'
+      });
+    }
+
+    console.log(`📟 [KIOSKS-AVAILABLE] Consultando kioscos disponibles para empresa ${company_id}`);
+
+    const kiosks = await Kiosk.findAll({
+      where: {
+        company_id: parseInt(company_id),
+        is_active: false // Solo kioscos NO activos
+      },
+      order: [['name', 'ASC']]
+    });
+
+    console.log(`✅ [KIOSKS-AVAILABLE] Encontrados ${kiosks.length} kioscos disponibles`);
+
+    const formattedKiosks = kiosks.map(formatKiosk);
+
+    res.json({
+      success: true,
+      kiosks: formattedKiosks,
+      count: formattedKiosks.length
+    });
+
+  } catch (error) {
+    console.error('❌ [KIOSKS-AVAILABLE] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      message: error.message
+    });
+  }
+});
+
+/**
  * @route GET /api/v1/kiosks
  * @desc Obtener todos los kioscos de la empresa del usuario
  */

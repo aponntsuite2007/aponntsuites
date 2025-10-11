@@ -136,14 +136,13 @@ const upload = multer({
  */
 router.get('/', auth, supervisorOrAdmin, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, role, isActive } = req.query;
+    const { page = 1, limit = 10, search, role, isActive, company_id } = req.query;
 
     const where = {};
 
     // Filter by company for multi-tenant security
-    if (req.user.companyId) {
-      where.companyId = req.user.companyId;
-    }
+    const companyId = req.user?.company_id || company_id || 1;
+    where.company_id = companyId;
 
     if (search) {
       where[Op.or] = [

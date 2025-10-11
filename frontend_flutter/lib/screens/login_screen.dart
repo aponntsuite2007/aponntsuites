@@ -26,19 +26,6 @@ class _NewLoginScreenState extends State<NewLoginScreen> {
   void initState() {
     super.initState();
     _loadConfiguration();
-    // 🧪 AUTO-LOGIN EN DEBUG MODE PARA TESTING
-    _autoLoginForDebug();
-  }
-
-  Future<void> _autoLoginForDebug() async {
-    // Esperar 2 segundos y hacer auto-login
-    await Future.delayed(Duration(seconds: 2));
-    _usernameController.text = 'testuser';
-    _passwordController.text = 'test123';
-    setState(() {});
-    // Esperar 1 segundo más y ejecutar login
-    await Future.delayed(Duration(seconds: 1));
-    _login();
   }
 
   @override

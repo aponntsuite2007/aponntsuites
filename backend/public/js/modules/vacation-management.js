@@ -276,49 +276,33 @@ function getVacationPoliciesContent() {
         <div class="vacation-policies-container">
             <h3 style="margin: 0 0 20px 0;">📜 Políticas de Vacaciones y Permisos</h3>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
-                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                    <h4 style="margin: 0 0 15px 0; color: #27ae60;">🏖️ Vacaciones Anuales</h4>
-                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-                        <li>21 días hábiles por año calendario</li>
-                        <li>Proporcional en caso de ingreso durante el año</li>
-                        <li>Solicitud con 15 días de anticipación mínima</li>
-                        <li>Máximo 14 días corridos por período</li>
-                        <li>No acumulables por más de 2 años</li>
-                    </ul>
+            <!-- Escalas de Vacaciones por Antigüedad -->
+            <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h4 style="margin: 0; color: #27ae60;">📊 Escalas de Vacaciones por Antigüedad</h4>
+                    <button onclick="addVacationScale()" style="background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        ➕ Agregar Escala
+                    </button>
                 </div>
-
-                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                    <h4 style="margin: 0 0 15px 0; color: #f39c12;">👤 Permisos Personales</h4>
-                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-                        <li>3 días por año para asuntos personales</li>
-                        <li>Solicitud con 48 horas de anticipación</li>
-                        <li>No remunerados si exceden el límite</li>
-                        <li>Justificación requerida</li>
-                        <li>Aprobación supervisión directa</li>
-                    </ul>
+                <div id="vacation-scales-list">
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        🔄 Cargando escalas...
+                    </div>
                 </div>
+            </div>
 
-                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                    <h4 style="margin: 0 0 15px 0; color: #e74c3c;">🏥 Licencias Médicas</h4>
-                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-                        <li>Certificado médico obligatorio</li>
-                        <li>Notificación inmediata por enfermedad</li>
-                        <li>ART para accidentes laborales</li>
-                        <li>Seguimiento médico laboral</li>
-                        <li>Reincorporación con alta médica</li>
-                    </ul>
+            <!-- Licencias Extraordinarias -->
+            <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h4 style="margin: 0; color: #f39c12;">📋 Licencias Extraordinarias</h4>
+                    <button onclick="addExtraordinaryLicense()" style="background: #f39c12; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        ➕ Agregar Licencia
+                    </button>
                 </div>
-
-                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                    <h4 style="margin: 0 0 15px 0; color: #8e44ad;">👶 Licencia Maternidad/Paternidad</h4>
-                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-                        <li>90 días corridos maternidad</li>
-                        <li>2 días paternidad</li>
-                        <li>Notificación 60 días antes</li>
-                        <li>Certificado médico requerido</li>
-                        <li>Extensión por complicaciones</li>
-                    </ul>
+                <div id="extraordinary-licenses-list">
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        🔄 Cargando licencias...
+                    </div>
                 </div>
             </div>
         </div>
@@ -1212,6 +1196,419 @@ async function deleteCompatibilityRule(ruleId) {
     } catch (error) {
         console.error('Error eliminando regla:', error);
         alert('Error eliminando regla de compatibilidad');
+    }
+}
+
+// ==================== POLÍTICAS DE VACACIONES ====================
+
+async function loadVacationPolicies() {
+    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
+
+    try {
+        const response = await fetch(`/api/v1/vacation/config?company_id=${companyId}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            displayVacationScales(result.data.vacationScales || []);
+            displayExtraordinaryLicenses(result.data.extraordinaryLicenses || []);
+        }
+    } catch (error) {
+        console.error('Error cargando políticas:', error);
+    }
+}
+
+function displayVacationScales(scales) {
+    const container = document.getElementById('vacation-scales-list');
+    if (!container) return;
+
+    if (scales.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #666;">
+                No hay escalas de vacaciones configuradas. Haga clic en "Agregar Escala" para crear una.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <th style="padding: 12px; text-align: left;">Rango de Antigüedad</th>
+                    <th style="padding: 12px; text-align: center;">Días de Vacaciones</th>
+                    <th style="padding: 12px; text-align: center;">Prioridad</th>
+                    <th style="padding: 12px; text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${scales.map(scale => `
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 12px;">${scale.rangeDescription || `${scale.yearsFrom} - ${scale.yearsTo || '∞'} años`}</td>
+                        <td style="padding: 12px; text-align: center; font-weight: 600; color: #27ae60;">${scale.vacationDays} días</td>
+                        <td style="padding: 12px; text-align: center;">${scale.priority}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="deleteVacationScale(${scale.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                                🗑️ Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function displayExtraordinaryLicenses(licenses) {
+    const container = document.getElementById('extraordinary-licenses-list');
+    if (!container) return;
+
+    if (licenses.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #666;">
+                No hay licencias extraordinarias configuradas. Haga clic en "Agregar Licencia" para crear una.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <th style="padding: 12px; text-align: left;">Tipo</th>
+                    <th style="padding: 12px; text-align: left;">Descripción</th>
+                    <th style="padding: 12px; text-align: center;">Días</th>
+                    <th style="padding: 12px; text-align: center;">Tipo de Día</th>
+                    <th style="padding: 12px; text-align: center;">Requiere Aprobación</th>
+                    <th style="padding: 12px; text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${licenses.map(license => `
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 12px; font-weight: 600;">${license.type}</td>
+                        <td style="padding: 12px;">${license.description || '-'}</td>
+                        <td style="padding: 12px; text-align: center; font-weight: 600; color: #f39c12;">${license.days} días</td>
+                        <td style="padding: 12px; text-align: center;">${license.dayType === 'habil' ? 'Hábiles' : 'Corridos'}</td>
+                        <td style="padding: 12px; text-align: center;">${license.requiresApproval ? '✓ Sí' : '✗ No'}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="deleteExtraordinaryLicense(${license.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                                🗑️ Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+async function addVacationScale() {
+    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+
+    const modalHTML = `
+        <div id="vacationScaleModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+            <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                <h3 style="margin: 0 0 20px 0; color: #27ae60;">📊 Agregar Escala de Vacaciones</h3>
+
+                <form id="vacationScaleForm">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Años desde:</label>
+                        <input type="number" id="yearsFrom" step="0.01" required
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                               placeholder="Ej: 0 (para inicio), 5, 10...">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Años hasta (dejar vacío para sin límite):</label>
+                        <input type="number" id="yearsTo" step="0.01"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                               placeholder="Ej: 5, 10, 20... (vacío = sin límite)">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Descripción del rango:</label>
+                        <input type="text" id="rangeDescription" required
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                               placeholder="Ej: '0 - 5 años', '5 - 10 años', 'Más de 20 años'">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Días de vacaciones:</label>
+                        <input type="number" id="vacationDays" required min="1"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                               placeholder="Ej: 14, 21, 28...">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Prioridad (menor = mayor prioridad):</label>
+                        <input type="number" id="priority" value="0"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" onclick="closeVacationScaleModal()"
+                                style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            💾 Guardar Escala
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    document.getElementById('vacationScaleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
+
+        const data = {
+            company_id: companyId,
+            yearsFrom: parseFloat(document.getElementById('yearsFrom').value),
+            yearsTo: document.getElementById('yearsTo').value ? parseFloat(document.getElementById('yearsTo').value) : null,
+            rangeDescription: document.getElementById('rangeDescription').value,
+            vacationDays: parseInt(document.getElementById('vacationDays').value),
+            priority: parseInt(document.getElementById('priority').value)
+        };
+
+        try {
+            const response = await fetch('/api/v1/vacation/scales', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✓ Escala de vacaciones creada exitosamente');
+                closeVacationScaleModal();
+                loadVacationPolicies();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error creando escala:', error);
+            alert('Error creando escala de vacaciones');
+        }
+    });
+}
+
+function closeVacationScaleModal() {
+    const modal = document.getElementById('vacationScaleModal');
+    if (modal) modal.remove();
+}
+
+async function deleteVacationScale(scaleId) {
+    if (!confirm('¿Está seguro de eliminar esta escala de vacaciones?')) return;
+
+    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+
+    try {
+        const response = await fetch(`/api/v1/vacation/scales/${scaleId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ isActive: false })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('✓ Escala eliminada exitosamente');
+            loadVacationPolicies();
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error eliminando escala:', error);
+        alert('Error eliminando escala de vacaciones');
+    }
+}
+
+async function addExtraordinaryLicense() {
+    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+
+    const modalHTML = `
+        <div id="extraordinaryLicenseModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+            <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                <h3 style="margin: 0 0 20px 0; color: #f39c12;">📋 Agregar Licencia Extraordinaria</h3>
+
+                <form id="extraordinaryLicenseForm">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tipo de Licencia:</label>
+                        <input type="text" id="licenseType" required
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                               placeholder="Ej: Matrimonio, Paternidad, Mudanza...">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Descripción:</label>
+                        <textarea id="licenseDescription" rows="3"
+                                  style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                                  placeholder="Descripción detallada de la licencia..."></textarea>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Días otorgados:</label>
+                        <input type="number" id="licenseDays" required min="1"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                               placeholder="Ej: 1, 3, 10...">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tipo de días:</label>
+                        <select id="licenseDayType" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                            <option value="habil">Días Hábiles</option>
+                            <option value="corrido">Días Corridos</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="requiresApproval" checked>
+                            <span style="font-weight: 600;">Requiere aprobación previa</span>
+                        </label>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="requiresDocumentation">
+                            <span style="font-weight: 600;">Requiere documentación de respaldo</span>
+                        </label>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Máximo por año (dejar vacío para sin límite):</label>
+                        <input type="number" id="maxPerYear" min="1"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                               placeholder="Ej: 1, 2, 3... (vacío = sin límite)">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Días de antelación requeridos:</label>
+                        <input type="number" id="advanceNoticeDays" value="0" min="0"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Base legal (opcional):</label>
+                        <textarea id="legalBasis" rows="2"
+                                  style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                                  placeholder="Ej: Art. 158 LCT, CCT 130/75..."></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" onclick="closeExtraordinaryLicenseModal()"
+                                style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                style="background: #f39c12; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            💾 Guardar Licencia
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    document.getElementById('extraordinaryLicenseForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
+
+        const data = {
+            company_id: companyId,
+            type: document.getElementById('licenseType').value,
+            description: document.getElementById('licenseDescription').value,
+            days: parseInt(document.getElementById('licenseDays').value),
+            dayType: document.getElementById('licenseDayType').value,
+            requiresApproval: document.getElementById('requiresApproval').checked,
+            requiresDocumentation: document.getElementById('requiresDocumentation').checked,
+            maxPerYear: document.getElementById('maxPerYear').value ? parseInt(document.getElementById('maxPerYear').value) : null,
+            advanceNoticeDays: parseInt(document.getElementById('advanceNoticeDays').value),
+            legalBasis: document.getElementById('legalBasis').value
+        };
+
+        try {
+            const response = await fetch('/api/v1/vacation/extraordinary-licenses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✓ Licencia extraordinaria creada exitosamente');
+                closeExtraordinaryLicenseModal();
+                loadVacationPolicies();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error creando licencia:', error);
+            alert('Error creando licencia extraordinaria');
+        }
+    });
+}
+
+function closeExtraordinaryLicenseModal() {
+    const modal = document.getElementById('extraordinaryLicenseModal');
+    if (modal) modal.remove();
+}
+
+async function deleteExtraordinaryLicense(licenseId) {
+    if (!confirm('¿Está seguro de eliminar esta licencia extraordinaria?')) return;
+
+    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
+
+    try {
+        // Soft delete by setting isActive to false
+        const response = await fetch(`/api/v1/vacation/extraordinary-licenses/${licenseId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ isActive: false })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('✓ Licencia eliminada exitosamente');
+            loadVacationPolicies();
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error eliminando licencia:', error);
+        alert('Error eliminando licencia extraordinaria');
     }
 }
 
