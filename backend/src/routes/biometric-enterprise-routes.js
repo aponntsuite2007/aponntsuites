@@ -395,6 +395,102 @@ router.get('/health', async (req, res) => {
 });
 
 /**
+ * @route POST /api/v2/biometric-enterprise/analyze-face
+ * @desc Analyze face for real-time feedback (NO SAVE - feedback only)
+ */
+router.post('/analyze-face',
+  devAuth,
+  upload.single('faceImage'),
+  async (req, res) => {
+    const startTime = Date.now();
+
+    try {
+      console.log('🔍 [ANALYZE-FACE] Analizando imagen para feedback en tiempo real...');
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: 'Face image required',
+          faceCount: 0,
+          quality: 'unknown',
+          isOptimal: false
+        });
+      }
+
+      // Enviar a Azure para análisis
+      const azureResult = await azureFaceService.detectAndExtractFace(req.file.buffer, {
+        returnFaceAttributes: 'qualityForRecognition,exposure,noise,blur,headPose,occlusion'
+      });
+
+      const processingTime = Date.now() - startTime;
+
+      if (!azureResult.success) {
+        // Error de Azure
+        console.log(`❌ [ANALYZE-FACE] Azure error: ${azureResult.error}`);
+
+        let faceCount = 0;
+        let quality = 'unknown';
+
+        if (azureResult.error === 'NO_FACE_DETECTED') {
+          faceCount = 0;
+          quality = 'no_face';
+        } else if (azureResult.error === 'MULTIPLE_FACES') {
+          faceCount = azureResult.faces?.length || 2;
+          quality = 'multiple_faces';
+        }
+
+        return res.json({
+          success: true,
+          faceCount,
+          quality,
+          isOptimal: false,
+          message: azureResult.error,
+          processingTime
+        });
+      }
+
+      // Azure detectó 1 rostro exitosamente
+      const face = azureResult.faces[0];
+      const qualityAttr = face.attributes?.qualityForRecognition;
+
+      // Determinar si es óptimo para captura
+      const isHighQuality = qualityAttr === 'high';
+      const isMediumQuality = qualityAttr === 'medium';
+      const isOptimal = isHighQuality;
+
+      console.log(`✅ [ANALYZE-FACE] Rostro analizado - Calidad: ${qualityAttr}, Óptimo: ${isOptimal}`);
+
+      return res.json({
+        success: true,
+        faceCount: 1,
+        quality: qualityAttr || 'unknown',
+        isOptimal,
+        details: {
+          faceId: face.faceId,
+          faceRectangle: face.faceRectangle,
+          blur: face.attributes?.blur,
+          exposure: face.attributes?.exposure,
+          noise: face.attributes?.noise,
+          headPose: face.attributes?.headPose,
+          occlusion: face.attributes?.occlusion
+        },
+        processingTime
+      });
+
+    } catch (error) {
+      console.error('❌ [ANALYZE-FACE] Error:', error);
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+        faceCount: 0,
+        quality: 'error',
+        isOptimal: false
+      });
+    }
+  }
+);
+
+/**
  * 🧠 Extract 128D face embedding (Face-api.js simulation)
  */
 async function extractFaceEmbedding(imageFile, qualityThreshold = 0.7) {

@@ -1,28 +1,31 @@
 /**
- * 🏦 SISTEMA DE CAPTURA BIOMÉTRICA PROFESIONAL
+ * 🏦 SISTEMA DE CAPTURA BIOMÉTRICA PROFESIONAL CON FEEDBACK REAL
  *
- * Arquitectura enterprise como bancos:
- * - Frontend: Video + Overlay visual (óvalo guía) - SIN detección en tiempo real
- * - Backend: Validación seria con Azure Face API (99.8% precisión)
+ * Arquitectura enterprise con feedback continuo:
+ * - Frontend: Video + Overlay visual + análisis de brillo
+ * - Backend: Feedback real de Azure cada 1.5 segundos
+ * - Captura automática cuando condiciones son óptimas
  *
  * Ventajas:
- * ✅ Rápido (no carga modelos pesados)
- * ✅ Confiable (no se congela)
- * ✅ Profesional (guía visual como bancos)
- * ✅ Validación seria (Azure en backend)
+ * ✅ Feedback real en tiempo real (Azure)
+ * ✅ Captura automática inteligente
+ * ✅ Mensajes dinámicos según condiciones
+ * ✅ NO requiere botón manual
  */
 
 // Estado global de captura
 let currentStream = null;
 let captureInProgress = false;
+let feedbackLoop = null;
+let currentEmployeeId = null;
 
 /**
- * 📷 Iniciar captura facial profesional
+ * 📷 Iniciar captura facial profesional CON FEEDBACK REAL
  */
 export async function startProfessionalFaceCapture(employeeData) {
     try {
-        console.log('🏦 [PROFESSIONAL-CAPTURE] Iniciando captura facial enterprise...');
-        console.log('📋 [PROFESSIONAL-CAPTURE] Employee data:', employeeData);
+        console.log('🏦 [AUTO-CAPTURE] Iniciando captura automática con feedback real de Azure...');
+        console.log('📋 [AUTO-CAPTURE] Employee data:', employeeData);
 
         if (captureInProgress) {
             console.warn('⚠️ Captura ya en progreso');
@@ -30,15 +33,11 @@ export async function startProfessionalFaceCapture(employeeData) {
         }
 
         captureInProgress = true;
+        currentEmployeeId = employeeData; // Guardar para uso posterior
 
-        // Crear modal con guía visual
-        console.log('🎨 [PROFESSIONAL-CAPTURE] Creando modal...');
-        const modal = createCaptureModalWithGuide();
-        console.log('✅ [PROFESSIONAL-CAPTURE] Modal creado:', modal);
-
-        console.log('📍 [PROFESSIONAL-CAPTURE] Agregando modal al body...');
+        // Crear modal con guía visual (SIN botón de captura)
+        const modal = createAutoCaptureModal();
         document.body.appendChild(modal);
-        console.log('✅ [PROFESSIONAL-CAPTURE] Modal agregado al DOM');
 
         // Acceder a cámara
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -60,34 +59,282 @@ export async function startProfessionalFaceCapture(employeeData) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
 
-        console.log('✅ [PROFESSIONAL-CAPTURE] Cámara iniciada - esperando captura del usuario');
+        console.log('✅ [AUTO-CAPTURE] Cámara iniciada - iniciando análisis en tiempo real...');
+
+        // ⚡ INICIAR FEEDBACK LOOP EN TIEMPO REAL
+        startRealtimeFeedbackLoop(modal, video, canvas);
 
     } catch (error) {
-        console.error('❌ [PROFESSIONAL-CAPTURE] Error:', error);
+        console.error('❌ [AUTO-CAPTURE] Error:', error);
         captureInProgress = false;
         showError('No se pudo acceder a la cámara. Verifique los permisos.');
     }
 }
 
 /**
+ * ⚡ LOOP DE FEEDBACK EN TIEMPO REAL CON AZURE
+ */
+async function startRealtimeFeedbackLoop(modal, video, canvas) {
+    const ctx = canvas.getContext('2d');
+    const statusElement = modal.querySelector('#capture-status');
+    const feedbackMessage = modal.querySelector('#feedback-message');
+    const ovalElement = modal.querySelector('.guide-oval');
+
+    let lastAzureCheck = 0;
+    const AZURE_CHECK_INTERVAL = 1500; // Cada 1.5 segundos llamar a Azure
+    let consecutiveGoodFrames = 0;
+    const REQUIRED_GOOD_FRAMES = 2; // 2 checks buenos consecutivos antes de capturar
+
+    console.log('⚡ [FEEDBACK-LOOP] Iniciando análisis en tiempo real...');
+
+    const loop = async () => {
+        if (!captureInProgress) {
+            console.log('🛑 [FEEDBACK-LOOP] Deteniendo loop - captura finalizada');
+            return;
+        }
+
+        const now = Date.now();
+
+        // 1. ANÁLISIS DE BRILLO (liviano - local)
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const brightness = analyzeBrightness(ctx, canvas);
+
+        // 2. FEEDBACK REAL DE AZURE (cada 1.5 segundos)
+        if (now - lastAzureCheck >= AZURE_CHECK_INTERVAL) {
+            lastAzureCheck = now;
+
+            console.log('🔍 [AZURE-FEEDBACK] Solicitando análisis a Azure...');
+            statusElement.textContent = '🔍 Analizando con Azure...';
+            statusElement.className = 'status-analyzing';
+
+            try {
+                // Capturar frame actual
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+
+                // Enviar a Azure para análisis (NO para guardar)
+                const feedback = await getAzureFeedback(blob);
+
+                console.log('📊 [AZURE-FEEDBACK] Respuesta:', feedback);
+
+                // Actualizar UI según feedback de Azure
+                updateFeedbackUI(feedback, brightness, statusElement, feedbackMessage, ovalElement);
+
+                // Si condiciones son óptimas, incrementar contador
+                if (feedback.isOptimal) {
+                    consecutiveGoodFrames++;
+                    console.log(`✅ [AUTO-CAPTURE] Condiciones óptimas (${consecutiveGoodFrames}/${REQUIRED_GOOD_FRAMES})`);
+
+                    if (consecutiveGoodFrames >= REQUIRED_GOOD_FRAMES) {
+                        console.log('🎯 [AUTO-CAPTURE] ¡Capturando automáticamente!');
+                        clearInterval(feedbackLoop);
+                        await performFinalCapture(modal, canvas, blob);
+                        return;
+                    }
+                } else {
+                    consecutiveGoodFrames = 0;
+                }
+
+            } catch (error) {
+                console.error('❌ [AZURE-FEEDBACK] Error:', error);
+                feedbackMessage.textContent = '⚠️ Error al analizar - reintentando...';
+            }
+        } else {
+            // Entre checks de Azure, solo mostrar análisis de brillo
+            updateBrightnessUI(brightness, feedbackMessage);
+        }
+
+        // Continuar loop
+        feedbackLoop = setTimeout(loop, 100); // 10 FPS de análisis visual
+    };
+
+    loop();
+}
+
+/**
+ * 💡 Analizar brillo del frame (liviano - local)
+ */
+function analyzeBrightness(ctx, canvas) {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    let totalBrightness = 0;
+    const sampleRate = 10; // Muestrear 1 de cada 10 píxeles para velocidad
+
+    for (let i = 0; i < data.length; i += 4 * sampleRate) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const brightness = (r + g + b) / 3;
+        totalBrightness += brightness;
+    }
+
+    const avgBrightness = totalBrightness / (data.length / 4 / sampleRate);
+    return avgBrightness; // 0-255
+}
+
+/**
+ * 🌐 Obtener feedback real de Azure (sin guardar)
+ */
+async function getAzureFeedback(imageBlob) {
+    const formData = new FormData();
+    formData.append('faceImage', imageBlob, 'feedback-frame.jpg');
+    formData.append('feedbackOnly', 'true'); // NO guardar, solo analizar
+
+    const response = await fetch('/api/v2/biometric-enterprise/analyze-face', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token') || 'token_test'}`
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error('Azure feedback failed');
+    }
+
+    return await response.json();
+}
+
+/**
+ * 🎨 Actualizar UI según feedback de Azure
+ */
+function updateFeedbackUI(feedback, brightness, statusElement, feedbackMessage, ovalElement) {
+    // Cambiar color del óvalo según estado
+    if (feedback.faceCount === 0) {
+        // ❌ Sin rostro
+        statusElement.className = 'status-error';
+        statusElement.textContent = '❌ No se detecta rostro';
+        feedbackMessage.textContent = '📍 Posicione su rostro dentro del óvalo';
+        ovalElement.style.stroke = '#f44336'; // Rojo
+
+    } else if (feedback.faceCount > 1) {
+        // ❌ Múltiples personas
+        statusElement.className = 'status-error';
+        statusElement.textContent = '❌ Múltiples personas detectadas';
+        feedbackMessage.textContent = `⚠️ Se detectaron ${feedback.faceCount} personas - Asegúrese de estar solo`;
+        ovalElement.style.stroke = '#ff9800'; // Naranja
+
+    } else if (feedback.quality === 'low') {
+        // ⚠️ Calidad baja
+        statusElement.className = 'status-warning';
+        statusElement.textContent = '⚠️ Calidad baja';
+
+        if (brightness < 80) {
+            feedbackMessage.textContent = '💡 Poca luz - Mejore la iluminación';
+        } else if (brightness > 200) {
+            feedbackMessage.textContent = '☀️ Mucha luz - Reduzca la iluminación';
+        } else {
+            feedbackMessage.textContent = '📏 Acérquese más a la cámara';
+        }
+
+        ovalElement.style.stroke = '#ff9800'; // Naranja
+
+    } else if (feedback.faceCount === 1 && feedback.quality === 'high') {
+        // ✅ Condiciones óptimas
+        statusElement.className = 'status-optimal';
+        statusElement.textContent = '✅ Condiciones óptimas';
+        feedbackMessage.textContent = '🎯 Capturando automáticamente...';
+        ovalElement.style.stroke = '#4CAF50'; // Verde
+
+    } else {
+        // ⚠️ Casi listo
+        statusElement.className = 'status-warning';
+        statusElement.textContent = '⚠️ Casi listo...';
+        feedbackMessage.textContent = '📸 Mantenga la posición';
+        ovalElement.style.stroke = '#2196F3'; // Azul
+    }
+}
+
+/**
+ * 💡 Actualizar UI solo con análisis de brillo (entre checks de Azure)
+ */
+function updateBrightnessUI(brightness, feedbackMessage) {
+    if (brightness < 80) {
+        feedbackMessage.textContent = '💡 Poca luz detectada';
+    } else if (brightness > 200) {
+        feedbackMessage.textContent = '☀️ Mucha luz detectada';
+    }
+}
+
+/**
+ * 📸 Realizar captura final y guardar
+ */
+async function performFinalCapture(modal, canvas, imageBlob) {
+    const statusElement = modal.querySelector('#capture-status');
+    const feedbackMessage = modal.querySelector('#feedback-message');
+
+    try {
+        statusElement.className = 'status-processing';
+        statusElement.textContent = '📸 Capturando y guardando...';
+        feedbackMessage.textContent = 'Procesando con Azure Face API...';
+
+        // Enviar al backend para guardar definitivamente
+        const formData = new FormData();
+        formData.append('faceImage', imageBlob, 'face-capture.jpg');
+        formData.append('employeeId', currentEmployeeId);
+        formData.append('quality', '0.8');
+
+        const response = await fetch('/api/v2/biometric-enterprise/enroll-face', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token') || 'token_test'}`
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            statusElement.className = 'status-success';
+            statusElement.textContent = '✅ Rostro registrado exitosamente';
+            feedbackMessage.textContent = `Precisión: ${result.data.accuracy || '99.8%'} | Confianza: ${(result.data.confidenceScore * 100).toFixed(1)}%`;
+
+            console.log('✅ [AUTO-CAPTURE] Registro exitoso:', result.data);
+
+            setTimeout(() => {
+                closeAutoCaptureModal(modal);
+                if (typeof refreshEmployeeData === 'function') {
+                    refreshEmployeeData();
+                }
+            }, 2500);
+
+        } else {
+            throw new Error(result.message || 'Error al guardar');
+        }
+
+    } catch (error) {
+        console.error('❌ [AUTO-CAPTURE] Error al guardar:', error);
+        statusElement.className = 'status-error';
+        statusElement.textContent = '❌ Error al guardar';
+        feedbackMessage.textContent = error.message;
+
+        // Reiniciar loop después de error
+        setTimeout(() => {
+            captureInProgress = true;
+            startRealtimeFeedbackLoop(modal, modal.querySelector('#capture-video'), modal.querySelector('#capture-canvas'));
+        }, 2000);
+    }
+}
+
+/**
  * 🎨 Crear modal con guía visual profesional (óvalo como bancos)
  */
-function createCaptureModalWithGuide() {
+function createAutoCaptureModal() {
     const modal = document.createElement('div');
     modal.className = 'biometric-capture-modal';
     modal.innerHTML = `
         <div class="capture-container">
             <!-- Header -->
             <div class="capture-header">
-                <h3>📷 Registro Facial Biométrico</h3>
-                <p class="capture-instructions">Posicione su rostro dentro del óvalo</p>
+                <h3>📷 Registro Facial Automático</h3>
+                <p class="capture-instructions">Sistema con detección y captura automática</p>
             </div>
 
             <!-- Video preview con overlay -->
             <div class="video-container">
                 <video id="capture-video" autoplay playsinline></video>
 
-                <!-- Óvalo guía (SVG overlay) -->
+                <!-- Óvalo guía (SVG overlay) - CAMBIA DE COLOR SEGÚN FEEDBACK -->
                 <svg class="face-guide-oval" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <!-- Fondo oscurecido -->
                     <defs>
@@ -111,33 +358,21 @@ function createCaptureModalWithGuide() {
                 <canvas id="capture-canvas" style="display: none;"></canvas>
             </div>
 
-            <!-- Instrucciones dinámicas -->
+            <!-- FEEDBACK EN TIEMPO REAL DE AZURE -->
             <div class="capture-guidance">
-                <div id="capture-status" class="status-ready">
-                    ✓ Listo para capturar
+                <div id="capture-status" class="status-analyzing">
+                    🔍 Iniciando análisis...
                 </div>
-                <ul class="capture-tips">
-                    <li>✓ Asegúrese de estar solo en el cuadro</li>
-                    <li>✓ Ilumine bien su rostro</li>
-                    <li>✓ Mire directamente a la cámara</li>
-                    <li>✓ Retire lentes oscuros si los usa</li>
-                </ul>
+                <div id="feedback-message" class="feedback-message">
+                    Analizando condiciones con Azure Face API...
+                </div>
             </div>
 
-            <!-- Botones de acción -->
+            <!-- Solo botón cancelar - NO HAY BOTÓN DE CAPTURA -->
             <div class="capture-actions">
-                <button id="btn-capture" class="btn-capture">
-                    📸 Capturar Rostro
-                </button>
                 <button id="btn-cancel" class="btn-cancel">
                     ✕ Cancelar
                 </button>
-            </div>
-
-            <!-- Indicador de procesamiento -->
-            <div id="processing-indicator" class="processing-indicator" style="display: none;">
-                <div class="spinner"></div>
-                <p>Validando con Azure Face API...</p>
             </div>
         </div>
 
@@ -232,9 +467,31 @@ function createCaptureModalWithGuide() {
                 text-align: center;
             }
 
+            .status-analyzing {
+                background: #e3f2fd;
+                color: #1565c0;
+            }
+
             .status-ready {
                 background: #e8f5e9;
                 color: #2e7d32;
+            }
+
+            .status-optimal {
+                background: #c8e6c9;
+                color: #1b5e20;
+                font-weight: bold;
+            }
+
+            .status-success {
+                background: #4caf50;
+                color: white;
+                font-weight: bold;
+            }
+
+            .status-warning {
+                background: #fff3e0;
+                color: #e65100;
             }
 
             .status-processing {
@@ -247,15 +504,16 @@ function createCaptureModalWithGuide() {
                 color: #c62828;
             }
 
-            .capture-tips {
-                margin: 0;
-                padding-left: 20px;
-                font-size: 13px;
-                color: #666;
-            }
-
-            .capture-tips li {
-                margin: 4px 0;
+            .feedback-message {
+                margin-top: 12px;
+                padding: 12px;
+                background: white;
+                border-left: 4px solid #2196F3;
+                border-radius: 4px;
+                font-size: 14px;
+                color: #333;
+                text-align: center;
+                font-weight: 500;
             }
 
             .capture-actions {
@@ -331,29 +589,13 @@ function createCaptureModalWithGuide() {
         </style>
     `;
 
-    // Event listeners
-    const btnCapture = modal.querySelector('#btn-capture');
+    // Event listener solo para cancelar (NO hay botón de captura)
     const btnCancel = modal.querySelector('#btn-cancel');
 
-    console.log('🔘 [BTN] Botones encontrados:', { btnCapture, btnCancel });
-
-    if (!btnCapture) {
-        console.error('❌ [BTN] No se encontró el botón de captura!');
-    } else {
-        console.log('✅ [BTN] Conectando evento click al botón de captura');
-        btnCapture.addEventListener('click', () => {
-            console.log('🖱️ [BTN-CLICK] Botón de captura clickeado!');
-            captureAndValidate(modal);
-        });
-    }
-
-    if (!btnCancel) {
-        console.error('❌ [BTN] No se encontró el botón de cancelar!');
-    } else {
-        console.log('✅ [BTN] Conectando evento click al botón de cancelar');
+    if (btnCancel) {
         btnCancel.addEventListener('click', () => {
-            console.log('🖱️ [BTN-CLICK] Botón de cancelar clickeado!');
-            closeCaptureModal(modal);
+            console.log('🖱️ [BTN-CLICK] Cancelando captura automática...');
+            closeAutoCaptureModal(modal);
         });
     }
 
@@ -361,144 +603,15 @@ function createCaptureModalWithGuide() {
 }
 
 /**
- * 📸 Capturar foto y enviar a backend para validación Azure
+ * 🚪 Cerrar modal de captura automática y liberar recursos
  */
-async function captureAndValidate(modal) {
-    console.log('📸 [CAPTURE-VALIDATE] Función iniciada');
-
-    try {
-        const video = modal.querySelector('#capture-video');
-        const canvas = modal.querySelector('#capture-canvas');
-        const ctx = canvas.getContext('2d');
-        const status = modal.querySelector('#capture-status');
-        const btnCapture = modal.querySelector('#btn-capture');
-        const processingIndicator = modal.querySelector('#processing-indicator');
-
-        console.log('🔍 [CAPTURE-VALIDATE] Elementos encontrados:', {
-            video, canvas, status, btnCapture, processingIndicator
-        });
-
-        // Deshabilitar botón
-        btnCapture.disabled = true;
-        btnCapture.textContent = '⏳ Procesando...';
-
-        // Actualizar status
-        status.className = 'status-processing';
-        status.textContent = '📷 Capturando imagen...';
-
-        // Capturar frame actual
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Convertir a blob
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-
-        console.log('📸 [CAPTURE] Imagen capturada:', {
-            size: `${(blob.size / 1024).toFixed(2)} KB`,
-            dimensions: `${canvas.width}x${canvas.height}`
-        });
-
-        // Mostrar indicador de procesamiento
-        processingIndicator.style.display = 'block';
-        status.textContent = '🌐 Validando con Azure Face API...';
-
-        // Enviar al backend para validación con Azure
-        const formData = new FormData();
-        formData.append('faceImage', blob, 'face-capture.jpg');
-
-        // Obtener employeeId del contexto actual
-        const employeeId = getCurrentEmployeeId();
-        if (!employeeId) {
-            throw new Error('No se pudo obtener el ID del empleado');
-        }
-
-        formData.append('employeeId', employeeId);
-        formData.append('quality', '0.8'); // Calidad mínima
-
-        const response = await fetch('/api/v2/biometric-enterprise/enroll-face', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token') || 'token_test'}`
-            },
-            body: formData
-        });
-
-        const result = await response.json();
-
-        processingIndicator.style.display = 'none';
-
-        if (result.success) {
-            // ✅ Registro exitoso
-            status.className = 'status-ready';
-            status.textContent = '✅ Rostro registrado exitosamente';
-
-            console.log('✅ [AZURE-VALIDATION] Registro exitoso:', result.data);
-
-            showSuccessMessage(`
-                ✅ Registro biométrico completado
-
-                Proveedor: ${result.data.provider || 'Azure Face API'}
-                Precisión: ${result.data.accuracy || '99.8%'}
-                Calidad: ${result.data.qualityScore ? (result.data.qualityScore * 100).toFixed(1) + '%' : 'N/A'}
-                Confianza: ${result.data.confidenceScore ? (result.data.confidenceScore * 100).toFixed(1) + '%' : 'N/A'}
-            `);
-
-            // Cerrar modal después de 2 segundos
-            setTimeout(() => {
-                closeCaptureModal(modal);
-                // Recargar datos del empleado para mostrar biometría registrada
-                if (typeof refreshEmployeeData === 'function') {
-                    refreshEmployeeData();
-                }
-            }, 2000);
-
-        } else {
-            // ❌ Error de validación
-            status.className = 'status-error';
-
-            // Mensajes específicos según el error de Azure
-            let errorMessage = result.message || 'Error al validar rostro';
-
-            if (result.error === 'MULTIPLE_FACES') {
-                errorMessage = '⚠️ Se detectaron múltiples personas - Asegúrese de estar solo';
-            } else if (result.error === 'NO_FACE_DETECTED') {
-                errorMessage = '⚠️ No se detectó ningún rostro - Acérquese a la cámara';
-            } else if (result.error === 'POOR_QUALITY') {
-                errorMessage = '⚠️ Calidad insuficiente - Mejore la iluminación';
-            }
-
-            status.textContent = errorMessage;
-
-            console.error('❌ [AZURE-VALIDATION] Error:', result);
-
-            showError(errorMessage);
-
-            // Rehabilitar botón para reintentar
-            btnCapture.disabled = false;
-            btnCapture.textContent = '🔄 Reintentar Captura';
-        }
-
-    } catch (error) {
-        console.error('❌ [CAPTURE] Error:', error);
-
-        const status = modal.querySelector('#capture-status');
-        const btnCapture = modal.querySelector('#btn-capture');
-        const processingIndicator = modal.querySelector('#processing-indicator');
-
-        processingIndicator.style.display = 'none';
-        status.className = 'status-error';
-        status.textContent = '❌ Error al procesar imagen';
-
-        showError('Error al capturar imagen. Intente nuevamente.');
-
-        btnCapture.disabled = false;
-        btnCapture.textContent = '🔄 Reintentar';
+function closeAutoCaptureModal(modal) {
+    // Detener loop de feedback
+    if (feedbackLoop) {
+        clearTimeout(feedbackLoop);
+        feedbackLoop = null;
     }
-}
 
-/**
- * 🚪 Cerrar modal y liberar cámara
- */
-function closeCaptureModal(modal) {
     // Detener stream de cámara
     if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
@@ -509,45 +622,9 @@ function closeCaptureModal(modal) {
     modal.remove();
 
     captureInProgress = false;
+    currentEmployeeId = null;
 
-    console.log('🚪 [CAPTURE] Modal cerrado y cámara liberada');
-}
-
-/**
- * 🆔 Obtener ID del empleado actual desde el contexto
- */
-function getCurrentEmployeeId() {
-    // 1. Intentar desde employeeRegistrationState (biometric.js)
-    if (window.employeeRegistrationState) {
-        if (window.employeeRegistrationState.selectedEmployee && window.employeeRegistrationState.selectedEmployee.id) {
-            console.log('✅ [EMPLOYEE-ID] Obtenido desde employeeRegistrationState.selectedEmployee:', window.employeeRegistrationState.selectedEmployee.id);
-            return window.employeeRegistrationState.selectedEmployee.id;
-        }
-
-        if (window.employeeRegistrationState.currentEmployee && window.employeeRegistrationState.currentEmployee.id) {
-            console.log('✅ [EMPLOYEE-ID] Obtenido desde employeeRegistrationState.currentEmployee:', window.employeeRegistrationState.currentEmployee.id);
-            return window.employeeRegistrationState.currentEmployee.id;
-        }
-    }
-
-    // 2. Intentar obtener desde el panel de empleado visible
-    const employeePanel = document.querySelector('[data-employee-id]');
-    if (employeePanel) {
-        const id = employeePanel.getAttribute('data-employee-id');
-        console.log('✅ [EMPLOYEE-ID] Obtenido desde panel DOM:', id);
-        return id;
-    }
-
-    // 3. Intentar obtener desde variable global si existe
-    if (window.currentEmployeeData && window.currentEmployeeData.id) {
-        console.log('✅ [EMPLOYEE-ID] Obtenido desde currentEmployeeData:', window.currentEmployeeData.id);
-        return window.currentEmployeeData.id;
-    }
-
-    console.error('❌ [EMPLOYEE-ID] No se pudo obtener el ID del empleado actual');
-    console.error('   employeeRegistrationState:', window.employeeRegistrationState);
-    console.error('   currentEmployeeData:', window.currentEmployeeData);
-    return null;
+    console.log('🚪 [AUTO-CAPTURE] Modal cerrado, cámara liberada y loop detenido');
 }
 
 /**
@@ -569,4 +646,4 @@ window.BiometricSimple = {
     startProfessionalFaceCapture
 };
 
-console.log('✅ [BIOMETRIC-SIMPLE] Módulo cargado - Sistema profesional sin Face-API.js');
+console.log('✅ [BIOMETRIC-SIMPLE] Módulo cargado - Sistema con captura automática y feedback real de Azure');
