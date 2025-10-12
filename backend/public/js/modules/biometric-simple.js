@@ -22,6 +22,7 @@ let captureInProgress = false;
 export async function startProfessionalFaceCapture(employeeData) {
     try {
         console.log('🏦 [PROFESSIONAL-CAPTURE] Iniciando captura facial enterprise...');
+        console.log('📋 [PROFESSIONAL-CAPTURE] Employee data:', employeeData);
 
         if (captureInProgress) {
             console.warn('⚠️ Captura ya en progreso');
@@ -31,8 +32,13 @@ export async function startProfessionalFaceCapture(employeeData) {
         captureInProgress = true;
 
         // Crear modal con guía visual
+        console.log('🎨 [PROFESSIONAL-CAPTURE] Creando modal...');
         const modal = createCaptureModalWithGuide();
+        console.log('✅ [PROFESSIONAL-CAPTURE] Modal creado:', modal);
+
+        console.log('📍 [PROFESSIONAL-CAPTURE] Agregando modal al body...');
         document.body.appendChild(modal);
+        console.log('✅ [PROFESSIONAL-CAPTURE] Modal agregado al DOM');
 
         // Acceder a cámara
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -137,16 +143,16 @@ function createCaptureModalWithGuide() {
 
         <style>
             .biometric-capture-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.95);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: rgba(0, 0, 0, 0.95) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                z-index: 999999 !important;
                 animation: fadeIn 0.3s ease;
             }
 
@@ -329,8 +335,27 @@ function createCaptureModalWithGuide() {
     const btnCapture = modal.querySelector('#btn-capture');
     const btnCancel = modal.querySelector('#btn-cancel');
 
-    btnCapture.addEventListener('click', () => captureAndValidate(modal));
-    btnCancel.addEventListener('click', () => closeCaptureModal(modal));
+    console.log('🔘 [BTN] Botones encontrados:', { btnCapture, btnCancel });
+
+    if (!btnCapture) {
+        console.error('❌ [BTN] No se encontró el botón de captura!');
+    } else {
+        console.log('✅ [BTN] Conectando evento click al botón de captura');
+        btnCapture.addEventListener('click', () => {
+            console.log('🖱️ [BTN-CLICK] Botón de captura clickeado!');
+            captureAndValidate(modal);
+        });
+    }
+
+    if (!btnCancel) {
+        console.error('❌ [BTN] No se encontró el botón de cancelar!');
+    } else {
+        console.log('✅ [BTN] Conectando evento click al botón de cancelar');
+        btnCancel.addEventListener('click', () => {
+            console.log('🖱️ [BTN-CLICK] Botón de cancelar clickeado!');
+            closeCaptureModal(modal);
+        });
+    }
 
     return modal;
 }
@@ -339,6 +364,8 @@ function createCaptureModalWithGuide() {
  * 📸 Capturar foto y enviar a backend para validación Azure
  */
 async function captureAndValidate(modal) {
+    console.log('📸 [CAPTURE-VALIDATE] Función iniciada');
+
     try {
         const video = modal.querySelector('#capture-video');
         const canvas = modal.querySelector('#capture-canvas');
@@ -346,6 +373,10 @@ async function captureAndValidate(modal) {
         const status = modal.querySelector('#capture-status');
         const btnCapture = modal.querySelector('#btn-capture');
         const processingIndicator = modal.querySelector('#processing-indicator');
+
+        console.log('🔍 [CAPTURE-VALIDATE] Elementos encontrados:', {
+            video, canvas, status, btnCapture, processingIndicator
+        });
 
         // Deshabilitar botón
         btnCapture.disabled = true;
