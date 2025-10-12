@@ -6860,29 +6860,18 @@ function startIrisCapture() {
         return;
     }
 
-    console.log('👁️ [IRIS-CAPTURE] Iniciando captura de iris...');
-    employeeRegistrationState.isCapturing = true;
-    employeeRegistrationState.currentModality = 'iris';
+    console.log('👁️ [IRIS-CAPTURE] Captura de iris no disponible');
 
-    addToActivityLog('Iniciando captura de iris (Daugman NIST)', 'info');
+    addToActivityLog('⚠️ Captura de iris requiere hardware especializado no disponible', 'warning');
+    addToActivityLog('📝 Para registro biométrico completo, use solo la captura facial', 'info');
 
-    // Simular proceso de captura
-    setTimeout(() => {
-        const captureResult = {
-            template: 'IRIS_TEMPLATE_' + Date.now(),
-            quality: 0.9995,
-            confidence: 0.987,
-            algorithm: 'Daugman-NIST-IREX',
-            processingTime: 743
-        };
+    employeeRegistrationState.isCapturing = false;
+    employeeRegistrationState.currentModality = null;
 
-        employeeRegistrationState.capturedData.iris = captureResult;
-        updateBiometricStatus('iris', 'Capturado');
-        addToActivityLog(`Captura de iris completada - Calidad: ${(captureResult.quality * 100).toFixed(2)}%`, 'success');
-
-        employeeRegistrationState.isCapturing = false;
-        employeeRegistrationState.currentModality = null;
-    }, 3000);
+    // Show user-friendly modal instead of fake capture
+    if (window.confirm('⚠️ Captura de iris no disponible\n\nEsta funcionalidad requiere un lector de iris especializado que no está conectado.\n\n¿Desea continuar con la captura facial solamente?')) {
+        addToActivityLog('Usuario optó por continuar solo con captura facial', 'info');
+    }
 }
 
 function startVoiceCapture() {
@@ -6891,48 +6880,17 @@ function startVoiceCapture() {
         return;
     }
 
-    // Validar calidad de dispositivos antes de iniciar captura
-    if (window.biometricDeviceService && window.biometricDeviceService.isInitialized) {
-        const validation = window.biometricDeviceService.validateMinimumQuality();
+    console.log('🗣️ [VOICE-CAPTURE] Captura de voz no implementada completamente');
 
-        if (!validation.microphone.valid) {
-            addToActivityLog('❌ Calidad de micrófono insuficiente para captura biométrica:', 'error');
-            validation.microphone.issues.forEach(issue => {
-                addToActivityLog(`  • ${issue}`, 'error');
-            });
-            addToActivityLog('Por favor ajuste la configuración o cambie de dispositivo antes de continuar', 'warning');
-            return;
-        }
+    addToActivityLog('⚠️ Captura biométrica de voz requiere algoritmos MFCC-DNN no implementados', 'warning');
+    addToActivityLog('📝 Para registro biométrico completo, use solo la captura facial', 'info');
 
-        addToActivityLog('✅ Calidad de micrófono validada - Iniciando captura...', 'success');
+    employeeRegistrationState.isCapturing = false;
+    employeeRegistrationState.currentModality = null;
+
+    if (window.confirm('⚠️ Captura de voz no disponible\n\nLa captura biométrica de voz requiere algoritmos de procesamiento de audio especializados (MFCC-DNN) que no están implementados.\n\n¿Desea continuar con la captura facial solamente?')) {
+        addToActivityLog('Usuario optó por continuar solo con captura facial', 'info');
     }
-
-    console.log('🗣️ [VOICE-CAPTURE] Iniciando captura de voz...');
-    employeeRegistrationState.isCapturing = true;
-    employeeRegistrationState.currentModality = 'voice';
-
-    addToActivityLog('Iniciando captura de voz (MFCC-DNN)', 'info');
-
-    // Mostrar guías específicas para captura de voz
-    showCaptureGuidance('voice');
-
-    // Simular proceso de captura
-    setTimeout(() => {
-        const captureResult = {
-            template: 'VOICE_TEMPLATE_' + Date.now(),
-            quality: 0.978,
-            confidence: 0.934,
-            algorithm: 'MFCC-GMM-UBM-DNN',
-            processingTime: 1127
-        };
-
-        employeeRegistrationState.capturedData.voice = captureResult;
-        updateBiometricStatus('voice', 'Capturado');
-        addToActivityLog(`Captura de voz completada - Calidad: ${(captureResult.quality * 100).toFixed(1)}%`, 'success');
-
-        employeeRegistrationState.isCapturing = false;
-        employeeRegistrationState.currentModality = null;
-    }, 4000);
 }
 
 function startFingerprintCapture() {
@@ -6941,46 +6899,17 @@ function startFingerprintCapture() {
         return;
     }
 
-    // Validar disponibilidad de lector de huellas
-    if (window.biometricDeviceService && window.biometricDeviceService.isInitialized) {
-        const validation = window.biometricDeviceService.validateMinimumQuality();
+    console.log('👆 [FINGERPRINT-CAPTURE] Captura de huella requiere hardware');
 
-        if (!validation.fingerprint.valid) {
-            addToActivityLog('⚠️ No hay lectores de huellas conectados - Usando modo simulación', 'warning');
-            validation.fingerprint.issues.forEach(issue => {
-                addToActivityLog(`  • ${issue}`, 'warning');
-            });
-        } else {
-            addToActivityLog('✅ Lector de huellas disponible - Iniciando captura...', 'success');
-        }
+    addToActivityLog('⚠️ No hay lectores de huellas dactilares conectados', 'warning');
+    addToActivityLog('📝 Para registro biométrico completo, use solo la captura facial', 'info');
+
+    employeeRegistrationState.isCapturing = false;
+    employeeRegistrationState.currentModality = null;
+
+    if (window.confirm('⚠️ Captura de huella dactilar no disponible\n\nEsta funcionalidad requiere un lector de huellas USB que no está conectado al sistema.\n\n¿Desea continuar con la captura facial solamente?')) {
+        addToActivityLog('Usuario optó por continuar solo con captura facial', 'info');
     }
-
-    console.log('👆 [FINGERPRINT-CAPTURE] Iniciando captura de huella...');
-    employeeRegistrationState.isCapturing = true;
-    employeeRegistrationState.currentModality = 'fingerprint';
-
-    addToActivityLog('Iniciando captura de huella dactilar (Minutiae)', 'info');
-
-    // Mostrar guías específicas para captura de huella
-    showCaptureGuidance('fingerprint');
-
-    // Simular proceso de captura
-    setTimeout(() => {
-        const captureResult = {
-            template: 'FINGERPRINT_TEMPLATE_' + Date.now(),
-            quality: 0.991,
-            confidence: 0.967,
-            algorithm: 'Minutiae-Ridge-Pattern',
-            processingTime: 234
-        };
-
-        employeeRegistrationState.capturedData.fingerprint = captureResult;
-        updateBiometricStatus('fingerprint', 'Capturado');
-        addToActivityLog(`Captura de huella completada - Calidad: ${(captureResult.quality * 100).toFixed(1)}%`, 'success');
-
-        employeeRegistrationState.isCapturing = false;
-        employeeRegistrationState.currentModality = null;
-    }, 1500);
 }
 
 function updateBiometricStatus(modality, status) {
@@ -9022,35 +8951,60 @@ async function startRealFacialCapture() {
             frameCount++;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // DETECCIÓN FACIAL NATIVA - sin Face-API.js problemático
+            // 🎯 DETECCIÓN FACIAL REAL CON FACE-API.JS
             let detections = [];
 
-            // Limpiar y dibujar landmarks nativos optimizados
-            const overlayCanvas = captureModal.querySelector('.landmarks-overlay');
-            if (overlayCanvas) {
-                // 🔧 FIX CRÍTICO: Sincronizar dimensiones del overlay con el canvas principal
-                overlayCanvas.width = canvas.width;
-                overlayCanvas.height = canvas.height;
+            // Verificar que Face-API esté cargado
+            if (!faceAPIInitialized || typeof faceapi === 'undefined') {
+                console.warn('⚠️ [FACE-API] No inicializado - no se pueden detectar rostros');
+                guidance.textContent = '⚠️ Face-API no disponible - Inicializando modelos...';
+                guidance.style.color = '#ff9800';
+                setTimeout(() => requestAnimationFrame(analyzeFrame), 200);
+                return;
+            }
 
-                const overlayCtx = overlayCanvas.getContext('2d');
-                overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            try {
+                // Detectar rostros REALES con Face-API.js
+                detections = await faceapi
+                    .detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks();
 
-                // ✅ NO LANDMARKS - Sistema purificado sin simulaciones
-                // Los landmarks reales se quitaron para eliminar cualquier elemento hardcodeado
-                console.log('🎯 [PURIFICADO] Sistema biométrico funcionando sin landmarks simulados');
+                // 🚨 VALIDACIÓN CRÍTICA: Múltiples rostros detectados
+                if (detections.length > 1) {
+                    guidance.textContent = `⚠️ ${detections.length} rostros detectados - Asegúrese de estar solo en el cuadro`;
+                    guidance.style.color = '#ff5722';
+                    consecutiveGoodFrames = 0; // Reset quality counter
+                    setTimeout(() => requestAnimationFrame(analyzeFrame), 100);
+                    return;
+                }
 
-                // Simular detección para análisis de calidad
-                detections = [{
-                    detection: {
-                        box: {
-                            x: canvas.width * 0.3,
-                            y: canvas.height * 0.2,
-                            width: canvas.width * 0.4,
-                            height: canvas.height * 0.6
-                        },
-                        score: 0.85
-                    }
-                }];
+                // Ningún rostro detectado
+                if (detections.length === 0) {
+                    guidance.textContent = '🔍 No se detecta rostro - Posiciónese frente a la cámara';
+                    guidance.style.color = '#ff9800';
+                    consecutiveGoodFrames = 0;
+                    setTimeout(() => requestAnimationFrame(analyzeFrame), 100);
+                    return;
+                }
+
+                // Dibujar landmarks reales en overlay
+                const overlayCanvas = captureModal.querySelector('.landmarks-overlay');
+                if (overlayCanvas && detections.length === 1) {
+                    overlayCanvas.width = canvas.width;
+                    overlayCanvas.height = canvas.height;
+                    const overlayCtx = overlayCanvas.getContext('2d');
+                    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+                    // Dibujar landmarks reales de Face-API.js
+                    await drawRealFaceLandmarks(overlayCtx, detections[0].detection.box);
+                }
+
+            } catch (error) {
+                console.error('❌ [FACE-DETECTION] Error:', error);
+                guidance.textContent = '❌ Error en detección facial';
+                guidance.style.color = '#dc3545';
+                setTimeout(() => requestAnimationFrame(analyzeFrame), 200);
+                return;
             }
 
             // Análisis de calidad basado en detección real - PANTALLA COMPLETA
