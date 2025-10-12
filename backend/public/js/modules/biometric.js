@@ -8321,28 +8321,58 @@ async function refreshBiometricStatusList() {
  */
 async function getBiometricStatusForEmployee(employeeId) {
     try {
-        // Simular estado biométrico por ahora (en producción vendría de la API)
-        const hasFingerprint = Math.random() > 0.5;
-        const hasFacial = Math.random() > 0.4;
-        const hasIris = Math.random() > 0.7;
-        const hasVoice = Math.random() > 0.8;
+        console.log(`🔍 [BIOMETRIC-STATUS] Consultando estado REAL para empleado: ${employeeId}`);
 
-        const modalitiesCount = [hasFingerprint, hasFacial, hasIris, hasVoice].filter(Boolean).length;
+        // Consultar API REAL (no simulación)
+        const authToken = localStorage.getItem('authToken');
+        const response = await fetch(`/api/v2/biometric-enterprise/employee/${employeeId}/templates`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            console.warn(`⚠️ [BIOMETRIC-STATUS] Error HTTP ${response.status} para empleado ${employeeId}`);
+            return {
+                hasFacial: false,
+                hasFingerprint: false,
+                hasIris: false,
+                hasVoice: false,
+                modalitiesCount: 0,
+                status: 'pending',
+                lastUpdate: null
+            };
+        }
+
+        const data = await response.json();
+        const templates = data.data?.templates || [];
+
+        console.log(`✅ [BIOMETRIC-STATUS] Empleado ${employeeId}: ${templates.length} templates REALES`);
+
+        // Verificar qué modalidades tiene (datos REALES de la DB)
+        const hasFacial = templates.some(t => t.algorithm?.toLowerCase().includes('face'));
+        const hasFingerprint = templates.some(t => t.algorithm?.toLowerCase().includes('finger'));
+        const hasIris = templates.some(t => t.algorithm?.toLowerCase().includes('iris'));
+        const hasVoice = templates.some(t => t.algorithm?.toLowerCase().includes('voice'));
+
+        const modalitiesCount = [hasFacial, hasFingerprint, hasIris, hasVoice].filter(Boolean).length;
 
         return {
-            hasFingerprint,
             hasFacial,
+            hasFingerprint,
             hasIris,
             hasVoice,
             modalitiesCount,
-            status: modalitiesCount >= 2 ? 'registered' : modalitiesCount >= 1 ? 'partial' : 'pending',
-            lastUpdate: new Date().toISOString()
+            status: modalitiesCount >= 1 ? 'registered' : 'pending',
+            lastUpdate: templates[0]?.created_at || null,
+            templatesCount: templates.length
         };
     } catch (error) {
-        console.error('Error obteniendo estado biométrico:', error);
+        console.error('❌ [BIOMETRIC-STATUS] Error:', error);
         return {
-            hasFingerprint: false,
             hasFacial: false,
+            hasFingerprint: false,
             hasIris: false,
             hasVoice: false,
             modalitiesCount: 0,
@@ -8934,13 +8964,24 @@ async function startRealFacialCapture() {
     try {
         console.log('🏦 [PROFESSIONAL-BIOMETRIC] Cargando sistema enterprise...');
 
+        // Verificar que tenemos un empleado seleccionado
+        if (!employeeRegistrationState.selectedEmployee || !employeeRegistrationState.selectedEmployee.id) {
+            console.error('❌ No hay empleado seleccionado');
+            addToActivityLog('Error: Debe seleccionar un empleado primero', 'error');
+            alert('Debe seleccionar un empleado antes de iniciar la captura biométrica.');
+            return;
+        }
+
+        const employeeId = employeeRegistrationState.selectedEmployee.id;
+        console.log('✅ Employee ID obtenido:', employeeId);
+
         // Cargar módulo profesional dinámicamente
         const biometricModule = await import('/js/modules/biometric-simple.js');
 
         console.log('✅ [PROFESSIONAL-BIOMETRIC] Módulo cargado - Iniciando captura profesional');
 
-        // Llamar al sistema profesional
-        await biometricModule.startProfessionalFaceCapture();
+        // Llamar al sistema profesional PASANDO EL EMPLOYEE ID
+        await biometricModule.startProfessionalFaceCapture(employeeId);
 
     } catch (error) {
         console.error('❌ [PROFESSIONAL-BIOMETRIC] Error al cargar módulo:', error);
