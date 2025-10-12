@@ -417,12 +417,35 @@ router.post('/analyze-face',
         });
       }
 
+      // Verificar si Azure está habilitado
+      if (!azureFaceService.isEnabled()) {
+        console.warn('⚠️ [ANALYZE-FACE] Azure no está habilitado - usando análisis básico');
+        return res.json({
+          success: true,
+          faceCount: 1,
+          quality: 'medium',
+          isOptimal: false,
+          message: 'Azure no configurado - análisis básico',
+          processingTime: Date.now() - startTime
+        });
+      }
+
+      console.log('🌐 [ANALYZE-FACE] Enviando imagen a Azure Face API...');
+      console.log(`   Endpoint: ${azureFaceService.endpoint}`);
+      console.log(`   Image size: ${req.file.buffer.length} bytes`);
+
       // Enviar a Azure para análisis
       const azureResult = await azureFaceService.detectAndExtractFace(req.file.buffer, {
         returnFaceAttributes: 'qualityForRecognition,exposure,noise,blur,headPose,occlusion'
       });
 
       const processingTime = Date.now() - startTime;
+
+      console.log(`📊 [ANALYZE-FACE] Azure resultado:`, {
+        success: azureResult.success,
+        error: azureResult.error,
+        faceCount: azureResult.faces?.length || 0
+      });
 
       if (!azureResult.success) {
         // Error de Azure

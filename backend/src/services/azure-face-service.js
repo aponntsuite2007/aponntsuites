@@ -45,20 +45,53 @@ class AzureFaceService {
   }
 
   /**
-   * Detectar y extraer embedding de rostro
+   * Detectar y extraer embedding de rostro CON RETRY
    * @param {Buffer} imageBuffer - Buffer de la imagen
    * @param {Object} options - Opciones de detección
    * @returns {Promise<Object>} Resultado con embedding y metadata
    */
   async detectAndExtractFace(imageBuffer, options = {}) {
     if (!this.enabled) {
-      throw new Error('Azure Face API no está habilitado. Configure las credenciales.');
+      return {
+        success: false,
+        error: 'AZURE_NOT_CONFIGURED',
+        message: 'Azure Face API no está habilitado. Configure las credenciales.'
+      };
     }
 
+    const maxRetries = 3;
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await this._detectFaceInternal(imageBuffer, options, attempt);
+      } catch (error) {
+        lastError = error;
+
+        // Si es rate limit, esperar antes de reintentar
+        if (error.statusCode === 429 && attempt < maxRetries) {
+          const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
+          console.warn(`⏳ [AZURE-FACE] Rate limit - esperando ${waitTime}ms antes de reintentar (${attempt}/${maxRetries})...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+
+        // Otros errores, no reintentar
+        return error;
+      }
+    }
+
+    return lastError;
+  }
+
+  /**
+   * Detección interna (puede lanzar excepciones para retry)
+   */
+  async _detectFaceInternal(imageBuffer, options = {}, attempt = 1) {
     const startTime = Date.now();
 
     try {
-      console.log(`🔍 [AZURE-FACE] Detectando rostro... (${imageBuffer.length} bytes)`);
+      console.log(`🔍 [AZURE-FACE] Detectando rostro... (${imageBuffer.length} bytes) [intento ${attempt}]`);
 
       // 1. Detectar rostros con Face API
       const detectUrl = `${this.endpoint}/face/v1.0/detect`;
@@ -67,7 +100,7 @@ class AzureFaceService {
         recognitionModel: this.recognitionModel,
         returnFaceId: true,
         returnFaceLandmarks: true,
-        returnFaceAttributes: [
+        returnFaceAttributes: options.returnFaceAttributes || [
           'qualityForRecognition',
           'headPose',
           'blur',
@@ -175,39 +208,50 @@ class AzureFaceService {
 
         // Errores específicos de Azure
         if (status === 401) {
-          return {
+          const errorResult = {
             success: false,
             error: 'INVALID_CREDENTIALS',
             message: 'Credenciales de Azure inválidas. Verifique AZURE_FACE_KEY.',
+            statusCode: status,
             processingTime
           };
+          // No reintentar errores de credenciales
+          return errorResult;
         }
 
         if (status === 429) {
-          return {
+          const errorResult = {
             success: false,
             error: 'RATE_LIMIT_EXCEEDED',
-            message: 'Límite de solicitudes de Azure excedido. Intente nuevamente más tarde.',
+            message: 'Límite de solicitudes de Azure excedido',
+            statusCode: status,
             processingTime
           };
+          // Lanzar excepción para retry
+          throw errorResult;
         }
 
-        return {
+        const errorResult = {
           success: false,
           error: 'AZURE_API_ERROR',
           message: errorData.error?.message || 'Error en Azure Face API',
           statusCode: status,
+          details: errorData,
           processingTime
         };
+
+        console.error('❌ [AZURE-FACE] Error details:', errorData);
+        return errorResult;
       }
 
       console.error('❌ [AZURE-FACE] Error de conexión:', error.message);
-      return {
+      const errorResult = {
         success: false,
         error: 'CONNECTION_ERROR',
         message: 'Error de conexión con Azure Face API: ' + error.message,
         processingTime
       };
+      return errorResult;
     }
   }
 
