@@ -430,72 +430,52 @@ router.post('/analyze-face',
         });
       }
 
-      console.log('🌐 [ANALYZE-FACE] Enviando imagen a Azure Face API...');
-      console.log(`   Endpoint: ${azureFaceService.endpoint}`);
+      console.log('🧠 [ANALYZE-FACE] Usando Face-API.js para análisis en tiempo real...');
       console.log(`   Image size: ${req.file.buffer.length} bytes`);
 
-      // Enviar a Azure para análisis
-      const azureResult = await azureFaceService.detectAndExtractFace(req.file.buffer, {
-        returnFaceAttributes: 'qualityForRecognition,exposure,noise,blur,headPose,occlusion'
-      });
+      // Usar Face-API.js local (no necesita aprobación)
+      const faceResult = await extractFaceEmbedding(req.file, 0.5);
 
       const processingTime = Date.now() - startTime;
 
-      console.log(`📊 [ANALYZE-FACE] Azure resultado:`, {
-        success: azureResult.success,
-        error: azureResult.error,
-        faceCount: azureResult.faces?.length || 0
+      console.log(`📊 [ANALYZE-FACE] Face-API resultado:`, {
+        success: faceResult.success,
+        error: faceResult.error
       });
 
-      if (!azureResult.success) {
-        // Error de Azure
-        console.log(`❌ [ANALYZE-FACE] Azure error: ${azureResult.error}`);
-
-        let faceCount = 0;
-        let quality = 'unknown';
-
-        if (azureResult.error === 'NO_FACE_DETECTED') {
-          faceCount = 0;
-          quality = 'no_face';
-        } else if (azureResult.error === 'MULTIPLE_FACES') {
-          faceCount = azureResult.faces?.length || 2;
-          quality = 'multiple_faces';
-        }
+      if (!faceResult.success) {
+        // No se detectó rostro
+        console.log(`❌ [ANALYZE-FACE] Error: ${faceResult.error}`);
 
         return res.json({
           success: true,
-          faceCount,
-          quality,
+          faceCount: 0,
+          quality: 'no_face',
           isOptimal: false,
-          message: azureResult.error,
+          message: faceResult.error,
           processingTime
         });
       }
 
-      // Azure detectó 1 rostro exitosamente
-      const face = azureResult.faces[0];
-      const qualityAttr = face.attributes?.qualityForRecognition;
-
-      // Determinar si es óptimo para captura
-      const isHighQuality = qualityAttr === 'high';
-      const isMediumQuality = qualityAttr === 'medium';
+      // Rostro detectado exitosamente
+      const qualityScore = faceResult.qualityScore || 0.7;
+      const isHighQuality = qualityScore >= 0.8;
+      const isMediumQuality = qualityScore >= 0.6 && qualityScore < 0.8;
       const isOptimal = isHighQuality;
 
-      console.log(`✅ [ANALYZE-FACE] Rostro analizado - Calidad: ${qualityAttr}, Óptimo: ${isOptimal}`);
+      const quality = isHighQuality ? 'high' : (isMediumQuality ? 'medium' : 'low');
+
+      console.log(`✅ [ANALYZE-FACE] Rostro analizado - Calidad: ${quality}, Score: ${qualityScore}, Óptimo: ${isOptimal}`);
 
       return res.json({
         success: true,
         faceCount: 1,
-        quality: qualityAttr || 'unknown',
+        quality,
         isOptimal,
         details: {
-          faceId: face.faceId,
-          faceRectangle: face.faceRectangle,
-          blur: face.attributes?.blur,
-          exposure: face.attributes?.exposure,
-          noise: face.attributes?.noise,
-          headPose: face.attributes?.headPose,
-          occlusion: face.attributes?.occlusion
+          qualityScore,
+          confidenceScore: faceResult.confidenceScore,
+          faceBox: faceResult.faceBox
         },
         processingTime
       });
