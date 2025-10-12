@@ -37,34 +37,36 @@ async function initializeFaceAPI() {
 
         console.log('✅ [FACE-API] Librería cargada, iniciando modelos...');
 
-        // Cargar modelos - SOLO desde CDN (más confiable en producción)
+        // Cargar modelos - Usar mismo CDN que la librería (face-api.js 0.22.2)
         try {
-            console.log('📡 [FACE-API] Cargando modelos desde CDN...');
-            const cdnUrl = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+            console.log('📡 [FACE-API] Cargando modelos desde CDN (face-api.js 0.22.2)...');
+
+            // Usar el mismo CDN que carga la librería (justadudewhohacks 0.22.2)
+            const cdnUrl = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/';
 
             await Promise.all([
                 faceapi.nets.tinyFaceDetector.loadFromUri(cdnUrl),
                 faceapi.nets.faceLandmark68Net.loadFromUri(cdnUrl)
             ]);
 
-            console.log('✅ [FACE-API] Modelos CDN cargados exitosamente');
+            console.log('✅ [FACE-API] Modelos cargados exitosamente (compatibles con 0.22.2)');
         } catch (cdnError) {
-            console.error('❌ [FACE-API] Error cargando desde CDN:', cdnError);
+            console.error('❌ [FACE-API] Error cargando modelos:', cdnError);
 
-            // Intentar CDN alternativo
+            // Fallback: usar GitHub directo
             try {
-                console.log('📡 [FACE-API] Intentando CDN alternativo...');
-                const altCdnUrl = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/';
+                console.log('📡 [FACE-API] Intentando GitHub directo...');
+                const githubUrl = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights/';
 
                 await Promise.all([
-                    faceapi.nets.tinyFaceDetector.loadFromUri(altCdnUrl),
-                    faceapi.nets.faceLandmark68Net.loadFromUri(altCdnUrl)
+                    faceapi.nets.tinyFaceDetector.loadFromUri(githubUrl),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(githubUrl)
                 ]);
 
-                console.log('✅ [FACE-API] Modelos CDN alternativo cargados exitosamente');
-            } catch (altError) {
-                console.error('❌ [FACE-API] Ambos CDN fallaron:', altError);
-                throw altError;
+                console.log('✅ [FACE-API] Modelos GitHub cargados exitosamente');
+            } catch (githubError) {
+                console.error('❌ [FACE-API] Error en ambas fuentes:', githubError);
+                throw githubError;
             }
         }
 
