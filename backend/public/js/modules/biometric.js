@@ -22,43 +22,64 @@ async function initializeFaceAPI() {
     try {
         console.log('🤖 [FACE-API] Inicializando modelos profesionales...');
 
+        // Esperar a que la librería esté disponible
+        let attempts = 0;
+        while (typeof faceapi === 'undefined' && attempts < 20) {
+            console.log(`⏳ [FACE-API] Esperando librería... intento ${attempts + 1}/20`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            attempts++;
+        }
+
         if (typeof faceapi === 'undefined') {
-            console.warn('⚠️ [FACE-API] Librería Face API no disponible - usando fallback');
+            console.error('❌ [FACE-API] Librería no disponible después de 10 segundos');
             return false;
         }
 
-        // Cargar modelos necesarios para detección profesional + LANDMARKS
+        console.log('✅ [FACE-API] Librería cargada, iniciando modelos...');
+
+        // Cargar modelos - SOLO desde CDN (más confiable en producción)
         try {
-            // Intentar cargar desde directorio local primero
+            console.log('📡 [FACE-API] Cargando modelos desde CDN...');
+            const cdnUrl = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
             await Promise.all([
-                faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-                faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+                faceapi.nets.tinyFaceDetector.loadFromUri(cdnUrl),
+                faceapi.nets.faceLandmark68Net.loadFromUri(cdnUrl)
             ]);
-            console.log('✅ [FACE-API] Modelos locales cargados exitosamente (detector + landmarks)');
-        } catch (localError) {
+
+            console.log('✅ [FACE-API] Modelos CDN cargados exitosamente');
+        } catch (cdnError) {
+            console.error('❌ [FACE-API] Error cargando desde CDN:', cdnError);
+
+            // Intentar CDN alternativo
             try {
-                // Fallback a CDN si los modelos locales fallan
-                console.log('📡 [FACE-API] Cargando modelos desde CDN...');
+                console.log('📡 [FACE-API] Intentando CDN alternativo...');
+                const altCdnUrl = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/';
+
                 await Promise.all([
-                    faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/'),
-                    faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/')
+                    faceapi.nets.tinyFaceDetector.loadFromUri(altCdnUrl),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(altCdnUrl)
                 ]);
-                console.log('✅ [FACE-API] Modelos CDN cargados exitosamente (detector + landmarks)');
-            } catch (cdnError) {
-                console.warn('⚠️ [FACE-API] No se pudieron cargar modelos - usando algoritmos backup');
-                throw cdnError;
+
+                console.log('✅ [FACE-API] Modelos CDN alternativo cargados exitosamente');
+            } catch (altError) {
+                console.error('❌ [FACE-API] Ambos CDN fallaron:', altError);
+                throw altError;
             }
         }
 
         faceAPIInitialized = true;
         window.faceDetectionModel = true;
 
-        console.log('✅ [FACE-API] Modelos cargados exitosamente - Detección profesional activada');
+        console.log('✅ [FACE-API] Sistema de detección facial activado correctamente');
+        console.log('   - TinyFaceDetector: ✅');
+        console.log('   - FaceLandmark68: ✅');
         return true;
 
     } catch (error) {
-        console.error('❌ [FACE-API] Error inicializando:', error);
-        console.log('🔄 [FACE-API] Continuando con algoritmos backup...');
+        console.error('❌ [FACE-API] Error fatal inicializando:', error);
+        faceAPIInitialized = false;
+        window.faceDetectionModel = false;
         return false;
     }
 }
