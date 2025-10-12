@@ -8926,197 +8926,29 @@ function analyzeRealFaceQuality(detections, canvasWidth = 640, canvasHeight = 48
 /**
  * 📷 Captura facial en tiempo real con asistencia dinámica
  */
+/**
+ * 🏦 SISTEMA PROFESIONAL - Sin Face-API.js en frontend
+ * Arquitectura enterprise como bancos: Frontend simple + Backend potente (Azure)
+ */
 async function startRealFacialCapture() {
     try {
-        console.log('🎯 [FACIAL-REAL] Iniciando captura facial con asistencia dinámica...');
+        console.log('🏦 [PROFESSIONAL-BIOMETRIC] Cargando sistema enterprise...');
 
-        // Crear modal de captura
-        const captureModal = createCaptureModal('facial', 'Captura Facial con IA', '📷');
-        document.body.appendChild(captureModal);
+        // Cargar módulo profesional dinámicamente
+        const biometricModule = await import('/js/modules/biometric-simple.js');
 
-        // Acceder a la cámara
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                facingMode: 'user'
-            }
-        });
+        console.log('✅ [PROFESSIONAL-BIOMETRIC] Módulo cargado - Iniciando captura profesional');
 
-        const video = captureModal.querySelector('.capture-video');
-        const canvas = captureModal.querySelector('.capture-canvas');
-        const guidance = captureModal.querySelector('#dynamic-guidance');
-        const ctx = canvas.getContext('2d');
-
-        video.srcObject = stream;
-        await video.play();
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        let captureCompleted = false;
-        let frameCount = 0;
-        let capturedSamples = [];
-        let qualityThreshold = 0.85; // Umbral de calidad mínimo
-        let consecutiveGoodFrames = 0;
-        const REQUIRED_GOOD_FRAMES = 10; // Frames consecutivos de calidad antes de capturar
-        const MIN_SAMPLES = 3; // Mínimo de muestras
-        const MAX_SAMPLES = 8; // Máximo para evitar captura infinita
-        let TARGET_SAMPLES = MIN_SAMPLES; // Dinámico según calidad
-
-        // Usar sistema de landmarks propio - sin Face-API.js problemático
-        console.log('🎯 [LANDMARKS] Usando sistema de detección facial nativo optimizado');
-
-        // Loop de análisis en tiempo real con Face-API.js REAL
-        const analyzeFrame = async () => {
-            if (captureCompleted) return;
-
-            frameCount++;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // 🎯 DETECCIÓN FACIAL REAL CON FACE-API.JS
-            let detections = [];
-
-            // Verificar que Face-API esté cargado
-            if (!faceAPIInitialized || typeof faceapi === 'undefined') {
-                console.warn('⚠️ [FACE-API] No inicializado - no se pueden detectar rostros');
-                guidance.textContent = '⚠️ Face-API no disponible - Inicializando modelos...';
-                guidance.style.color = '#ff9800';
-                setTimeout(() => requestAnimationFrame(analyzeFrame), 200);
-                return;
-            }
-
-            try {
-                // Detectar rostros REALES con Face-API.js
-                detections = await faceapi
-                    .detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions())
-                    .withFaceLandmarks();
-
-                // 🚨 VALIDACIÓN CRÍTICA: Múltiples rostros detectados
-                if (detections.length > 1) {
-                    guidance.textContent = `⚠️ ${detections.length} rostros detectados - Asegúrese de estar solo en el cuadro`;
-                    guidance.style.color = '#ff5722';
-                    consecutiveGoodFrames = 0; // Reset quality counter
-                    setTimeout(() => requestAnimationFrame(analyzeFrame), 100);
-                    return;
-                }
-
-                // Ningún rostro detectado
-                if (detections.length === 0) {
-                    guidance.textContent = '🔍 No se detecta rostro - Posiciónese frente a la cámara';
-                    guidance.style.color = '#ff9800';
-                    consecutiveGoodFrames = 0;
-                    setTimeout(() => requestAnimationFrame(analyzeFrame), 100);
-                    return;
-                }
-
-                // Dibujar landmarks reales en overlay
-                const overlayCanvas = captureModal.querySelector('.landmarks-overlay');
-                if (overlayCanvas && detections.length === 1) {
-                    overlayCanvas.width = canvas.width;
-                    overlayCanvas.height = canvas.height;
-                    const overlayCtx = overlayCanvas.getContext('2d');
-                    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-
-                    // Dibujar landmarks reales de Face-API.js
-                    await drawRealFaceLandmarks(overlayCtx, detections[0].detection.box);
-                }
-
-            } catch (error) {
-                console.error('❌ [FACE-DETECTION] Error:', error);
-                guidance.textContent = '❌ Error en detección facial';
-                guidance.style.color = '#dc3545';
-                setTimeout(() => requestAnimationFrame(analyzeFrame), 200);
-                return;
-            }
-
-            // Análisis de calidad basado en detección real - PANTALLA COMPLETA
-            const analysis = analyzeRealFaceQuality(detections, canvas.width, canvas.height);
-
-                // Mostrar guía dinámica con información de calidad
-            updateDynamicGuidanceWithQuality(guidance, analysis, 'facial', capturedSamples.length, TARGET_SAMPLES, consecutiveGoodFrames, REQUIRED_GOOD_FRAMES);
-
-            // Sistema de calidad inteligente
-            if (analysis.quality >= qualityThreshold) {
-                consecutiveGoodFrames++;
-
-                // Capturar solo cuando hay suficientes frames consecutivos de calidad
-                if (consecutiveGoodFrames >= REQUIRED_GOOD_FRAMES && frameCount > 30) {
-                    frameCount = 0;
-                    consecutiveGoodFrames = 0;
-
-                    // Capturar muestra
-                    const sampleCanvas = document.createElement('canvas');
-                    sampleCanvas.width = canvas.width;
-                    sampleCanvas.height = canvas.height;
-                    const sampleCtx = sampleCanvas.getContext('2d');
-                    sampleCtx.drawImage(canvas, 0, 0);
-
-                    capturedSamples.push({
-                        canvas: sampleCanvas,
-                        analysis: { ...analysis },
-                        timestamp: Date.now(),
-                        sample: capturedSamples.length + 1
-                    });
-
-                    addToActivityLog(`📸 Muestra ${capturedSamples.length} capturada (calidad: ${(analysis.quality * 100).toFixed(1)}%)`, 'success');
-
-                    // Sistema dinámico de evaluación de muestras
-                    const avgQuality = capturedSamples.reduce((sum, s) => sum + s.analysis.quality, 0) / capturedSamples.length;
-
-                    // Mostrar progreso dinámico
-                    console.log(`🎯 [BIOMETRIC] Muestra ${capturedSamples.length}: calidad individual ${(analysis.quality * 100).toFixed(1)}%, promedio ${(avgQuality * 100).toFixed(1)}%`);
-
-                    // Condiciones para completar registro:
-                    const hasMinSamples = capturedSamples.length >= MIN_SAMPLES;
-                    const hasExcellentQuality = avgQuality >= 0.85; // Umbral más realista
-                    const hasMaxSamples = capturedSamples.length >= MAX_SAMPLES;
-                    const hasGoodEnoughQuality = avgQuality >= 0.75 && capturedSamples.length >= 5; // Al menos 5 muestras con calidad decente
-
-                    if (hasMinSamples && (hasExcellentQuality || hasMaxSamples || hasGoodEnoughQuality)) {
-                        // ¡REGISTRO COMPLETADO!
-                        console.log(`✅ [BIOMETRIC] Registro completado: ${capturedSamples.length} muestras, calidad promedio ${(avgQuality * 100).toFixed(1)}%`);
-                        addToActivityLog(`🎉 ¡Registro biométrico completado! ${capturedSamples.length} muestras, calidad: ${(avgQuality * 100).toFixed(1)}%`, 'success');
-
-                        showBiometricSuccessMessage(capturedSamples, avgQuality);
-                        captureCompletedMultipleBiometric('facial', capturedSamples, stream, captureModal);
-                        captureCompleted = true;
-                        return; // Importante: salir del loop
-                    } else {
-                        // Continuar capturando
-                        const remainingNeeded = Math.max(MIN_SAMPLES - capturedSamples.length, 0);
-                        const qualityNeeded = Math.max(0.75 - avgQuality, 0);
-
-                        if (remainingNeeded > 0) {
-                            addToActivityLog(`📸 Necesitamos ${remainingNeeded} muestras más`, 'info');
-                        } else if (qualityNeeded > 0) {
-                            addToActivityLog(`📊 Mejorando calidad... (necesitamos ${(qualityNeeded * 100).toFixed(1)}% más)`, 'info');
-                        }
-
-                        setTimeout(() => requestAnimationFrame(analyzeFrame), 33);
-                    }
-                } else {
-                    setTimeout(() => requestAnimationFrame(analyzeFrame), 33);
-                }
-            } else {
-                consecutiveGoodFrames = 0; // Reset si la calidad baja
-                setTimeout(() => requestAnimationFrame(analyzeFrame), 33);
-            }
-        };
-
-        // Iniciar análisis con Face-API
-        setTimeout(() => requestAnimationFrame(analyzeFrame), 100); // Delay inicial para cargar modelos
-
-        // Botón de captura manual
-        captureModal.querySelector('#manual-capture').onclick = () => {
-            const analysis = analyzeFacePosition(canvas);
-            captureCompletedBiometric('facial', canvas, stream, captureModal, analysis);
-            captureCompleted = true;
-        };
+        // Llamar al sistema profesional
+        await biometricModule.startProfessionalFaceCapture();
 
     } catch (error) {
-        console.error('❌ [FACIAL-REAL] Error en captura:', error);
-        addToActivityLog('Error en captura facial: ' + error.message, 'error');
+        console.error('❌ [PROFESSIONAL-BIOMETRIC] Error al cargar módulo:', error);
+        addToActivityLog('Error al cargar sistema biométrico: ' + error.message, 'error');
+
+        // Mostrar mensaje de error al usuario
+        alert('Error al iniciar captura biométrica.\n\nDetalles técnicos: ' + error.message + '\n\nPor favor, recargue la página e intente nuevamente.');
+
         employeeRegistrationState.isCapturing = false;
     }
 }
