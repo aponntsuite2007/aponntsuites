@@ -486,18 +486,36 @@ function closeCaptureModal(modal) {
  * 🆔 Obtener ID del empleado actual desde el contexto
  */
 function getCurrentEmployeeId() {
-    // Intentar obtener desde el panel de empleado visible
-    const employeePanel = document.querySelector('[data-employee-id]');
-    if (employeePanel) {
-        return employeePanel.getAttribute('data-employee-id');
+    // 1. Intentar desde employeeRegistrationState (biometric.js)
+    if (window.employeeRegistrationState) {
+        if (window.employeeRegistrationState.selectedEmployee && window.employeeRegistrationState.selectedEmployee.id) {
+            console.log('✅ [EMPLOYEE-ID] Obtenido desde employeeRegistrationState.selectedEmployee:', window.employeeRegistrationState.selectedEmployee.id);
+            return window.employeeRegistrationState.selectedEmployee.id;
+        }
+
+        if (window.employeeRegistrationState.currentEmployee && window.employeeRegistrationState.currentEmployee.id) {
+            console.log('✅ [EMPLOYEE-ID] Obtenido desde employeeRegistrationState.currentEmployee:', window.employeeRegistrationState.currentEmployee.id);
+            return window.employeeRegistrationState.currentEmployee.id;
+        }
     }
 
-    // Intentar obtener desde variable global si existe
+    // 2. Intentar obtener desde el panel de empleado visible
+    const employeePanel = document.querySelector('[data-employee-id]');
+    if (employeePanel) {
+        const id = employeePanel.getAttribute('data-employee-id');
+        console.log('✅ [EMPLOYEE-ID] Obtenido desde panel DOM:', id);
+        return id;
+    }
+
+    // 3. Intentar obtener desde variable global si existe
     if (window.currentEmployeeData && window.currentEmployeeData.id) {
+        console.log('✅ [EMPLOYEE-ID] Obtenido desde currentEmployeeData:', window.currentEmployeeData.id);
         return window.currentEmployeeData.id;
     }
 
-    console.error('❌ No se pudo obtener el ID del empleado actual');
+    console.error('❌ [EMPLOYEE-ID] No se pudo obtener el ID del empleado actual');
+    console.error('   employeeRegistrationState:', window.employeeRegistrationState);
+    console.error('   currentEmployeeData:', window.currentEmployeeData);
     return null;
 }
 
