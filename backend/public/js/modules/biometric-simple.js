@@ -81,7 +81,7 @@ async function startRealtimeFeedbackLoop(modal, video, canvas) {
     const ovalElement = modal.querySelector('.guide-oval');
 
     let lastAzureCheck = 0;
-    const AZURE_CHECK_INTERVAL = 1500; // Cada 1.5 segundos llamar a Azure
+    const AZURE_CHECK_INTERVAL = 3000; // Cada 3 segundos llamar a Azure (límite: 20/min)
     let consecutiveGoodFrames = 0;
     const REQUIRED_GOOD_FRAMES = 2; // 2 checks buenos consecutivos antes de capturar
 
