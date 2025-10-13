@@ -297,7 +297,10 @@ router.get('/employee/:employeeId/templates',
       const { employeeId } = req.params;
       const companyId = req.companyContext?.companyId;
 
+      console.log(`🔍 [BIOMETRIC-TEMPLATES] Fetching templates for employee: ${employeeId}, company: ${companyId}`);
+
       if (!companyId) {
+        console.warn('⚠️ [BIOMETRIC-TEMPLATES] No company context found');
         return res.status(403).json({
           success: false,
           error: 'Company context required'
@@ -306,6 +309,9 @@ router.get('/employee/:employeeId/templates',
 
       // Query directly using Sequelize
       const database = require('../config/database');
+
+      console.log('📊 [BIOMETRIC-TEMPLATES] Executing query...');
+
       const [templates] = await database.sequelize.query(`
         SELECT id, algorithm, quality_score, confidence_score, is_primary, is_validated,
                capture_timestamp, match_count, last_matched, embedding_hash
@@ -316,6 +322,8 @@ router.get('/employee/:employeeId/templates',
         replacements: { companyId, employeeId },
         type: database.sequelize.QueryTypes.SELECT
       });
+
+      console.log(`✅ [BIOMETRIC-TEMPLATES] Found ${templates.length} templates for employee ${employeeId}`);
 
       res.json({
         success: true,
@@ -331,7 +339,7 @@ router.get('/employee/:employeeId/templates',
           captureDate: template.capture_timestamp,
           matchCount: template.match_count,
           lastMatched: template.last_matched,
-          templateHash: template.embedding_hash.substring(0, 12) + '...' // Show only first 12 chars
+          templateHash: template.embedding_hash ? template.embedding_hash.substring(0, 12) + '...' : 'N/A'
         })),
         security: {
           encryptedTemplates: true,
@@ -342,11 +350,15 @@ router.get('/employee/:employeeId/templates',
       });
 
     } catch (error) {
-      console.error('❌ [BIOMETRIC-ENTERPRISE] Error fetching templates:', error);
+      console.error('❌ [BIOMETRIC-TEMPLATES] Error fetching templates:', error);
+      console.error('❌ [BIOMETRIC-TEMPLATES] Error name:', error.name);
+      console.error('❌ [BIOMETRIC-TEMPLATES] Error message:', error.message);
+      console.error('❌ [BIOMETRIC-TEMPLATES] Stack trace:', error.stack);
 
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch biometric templates'
+        error: 'Failed to fetch biometric templates',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }
