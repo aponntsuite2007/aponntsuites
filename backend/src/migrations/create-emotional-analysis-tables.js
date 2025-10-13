@@ -231,7 +231,7 @@ async function createEmotionalAnalysisTables() {
       CREATE OR REPLACE VIEW v_department_wellness AS
       SELECT
           u.company_id,
-          u."departmentId",
+          u.department_id,
           d.name as department_name,
           COUNT(DISTINCT e.user_id) as users_analyzed,
           AVG(e.wellness_score) as avg_wellness_score,
@@ -241,9 +241,9 @@ async function createEmotionalAnalysisTables() {
           DATE_TRUNC('day', e.scan_timestamp) as analysis_date
       FROM biometric_emotional_analysis e
       JOIN users u ON e.user_id = u.user_id AND e.company_id = u.company_id
-      LEFT JOIN departments d ON u."departmentId" = d.id
-      WHERE u."departmentId" IS NOT NULL
-      GROUP BY u.company_id, u."departmentId", d.name, DATE_TRUNC('day', e.scan_timestamp)
+      LEFT JOIN departments d ON u.department_id = d.id
+      WHERE u.department_id IS NOT NULL
+      GROUP BY u.company_id, u.department_id, d.name, DATE_TRUNC('day', e.scan_timestamp)
       HAVING COUNT(DISTINCT e.user_id) >= 10; -- Mínimo 10 personas para anonimización
     `);
 
