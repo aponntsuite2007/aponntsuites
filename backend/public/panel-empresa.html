@@ -1664,12 +1664,15 @@
 
     <script src="js/services/device-detection-service.js"></script>
     <script src="js/modules/biometric.js"></script>
+    <script src="js/modules/biometric-simple.js"></script>
     <script src="js/modules/evaluacion-biometrica.js"></script>
     <!-- biometric-verification.js y facial-biometric.js unificados en biometric.js -->
+    <!-- biometric-simple.js: Sistema profesional con captura automática y feedback Azure -->
 
     <!-- Medical & Health Modules -->
     <script src="js/modules/medical-dashboard.js"></script>
     <script src="js/modules/psychological-assessment.js"></script>
+    <script src="js/modules/emotional-analysis.js"></script>
 
     <!-- HR Management Modules -->
     <script src="js/modules/training-management.js"></script>
@@ -3447,6 +3450,15 @@
                             showPsychologicalAssessmentContent();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'psychological-assessment.js no cargado');
+                        }
+                        break;
+
+                    case 'emotional':
+                    case 'emotional-analysis':
+                        if (typeof showEmotionalAnalysisContent === 'function') {
+                            showEmotionalAnalysisContent();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'emotional-analysis.js no cargado');
                         }
                         break;
 

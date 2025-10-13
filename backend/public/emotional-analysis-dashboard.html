@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Emocional - Bienestar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 400px;
+        }
+        .consent-alert {
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .btn-custom {
+            border-radius: 20px;
+            padding: 10px 30px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="dashboard-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-brain"></i> Análisis Emocional Profesional</h2>
+                    <p class="mb-0">Sistema de bienestar y salud emocional con IA</p>
+                </div>
+                <div>
+                    <button class="btn btn-light btn-custom" onclick="window.location.reload()">
+                        <i class="fas fa-sync"></i> Actualizar
+                    </button>
+                    <button class="btn btn-outline-light btn-custom ml-2" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado de Consentimiento -->
+        <div id="consentSection">
+            <div class="consent-alert alert alert-warning">
+                <div class="row">
+                    <div class="col-md-9">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Consentimiento Requerido</h5>
+                        <p>Para utilizar el análisis emocional, debe otorgar su consentimiento informado según la Ley 25.326 de Protección de Datos Personales.</p>
+                        <small class="text-muted">El consentimiento es revocable en cualquier momento.</small>
+                    </div>
+                    <div class="col-md-3 text-right">
+                        <button id="btnRequestConsent" class="btn btn-success btn-custom">
+                            <i class="fas fa-check-circle"></i> Otorgar Consentimiento
+                        </button>
+                        <button id="btnRevokeConsent" class="btn btn-danger btn-custom" style="display:none;">
+                            <i class="fas fa-times-circle"></i> Revocar Consentimiento
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard de Bienestar (oculto hasta otorgar consentimiento) -->
+        <div id="dashboardContent" style="display:none;">
+            <!-- Cards de Resumen -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="stat-card text-center">
+                        <h6 class="text-muted">Bienestar General</h6>
+                        <h1 class="text-success" id="wellnessScore">--</h1>
+                        <small class="text-muted">Escala 0-100</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card text-center">
+                        <h6 class="text-muted">Nivel de Fatiga</h6>
+                        <h1 class="text-warning" id="fatigueScore">--</h1>
+                        <small class="text-muted">Porcentaje detectado</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card text-center">
+                        <h6 class="text-muted">Nivel de Estrés</h6>
+                        <h1 class="text-danger" id="stressScore">--</h1>
+                        <small class="text-muted">Porcentaje detectado</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <canvas id="emotionsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recomendaciones -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="stat-card">
+                        <h5><i class="fas fa-lightbulb text-warning"></i> Recomendaciones Personalizadas</h5>
+                        <div id="recommendationsContainer">
+                            <p class="text-muted">Cargando recomendaciones...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingIndicator" class="text-center" style="display:none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Cargando...</span>
+            </div>
+            <p>Cargando datos...</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuración API
+        const API_BASE = window.location.origin + '/api/v1';
+        let currentUser = null;
+        let currentCompany = null;
+        let charts = {};
+
+        // Inicializar al cargar
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🧠 Inicializando dashboard de análisis emocional...');
+
+            // Obtener usuario actual del localStorage
+            try {
+                const userStr = localStorage.getItem('currentUser');
+                if (userStr) {
+                    currentUser = JSON.parse(userStr);
+                    currentCompany = currentUser.company_id;
+                    console.log('✅ Usuario cargado:', currentUser.firstName);
+
+                    await checkConsentStatus();
+                }
+            } catch (error) {
+                console.error('Error cargando usuario:', error);
+                alert('Error: Sesión no válida. Por favor inicie sesión nuevamente.');
+                window.location.href = '/panel-empresa.html';
+            }
+
+            // Setup listeners
+            document.getElementById('btnRequestConsent').addEventListener('click', requestConsent);
+            document.getElementById('btnRevokeConsent').addEventListener('click', revokeConsent);
+        });
+
+        // Verificar estado de consentimiento
+        async function checkConsentStatus() {
+            try {
+                const response = await fetch(
+                    `${API_BASE}/consent/check/${currentUser.user_id}/emotional_analysis?companyId=${currentCompany}`
+                );
+                const data = await response.json();
+
+                if (data.success && data.hasConsent) {
+                    showConsentActive();
+                    await loadDashboard();
+                } else {
+                    showConsentInactive();
+                }
+            } catch (error) {
+                console.error('Error verificando consentimiento:', error);
+                showConsentInactive();
+            }
+        }
+
+        // UI: Consentimiento activo
+        function showConsentActive() {
+            document.getElementById('consentSection').innerHTML = `
+                <div class="consent-alert alert alert-success">
+                    <div class="row">
+                        <div class="col-md-10">
+                            <h5><i class="fas fa-check-circle"></i> Consentimiento Activo</h5>
+                            <p class="mb-0">Su consentimiento está activo y sus datos están protegidos según Ley 25.326.</p>
+                        </div>
+                        <div class="col-md-2 text-right">
+                            <button id="btnRevokeConsent" class="btn btn-outline-danger btn-custom" onclick="revokeConsent()">
+                                <i class="fas fa-times"></i> Revocar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('dashboardContent').style.display = 'block';
+        }
+
+        // UI: Consentimiento inactivo
+        function showConsentInactive() {
+            document.getElementById('dashboardContent').style.display = 'none';
+        }
+
+        // Solicitar consentimiento
+        async function requestConsent() {
+            try {
+                // 1. Solicitar texto legal
+                const requestResponse = await fetch(`${API_BASE}/consent/request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.user_id,
+                        companyId: currentCompany,
+                        consentType: 'emotional_analysis'
+                    })
+                });
+                const requestData = await requestResponse.json();
+
+                if (!requestData.success) {
+                    alert('Error al solicitar consentimiento');
+                    return;
+                }
+
+                // 2. Mostrar modal con texto legal
+                const accepted = await showConsentModal(requestData.consentText);
+
+                if (accepted) {
+                    // 3. Otorgar consentimiento
+                    const grantResponse = await fetch(`${API_BASE}/consent/grant`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: currentUser.user_id,
+                            companyId: currentCompany,
+                            consentType: 'emotional_analysis',
+                            consentText: requestData.consentText
+                        })
+                    });
+                    const grantData = await grantResponse.json();
+
+                    if (grantData.success) {
+                        alert('Consentimiento otorgado exitosamente');
+                        await checkConsentStatus();
+                    }
+                }
+            } catch (error) {
+                console.error('Error solicitando consentimiento:', error);
+                alert('Error al solicitar consentimiento');
+            }
+        }
+
+        // Modal de consentimiento
+        function showConsentModal(consentText) {
+            return new Promise((resolve) => {
+                const modalHtml = `
+                    <div class="modal fade" id="consentModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">Consentimiento Informado - Ley 25.326</h5>
+                                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                                </div>
+                                <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        Por favor lea cuidadosamente el siguiente texto legal.
+                                    </div>
+                                    <pre style="white-space: pre-wrap; font-size: 14px;">${consentText}</pre>
+                                    <hr>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="acceptCheckbox">
+                                        <label class="form-check-label" for="acceptCheckbox">
+                                            <strong>He leído y acepto los términos del consentimiento informado</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-success" id="btnAccept" disabled>
+                                        <i class="fas fa-check"></i> Aceptar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                $('body').append(modalHtml);
+                const modal = $('#consentModal');
+
+                $('#acceptCheckbox').on('change', function() {
+                    $('#btnAccept').prop('disabled', !this.checked);
+                });
+
+                $('#btnAccept').on('click', () => {
+                    modal.modal('hide');
+                    resolve(true);
+                });
+
+                modal.on('hidden.bs.modal', function() {
+                    $(this).remove();
+                    resolve(false);
+                });
+
+                modal.modal('show');
+            });
+        }
+
+        // Revocar consentimiento
+        async function revokeConsent() {
+            if (!confirm('¿Está seguro? Se eliminarán todos sus datos de análisis emocional.')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/consent/revoke`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.user_id,
+                        companyId: currentCompany,
+                        consentType: 'emotional_analysis',
+                        reason: 'Usuario revocó consentimiento'
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Consentimiento revocado exitosamente');
+                    await checkConsentStatus();
+                }
+            } catch (error) {
+                console.error('Error revocando consentimiento:', error);
+                alert('Error al revocar consentimiento');
+            }
+        }
+
+        // Cargar dashboard
+        async function loadDashboard() {
+            try {
+                document.getElementById('loadingIndicator').style.display = 'block';
+
+                const response = await fetch(
+                    `${API_BASE}/emotional-analysis/history/${currentUser.user_id}?companyId=${currentCompany}&days=30`
+                );
+                const data = await response.json();
+
+                document.getElementById('loadingIndicator').style.display = 'none';
+
+                if (data.success && data.data.length > 0) {
+                    renderDashboard(data.data);
+                } else {
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error cargando dashboard:', error);
+                document.getElementById('loadingIndicator').style.display = 'none';
+                showEmptyState();
+            }
+        }
+
+        // Renderizar dashboard
+        function renderDashboard(data) {
+            const latest = data[0];
+
+            // Actualizar scores
+            document.getElementById('wellnessScore').textContent = latest.wellnessScore || '--';
+            document.getElementById('fatigueScore').textContent = Math.round((latest.fatigueScore || 0) * 100) + '%';
+            document.getElementById('stressScore').textContent = Math.round((latest.stressScore || 0) * 100) + '%';
+
+            // Crear gráficos
+            createTrendsChart(data.slice(0, 30).reverse());
+            createEmotionsChart(latest);
+            showRecommendations(latest);
+        }
+
+        // Gráfico de tendencias
+        function createTrendsChart(data) {
+            const canvas = document.getElementById('trendsChart');
+            if (charts.trends) charts.trends.destroy();
+
+            const labels = data.map(d => new Date(d.scanTimestamp).toLocaleDateString());
+
+            charts.trends = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Bienestar',
+                            data: data.map(d => d.wellnessScore || 0),
+                            borderColor: '#28a745',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Fatiga',
+                            data: data.map(d => (d.fatigueScore || 0) * 100),
+                            borderColor: '#ffc107',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Estrés',
+                            data: data.map(d => (d.stressScore || 0) * 100),
+                            borderColor: '#dc3545',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Tendencias (30 días)' }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de emociones
+        function createEmotionsChart(latest) {
+            const canvas = document.getElementById('emotionsChart');
+            if (charts.emotions) charts.emotions.destroy();
+
+            charts.emotions = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Felicidad', 'Neutral', 'Tristeza', 'Enojo', 'Sorpresa', 'Miedo', 'Disgusto', 'Desprecio'],
+                    datasets: [{
+                        label: 'Intensidad (%)',
+                        data: [
+                            (latest.emotionHappiness || 0) * 100,
+                            (latest.emotionNeutral || 0) * 100,
+                            (latest.emotionSadness || 0) * 100,
+                            (latest.emotionAnger || 0) * 100,
+                            (latest.emotionSurprise || 0) * 100,
+                            (latest.emotionFear || 0) * 100,
+                            (latest.emotionDisgust || 0) * 100,
+                            (latest.emotionContempt || 0) * 100
+                        ],
+                        backgroundColor: ['#28a745', '#6c757d', '#17a2b8', '#dc3545', '#ffc107', '#6f42c1', '#fd7e14', '#e83e8c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Análisis Emocional Actual' }
+                    }
+                }
+            });
+        }
+
+        // Mostrar recomendaciones
+        function showRecommendations(latest) {
+            const container = document.getElementById('recommendationsContainer');
+            const recommendations = [];
+
+            if (latest.fatigueScore > 0.6) {
+                recommendations.push('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Nivel de fatiga elevado detectado.</div>');
+            }
+            if (latest.stressScore > 0.6) {
+                recommendations.push('<div class="alert alert-warning"><i class="fas fa-heartbeat"></i> Nivel de estrés alto detectado.</div>');
+            }
+            if (latest.wellnessScore < 50) {
+                recommendations.push('<div class="alert alert-danger"><i class="fas fa-medkit"></i> Bienestar bajo. Consulte con RRHH.</div>');
+            } else if (latest.wellnessScore >= 70) {
+                recommendations.push('<div class="alert alert-success"><i class="fas fa-smile"></i> Excelente nivel de bienestar!</div>');
+            }
+
+            container.innerHTML = recommendations.length > 0
+                ? recommendations.join('')
+                : '<div class="alert alert-info"><i class="fas fa-info-circle"></i> No hay recomendaciones especiales.</div>';
+        }
+
+        // Estado vacío
+        function showEmptyState() {
+            document.getElementById('dashboardContent').innerHTML = `
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <h5>No hay datos de análisis emocional</h5>
+                    <p>Los datos se generarán automáticamente cuando registre su asistencia biométrica.</p>
+                </div>
+            `;
+            document.getElementById('dashboardContent').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
