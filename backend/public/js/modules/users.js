@@ -1331,6 +1331,33 @@ async function viewUser(userId) {
                             </div>
                         </div>
 
+                        <!-- Consentimiento Biométrico -->
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                            <h4 style="margin: 0 0 15px 0; color: #333;">🔐 Consentimiento Biométrico (Análisis Emocional)</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="info-card">
+                                    <div class="info-label">📋 Estado del Consentimiento:</div>
+                                    <div class="info-value" id="consent-status">
+                                        <span class="status-badge secondary">🔄 Cargando...</span>
+                                    </div>
+                                    <div id="consent-details" style="font-size: 0.85em; color: #666; margin-top: 10px;">
+                                        <!-- Se llenará dinámicamente -->
+                                    </div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-label">⚖️ Cumplimiento Legal:</div>
+                                    <div style="font-size: 0.85em; line-height: 1.6; color: #666;">
+                                        <div>✓ Ley 25.326 (Argentina)</div>
+                                        <div>✓ GDPR (UE)</div>
+                                        <div>✓ BIPA (Illinois)</div>
+                                        <div style="margin-top: 8px; font-style: italic;">
+                                            El consentimiento no es editable manualmente. El empleado debe otorgarlo mediante validación biométrica.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Departamento y Jerarquía -->
                         <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0;">
                             <h4 style="margin: 0 0 15px 0; color: #333;">🏢 Departamento y Organización</h4>
@@ -3102,10 +3129,120 @@ function showFileTab(tabName, button) {
 // Cargar datos iniciales del expediente
 async function loadEmployeeFileData(userId) {
     console.log('📋 [EMPLOYEE FILE] Cargando datos del expediente:', userId);
-    
+
     // Aquí se cargarán los datos de cada sección
     // Por ahora, agregamos los estilos CSS necesarios
     addEmployeeFileStyles();
+
+    // Cargar estado de consentimiento biométrico
+    await loadBiometricConsentStatus(userId);
+}
+
+// Cargar estado de consentimiento biométrico para un usuario
+async function loadBiometricConsentStatus(userId) {
+    console.log('🔐 [CONSENT] Cargando estado de consentimiento para:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            console.warn('⚠️ [CONSENT] No hay token de autenticación');
+            return;
+        }
+
+        const apiUrl = window.progressiveAdmin.getApiUrl(`/api/v1/biometric/consents/${userId}`);
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const consentStatusDiv = document.getElementById('consent-status');
+        const consentDetailsDiv = document.getElementById('consent-details');
+
+        if (!consentStatusDiv || !consentDetailsDiv) {
+            console.warn('⚠️ [CONSENT] Elementos DOM no encontrados');
+            return;
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.hasConsent && data.consent) {
+                const consent = data.consent;
+                const consentDate = new Date(consent.consent_date).toLocaleDateString('es-AR');
+                const expiresAt = consent.expires_at ? new Date(consent.expires_at).toLocaleDateString('es-AR') : 'Sin expiración';
+                const validationMethod = consent.acceptance_method === 'facial' ? '😊 Facial' :
+                                       consent.acceptance_method === 'fingerprint' ? '👆 Huella' :
+                                       consent.acceptance_method || 'No especificado';
+
+                // Verificar si está expirado
+                const isExpired = consent.expires_at && new Date(consent.expires_at) < new Date();
+
+                if (isExpired) {
+                    consentStatusDiv.innerHTML = '<span class="status-badge secondary">⏰ Expirado</span>';
+                    consentDetailsDiv.innerHTML = `
+                        <div style="color: #dc3545;">
+                            <strong>Consentimiento expirado</strong><br>
+                            Otorgado: ${consentDate}<br>
+                            Expiró: ${expiresAt}<br>
+                            Método: ${validationMethod}
+                        </div>
+                    `;
+                } else {
+                    consentStatusDiv.innerHTML = '<span class="status-badge success">✅ Activo</span>';
+                    consentDetailsDiv.innerHTML = `
+                        <div style="color: #28a745;">
+                            <strong>Consentimiento otorgado</strong><br>
+                            Fecha: ${consentDate}<br>
+                            Expira: ${expiresAt}<br>
+                            Método: ${validationMethod}<br>
+                            IP: ${consent.ip_address || 'No disponible'}
+                        </div>
+                    `;
+                }
+            } else {
+                consentStatusDiv.innerHTML = '<span class="status-badge warning">⏳ Pendiente</span>';
+                consentDetailsDiv.innerHTML = `
+                    <div style="color: #ffc107;">
+                        <strong>Sin consentimiento</strong><br>
+                        El empleado aún no ha otorgado su consentimiento para el análisis emocional biométrico.<br>
+                        <em>Debe otorgarlo mediante validación biométrica (facial o huella).</em>
+                    </div>
+                `;
+            }
+
+            console.log('✅ [CONSENT] Estado de consentimiento cargado exitosamente');
+        } else if (response.status === 404 || response.status === 400) {
+            // No hay consentimiento
+            consentStatusDiv.innerHTML = '<span class="status-badge warning">⏳ Pendiente</span>';
+            consentDetailsDiv.innerHTML = `
+                <div style="color: #ffc107;">
+                    <strong>Sin consentimiento</strong><br>
+                    El empleado aún no ha otorgado su consentimiento para el análisis emocional biométrico.<br>
+                    <em>Debe otorgarlo mediante validación biométrica (facial o huella).</em>
+                </div>
+            `;
+        } else {
+            throw new Error('Error obteniendo consentimiento');
+        }
+
+    } catch (error) {
+        console.error('❌ [CONSENT] Error cargando consentimiento:', error);
+        const consentStatusDiv = document.getElementById('consent-status');
+        const consentDetailsDiv = document.getElementById('consent-details');
+
+        if (consentStatusDiv && consentDetailsDiv) {
+            consentStatusDiv.innerHTML = '<span class="status-badge secondary">❌ Error</span>';
+            consentDetailsDiv.innerHTML = `
+                <div style="color: #dc3545;">
+                    <strong>Error al cargar</strong><br>
+                    No se pudo obtener el estado del consentimiento.
+                </div>
+            `;
+        }
+    }
 }
 
 // Agregar estilos CSS para el expediente

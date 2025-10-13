@@ -227,11 +227,12 @@ async function createEmotionalAnalysisTables() {
     // ========================================
 
     // Vista: Bienestar por departamento (AGREGADO, no individual)
+    // FILTRADO: Solo usuarios con consentimiento activo
     await sequelize.query(`
       CREATE OR REPLACE VIEW v_department_wellness AS
       SELECT
           u.company_id,
-          u.department_id,
+          u."departmentId"::integer as department_id,
           d.name as department_name,
           COUNT(DISTINCT e.user_id) as users_analyzed,
           AVG(e.wellness_score) as avg_wellness_score,
@@ -241,29 +242,44 @@ async function createEmotionalAnalysisTables() {
           DATE_TRUNC('day', e.scan_timestamp) as analysis_date
       FROM biometric_emotional_analysis e
       JOIN users u ON e.user_id = u.user_id AND e.company_id = u.company_id
-      LEFT JOIN departments d ON u.department_id = d.id
-      WHERE u.department_id IS NOT NULL
-      GROUP BY u.company_id, u.department_id, d.name, DATE_TRUNC('day', e.scan_timestamp)
+      -- SOLO usuarios con consentimiento activo
+      JOIN biometric_consents c ON e.user_id = c.user_id
+        AND e.company_id = c.company_id
+        AND c.consent_type = 'emotional_analysis'
+        AND c.consent_given = true
+        AND c.revoked = false
+        AND (c.expires_at IS NULL OR c.expires_at > NOW())
+      LEFT JOIN departments d ON u."departmentId"::integer = d.id
+      WHERE u."departmentId" IS NOT NULL
+      GROUP BY u.company_id, u."departmentId", d.name, DATE_TRUNC('day', e.scan_timestamp)
       HAVING COUNT(DISTINCT e.user_id) >= 10; -- Mínimo 10 personas para anonimización
     `);
 
     console.log('✅ Vista v_department_wellness creada');
 
     // Vista: Tendencias temporales
+    // FILTRADO: Solo usuarios con consentimiento activo
     await sequelize.query(`
       CREATE OR REPLACE VIEW v_wellness_trends AS
       SELECT
-          company_id,
-          DATE_TRUNC('hour', scan_timestamp) as hour_bucket,
-          time_of_day,
+          e.company_id,
+          DATE_TRUNC('hour', e.scan_timestamp) as hour_bucket,
+          e.time_of_day,
           COUNT(*) as scans_count,
-          AVG(wellness_score) as avg_wellness,
-          AVG(fatigue_score) as avg_fatigue,
-          AVG(stress_score) as avg_stress
-      FROM biometric_emotional_analysis
-      WHERE scan_timestamp >= NOW() - INTERVAL '7 days'
-      GROUP BY company_id, DATE_TRUNC('hour', scan_timestamp), time_of_day
-      ORDER BY company_id, hour_bucket DESC;
+          AVG(e.wellness_score) as avg_wellness,
+          AVG(e.fatigue_score) as avg_fatigue,
+          AVG(e.stress_score) as avg_stress
+      FROM biometric_emotional_analysis e
+      -- SOLO usuarios con consentimiento activo
+      JOIN biometric_consents c ON e.user_id = c.user_id
+        AND e.company_id = c.company_id
+        AND c.consent_type = 'emotional_analysis'
+        AND c.consent_given = true
+        AND c.revoked = false
+        AND (c.expires_at IS NULL OR c.expires_at > NOW())
+      WHERE e.scan_timestamp >= NOW() - INTERVAL '7 days'
+      GROUP BY e.company_id, DATE_TRUNC('hour', e.scan_timestamp), e.time_of_day
+      ORDER BY e.company_id, hour_bucket DESC;
     `);
 
     console.log('✅ Vista v_wellness_trends creada');

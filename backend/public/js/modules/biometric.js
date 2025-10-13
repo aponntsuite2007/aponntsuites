@@ -5737,7 +5737,7 @@ function showEmployeeRegistrationContent(container) {
                 <h3 style="margin: 0 0 20px 0; color: #495057; display: flex; align-items: center;">
                     🎯 Captura Biométrica Multi-Modal
                     <span style="margin-left: auto; font-size: 12px; background: #d1ecf1; padding: 5px 10px; border-radius: 15px; color: #0c5460;">
-                        4 Modalidades Implementadas
+                        2 Modalidades Implementadas
                     </span>
                 </h3>
 

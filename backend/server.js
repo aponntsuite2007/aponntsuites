@@ -1846,6 +1846,11 @@ const consentRoutes = require('./src/routes/consentRoutes');
 app.use('/api/v1/consent', consentRoutes);
 console.log('⚖️ [CONSENT] Sistema legal configurado');
 
+// 🔐 GESTIÓN DE CONSENTIMIENTOS BIOMÉTRICOS (Análisis Emocional)
+const biometricConsentRoutes = require('./src/routes/biometricConsentRoutes');
+app.use('/api/v1/biometric', biometricConsentRoutes);
+console.log('🔐 [BIOMETRIC-CONSENT] Sistema de consentimientos biométricos configurado');
+
 // 🏖️ CONFIGURAR API DE VACACIONES Y PERMISOS
 const vacationRoutes = require('./src/routes/vacationRoutes');
 app.use('/api/v1/vacation', vacationRoutes);

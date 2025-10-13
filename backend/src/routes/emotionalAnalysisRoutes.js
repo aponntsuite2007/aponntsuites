@@ -124,11 +124,28 @@ router.post('/analyze', async (req, res) => {
 /**
  * GET /api/v1/emotional-analysis/history/:userId
  * Obtener historial de análisis de un usuario
+ * FILTRADO: Solo si el usuario tiene consentimiento activo
  */
 router.get('/history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const { companyId, days = 30 } = req.query;
+
+    // Verificar que el usuario tiene consentimiento activo
+    const hasConsent = await consentManagementService.hasActiveConsent(
+      userId,
+      companyId,
+      'emotional_analysis'
+    );
+
+    if (!hasConsent) {
+      return res.status(403).json({
+        success: false,
+        error: 'CONSENT_REQUIRED',
+        message: 'Usuario no tiene consentimiento activo para consultar historial emocional',
+        requiresConsent: true
+      });
+    }
 
     const history = await EmotionalAnalysis.findAll({
       where: {
@@ -145,7 +162,8 @@ router.get('/history/:userId', async (req, res) => {
     res.json({
       success: true,
       count: history.length,
-      data: history
+      data: history,
+      consentStatus: 'active'
     });
 
   } catch (error) {
@@ -161,6 +179,7 @@ router.get('/history/:userId', async (req, res) => {
 /**
  * GET /api/v1/emotional-analysis/department-report/:departmentId
  * Reporte agregado por departamento (SOLO AGREGADO, nunca individual)
+ * FILTRADO: Solo incluye usuarios con consentimiento activo
  */
 router.get('/department-report/:departmentId', async (req, res) => {
   try {
@@ -178,8 +197,15 @@ router.get('/department-report/:departmentId', async (req, res) => {
         AVG(e.emotion_happiness) as avg_happiness,
         DATE_TRUNC('day', e.scan_timestamp) as date
       FROM biometric_emotional_analysis e
-      JOIN users u ON e.user_id = u.id AND e.company_id = u.company_id
-      WHERE u.department_id = :departmentId
+      JOIN users u ON e.user_id = u.user_id AND e.company_id = u.company_id
+      -- SOLO usuarios con consentimiento activo
+      JOIN biometric_consents c ON e.user_id = c.user_id
+        AND e.company_id = c.company_id
+        AND c.consent_type = 'emotional_analysis'
+        AND c.consent_given = true
+        AND c.revoked = false
+        AND (c.expires_at IS NULL OR c.expires_at > NOW())
+      WHERE u."departmentId"::integer = :departmentId
         AND u.company_id = :companyId
         AND e.scan_timestamp >= NOW() - INTERVAL ':days days'
       GROUP BY DATE_TRUNC('day', e.scan_timestamp)
@@ -195,7 +221,8 @@ router.get('/department-report/:departmentId', async (req, res) => {
       departmentId,
       minimumUsers: 10,
       data: results,
-      note: 'Datos agregados - mínimo 10 usuarios para privacidad'
+      note: 'Datos agregados - mínimo 10 usuarios con consentimiento activo para privacidad',
+      consentFiltered: true
     });
 
   } catch (error) {
