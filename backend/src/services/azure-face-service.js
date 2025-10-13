@@ -106,7 +106,13 @@ class AzureFaceService {
           'blur',
           'exposure',
           'noise',
-          'occlusion'
+          'occlusion',
+          // ⬇️ ANÁLISIS EMOCIONAL Y BIENESTAR (PROFESIONAL)
+          'emotion',      // 8 emociones con scores 0-1
+          'smile',        // Intensidad de sonrisa (0-1)
+          'facialHair',   // Indicador de autocuidado
+          'glasses',      // Detección de lentes (fatiga visual)
+          'age'           // Estimación de edad
         ].join(','),
         returnRecognitionModel: true
       };
@@ -188,7 +194,13 @@ class AzureFaceService {
           exposure: face.faceAttributes?.exposure,
           noise: face.faceAttributes?.noise,
           occlusion: face.faceAttributes?.occlusion,
-          headPose: face.faceAttributes?.headPose
+          headPose: face.faceAttributes?.headPose,
+          // ⬇️ DATOS EMOCIONALES Y BIENESTAR (PROFESIONAL)
+          emotion: face.faceAttributes?.emotion,           // 8 emociones REALES de Azure
+          smile: face.faceAttributes?.smile,               // Intensidad sonrisa
+          facialHair: face.faceAttributes?.facialHair,     // Autocuidado
+          glasses: face.faceAttributes?.glasses,           // Fatiga visual
+          age: face.faceAttributes?.age                    // Edad estimada
         },
         recognitionModel: face.recognitionModel,
         detectionModel: this.detectionModel,

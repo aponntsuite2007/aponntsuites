@@ -1836,6 +1836,16 @@ const { initializeKioskWebSocketServer } = require('./src/services/kiosk-websock
 const mobileRoutes = require('./src/routes/mobileRoutes');
 app.use('/api/v1/mobile', mobileRoutes);
 
+// 🧠 ANÁLISIS EMOCIONAL PROFESIONAL (Azure Face API)
+const emotionalAnalysisRoutes = require('./src/routes/emotionalAnalysisRoutes');
+app.use('/api/v1/emotional-analysis', emotionalAnalysisRoutes);
+console.log('🧠 [EMOTIONAL-ANALYSIS] Rutas profesionales configuradas');
+
+// ⚖️ GESTIÓN DE CONSENTIMIENTOS (Ley 25.326)
+const consentRoutes = require('./src/routes/consentRoutes');
+app.use('/api/v1/consent', consentRoutes);
+console.log('⚖️ [CONSENT] Sistema legal configurado');
+
 // 🏖️ CONFIGURAR API DE VACACIONES Y PERMISOS
 const vacationRoutes = require('./src/routes/vacationRoutes');
 app.use('/api/v1/vacation', vacationRoutes);
