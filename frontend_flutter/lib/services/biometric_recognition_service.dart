@@ -1,7 +1,7 @@
 // 👆 BIOMETRIC RECOGNITION SERVICE - FLUTTER SYNCHRONIZED
 // ======================================================
 // Multi-modal biometric service for Flutter synchronized with web platform
-// Includes: Facial, Iris, Voice, Fingerprint recognition
+// Includes: Facial and Fingerprint recognition
 // Using same algorithms and encryption as web version
 
 import 'dart:async';
@@ -15,8 +15,6 @@ import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:record/record.dart';
 
 class BiometricRecognitionService {
   static const String _channelName = 'biometric_recognition';
@@ -25,16 +23,12 @@ class BiometricRecognitionService {
   // Services initialization
   final LocalAuthentication _localAuth = LocalAuthentication();
   late FaceDetector _faceDetector;
-  late stt.SpeechToText _speechToText;
-  late Record _audioRecord;
 
   bool _isInitialized = false;
   Map<String, dynamic> _config = {};
 
   // Multi-modal biometric data
   Map<String, dynamic>? _facialTemplate;
-  Map<String, dynamic>? _irisTemplate;
-  Map<String, dynamic>? _voiceTemplate;
   Map<String, dynamic>? _fingerprintTemplate;
 
   // Encryption for templates (same as web)
@@ -58,19 +52,6 @@ class BiometricRecognitionService {
           'confidenceThreshold': 0.85,
           'livenessDetection': true,
           'qualityThreshold': 0.6
-        },
-        'irisRecognition': {
-          'enabled': true,
-          'accuracy': 0.9995,
-          'hamming_distance_threshold': 0.32,
-          'template_size': 2048
-        },
-        'voiceRecognition': {
-          'enabled': true,
-          'accuracy': 0.978,
-          'mfcc_features': 13,
-          'sample_rate': 16000,
-          'anti_spoofing': true
         },
         'fingerprintRecognition': {
           'enabled': true,
@@ -100,13 +81,6 @@ class BiometricRecognitionService {
         )
       );
 
-      // Initialize Speech Recognition
-      _speechToText = stt.SpeechToText();
-      await _speechToText.initialize();
-
-      // Initialize Audio Recording
-      _audioRecord = Record();
-
       // Test device capabilities
       final capabilities = await _testBiometricCapabilities();
 
@@ -122,8 +96,6 @@ class BiometricRecognitionService {
         'encryption': 'AES-256-GCM',
         'modalities': [
           'facial_recognition',
-          'iris_recognition',
-          'voice_recognition',
           'fingerprint_recognition'
         ]
       };
@@ -165,14 +137,9 @@ class BiometricRecognitionService {
       capabilities['available_biometrics'] = biometrics.map((b) => b.toString()).toList();
       capabilities['fingerprint_available'] = biometrics.contains(BiometricType.fingerprint);
       capabilities['face_id_available'] = biometrics.contains(BiometricType.face);
-      capabilities['iris_available'] = biometrics.contains(BiometricType.iris);
     } catch (e) {
       capabilities['device_biometrics_available'] = false;
     }
-
-    // Test voice capabilities
-    capabilities['voice_recognition_available'] = await _speechToText.initialize();
-    capabilities['audio_recording_available'] = await _audioRecord.hasPermission();
 
     return capabilities;
   }
@@ -312,102 +279,6 @@ class BiometricRecognitionService {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 👁️ RECONOCIMIENTO POR IRIS (SINCRONIZADO CON WEB)
-  // ═══════════════════════════════════════════════════════════════
-
-  /// 👁️ Process iris recognition
-  Future<Map<String, dynamic>> processIrisRecognition(Uint8List irisImage) async {
-    try {
-      developer.log('👁️ [IRIS-FLUTTER] Procesando reconocimiento por iris...', name: 'Biometric');
-
-      // Simulate iris recognition using Daugman algorithm (same as web)
-      // In production, this would integrate with actual iris recognition library
-
-      final irisTemplate = await _generateIrisTemplate(irisImage);
-      final encryptedTemplate = await _encryptBiometricTemplate(irisTemplate);
-
-      final result = {
-        'success': true,
-        'template': encryptedTemplate,
-        'modality': 'iris_recognition',
-        'metadata': {
-          'accuracy': _config['irisRecognition']['accuracy'],
-          'algorithm': 'Daugman-Algorithm-Flutter',
-          'template_size': _config['irisRecognition']['template_size'],
-          'hamming_distance_ready': true,
-          'synchronized_with_web': true
-        }
-      };
-
-      _irisTemplate = result;
-
-      developer.log('✅ [IRIS-FLUTTER] Reconocimiento por iris completado', name: 'Biometric');
-
-      return result;
-
-    } catch (error) {
-      developer.log('❌ [IRIS-FLUTTER] Error: $error', name: 'Biometric');
-      throw error;
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // 🗣️ RECONOCIMIENTO POR VOZ (SINCRONIZADO CON WEB)
-  // ═══════════════════════════════════════════════════════════════
-
-  /// 🗣️ Process voice recognition
-  Future<Map<String, dynamic>> processVoiceRecognition(String phrase) async {
-    try {
-      developer.log('🗣️ [VOICE-FLUTTER] Procesando reconocimiento por voz...', name: 'Biometric');
-
-      // Start recording
-      await _audioRecord.start();
-      await Future.delayed(Duration(seconds: 3)); // Record for 3 seconds
-      final audioPath = await _audioRecord.stop();
-
-      if (audioPath == null) {
-        throw Exception('Failed to record audio');
-      }
-
-      // Read audio file
-      final audioFile = File(audioPath);
-      final audioData = await audioFile.readAsBytes();
-
-      // Extract MFCC features (same as web)
-      final voiceFeatures = await _extractVoiceFeatures(audioData);
-
-      // Generate voice template
-      final voiceTemplate = await _generateVoiceTemplate(voiceFeatures);
-
-      // Encrypt template
-      final encryptedTemplate = await _encryptBiometricTemplate(voiceTemplate);
-
-      final result = {
-        'success': true,
-        'template': encryptedTemplate,
-        'modality': 'voice_recognition',
-        'metadata': {
-          'accuracy': _config['voiceRecognition']['accuracy'],
-          'algorithm': 'MFCC-GMM-UBM-DNN-Flutter',
-          'sample_rate': _config['voiceRecognition']['sample_rate'],
-          'mfcc_features': _config['voiceRecognition']['mfcc_features'],
-          'anti_spoofing_verified': true,
-          'synchronized_with_web': true
-        }
-      };
-
-      _voiceTemplate = result;
-
-      developer.log('✅ [VOICE-FLUTTER] Reconocimiento por voz completado', name: 'Biometric');
-
-      return result;
-
-    } catch (error) {
-      developer.log('❌ [VOICE-FLUTTER] Error: $error', name: 'Biometric');
-      throw error;
-    }
-  }
 
   // ═══════════════════════════════════════════════════════════════
   // 👆 RECONOCIMIENTO DACTILAR (SINCRONIZADO CON WEB)
@@ -547,35 +418,6 @@ class BiometricRecognitionService {
     return 0.87; // Placeholder - would be actual similarity calculation
   }
 
-  Future<Map<String, dynamic>> _generateIrisTemplate(Uint8List irisImage) async {
-    // Placeholder for iris template generation
-    return {
-      'template_data': base64Encode(irisImage),
-      'algorithm': 'Daugman-Iris-Code',
-      'timestamp': DateTime.now().toIso8601String()
-    };
-  }
-
-  Future<Map<String, dynamic>> _extractVoiceFeatures(Uint8List audioData) async {
-    // Placeholder for MFCC feature extraction
-    return {
-      'mfcc_coefficients': List.generate(13, (i) => i * 0.1),
-      'spectral_features': List.generate(20, (i) => i * 0.05),
-      'prosodic_features': {
-        'pitch': 150.0,
-        'tempo': 120.0,
-        'energy': 0.7
-      }
-    };
-  }
-
-  Future<Map<String, dynamic>> _generateVoiceTemplate(Map<String, dynamic> features) async {
-    return {
-      'template_data': base64Encode(utf8.encode(json.encode(features))),
-      'algorithm': 'MFCC-Voice-Template',
-      'timestamp': DateTime.now().toIso8601String()
-    };
-  }
 
   Future<Map<String, dynamic>> _generateFingerprintTemplate() async {
     // Placeholder for fingerprint template (device-based)
@@ -616,8 +458,6 @@ class BiometricRecognitionService {
   Map<String, dynamic> get config => Map.unmodifiable(_config);
 
   Map<String, dynamic>? get facialTemplate => _facialTemplate;
-  Map<String, dynamic>? get irisTemplate => _irisTemplate;
-  Map<String, dynamic>? get voiceTemplate => _voiceTemplate;
   Map<String, dynamic>? get fingerprintTemplate => _fingerprintTemplate;
 
   Map<String, dynamic> getServiceStats() {
@@ -629,8 +469,6 @@ class BiometricRecognitionService {
       'isInitialized': _isInitialized,
       'modalities': {
         'facial_recognition': _facialTemplate != null,
-        'iris_recognition': _irisTemplate != null,
-        'voice_recognition': _voiceTemplate != null,
         'fingerprint_recognition': _fingerprintTemplate != null
       },
       'encryption': 'AES-256-GCM',
@@ -649,7 +487,6 @@ class BiometricRecognitionService {
 
   void dispose() {
     _faceDetector.close();
-    _audioRecord.dispose();
     developer.log('👆 [BIOMETRIC-FLUTTER] Servicio finalizado', name: 'Biometric');
   }
 }

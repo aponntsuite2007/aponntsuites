@@ -438,7 +438,7 @@ router.delete('/face/:templateId', auth, async (req, res) => {
 
 /**
  * @route POST /api/v1/biometric/save
- * @desc Guardar datos biométricos de múltiples tipos (facial, iris, voz, huella)
+ * @desc Guardar datos biométricos de múltiples tipos (facial, huella)
  */
 router.post('/save', upload.single('biometricData'), async (req, res) => {
   try {
@@ -451,10 +451,10 @@ router.post('/save', upload.single('biometricData'), async (req, res) => {
     console.log(`🔧 [DEBUG] type value:`, type, typeof type);
 
     // Validaciones básicas
-    if (!type || !['facial', 'iris', 'voice', 'fingerprint'].includes(type)) {
+    if (!type || !['facial', 'fingerprint'].includes(type)) {
       return res.status(400).json({
         success: false,
-        message: 'Tipo biométrico inválido. Debe ser: facial, iris, voice, fingerprint'
+        message: 'Tipo biométrico inválido. Debe ser: facial, fingerprint'
       });
     }
 
@@ -546,65 +546,6 @@ router.post('/save', upload.single('biometricData'), async (req, res) => {
           }
         });
 
-      case 'iris':
-        // Para iris, usar similar a facial pero con parámetros específicos
-        const existingIris = await FacialBiometricData.findOne({
-          where: {
-            userId: employee.user_id,
-            algorithm: 'iris_capture_v1',
-            isActive: true
-          }
-        });
-
-        dataToSave.isPrimary = !existingIris;
-        dataToSave.faceEmbedding = 'iris_data_processed';
-        dataToSave.algorithm = 'iris_capture_v1';
-        dataToSave.confidenceThreshold = 0.90; // Iris requiere mayor confianza
-
-        const irisData = await BiometricData.create(dataToSave);
-
-        console.log(`✅ [BIOMETRIC-SAVE] Template iris guardado ID: ${irisData.id}`);
-
-        return res.json({
-          success: true,
-          message: 'Template iris guardado exitosamente',
-          data: {
-            id: irisData.id,
-            type: 'iris',
-            quality: irisData.qualityScore,
-            isPrimary: irisData.isPrimary
-          }
-        });
-
-      case 'voice':
-        // Para voz, crear registro en BiometricData general
-        const voiceData = await BiometricData.create({
-          userId: employee.user_id,
-          biometricType: 'voice',
-          templateData: biometricFile ? 'voice_audio_processed' : 'simulated_voice_template',
-          qualityScore: Math.round(quality * 100),
-          algorithm: 'voice_recognition_v1',
-          isActive: true,
-          metadata: JSON.stringify({
-            duration: 5000,
-            sampleRate: 44100,
-            channels: 1,
-            format: 'webm'
-          })
-        });
-
-        console.log(`✅ [BIOMETRIC-SAVE] Template voz guardado ID: ${voiceData.id}`);
-
-        return res.json({
-          success: true,
-          message: 'Template de voz guardado exitosamente',
-          data: {
-            id: voiceData.id,
-            type: 'voice',
-            quality: voiceData.qualityScore
-          }
-        });
-
       case 'fingerprint':
         // Para huella dactilar
         const fingerprintData = await BiometricData.create({
@@ -692,31 +633,17 @@ router.get('/status/:employeeId', async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    const voiceTemplates = otherBiometrics.filter(b => b.biometricType === 'voice');
     const fingerprintTemplates = otherBiometrics.filter(b => b.biometricType === 'fingerprint');
-    const irisTemplates = facialTemplates.filter(f => f.algorithm === 'iris_capture_v1');
-    const facialOnly = facialTemplates.filter(f => f.algorithm !== 'iris_capture_v1');
 
     res.json({
       success: true,
       employeeId: employeeId,
       biometricStatus: {
         facial: {
-          registered: facialOnly.length > 0,
-          count: facialOnly.length,
-          primary: facialOnly.find(f => f.isPrimary) || null,
-          validated: facialOnly.filter(f => f.isValidated).length
-        },
-        iris: {
-          registered: irisTemplates.length > 0,
-          count: irisTemplates.length,
-          primary: irisTemplates.find(i => i.isPrimary) || null,
-          validated: irisTemplates.filter(i => i.isValidated).length
-        },
-        voice: {
-          registered: voiceTemplates.length > 0,
-          count: voiceTemplates.length,
-          latest: voiceTemplates[0] || null
+          registered: facialTemplates.length > 0,
+          count: facialTemplates.length,
+          primary: facialTemplates.find(f => f.isPrimary) || null,
+          validated: facialTemplates.filter(f => f.isValidated).length
         },
         fingerprint: {
           registered: fingerprintTemplates.length > 0,
@@ -729,10 +656,8 @@ router.get('/status/:employeeId', async (req, res) => {
         validatedTemplates: facialTemplates.filter(f => f.isValidated).length,
         activeTemplates: facialTemplates.length + otherBiometrics.length,
         completionPercentage: Math.round(
-          ((facialOnly.length > 0 ? 25 : 0) +
-           (irisTemplates.length > 0 ? 25 : 0) +
-           (voiceTemplates.length > 0 ? 25 : 0) +
-           (fingerprintTemplates.length > 0 ? 25 : 0))
+          ((facialTemplates.length > 0 ? 50 : 0) +
+           (fingerprintTemplates.length > 0 ? 50 : 0))
         )
       }
     });

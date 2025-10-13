@@ -113,16 +113,14 @@ class _StartupScreenState extends State<StartupScreen> {
       final isConfigured = await ConfigService.isConfigured();
 
       if (!isConfigured) {
-        print('🔧 [STARTUP] No hay configuración, usando valores por defecto');
-        // Guardar config por defecto automáticamente
-        final config = await ConfigService.getConfig();
-        await ConfigService.saveConfig(
-          baseUrl: config['baseUrl']!,
-          port: config['port']!,
-          companyName: config['companyName']!,
-          companyId: config['companyId']!,
-        );
-        print('✅ [STARTUP] Configuración por defecto guardada: ${config['baseUrl']}:${config['port']}');
+        print('🔧 [STARTUP] No hay configuración, ir a ConfigScreen');
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => ConfigScreen()),
+          );
+        }
+        return;
       }
 
       // 2. Verificar si tiene token de autenticación

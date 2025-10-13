@@ -17,14 +17,12 @@ class EnhancedBiometricService {
   bool _biometricEnabled = false;
   bool _fingerprintEnabled = true;
   bool _faceIdEnabled = true;
-  bool _irisEnabled = true;
   int _maxAttempts = 3;
   Duration _lockoutDuration = Duration(minutes: 5);
 
   bool get biometricEnabled => _biometricEnabled;
   bool get fingerprintEnabled => _fingerprintEnabled;
   bool get faceIdEnabled => _faceIdEnabled;
-  bool get irisEnabled => _irisEnabled;
 
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
@@ -254,11 +252,6 @@ class EnhancedBiometricService {
     await _prefs?.setBool('faceid_enabled', enabled);
   }
 
-  Future<void> setIrisEnabled(bool enabled) async {
-    _irisEnabled = enabled;
-    await _prefs?.setBool('iris_enabled', enabled);
-  }
-
   Future<void> setMaxAttempts(int attempts) async {
     _maxAttempts = attempts;
     await _prefs?.setInt('max_attempts', attempts);
@@ -274,7 +267,6 @@ class EnhancedBiometricService {
     _biometricEnabled = _prefs?.getBool('biometric_enabled') ?? false;
     _fingerprintEnabled = _prefs?.getBool('fingerprint_enabled') ?? true;
     _faceIdEnabled = _prefs?.getBool('faceid_enabled') ?? true;
-    _irisEnabled = _prefs?.getBool('iris_enabled') ?? true;
     _maxAttempts = _prefs?.getInt('max_attempts') ?? 3;
     final lockoutMinutes = _prefs?.getInt('lockout_duration_minutes') ?? 5;
     _lockoutDuration = Duration(minutes: lockoutMinutes);
@@ -287,12 +279,12 @@ class EnhancedBiometricService {
           return _fingerprintEnabled;
         case BiometricType.face:
           return _faceIdEnabled;
-        case BiometricType.iris:
-          return _irisEnabled;
         case BiometricType.weak:
           return false; // No permitir biométricos débiles
         case BiometricType.strong:
           return true; // Permitir biométricos fuertes
+        default:
+          return false;
       }
     }).toList();
   }

@@ -165,8 +165,8 @@ class _KioskScreenState extends State<KioskScreen> {
       // Construir URL del backend usando ConfigService
       final config = await ConfigService.getConfig();
 
-      // Validar que haya configuración del servidor
-      if (config['baseUrl']!.isEmpty || config['port']!.isEmpty) {
+      // Validar que haya configuración del servidor (puerto puede estar vacío para HTTPS)
+      if (config['baseUrl']!.isEmpty) {
         print('❌ [KIOSK] No hay configuración de servidor');
         if (mounted) {
           // Mostrar error y redirigir a configuración

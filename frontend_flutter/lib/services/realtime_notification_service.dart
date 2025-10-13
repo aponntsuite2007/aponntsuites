@@ -8,11 +8,10 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:http/http.dart' as http;
 import 'multi_tenant_security_service.dart';
-import 'voice_accessibility_service.dart';
 
 /// 🔔 Servicio de Notificaciones en Tiempo Real Bidireccional
 /// Sistema completo de comunicación en tiempo real entre empresa y empleados
-/// Incluye push notifications, WebSocket, notificaciones locales y accesibilidad por voz
+/// Incluye push notifications, WebSocket y notificaciones locales
 class RealtimeNotificationService {
   static const String _taskName = 'notificationBackgroundTask';
   static const String _channelId = 'attendance_notifications';
@@ -22,26 +21,23 @@ class RealtimeNotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   final MultiTenantSecurityService _securityService;
-  final VoiceAccessibilityService? _voiceService;
 
   WebSocketChannel? _websocketChannel;
   String? _fcmToken;
   String? _baseUrl;
   bool _isInitialized = false;
-  bool _voiceNotificationsEnabled = false;
 
   final Map<String, Function(Map<String, dynamic>)> _messageHandlers = {};
   final List<NotificationMessage> _pendingMessages = [];
 
-  RealtimeNotificationService(this._securityService, [this._voiceService]);
+  RealtimeNotificationService(this._securityService);
 
   /// 🚀 Inicializa el servicio de notificaciones
-  Future<bool> initialize({String? serverUrl, bool enableVoice = false}) async {
+  Future<bool> initialize({String? serverUrl}) async {
     try {
       print('🔔 [REALTIME-NOTIFICATIONS] Inicializando servicio...');
 
       _baseUrl = serverUrl ?? 'localhost:9998';
-      _voiceNotificationsEnabled = enableVoice && _voiceService != null;
 
       // Inicializar Firebase Messaging
       await _initializeFirebase();
@@ -57,10 +53,6 @@ class RealtimeNotificationService {
 
       _isInitialized = true;
       print('✅ [REALTIME-NOTIFICATIONS] Servicio inicializado correctamente');
-
-      if (_voiceNotificationsEnabled) {
-        await _voiceService?.speak('Sistema de notificaciones en tiempo real activo');
-      }
 
       return true;
     } catch (e) {
@@ -324,14 +316,6 @@ class RealtimeNotificationService {
   /// ⚡ Procesa mensaje de notificación
   Future<void> _processNotificationMessage(NotificationMessage message) async {
     try {
-      // Reproducir notificación por voz si está habilitado
-      if (_voiceNotificationsEnabled && _voiceService != null) {
-        await _voiceService!.speak(
-          'Nueva notificación: ${message.title}. ${message.body}',
-          priority: true,
-        );
-      }
-
       // Ejecutar manejador específico si existe
       final handler = _messageHandlers[message.type];
       if (handler != null) {
@@ -426,7 +410,6 @@ class RealtimeNotificationService {
     isInitialized: _isInitialized,
     fcmToken: _fcmToken,
     websocketConnected: _websocketChannel != null,
-    voiceEnabled: _voiceNotificationsEnabled,
     pendingMessages: _pendingMessages.length,
   );
 }
@@ -488,20 +471,18 @@ class NotificationServiceStatus {
   final bool isInitialized;
   final String? fcmToken;
   final bool websocketConnected;
-  final bool voiceEnabled;
   final int pendingMessages;
 
   NotificationServiceStatus({
     required this.isInitialized,
     required this.fcmToken,
     required this.websocketConnected,
-    required this.voiceEnabled,
     required this.pendingMessages,
   });
 
   @override
   String toString() {
-    return 'NotificationServiceStatus(initialized: $isInitialized, websocket: $websocketConnected, voice: $voiceEnabled, pending: $pendingMessages)';
+    return 'NotificationServiceStatus(initialized: $isInitialized, websocket: $websocketConnected, pending: $pendingMessages)';
   }
 }
 

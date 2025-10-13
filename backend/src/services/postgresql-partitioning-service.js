@@ -145,7 +145,7 @@ class PostgreSQLPartitioningService {
           template_id BIGSERIAL,
           company_id INTEGER NOT NULL,
           user_id BIGINT NOT NULL,
-          template_type VARCHAR(20) NOT NULL CHECK (template_type IN ('face', 'fingerprint', 'voice')),
+          template_type VARCHAR(20) NOT NULL CHECK (template_type IN ('face', 'fingerprint')),
           template_data BYTEA NOT NULL,
           template_vector REAL[] NOT NULL,
           quality_score DECIMAL(5,4) NOT NULL,

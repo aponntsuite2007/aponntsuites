@@ -187,8 +187,6 @@ class NativeDeviceDetectionService {
         availableTypes: availableTypes,
         hasFingerprint: availableTypes.contains(BiometricType.fingerprint),
         hasFaceRecognition: availableTypes.contains(BiometricType.face),
-        hasIris: availableTypes.contains(BiometricType.iris),
-        hasVoice: availableTypes.contains(BiometricType.voice),
         strongBiometricsAvailable: availableTypes.contains(BiometricType.strong),
         weakBiometricsAvailable: availableTypes.contains(BiometricType.weak),
       );
@@ -208,8 +206,6 @@ class NativeDeviceDetectionService {
         availableTypes: [],
         hasFingerprint: false,
         hasFaceRecognition: false,
-        hasIris: false,
-        hasVoice: false,
         strongBiometricsAvailable: false,
         weakBiometricsAvailable: false,
       );
@@ -395,8 +391,6 @@ class BiometricCapabilities {
   final List<BiometricType> availableTypes;
   final bool hasFingerprint;
   final bool hasFaceRecognition;
-  final bool hasIris;
-  final bool hasVoice;
   final bool strongBiometricsAvailable;
   final bool weakBiometricsAvailable;
 
@@ -407,8 +401,6 @@ class BiometricCapabilities {
     required this.availableTypes,
     required this.hasFingerprint,
     required this.hasFaceRecognition,
-    required this.hasIris,
-    required this.hasVoice,
     required this.strongBiometricsAvailable,
     required this.weakBiometricsAvailable,
   });

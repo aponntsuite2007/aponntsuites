@@ -744,26 +744,26 @@ class BiometricDeviceDetectionService {
                 '📏 Distancia óptima: 50-70 cm de la cámara',
                 '🚫 Retire gafas, gorros o elementos que cubran el rostro'
             ],
-            iris: [
-                '👁️ Mantenga los ojos bien abiertos',
-                '💡 Buena iluminación pero sin destellos directos',
-                '📏 Acérquese a 15-20 cm del sensor',
-                '⏱️ Mantenga la posición por 2-3 segundos',
-                '🚫 Evite lentes de contacto de colores'
-            ],
-            voice: [
-                '🎤 Hable claro y con volumen normal',
-                '🔇 Ambiente silencioso sin ruido de fondo',
-                '📱 Mantenga el micrófono a 15-20 cm',
-                '⏱️ Pronuncie la frase completa sin pausas',
-                '🗣️ Use su tono de voz natural'
-            ],
             fingerprint: [
                 '🧼 Limpie el dedo y el sensor antes de la captura',
                 '👆 Presione firmemente pero sin exceso',
                 '📐 Centre el dedo en el sensor',
                 '⏱️ Mantenga la posición hasta el pitido',
                 '🔄 Capture diferentes ángulos si es necesario'
+            ],
+            qr: [
+                '📱 Muestre el código QR de forma clara',
+                '💡 Buena iluminación sin reflejos',
+                '📏 Mantenga el código a 20-30 cm de la cámara',
+                '⏱️ Mantenga estable hasta el escaneo',
+                '✅ Asegúrese que el código esté completo en el encuadre'
+            ],
+            nfc: [
+                '📱 Acerque la tarjeta/dispositivo al lector',
+                '⏱️ Mantenga cerca por 1-2 segundos',
+                '🚫 No retire hasta escuchar confirmación',
+                '📐 Asegure contacto completo con el sensor',
+                '🔄 Si falla, reintente con pequeños ajustes de posición'
             ]
         };
 

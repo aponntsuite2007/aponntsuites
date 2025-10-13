@@ -167,31 +167,27 @@ class BiometricService {
   /// Obtener texto descriptivo del tipo de biometría disponible
   Future<String> getBiometricTypeDescription() async {
     final availableTypes = await getAvailableBiometrics();
-    
+
     if (availableTypes.isEmpty) {
       return 'Sin biometría disponible';
     }
-    
+
     if (availableTypes.contains(BiometricType.face)) {
       return 'Reconocimiento facial';
     }
-    
+
     if (availableTypes.contains(BiometricType.fingerprint)) {
       return 'Huella digital';
     }
-    
-    if (availableTypes.contains(BiometricType.iris)) {
-      return 'Reconocimiento de iris';
-    }
-    
+
     if (availableTypes.contains(BiometricType.strong)) {
       return 'Biometría fuerte';
     }
-    
+
     if (availableTypes.contains(BiometricType.weak)) {
       return 'Biometría débil';
     }
-    
+
     return 'Biometría disponible';
   }
   

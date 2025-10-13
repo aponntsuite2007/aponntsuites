@@ -6,8 +6,6 @@ import 'package:local_auth/local_auth.dart';
 import 'package:camera/camera.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:pattern_lock/pattern_lock.dart';
-import 'package:speech_to_text/speech_to_text.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:crypto/crypto.dart';
 import 'package:image/image.dart' as img;
 import 'multi_tenant_security_service.dart';
@@ -15,15 +13,12 @@ import 'multi_tenant_security_service.dart';
 /// 🔐 Servicio de Autenticación Biométrica Unificado
 /// Integra todos los métodos de autenticación biométrica con aislamiento por empresa
 class BiometricAuthenticationService {
-  static const String _voiceTemplateKey = 'VOICE_TEMPLATE';
   static const String _faceTemplateKey = 'FACE_TEMPLATE';
   static const String _fingerprintTemplateKey = 'FINGERPRINT_TEMPLATE';
   static const String _patternKey = 'PATTERN_HASH';
   static const String _passwordKey = 'PASSWORD_HASH';
 
   final LocalAuthentication _localAuth = LocalAuthentication();
-  final SpeechToText _speechToText = SpeechToText();
-  final FlutterTts _flutterTts = FlutterTts();
   final MultiTenantSecurityService _securityService;
 
   CameraController? _cameraController;
@@ -31,7 +26,6 @@ class BiometricAuthenticationService {
 
   List<CameraDescription> _cameras = [];
   bool _isInitialized = false;
-  bool _speechEnabled = false;
 
   BiometricAuthenticationService(this._securityService);
 
@@ -43,40 +37,17 @@ class BiometricAuthenticationService {
       // Inicializar cámaras
       _cameras = await availableCameras();
 
-      // Configurar TTS para accesibilidad
-      await _initializeTts();
-
-      // Inicializar reconocimiento de voz
-      _speechEnabled = await _speechToText.initialize(
-        onError: (error) => print('❌ [VOICE] Error: ${error.errorMsg}'),
-        onStatus: (status) => print('🎙️ [VOICE] Estado: $status'),
-      );
-
       // Inicializar controlador QR
       _qrController = MobileScannerController();
 
       _isInitialized = true;
       print('✅ [BIOMETRIC] Servicios inicializados correctamente');
-      await _speak('Sistema biométrico listo para autenticación');
 
       return true;
     } catch (e) {
       print('❌ [BIOMETRIC] Error inicializando: $e');
       return false;
     }
-  }
-
-  /// 🎙️ Configura TTS para usuarios con discapacidad visual
-  Future<void> _initializeTts() async {
-    await _flutterTts.setLanguage('es-ES');
-    await _flutterTts.setSpeechRate(0.8);
-    await _flutterTts.setVolume(1.0);
-    await _flutterTts.setPitch(1.0);
-  }
-
-  /// 🔊 Reproduce mensaje de voz
-  Future<void> _speak(String message) async {
-    await _flutterTts.speak(message);
   }
 
   /// 🔍 Verifica disponibilidad de métodos biométricos
@@ -90,9 +61,6 @@ class BiometricAuthenticationService {
 
       // Verificar cámara para reconocimiento facial y QR
       capabilities.hasCamera = _cameras.isNotEmpty;
-
-      // Verificar reconocimiento de voz
-      capabilities.hasVoiceRecognition = _speechEnabled;
 
       // Siempre disponibles
       capabilities.hasPattern = true;
@@ -111,8 +79,6 @@ class BiometricAuthenticationService {
   /// 🔐 Autenticación por huella dactilar
   Future<AuthResult> authenticateFingerprint(String employeeId) async {
     try {
-      await _speak('Coloque su dedo en el sensor de huella');
-
       final bool isAuthenticated = await _localAuth.authenticate(
         localizedReason: 'Verificar identidad con huella dactilar',
         options: const AuthenticationOptions(
@@ -123,15 +89,12 @@ class BiometricAuthenticationService {
 
       if (isAuthenticated) {
         print('✅ [FINGERPRINT] Autenticación exitosa para: $employeeId');
-        await _speak('Huella verificada correctamente');
         return AuthResult.success('fingerprint', employeeId);
       } else {
-        await _speak('Huella no reconocida, intente nuevamente');
         return AuthResult.failure('Huella no reconocida');
       }
     } catch (e) {
       print('❌ [FINGERPRINT] Error: $e');
-      await _speak('Error en el sensor de huella');
       return AuthResult.failure('Error en autenticación por huella: $e');
     }
   }
@@ -139,8 +102,6 @@ class BiometricAuthenticationService {
   /// 👤 Autenticación facial con cámara
   Future<AuthResult> authenticateFace(String employeeId) async {
     try {
-      await _speak('Posicione su rostro frente a la cámara');
-
       if (_cameras.isEmpty) {
         return AuthResult.failure('Cámara no disponible');
       }
@@ -164,15 +125,12 @@ class BiometricAuthenticationService {
 
       if (storedTemplate != null && await _compareFaceTemplates(faceData, storedTemplate)) {
         print('✅ [FACE] Autenticación exitosa para: $employeeId');
-        await _speak('Rostro verificado correctamente');
         return AuthResult.success('face', employeeId);
       } else {
-        await _speak('Rostro no reconocido, intente nuevamente');
         return AuthResult.failure('Rostro no reconocido');
       }
     } catch (e) {
       print('❌ [FACE] Error: $e');
-      await _speak('Error en reconocimiento facial');
       return AuthResult.failure('Error en autenticación facial: $e');
     } finally {
       await _cameraController?.dispose();
@@ -183,8 +141,6 @@ class BiometricAuthenticationService {
   /// 📱 Autenticación por código QR con token temporal
   Future<AuthResult> authenticateQR() async {
     try {
-      await _speak('Escanee el código QR temporal');
-
       if (_qrController == null) {
         return AuthResult.failure('Scanner QR no disponible');
       }
@@ -201,19 +157,15 @@ class BiometricAuthenticationService {
         if (tokenData != null) {
           final employeeId = tokenData['employeeId'] as String;
           print('✅ [QR] Autenticación exitosa para: $employeeId');
-          await _speak('Código QR válido, acceso concedido');
           return AuthResult.success('qr', employeeId);
         } else {
-          await _speak('Código QR expirado o inválido');
           return AuthResult.failure('Token QR inválido o expirado');
         }
       } else {
-        await _speak('No se pudo leer el código QR');
         return AuthResult.failure('QR no detectado');
       }
     } catch (e) {
       print('❌ [QR] Error: $e');
-      await _speak('Error escaneando código QR');
       return AuthResult.failure('Error en autenticación QR: $e');
     }
   }
@@ -221,8 +173,6 @@ class BiometricAuthenticationService {
   /// 🔢 Autenticación por patrón
   Future<AuthResult> authenticatePattern(String employeeId, List<int> inputPattern) async {
     try {
-      await _speak('Dibuje su patrón de seguridad');
-
       // Convertir patrón a hash
       final patternHash = _hashPattern(inputPattern);
 
@@ -231,15 +181,12 @@ class BiometricAuthenticationService {
 
       if (storedPattern != null && storedPattern == patternHash) {
         print('✅ [PATTERN] Autenticación exitosa para: $employeeId');
-        await _speak('Patrón correcto, acceso concedido');
         return AuthResult.success('pattern', employeeId);
       } else {
-        await _speak('Patrón incorrecto, intente nuevamente');
         return AuthResult.failure('Patrón incorrecto');
       }
     } catch (e) {
       print('❌ [PATTERN] Error: $e');
-      await _speak('Error en verificación de patrón');
       return AuthResult.failure('Error en autenticación por patrón: $e');
     }
   }
@@ -255,58 +202,13 @@ class BiometricAuthenticationService {
 
       if (storedPassword != null && storedPassword == passwordHash) {
         print('✅ [PASSWORD] Autenticación exitosa para: $employeeId');
-        await _speak('Contraseña correcta, acceso concedido');
         return AuthResult.success('password', employeeId);
       } else {
-        await _speak('Contraseña incorrecta');
         return AuthResult.failure('Contraseña incorrecta');
       }
     } catch (e) {
       print('❌ [PASSWORD] Error: $e');
       return AuthResult.failure('Error en autenticación por contraseña: $e');
-    }
-  }
-
-  /// 🎙️ Autenticación por voz (para personas con discapacidad visual)
-  Future<AuthResult> authenticateVoice(String employeeId) async {
-    try {
-      await _speak('Diga la frase de seguridad: Mi voz es mi contraseña');
-
-      if (!_speechEnabled) {
-        return AuthResult.failure('Reconocimiento de voz no disponible');
-      }
-
-      String recognizedText = '';
-
-      await _speechToText.listen(
-        onResult: (result) {
-          recognizedText = result.recognizedWords.toLowerCase();
-        },
-        listenFor: const Duration(seconds: 5),
-        pauseFor: const Duration(seconds: 3),
-      );
-
-      // Esperar a que termine el reconocimiento
-      await Future.delayed(const Duration(seconds: 6));
-
-      // Procesar muestra de voz
-      final voiceData = await _processVoiceSample(recognizedText);
-
-      // Comparar con template de voz almacenado
-      final storedVoiceTemplate = await _securityService.getBiometricData(employeeId, 'voice');
-
-      if (storedVoiceTemplate != null && await _compareVoiceTemplates(voiceData, storedVoiceTemplate)) {
-        print('✅ [VOICE] Autenticación exitosa para: $employeeId');
-        await _speak('Voz verificada correctamente, acceso concedido');
-        return AuthResult.success('voice', employeeId);
-      } else {
-        await _speak('Voz no reconocida, intente nuevamente');
-        return AuthResult.failure('Voz no reconocida');
-      }
-    } catch (e) {
-      print('❌ [VOICE] Error: $e');
-      await _speak('Error en reconocimiento de voz');
-      return AuthResult.failure('Error en autenticación por voz: $e');
     }
   }
 
@@ -318,9 +220,6 @@ class BiometricAuthenticationService {
       switch (biometricType) {
         case 'face':
           processedData = await _processFaceImage(data as Uint8List);
-          break;
-        case 'voice':
-          processedData = await _processVoiceSample(data as String);
           break;
         case 'pattern':
           processedData = _hashPattern(data as List<int>);
@@ -373,30 +272,6 @@ class BiometricAuthenticationService {
     }
   }
 
-  /// 🎙️ Procesa muestra de voz para crear template
-  Future<String> _processVoiceSample(String recognizedText) async {
-    try {
-      // Normalizar texto
-      final normalized = recognizedText.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '');
-
-      // Crear características de voz (simplificado)
-      final features = <String>[];
-      features.add('length:${normalized.length}');
-      features.add('words:${normalized.split(' ').length}');
-      features.add('vowels:${RegExp(r'[aeiou]').allMatches(normalized).length}');
-      features.add('consonants:${RegExp(r'[bcdfghjklmnpqrstvwxyz]').allMatches(normalized).length}');
-
-      // Hash de características vocales
-      final featuresStr = features.join('|');
-      final bytes = utf8.encode('$featuresStr:$normalized');
-      final digest = sha256.convert(bytes);
-
-      return digest.toString();
-    } catch (e) {
-      print('❌ [VOICE] Error procesando muestra de voz: $e');
-      rethrow;
-    }
-  }
 
   /// 🔢 Genera hash del patrón
   String _hashPattern(List<int> pattern) {
@@ -416,17 +291,10 @@ class BiometricAuthenticationService {
     return template1 == template2;
   }
 
-  /// 🎙️ Compara templates de voz
-  Future<bool> _compareVoiceTemplates(String template1, String template2) async {
-    return template1 == template2;
-  }
-
   /// 🧹 Limpia recursos
   Future<void> dispose() async {
     await _cameraController?.dispose();
     await _qrController?.dispose();
-    await _speechToText.stop();
-    await _flutterTts.stop();
   }
 }
 
@@ -434,7 +302,6 @@ class BiometricAuthenticationService {
 class BiometricCapabilities {
   bool hasLocalAuth = false;
   bool hasCamera = false;
-  bool hasVoiceRecognition = false;
   bool hasPattern = false;
   bool hasPassword = false;
   bool hasQR = false;
@@ -442,7 +309,7 @@ class BiometricCapabilities {
 
   @override
   String toString() {
-    return 'BiometricCapabilities(localAuth: $hasLocalAuth, camera: $hasCamera, voice: $hasVoiceRecognition, pattern: $hasPattern, password: $hasPassword, qr: $hasQR, types: $availableBiometrics)';
+    return 'BiometricCapabilities(localAuth: $hasLocalAuth, camera: $hasCamera, pattern: $hasPattern, password: $hasPassword, qr: $hasQR, types: $availableBiometrics)';
   }
 }
 

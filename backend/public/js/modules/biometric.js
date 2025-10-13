@@ -4307,10 +4307,6 @@ function createBiometricVerificationModal(userId, userName) {
                             style="flex: 1; padding: 15px; border: none; background: #f8f9fa; color: #666; cursor: pointer; font-weight: 600;">
                         👆 Verificación Huella
                     </button>
-                    <button onclick="showVerificationTab('iris')" id="tab-iris"
-                            style="flex: 1; padding: 15px; border: none; background: #f8f9fa; color: #666; cursor: pointer; font-weight: 600;">
-                        👁️ Verificación Iris
-                    </button>
                 </div>
             </div>
 
@@ -4358,26 +4354,6 @@ function createBiometricVerificationModal(userId, userName) {
                     </div>
                 </div>
 
-                <!-- Iris Verification Tab -->
-                <div id="iris-content" style="display: none;">
-                    <h3 style="color: #dc3545; margin-bottom: 20px;">👁️ Verificación de Iris</h3>
-                    <div style="text-align: center; margin: 20px 0;">
-                        <div style="width: 200px; height: 200px; border: 3px dashed #dc3545; margin: 0 auto 20px; border-radius: 15px; display: flex; align-items: center; justify-content: center; background: #f8f9fa;">
-                            <span style="color: #dc3545; font-size: 48px;">👁️</span>
-                        </div>
-                        <button onclick="startIrisVerification('${userId}')"
-                                style="padding: 15px 30px; background: #dc3545; color: white; border: none; border-radius: 25px; cursor: pointer; font-size: 16px; margin: 0 10px;">
-                            👁️ Escanear Iris
-                        </button>
-                        <button onclick="simulateIrisVerification('${userId}')"
-                                style="padding: 15px 30px; background: #6c757d; color: white; border: none; border-radius: 25px; cursor: pointer; font-size: 16px; margin: 0 10px;">
-                            🎭 Simular (Demo)
-                        </button>
-                    </div>
-                    <div id="iris-verification-result" style="margin-top: 20px;">
-                        <!-- Resultados aparecerán aquí -->
-                    </div>
-                </div>
             </div>
 
             <!-- Footer -->
@@ -4396,7 +4372,7 @@ function createBiometricVerificationModal(userId, userName) {
 // Show verification tab
 function showVerificationTab(tabName) {
     // Reset all tabs
-    const tabs = ['face', 'fingerprint', 'iris'];
+    const tabs = ['face', 'fingerprint'];
     tabs.forEach(tab => {
         const content = document.getElementById(`${tab}-content`);
         const button = document.getElementById(`tab-${tab}`);
@@ -4416,8 +4392,7 @@ function showVerificationTab(tabName) {
     if (selectedButton) {
         const colors = {
             face: '#667eea',
-            fingerprint: '#28a745',
-            iris: '#dc3545'
+            fingerprint: '#28a745'
         };
         selectedButton.style.background = colors[tabName];
         selectedButton.style.color = 'white';
@@ -4488,37 +4463,6 @@ function simulateFingerprintVerification(userId) {
     }, 2000);
 }
 
-// Simulate iris verification
-function simulateIrisVerification(userId) {
-    console.log('👁️ [BIOMETRIC-VERIFICATION] Simulando verificación iris para:', userId);
-
-    const resultContainer = document.getElementById('iris-verification-result');
-
-    resultContainer.innerHTML = `
-        <div style="text-align: center; color: #dc3545;">
-            <h4>👁️ Procesando Verificación de Iris...</h4>
-            <div style="width: 100%; height: 4px; background: #e9ecef; border-radius: 2px; overflow: hidden; margin: 20px 0;">
-                <div style="width: 0%; height: 100%; background: #dc3545; animation: progress 4s ease-in-out;"></div>
-            </div>
-            <p>Escaneando patrones del iris...</p>
-        </div>
-    `;
-
-    setTimeout(() => {
-        const success = Math.random() > 0.15; // 85% éxito
-        const confidence = Math.floor(Math.random() * 20) + (success ? 85 : 45);
-
-        showVerificationResult(success, {
-            type: 'iris',
-            confidence,
-            userId,
-            method: 'Escaneo de Iris',
-            icon: '👁️',
-            color: success ? '#28a745' : '#dc3545',
-            resultId: 'iris-verification-result'
-        });
-    }, 4000);
-}
 
 // Show verification result
 function showVerificationResult(success, data) {
@@ -4866,24 +4810,19 @@ function showBiometricVerificationContent(container) {
 
     content.innerHTML = `
         <div class="verification-hub">
-            <h2>🔍 Centro de Verificación Multi-modal (Facial + Iris + Voz)</h2>
+            <h2>🔍 Centro de Verificación Multi-modal (Facial + Huella)</h2>
             <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 <h4>🎓 Tecnologías Académicas Implementadas:</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 10px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
                     <div style="background: white; padding: 10px; border-radius: 6px; text-align: center;">
                         <strong>🎭 Facial Recognition</strong><br>
                         <small>Stanford University - 95.8% confianza</small><br>
                         <a href="https://ai.stanford.edu/" target="_blank" style="font-size: 11px;">Stanford AI Lab</a>
                     </div>
                     <div style="background: white; padding: 10px; border-radius: 6px; text-align: center;">
-                        <strong>👁️ Iris Recognition</strong><br>
-                        <small>Daugman Algorithm - 99.95% confianza</small><br>
-                        <a href="https://www.nist.gov/programs-projects/iris-exchange-irex" target="_blank" style="font-size: 11px;">NIST IREX</a>
-                    </div>
-                    <div style="background: white; padding: 10px; border-radius: 6px; text-align: center;">
-                        <strong>🗣️ Voice Recognition</strong><br>
-                        <small>MFCC-DNN Pipeline - 97.8% confianza</small><br>
-                        <a href="https://www.nist.gov/itl/iad/mig/speaker-recognition-evaluation" target="_blank" style="font-size: 11px;">NIST Speaker Recognition</a>
+                        <strong>👆 Fingerprint Recognition</strong><br>
+                        <small>Minutiae Algorithm - 98.5% confianza</small><br>
+                        <a href="https://www.nist.gov/programs-projects/fingerprint-recognition" target="_blank" style="font-size: 11px;">NIST Biometrics</a>
                     </div>
                 </div>
             </div>
@@ -4908,18 +4847,6 @@ function showBiometricVerificationContent(container) {
                     <h3>👆 Verificación Dactilar</h3>
                     <p>Autenticación por huella dactilar</p>
                     <button class="btn btn-light" onclick="startFingerprintVerificationWithEmployee()">Verificar Huella</button>
-                </div>
-                <div class="verification-card" style="background: linear-gradient(135deg, #fd7e14 0%, #e63946 100%); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                    <h3>👁️ Verificación Iris (Daugman Algorithm)</h3>
-                    <p>🔬 Confiabilidad: 99.95% - Algoritmo NIST-IREX compliant</p>
-                    <p>📖 <a href="https://www.nist.gov/programs-projects/iris-exchange-irex" target="_blank">NIST IREX Standards</a></p>
-                    <button class="btn btn-light" onclick="startIrisVerificationWithEmployee()">👁️ Escanear Iris</button>
-                </div>
-                <div class="verification-card" style="background: linear-gradient(135deg, #6f42c1 0%, #d63384 100%); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                    <h3>🗣️ Verificación por Voz (MFCC-DNN)</h3>
-                    <p>🔬 Confiabilidad: 97.8% - Pipeline MFCC-GMM-UBM-DNN</p>
-                    <p>📖 <a href="https://www.nist.gov/itl/iad/mig/speaker-recognition-evaluation" target="_blank">NIST Speaker Recognition</a></p>
-                    <button class="btn btn-light" onclick="startVoiceVerificationWithEmployee()">🗣️ Verificar Voz</button>
                 </div>
             </div>
             <div id="verification-results" style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; min-height: 200px;">
@@ -5040,7 +4967,7 @@ function showFacialCaptureTechContent(container) {
             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 15px; margin-bottom: 30px; color: white;">
                 <h2 style="margin: 0 0 15px 0; display: flex; align-items: center;">
                     <span style="font-size: 32px; margin-right: 15px;">🚀</span>
-                    Tecnologías Biométricas Multi-Modales (Facial + Iris + Voz)
+                    Tecnologías Biométricas Multi-Modales (Facial + Huella)
                 </h2>
                 <div style="font-size: 15px; opacity: 0.9;">
                     <strong>Sistema Multi-Tenant SIAC</strong> - Arquitectura Profesional para Miles de Empresas<br>
@@ -5056,24 +4983,6 @@ function showFacialCaptureTechContent(container) {
                     Documentación Científica Oficial
                 </h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea;">
-                        <h4 style="color: #667eea; margin: 0 0 10px 0;">👁️ Iris Recognition - Daugman Algorithm</h4>
-                        <p style="margin: 0 0 10px 0; font-size: 14px;"><strong>Confiabilidad:</strong> 99.95% - NIST IREX Compliant</p>
-                        <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
-                            <li><a href="https://www.nist.gov/programs-projects/iris-exchange-irex" target="_blank">🔗 NIST IREX Standards</a></li>
-                            <li><a href="https://ieeexplore.ieee.org/document/1262027" target="_blank">🔗 Iris Recognition Research (IEEE)</a></li>
-                            <li><a href="https://www.irisguard.com/" target="_blank">🔗 IrisGuard Technology</a></li>
-                        </ul>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #6f42c1;">
-                        <h4 style="color: #6f42c1; margin: 0 0 10px 0;">🗣️ Voice Recognition - MFCC-DNN</h4>
-                        <p style="margin: 0 0 10px 0; font-size: 14px;"><strong>Confiabilidad:</strong> 97.8% - NIST Speaker Recognition</p>
-                        <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
-                            <li><a href="https://www.nist.gov/itl/iad/mig/speaker-recognition-evaluation" target="_blank">🔗 NIST Speaker Recognition</a></li>
-                            <li><a href="https://www.sciencedirect.com/topics/computer-science/voice-recognition" target="_blank">🔗 Voice Biometrics Research</a></li>
-                            <li><a href="https://www.nuance.com/omni-channel-customer-engagement/voice-and-messaging/biometric-authentication.html" target="_blank">🔗 Nuance Voice Biometrics</a></li>
-                        </ul>
-                    </div>
                     <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #28a745;">
                         <h4 style="color: #28a745; margin: 0 0 10px 0;">🧠 Facial Recognition - Academic</h4>
                         <p style="margin: 0 0 10px 0; font-size: 14px;"><strong>Universidades:</strong> Harvard + MIT + Stanford + WHO</p>
@@ -5468,96 +5377,6 @@ function loadPhaseStates() {
     }
 }
 
-// 🗣️ VOICE VERIFICATION EXTENSION - NIST COMPLIANT
-// =================================================
-
-/**
- * Iniciar verificación por voz usando MFCC-DNN Pipeline
- */
-function startVoiceVerification(userId) {
-    console.log('🗣️ [VOICE-VERIFICATION] Iniciando verificación por voz para usuario:', userId);
-
-    const resultContainer = document.getElementById('verification-results');
-    if (!resultContainer) {
-        console.error('❌ [VOICE-VERIFICATION] Container de resultados no encontrado');
-        return;
-    }
-
-    // Simular proceso de verificación por voz
-    resultContainer.innerHTML = `
-        <div style="background: linear-gradient(135deg, #6f42c1 0%, #d63384 100%); color: white; padding: 20px; border-radius: 10px;">
-            <h4>🗣️ Procesando Verificación por Voz...</h4>
-            <div style="margin: 15px 0;">
-                <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 5px;">
-                    <strong>🔬 Tecnología:</strong> MFCC-GMM-UBM-DNN Pipeline<br>
-                    <strong>📊 Confiabilidad:</strong> 97.8% certificado<br>
-                    <strong>📖 Estándar:</strong> <a href="https://www.nist.gov/itl/iad/mig/speaker-recognition-evaluation" target="_blank" style="color: #ffd700;">NIST Speaker Recognition</a>
-                </div>
-            </div>
-            <p>🎤 Procesando muestra de voz...</p>
-            <p>🔊 Extrayendo características MFCC...</p>
-            <p>🧠 Aplicando modelo DNN para verificación...</p>
-        </div>
-    `;
-
-    // Simular procesamiento
-    setTimeout(() => {
-        const confidence = (0.85 + Math.random() * 0.13).toFixed(3);
-        const isMatch = confidence > 0.75;
-
-        simulateVoiceVerificationResult({
-            userId: userId,
-            type: 'voice',
-            confidence: parseFloat(confidence),
-            isMatch: isMatch,
-            method: 'MFCC-DNN Voice Recognition',
-            technology: 'NIST Speaker Recognition Compliant',
-            resultId: 'verification-results'
-        });
-    }, 3000);
-}
-
-/**
- * Simular resultado de verificación por voz
- */
-function simulateVoiceVerificationResult(params) {
-    const { userId, confidence, isMatch, resultId } = params;
-    const resultContainer = document.getElementById(resultId);
-
-    const statusColor = isMatch ? '#28a745' : '#dc3545';
-    const statusText = isMatch ? 'VERIFICACIÓN EXITOSA' : 'VERIFICACIÓN FALLIDA';
-    const statusIcon = isMatch ? '✅' : '❌';
-
-    resultContainer.innerHTML = `
-        <div style="background: ${statusColor}; color: white; padding: 20px; border-radius: 10px;">
-            <h4>${statusIcon} ${statusText}</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 15px 0;">
-                <div>
-                    <strong>👤 Usuario ID:</strong> ${userId}<br>
-                    <strong>🗣️ Método:</strong> Voice Recognition<br>
-                    <strong>🔬 Algoritmo:</strong> MFCC-GMM-UBM-DNN<br>
-                    <strong>📊 Confianza:</strong> ${(confidence * 100).toFixed(1)}%
-                </div>
-                <div>
-                    <strong>⏱️ Tiempo:</strong> ${new Date().toLocaleString()}<br>
-                    <strong>🎤 Calidad Audio:</strong> ${(0.8 + Math.random() * 0.15).toFixed(2)}<br>
-                    <strong>🔊 MFCC Features:</strong> 13 coeficientes<br>
-                    <strong>📈 Score:</strong> ${confidence}/1.000
-                </div>
-            </div>
-            <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 5px; margin-top: 15px;">
-                <strong>🔬 Detalles Técnicos:</strong><br>
-                • Pipeline MFCC-GMM-UBM-DNN implementado<br>
-                • Voice Activity Detection (VAD) aplicado<br>
-                • Anti-spoofing con análisis espectral<br>
-                • Template AES-256-GCM encrypted<br>
-                • Cumple estándares NIST Speaker Recognition
-            </div>
-        </div>
-    `;
-
-    console.log(`🗣️ [VOICE-VERIFICATION] Resultado: ${isMatch ? 'EXITOSA' : 'FALLIDA'} - Confianza: ${confidence}`);
-}
 
 // 👤 EMPLOYEE-BASED VERIFICATION FUNCTIONS
 // ==========================================
@@ -5604,21 +5423,6 @@ function startFingerprintVerificationWithEmployee() {
     startFingerprintVerification(employee.id, employee);
 }
 
-function startIrisVerificationWithEmployee() {
-    const employee = getSelectedEmployee();
-    if (!employee) return;
-
-    console.log(`👁️ [IRIS-VERIFICATION] Verificando empleado: ${employee.name}`);
-    startIrisVerification(employee.id, employee);
-}
-
-function startVoiceVerificationWithEmployee() {
-    const employee = getSelectedEmployee();
-    if (!employee) return;
-
-    console.log(`🗣️ [VOICE-VERIFICATION] Verificando empleado: ${employee.name}`);
-    startVoiceVerification(employee.id, employee);
-}
 
 // OVERRIDE existing functions to handle employee data
 function simulateFacialVerificationResult(params) {
@@ -5745,7 +5549,7 @@ function showEmployeeRegistrationContent(container) {
                         🎯 Stanford + MIT + Harvard + WHO
                     </span>
                     <span style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 20px; font-size: 14px;">
-                        👁️ Facial + Iris + Voz + Huella
+                        👁️ Facial + Huella
                     </span>
                     <span style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 20px; font-size: 14px;">
                         🔐 AES-256 + GDPR
@@ -5965,58 +5769,6 @@ function showEmployeeRegistrationContent(container) {
                         </div>
                     </div>
 
-                    <!-- Captura de Iris (Daugman) -->
-                    <div style="border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; background: #f8f9fa;">
-                        <h4 style="margin: 0 0 15px 0; color: #495057; display: flex; align-items: center;">
-                            👁️ Reconocimiento por Iris
-                            <span style="margin-left: auto; font-size: 11px; background: #fff3cd; padding: 3px 8px; border-radius: 10px; color: #856404;">
-                                Daugman NIST
-                            </span>
-                        </h4>
-                        <div style="background: #e9ecef; height: 150px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; border: 2px dashed #ced4da;">
-                            <div style="text-align: center; color: #6c757d;">
-                                <div style="font-size: 36px; margin-bottom: 8px;">👁️</div>
-                                <div style="font-size: 12px;">Cámara infrarroja 850nm</div>
-                            </div>
-                        </div>
-                        <button onclick="startIrisCapture()" style="
-                            width: 100%; padding: 12px; background: linear-gradient(135deg, #fd7e14 0%, #dc6545 100%);
-                            color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
-                            margin-bottom: 8px;
-                        ">
-                            👁️ Iniciar Captura Iris
-                        </button>
-                        <div style="font-size: 11px; color: #6c757d; text-align: center;">
-                            Confiabilidad: 99.95% • Tiempo: &lt;800ms
-                        </div>
-                    </div>
-
-                    <!-- Captura de Voz (MFCC-DNN) -->
-                    <div style="border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; background: #f8f9fa;">
-                        <h4 style="margin: 0 0 15px 0; color: #495057; display: flex; align-items: center;">
-                            🗣️ Reconocimiento por Voz
-                            <span style="margin-left: auto; font-size: 11px; background: #f8d7da; padding: 3px 8px; border-radius: 10px; color: #721c24;">
-                                MFCC-DNN
-                            </span>
-                        </h4>
-                        <div style="background: #e9ecef; height: 150px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; border: 2px dashed #ced4da;">
-                            <div style="text-align: center; color: #6c757d;">
-                                <div style="font-size: 36px; margin-bottom: 8px;">🎤</div>
-                                <div style="font-size: 12px;">Micrófono activo</div>
-                            </div>
-                        </div>
-                        <button onclick="startVoiceCapture()" style="
-                            width: 100%; padding: 12px; background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
-                            color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
-                            margin-bottom: 8px;
-                        ">
-                            🎤 Iniciar Captura Voz
-                        </button>
-                        <div style="font-size: 11px; color: #6c757d; text-align: center;">
-                            Confiabilidad: 97.8% • Tiempo: &lt;1200ms
-                        </div>
-                    </div>
-
                     <!-- Captura de Huella (Minutiae) -->
                     <div style="border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; background: #f8f9fa;">
                         <h4 style="margin: 0 0 15px 0; color: #495057; display: flex; align-items: center;">
@@ -6059,16 +5811,6 @@ function showEmployeeRegistrationContent(container) {
                             <div id="facial-status" style="color: #dc3545; font-weight: 600;">Pendiente</div>
                         </div>
                         <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
-                            <div style="font-size: 24px; margin-bottom: 5px;">👁️</div>
-                            <div style="font-size: 12px; color: #6c757d;">Iris</div>
-                            <div id="iris-status" style="color: #dc3545; font-weight: 600;">Pendiente</div>
-                        </div>
-                        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
-                            <div style="font-size: 24px; margin-bottom: 5px;">🗣️</div>
-                            <div style="font-size: 12px; color: #6c757d;">Voz</div>
-                            <div id="voice-status" style="color: #dc3545; font-weight: 600;">Pendiente</div>
-                        </div>
-                        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
                             <div style="font-size: 24px; margin-bottom: 5px;">👆</div>
                             <div style="font-size: 12px; color: #6c757d;">Huella</div>
                             <div id="fingerprint-status" style="color: #dc3545; font-weight: 600;">Pendiente</div>
@@ -6106,7 +5848,7 @@ function showEmployeeRegistrationContent(container) {
                 <h4 style="margin: 0 0 15px 0; color: #e2e8f0;">📋 Log de Actividad</h4>
                 <div id="biometric-activity-log" style="font-family: 'Courier New', monospace; font-size: 12px; max-height: 200px; overflow-y: auto;">
                     <div style="color: #68d391;">[${new Date().toLocaleTimeString()}] Sistema de registro biométrico inicializado</div>
-                    <div style="color: #63b3ed;">[${new Date().toLocaleTimeString()}] Modalidades disponibles: Facial, Iris, Voz, Huella</div>
+                    <div style="color: #63b3ed;">[${new Date().toLocaleTimeString()}] Modalidades disponibles: Facial, Huella</div>
                     <div style="color: #f6ad55;">[${new Date().toLocaleTimeString()}] Esperando selección de empleado...</div>
                 </div>
             </div>
@@ -6137,8 +5879,6 @@ let employeeRegistrationState = {
     selectedEmployee: null,
     capturedData: {
         facial: null,
-        iris: null,
-        voice: null,
         fingerprint: null
     },
     isCapturing: false,
@@ -6153,8 +5893,6 @@ function initializeEmployeeRegistration() {
         selectedEmployee: null,
         capturedData: {
             facial: null,
-            iris: null,
-            voice: null,
             fingerprint: null
         },
         isCapturing: false,
@@ -6419,7 +6157,6 @@ function showBestPracticesPanelSafely() {
 
         const practices = [
             '📷 Cámara: Iluminación frontal uniforme, fondo limpio',
-            '👁️ Iris: Luz infrarroja, mantener el ojo abierto y estable',
             '🗣️ Voz: Ambiente silencioso, hablar con claridad',
             '👆 Huella: Dedo limpio, presión firme y completa'
         ];
@@ -6679,8 +6416,8 @@ function showBestPracticesPanel() {
 
     // Prácticas para cada modalidad
     Object.entries(bestPractices).forEach(([modality, practices]) => {
-        const icons = { facial: '📷', iris: '👁️', voice: '🗣️', fingerprint: '👆' };
-        const titles = { facial: 'Captura Facial', iris: 'Captura de Iris', voice: 'Captura de Voz', fingerprint: 'Captura Dactilar' };
+        const icons = { facial: '📷', fingerprint: '👆' };
+        const titles = { facial: 'Captura Facial', fingerprint: 'Captura Dactilar' };
 
         practicesHTML += `
             <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; border-left: 4px solid #007bff;">
@@ -6791,8 +6528,6 @@ function loadEmployeeBiometricProfile() {
         position: select.options[select.selectedIndex].text.split(' - ')[1],
         hasExistingData: {
             facial: Math.random() > 0.7,
-            iris: Math.random() > 0.8,
-            voice: Math.random() > 0.9,
             fingerprint: Math.random() > 0.6
         }
     };
@@ -6818,8 +6553,6 @@ function loadEmployeeBiometricProfile() {
                     <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">Datos existentes:</div>
                     <div style="display: flex; gap: 5px;">
                         <span style="width: 8px; height: 8px; border-radius: 50%; background: ${employeeData.hasExistingData.facial ? '#28a745' : '#dc3545'};" title="Facial"></span>
-                        <span style="width: 8px; height: 8px; border-radius: 50%; background: ${employeeData.hasExistingData.iris ? '#28a745' : '#dc3545'};" title="Iris"></span>
-                        <span style="width: 8px; height: 8px; border-radius: 50%; background: ${employeeData.hasExistingData.voice ? '#28a745' : '#dc3545'};" title="Voz"></span>
                         <span style="width: 8px; height: 8px; border-radius: 50%; background: ${employeeData.hasExistingData.fingerprint ? '#28a745' : '#dc3545'};" title="Huella"></span>
                     </div>
                 </div>
@@ -6877,44 +6610,6 @@ async function startFacialCapture() {
     }
 }
 
-function startIrisCapture() {
-    if (!employeeRegistrationState.selectedEmployee) {
-        addToActivityLog('Debe seleccionar un empleado primero', 'warning');
-        return;
-    }
-
-    console.log('👁️ [IRIS-CAPTURE] Captura de iris no disponible');
-
-    addToActivityLog('⚠️ Captura de iris requiere hardware especializado no disponible', 'warning');
-    addToActivityLog('📝 Para registro biométrico completo, use solo la captura facial', 'info');
-
-    employeeRegistrationState.isCapturing = false;
-    employeeRegistrationState.currentModality = null;
-
-    // Show user-friendly modal instead of fake capture
-    if (window.confirm('⚠️ Captura de iris no disponible\n\nEsta funcionalidad requiere un lector de iris especializado que no está conectado.\n\n¿Desea continuar con la captura facial solamente?')) {
-        addToActivityLog('Usuario optó por continuar solo con captura facial', 'info');
-    }
-}
-
-function startVoiceCapture() {
-    if (!employeeRegistrationState.selectedEmployee) {
-        addToActivityLog('Debe seleccionar un empleado primero', 'warning');
-        return;
-    }
-
-    console.log('🗣️ [VOICE-CAPTURE] Captura de voz no implementada completamente');
-
-    addToActivityLog('⚠️ Captura biométrica de voz requiere algoritmos MFCC-DNN no implementados', 'warning');
-    addToActivityLog('📝 Para registro biométrico completo, use solo la captura facial', 'info');
-
-    employeeRegistrationState.isCapturing = false;
-    employeeRegistrationState.currentModality = null;
-
-    if (window.confirm('⚠️ Captura de voz no disponible\n\nLa captura biométrica de voz requiere algoritmos de procesamiento de audio especializados (MFCC-DNN) que no están implementados.\n\n¿Desea continuar con la captura facial solamente?')) {
-        addToActivityLog('Usuario optó por continuar solo con captura facial', 'info');
-    }
-}
 
 function startFingerprintCapture() {
     if (!employeeRegistrationState.selectedEmployee) {
@@ -6987,7 +6682,7 @@ function previewBiometricProfile() {
     console.log('👁️ [PREVIEW-PROFILE] Mostrando vista previa...');
 
     const capturedData = employeeRegistrationState.capturedData;
-    const modalities = ['facial', 'iris', 'voice', 'fingerprint'];
+    const modalities = ['facial', 'fingerprint'];
 
     let previewContent = `
         <div style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e9ecef; margin-top: 20px;">
@@ -6999,7 +6694,7 @@ function previewBiometricProfile() {
 
     modalities.forEach(modality => {
         const data = capturedData[modality];
-        const icon = modality === 'facial' ? '📷' : modality === 'iris' ? '👁️' : modality === 'voice' ? '🗣️' : '👆';
+        const icon = modality === 'facial' ? '📷' : '👆';
         const status = data ? 'Capturado' : 'Pendiente';
         const quality = data ? `${(data.quality * 100).toFixed(1)}%` : 'N/A';
 
@@ -7038,13 +6733,11 @@ function resetBiometricCapture() {
     // Resetear datos capturados
     employeeRegistrationState.capturedData = {
         facial: null,
-        iris: null,
-        voice: null,
         fingerprint: null
     };
 
     // Resetear estados visuales
-    const modalities = ['facial', 'iris', 'voice', 'fingerprint'];
+    const modalities = ['facial', 'fingerprint'];
     modalities.forEach(modality => {
         updateBiometricStatus(modality, 'Pendiente');
     });
@@ -7078,8 +6771,8 @@ function showCaptureGuidance(modality) {
         align-items: center; justify-content: center;
     `;
 
-    const icons = { facial: '📷', iris: '👁️', voice: '🗣️', fingerprint: '👆' };
-    const titles = { facial: 'Captura Facial', iris: 'Captura de Iris', voice: 'Captura de Voz', fingerprint: 'Captura Dactilar' };
+    const icons = { facial: '📷', fingerprint: '👆' };
+    const titles = { facial: 'Captura Facial', fingerprint: 'Captura Dactilar' };
 
     overlay.innerHTML = `
         <div style="
@@ -7648,8 +7341,8 @@ function updateSelectedDeviceDisplay(type, deviceId) {
 }
 
 console.log('✅ [BIOMETRIC-UNIFICATION] Módulo unificado de registro biométrico completado');
-console.log('👤 [EMPLOYEE-REGISTRATION] Sistema unificado: Facial + Iris + Voz + Huella dactilar');
-console.log('🔬 [MULTI-MODAL] Tecnologías integradas: Stanford FaceNet + Daugman Iris + MFCC-DNN Voice + Minutiae Fingerprint');
+console.log('👤 [EMPLOYEE-REGISTRATION] Sistema unificado: Facial + Huella dactilar');
+console.log('🔬 [MULTI-MODAL] Tecnologías integradas: Stanford FaceNet + Minutiae Fingerprint');
 console.log('🛡️ [SECURITY] Encriptación AES-256 + Compliance GDPR + Multi-tenant architecture');
 console.log('🔍 [DEVICE-DETECTION] Sistema de detección de dispositivos biométricos integrado');
 // ==================== FUNCIONES DE APOYO PARA DISPOSITIVOS ====================
@@ -7799,7 +7492,7 @@ function getQualityRequirements(deviceType, currentScore) {
 // ==================== FUNCIONES DE CAPTURA CON ASISTENCIA DINÁMICA ====================
 
 /**
- * 🎯 Captura biométrica avanzada con óvalo dinámico (rostro o iris)
+ * 🎯 Captura biométrica avanzada con óvalo dinámico (rostro)
  */
 async function startAdvancedFacialCapture() {
     // 🚀 OPTIMIZACIÓN PARA ALTO VOLUMEN: 500 personas / 5 minutos = 6 segundos por persona
@@ -7818,19 +7511,6 @@ async function startAdvancedFacialCapture() {
     });
 }
 
-/**
- * 🎯 Captura de iris avanzada con óvalo dinámico
- */
-async function startAdvancedIrisCapture() {
-    return await startAdvancedBiometricCapture('iris', {
-        title: 'Captura de Iris con Óvalo Dinámico',
-        icon: '👁️',
-        ovalType: 'iris',
-        resolution: { width: 1920, height: 1080 },
-        targetSamples: 3,
-        qualityThreshold: 0.75 // 👁️ Más permisivo para captura de iris rápida
-    });
-}
 
 /**
  * 🎯 Sistema universal de captura biométrica con óvalo dinámico
@@ -7914,18 +7594,14 @@ async function startAdvancedBiometricCapture(type, options) {
             if (performanceConfig.processingOptimizations.fastMode) {
                 // Modo rápido: análisis cada N frames
                 if (frameCount % 3 === 0) {
-                    analysis = type === 'iris' ?
-                        await analyzeIrisPosition(canvas) :
-                        await analyzeFacePosition(canvas);
+                    analysis = await analyzeFacePosition(canvas);
                 } else {
                     // Reutilizar último análisis para frames intermedios
                     analysis = window.lastBiometricAnalysis || { quality: 0.5, isWellPositioned: false };
                 }
             } else {
                 // Modo normal: análisis completo
-                analysis = type === 'iris' ?
-                    await analyzeIrisPosition(canvas) :
-                    await analyzeFacePosition(canvas);
+                analysis = await analyzeFacePosition(canvas);
             }
 
             // Guardar análisis para frames futuros
@@ -8010,7 +7686,7 @@ async function startAdvancedBiometricCapture(type, options) {
 
         // Botón de captura manual
         captureModal.querySelector('#manual-capture').onclick = () => {
-            const analysis = type === 'iris' ? analyzeIrisPosition(canvas) : analyzeFacePosition(canvas);
+            const analysis = analyzeFacePosition(canvas);
 
             if (capturedSamples.length < TARGET_SAMPLES) {
                 const sampleCanvas = document.createElement('canvas');
@@ -8337,8 +8013,6 @@ async function getBiometricStatusForEmployee(employeeId) {
             return {
                 hasFacial: false,
                 hasFingerprint: false,
-                hasIris: false,
-                hasVoice: false,
                 modalitiesCount: 0,
                 status: 'pending',
                 lastUpdate: null
@@ -8353,16 +8027,12 @@ async function getBiometricStatusForEmployee(employeeId) {
         // Verificar qué modalidades tiene (datos REALES de la DB)
         const hasFacial = templates.some(t => t.algorithm?.toLowerCase().includes('face'));
         const hasFingerprint = templates.some(t => t.algorithm?.toLowerCase().includes('finger'));
-        const hasIris = templates.some(t => t.algorithm?.toLowerCase().includes('iris'));
-        const hasVoice = templates.some(t => t.algorithm?.toLowerCase().includes('voice'));
 
-        const modalitiesCount = [hasFacial, hasFingerprint, hasIris, hasVoice].filter(Boolean).length;
+        const modalitiesCount = [hasFacial, hasFingerprint].filter(Boolean).length;
 
         return {
             hasFacial,
             hasFingerprint,
-            hasIris,
-            hasVoice,
             modalitiesCount,
             status: modalitiesCount >= 1 ? 'registered' : 'pending',
             lastUpdate: templates[0]?.created_at || null,
@@ -8373,8 +8043,6 @@ async function getBiometricStatusForEmployee(employeeId) {
         return {
             hasFacial: false,
             hasFingerprint: false,
-            hasIris: false,
-            hasVoice: false,
             modalitiesCount: 0,
             status: 'pending',
             lastUpdate: null
@@ -8430,10 +8098,8 @@ function renderEmployeesList(employees) {
                     <div style="display: flex; gap: 5px; margin-bottom: 5px;">
                         <span style="padding: 2px 6px; border-radius: 3px; background: ${status.hasFingerprint ? '#28a745' : '#e9ecef'}; color: ${status.hasFingerprint ? 'white' : '#6c757d'};">👆</span>
                         <span style="padding: 2px 6px; border-radius: 3px; background: ${status.hasFacial ? '#28a745' : '#e9ecef'}; color: ${status.hasFacial ? 'white' : '#6c757d'};">👤</span>
-                        <span style="padding: 2px 6px; border-radius: 3px; background: ${status.hasIris ? '#28a745' : '#e9ecef'}; color: ${status.hasIris ? 'white' : '#6c757d'};">👁️</span>
-                        <span style="padding: 2px 6px; border-radius: 3px; background: ${status.hasVoice ? '#28a745' : '#e9ecef'}; color: ${status.hasVoice ? 'white' : '#6c757d'};">🎤</span>
                     </div>
-                    <div>${status.modalitiesCount}/4 modalidades</div>
+                    <div>${status.modalitiesCount}/2 modalidades</div>
                 </div>
             </div>
         `;
@@ -8973,7 +8639,35 @@ async function startRealFacialCapture() {
         }
 
         const employeeId = employeeRegistrationState.selectedEmployee.id;
+        const employeeName = `${employeeRegistrationState.selectedEmployee.firstName} ${employeeRegistrationState.selectedEmployee.lastName}`;
         console.log('✅ Employee ID obtenido:', employeeId);
+
+        // ⚠️ VERIFICAR SI YA TIENE BIOMETRÍA REGISTRADA
+        console.log('🔍 [CHECK-EXISTING] Verificando si empleado ya tiene biometría...');
+        const biometricStatus = await getBiometricStatusForEmployee(employeeId);
+
+        if (biometricStatus.hasFacial) {
+            console.warn('⚠️ [CHECK-EXISTING] Empleado YA tiene biometría facial registrada');
+
+            const confirmar = confirm(
+                `⚠️ ADVERTENCIA\n\n` +
+                `El empleado "${employeeName}" ya tiene un registro biométrico facial.\n\n` +
+                `Templates registrados: ${biometricStatus.templatesCount}\n` +
+                `Última actualización: ${biometricStatus.lastUpdate ? new Date(biometricStatus.lastUpdate).toLocaleString() : 'N/A'}\n\n` +
+                `¿Desea REEMPLAZAR el registro existente?\n\n` +
+                `• Aceptar = Reemplazar (se eliminará el anterior)\n` +
+                `• Cancelar = Mantener el actual`
+            );
+
+            if (!confirmar) {
+                console.log('❌ [CHECK-EXISTING] Usuario canceló - manteniendo registro actual');
+                addToActivityLog(`Captura cancelada - ${employeeName} ya tiene biometría`, 'info');
+                return;
+            }
+
+            console.log('✅ [CHECK-EXISTING] Usuario confirmó reemplazo');
+            addToActivityLog(`Reemplazando biometría de ${employeeName}...`, 'warning');
+        }
 
         // Cargar módulo profesional dinámicamente
         const biometricModule = await import('/js/modules/biometric-simple.js');
@@ -8994,155 +8688,6 @@ async function startRealFacialCapture() {
     }
 }
 
-/**
- * 👁️ Captura de iris con asistencia dinámica
- */
-async function startRealIrisCapture() {
-    try {
-        console.log('👁️ [IRIS-REAL] Iniciando captura de iris...');
-
-        const captureModal = createCaptureModal('iris');
-        document.body.appendChild(captureModal);
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                width: { ideal: 1920 },
-                height: { ideal: 1080 },
-                facingMode: 'user'
-            }
-        });
-
-        const video = captureModal.querySelector('#capture-video');
-        const canvas = captureModal.querySelector('#capture-canvas');
-        const guidance = captureModal.querySelector('#dynamic-guidance');
-
-        video.srcObject = stream;
-        await video.play();
-
-        let captureCompleted = false;
-        let frameCount = 0;
-
-        const analyzeFrame = () => {
-            if (captureCompleted) return;
-
-            frameCount++;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            const analysis = analyzeIrisPosition(canvas);
-            updateDynamicGuidance(guidance, analysis, 'iris');
-
-            if (analysis.quality > 0.9 && frameCount > 60) {
-                captureCompletedBiometric('iris', canvas, stream, captureModal, analysis);
-                captureCompleted = true;
-            } else {
-                requestAnimationFrame(analyzeFrame);
-            }
-        };
-
-        requestAnimationFrame(analyzeFrame);
-
-        captureModal.querySelector('#manual-capture').onclick = () => {
-            const analysis = analyzeIrisPosition(canvas);
-            captureCompletedBiometric('iris', canvas, stream, captureModal, analysis);
-            captureCompleted = true;
-        };
-
-    } catch (error) {
-        console.error('❌ [IRIS-REAL] Error en captura:', error);
-        addToActivityLog('Error en captura de iris: ' + error.message, 'error');
-        employeeRegistrationState.isCapturing = false;
-    }
-}
-
-/**
- * 🎤 Captura de voz con asistencia dinámica
- */
-async function startRealVoiceCapture() {
-    try {
-        console.log('🎤 [VOICE-REAL] Iniciando captura de voz...');
-
-        const captureModal = createCaptureModal('voice');
-        document.body.appendChild(captureModal);
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                sampleRate: 44100,
-                channelCount: 1,
-                noiseSuppression: true,
-                echoCancellation: true
-            }
-        });
-
-        const guidance = captureModal.querySelector('#dynamic-guidance');
-        const recordButton = captureModal.querySelector('#manual-capture');
-
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-        let recordingTime = 0;
-
-        recordButton.textContent = '🎤 Iniciar Grabación';
-        recordButton.onclick = () => {
-            if (!isRecording) {
-                startVoiceRecording();
-            } else {
-                stopVoiceRecording();
-            }
-        };
-
-        function startVoiceRecording() {
-            audioChunks = [];
-            mediaRecorder = new MediaRecorder(stream);
-
-            mediaRecorder.ondataavailable = (event) => {
-                audioChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                processVoiceCapture(audioBlob, stream, captureModal);
-            };
-
-            mediaRecorder.start();
-            isRecording = true;
-            recordingTime = 0;
-
-            recordButton.textContent = '⏹️ Detener Grabación';
-
-            // Análisis en tiempo real de audio
-            const analyzeAudio = () => {
-                if (!isRecording) return;
-
-                recordingTime += 100;
-                const analysis = analyzeVoiceQuality(recordingTime);
-                updateDynamicGuidance(guidance, analysis, 'voice');
-
-                // Auto-stop después de suficiente audio de calidad
-                if (recordingTime >= 3000 && analysis.quality > 0.8) {
-                    stopVoiceRecording();
-                } else if (recordingTime < 10000) {
-                    setTimeout(analyzeAudio, 100);
-                }
-            };
-
-            analyzeAudio();
-        }
-
-        function stopVoiceRecording() {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                isRecording = false;
-                recordButton.textContent = '🔄 Procesando...';
-            }
-        }
-
-    } catch (error) {
-        console.error('❌ [VOICE-REAL] Error en captura:', error);
-        addToActivityLog('Error en captura de voz: ' + error.message, 'error');
-        employeeRegistrationState.isCapturing = false;
-    }
-}
 
 /**
  * 👆 Captura de huella con asistencia dinámica (simulada)
@@ -9249,7 +8794,7 @@ function createAdvancedCaptureModal(type, options) {
             ${options.icon} ${options.title}
         </h2>
         <p style="margin: 10px 0 0 0; color: #ccc;">
-            Mantenga el ${type === 'iris' ? 'ojo' : 'rostro'} dentro del óvalo para captura automática
+            Mantenga el rostro dentro del óvalo para captura automática
         </p>
     `;
 
@@ -9416,15 +8961,9 @@ function drawDynamicOval(ctx, analysis, ovalType, width, height) {
     const centerY = height / 2;
 
     // Tamaños del óvalo según el tipo
-    let ovalWidth, ovalHeight;
-    if (ovalType === 'iris') {
-        ovalWidth = 120;
-        ovalHeight = 120; // Círculo para iris
-    } else {
-        // 🎯 ÓVALO AUMENTADO para mejor experiencia de usuario
-        ovalWidth = 320; // Aumentado para mejor UX
-        ovalHeight = 400; // Aumentado para mayor comodidad
-    }
+    // 🎯 ÓVALO AUMENTADO para mejor experiencia de usuario
+    const ovalWidth = 320; // Aumentado para mejor UX
+    const ovalHeight = 400; // Aumentado para mayor comodidad
 
     // 🚀 UMBRALES OPTIMIZADOS para fichaje ultra rápido (500 personas en 5 min)
     let ovalColor, shadowColor;
@@ -9468,10 +9007,6 @@ function drawDynamicOval(ctx, analysis, ovalType, width, height) {
         drawFaceGuidePoints(ctx, centerX, centerY, ovalWidth, ovalHeight, ovalColor);
     }
 
-    // Dibujar cruz central para iris
-    if (ovalType === 'iris') {
-        drawIrisCross(ctx, centerX, centerY, ovalColor);
-    }
 
     // Mostrar estado de calidad con indicador prominente
     const qualityPercent = (analysis.quality * 100).toFixed(0);
@@ -9518,22 +9053,6 @@ function drawFaceGuidePoints(ctx, centerX, centerY, ovalWidth, ovalHeight, color
     // Solo mostramos el óvalo sin decoraciones emoji
 }
 
-/**
- * 🎯 Dibujar cruz central para iris
- */
-function drawIrisCross(ctx, centerX, centerY, color) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([]);
-
-    // Cruz central
-    ctx.beginPath();
-    ctx.moveTo(centerX - 15, centerY);
-    ctx.lineTo(centerX + 15, centerY);
-    ctx.moveTo(centerX, centerY - 15);
-    ctx.lineTo(centerX, centerY + 15);
-    ctx.stroke();
-}
 
 /**
  * 🎯 Efecto flash de captura exitosa
@@ -9646,17 +9165,10 @@ function updateAdvancedGuidance(guidanceElement, analysis, type, capturedSamples
  * 🎯 Consejos de posicionamiento específicos
  */
 function getPositioningAdvice(analysis, type) {
-    if (type === 'iris') {
-        if (!analysis.isWellPositioned) {
-            return 'Centre el ojo en el círculo';
-        }
-        return 'Mantenga la mirada fija';
-    } else {
-        if (!analysis.isWellPositioned) {
-            return 'Centre el rostro en el óvalo';
-        }
-        return 'Mantenga posición estable';
+    if (!analysis.isWellPositioned) {
+        return 'Centre el rostro en el óvalo';
     }
+    return 'Mantenga posición estable';
 }
 
 /**
@@ -9832,26 +9344,8 @@ function createCaptureModal(type, title, icon) {
     `;
     captureBtn.textContent = '📸 Capturar Manualmente';
 
-    // Botones específicos por tipo
-    if (type === 'voice') {
-        const startBtn = document.createElement('button');
-        startBtn.className = 'start-recording';
-        startBtn.style.cssText = captureBtn.style.cssText;
-        startBtn.style.background = '#28a745';
-        startBtn.textContent = '🎤 Iniciar Grabación';
-
-        const stopBtn = document.createElement('button');
-        stopBtn.className = 'stop-recording';
-        stopBtn.style.cssText = captureBtn.style.cssText;
-        stopBtn.style.background = '#dc3545';
-        stopBtn.textContent = '⏹️ Detener';
-        stopBtn.disabled = true;
-
-        controls.appendChild(startBtn);
-        controls.appendChild(stopBtn);
-    } else {
-        controls.appendChild(captureBtn);
-    }
+    // Botones para captura
+    controls.appendChild(captureBtn);
 
     const cancelBtn = document.createElement('button');
     cancelBtn.style.cssText = `
@@ -11114,61 +10608,6 @@ function getDefaultAnalysis(canvas) {
     };
 }
 
-/**
- * Analizar posición de iris para guía dinámica
- */
-function analyzeIrisPosition(canvas) {
-    const analysis = analyzeFacePosition(canvas); // Usar análisis base facial
-
-    // Métricas específicas para iris
-    const irisQuality = analysis.quality * 0.8; // Iris requiere mayor precisión
-    const eyeRegionScore = analysis.centerScore * 1.2; // Bonus por estar en centro
-    const irisWellPositioned = analysis.centerScore > 0.8 && analysis.lightingScore > 0.7; // Más estricto para iris
-
-    return {
-        ...analysis,
-        quality: Math.min(1, irisQuality),
-        eyeRegionScore: eyeRegionScore,
-        isWellPositioned: irisWellPositioned,
-        recommendations: generateIrisRecommendations(analysis.centerScore, analysis.lightingScore, analysis.position, canvas)
-    };
-}
-
-/**
- * Analizar calidad de voz
- */
-function analyzeVoiceQuality(audioData, avgVolume) {
-    // Análisis de calidad de audio
-    const volumeScore = avgVolume > 30 && avgVolume < 200 ? 1 : Math.max(0, 1 - Math.abs(avgVolume - 100) / 100);
-
-    // Calcular distribución de frecuencias
-    let lowFreq = 0, midFreq = 0, highFreq = 0;
-    const third = Math.floor(audioData.length / 3);
-
-    for (let i = 0; i < third; i++) lowFreq += audioData[i];
-    for (let i = third; i < third * 2; i++) midFreq += audioData[i];
-    for (let i = third * 2; i < audioData.length; i++) highFreq += audioData[i];
-
-    lowFreq /= third;
-    midFreq /= third;
-    highFreq /= third;
-
-    // Puntuación basada en distribución balanceada
-    const balanceScore = 1 - Math.abs(midFreq - ((lowFreq + highFreq) / 2)) / 128;
-    const clarityScore = midFreq / 128; // Frecuencias medias importantes para voz
-
-    const quality = (volumeScore * 0.4 + balanceScore * 0.3 + clarityScore * 0.3);
-
-    return {
-        quality: quality,
-        volume: avgVolume,
-        volumeScore: volumeScore,
-        balanceScore: balanceScore,
-        clarityScore: clarityScore,
-        frequencies: { low: lowFreq, mid: midFreq, high: highFreq },
-        recommendations: generateVoiceRecommendations(volumeScore, balanceScore, avgVolume)
-    };
-}
 
 /**
  * Analizar calidad de huella dactilar
@@ -11274,60 +10713,6 @@ function generateFacialRecommendations(centerScore, lightingScore, contrastScore
 }
 
 /**
- * Generar recomendaciones para iris
- */
-function generateIrisRecommendations(centerScore, lightingScore, position, canvas) {
-    const recommendations = [];
-
-    if (centerScore < 0.8) {
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-
-        if (position.x < centerX - 30) recommendations.push("👈 Gire ligeramente hacia la derecha");
-        else if (position.x > centerX + 30) recommendations.push("👉 Gire ligeramente hacia la izquierda");
-
-        if (position.y < centerY - 30) recommendations.push("👇 Baje ligeramente la mirada");
-        else if (position.y > centerY + 30) recommendations.push("👆 Suba ligeramente la mirada");
-    }
-
-    if (lightingScore < 0.7) {
-        recommendations.push("💡 Ajuste la iluminación para mejor detalle del iris");
-    }
-
-    recommendations.push("👁️ Mantenga los ojos abiertos y mire directamente");
-
-    if (recommendations.length === 1) {
-        recommendations.unshift("✅ Excelente - capture cuando esté listo");
-    }
-
-    return recommendations;
-}
-
-/**
- * Generar recomendaciones para voz
- */
-function generateVoiceRecommendations(volumeScore, balanceScore, avgVolume) {
-    const recommendations = [];
-
-    if (volumeScore < 0.6) {
-        if (avgVolume < 50) recommendations.push("🔊 Hable más fuerte");
-        else recommendations.push("🔉 Hable más suave");
-    }
-
-    if (balanceScore < 0.6) {
-        recommendations.push("🎤 Ajuste la distancia al micrófono");
-    }
-
-    if (recommendations.length === 0) {
-        recommendations.push("✅ Calidad de audio excelente");
-    } else {
-        recommendations.push("🗣️ Hable de forma clara y natural");
-    }
-
-    return recommendations;
-}
-
-/**
  * Generar recomendaciones para huella
  */
 function generateFingerprintRecommendations(quality) {
@@ -11343,41 +10728,6 @@ function generateFingerprintRecommendations(quality) {
     }
 
     return recommendations;
-}
-
-/**
- * Dibujar visualización de voz en canvas
- */
-function drawVoiceVisualization(canvas, audioData) {
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const barWidth = canvas.width / audioData.length;
-    let x = 0;
-
-    // Gradiente de color
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#007bff');
-    gradient.addColorStop(1, '#28a745');
-
-    for (let i = 0; i < audioData.length; i++) {
-        const barHeight = (audioData[i] / 255) * canvas.height;
-
-        ctx.fillStyle = gradient;
-        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-
-        x += barWidth;
-    }
-
-    // Línea de referencia
-    ctx.strokeStyle = '#dc3545';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    ctx.moveTo(0, canvas.height * 0.7);
-    ctx.lineTo(canvas.width, canvas.height * 0.7);
-    ctx.stroke();
-    ctx.setLineDash([]);
 }
 
 /**
@@ -11487,13 +10837,11 @@ async function captureCompletedBiometric(type, dataOrCanvas, stream, modal, anal
         // Preparar datos para envío
         let biometricData = null;
 
-        if (type === 'facial' || type === 'iris') {
+        if (type === 'facial') {
             // Convertir canvas a blob
             biometricData = await new Promise(resolve => {
                 dataOrCanvas.toBlob(resolve, 'image/jpeg', 0.8);
             });
-        } else if (type === 'voice') {
-            biometricData = dataOrCanvas; // Ya es un blob de audio
         } else if (type === 'fingerprint') {
             biometricData = additionalData || 'simulated_fingerprint_data';
         }
@@ -11597,14 +10945,6 @@ function generateMathematicalPattern(samples, type) {
                 geometricRatios: calculateGeometricRatios(samples),
                 textureFeatures: extractTextureFeatures(samples),
                 symmetryMetrics: calculateSymmetryMetrics(samples)
-            };
-        } else if (type === 'iris') {
-            // Generar features de iris consolidados
-            pattern.features = {
-                irisCode: generateIrisCode(samples),
-                gabor: extractGaborFeatures(samples),
-                collagen: analyzeCollagenStructure(samples),
-                pupilRatio: calculatePupilRatios(samples)
             };
         }
 

@@ -8,7 +8,7 @@ module.exports = (sequelize) => {
       primaryKey: true
     },
     type: {
-      type: DataTypes.ENUM('fingerprint', 'face', 'iris'),
+      type: DataTypes.ENUM('fingerprint', 'face'),
       allowNull: false
     },
     fingerIndex: {
