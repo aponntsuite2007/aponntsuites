@@ -1666,6 +1666,7 @@
     <script src="js/modules/biometric.js"></script>
     <script src="js/modules/biometric-simple.js"></script>
     <script src="js/modules/evaluacion-biometrica.js"></script>
+    <script src="js/modules/emotional-analysis.js"></script>
     <!-- biometric-verification.js y facial-biometric.js unificados en biometric.js -->
     <!-- biometric-simple.js: Sistema profesional con captura automática y feedback Azure -->
 
@@ -3549,6 +3550,14 @@
                         }
                         break;
 
+                    case 'emotional-analysis':
+                        if (typeof showEmotionalAnalysisContent === 'function') {
+                            showEmotionalAnalysisContent();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'emotional-analysis.js no cargado');
+                        }
+                        break;
+
                     case 'departments':
                         if (typeof showDepartmentsContent === 'function') {
                             showDepartmentsContent();
@@ -4606,7 +4615,7 @@
             'medical-config', 'medical-dashboard', 'fehaciente-consent',
             'terms-conditions', 'absence-notifications', 'document-management',
             'facial-biometric', 'employee-map', 'training-management', 'notifications', 'job-postings',
-            'legal-dashboard', 'art-management', 'payroll-liquidation'
+            'legal-dashboard', 'art-management', 'payroll-liquidation', 'emotional-analysis'
         ];
         
         for (const module of modules) {
