@@ -1904,16 +1904,62 @@ function initializeBiometricWebSocket() {
     console.log('🔌 [BIOMETRIC-WS] Inicializando WebSocket tiempo real...');
 
     try {
-        // En desarrollo - simular WebSocket
-        biometricHubState.websocketConnected = true;
-        updateWebSocketStatus(true);
+        // Detectar si estamos en producción (Render) o desarrollo (localhost)
+        const isProduction = window.location.hostname.includes('render.com') ||
+                            window.location.hostname.includes('onrender.com');
 
-        // Simular datos tiempo real
-        setTimeout(() => {
-            simulateRealTimeData();
-        }, 2000);
+        if (isProduction) {
+            // Producción: conectar WebSocket real
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/biometric-ws`;
 
-        console.log('✅ [BIOMETRIC-WS] WebSocket simulado conectado');
+            const ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('✅ [BIOMETRIC-WS] WebSocket REAL conectado');
+                biometricHubState.websocketConnected = true;
+                updateWebSocketStatus(true);
+
+                // Suscribirse a eventos de la empresa
+                ws.send(JSON.stringify({
+                    type: 'subscribe',
+                    companyId: selectedCompany.company_id || selectedCompany.id
+                }));
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleRealtimeUpdate(data);
+                } catch (error) {
+                    console.error('❌ [BIOMETRIC-WS] Error procesando mensaje:', error);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('❌ [BIOMETRIC-WS] Error en WebSocket:', error);
+                updateWebSocketStatus(false);
+            };
+
+            ws.onclose = () => {
+                console.warn('⚠️ [BIOMETRIC-WS] WebSocket desconectado');
+                biometricHubState.websocketConnected = false;
+                updateWebSocketStatus(false);
+            };
+
+            biometricHubState.websocket = ws;
+        } else {
+            // Desarrollo: simular WebSocket
+            biometricHubState.websocketConnected = true;
+            updateWebSocketStatus(true);
+
+            // Simular datos tiempo real
+            setTimeout(() => {
+                simulateRealTimeData();
+            }, 2000);
+
+            console.log('✅ [BIOMETRIC-WS] WebSocket simulado (desarrollo)');
+        }
     } catch (error) {
         console.error('❌ [BIOMETRIC-WS] Error conectando WebSocket:', error);
         updateWebSocketStatus(false);
