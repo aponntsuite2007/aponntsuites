@@ -13,13 +13,13 @@
 const express = require('express');
 const router = express.Router();
 const { sequelize } = require('../config/database');
-const { authenticateToken, authorizeRole } = require('../middleware/auth');
+const { auth, authorize, adminOnly } = require('../middleware/auth');
 
 // ========================================
 // GET /api/v1/biometric/consents
 // Obtener todos los consentimientos de la empresa
 // ========================================
-router.get('/consents', authenticateToken, async (req, res) => {
+router.get('/consents', auth, async (req, res) => {
     try {
         const { company_id, role } = req.user;
 
@@ -94,7 +94,7 @@ router.get('/consents', authenticateToken, async (req, res) => {
 // GET /api/v1/biometric/consents/:userId
 // Obtener consentimiento de un usuario específico
 // ========================================
-router.get('/consents/:userId', authenticateToken, async (req, res) => {
+router.get('/consents/:userId', auth, async (req, res) => {
     try {
         const { userId } = req.params;
         const { company_id, user_id, role } = req.user;
@@ -152,7 +152,7 @@ router.get('/consents/:userId', authenticateToken, async (req, res) => {
 // POST /api/v1/biometric/consents/grant
 // Otorgar consentimiento con validación biométrica
 // ========================================
-router.post('/consents/grant', authenticateToken, async (req, res) => {
+router.post('/consents/grant', auth, async (req, res) => {
     try {
         const {
             consentText,
@@ -297,7 +297,7 @@ router.post('/consents/grant', authenticateToken, async (req, res) => {
 // POST /api/v1/biometric/consents/revoke
 // Revocar consentimiento con validación biométrica
 // ========================================
-router.post('/consents/revoke', authenticateToken, async (req, res) => {
+router.post('/consents/revoke', auth, async (req, res) => {
     try {
         const {
             reason,
@@ -412,7 +412,7 @@ router.post('/consents/revoke', authenticateToken, async (req, res) => {
 // GET /api/v1/biometric/consents/audit-log
 // Obtener log de auditoría de consentimientos
 // ========================================
-router.get('/consents/audit-log', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+router.get('/consents/audit-log', auth, authorize('admin'), async (req, res) => {
     try {
         const { company_id } = req.user;
         const { userId, startDate, endDate, limit = 100 } = req.query;
@@ -472,7 +472,7 @@ router.get('/consents/audit-log', authenticateToken, authorizeRole(['admin']), a
 // GET /api/v1/biometric/consents/compliance-report
 // Generar reporte de cumplimiento legal
 // ========================================
-router.get('/consents/compliance-report', authenticateToken, authorizeRole(['admin', 'rrhh']), async (req, res) => {
+router.get('/consents/compliance-report', auth, authorize('admin', 'rrhh'), async (req, res) => {
     try {
         const { company_id } = req.user;
 
