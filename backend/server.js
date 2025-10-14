@@ -1880,8 +1880,9 @@ const notificationRoutes = require('./src/routes/notificationRoutes');
 app.use('/api/v1/notifications', notificationRoutes);
 
 // 🔒 CONFIGURAR API BIOMÉTRICA
-const biometricRoutes = require('./src/routes/biometricRoutes');
-app.use('/api/v1/biometric', biometricRoutes);
+// COMENTADO: Conflicto con biometricConsentRoutes en la misma ruta /api/v1/biometric
+// const biometricRoutes = require('./src/routes/biometricRoutes');
+// app.use('/api/v1/biometric', biometricRoutes);
 
 // 🏥 CONFIGURAR API MÉDICA
 const { medicalRouter, adminRouter } = require('./src/routes/medicalRoutes-simple');
