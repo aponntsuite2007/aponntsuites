@@ -11534,13 +11534,40 @@ async function showBiometricConsentContent(container) {
 
     try {
         const token = localStorage.getItem('token');
+
+        if (!token) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: #fef3c7; border-radius: 12px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
+                    <p style="color: #92400e; margin: 0; font-weight: 600;">Sesión no válida</p>
+                    <p style="color: #78350f; margin: 10px 0 0 0; font-size: 14px;">Por favor, recarga la página para iniciar sesión</p>
+                </div>
+            `;
+            return;
+        }
+
         const response = await fetch('/api/v1/biometric/consents', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
-        if (!response.ok) throw new Error('Error al cargar consentimientos');
+        if (!response.ok) {
+            if (response.status === 401) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: #fef3c7; border-radius: 12px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
+                        <p style="color: #92400e; margin: 0; font-weight: 600;">Sesión expirada</p>
+                        <p style="color: #78350f; margin: 10px 0 20px 0; font-size: 14px;">Tu sesión ha expirado. Por favor, inicia sesión nuevamente.</p>
+                        <button onclick="location.reload()" style="padding: 10px 20px; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            Recargar página
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            throw new Error('Error al cargar consentimientos');
+        }
 
         const data = await response.json();
         const consents = data.consents || [];
