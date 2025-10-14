@@ -59,7 +59,7 @@ router.get('/consents', auth, async (req, res) => {
                 AND c.consent_type = 'emotional_analysis'
                 AND u.company_id = c.company_id
             WHERE u.company_id = :company_id
-                AND u."isActive" = true
+                AND u.is_active = true
             ORDER BY u.last_name, u.first_name
         `, {
             replacements: { company_id },
@@ -494,7 +494,7 @@ router.get('/consents/compliance-report', auth, authorize('admin', 'rrhh'), asyn
                 AND c.company_id = u.company_id
                 AND c.consent_type = 'emotional_analysis'
             WHERE u.company_id = :company_id
-                AND u."isActive" = true
+                AND u.is_active = true
         `, {
             replacements: { company_id },
             type: sequelize.QueryTypes.SELECT
