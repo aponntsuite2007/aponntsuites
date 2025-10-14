@@ -2710,8 +2710,8 @@
             currentUser.isCompanyAdmin = true;
             isAuthenticated = true;
 
-            // Guardar token para futuras peticiones - DESACTIVADO PARA SIEMPRE PEDIR LOGIN
-            // localStorage.setItem('authToken', authResult.token); // DESACTIVADO
+            // Guardar token para futuras peticiones - REACTIVADO para módulos biométricos
+            localStorage.setItem('authToken', authResult.token); // REACTIVADO - Necesario para módulos biométricos
             companyAuthToken = authResult.token;
             authToken = authResult.token; // Para nuestro sistema de módulos
 
@@ -6129,8 +6129,8 @@
                     name: document.getElementById('companySelect').selectedOptions[0].textContent
                 };
 
-                // Guardar en localStorage - DESACTIVADO PARA SIEMPRE PEDIR LOGIN
-                // localStorage.setItem('authToken', data.token); // DESACTIVADO
+                // Guardar en localStorage - REACTIVADO para módulos biométricos
+                localStorage.setItem('authToken', data.token); // REACTIVADO - Necesario para módulos biométricos
                 localStorage.setItem('currentUser', JSON.stringify(data.user));
                 // localStorage.setItem('currentCompany', JSON.stringify(currentCompany)); // DESACTIVADO
 
