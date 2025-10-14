@@ -11433,7 +11433,7 @@ async function showEmotionalAnalysisContent(container) {
     `;
 
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
 
         // Cargar dashboard completo
         container.innerHTML = `
@@ -11537,7 +11537,7 @@ async function showBiometricConsentContent(container) {
     `;
 
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
 
         if (!token) {
             container.innerHTML = `

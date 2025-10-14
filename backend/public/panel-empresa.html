@@ -1374,20 +1374,20 @@
                                                             console.log('✅ [AUTH] Login exitoso con JWT');
                                                             console.log('👤 [AUTH] Usuario autenticado:', authData.user.firstName, authData.user.lastName);
 
-                                                            // Guardar token JWT y datos del usuario - DESACTIVADO PARA SIEMPRE PEDIR LOGIN
-                                                            // localStorage.setItem('authToken', authData.token); // DESACTIVADO
-                                                            // localStorage.setItem('refreshToken', authData.refreshToken || ''); // DESACTIVADO
-                                                            // localStorage.setItem('currentUser', JSON.stringify({ // DESACTIVADO
-                                                            //     id: authData.user.user_id,
-                                                            //     employeeId: authData.user.employeeId,
-                                                            //     username: authData.user.email,
-                                                            //     firstName: authData.user.firstName,
-                                                            //     lastName: authData.user.lastName,
-                                                            //     email: authData.user.email,
-                                                            //     role: authData.user.role,
-                                                            //     company_id: selectedCompany.id,
-                                                            //     isAuthenticated: true
-                                                            // }));
+                                                            // Guardar token JWT y datos del usuario - REACTIVADO para módulos biométricos
+                                                            localStorage.setItem('authToken', authData.token);
+                                                            localStorage.setItem('refreshToken', authData.refreshToken || '');
+                                                            localStorage.setItem('currentUser', JSON.stringify({
+                                                                id: authData.user.user_id,
+                                                                employeeId: authData.user.employeeId,
+                                                                username: authData.user.email,
+                                                                firstName: authData.user.firstName,
+                                                                lastName: authData.user.lastName,
+                                                                email: authData.user.email,
+                                                                role: authData.user.role,
+                                                                company_id: selectedCompany.id,
+                                                                isAuthenticated: true
+                                                            }));
 
                                                             // Ocultar formulario de login
                                                             form.style.display = 'none';
