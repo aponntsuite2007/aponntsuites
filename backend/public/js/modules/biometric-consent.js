@@ -501,15 +501,56 @@ function showBiometricconsentContent() {
 
 // Cargar datos de consentimientos
 async function loadConsentsData() {
+    const tbody = document.getElementById('consents-tbody');
+
     try {
         showConsentMessage('🔄 Cargando datos de consentimientos...', 'info');
+
+        const token = localStorage.getItem('authToken');
+
+        if (!token) {
+            console.warn('⚠️ No hay token de autenticación');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="padding: 40px; text-align: center;">
+                            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; display: inline-block;">
+                                <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
+                                <p style="color: #92400e; margin: 5px 0; font-weight: 600;">Sesión no válida</p>
+                                <p style="color: #78350f; margin: 0; font-size: 14px;">Por favor, recarga la página para iniciar sesión</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+            return;
+        }
 
         // TODO: Reemplazar con llamada real a API
         const response = await fetch('/api/v1/biometric/consents', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                'Authorization': `Bearer ${token}`
             }
         });
+
+        if (response.status === 401) {
+            console.warn('⚠️ Token expirado (401)');
+            localStorage.removeItem('authToken');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="padding: 40px; text-align: center;">
+                            <div style="background: #fee2e2; padding: 20px; border-radius: 8px; display: inline-block;">
+                                <div style="font-size: 48px; margin-bottom: 10px;">⏰</div>
+                                <p style="color: #991b1b; margin: 5px 0; font-weight: 600;">Sesión expirada</p>
+                                <p style="color: #dc2626; margin: 0; font-size: 14px;">Por favor, recarga la página para iniciar sesión nuevamente</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+            return;
+        }
 
         if (!response.ok) {
             throw new Error('Error cargando consentimientos');

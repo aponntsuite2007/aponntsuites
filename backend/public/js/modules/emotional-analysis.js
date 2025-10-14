@@ -216,11 +216,37 @@ window.emotionalAnalysis = {
 
         try {
             const token = localStorage.getItem('authToken');
+
+            if (!token) {
+                console.warn('⚠️ No hay token de autenticación');
+                contentArea.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: #fef3c7; border-radius: 12px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
+                        <p style="color: #92400e; margin: 0; font-weight: 600;">Sesión no válida</p>
+                        <p style="color: #78350f; margin: 10px 0 0 0; font-size: 14px;">Por favor, recarga la página para iniciar sesión</p>
+                    </div>
+                `;
+                return;
+            }
+
             const response = await fetch('/api/v1/biometric/consents/compliance-report', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
+
+            if (response.status === 401) {
+                console.warn('⚠️ Token expirado (401)');
+                localStorage.removeItem('authToken');
+                contentArea.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: #fee2e2; border-radius: 12px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">⏰</div>
+                        <p style="color: #991b1b; margin: 0; font-weight: 600;">Sesión expirada</p>
+                        <p style="color: #dc2626; margin: 10px 0 0 0; font-size: 14px;">Por favor, recarga la página para iniciar sesión nuevamente</p>
+                    </div>
+                `;
+                return;
+            }
 
             if (!response.ok) throw new Error('Error al cargar reporte');
 
