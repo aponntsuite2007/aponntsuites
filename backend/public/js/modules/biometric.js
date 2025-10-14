@@ -530,7 +530,7 @@ function showBiometricContent() {
                         padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
                         transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
                     ">
-                        📊 Análisis Parámetros Biométricos
+                        😊 Análisis Emocional
                     </button>
                     <button class="biometric-tab-btn" data-tab="biometric-consent" onclick="showBiometricTab('biometric-consent')" style="
                         padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
@@ -1209,14 +1209,14 @@ async function showBiometricAIAnalysis(container) {
 
             <!-- Métricas principales IA -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                <!-- Análisis Parámetros Biométricos -->
-                <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 25px; border-radius: 15px; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -20px; right: -20px; font-size: 60px; opacity: 0.2;">📊</div>
-                    <h5 style="margin: 0 0 10px 0; font-size: 16px;">Análisis Parámetros Biométricos</h5>
+                <!-- Análisis Emocional -->
+                <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 25px; border-radius: 15px; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -20px; right: -20px; font-size: 60px; opacity: 0.2;">😊</div>
+                    <h5 style="margin: 0 0 10px 0; font-size: 16px;">Harvard Medical - Análisis Emocional</h5>
                     <div style="font-size: 32px; font-weight: bold; margin-bottom: 8px;">94.7%</div>
-                    <div style="font-size: 14px; opacity: 0.9;">Estado general positivo</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Estado emocional general positivo</div>
                     <div style="margin-top: 12px; font-size: 12px; opacity: 0.8;">
-                        <strong>Modelo:</strong> Azure Face API v2.1
+                        <strong>Modelo:</strong> EmotiNet Harvard v3.2
                     </div>
                 </div>
 
@@ -11388,7 +11388,7 @@ async function showEmotionalAnalysisContent(container) {
 
                 <!-- Info Panel -->
                 <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <h3 style="margin: 0 0 20px 0; color: #1f2937;">📊 Sistema de Análisis de Parámetros Biométricos</h3>
+                    <h3 style="margin: 0 0 20px 0; color: #1f2937;">📋 Sistema de Análisis Emocional</h3>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
                         <div>
