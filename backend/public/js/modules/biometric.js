@@ -526,65 +526,23 @@ function showBiometricContent() {
                     ">
                         📊 Dashboard Tiempo Real
                     </button>
-                    <button class="biometric-tab-btn" data-tab="templates" onclick="showBiometricTab('templates')" style="
-                        padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
-                        transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
-                    ">
-                        🎭 Gestión Templates
-                    </button>
-                    <button class="biometric-tab-btn" data-tab="ai-analysis" onclick="showBiometricTab('ai-analysis')" style="
-                        padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
-                        transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
-                    ">
-                        🧠 Análisis IA Avanzado
-                    </button>
-                    <button class="biometric-tab-btn" data-tab="monitoring" onclick="showBiometricTab('monitoring')" style="
-                        padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
-                        transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
-                    ">
-                        📡 Monitoreo Continuo
-                    </button>
-                    <button class="biometric-tab-btn" data-tab="config" onclick="showBiometricTab('config')" style="
-                        padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
-                        transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
-                    ">
-                        ⚙️ Configuración
-                    </button>
                     <button class="biometric-tab-btn" data-tab="employee-registration" onclick="showBiometricTab('employee-registration')" style="
                         padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
                         transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
                     ">
                         👤 Registro Biométrico Empleados
                     </button>
-                    <button class="biometric-tab-btn" data-tab="scientific-evaluation" onclick="showBiometricTab('scientific-evaluation')" style="
-                        padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
-                        transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
-                    ">
-                        🧬 Evaluación Científica
-                    </button>
-                    <button class="biometric-tab-btn" data-tab="psychological-assessment" onclick="showBiometricTab('psychological-assessment')" style="
-                        padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
-                        transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
-                    ">
-                        🧠 Evaluación Psicológica
-                    </button>
                     <button class="biometric-tab-btn" data-tab="emotional-analysis" onclick="showBiometricTab('emotional-analysis')" style="
                         padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
                         transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
                     ">
-                        😊 Análisis Emocional Profesional
+                        😊 Análisis Emocional
                     </button>
                     <button class="biometric-tab-btn" data-tab="biometric-consent" onclick="showBiometricTab('biometric-consent')" style="
                         padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
                         transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
                     ">
                         🔐 Consentimientos Biométricos
-                    </button>
-                    <button class="biometric-tab-btn" data-tab="facial-capture-tech" onclick="showBiometricTab('facial-capture-tech')" style="
-                        padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
-                        transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
-                    ">
-                        🚀 Tecnologías Biométricas Multi-Modales
                     </button>
                 </div>
             </div>
