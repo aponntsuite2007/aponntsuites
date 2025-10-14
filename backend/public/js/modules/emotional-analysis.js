@@ -69,9 +69,10 @@ window.emotionalAnalysis = {
             case 'dashboard':
                 await emotionalAnalysis.loadDashboard();
                 break;
-            case 'consents':
-                await emotionalAnalysis.loadConsents();
-                break;
+            // Consentimientos movidos a tab separada en biometric.js
+            // case 'consents':
+            //     await emotionalAnalysis.loadConsents();
+            //     break;
             case 'reports':
                 await emotionalAnalysis.loadReports();
                 break;
@@ -97,9 +98,10 @@ window.emotionalAnalysis = {
             case 'dashboard':
                 emotionalAnalysis.loadDashboard();
                 break;
-            case 'consents':
-                emotionalAnalysis.loadConsents();
-                break;
+            // Consentimientos movidos a tab separada
+            // case 'consents':
+            //     emotionalAnalysis.loadConsents();
+            //     break;
             case 'reports':
                 emotionalAnalysis.loadReports();
                 break;
