@@ -568,6 +568,18 @@ function showBiometricContent() {
                     ">
                         🧠 Evaluación Psicológica
                     </button>
+                    <button class="biometric-tab-btn" data-tab="emotional-analysis" onclick="showBiometricTab('emotional-analysis')" style="
+                        padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
+                        transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
+                    ">
+                        😊 Análisis Emocional Profesional
+                    </button>
+                    <button class="biometric-tab-btn" data-tab="biometric-consent" onclick="showBiometricTab('biometric-consent')" style="
+                        padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
+                        transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
+                    ">
+                        🔐 Consentimientos Biométricos
+                    </button>
                     <button class="biometric-tab-btn" data-tab="facial-capture-tech" onclick="showBiometricTab('facial-capture-tech')" style="
                         padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
                         transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
@@ -670,6 +682,12 @@ function showBiometricTab(tabName) {
             break;
         case 'facial-capture-tech':
             showFacialCaptureTechContent(content);
+            break;
+        case 'emotional-analysis':
+            showEmotionalAnalysisContent(content);
+            break;
+        case 'biometric-consent':
+            showBiometricConsentContent(content);
             break;
         default:
             console.error(`❌ [BIOMETRIC-HUB] Tab desconocido: ${tabName}`);
@@ -11393,6 +11411,228 @@ function drawClosedShape(ctx, points) {
     }
     ctx.closePath();
     ctx.stroke();
+}
+
+// ==================================================================
+// 😊 EMOTIONAL ANALYSIS TAB - ANÁLISIS EMOCIONAL PROFESIONAL
+// ==================================================================
+async function showEmotionalAnalysisContent(container) {
+    console.log('😊 [EMOTIONAL-ANALYSIS] Cargando módulo de análisis emocional...');
+
+    container.innerHTML = `
+        <div style="padding: 20px;">
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">🔄</div>
+                <p style="color: #6b7280;">Cargando dashboard de análisis emocional...</p>
+            </div>
+        </div>
+    `;
+
+    try {
+        const token = localStorage.getItem('token');
+
+        // Cargar dashboard completo
+        container.innerHTML = `
+            <div style="padding: 20px;">
+                <!-- Stats Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">👥 Usuarios Analizados</div>
+                        <div style="font-size: 32px; font-weight: bold;">0</div>
+                        <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">Últimos 7 días</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 25px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">😊 Bienestar Promedio</div>
+                        <div style="font-size: 32px; font-weight: bold;">--</div>
+                        <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">Sin datos disponibles</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 25px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">⚡ Nivel de Fatiga</div>
+                        <div style="font-size: 32px; font-weight: bold;">--</div>
+                        <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">Sin datos disponibles</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 25px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">📊 Análisis Hoy</div>
+                        <div style="font-size: 32px; font-weight: bold;">0</div>
+                        <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">Escaneos realizados</div>
+                    </div>
+                </div>
+
+                <!-- Info Panel -->
+                <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h3 style="margin: 0 0 20px 0; color: #1f2937;">📋 Sistema de Análisis Emocional</h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                        <div>
+                            <h4 style="color: #8B5CF6; margin: 0 0 15px 0;">🔬 Tecnología Azure Face API</h4>
+                            <ul style="color: #6b7280; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                <li>Detección de emociones en tiempo real</li>
+                                <li>Análisis de fatiga y estrés</li>
+                                <li>Indicadores de bienestar</li>
+                                <li>Procesamiento seguro y encriptado</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 style="color: #10b981; margin: 0 0 15px 0;">⚖️ Cumplimiento Legal</h4>
+                            <ul style="color: #6b7280; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                <li>Ley 25.326 (Argentina)</li>
+                                <li>Consentimiento explícito requerido</li>
+                                <li>Retención de datos: 90 días</li>
+                                <li>Derecho a revocación inmediata</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 style="color: #f59e0b; margin: 0 0 15px 0;">🔐 Seguridad y Privacidad</h4>
+                            <ul style="color: #6b7280; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                <li>Datos anonimizados en reportes</li>
+                                <li>Auditoría completa de accesos</li>
+                                <li>Eliminación automática de datos</li>
+                                <li>Reportes agregados (mín. 10 usuarios)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; padding: 20px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
+                        <strong style="color: #92400e;">⚠️ Importante:</strong>
+                        <p style="margin: 10px 0 0 0; color: #78350f;">
+                            Para comenzar a usar el análisis emocional, los usuarios deben otorgar su consentimiento explícito
+                            en la pestaña <strong>Consentimientos Biométricos</strong>. Los datos solo se recopilan de usuarios que han aceptado
+                            el análisis biométrico.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('❌ [EMOTIONAL-ANALYSIS] Error cargando dashboard:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; background: #fee2e2; border-radius: 12px;">
+                <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                <p style="color: #991b1b; margin: 0;">Error al cargar el dashboard</p>
+                <p style="color: #dc2626; margin: 10px 0 0 0; font-size: 14px;">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// ==================================================================
+// 🔐 BIOMETRIC CONSENT TAB - GESTIÓN DE CONSENTIMIENTOS
+// ==================================================================
+async function showBiometricConsentContent(container) {
+    console.log('🔐 [BIOMETRIC-CONSENT] Cargando módulo de consentimientos...');
+
+    container.innerHTML = `
+        <div style="padding: 20px;">
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">🔄</div>
+                <p style="color: #6b7280;">Cargando consentimientos biométricos...</p>
+            </div>
+        </div>
+    `;
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/v1/biometric/consents', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Error al cargar consentimientos');
+
+        const data = await response.json();
+        const consents = data.consents || [];
+        const stats = data.stats || {};
+
+        container.innerHTML = `
+            <div style="padding: 20px;">
+                <!-- Stats Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #10b981; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">✅ Activos</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #10b981;">${stats.active || 0}</div>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">⏳ Pendientes</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #f59e0b;">${stats.pending || 0}</div>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #ef4444; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">🚫 Revocados</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #ef4444;">${stats.revoked || 0}</div>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #6b7280; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">📊 Total</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #1f2937;">${stats.total || 0}</div>
+                    </div>
+                </div>
+
+                <!-- Consents Table -->
+                <div style="background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
+                    <div style="padding: 20px; border-bottom: 1px solid #e5e7eb;">
+                        <h3 style="margin: 0; color: #1f2937;">⚖️ Consentimientos por Usuario</h3>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f9fafb;">
+                                    <th style="padding: 12px; text-align: left; font-size: 13px; color: #6b7280; font-weight: 600;">Usuario</th>
+                                    <th style="padding: 12px; text-align: left; font-size: 13px; color: #6b7280; font-weight: 600;">Email</th>
+                                    <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Estado</th>
+                                    <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Fecha</th>
+                                    <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Método</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${consents.length === 0 ? `
+                                    <tr>
+                                        <td colspan="5" style="padding: 40px; text-align: center; color: #6b7280;">
+                                            <div style="font-size: 48px; margin-bottom: 15px;">📝</div>
+                                            <p style="margin: 0;">No hay consentimientos registrados</p>
+                                        </td>
+                                    </tr>
+                                ` : consents.map(consent => `
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 15px; color: #1f2937; font-weight: 500;">${consent.employee_name || 'Sin nombre'}</td>
+                                        <td style="padding: 15px; color: #6b7280;">${consent.email || '-'}</td>
+                                        <td style="padding: 15px; text-align: center;">
+                                            ${getConsentStatusBadge(consent.status)}
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; color: #6b7280; font-size: 13px;">
+                                            ${consent.consent_date ? new Date(consent.consent_date).toLocaleDateString('es-AR') : '-'}
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; color: #6b7280; font-size: 13px;">
+                                            ${consent.validation_method || '-'}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('❌ [BIOMETRIC-CONSENT] Error cargando consentimientos:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; background: #fee2e2; border-radius: 12px;">
+                <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                <p style="color: #991b1b; margin: 0;">Error al cargar consentimientos</p>
+                <p style="color: #dc2626; margin: 10px 0 0 0; font-size: 14px;">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function getConsentStatusBadge(status) {
+    const badges = {
+        'active': '<span style="padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 12px; font-size: 12px; font-weight: 600;">✅ Activo</span>',
+        'pending': '<span style="padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 12px; font-size: 12px; font-weight: 600;">⏳ Pendiente</span>',
+        'revoked': '<span style="padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 12px; font-size: 12px; font-weight: 600;">🚫 Revocado</span>',
+        'expired': '<span style="padding: 4px 12px; background: #f3f4f6; color: #4b5563; border-radius: 12px; font-size: 12px; font-weight: 600;">⏱️ Expirado</span>'
+    };
+    return badges[status] || badges['pending'];
 }
 
 // ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE
