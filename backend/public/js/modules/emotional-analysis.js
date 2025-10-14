@@ -4,8 +4,6 @@
  */
 
 let currentView = 'dashboard';
-let consentsData = [];
-let statsData = {};
 
 async function showEmotionalAnalysisContent() {
     console.log('🧠 Cargando módulo de análisis emocional...');
@@ -34,10 +32,6 @@ async function showEmotionalAnalysisContent() {
                 <button id="tab-dashboard" onclick="emotionalAnalysis.switchView('dashboard')"
                         class="tab-btn active" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid #8B5CF6; color: #8B5CF6; font-weight: 600; cursor: pointer;">
                     📊 Dashboard
-                </button>
-                <button id="tab-consents" onclick="emotionalAnalysis.switchView('consents')"
-                        class="tab-btn" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600; cursor: pointer;">
-                    ⚖️ Consentimientos
                 </button>
                 <button id="tab-reports" onclick="emotionalAnalysis.switchView('reports')"
                         class="tab-btn" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600; cursor: pointer;">
@@ -69,9 +63,6 @@ window.emotionalAnalysis = {
             case 'dashboard':
                 await emotionalAnalysis.loadDashboard();
                 break;
-            case 'consents':
-                await emotionalAnalysis.loadConsents();
-                break;
             case 'reports':
                 await emotionalAnalysis.loadReports();
                 break;
@@ -96,9 +87,6 @@ window.emotionalAnalysis = {
         switch(view) {
             case 'dashboard':
                 emotionalAnalysis.loadDashboard();
-                break;
-            case 'consents':
-                emotionalAnalysis.loadConsents();
                 break;
             case 'reports':
                 emotionalAnalysis.loadReports();
@@ -185,8 +173,8 @@ window.emotionalAnalysis = {
                         <strong style="color: #92400e;">⚠️ Importante:</strong>
                         <p style="margin: 10px 0 0 0; color: #78350f;">
                             Para comenzar a usar el análisis emocional, los usuarios deben otorgar su consentimiento explícito
-                            en la pestaña <strong>Consentimientos</strong>. Los datos solo se recopilan de usuarios que han aceptado
-                            el análisis biométrico.
+                            en el módulo <strong>Centro Comando Biométrico → Consentimientos Biométricos</strong>.
+                            Los datos solo se recopilan de usuarios que han aceptado el análisis biométrico.
                         </p>
                     </div>
                 </div>
@@ -201,142 +189,6 @@ window.emotionalAnalysis = {
                 </div>
             `;
         }
-    },
-
-    async loadConsents() {
-        const contentArea = document.getElementById('emotional-content-area');
-        contentArea.innerHTML = `
-            <div style="text-align: center; padding: 60px 20px;">
-                <div style="font-size: 48px; margin-bottom: 20px;">🔄</div>
-                <p style="color: #6b7280;">Cargando consentimientos...</p>
-            </div>
-        `;
-
-        try {
-            const token = localStorage.getItem('authToken');
-
-            if (!token) {
-                console.warn('⚠️ No hay token de autenticación');
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; background: #fef3c7; border-radius: 12px; margin: 20px;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
-                        <p style="color: #92400e; margin: 0; font-weight: 600;">Sesión no válida</p>
-                        <p style="color: #78350f; margin: 10px 0 0 0; font-size: 14px;">Por favor, recarga la página para iniciar sesión</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const response = await fetch('/api/v1/biometric/consents', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.status === 401) {
-                console.warn('⚠️ Token expirado (401)');
-                localStorage.removeItem('authToken');
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; background: #fee2e2; border-radius: 12px; margin: 20px;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">⏰</div>
-                        <p style="color: #991b1b; margin: 0; font-weight: 600;">Sesión expirada</p>
-                        <p style="color: #dc2626; margin: 10px 0 0 0; font-size: 14px;">Por favor, recarga la página para iniciar sesión nuevamente</p>
-                    </div>
-                `;
-                return;
-            }
-
-            if (!response.ok) throw new Error('Error al cargar consentimientos');
-
-            const data = await response.json();
-            consentsData = data.consents || [];
-            statsData = data.stats || {};
-
-            contentArea.innerHTML = `
-                <!-- Stats Cards -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
-                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #10b981; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">✅ Activos</div>
-                        <div style="font-size: 28px; font-weight: bold; color: #10b981;">${statsData.active || 0}</div>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">⏳ Pendientes</div>
-                        <div style="font-size: 28px; font-weight: bold; color: #f59e0b;">${statsData.pending || 0}</div>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #ef4444; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">🚫 Revocados</div>
-                        <div style="font-size: 28px; font-weight: bold; color: #ef4444;">${statsData.revoked || 0}</div>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #6b7280; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">📊 Total</div>
-                        <div style="font-size: 28px; font-weight: bold; color: #1f2937;">${statsData.total || 0}</div>
-                    </div>
-                </div>
-
-                <!-- Consents Table -->
-                <div style="background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
-                    <div style="padding: 20px; border-bottom: 1px solid #e5e7eb;">
-                        <h3 style="margin: 0; color: #1f2937;">⚖️ Consentimientos por Usuario</h3>
-                    </div>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="background: #f9fafb;">
-                                    <th style="padding: 12px; text-align: left; font-size: 13px; color: #6b7280; font-weight: 600;">Usuario</th>
-                                    <th style="padding: 12px; text-align: left; font-size: 13px; color: #6b7280; font-weight: 600;">Email</th>
-                                    <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Estado</th>
-                                    <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Fecha</th>
-                                    <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Método</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${consentsData.length === 0 ? `
-                                    <tr>
-                                        <td colspan="5" style="padding: 40px; text-align: center; color: #6b7280;">
-                                            <div style="font-size: 48px; margin-bottom: 15px;">📝</div>
-                                            <p style="margin: 0;">No hay consentimientos registrados</p>
-                                        </td>
-                                    </tr>
-                                ` : consentsData.map(consent => `
-                                    <tr style="border-bottom: 1px solid #f3f4f6;">
-                                        <td style="padding: 15px; color: #1f2937; font-weight: 500;">${consent.employee_name || 'Sin nombre'}</td>
-                                        <td style="padding: 15px; color: #6b7280;">${consent.email || '-'}</td>
-                                        <td style="padding: 15px; text-align: center;">
-                                            ${emotionalAnalysis.getStatusBadge(consent.status)}
-                                        </td>
-                                        <td style="padding: 15px; text-align: center; color: #6b7280; font-size: 13px;">
-                                            ${consent.consent_date ? new Date(consent.consent_date).toLocaleDateString('es-AR') : '-'}
-                                        </td>
-                                        <td style="padding: 15px; text-align: center; color: #6b7280; font-size: 13px;">
-                                            ${consent.validation_method || '-'}
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-        } catch (error) {
-            console.error('Error loading consents:', error);
-            contentArea.innerHTML = `
-                <div style="text-align: center; padding: 40px; background: #fee2e2; border-radius: 12px;">
-                    <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
-                    <p style="color: #991b1b; margin: 0;">Error al cargar consentimientos</p>
-                    <p style="color: #dc2626; margin: 10px 0 0 0; font-size: 14px;">${error.message}</p>
-                </div>
-            `;
-        }
-    },
-
-    getStatusBadge(status) {
-        const badges = {
-            'active': '<span style="padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 12px; font-size: 12px; font-weight: 600;">✅ Activo</span>',
-            'pending': '<span style="padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 12px; font-size: 12px; font-weight: 600;">⏳ Pendiente</span>',
-            'revoked': '<span style="padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 12px; font-size: 12px; font-weight: 600;">🚫 Revocado</span>',
-            'expired': '<span style="padding: 4px 12px; background: #f3f4f6; color: #4b5563; border-radius: 12px; font-size: 12px; font-weight: 600;">⏱️ Expirado</span>'
-        };
-        return badges[status] || badges['pending'];
     },
 
     async loadReports() {

@@ -507,7 +507,7 @@ async function loadConsentsData() {
         // TODO: Reemplazar con llamada real a API
         const response = await fetch('/api/v1/biometric/consents', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
         });
 
