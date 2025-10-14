@@ -214,11 +214,25 @@ window.emotionalAnalysis = {
 
         try {
             const token = localStorage.getItem('token');
+
+            if (!token) {
+                console.warn('⚠️ No hay token, redirigiendo al login...');
+                window.location.href = '/login.html';
+                return;
+            }
+
             const response = await fetch('/api/v1/biometric/consents', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
+
+            if (response.status === 401) {
+                console.warn('⚠️ Token expirado (401), redirigiendo al login...');
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+                return;
+            }
 
             if (!response.ok) throw new Error('Error al cargar consentimientos');
 
