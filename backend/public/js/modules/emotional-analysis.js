@@ -213,11 +213,17 @@ window.emotionalAnalysis = {
         `;
 
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken');
 
             if (!token) {
-                console.warn('⚠️ No hay token, redirigiendo al login...');
-                window.location.href = '/login.html';
+                console.warn('⚠️ No hay token de autenticación');
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: #fef3c7; border-radius: 12px; margin: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
+                        <p style="color: #92400e; margin: 0; font-weight: 600;">Sesión no válida</p>
+                        <p style="color: #78350f; margin: 10px 0 0 0; font-size: 14px;">Por favor, recarga la página para iniciar sesión</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -228,9 +234,15 @@ window.emotionalAnalysis = {
             });
 
             if (response.status === 401) {
-                console.warn('⚠️ Token expirado (401), redirigiendo al login...');
-                localStorage.removeItem('token');
-                window.location.href = '/login.html';
+                console.warn('⚠️ Token expirado (401)');
+                localStorage.removeItem('authToken');
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: #fee2e2; border-radius: 12px; margin: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">⏰</div>
+                        <p style="color: #991b1b; margin: 0; font-weight: 600;">Sesión expirada</p>
+                        <p style="color: #dc2626; margin: 10px 0 0 0; font-size: 14px;">Por favor, recarga la página para iniciar sesión nuevamente</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -351,7 +363,7 @@ window.emotionalAnalysis = {
         `;
 
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken');
             const response = await fetch('/api/v1/biometric/consents/compliance-report', {
                 headers: {
                     'Authorization': `Bearer ${token}`
