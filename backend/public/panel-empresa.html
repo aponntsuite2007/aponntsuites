@@ -6053,9 +6053,7 @@
         userInput.addEventListener('input', function() {
             if (this.value.trim()) {
                 passwordInput.disabled = false;
-                if (!passwordInput.value) {
-                    passwordInput.focus();
-                }
+                // No hacer auto-focus, dejar que el usuario termine de escribir
             } else {
                 passwordInput.disabled = true;
                 document.getElementById('loginButton').disabled = true;
@@ -6152,6 +6150,11 @@
 
                 console.log('✅ Login exitoso - mostrando dashboard');
                 showDashboard();
+
+                // Scroll al top para mostrar los módulos
+                setTimeout(() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 300);
 
             } else {
                 throw new Error(data.error || 'Error de autenticación');

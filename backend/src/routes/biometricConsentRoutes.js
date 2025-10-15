@@ -57,51 +57,96 @@ router.get('/consents', auth, authorize('admin', 'rrhh'), async (req, res) => {
         }
 
         // Obtener usuarios y sus consentimientos
-        const results = await sequelize.query(`
-            SELECT
-                u.user_id,
-                u."firstName" || ' ' || u."lastName" as employee_name,
-                u.email,
-                c.id as consent_id,
-                c.consent_type,
-                c.consent_given,
-                c.consent_date,
-                c.created_at as consent_created_at,
-                c.revoked,
-                c.revoked_date,
-                c.revoked_reason,
-                c.expires_at,
-                c.acceptance_method as validation_method,
-                c.ip_address,
-                c.user_agent,
-                CASE
-                    WHEN bd.id IS NOT NULL THEN true
-                    ELSE false
-                END as has_biometry,
-                CASE
-                    WHEN c.revoked = true THEN 'rechazado'
-                    WHEN c.expires_at IS NOT NULL AND c.expires_at < NOW() THEN 'expirado'
-                    WHEN c.consent_given = true AND c.revoked = false THEN 'aceptado'
-                    WHEN c.id IS NOT NULL AND c.consent_given = false AND
-                         EXTRACT(DAY FROM (NOW() - c.created_at)) >= 7 THEN 'sin respuesta'
-                    WHEN c.id IS NOT NULL AND c.consent_given = false THEN 'enviado'
-                    ELSE 'pendiente'
-                END as status
-            FROM users u
-            LEFT JOIN biometric_consents c
-                ON u.user_id = c.user_id
-                AND c.consent_type = 'biometric_analysis'
-                AND u.company_id = c.company_id
-            LEFT JOIN biometric_data bd
-                ON u.user_id = bd."UserId"
-                AND bd.type = 'face'
-                AND bd."isActive" = true
-            WHERE ${whereConditions.join(' AND ')}
-            ORDER BY u."lastName", u."firstName"
-        `, {
-            replacements,
-            type: sequelize.QueryTypes.SELECT
-        });
+        // Primero intentar con JOIN a biometric_data, si falla usar query sin JOIN
+        let results;
+        try {
+            results = await sequelize.query(`
+                SELECT
+                    u.user_id,
+                    u."firstName" || ' ' || u."lastName" as employee_name,
+                    u.email,
+                    c.id as consent_id,
+                    c.consent_type,
+                    c.consent_given,
+                    c.consent_date,
+                    c.created_at as consent_created_at,
+                    c.revoked,
+                    c.revoked_date,
+                    c.revoked_reason,
+                    c.expires_at,
+                    c.acceptance_method as validation_method,
+                    c.ip_address,
+                    c.user_agent,
+                    CASE
+                        WHEN bd.id IS NOT NULL THEN true
+                        ELSE false
+                    END as has_biometry,
+                    CASE
+                        WHEN c.revoked = true THEN 'rechazado'
+                        WHEN c.expires_at IS NOT NULL AND c.expires_at < NOW() THEN 'expirado'
+                        WHEN c.consent_given = true AND c.revoked = false THEN 'aceptado'
+                        WHEN c.id IS NOT NULL AND c.consent_given = false AND
+                             EXTRACT(DAY FROM (NOW() - c.created_at)) >= 7 THEN 'sin respuesta'
+                        WHEN c.id IS NOT NULL AND c.consent_given = false THEN 'enviado'
+                        ELSE 'pendiente'
+                    END as status
+                FROM users u
+                LEFT JOIN biometric_consents c
+                    ON u.user_id = c.user_id
+                    AND c.consent_type = 'biometric_analysis'
+                    AND u.company_id = c.company_id
+                LEFT JOIN biometric_data bd
+                    ON u.user_id = bd."UserId"
+                    AND bd.type = 'face'
+                    AND bd."isActive" = true
+                WHERE ${whereConditions.join(' AND ')}
+                ORDER BY u."lastName", u."firstName"
+            `, {
+                replacements,
+                type: sequelize.QueryTypes.SELECT
+            });
+        } catch (joinError) {
+            console.warn('⚠️ [CONSENTS] Error con JOIN a biometric_data, usando query sin biometry:', joinError.message);
+            // Fallback sin el JOIN a biometric_data
+            results = await sequelize.query(`
+                SELECT
+                    u.user_id,
+                    u."firstName" || ' ' || u."lastName" as employee_name,
+                    u.email,
+                    c.id as consent_id,
+                    c.consent_type,
+                    c.consent_given,
+                    c.consent_date,
+                    c.created_at as consent_created_at,
+                    c.revoked,
+                    c.revoked_date,
+                    c.revoked_reason,
+                    c.expires_at,
+                    c.acceptance_method as validation_method,
+                    c.ip_address,
+                    c.user_agent,
+                    false as has_biometry,
+                    CASE
+                        WHEN c.revoked = true THEN 'rechazado'
+                        WHEN c.expires_at IS NOT NULL AND c.expires_at < NOW() THEN 'expirado'
+                        WHEN c.consent_given = true AND c.revoked = false THEN 'aceptado'
+                        WHEN c.id IS NOT NULL AND c.consent_given = false AND
+                             EXTRACT(DAY FROM (NOW() - c.created_at)) >= 7 THEN 'sin respuesta'
+                        WHEN c.id IS NOT NULL AND c.consent_given = false THEN 'enviado'
+                        ELSE 'pendiente'
+                    END as status
+                FROM users u
+                LEFT JOIN biometric_consents c
+                    ON u.user_id = c.user_id
+                    AND c.consent_type = 'biometric_analysis'
+                    AND u.company_id = c.company_id
+                WHERE ${whereConditions.join(' AND ')}
+                ORDER BY u."lastName", u."firstName"
+            `, {
+                replacements,
+                type: sequelize.QueryTypes.SELECT
+            });
+        }
 
         // Calcular estadísticas
         const stats = {
