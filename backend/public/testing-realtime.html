@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Testing WebSocket Tiempo Real</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4b5563;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .status {
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status.connected {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+        }
+
+        .status.disconnected {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .log {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .log-entry {
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+        }
+
+        .log-entry.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .log-entry.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .log-entry.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Testing WebSocket Tiempo Real</h1>
+            <p>Simula eventos para probar el sistema de notificaciones en vivo</p>
+        </div>
+
+        <div class="card">
+            <h2>📊 Estado del Sistema</h2>
+            <div id="status" class="status disconnected">
+                ⏳ Verificando conexión...
+            </div>
+            <button onclick="checkStatus()" class="btn btn-info">
+                🔄 Verificar Estado
+            </button>
+        </div>
+
+        <div class="card">
+            <h2>👥 Seleccionar Empleado</h2>
+            <div class="form-group">
+                <label>Empleado para Testing</label>
+                <select id="employee-select">
+                    <option value="">Cargando empleados...</option>
+                </select>
+            </div>
+            <button onclick="loadEmployees()" class="btn btn-primary">
+                🔄 Recargar Empleados
+            </button>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📍 Simular Fichaje</h2>
+                <div class="button-group">
+                    <button onclick="simulateAttendance('entrada')" class="btn btn-success">
+                        🟢 Simular ENTRADA
+                    </button>
+                    <button onclick="simulateAttendance('salida')" class="btn btn-warning">
+                        🔴 Simular SALIDA
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>👤 Simular Detección</h2>
+                <button onclick="simulateDetection()" class="btn btn-info">
+                    🔍 Simular Detección Facial
+                </button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>🖥️ Estado de Kiosks</h2>
+                <div class="button-group">
+                    <button onclick="simulateKioskStatus('online')" class="btn btn-success">
+                        🟢 Kiosk ONLINE
+                    </button>
+                    <button onclick="simulateKioskStatus('offline')" class="btn btn-danger">
+                        🔴 Kiosk OFFLINE
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🚀 Testing Rápido</h2>
+                <button onclick="runQuickTest()" class="btn btn-primary">
+                    ⚡ Ejecutar Test Completo
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Log de Eventos</h2>
+            <div id="log" class="log">
+                <div class="log-entry info">💡 Presiona los botones arriba para simular eventos</div>
+            </div>
+            <button onclick="clearLog()" class="btn btn-danger" style="margin-top: 10px;">
+                🗑️ Limpiar Log
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/test';
+        let selectedEmployee = null;
+        let companyId = null;
+
+        // Obtener token y company_id
+        function getAuthHeaders() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                addLog('⚠️ No hay token de autenticación. Por favor, inicia sesión primero.', 'error');
+                return null;
+            }
+            return {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // Decodificar JWT para obtener company_id
+        function decodeJWT(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Inicializar
+        async function init() {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                const decoded = decodeJWT(token);
+                companyId = decoded?.companyId || decoded?.company_id;
+                addLog(`✅ Company ID detectado: ${companyId}`, 'success');
+            }
+
+            await checkStatus();
+            await loadEmployees();
+        }
+
+        // Verificar estado del sistema
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+
+                const statusDiv = document.getElementById('status');
+                if (data.websocket_server_connected) {
+                    statusDiv.className = 'status connected';
+                    statusDiv.innerHTML = '✅ Sistema en tiempo real: ACTIVO';
+                    addLog('✅ WebSocket server conectado', 'success');
+                } else {
+                    statusDiv.className = 'status disconnected';
+                    statusDiv.innerHTML = '⚠️ WebSocket server no disponible (esperando inicialización)';
+                    addLog('⚠️ WebSocket server no conectado todavía', 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error verificando estado: ${error.message}`, 'error');
+            }
+        }
+
+        // Cargar empleados
+        async function loadEmployees() {
+            const headers = getAuthHeaders();
+            if (!headers) return;
+
+            try {
+                const url = companyId ? `${API_BASE}/employees?company_id=${companyId}` : `${API_BASE}/employees`;
+                const response = await fetch(url, { headers });
+                const data = await response.json();
+
+                const select = document.getElementById('employee-select');
+                select.innerHTML = '<option value="">Selecciona un empleado</option>';
+
+                if (data.employees && data.employees.length > 0) {
+                    data.employees.forEach(emp => {
+                        const option = document.createElement('option');
+                        option.value = emp.user_id;
+                        option.textContent = `${emp.firstName} ${emp.lastName} (${emp.employeeId})`;
+                        option.dataset.name = `${emp.firstName} ${emp.lastName}`;
+                        select.appendChild(option);
+                    });
+                    addLog(`✅ Cargados ${data.employees.length} empleados`, 'success');
+                } else {
+                    addLog('⚠️ No se encontraron empleados', 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error cargando empleados: ${error.message}`, 'error');
+            }
+        }
+
+        // Simular fichaje
+        async function simulateAttendance(action) {
+            const headers = getAuthHeaders();
+            if (!headers) return;
+
+            const select = document.getElementById('employee-select');
+            const employee_id = select.value;
+
+            if (!employee_id) {
+                addLog('⚠️ Por favor, selecciona un empleado primero', 'error');
+                return;
+            }
+
+            if (!companyId) {
+                addLog('⚠️ No se pudo detectar company_id', 'error');
+                return;
+            }
+
+            const employeeName = select.options[select.selectedIndex].dataset.name;
+            addLog(`⏳ Simulando ${action} de ${employeeName}...`, 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}/simulate-attendance`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        employee_id,
+                        company_id: companyId,
+                        action
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const icon = action === 'entrada' ? '🟢' : '🔴';
+                    addLog(`${icon} ${employeeName} ${action.toUpperCase()} registrada exitosamente`, 'success');
+                    if (data.websocket_notified) {
+                        addLog('✅ Notificación enviada via WebSocket', 'success');
+                    }
+                } else {
+                    addLog(`❌ Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Simular detección
+        async function simulateDetection() {
+            const headers = getAuthHeaders();
+            if (!headers) return;
+
+            const select = document.getElementById('employee-select');
+            const employee_id = select.value;
+
+            if (!employee_id) {
+                addLog('⚠️ Por favor, selecciona un empleado primero', 'error');
+                return;
+            }
+
+            if (!companyId) {
+                addLog('⚠️ No se pudo detectar company_id', 'error');
+                return;
+            }
+
+            const employeeName = select.options[select.selectedIndex].dataset.name;
+            addLog(`⏳ Simulando detección facial de ${employeeName}...`, 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}/simulate-detection`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        employee_id,
+                        company_id: companyId,
+                        confidence: 0.95
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addLog(`🔍 ${employeeName} detectado (95% confianza)`, 'success');
+                    if (data.websocket_notified) {
+                        addLog('✅ Notificación enviada via WebSocket', 'success');
+                    }
+                } else {
+                    addLog(`❌ Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Simular cambio estado kiosk
+        async function simulateKioskStatus(status) {
+            const headers = getAuthHeaders();
+            if (!headers) return;
+
+            if (!companyId) {
+                addLog('⚠️ No se pudo detectar company_id', 'error');
+                return;
+            }
+
+            const icon = status === 'online' ? '🟢' : '🔴';
+            addLog(`⏳ Simulando kiosk ${status.toUpperCase()}...`, 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}/simulate-kiosk-status`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        company_id: companyId,
+                        kiosk_id: 'TEST-KIOSK-1',
+                        status
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addLog(`${icon} Kiosk TEST-KIOSK-1: ${status.toUpperCase()}`, 'success');
+                    if (data.websocket_notified) {
+                        addLog('✅ Notificación enviada via WebSocket', 'success');
+                    }
+                } else {
+                    addLog(`❌ Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test completo
+        async function runQuickTest() {
+            addLog('🚀 Iniciando test completo...', 'info');
+            await simulateKioskStatus('online');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await simulateDetection();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await simulateAttendance('entrada');
+            addLog('✅ Test completo finalizado', 'success');
+        }
+
+        // Agregar log
+        function addLog(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString('es-AR');
+            entry.textContent = `[${timestamp}] ${message}`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+
+            // Limitar a 50 entradas
+            while (logDiv.children.length > 50) {
+                logDiv.removeChild(logDiv.lastChild);
+            }
+        }
+
+        // Limpiar log
+        function clearLog() {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML = '<div class="log-entry info">💡 Log limpiado</div>';
+        }
+
+        // Iniciar al cargar
+        init();
+    </script>
+</body>
+</html>
