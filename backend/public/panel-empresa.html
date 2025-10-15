@@ -1489,7 +1489,7 @@
                 console.log('🔍 [HEADER DEBUG] Llamando updateCompanyInfo()...');
                 updateCompanyInfo(); // ✅ NUEVO v2.1.2: Forzar actualización header empresa
                 console.log('🔍 [HEADER DEBUG] Llamando initializeLanguageSelector()...');
-                // initializeLanguageSelector(); // DESACTIVADO
+                initializeLanguageSelector(); // ACTIVADO
                 
                 // Inicializar sistema de traducción después de cargar
                 setTimeout(() => {
@@ -6109,16 +6109,18 @@
                 // Login exitoso
                 authToken = data.token;
                 currentUser = data.user;
-                currentCompany = {
+                currentCompany = data.company || {
                     id: companyId,
                     company_id: companyId,
-                    name: document.getElementById('companySelect').selectedOptions[0].textContent
+                    name: document.getElementById('companySelect').selectedOptions[0].textContent,
+                    address: null,
+                    phone: null
                 };
 
                 // Guardar en localStorage - REACTIVADO para módulos biométricos
                 localStorage.setItem('authToken', data.token); // REACTIVADO - Necesario para módulos biométricos
                 localStorage.setItem('currentUser', JSON.stringify(data.user));
-                // localStorage.setItem('currentCompany', JSON.stringify(currentCompany)); // DESACTIVADO
+                localStorage.setItem('selectedCompany', JSON.stringify(currentCompany)); // ACTIVADO - Con datos completos de empresa
 
                 // Configurar variables globales para compatibilidad INMEDIATAMENTE
                 window.selectedCompany = currentCompany;

@@ -74,6 +74,15 @@ router.post('/login', async (req, res) => {
 
     // Login exitoso - (lastLogin field removed for compatibility)
 
+    // Obtener datos completos de la empresa
+    const [company] = await sequelize.query(
+      'SELECT company_id, name, slug, legal_name, address, phone, contact_phone, email FROM companies WHERE company_id = ?',
+      {
+        replacements: [user.company_id],
+        type: sequelize.QueryTypes.SELECT
+      }
+    );
+
     // Generar tokens
     const tokenPayload = {
       id: user.user_id,
@@ -107,6 +116,12 @@ router.post('/login', async (req, res) => {
         username: user.usuario,
         company_id: user.company_id, // CRITICAL: Multi-tenant isolation
         companyId: user.company_id // backward compatibility
+      },
+      company: company || {
+        company_id: user.company_id,
+        name: 'Empresa',
+        address: null,
+        phone: null
       }
     });
 
