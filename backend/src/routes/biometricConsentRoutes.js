@@ -735,8 +735,9 @@ router.post('/consents/accept', async (req, res) => {
         const updatedConsents = await sequelize.query(`
             SELECT
                 c.id, c.consent_date, c.expires_at, c.immutable_signature, c.consent_version,
+                c.consent_text, c.ip_address, c.user_agent,
                 u."firstName", u."lastName", u.email,
-                comp.name as company_name, comp.email as company_email
+                comp.name as company_name, comp.email as company_email, comp.address as company_address
             FROM biometric_consents c
             JOIN users u ON c.user_id = u.user_id
             JOIN companies comp ON c.company_id = comp.company_id
@@ -748,9 +749,9 @@ router.post('/consents/accept', async (req, res) => {
 
         const updatedConsent = updatedConsents[0];
 
-        // Enviar email de confirmación
+        // Enviar email de confirmación con PDF
         try {
-            await biometricConsentService.sendConsentConfirmationEmail(
+            const emailResult = await biometricConsentService.sendConsentConfirmationEmail(
                 {
                     firstName: updatedConsent.firstName,
                     lastName: updatedConsent.lastName,
@@ -758,16 +759,23 @@ router.post('/consents/accept', async (req, res) => {
                 },
                 {
                     name: updatedConsent.company_name,
-                    email: updatedConsent.company_email
+                    email: updatedConsent.company_email,
+                    address: updatedConsent.company_address
                 },
                 {
                     consentDate: updatedConsent.consent_date,
                     expiresAt: updatedConsent.expires_at,
                     immutableSignature: signature,
-                    version: updatedConsent.consent_version
+                    version: updatedConsent.consent_version,
+                    consentText: updatedConsent.consent_text,
+                    ipAddress: updatedConsent.ip_address,
+                    userAgent: updatedConsent.user_agent
                 }
             );
             console.log(`✅ Email de confirmación enviado a ${updatedConsent.email}`);
+            if (emailResult.pdfGenerated) {
+                console.log(`📄 PDF generado y adjuntado`);
+            }
         } catch (emailError) {
             console.error('⚠️ Error enviando email de confirmación:', emailError);
             // No fallar la operación si el email falla

@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const { sequelize } = require('../config/database');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const pdfGenerationService = require('./pdfGenerationService');
 
 class BiometricConsentService {
     constructor() {
@@ -350,7 +351,7 @@ class BiometricConsentService {
      * Enviar email de confirmación tras aceptar consentimiento
      */
     async sendConsentConfirmationEmail(user, company, consentData) {
-        const { consentDate, expiresAt, immutableSignature, version } = consentData;
+        const { consentDate, expiresAt, immutableSignature, version, consentText, ipAddress, userAgent } = consentData;
 
         const html = `
 <!DOCTYPE html>
@@ -482,15 +483,55 @@ class BiometricConsentService {
         `;
 
         try {
-            const result = await this.emailTransporter.sendMail({
+            // Generar PDF del consentimiento
+            console.log(`📄 Generando PDF para ${user.email}...`);
+            let pdfAttachment = null;
+            let pdfPath = null;
+
+            try {
+                const pdfData = await pdfGenerationService.generateConsentPDF(user, company, consentData);
+
+                // Guardar PDF en disco para registros
+                pdfPath = await pdfGenerationService.savePDF(pdfData.buffer, pdfData.filename);
+
+                // Preparar adjunto para el email
+                pdfAttachment = {
+                    filename: pdfData.filename,
+                    content: pdfData.buffer,
+                    contentType: 'application/pdf'
+                };
+
+                console.log(`✅ PDF generado exitosamente: ${pdfData.filename}`);
+                console.log(`📁 PDF guardado en: ${pdfPath}`);
+
+            } catch (pdfError) {
+                console.error(`⚠️ Error generando PDF (continuando sin adjunto):`, pdfError);
+                // No fallar el email si el PDF falla, solo registrar el error
+            }
+
+            // Enviar email con o sin PDF
+            const mailOptions = {
                 from: `"APONNT Sistema Biométrico" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
                 to: user.email,
                 subject: '✅ Confirmación: Consentimiento Biométrico Registrado',
                 html
-            });
+            };
+
+            // Agregar PDF si se generó exitosamente
+            if (pdfAttachment) {
+                mailOptions.attachments = [pdfAttachment];
+                console.log(`📎 PDF adjuntado al email`);
+            }
+
+            const result = await this.emailTransporter.sendMail(mailOptions);
 
             console.log(`✅ Email de confirmación enviado a ${user.email} - ID: ${result.messageId}`);
-            return result;
+
+            return {
+                emailResult: result,
+                pdfGenerated: !!pdfAttachment,
+                pdfPath: pdfPath || null
+            };
 
         } catch (error) {
             console.error(`❌ Error enviando confirmación a ${user.email}:`, error);
