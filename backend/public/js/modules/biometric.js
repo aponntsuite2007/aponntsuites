@@ -1904,26 +1904,12 @@ function initializeBiometricWebSocket() {
     console.log('🔌 [BIOMETRIC-WS] Inicializando WebSocket tiempo real...');
 
     try {
-        // Función para activar modo simulado (fallback)
-        const activateSimulatedMode = (reason = '') => {
-            console.log(`🔄 [BIOMETRIC-WS] Activando modo simulado ${reason}`);
-            biometricHubState.websocketConnected = true;
-            updateWebSocketStatus(true);
-
-            // Simular datos tiempo real
-            setTimeout(() => {
-                simulateRealTimeData();
-            }, 2000);
-
-            console.log('✅ [BIOMETRIC-WS] WebSocket simulado activo');
-        };
-
         // Detectar si estamos en producción (Render) o desarrollo (localhost)
         const isProduction = window.location.hostname.includes('render.com') ||
                             window.location.hostname.includes('onrender.com');
 
         if (isProduction) {
-            // Producción: intentar WebSocket real, con fallback a simulado
+            // Producción: intentar WebSocket real SOLO, sin fallback simulado
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/biometric-ws`;
 
@@ -1931,9 +1917,10 @@ function initializeBiometricWebSocket() {
 
             const ws = new WebSocket(wsUrl);
             let connectionTimeout = setTimeout(() => {
-                console.warn('⏰ [BIOMETRIC-WS] Timeout - fallback a modo simulado');
+                console.warn('⏰ [BIOMETRIC-WS] Timeout de conexión');
                 ws.close();
-                activateSimulatedMode('(timeout)');
+                biometricHubState.websocketConnected = false;
+                updateWebSocketStatus(false);
             }, 5000); // 5 segundos timeout
 
             ws.onopen = () => {
@@ -1960,35 +1947,29 @@ function initializeBiometricWebSocket() {
 
             ws.onerror = (error) => {
                 clearTimeout(connectionTimeout);
-                console.warn('⚠️ [BIOMETRIC-WS] Error en conexión real, cambiando a simulado');
-                activateSimulatedMode('(error de conexión)');
+                console.warn('⚠️ [BIOMETRIC-WS] Error en conexión WebSocket');
+                biometricHubState.websocketConnected = false;
+                updateWebSocketStatus(false);
             };
 
             ws.onclose = () => {
                 clearTimeout(connectionTimeout);
                 console.warn('⚠️ [BIOMETRIC-WS] WebSocket cerrado');
-                if (!biometricHubState.websocketConnected) {
-                    activateSimulatedMode('(conexión cerrada)');
-                } else {
-                    biometricHubState.websocketConnected = false;
-                    updateWebSocketStatus(false);
-                }
+                biometricHubState.websocketConnected = false;
+                updateWebSocketStatus(false);
             };
 
             biometricHubState.websocket = ws;
         } else {
-            // Desarrollo: simular WebSocket
-            activateSimulatedMode('(desarrollo local)');
+            // Desarrollo: no hacer nada, WebSocket no disponible
+            console.log('ℹ️ [BIOMETRIC-WS] Modo desarrollo - WebSocket no habilitado');
+            biometricHubState.websocketConnected = false;
+            updateWebSocketStatus(false);
         }
     } catch (error) {
         console.error('❌ [BIOMETRIC-WS] Error fatal:', error);
-        // Fallback a modo simulado
-        biometricHubState.websocketConnected = true;
-        updateWebSocketStatus(true);
-        setTimeout(() => {
-            simulateRealTimeData();
-        }, 2000);
-        console.log('✅ [BIOMETRIC-WS] Modo simulado de emergencia activado');
+        biometricHubState.websocketConnected = false;
+        updateWebSocketStatus(false);
     }
 }
 
