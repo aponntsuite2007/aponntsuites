@@ -11550,7 +11550,7 @@ async function showEmotionalAnalysisContent(container) {
 // ==================================================================
 // 🔐 BIOMETRIC CONSENT TAB - GESTIÓN DE CONSENTIMIENTOS
 // ==================================================================
-async function showBiometricConsentContent(container) {
+async function showBiometricConsentContent(container, filters = {}) {
     console.log('🔐 [BIOMETRIC-CONSENT] Cargando módulo de consentimientos...');
 
     container.innerHTML = `
@@ -11576,7 +11576,13 @@ async function showBiometricConsentContent(container) {
             return;
         }
 
-        const response = await fetch('/api/v1/biometric/consents', {
+        // Construir query params con filtros
+        const params = new URLSearchParams();
+        if (filters.status) params.append('status', filters.status);
+        if (filters.role) params.append('role', filters.role);
+        if (filters.method) params.append('method', filters.method);
+
+        const response = await fetch(`/api/v1/biometric/consents?${params}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -11636,24 +11642,22 @@ async function showBiometricConsentContent(container) {
                             <option value="expired">⏱️ Expirados</option>
                         </select>
                         <select id="filter-role" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
-                            <option value="">Todos los roles</option>
-                            <option value="employee">👤 Empleado</option>
-                            <option value="supervisor">👨‍💼 Supervisor</option>
-                            <option value="admin">🔑 Admin</option>
+                            <option value="">Cargando roles...</option>
                         </select>
                         <select id="filter-method" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
                             <option value="">Todos los métodos</option>
-                            <option value="facial">📸 Facial</option>
-                            <option value="fingerprint">👆 Huella</option>
                             <option value="email">📧 Email</option>
                         </select>
                         <button onclick="window.applyConsentFilters()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
                             🔍 Filtrar
                         </button>
                     </div>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button onclick="window.requestBulkConsent()" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
                             📧 Solicitar Consentimientos Pendientes
+                        </button>
+                        <button onclick="window.showLegalDocumentPreview()" style="padding: 10px 20px; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            📄 Ver Documento Legal
                         </button>
                         <button onclick="window.clearConsentFilters()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
                             ✖️ Limpiar Filtros
@@ -11706,6 +11710,10 @@ async function showBiometricConsentContent(container) {
                 </div>
             </div>
         `;
+
+        // Cargar roles dinámicamente desde la API
+        loadDynamicRoles();
+
     } catch (error) {
         console.error('❌ [BIOMETRIC-CONSENT] Error cargando consentimientos:', error);
         container.innerHTML = `
@@ -11739,30 +11747,11 @@ window.applyConsentFilters = async function() {
     const container = document.getElementById('biometric-main-content');
     if (!container) return;
 
-    container.innerHTML = '<div style="padding: 40px; text-align: center;"><div style="font-size: 48px;">🔄</div><p>Aplicando filtros...</p></div>';
-
     try {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            alert('Sesión expirada');
-            location.reload();
-            return;
-        }
+        // Pasar los filtros directamente a la función de carga
+        await showBiometricConsentContent(container, { status, role, method });
 
-        const params = new URLSearchParams();
-        if (status) params.append('status', status);
-        if (role) params.append('role', role);
-        if (method) params.append('method', method);
-
-        const response = await fetch(`/api/v1/biometric/consents?${params}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!response.ok) throw new Error('Error al filtrar');
-
-        await showBiometricConsentContent(container);
-
-        // Restaurar valores de filtros
+        // Restaurar valores de filtros después de recargar
         if (status) document.getElementById('filter-status').value = status;
         if (role) document.getElementById('filter-role').value = role;
         if (method) document.getElementById('filter-method').value = method;
@@ -11813,6 +11802,139 @@ window.requestBulkConsent = async function() {
     } catch (error) {
         console.error('Error enviando solicitudes:', error);
         alert('Error al enviar solicitudes de consentimiento');
+    }
+};
+
+// ==================================================================
+// 🔄 CARGAR ROLES DINÁMICAMENTE DESDE LA API
+// ==================================================================
+async function loadDynamicRoles() {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        const response = await fetch('/api/v1/biometric/consents/roles', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Error cargando roles');
+
+        const data = await response.json();
+        const roleSelect = document.getElementById('filter-role');
+
+        if (roleSelect && data.success && data.roles) {
+            roleSelect.innerHTML = '<option value="">Todos los roles</option>';
+            data.roles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role.value;
+                option.textContent = `${role.label} (${role.userCount})`;
+                roleSelect.appendChild(option);
+            });
+        }
+
+    } catch (error) {
+        console.error('Error cargando roles:', error);
+        // Fallback a roles básicos si falla
+        const roleSelect = document.getElementById('filter-role');
+        if (roleSelect) {
+            roleSelect.innerHTML = `
+                <option value="">Todos los roles</option>
+                <option value="admin">Admin</option>
+                <option value="employee">Empleado</option>
+            `;
+        }
+    }
+}
+
+// ==================================================================
+// 📄 VISTA PREVIA DEL DOCUMENTO LEGAL
+// ==================================================================
+window.showLegalDocumentPreview = async function() {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            alert('Sesión expirada');
+            return;
+        }
+
+        // Crear loading modal
+        const modalHtml = `
+            <div id="legal-doc-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 16px; max-width: 900px; width: 90%; max-height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="padding: 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <h3 style="margin: 0;">📄 Documento Legal de Consentimiento</h3>
+                        <button onclick="document.getElementById('legal-doc-modal').remove()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; line-height: 1;">&times;</button>
+                    </div>
+                    <div id="legal-doc-content" style="padding: 30px; overflow-y: auto; max-height: calc(90vh - 140px);">
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">🔄</div>
+                            <p style="color: #6b7280;">Cargando documento legal...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Fetch document
+        const response = await fetch('/api/v1/biometric/consents/legal-document', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Error al cargar documento');
+
+        const data = await response.json();
+        const doc = data.document;
+
+        // Render document content
+        const contentDiv = document.getElementById('legal-doc-content');
+        if (contentDiv && doc) {
+            contentDiv.innerHTML = `
+                <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: #1f2937;">ℹ️ Información del Documento</h4>
+                    <p style="margin: 5px 0; color: #6b7280;"><strong>Título:</strong> ${doc.title || 'Consentimiento Biométrico'}</p>
+                    <p style="margin: 5px 0; color: #6b7280;"><strong>Versión:</strong> ${doc.version || '1.0'}</p>
+                    <p style="margin: 5px 0; color: #6b7280;"><strong>Vigencia:</strong> ${doc.effective_from ? new Date(doc.effective_from).toLocaleDateString('es-AR') : 'Inmediata'}</p>
+                </div>
+
+                <div style="background: white; border: 2px solid #cbd5e1; border-radius: 12px; padding: 25px; margin-bottom: 25px; white-space: pre-wrap; line-height: 1.8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #334155;">
+                    ${doc.content || 'No hay contenido disponible.'}
+                </div>
+
+                <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 15px 0; color: #1e40af;">⚖️ Referencias Legales Oficiales</h4>
+                    <p style="color: #1e40af; margin-bottom: 15px; font-size: 14px;">Haz clic en los enlaces para consultar el texto oficial de las leyes mencionadas:</p>
+                    ${doc.legalReferences ? doc.legalReferences.map(ref => `
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            <a href="${ref.url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: 600; text-decoration: none; display: block; margin-bottom: 5px;">
+                                🔗 ${ref.name}
+                            </a>
+                            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 13px;">${ref.description}</p>
+                        </div>
+                    `).join('') : '<p style="color: #64748b;">No hay referencias disponibles.</p>'}
+                </div>
+
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                    <button onclick="document.getElementById('legal-doc-modal').remove()" style="padding: 12px 30px; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px;">
+                        ✖️ Cerrar
+                    </button>
+                </div>
+            `;
+        }
+
+    } catch (error) {
+        console.error('Error mostrando documento:', error);
+        const contentDiv = document.getElementById('legal-doc-content');
+        if (contentDiv) {
+            contentDiv.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: #fee2e2; border-radius: 12px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                    <p style="color: #991b1b; margin: 0;">Error al cargar el documento</p>
+                    <p style="color: #dc2626; margin: 10px 0 0 0; font-size: 14px;">${error.message}</p>
+                </div>
+            `;
+        }
     }
 };
 
