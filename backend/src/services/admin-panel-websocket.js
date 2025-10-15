@@ -18,27 +18,79 @@ class AdminPanelWebSocketServer {
         this.clients = new Map(); // Map de conexiones por user_id
         this.companies = new Map(); // Map de empresas con suscriptores
         this.kioskServerRef = null; // Referencia al servidor de kiosks
+        this.heartbeatInterval = null; // Intervalo para heartbeat
 
         this.initialize();
+        this.startHeartbeat();
+    }
+
+    /**
+     * 💓 INICIAR SISTEMA DE HEARTBEAT
+     */
+    startHeartbeat() {
+        // Enviar ping cada 30 segundos para mantener conexiones vivas
+        this.heartbeatInterval = setInterval(() => {
+            if (!this.wss) return;
+
+            this.wss.clients.forEach((ws) => {
+                if (ws.isAlive === false) {
+                    console.warn('⚠️ [ADMIN-WS] Cliente no respondió al ping, terminando conexión');
+                    return ws.terminate();
+                }
+
+                ws.isAlive = false;
+                ws.ping();
+            });
+        }, 30000); // 30 segundos
+
+        console.log('💓 [ADMIN-WS] Sistema de heartbeat iniciado (30s)');
     }
 
     /**
      * 🚀 INICIALIZAR SERVIDOR WEBSOCKET
      */
     initialize() {
-        this.wss = new WebSocket.Server({
-            server: this.server,
-            path: '/biometric-ws',
-            perMessageDeflate: false,
-            clientTracking: true,
-            maxPayload: 1 * 1024 * 1024 // 1MB
-        });
+        try {
+            this.wss = new WebSocket.Server({
+                server: this.server,
+                path: '/biometric-ws',
+                perMessageDeflate: false,
+                clientTracking: true,
+                maxPayload: 1 * 1024 * 1024, // 1MB
+                verifyClient: (info) => {
+                    // Log para debugging en Render
+                    console.log('🔍 [ADMIN-WS] Nueva solicitud de conexión:', {
+                        origin: info.origin,
+                        secure: info.secure,
+                        host: info.req.headers.host,
+                        protocol: info.req.headers['sec-websocket-protocol'],
+                        userAgent: info.req.headers['user-agent']?.substring(0, 50)
+                    });
+                    return true; // Aceptar todas las conexiones por ahora
+                }
+            });
 
-        this.wss.on('connection', (ws, request) => {
-            this.handleConnection(ws, request);
-        });
+            this.wss.on('connection', (ws, request) => {
+                this.handleConnection(ws, request);
+            });
 
-        console.log('🖥️ [ADMIN-WS] Servidor WebSocket para panel admin/empresa inicializado');
+            this.wss.on('error', (error) => {
+                console.error('❌ [ADMIN-WS] Error en servidor WebSocket:', error.message);
+                console.error('❌ [ADMIN-WS] Stack:', error.stack);
+            });
+
+            this.wss.on('listening', () => {
+                console.log('✅ [ADMIN-WS] Servidor WebSocket escuchando en /biometric-ws');
+            });
+
+            console.log('🖥️ [ADMIN-WS] Servidor WebSocket para panel admin/empresa inicializado');
+            console.log('🖥️ [ADMIN-WS] Path: /biometric-ws');
+            console.log('🖥️ [ADMIN-WS] Max clientes: sin límite');
+            console.log('🖥️ [ADMIN-WS] Max payload: 1MB');
+        } catch (error) {
+            console.error('💥 [ADMIN-WS] Error crítico inicializando WebSocket:', error);
+            throw error;
+        }
     }
 
     /**
@@ -53,7 +105,11 @@ class AdminPanelWebSocketServer {
      * 🔌 MANEJAR NUEVA CONEXIÓN
      */
     handleConnection(ws, request) {
+        const clientIP = request.headers['x-forwarded-for'] || request.socket.remoteAddress;
         console.log('🔌 [ADMIN-WS] Nueva conexión desde panel admin');
+        console.log('🔌 [ADMIN-WS] IP:', clientIP);
+        console.log('🔌 [ADMIN-WS] Origin:', request.headers.origin);
+        console.log('🔌 [ADMIN-WS] User-Agent:', request.headers['user-agent']?.substring(0, 80));
 
         // Configurar cliente temporal (sin autenticar)
         const clientInfo = {
@@ -62,10 +118,13 @@ class AdminPanelWebSocketServer {
             companyId: null,
             role: null,
             isAuthenticated: false,
-            lastActivity: Date.now()
+            lastActivity: Date.now(),
+            connectedAt: Date.now(),
+            ip: clientIP
         };
 
         ws.clientInfo = clientInfo;
+        ws.isAlive = true; // Para heartbeat
 
         // Configurar eventos
         ws.on('message', (data) => {
@@ -81,6 +140,7 @@ class AdminPanelWebSocketServer {
         });
 
         ws.on('pong', () => {
+            ws.isAlive = true;
             ws.clientInfo.lastActivity = Date.now();
         });
 

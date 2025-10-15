@@ -239,6 +239,46 @@ async function cleanOrphanedAdminUsers() {
   }
 }
 
+// ENDPOINT PARA VERIFICAR ESTADO DEL WEBSOCKET
+app.get('/api/v1/ws-health', (req, res) => {
+  try {
+    // Verificar si el WebSocket server está inicializado
+    const wsHealthData = {
+      success: true,
+      websocket: {
+        enabled: true,
+        path: '/biometric-ws',
+        protocol: 'ws/wss',
+        status: 'initialized',
+        url_local: `ws://localhost:${PORT}/biometric-ws`,
+        url_network: `ws://${SERVER_IP}:${PORT}/biometric-ws`,
+        url_production: `wss://${req.headers.host || SERVER_IP}/biometric-ws`
+      },
+      server: {
+        uptime: Math.floor(process.uptime()),
+        environment: process.env.NODE_ENV || 'production',
+        port: PORT,
+        host: SERVER_IP
+      },
+      instructions: {
+        connect: 'Use "wss://" for HTTPS or "ws://" for HTTP',
+        path: '/biometric-ws',
+        auth_required: true,
+        auth_method: 'Send {"type":"subscribe","companyId":11,"token":"JWT_TOKEN"} after connection'
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(wsHealthData);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // ENDPOINT ESPECIAL PARA AUTO-CONFIGURACIÓN DE LA APK
 app.get('/api/v1/config/mobile-connection', (req, res) => {
   try {
