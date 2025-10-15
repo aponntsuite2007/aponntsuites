@@ -1649,7 +1649,6 @@
     <script src="js/modules/settings.js"></script>
     <script src="js/modules/attendance.js"></script>
     <script src="js/modules/shifts.js"></script>
-    <script src="js/modules/network.js"></script>
 
     <!-- Authentication & Security Modules -->
     <script src="js/modules/access-control.js"></script>
@@ -3679,13 +3678,6 @@
                             showModuleFallback(moduleId, moduleName, 'art-management.js no cargado');
                         }
                         break;
-                    case 'network':
-                        if (typeof showNetworkContent === 'function') {
-                            showNetworkContent();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'network.js no cargado');
-                        }
-                        break;
                     case 'settings':
                         if (typeof showSettingsContent === 'function') {
                             showSettingsContent();
@@ -3719,13 +3711,9 @@
                             showModuleFallback(moduleId, moduleName, 'terms-conditions.js no cargado');
                         }
                         break;
-                    case 'permissions-test':
-                        // Special module for testing permissions
-                        showModuleFallback(moduleId, moduleName, 'Módulo de prueba de permisos');
-                        break;
                     default:
                         console.log(`❌ [SWITCH-DEBUG] NO SE ENCONTRÓ CASE para moduleId: "${moduleId}"`);
-                        console.log(`📝 [SWITCH-DEBUG] Cases disponibles: training, medical, medical-dashboard, psychological, psychological-assessment, sanctions, sanctions-management, vacation, vacation-management, dashboard, attendance, users, access-control, notifications, notifications-complete, absence-notifications, fehaciente-consent, biometric, departments, siac-admin-panel, siac-clients, siac-products, siac-billing, clientes, facturacion, plantillas-fiscales, job-postings, training-management, document-management, employee-map, legal-dashboard, licensing-management, payroll-liquidation, art-management, network, settings, shifts, terms-conditions, permissions-test`);
+                        console.log(`📝 [SWITCH-DEBUG] Cases disponibles: training, medical, medical-dashboard, psychological, psychological-assessment, sanctions, sanctions-management, vacation, vacation-management, dashboard, attendance, users, access-control, notifications, notifications-complete, absence-notifications, fehaciente-consent, biometric, departments, siac-admin-panel, siac-clients, siac-products, siac-billing, clientes, facturacion, plantillas-fiscales, job-postings, training-management, document-management, employee-map, legal-dashboard, licensing-management, payroll-liquidation, art-management, settings, shifts, terms-conditions`);
                         // Para módulos que no tienen implementación específica aún
                         showModuleFallback(moduleId, moduleName, `ID no encontrado: "${moduleId}"`);
                 }
@@ -6151,10 +6139,10 @@
                 console.log('✅ Login exitoso - mostrando dashboard');
                 showDashboard();
 
-                // Scroll al top para mostrar los módulos
+                // Scroll al top para mostrar los módulos (después de que se carguen)
                 setTimeout(() => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                }, 300);
+                }, 1000); // 1 segundo para asegurar que se ejecute después de cargar módulos
 
             } else {
                 throw new Error(data.error || 'Error de autenticación');
