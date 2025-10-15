@@ -347,6 +347,158 @@ class BiometricConsentService {
     }
 
     /**
+     * Enviar email de confirmación tras aceptar consentimiento
+     */
+    async sendConsentConfirmationEmail(user, company, consentData) {
+        const { consentDate, expiresAt, immutableSignature, version } = consentData;
+
+        const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación de Consentimiento Biométrico</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background: #f5f7fa;">
+    <div style="max-width: 600px; margin: 40px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+
+        <!-- Header Success -->
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 20px; text-align: center;">
+            <div style="font-size: 80px; margin-bottom: 10px;">✅</div>
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Consentimiento Confirmado</h1>
+            <p style="color: rgba(255,255,255,0.95); margin: 10px 0 0 0; font-size: 16px;">Tu consentimiento ha sido registrado exitosamente</p>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 40px 30px;">
+            <p style="font-size: 18px; color: #2d3748; margin: 0 0 20px 0;">
+                Hola <strong>${user.firstName} ${user.lastName}</strong>,
+            </p>
+
+            <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin: 0 0 24px 0;">
+                Confirmamos que hemos registrado tu <strong>consentimiento informado</strong> para el tratamiento
+                de datos biométricos en <strong>${company.name}</strong>.
+            </p>
+
+            <!-- Consent Details Box -->
+            <div style="background: #d1fae5; border-left: 4px solid #10b981; padding: 24px; border-radius: 8px; margin-bottom: 24px;">
+                <h3 style="margin: 0 0 16px 0; color: #065f46; font-size: 18px;">📋 Detalles del Consentimiento</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 8px 0; color: #047857; font-weight: 600;">Fecha de aceptación:</td>
+                        <td style="padding: 8px 0; color: #065f46;">${new Date(consentDate).toLocaleString('es-AR', {
+                            dateStyle: 'full',
+                            timeStyle: 'short',
+                            timeZone: 'America/Argentina/Buenos_Aires'
+                        })}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #047857; font-weight: 600;">Válido hasta:</td>
+                        <td style="padding: 8px 0; color: #065f46;">${new Date(expiresAt).toLocaleDateString('es-AR', {
+                            dateStyle: 'long',
+                            timeZone: 'America/Argentina/Buenos_Aires'
+                        })}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #047857; font-weight: 600;">Versión documento:</td>
+                        <td style="padding: 8px 0; color: #065f46;">${version}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #047857; font-weight: 600;">ID Firma Digital:</td>
+                        <td style="padding: 8px 0; color: #065f46; font-family: monospace; font-size: 12px;">${immutableSignature.substring(0, 16)}...</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- What This Means -->
+            <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+                <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px;">🔐 ¿Qué significa esto?</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #1e40af; line-height: 1.8;">
+                    <li>Tu imagen facial será procesada para <strong>control de asistencia</strong></li>
+                    <li>Se realizará <strong>análisis biométrico</strong> para identificación segura</li>
+                    <li>Los datos se almacenan de forma <strong>cifrada y segura</strong></li>
+                    <li>Cumplimos con <strong>Ley 25.326, GDPR y BIPA</strong></li>
+                    <li>Tecnología: <strong>Microsoft Azure Face API</strong></li>
+                </ul>
+            </div>
+
+            <!-- Your Rights -->
+            <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+                <h3 style="margin: 0 0 12px 0; color: #92400e; font-size: 16px;">⚖️ Tus Derechos (Ley 25.326)</h3>
+                <p style="margin: 0 0 12px 0; color: #78350f; line-height: 1.6; font-size: 14px;">
+                    Según Art. 14-16 de la Ley 25.326 de Protección de Datos Personales, tenés derecho a:
+                </p>
+                <ul style="margin: 0; padding-left: 20px; color: #78350f; line-height: 1.6; font-size: 14px;">
+                    <li><strong>Acceder</strong> a tus datos biométricos almacenados</li>
+                    <li><strong>Rectificar</strong> información incorrecta</li>
+                    <li><strong>Suprimir</strong> tus datos (derecho al olvido)</li>
+                    <li><strong>Revocar</strong> este consentimiento en cualquier momento</li>
+                    <li><strong>Portabilidad</strong> de tus datos</li>
+                </ul>
+            </div>
+
+            <!-- How to Revoke -->
+            <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+                <h3 style="margin: 0 0 12px 0; color: #991b1b; font-size: 16px;">🚫 ¿Cómo revocar mi consentimiento?</h3>
+                <p style="margin: 0; color: #7f1d1d; line-height: 1.6; font-size: 14px;">
+                    Podés revocar este consentimiento en cualquier momento contactando a:
+                </p>
+                <p style="margin: 12px 0 0 0; color: #991b1b; font-weight: 600;">
+                    📧 <a href="mailto:${process.env.SUPPORT_EMAIL || company.email || 'soporte@aponnt.com'}"
+                         style="color: #991b1b; text-decoration: underline;">
+                        ${process.env.SUPPORT_EMAIL || company.email || 'soporte@aponnt.com'}
+                    </a>
+                </p>
+                <p style="margin: 8px 0 0 0; color: #7f1d1d; font-size: 13px;">
+                    La revocación será procesada en un plazo máximo de 10 días hábiles.
+                </p>
+            </div>
+
+            <!-- Security Note -->
+            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin-top: 24px;">
+                <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.6;">
+                    🔒 <strong>Seguridad:</strong> Este consentimiento está protegido con firma digital HMAC-SHA256.
+                    La integridad de este documento está garantizada mediante tecnología blockchain-ready.
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f7fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0 0 8px 0; font-size: 14px; color: #4a5568; font-weight: 600;">
+                APONNT - Sistema de Gestión Biométrica
+            </p>
+            <p style="margin: 0; font-size: 12px; color: #a0aec0;">
+                Este email es tu comprobante oficial de consentimiento. Guardalo para tus registros.
+            </p>
+            <p style="margin: 12px 0 0 0; font-size: 11px; color: #cbd5e0;">
+                Cumplimiento: Ley 25.326 (ARG) · GDPR · BIPA · ${company.name}
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+
+        try {
+            const result = await this.emailTransporter.sendMail({
+                from: `"APONNT Sistema Biométrico" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+                to: user.email,
+                subject: '✅ Confirmación: Consentimiento Biométrico Registrado',
+                html
+            });
+
+            console.log(`✅ Email de confirmación enviado a ${user.email} - ID: ${result.messageId}`);
+            return result;
+
+        } catch (error) {
+            console.error(`❌ Error enviando confirmación a ${user.email}:`, error);
+            throw error;
+        }
+    }
+
+    /**
      * Generar firma HMAC para consentimiento
      */
     generateConsentSignature(consentData, secret = process.env.JWT_SECRET) {

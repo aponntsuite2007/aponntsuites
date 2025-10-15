@@ -731,7 +731,47 @@ router.post('/consents/accept', async (req, res) => {
             type: sequelize.QueryTypes.UPDATE
         });
 
-        // TODO: Enviar email de confirmación
+        // Obtener datos completos para email de confirmación
+        const updatedConsents = await sequelize.query(`
+            SELECT
+                c.id, c.consent_date, c.expires_at, c.immutable_signature, c.consent_version,
+                u."firstName", u."lastName", u.email,
+                comp.name as company_name, comp.email as company_email
+            FROM biometric_consents c
+            JOIN users u ON c.user_id = u.user_id
+            JOIN companies comp ON c.company_id = comp.company_id
+            WHERE c.consent_token = :token
+        `, {
+            replacements: { token },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const updatedConsent = updatedConsents[0];
+
+        // Enviar email de confirmación
+        try {
+            await biometricConsentService.sendConsentConfirmationEmail(
+                {
+                    firstName: updatedConsent.firstName,
+                    lastName: updatedConsent.lastName,
+                    email: updatedConsent.email
+                },
+                {
+                    name: updatedConsent.company_name,
+                    email: updatedConsent.company_email
+                },
+                {
+                    consentDate: updatedConsent.consent_date,
+                    expiresAt: updatedConsent.expires_at,
+                    immutableSignature: signature,
+                    version: updatedConsent.consent_version
+                }
+            );
+            console.log(`✅ Email de confirmación enviado a ${updatedConsent.email}`);
+        } catch (emailError) {
+            console.error('⚠️ Error enviando email de confirmación:', emailError);
+            // No fallar la operación si el email falla
+        }
 
         res.json({
             success: true,
