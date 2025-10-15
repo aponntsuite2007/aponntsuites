@@ -570,6 +570,218 @@ router.get('/consents/compliance-report', auth, authorize('admin', 'rrhh'), asyn
 });
 
 // ========================================
+// GET /api/v1/biometric/consents/validate-token/:token
+// Validar token y obtener datos para página pública
+// ========================================
+router.get('/consents/validate-token/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        // Buscar consentimiento por token
+        const consents = await sequelize.query(`
+            SELECT
+                c.id, c.user_id, c.company_id, c.consent_text,
+                c.consent_version, c.consent_token_expires_at,
+                u."firstName", u."lastName", u.email,
+                comp.name as company_name
+            FROM biometric_consents c
+            JOIN users u ON c.user_id = u.user_id
+            JOIN companies comp ON c.company_id = comp.company_id
+            WHERE c.consent_token = :token
+                AND c.consent_token_expires_at > NOW()
+                AND c.consent_given = false
+        `, {
+            replacements: { token },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (consents.length === 0) {
+            return res.status(404).json({
+                error: 'Token inválido o expirado'
+            });
+        }
+
+        const consent = consents[0];
+
+        // Registrar acceso al link
+        await sequelize.query(`
+            UPDATE biometric_consents
+            SET consent_link_accessed_at = NOW(),
+                consent_link_access_count = consent_link_access_count + 1
+            WHERE consent_token = :token
+        `, {
+            replacements: { token },
+            type: sequelize.QueryTypes.UPDATE
+        });
+
+        // Log en auditoría
+        await sequelize.query(`
+            INSERT INTO consent_audit_log (
+                company_id, user_id, action, action_timestamp, automated
+            ) VALUES (
+                :companyId, :userId, 'LINK_ACCESSED', NOW(), false
+            )
+        `, {
+            replacements: {
+                companyId: consent.company_id,
+                userId: consent.user_id
+            },
+            type: sequelize.QueryTypes.INSERT
+        });
+
+        res.json({
+            success: true,
+            user: {
+                firstName: consent.firstName,
+                lastName: consent.lastName,
+                email: consent.email
+            },
+            company: {
+                name: consent.company_name
+            },
+            legalDocument: {
+                content: consent.consent_text,
+                version: consent.consent_version
+            },
+            expiresAt: consent.consent_token_expires_at
+        });
+
+    } catch (error) {
+        console.error('Error validando token:', error);
+        res.status(500).json({
+            error: 'Error interno',
+            message: error.message
+        });
+    }
+});
+
+// ========================================
+// POST /api/v1/biometric/consents/accept
+// Aceptar consentimiento desde página pública
+// ========================================
+router.post('/consents/accept', async (req, res) => {
+    try {
+        const { token, acceptanceMethod, userAgent, timestamp } = req.body;
+
+        // Buscar consentimiento
+        const consents = await sequelize.query(`
+            SELECT id, user_id, company_id, consent_text, consent_version,
+                   consent_document_hash
+            FROM biometric_consents
+            WHERE consent_token = :token
+                AND consent_token_expires_at > NOW()
+                AND consent_given = false
+        `, {
+            replacements: { token },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (consents.length === 0) {
+            return res.status(404).json({
+                error: 'Token inválido o expirado'
+            });
+        }
+
+        const consent = consents[0];
+
+        // Calcular hash de respuesta
+        const crypto = require('crypto');
+        const responseData = {
+            userId: consent.user_id,
+            companyId: consent.company_id,
+            consentGiven: true,
+            timestamp,
+            documentHash: consent.consent_document_hash
+        };
+        const responseHash = crypto.createHash('sha256')
+            .update(JSON.stringify(responseData))
+            .digest('hex');
+
+        // Generar firma HMAC
+        const signatureData = `${consent.user_id}|${consent.company_id}|true|${timestamp}`;
+        const signature = crypto.createHmac('sha256', process.env.JWT_SECRET || 'default-secret')
+            .update(signatureData)
+            .digest('hex');
+
+        const ipAddress = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+
+        // Actualizar consentimiento
+        await sequelize.query(`
+            UPDATE biometric_consents
+            SET consent_given = true,
+                consent_date = NOW(),
+                consent_response_timestamp = NOW(),
+                consent_response_hash = :responseHash,
+                ip_address = :ipAddress,
+                user_agent = :userAgent,
+                acceptance_method = :acceptanceMethod,
+                immutable_signature = :signature,
+                expires_at = NOW() + INTERVAL '1 year',
+                updated_at = NOW()
+            WHERE consent_token = :token
+        `, {
+            replacements: {
+                responseHash,
+                ipAddress,
+                userAgent,
+                acceptanceMethod: acceptanceMethod || 'email',
+                signature,
+                token
+            },
+            type: sequelize.QueryTypes.UPDATE
+        });
+
+        // TODO: Enviar email de confirmación
+
+        res.json({
+            success: true,
+            message: 'Consentimiento aceptado exitosamente',
+            consentId: consent.id
+        });
+
+    } catch (error) {
+        console.error('Error aceptando consentimiento:', error);
+        res.status(500).json({
+            error: 'Error interno',
+            message: error.message
+        });
+    }
+});
+
+// ========================================
+// POST /api/v1/biometric/consents/reject
+// Rechazar consentimiento desde página pública
+// ========================================
+router.post('/consents/reject', async (req, res) => {
+    try {
+        const { token } = req.body;
+
+        // Buscar y eliminar consentimiento pendiente
+        await sequelize.query(`
+            DELETE FROM biometric_consents
+            WHERE consent_token = :token
+                AND consent_token_expires_at > NOW()
+                AND consent_given = false
+        `, {
+            replacements: { token },
+            type: sequelize.QueryTypes.DELETE
+        });
+
+        res.json({
+            success: true,
+            message: 'Consentimiento rechazado'
+        });
+
+    } catch (error) {
+        console.error('Error rechazando consentimiento:', error);
+        res.status(500).json({
+            error: 'Error interno',
+            message: error.message
+        });
+    }
+});
+
+// ========================================
 // POST /api/v1/biometric/consents/request-individual
 // Solicitar consentimiento a un usuario específico
 // ========================================

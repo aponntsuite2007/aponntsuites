@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consentimiento para Análisis Biométrico</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 60px 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .header .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading .spinner {
+            font-size: 60px;
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error-box {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .error-box .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .error-box h2 {
+            color: #991b1b;
+            margin-bottom: 12px;
+        }
+
+        .error-box p {
+            color: #7f1d1d;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .success-box .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .success-box h2 {
+            color: #065f46;
+            margin-bottom: 16px;
+            font-size: 28px;
+        }
+
+        .user-info {
+            background: #f8fafc;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+        }
+
+        .user-info h3 {
+            color: #1e293b;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .user-info p {
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .user-info strong {
+            color: #0f172a;
+        }
+
+        .legal-document {
+            background: #f1f5f9;
+            padding: 32px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 2px solid #cbd5e1;
+        }
+
+        .legal-document h3 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .legal-document p {
+            color: #475569;
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+
+        .legal-document ul {
+            margin-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        .legal-document li {
+            color: #475569;
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .consent-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-accept {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        }
+
+        .btn-accept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16,185,129,0.4);
+        }
+
+        .btn-reject {
+            background: #f1f5f9;
+            color: #475569;
+            border: 2px solid #cbd5e1;
+        }
+
+        .btn-reject:hover {
+            background: #e2e8f0;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .checkbox-container {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 2px solid #fbbf24;
+        }
+
+        .checkbox-container label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            color: #78350f;
+            font-weight: 500;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .info-box h4 {
+            color: #1e40af;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+        }
+
+        .info-box li {
+            color: #1e40af;
+            margin-bottom: 6px;
+        }
+
+        .footer {
+            background: #f8fafc;
+            padding: 24px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 12px;
+            }
+
+            .header {
+                padding: 40px 24px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .content {
+                padding: 32px 24px;
+            }
+
+            .consent-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">🔐</div>
+            <h1>Consentimiento Biométrico</h1>
+            <p>Sistema de Análisis Profesional</p>
+        </div>
+
+        <div class="content" id="main-content">
+            <div class="loading">
+                <div class="spinner">🔄</div>
+                <p style="margin-top: 20px; color: #64748b;">Cargando información...</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            APONNT - Sistema de Gestión Biométrica · Cumplimiento Ley 25.326 (ARG)
+        </div>
+    </div>
+
+    <script>
+        // Obtener token de la URL
+        const pathParts = window.location.pathname.split('/');
+        const token = pathParts[pathParts.length - 1];
+
+        let consentData = null;
+
+        async function loadConsentRequest() {
+            try {
+                // Llamar al backend para validar token y obtener datos
+                const response = await fetch(`/api/v1/biometric/consents/validate-token/${token}`);
+
+                if (!response.ok) {
+                    throw new Error('Token inválido o expirado');
+                }
+
+                const data = await response.json();
+                consentData = data;
+
+                renderConsentForm(data);
+
+            } catch (error) {
+                renderError(error.message);
+            }
+        }
+
+        function renderConsentForm(data) {
+            const content = document.getElementById('main-content');
+
+            content.innerHTML = `
+                <div class="user-info">
+                    <h3>👤 Información del Empleado</h3>
+                    <p><strong>Nombre:</strong> ${data.user.firstName} ${data.user.lastName}</p>
+                    <p><strong>Email:</strong> ${data.user.email}</p>
+                    <p><strong>Empresa:</strong> ${data.company.name}</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>📋 ¿Qué datos se recopilan?</h4>
+                    <ul>
+                        <li><strong>Imagen facial:</strong> Para reconocimiento y control de asistencia</li>
+                        <li><strong>Análisis emocional (opcional):</strong> Bienestar y fatiga laboral</li>
+                        <li><strong>Timestamps:</strong> Fecha y hora de registros biométricos</li>
+                    </ul>
+                </div>
+
+                <div class="legal-document">
+                    <h3>📄 Documento Legal - Ley 25.326</h3>
+                    ${formatLegalDocument(data.legalDocument.content)}
+                </div>
+
+                <div class="checkbox-container">
+                    <label>
+                        <input type="checkbox" id="accept-checkbox">
+                        <span>He leído y comprendido el documento. Acepto voluntariamente el tratamiento de mis datos biométricos.</span>
+                    </label>
+                </div>
+
+                <div class="consent-actions">
+                    <button class="btn btn-accept" id="btn-accept" disabled>
+                        ✅ Aceptar Consentimiento
+                    </button>
+                    <button class="btn btn-reject" id="btn-reject">
+                        ❌ Rechazar
+                    </button>
+                </div>
+            `;
+
+            // Event listeners
+            document.getElementById('accept-checkbox').addEventListener('change', (e) => {
+                document.getElementById('btn-accept').disabled = !e.target.checked;
+            });
+
+            document.getElementById('btn-accept').addEventListener('click', acceptConsent);
+            document.getElementById('btn-reject').addEventListener('click', rejectConsent);
+        }
+
+        function formatLegalDocument(content) {
+            // Convertir texto plano a HTML formateado
+            return content
+                .split('\n\n')
+                .map(paragraph => {
+                    if (paragraph.trim().startsWith('-')) {
+                        const items = paragraph.split('\n').filter(l => l.trim());
+                        return '<ul>' + items.map(item => `<li>${item.replace(/^-\s*/, '')}</li>`).join('') + '</ul>';
+                    }
+                    return `<p>${paragraph}</p>`;
+                })
+                .join('');
+        }
+
+        async function acceptConsent() {
+            const btnAccept = document.getElementById('btn-accept');
+            const btnReject = document.getElementById('btn-reject');
+
+            btnAccept.disabled = true;
+            btnReject.disabled = true;
+            btnAccept.innerHTML = '🔄 Procesando...';
+
+            try {
+                const response = await fetch('/api/v1/biometric/consents/accept', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        token: token,
+                        acceptanceMethod: 'email',
+                        userAgent: navigator.userAgent,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al procesar consentimiento');
+                }
+
+                const result = await response.json();
+                renderSuccess();
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                btnAccept.disabled = false;
+                btnReject.disabled = false;
+                btnAccept.innerHTML = '✅ Aceptar Consentimiento';
+            }
+        }
+
+        async function rejectConsent() {
+            if (!confirm('¿Estás seguro de rechazar el consentimiento?\n\nPodrás otorgarlo más adelante si cambias de opinión.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/biometric/consents/reject', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        token: token
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al procesar rechazo');
+                }
+
+                renderRejection();
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function renderSuccess() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="success-box">
+                    <div class="icon">✅</div>
+                    <h2>¡Consentimiento Otorgado!</h2>
+                    <p style="color: #065f46; font-size: 16px; margin-top: 16px;">
+                        Tu consentimiento ha sido registrado exitosamente.
+                    </p>
+                    <p style="color: #047857; margin-top: 12px;">
+                        Recibirás un email de confirmación con una copia de este documento.
+                    </p>
+                    <p style="color: #059669; margin-top: 20px; font-size: 14px;">
+                        Recordá que podés revocar este consentimiento en cualquier momento.
+                    </p>
+                </div>
+            `;
+        }
+
+        function renderRejection() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="error-box" style="background: #fef3c7; border-left-color: #f59e0b;">
+                    <div class="icon">ℹ️</div>
+                    <h2 style="color: #92400e;">Consentimiento Rechazado</h2>
+                    <p style="color: #78350f; margin-top: 16px;">
+                        Has rechazado el consentimiento para el análisis biométrico.
+                    </p>
+                    <p style="color: #78350f; margin-top: 12px;">
+                        Podés cambiar de opinión y otorgarlo más adelante.
+                    </p>
+                </div>
+            `;
+        }
+
+        function renderError(message) {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="error-box">
+                    <div class="icon">❌</div>
+                    <h2>Error</h2>
+                    <p>${message}</p>
+                    <p style="margin-top: 16px; font-size: 14px;">
+                        Por favor, contactá a tu administrador o solicitá un nuevo link.
+                    </p>
+                </div>
+            `;
+        }
+
+        // Cargar al iniciar
+        loadConsentRequest();
+    </script>
+</body>
+</html>
