@@ -901,7 +901,16 @@ router.post('/consents/request-bulk', auth, authorize('admin', 'rrhh'), async (r
 // ========================================
 router.get('/consents/roles', auth, authorize('admin', 'rrhh'), async (req, res) => {
     try {
+        console.log('🔍 [ROLES] Endpoint llamado por usuario:', req.user);
         const { companyId: company_id } = req.user;
+
+        if (!company_id) {
+            console.error('❌ [ROLES] company_id no encontrado en req.user');
+            return res.status(400).json({
+                success: false,
+                error: 'company_id requerido'
+            });
+        }
 
         // Obtener roles únicos de usuarios activos de la empresa
         const roles = await sequelize.query(`
@@ -927,10 +936,13 @@ router.get('/consents/roles', auth, authorize('admin', 'rrhh'), async (req, res)
         });
 
     } catch (error) {
-        console.error('Error obteniendo roles:', error);
+        console.error('❌ [ROLES] Error obteniendo roles:', error);
+        console.error('❌ [ROLES] Stack:', error.stack);
         res.status(500).json({
+            success: false,
             error: 'Error interno',
-            message: error.message
+            message: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
