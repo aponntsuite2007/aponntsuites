@@ -36,7 +36,7 @@ router.get('/consents', auth, async (req, res) => {
         const [results] = await sequelize.query(`
             SELECT
                 u.user_id,
-                u.first_name || ' ' || u.last_name as employee_name,
+                u."firstName" || ' ' || u."lastName" as employee_name,
                 u.email,
                 c.id as consent_id,
                 c.consent_type,
@@ -62,7 +62,7 @@ router.get('/consents', auth, async (req, res) => {
                 AND u.company_id = c.company_id
             WHERE u.company_id = :company_id
                 AND u.is_active = true
-            ORDER BY u.last_name, u.first_name
+            ORDER BY u."lastName", u."firstName"
         `, {
             replacements: { company_id },
             type: sequelize.QueryTypes.SELECT
@@ -115,7 +115,7 @@ router.get('/consents/:userId', auth, async (req, res) => {
         const [consent] = await sequelize.query(`
             SELECT
                 c.*,
-                u.first_name || ' ' || u.last_name as employee_name,
+                u."firstName" || ' ' || u."lastName" as employee_name,
                 u.email
             FROM biometric_consents c
             JOIN users u ON c.user_id = u.user_id AND c.company_id = u.company_id
@@ -425,9 +425,9 @@ router.get('/consents/audit-log', auth, authorize('admin'), async (req, res) => 
         let query = `
             SELECT
                 cal.*,
-                u.first_name || ' ' || u.last_name as employee_name,
+                u."firstName" || ' ' || u."lastName" as employee_name,
                 u.email,
-                p.first_name || ' ' || p.last_name as performed_by_name
+                p."firstName" || ' ' || p."lastName" as performed_by_name
             FROM consent_audit_log cal
             JOIN users u ON cal.user_id = u.user_id AND cal.company_id = u.company_id
             LEFT JOIN users p ON cal.performed_by_user_id = p.user_id
