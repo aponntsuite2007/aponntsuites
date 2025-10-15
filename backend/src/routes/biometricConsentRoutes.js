@@ -21,7 +21,7 @@ const { auth, authorize, adminOnly } = require('../middleware/auth');
 // ========================================
 router.get('/consents', auth, async (req, res) => {
     try {
-        const { company_id, role } = req.user;
+        const { companyId: company_id, role } = req.user;
 
         if (!['admin', 'rrhh'].includes(role)) {
             return res.status(403).json({
@@ -97,7 +97,7 @@ router.get('/consents', auth, async (req, res) => {
 router.get('/consents/:userId', auth, async (req, res) => {
     try {
         const { userId } = req.params;
-        const { company_id, user_id, role } = req.user;
+        const { companyId: company_id, user_id, role } = req.user;
 
         // Solo admin, RRHH o el propio usuario pueden ver su consentimiento
         if (!['admin', 'rrhh'].includes(role) && user_id !== userId) {
@@ -161,7 +161,7 @@ router.post('/consents/grant', auth, async (req, res) => {
             biometricProof    // Token de validación biométrica
         } = req.body;
 
-        const { user_id, company_id } = req.user;
+        const { user_id, companyId: company_id } = req.user;
 
         // Validar parámetros
         if (!consentText || !validationMethod || !biometricProof) {
@@ -305,7 +305,7 @@ router.post('/consents/revoke', auth, async (req, res) => {
             biometricProof
         } = req.body;
 
-        const { user_id, company_id } = req.user;
+        const { user_id, companyId: company_id } = req.user;
 
         // Validar parámetros
         if (!reason || !validationMethod || !biometricProof) {
@@ -414,7 +414,7 @@ router.post('/consents/revoke', auth, async (req, res) => {
 // ========================================
 router.get('/consents/audit-log', auth, authorize('admin'), async (req, res) => {
     try {
-        const { company_id } = req.user;
+        const { companyId: company_id } = req.user;
         const { userId, startDate, endDate, limit = 100 } = req.query;
 
         let query = `
@@ -474,7 +474,7 @@ router.get('/consents/audit-log', auth, authorize('admin'), async (req, res) => 
 // ========================================
 router.get('/consents/compliance-report', auth, authorize('admin', 'rrhh'), async (req, res) => {
     try {
-        const { company_id } = req.user;
+        const { companyId: company_id } = req.user;
 
         // Resumen de consentimientos
         const [summary] = await sequelize.query(`
