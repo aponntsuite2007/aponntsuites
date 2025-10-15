@@ -12012,12 +12012,13 @@ async function showBiometricConsentContent(container, filters = {}) {
                                     <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Estado</th>
                                     <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Fecha</th>
                                     <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Método</th>
+                                    <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${consents.length === 0 ? `
                                     <tr>
-                                        <td colspan="5" style="padding: 40px; text-align: center; color: #6b7280;">
+                                        <td colspan="6" style="padding: 40px; text-align: center; color: #6b7280;">
                                             <div style="font-size: 48px; margin-bottom: 15px;">📝</div>
                                             <p style="margin: 0;">No hay consentimientos registrados</p>
                                         </td>
@@ -12025,7 +12026,9 @@ async function showBiometricConsentContent(container, filters = {}) {
                                 ` : consents.map(consent => `
                                     <tr style="border-bottom: 1px solid #f3f4f6;">
                                         <td style="padding: 15px; color: #1f2937; font-weight: 500;">${consent.employee_name || 'Sin nombre'}</td>
-                                        <td style="padding: 15px; color: #6b7280;">${consent.email || '-'}</td>
+                                        <td style="padding: 15px; color: #6b7280;">
+                                            ${consent.email || '<span style="color: #ef4444;">❌ Sin email</span>'}
+                                        </td>
                                         <td style="padding: 15px; text-align: center;">
                                             ${getConsentStatusBadge(consent.status)}
                                         </td>
@@ -12034,6 +12037,22 @@ async function showBiometricConsentContent(container, filters = {}) {
                                         </td>
                                         <td style="padding: 15px; text-align: center; color: #6b7280; font-size: 13px;">
                                             ${consent.validation_method || '-'}
+                                        </td>
+                                        <td style="padding: 15px; text-align: center;">
+                                            ${consent.status === 'pending' && consent.email ? `
+                                                <button onclick="window.requestIndividualConsent('${consent.user_id}')"
+                                                        style="padding: 6px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                                               color: white; border: none; border-radius: 6px; cursor: pointer;
+                                                               font-weight: 600; font-size: 13px; transition: transform 0.2s;"
+                                                        onmouseover="this.style.transform='scale(1.05)'"
+                                                        onmouseout="this.style.transform='scale(1)'">
+                                                    📧 Solicitar
+                                                </button>
+                                            ` : consent.status === 'pending' && !consent.email ? `
+                                                <span style="color: #ef4444; font-size: 12px;">❌ Sin email</span>
+                                            ` : `
+                                                <span style="color: #10b981; font-size: 13px;">✅</span>
+                                            `}
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -12103,6 +12122,58 @@ window.clearConsentFilters = function() {
 };
 
 // ==================================================================
+// 📧 SOLICITAR CONSENTIMIENTO INDIVIDUAL
+// ==================================================================
+window.requestIndividualConsent = async function(userId) {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            alert('Sesión expirada');
+            location.reload();
+            return;
+        }
+
+        // Mostrar loading en el botón
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '⏳ Enviando...';
+
+        const response = await fetch('/api/v1/biometric/consents/request-individual', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || data.message || 'Error al enviar solicitud');
+        }
+
+        if (data.success) {
+            alert(`✅ Solicitud enviada a: ${data.email}`);
+            // Recargar tabla
+            window.applyConsentFilters();
+        } else {
+            throw new Error(data.message || 'Error desconocido');
+        }
+
+    } catch (error) {
+        console.error('❌ Error enviando solicitud individual:', error);
+        alert(`❌ Error: ${error.message}`);
+        // Restaurar botón
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
+    }
+};
+
+// ==================================================================
 // 📧 SOLICITAR CONSENTIMIENTOS MASIVOS
 // ==================================================================
 window.requestBulkConsent = async function() {
@@ -12129,7 +12200,19 @@ window.requestBulkConsent = async function() {
         if (!response.ok) throw new Error('Error al enviar solicitudes');
 
         const data = await response.json();
-        alert(`✅ ${data.emailsSent || 0} solicitudes enviadas correctamente`);
+
+        // Mostrar resumen detallado
+        let message = `✅ Solicitudes enviadas: ${data.emailsSent || 0}/${data.totalUsers || 0}\n`;
+        if (data.failed > 0) {
+            message += `\n⚠️ Fallos: ${data.failed}\n\nMotivos:\n`;
+            data.errors?.slice(0, 5).forEach(err => {
+                message += `- ${err.email || err.userId}: ${err.error}\n`;
+            });
+            if (data.errors.length > 5) {
+                message += `... y ${data.errors.length - 5} más`;
+            }
+        }
+        alert(message);
         window.applyConsentFilters();
 
     } catch (error) {
