@@ -21,7 +21,9 @@ const { auth, authorize, adminOnly } = require('../middleware/auth');
 // ========================================
 router.get('/consents', auth, async (req, res) => {
     try {
+        console.log('🔍 [CONSENTS] req.user completo:', JSON.stringify(req.user, null, 2));
         const { companyId: company_id, role } = req.user;
+        console.log('🔍 [CONSENTS] Extraído company_id:', company_id, 'role:', role);
 
         if (!['admin', 'rrhh'].includes(role)) {
             return res.status(403).json({
