@@ -2,7 +2,16 @@ const nodemailer = require('nodemailer');
 const { sequelize } = require('../config/database');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
-const pdfGenerationService = require('./pdfGenerationService');
+
+// Lazy load PDF service to avoid deployment failures if Puppeteer is not available
+let pdfGenerationService = null;
+try {
+    pdfGenerationService = require('./pdfGenerationService');
+    console.log('✅ PDF generation service loaded successfully');
+} catch (error) {
+    console.warn('⚠️ PDF generation service not available (Puppeteer dependencies missing):', error.message);
+    console.warn('📧 Emails will be sent without PDF attachments');
+}
 
 class BiometricConsentService {
     constructor() {
@@ -483,30 +492,34 @@ class BiometricConsentService {
         `;
 
         try {
-            // Generar PDF del consentimiento
-            console.log(`📄 Generando PDF para ${user.email}...`);
+            // Generar PDF del consentimiento (si está disponible)
             let pdfAttachment = null;
             let pdfPath = null;
 
-            try {
-                const pdfData = await pdfGenerationService.generateConsentPDF(user, company, consentData);
+            if (pdfGenerationService) {
+                try {
+                    console.log(`📄 Generando PDF para ${user.email}...`);
+                    const pdfData = await pdfGenerationService.generateConsentPDF(user, company, consentData);
 
-                // Guardar PDF en disco para registros
-                pdfPath = await pdfGenerationService.savePDF(pdfData.buffer, pdfData.filename);
+                    // Guardar PDF en disco para registros
+                    pdfPath = await pdfGenerationService.savePDF(pdfData.buffer, pdfData.filename);
 
-                // Preparar adjunto para el email
-                pdfAttachment = {
-                    filename: pdfData.filename,
-                    content: pdfData.buffer,
-                    contentType: 'application/pdf'
-                };
+                    // Preparar adjunto para el email
+                    pdfAttachment = {
+                        filename: pdfData.filename,
+                        content: pdfData.buffer,
+                        contentType: 'application/pdf'
+                    };
 
-                console.log(`✅ PDF generado exitosamente: ${pdfData.filename}`);
-                console.log(`📁 PDF guardado en: ${pdfPath}`);
+                    console.log(`✅ PDF generado exitosamente: ${pdfData.filename}`);
+                    console.log(`📁 PDF guardado en: ${pdfPath}`);
 
-            } catch (pdfError) {
-                console.error(`⚠️ Error generando PDF (continuando sin adjunto):`, pdfError);
-                // No fallar el email si el PDF falla, solo registrar el error
+                } catch (pdfError) {
+                    console.error(`⚠️ Error generando PDF (continuando sin adjunto):`, pdfError);
+                    // No fallar el email si el PDF falla, solo registrar el error
+                }
+            } else {
+                console.log(`📧 PDF service no disponible - enviando email sin PDF adjunto`);
             }
 
             // Enviar email con o sin PDF

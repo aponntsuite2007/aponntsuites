@@ -1,17 +1,41 @@
-const puppeteer = require('puppeteer');
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
 
+// Try to load Puppeteer - may fail if system dependencies are missing
+let puppeteer = null;
+let puppeteerAvailable = false;
+
+try {
+    puppeteer = require('puppeteer');
+    puppeteerAvailable = true;
+    console.log('✅ Puppeteer loaded successfully');
+} catch (error) {
+    console.warn('⚠️ Puppeteer not available:', error.message);
+    console.warn('💡 Install system dependencies for Puppeteer or PDF generation will be disabled');
+}
+
 class PDFGenerationService {
     constructor() {
         this.browser = null;
+        this.available = puppeteerAvailable;
+    }
+
+    /**
+     * Check if PDF generation is available
+     */
+    isAvailable() {
+        return this.available && puppeteer !== null;
     }
 
     /**
      * Inicializar navegador de Puppeteer (reutilizable)
      */
     async initBrowser() {
+        if (!this.isAvailable()) {
+            throw new Error('Puppeteer is not available. PDF generation is disabled.');
+        }
+
         if (!this.browser) {
             this.browser = await puppeteer.launch({
                 headless: 'new',
@@ -30,6 +54,10 @@ class PDFGenerationService {
      * Generar PDF del documento de consentimiento legal
      */
     async generateConsentPDF(userData, companyData, consentData) {
+        if (!this.isAvailable()) {
+            throw new Error('PDF generation is not available. Puppeteer dependencies missing.');
+        }
+
         try {
             const browser = await this.initBrowser();
             const page = await browser.newPage();
