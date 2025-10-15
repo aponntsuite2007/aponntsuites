@@ -8,42 +8,7 @@ function showDashboardContent() {
 
     content.innerHTML = `
         <div class="tab-content active" id="dashboard">
-            <div class="welcome-section">
-                <div class="company-info-card">
-                    <div class="company-details">
-                        <h3 id="companyName">Cargando información...</h3>
-                        <p id="companyInfo">Obteniendo datos de la empresa</p>
-                    </div>
-                    <div class="system-status">
-                        <div class="status-indicator online">
-                            <div class="status-dot"></div>
-                            <span>Sistema Operativo</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modules-overview">
-                <h3>📋 Módulos Disponibles</h3>
-                <p>Selecciona un módulo para acceder a sus funcionalidades específicas</p>
-
-                <div class="quick-access-grid" id="quickAccessModules">
-                    <!-- Se cargarán dinámicamente los módulos más usados -->
-                </div>
-            </div>
-
-            <div class="notifications-section">
-                <h3>🔔 Notificaciones del Sistema</h3>
-                <div id="systemNotifications" class="notifications-container">
-                    <div class="notification-item info">
-                        <div class="notification-icon">ℹ️</div>
-                        <div class="notification-content">
-                            <div class="notification-title">Sistema Actualizado</div>
-                            <div class="notification-desc">Nuevas funcionalidades disponibles en los módulos</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Dashboard vacío - contenido eliminado por solicitud del usuario -->
         </div>
     `;
 
