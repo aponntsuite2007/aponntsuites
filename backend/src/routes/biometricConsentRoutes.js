@@ -115,64 +115,6 @@ router.get('/consents', auth, authorize('admin', 'rrhh'), async (req, res) => {
 });
 
 // ========================================
-// GET /api/v1/biometric/consents/:userId
-// Obtener consentimiento de un usuario específico
-// ========================================
-router.get('/consents/:userId', auth, async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { companyId: company_id, user_id, role } = req.user;
-
-        // Solo admin, RRHH o el propio usuario pueden ver su consentimiento
-        if (!['admin', 'rrhh'].includes(role) && user_id !== userId) {
-            return res.status(403).json({
-                error: 'No autorizado',
-                message: 'No puede ver consentimientos de otros usuarios'
-            });
-        }
-
-        const consent = await sequelize.query(`
-            SELECT
-                c.*,
-                u."firstName" || ' ' || u."lastName" as employee_name,
-                u.email
-            FROM biometric_consents c
-            JOIN users u ON c.user_id = u.user_id AND c.company_id = u.company_id
-            WHERE c.user_id = :userId
-                AND c.company_id = :company_id
-                AND c.consent_type = 'emotional_analysis'
-                AND c.revoked = false
-            ORDER BY c.consent_date DESC
-            LIMIT 1
-        `, {
-            replacements: { userId, company_id },
-            type: sequelize.QueryTypes.SELECT
-        });
-
-        if (!consent.length) {
-            return res.json({
-                success: true,
-                hasConsent: false,
-                consent: null
-            });
-        }
-
-        res.json({
-            success: true,
-            hasConsent: true,
-            consent: consent[0]
-        });
-
-    } catch (error) {
-        console.error('Error obteniendo consentimiento:', error);
-        res.status(500).json({
-            error: 'Error interno',
-            message: error.message
-        });
-    }
-});
-
-// ========================================
 // POST /api/v1/biometric/consents/grant
 // Otorgar consentimiento con validación biométrica
 // ========================================
@@ -1102,6 +1044,66 @@ Al aceptar este consentimiento mediante el enlace recibido por email, usted decl
             error: 'Error interno',
             message: error.message,
             stack: error.stack
+        });
+    }
+});
+
+// ========================================
+// GET /api/v1/biometric/consents/:userId
+// Obtener consentimiento de un usuario específico
+// IMPORTANTE: Esta ruta va AL FINAL porque usa parámetros dinámicos
+// Si va antes, captura rutas específicas como "legal-document" como userId
+// ========================================
+router.get('/consents/:userId', auth, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { companyId: company_id, user_id, role } = req.user;
+
+        // Solo admin, RRHH o el propio usuario pueden ver su consentimiento
+        if (!['admin', 'rrhh'].includes(role) && user_id !== userId) {
+            return res.status(403).json({
+                error: 'No autorizado',
+                message: 'No puede ver consentimientos de otros usuarios'
+            });
+        }
+
+        const consent = await sequelize.query(`
+            SELECT
+                c.*,
+                u."firstName" || ' ' || u."lastName" as employee_name,
+                u.email
+            FROM biometric_consents c
+            JOIN users u ON c.user_id = u.user_id AND c.company_id = u.company_id
+            WHERE c.user_id = :userId
+                AND c.company_id = :company_id
+                AND c.consent_type = 'emotional_analysis'
+                AND c.revoked = false
+            ORDER BY c.consent_date DESC
+            LIMIT 1
+        `, {
+            replacements: { userId, company_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!consent.length) {
+            return res.json({
+                success: true,
+                hasConsent: false,
+                consent: null
+            });
+        }
+
+        res.json({
+            success: true,
+            hasConsent: true,
+            consent: consent[0]
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo consentimiento:', error);
+        res.status(500).json({
+            error: 'Error interno',
+            message: error.message
         });
     }
 });

@@ -12125,6 +12125,10 @@ window.clearConsentFilters = function() {
 // 📧 SOLICITAR CONSENTIMIENTO INDIVIDUAL
 // ==================================================================
 window.requestIndividualConsent = async function(userId) {
+    // Declarar variables fuera del try para que estén disponibles en catch
+    let button = null;
+    let originalText = '';
+
     try {
         const token = localStorage.getItem('authToken');
         if (!token) {
@@ -12133,11 +12137,13 @@ window.requestIndividualConsent = async function(userId) {
             return;
         }
 
-        // Mostrar loading en el botón
-        const button = event.target;
-        const originalText = button.innerHTML;
-        button.disabled = true;
-        button.innerHTML = '⏳ Enviando...';
+        // Obtener botón del evento global (onclick pasa event automáticamente)
+        if (typeof event !== 'undefined' && event?.target) {
+            button = event.target;
+            originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '⏳ Enviando...';
+        }
 
         const response = await fetch('/api/v1/biometric/consents/request-individual', {
             method: 'POST',
@@ -12165,8 +12171,9 @@ window.requestIndividualConsent = async function(userId) {
     } catch (error) {
         console.error('❌ Error enviando solicitud individual:', error);
         alert(`❌ Error: ${error.message}`);
-        // Restaurar botón
-        if (button) {
+    } finally {
+        // Restaurar botón en el finally para que SIEMPRE se ejecute
+        if (button && originalText) {
             button.disabled = false;
             button.innerHTML = originalText;
         }
