@@ -44,14 +44,6 @@ function showDashboardContent() {
                     </div>
                 </div>
             </div>
-
-            <div class="help-section">
-                <h3>❓ ¿Necesitas Ayuda?</h3>
-                <div class="help-options">
-                    <button class="btn secondary" onclick="showSystemGuide()">📖 Guía del Sistema</button>
-                    <button class="btn secondary" onclick="contactSupport()">📞 Contactar Soporte</button>
-                </div>
-            </div>
         </div>
     `;
 
