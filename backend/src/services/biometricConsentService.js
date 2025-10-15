@@ -142,41 +142,30 @@ Usted tiene derecho a:
             const tokenExpiry = new Date();
             tokenExpiry.setDate(tokenExpiry.getDate() + 7); // 7 días
 
-            // Hash del documento
-            const documentHash = crypto.createHash('sha256')
-                .update(legalDoc.content + legalDoc.version)
-                .digest('hex');
-
-            // Crear registro de consentimiento pendiente
-            await sequelize.query(`
-                INSERT INTO biometric_consents (
-                    company_id, user_id, consent_type, consent_given,
-                    consent_text, consent_version, consent_document_hash,
-                    consent_token, consent_token_expires_at, consent_email_sent_at,
-                    email_thread, created_at, updated_at
-                ) VALUES (
-                    :companyId, :userId, 'biometric_analysis', false,
-                    :consentText, :version, :documentHash,
-                    :token, :tokenExpiry, NOW(),
-                    :emailThread, NOW(), NOW()
-                )
-            `, {
-                replacements: {
-                    companyId,
-                    userId,
-                    consentText: legalDoc.content,
-                    version: legalDoc.version,
-                    documentHash,
-                    token,
-                    tokenExpiry,
-                    emailThread: JSON.stringify([{
-                        type: 'request',
-                        sent_at: new Date(),
-                        subject: 'Solicitud de Consentimiento Biométrico'
-                    }])
-                },
-                type: sequelize.QueryTypes.INSERT
-            });
+            // Crear registro de consentimiento pendiente con solo columnas básicas
+            // (la tabla en producción no tiene todas las columnas de la migración completa)
+            try {
+                await sequelize.query(`
+                    INSERT INTO biometric_consents (
+                        company_id, user_id, consent_type, consent_given,
+                        consent_text, consent_version
+                    ) VALUES (
+                        :companyId, :userId, 'biometric_analysis', false,
+                        :consentText, :version
+                    )
+                `, {
+                    replacements: {
+                        companyId,
+                        userId,
+                        consentText: legalDoc.content,
+                        version: legalDoc.version
+                    },
+                    type: sequelize.QueryTypes.INSERT
+                });
+            } catch (insertError) {
+                console.error('❌ [CONSENT-SERVICE] Error en INSERT:', insertError.message);
+                throw new Error(`No se pudo crear el registro de consentimiento: ${insertError.message}`);
+            }
 
             // Log en auditoría
             await sequelize.query(`
