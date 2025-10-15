@@ -1929,11 +1929,15 @@ function initializeBiometricWebSocket() {
                 biometricHubState.websocketConnected = true;
                 updateWebSocketStatus(true);
 
-                // Suscribirse a eventos de la empresa
+                // Suscribirse a eventos de la empresa con autenticación JWT
+                const token = localStorage.getItem('authToken');
                 ws.send(JSON.stringify({
                     type: 'subscribe',
-                    companyId: selectedCompany.company_id || selectedCompany.id
+                    companyId: selectedCompany.company_id || selectedCompany.id,
+                    token: token // Enviar token JWT para autenticación
                 }));
+
+                console.log('📡 [BIOMETRIC-WS] Suscripción enviada para empresa:', selectedCompany.company_id || selectedCompany.id);
             };
 
             ws.onmessage = (event) => {
@@ -1971,6 +1975,321 @@ function initializeBiometricWebSocket() {
         biometricHubState.websocketConnected = false;
         updateWebSocketStatus(false);
     }
+}
+
+/**
+ * 📡 MANEJAR EVENTOS EN TIEMPO REAL DESDE WEBSOCKET
+ */
+function handleRealtimeUpdate(event) {
+    console.log('📡 [REALTIME] Evento recibido:', event);
+
+    switch (event.type) {
+        case 'connection_established':
+            console.log('✅ [REALTIME] Conexión WebSocket establecida');
+            showRealtimeNotification('Conectado al sistema en tiempo real', 'success');
+            break;
+
+        case 'subscribed':
+            console.log('✅ [REALTIME] Suscrito a eventos de empresa:', event.companyId);
+            showRealtimeNotification(`Recibiendo eventos en tiempo real de empresa ${event.companyId}`, 'info');
+            break;
+
+        case 'new_attendance':
+            handleNewAttendance(event.data);
+            break;
+
+        case 'employee_detected':
+            handleEmployeeDetected(event.data);
+            break;
+
+        case 'kiosk_status_change':
+            handleKioskStatusChange(event);
+            break;
+
+        case 'initial_state':
+            handleInitialState(event);
+            break;
+
+        case 'error':
+            console.error('❌ [REALTIME] Error desde servidor:', event.error);
+            showRealtimeNotification(event.error, 'error');
+            break;
+
+        default:
+            console.log('ℹ️ [REALTIME] Evento no manejado:', event.type);
+    }
+}
+
+/**
+ * 📍 MANEJAR NUEVO FICHAJE
+ */
+function handleNewAttendance(data) {
+    console.log('📍 [REALTIME] Nuevo fichaje:', data);
+
+    // Mostrar notificación
+    const action = data.action === 'entrada' ? 'ENTRÓ' : 'SALIÓ';
+    const icon = data.action === 'entrada' ? '🟢' : '🔴';
+    showRealtimeNotification(
+        `${icon} ${data.employee_name} ${action} - ${new Date(data.timestamp).toLocaleTimeString('es-AR')}`,
+        'success',
+        5000
+    );
+
+    // Agregar a eventos recientes
+    addRecentEvent({
+        type: 'attendance',
+        message: `${data.employee_name} registró ${data.action}`,
+        timestamp: data.timestamp,
+        icon: icon
+    });
+
+    // Actualizar contador de asistencias si existe
+    const todayCounter = document.getElementById('attendance-today');
+    if (todayCounter) {
+        const currentValue = parseInt(todayCounter.textContent) || 0;
+        todayCounter.textContent = currentValue + 1;
+        // Efecto de actualización
+        todayCounter.style.transform = 'scale(1.2)';
+        todayCounter.style.color = '#10b981';
+        setTimeout(() => {
+            todayCounter.style.transform = 'scale(1)';
+            todayCounter.style.color = '';
+        }, 300);
+    }
+}
+
+/**
+ * 👤 MANEJAR DETECCIÓN DE EMPLEADO
+ */
+function handleEmployeeDetected(data) {
+    console.log('👤 [REALTIME] Empleado detectado:', data);
+
+    // Mostrar notificación de detección
+    showRealtimeNotification(
+        `🔍 Reconociendo: ${data.employee_name} (${Math.round(data.confidence * 100)}% confianza)`,
+        'info',
+        3000
+    );
+
+    // Agregar a eventos recientes
+    addRecentEvent({
+        type: 'detection',
+        message: `${data.employee_name} detectado en ${data.kiosk_id}`,
+        timestamp: data.timestamp,
+        icon: '👤',
+        confidence: data.confidence
+    });
+
+    // Actualizar velocidad de procesamiento
+    const speedElement = document.getElementById('processing-speed');
+    if (speedElement) {
+        speedElement.textContent = `${data.processing_time || 'N/A'}ms`;
+        speedElement.style.color = data.processing_time < 500 ? '#10b981' : '#f59e0b';
+    }
+}
+
+/**
+ * 🖥️ MANEJAR CAMBIO DE ESTADO DE KIOSK
+ */
+function handleKioskStatusChange(event) {
+    console.log('🖥️ [REALTIME] Cambio estado kiosk:', event);
+
+    const statusText = event.status === 'online' ? 'ONLINE' : 'OFFLINE';
+    const icon = event.status === 'online' ? '🟢' : '🔴';
+
+    showRealtimeNotification(
+        `${icon} Kiosk ${event.kiosk_id}: ${statusText}`,
+        event.status === 'online' ? 'success' : 'warning'
+    );
+
+    // Actualizar indicador de kiosk si existe
+    updateKioskIndicator(event.kiosk_id, event.status);
+}
+
+/**
+ * 📊 MANEJAR ESTADO INICIAL
+ */
+function handleInitialState(event) {
+    console.log('📊 [REALTIME] Estado inicial:', event);
+
+    if (event.kiosks_online !== undefined) {
+        showRealtimeNotification(
+            `📡 ${event.kiosks_online} kioscos online`,
+            'info'
+        );
+    }
+}
+
+/**
+ * 🔔 MOSTRAR NOTIFICACIÓN EN TIEMPO REAL
+ */
+function showRealtimeNotification(message, type = 'info', duration = 4000) {
+    // Crear contenedor de notificaciones si no existe
+    let container = document.getElementById('realtime-notifications-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'realtime-notifications-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        `;
+        document.body.appendChild(container);
+    }
+
+    // Colores según tipo
+    const colors = {
+        success: { bg: '#d1fae5', border: '#10b981', text: '#065f46' },
+        error: { bg: '#fee2e2', border: '#ef4444', text: '#991b1b' },
+        warning: { bg: '#fef3c7', border: '#f59e0b', text: '#92400e' },
+        info: { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' }
+    };
+
+    const color = colors[type] || colors.info;
+
+    // Crear notificación
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        background: ${color.bg};
+        border-left: 4px solid ${color.border};
+        color: ${color.text};
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-weight: 500;
+        animation: slideInRight 0.3s ease-out;
+        cursor: pointer;
+        transition: all 0.2s;
+    `;
+    notification.textContent = message;
+
+    // Hover effect
+    notification.onmouseenter = () => {
+        notification.style.transform = 'translateX(-5px)';
+        notification.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+    };
+    notification.onmouseleave = () => {
+        notification.style.transform = 'translateX(0)';
+        notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    };
+
+    // Click para cerrar
+    notification.onclick = () => {
+        notification.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    };
+
+    container.appendChild(notification);
+
+    // Auto-remover después de duración
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, duration);
+
+    // Limitar a máximo 5 notificaciones
+    const notifications = container.children;
+    if (notifications.length > 5) {
+        notifications[0].remove();
+    }
+}
+
+/**
+ * 📋 AGREGAR EVENTO RECIENTE
+ */
+function addRecentEvent(event) {
+    const recentEventsContainer = document.getElementById('recent-events-list');
+    if (!recentEventsContainer) return;
+
+    const eventElement = document.createElement('div');
+    eventElement.style.cssText = `
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: fadeInDown 0.3s ease-out;
+        background: white;
+        transition: background 0.2s;
+    `;
+
+    eventElement.onmouseenter = () => {
+        eventElement.style.background = '#f9fafb';
+    };
+    eventElement.onmouseleave = () => {
+        eventElement.style.background = 'white';
+    };
+
+    const time = new Date(event.timestamp).toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+
+    eventElement.innerHTML = `
+        <div style="font-size: 24px;">${event.icon}</div>
+        <div style="flex: 1;">
+            <div style="font-weight: 500; color: #1f2937; font-size: 14px;">${event.message}</div>
+            <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${time}</div>
+        </div>
+        ${event.confidence ? `
+            <div style="background: #dbeafe; color: #1e40af; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                ${Math.round(event.confidence * 100)}%
+            </div>
+        ` : ''}
+    `;
+
+    // Insertar al principio
+    recentEventsContainer.insertBefore(eventElement, recentEventsContainer.firstChild);
+
+    // Limitar a 10 eventos
+    while (recentEventsContainer.children.length > 10) {
+        recentEventsContainer.lastChild.remove();
+    }
+}
+
+/**
+ * 🖥️ ACTUALIZAR INDICADOR DE KIOSK
+ */
+function updateKioskIndicator(kioskId, status) {
+    const indicatorContainer = document.getElementById('kiosks-status-container');
+    if (!indicatorContainer) return;
+
+    let indicator = document.getElementById(`kiosk-indicator-${kioskId}`);
+
+    if (!indicator) {
+        // Crear nuevo indicador
+        indicator = document.createElement('div');
+        indicator.id = `kiosk-indicator-${kioskId}`;
+        indicator.style.cssText = `
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        `;
+        indicatorContainer.appendChild(indicator);
+    }
+
+    // Actualizar estado
+    const isOnline = status === 'online';
+    indicator.style.background = isOnline ? '#d1fae5' : '#fee2e2';
+    indicator.style.color = isOnline ? '#065f46' : '#991b1b';
+    indicator.innerHTML = `
+        <div style="width: 8px; height: 8px; border-radius: 50%; background: ${isOnline ? '#10b981' : '#ef4444'};"></div>
+        <span>Kiosk ${kioskId}</span>
+        <span style="margin-left: auto; font-size: 12px;">${isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+    `;
 }
 
 /**
@@ -4777,6 +5096,39 @@ if (!document.getElementById('biometric-unification-styles')) {
         @keyframes progress {
             0% { width: 0%; }
             100% { width: 100%; }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .btn {
