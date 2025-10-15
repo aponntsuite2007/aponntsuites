@@ -899,7 +899,7 @@ router.post('/consents/request-bulk', auth, authorize('admin', 'rrhh'), async (r
 // GET /api/v1/biometric/consents/roles
 // Obtener roles disponibles de la empresa (multi-tenant)
 // ========================================
-router.get('/consents/roles', auth, authorize('admin', 'rrhh'), async (req, res) => {
+router.get('/consents/roles', auth, async (req, res) => {
     try {
         console.log('🔍 [ROLES] Endpoint llamado por usuario:', req.user);
         const { companyId: company_id } = req.user;
@@ -951,7 +951,7 @@ router.get('/consents/roles', auth, authorize('admin', 'rrhh'), async (req, res)
 // GET /api/v1/biometric/consents/legal-document
 // Obtener documento legal activo para vista previa
 // ========================================
-router.get('/consents/legal-document', auth, authorize('admin', 'rrhh'), async (req, res) => {
+router.get('/consents/legal-document', auth, async (req, res) => {
     try {
         const { companyId: company_id } = req.user;
 
