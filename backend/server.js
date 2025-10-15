@@ -1833,9 +1833,6 @@ app.use('/api/v2/kiosk-enterprise', kioskEnterpriseRoutes);
 const { initializeKioskWebSocketServer } = require('./src/services/kiosk-websocket-server');
 const { AdminPanelWebSocketServer } = require('./src/services/admin-panel-websocket');
 
-// 🧪 IMPORTAR RUTAS DE TESTING
-const { router: testingRealtimeRouter, setAdminPanelWsServer } = require('./src/routes/testing-realtime');
-
 // 📱 CONFIGURAR API MÓVIL COMPLETA
 const mobileRoutes = require('./src/routes/mobileRoutes');
 app.use('/api/v1/mobile', mobileRoutes);
@@ -1935,13 +1932,14 @@ console.log('   👥 /api/siac/clientes/* - Módulo de gestión de clientes');
 console.log('   🛣️ /api/transport/trips/* - Gestión de viajes');
 
 // 🧪 CONFIGURAR API DE TESTING REALTIME
-app.use('/api/test', testingRealtimeRouter);
-console.log('🧪 [TESTING] Rutas de testing en tiempo real configuradas:');
-console.log('   📍 POST /api/test/simulate-attendance - Simular fichaje');
-console.log('   👤 POST /api/test/simulate-detection - Simular detección facial');
-console.log('   🖥️ POST /api/test/simulate-kiosk-status - Simular cambio estado kiosk');
-console.log('   📋 GET /api/test/employees - Listar empleados para testing');
-console.log('   ✅ GET /api/test/status - Estado del sistema');
+// TEMPORALMENTE DESHABILITADO - Causaba problemas en deploy
+// app.use('/api/test', testingRealtimeRouter);
+// console.log('🧪 [TESTING] Rutas de testing en tiempo real configuradas:');
+// console.log('   📍 POST /api/test/simulate-attendance - Simular fichaje');
+// console.log('   👤 POST /api/test/simulate-detection - Simular detección facial');
+// console.log('   🖥️ POST /api/test/simulate-kiosk-status - Simular cambio estado kiosk');
+// console.log('   📋 GET /api/test/employees - Listar empleados para testing');
+// console.log('   ✅ GET /api/test/status - Estado del sistema');
 
 // RUTA LEGACY ELIMINADA - Ahora se usa /api/v1/company-modules/my-modules
 
@@ -2107,12 +2105,11 @@ ${_getNetworkInterfaces().map(ip => `   • ${ip.interface}: ${ip.ip}${ip.isPrim
         adminWsServer.connectToKioskServer(kioskWsServer);
         kioskWsServer.adminPanelRef = adminWsServer;
 
-        // Configurar referencia para rutas de testing
-        setAdminPanelWsServer(adminWsServer);
+        // Configurar referencia para rutas de testing (deshabilitado temporalmente)
+        // setAdminPanelWsServer(adminWsServer);
 
         console.log('✅ [ADMIN-WS] WebSocket para panel administrativo inicializado en /biometric-ws');
         console.log('🔗 [WS] Servidores WebSocket conectados: Kiosk ↔ Admin Panel');
-        console.log('🧪 [TESTING] Endpoints de testing configurados con acceso a WebSocket');
       }).catch(err => {
         console.error('❌ [KIOSK-WS] Error inicializando WebSocket server:', err);
       });
