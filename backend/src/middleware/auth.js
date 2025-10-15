@@ -18,10 +18,12 @@ const auth = async (req, res, next) => {
       });
     }
 
-    // Verificar formato del token
-    if (!authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        error: 'Formato de token inválido.' 
+    // Verificar formato del token (case insensitive)
+    if (!authHeader.toLowerCase().startsWith('bearer ')) {
+      console.log('❌ [AUTH] Formato de token inválido. Header:', authHeader);
+      return res.status(401).json({
+        error: 'Formato de token inválido.',
+        received: authHeader.substring(0, 20) + '...'
       });
     }
 

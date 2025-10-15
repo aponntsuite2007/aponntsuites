@@ -33,7 +33,7 @@ router.get('/consents', auth, async (req, res) => {
         }
 
         // Obtener usuarios y sus consentimientos
-        const [results] = await sequelize.query(`
+        const results = await sequelize.query(`
             SELECT
                 u.user_id,
                 u."firstName" || ' ' || u."lastName" as employee_name,
@@ -112,7 +112,7 @@ router.get('/consents/:userId', auth, async (req, res) => {
             });
         }
 
-        const [consent] = await sequelize.query(`
+        const consent = await sequelize.query(`
             SELECT
                 c.*,
                 u."firstName" || ' ' || u."lastName" as employee_name,
@@ -180,7 +180,7 @@ router.post('/consents/grant', auth, async (req, res) => {
         // Por ahora, asumimos que es válido si existe
 
         // Verificar si ya existe un consentimiento activo
-        const [existing] = await sequelize.query(`
+        const existing = await sequelize.query(`
             SELECT id FROM biometric_consents
             WHERE user_id = :user_id
                 AND company_id = :company_id
@@ -323,7 +323,7 @@ router.post('/consents/revoke', auth, async (req, res) => {
         // TODO: Validar biometricProof
 
         // Verificar que existe consentimiento activo
-        const [existing] = await sequelize.query(`
+        const existing = await sequelize.query(`
             SELECT id FROM biometric_consents
             WHERE user_id = :user_id
                 AND company_id = :company_id
@@ -453,7 +453,7 @@ router.get('/consents/audit-log', auth, authorize('admin'), async (req, res) => 
 
         query += ` ORDER BY cal.action_timestamp DESC LIMIT :limit`;
 
-        const [results] = await sequelize.query(query, {
+        const results = await sequelize.query(query, {
             replacements,
             type: sequelize.QueryTypes.SELECT
         });
@@ -482,7 +482,7 @@ router.get('/consents/compliance-report', auth, authorize('admin', 'rrhh'), asyn
         const { companyId: company_id } = req.user;
 
         // Resumen de consentimientos
-        const [summary] = await sequelize.query(`
+        const summary = await sequelize.query(`
             SELECT
                 COUNT(DISTINCT u.user_id) as total_users,
                 COUNT(DISTINCT CASE WHEN c.consent_given = true AND c.revoked = false THEN u.user_id END) as users_with_consent,
@@ -506,7 +506,7 @@ router.get('/consents/compliance-report', auth, authorize('admin', 'rrhh'), asyn
         });
 
         // Resumen de auditoría
-        const [auditSummary] = await sequelize.query(`
+        const auditSummary = await sequelize.query(`
             SELECT
                 action,
                 COUNT(*) as count
