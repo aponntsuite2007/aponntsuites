@@ -84,10 +84,13 @@ router.get('/consents', auth, async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error obteniendo consentimientos:', error);
+        console.error('❌ [CONSENTS] Error obteniendo consentimientos:', error);
+        console.error('❌ [CONSENTS] Error stack:', error.stack);
         res.status(500).json({
             error: 'Error interno',
-            message: error.message
+            message: error.message,
+            details: error.stack,
+            sql: error.sql || 'N/A'
         });
     }
 });
