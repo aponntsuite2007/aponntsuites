@@ -21,15 +21,40 @@ const { auth, authorize, adminOnly } = require('../middleware/auth');
 // ========================================
 router.get('/consents', auth, async (req, res) => {
     try {
-        console.log('🔍 [CONSENTS] req.user completo:', JSON.stringify(req.user, null, 2));
         const { companyId: company_id, role } = req.user;
-        console.log('🔍 [CONSENTS] Extraído company_id:', company_id, 'role:', role);
+        const { status, role: roleFilter, method } = req.query;
 
         if (!['admin', 'rrhh'].includes(role)) {
             return res.status(403).json({
                 error: 'No autorizado',
                 message: 'Solo admin y RRHH pueden ver consentimientos'
             });
+        }
+
+        // Construir WHERE clause dinámico
+        let whereConditions = ['u.company_id = :company_id', 'u.is_active = true'];
+        const replacements = { company_id };
+
+        if (status) {
+            if (status === 'active') {
+                whereConditions.push('c.consent_given = true AND c.revoked = false AND (c.expires_at IS NULL OR c.expires_at > NOW())');
+            } else if (status === 'pending') {
+                whereConditions.push('(c.consent_id IS NULL OR c.consent_given = false)');
+            } else if (status === 'revoked') {
+                whereConditions.push('c.revoked = true');
+            } else if (status === 'expired') {
+                whereConditions.push('c.expires_at IS NOT NULL AND c.expires_at < NOW()');
+            }
+        }
+
+        if (roleFilter) {
+            whereConditions.push('u.role = :roleFilter');
+            replacements.roleFilter = roleFilter;
+        }
+
+        if (method) {
+            whereConditions.push('c.acceptance_method = :method');
+            replacements.method = method;
         }
 
         // Obtener usuarios y sus consentimientos
@@ -58,13 +83,12 @@ router.get('/consents', auth, async (req, res) => {
             FROM users u
             LEFT JOIN biometric_consents c
                 ON u.user_id = c.user_id
-                AND c.consent_type = 'emotional_analysis'
+                AND c.consent_type = 'biometric_analysis'
                 AND u.company_id = c.company_id
-            WHERE u.company_id = :company_id
-                AND u.is_active = true
+            WHERE ${whereConditions.join(' AND ')}
             ORDER BY u."lastName", u."firstName"
         `, {
-            replacements: { company_id },
+            replacements,
             type: sequelize.QueryTypes.SELECT
         });
 

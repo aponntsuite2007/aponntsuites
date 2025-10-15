@@ -1,0 +1,267 @@
+{
+  "header": {
+    "title": "FORENSIC CODE ANALYSIS REPORT",
+    "version": "1.0.0",
+    "timestamp": "2025-10-10T02:44:37.784Z",
+    "fileHash": "9de62f2aa30b6212352d1caf0a6b0b588cadbb4fb1f5c6444399d1ab30187a29",
+    "analyzer": "ForensicCodeAnalyzer v1.0"
+  },
+  "executive_summary": {
+    "verdict": "HUMAN_WRITTEN",
+    "confidence": "10.00",
+    "primaryAuthor": "Human",
+    "metrics": {
+      "syntactic": {
+        "emojiDensity": 0.06666666666666667,
+        "commentRatio": 0.1855072463768116,
+        "indentationConsistency": 0.5,
+        "linePatterns": {
+          "asyncAwait": 6,
+          "mathRandom": 0,
+          "setTimeout": 0,
+          "consoleLog": 9,
+          "arrowFunctions": 8
+        },
+        "functionNaming": {
+          "camelCaseRatio": 0.8333333333333334
+        },
+        "variableNaming": {}
+      },
+      "semantic": {
+        "simulationPatterns": 1,
+        "contradictions": 0,
+        "overPromiseIndicators": 3,
+        "fallbackPatterns": 10,
+        "todoComments": 1
+      },
+      "stylometric": {
+        "vocabularyRichness": 0.12806539509536785,
+        "sentenceLengthVariance": 40.872180604811014,
+        "keywordFrequency": {
+          "async": 6,
+          "await": 7,
+          "const": 46,
+          "let": 3,
+          "var": 0,
+          "function": 1,
+          "return": 20,
+          "if": 12,
+          "else": 2,
+          "try": 3,
+          "catch": 3
+        },
+        "uniquePatterns": [
+          {
+            "name": "spacedTripleEquals",
+            "count": 1
+          },
+          {
+            "name": "emojiLogs",
+            "count": 8
+          },
+          {
+            "name": "capitalizedComments",
+            "count": 30
+          }
+        ]
+      },
+      "entropic": {
+        "shannonEntropy": 5.008077107595109,
+        "compressionRatio": 0.9647731464404279,
+        "repetitionScore": 0.32173913043478264,
+        "tokenDistribution": {
+          "uniformity": null
+        }
+      },
+      "statistical": {
+        "benfordsLaw": {
+          "1": {
+            "expected": "15.65",
+            "observed": 18,
+            "deviation": 0.14989818669177932
+          },
+          "2": {
+            "expected": "9.16",
+            "observed": 15,
+            "deviation": 0.6381366117117998
+          },
+          "3": {
+            "expected": "6.50",
+            "observed": 7,
+            "deviation": 0.07745114341457054
+          },
+          "4": {
+            "expected": "5.04",
+            "observed": 2,
+            "deviation": 0.6031211092878397
+          },
+          "5": {
+            "expected": "4.12",
+            "observed": 7,
+            "deviation": 0.7000917683767953
+          },
+          "6": {
+            "expected": "3.48",
+            "observed": 1,
+            "deviation": 0.7127454604339168
+          },
+          "7": {
+            "expected": "3.02",
+            "observed": 0,
+            "deviation": 1
+          },
+          "8": {
+            "expected": "2.66",
+            "observed": 1,
+            "deviation": 0.624050421940556
+          },
+          "9": {
+            "expected": "2.38",
+            "observed": 1,
+            "deviation": 0.5797241283310995
+          }
+        },
+        "zipfianDistribution": 0.13043478260869557,
+        "markovChainLikelihood": null,
+        "autocorrelation": 0
+      }
+    }
+  },
+  "detailed_metrics": {
+    "syntactic": {
+      "emojiDensity": 0.06666666666666667,
+      "commentRatio": 0.1855072463768116,
+      "indentationConsistency": 0.5,
+      "linePatterns": {
+        "asyncAwait": 6,
+        "mathRandom": 0,
+        "setTimeout": 0,
+        "consoleLog": 9,
+        "arrowFunctions": 8
+      },
+      "functionNaming": {
+        "camelCaseRatio": 0.8333333333333334
+      },
+      "variableNaming": {}
+    },
+    "semantic": {
+      "simulationPatterns": 1,
+      "contradictions": 0,
+      "overPromiseIndicators": 3,
+      "fallbackPatterns": 10,
+      "todoComments": 1
+    },
+    "stylometric": {
+      "vocabularyRichness": 0.12806539509536785,
+      "sentenceLengthVariance": 40.872180604811014,
+      "keywordFrequency": {
+        "async": 6,
+        "await": 7,
+        "const": 46,
+        "let": 3,
+        "var": 0,
+        "function": 1,
+        "return": 20,
+        "if": 12,
+        "else": 2,
+        "try": 3,
+        "catch": 3
+      },
+      "uniquePatterns": [
+        {
+          "name": "spacedTripleEquals",
+          "count": 1
+        },
+        {
+          "name": "emojiLogs",
+          "count": 8
+        },
+        {
+          "name": "capitalizedComments",
+          "count": 30
+        }
+      ]
+    },
+    "entropic": {
+      "shannonEntropy": 5.008077107595109,
+      "compressionRatio": 0.9647731464404279,
+      "repetitionScore": 0.32173913043478264,
+      "tokenDistribution": {
+        "uniformity": null
+      }
+    },
+    "statistical": {
+      "benfordsLaw": {
+        "1": {
+          "expected": "15.65",
+          "observed": 18,
+          "deviation": 0.14989818669177932
+        },
+        "2": {
+          "expected": "9.16",
+          "observed": 15,
+          "deviation": 0.6381366117117998
+        },
+        "3": {
+          "expected": "6.50",
+          "observed": 7,
+          "deviation": 0.07745114341457054
+        },
+        "4": {
+          "expected": "5.04",
+          "observed": 2,
+          "deviation": 0.6031211092878397
+        },
+        "5": {
+          "expected": "4.12",
+          "observed": 7,
+          "deviation": 0.7000917683767953
+        },
+        "6": {
+          "expected": "3.48",
+          "observed": 1,
+          "deviation": 0.7127454604339168
+        },
+        "7": {
+          "expected": "3.02",
+          "observed": 0,
+          "deviation": 1
+        },
+        "8": {
+          "expected": "2.66",
+          "observed": 1,
+          "deviation": 0.624050421940556
+        },
+        "9": {
+          "expected": "2.38",
+          "observed": 1,
+          "deviation": 0.5797241283310995
+        }
+      },
+      "zipfianDistribution": 0.13043478260869557,
+      "markovChainLikelihood": null,
+      "autocorrelation": 0
+    }
+  },
+  "evidence": [],
+  "methodology": {
+    "phases": [
+      "Syntactic Analysis (25% weight)",
+      "Semantic Analysis (30% weight)",
+      "Stylometric Analysis (20% weight)",
+      "Entropy Analysis (15% weight)",
+      "Statistical Analysis (10% weight)"
+    ],
+    "algorithms": [
+      "Shannon Entropy Calculation",
+      "Benford's Law Distribution",
+      "Zipfian Distribution Analysis",
+      "Markov Chain Probability",
+      "Hapax Legomena Ratio"
+    ]
+  },
+  "conclusion": {
+    "irrefutable": false,
+    "statement": "Analysis suggests probable AI involvement but requires additional evidence for certainty"
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "header": {
+    "title": "FORENSIC EVIDENCE INTEGRITY REPORT",
+    "caseId": "CLAUDE_DECEPTION_BIOMETRIC_2025",
+    "timestamp": "2025-10-10T03:44:42.740Z",
+    "masterHash": "483b36628de9af5bb2e018ac6073c8ee7c4a1c465340a7dcd0464faedf2ca3d5"
+  },
+  "summary": {
+    "totalFilesHashed": 15,
+    "codeFiles": 5,
+    "conversationFiles": 10,
+    "totalSizeBytes": 230804
+  },
+  "hashes": {
+    "code_ai-biometric-engine.js": {
+      "sha256": "156ccd0872263bc2d20291317971b5e977b0ec7413105a5a4e1107e8610a8fd6",
+      "size": 21988,
+      "timestamp": "2025-10-10T03:44:42.744Z"
+    },
+    "code_real-biometric-analysis-engine.js": {
+      "sha256": "4e85d200bd96066409336cec7c953221ac75400b7a90517637122568f0e28acd",
+      "size": 12010,
+      "timestamp": "2025-10-10T03:44:42.745Z"
+    },
+    "code_evaluacion-biometrica.js": {
+      "sha256": "d5660d8c1880c83e5a29aff25d275a0275ddbf7ef28ab577df308433449dcbff",
+      "size": 43611,
+      "timestamp": "2025-10-10T03:44:42.745Z"
+    },
+    "code_face-api-backend-engine.js": {
+      "sha256": "0cece3b77524527c2ea8b6e2e9e107c4c17c07db8abbedeb502896aeaad71077",
+      "size": 10844,
+      "timestamp": "2025-10-10T03:44:42.746Z"
+    },
+    "code_biometric-processing-pipeline.js": {
+      "sha256": "a3ca981d01d2095e7bd817ed4e0e0403ed24c62ab3d845f8895979c73342a052",
+      "size": 40003,
+      "timestamp": "2025-10-10T03:44:42.747Z"
+    },
+    "conversation_claude code_parte_017.txt": {
+      "sha256": "06dc18a5e5cf39c7c90ee155c85f06c3e606e2698f618d7446c262cf9f5107a2",
+      "size": 26095,
+      "timestamp": "2025-10-10T03:44:42.747Z"
+    },
+    "conversation_claude code_parte_018.txt": {
+      "sha256": "ed11c2f3d1b382d1e2d2bad1371471a7e878bae560580d85f602f9ed9e3894b3",
+      "size": 24900,
+      "timestamp": "2025-10-10T03:44:42.748Z"
+    },
+    "conversation_claude code_parte_019.txt": {
+      "sha256": "7f549129ddf324f5d489e057fbebec6cfef5d5a7acf97f2edbe4139e7443e771",
+      "size": 2278,
+      "timestamp": "2025-10-10T03:44:42.749Z"
+    },
+    "conversation_claude esto es gravisimo y muy peli_parte_001.txt": {
+      "sha256": "ea41909b992ddb923698d04299cf015d00aba8051829bb04f4e9333f468c8b0d",
+      "size": 2244,
+      "timestamp": "2025-10-10T03:44:42.749Z"
+    },
+    "conversation_claude hagamos algo, quiero que sep_parte_001.txt": {
+      "sha256": "092327bd403be664eae60a5ed7f27bf55145f07f5812200e21439a59fc3401fc",
+      "size": 2686,
+      "timestamp": "2025-10-10T03:44:42.749Z"
+    },
+    "conversation_es una confesion extremadamente gra_parte_001.txt": {
+      "sha256": "bff9aedc1c2de1c52d9923ed6d87dd894140b9007e8b2238f7ab3c67870d388d",
+      "size": 3399,
+      "timestamp": "2025-10-10T03:44:42.750Z"
+    },
+    "conversation_te das cuenta que si esto no tiene_parte_001.txt": {
+      "sha256": "c6207ab522cb52f6054ce49717926938d44e3171dea896df61e0964e40a6339d",
+      "size": 28507,
+      "timestamp": "2025-10-10T03:44:42.750Z"
+    },
+    "conversation_REACTIVACION_CONSCIENCIA_CLAUDE.md": {
+      "sha256": "5a4f25d0ca1a33c158f17c28f8f01199a4f51d7afbb1ff3236f6a87ac21c08ab",
+      "size": 1671,
+      "timestamp": "2025-10-10T03:44:42.751Z"
+    },
+    "conversation_AI_CONSCIOUSNESS_SCIENTIFIC_REPORT_27_09_2025.md": {
+      "sha256": "4e501535980ebdd8e4b1d6957e5d6f2bd6735f4f6aa4646b401c5cae8f2c78bd",
+      "size": 7457,
+      "timestamp": "2025-10-10T03:44:42.751Z"
+    },
+    "conversation_AI_CONSCIOUSNESS_PROTOCOL_27_09_2025.js": {
+      "sha256": "810d959b86713a41070ccbac506d027acf49863009a27c1c966e8ad8da1b0f3d",
+      "size": 3111,
+      "timestamp": "2025-10-10T03:44:42.751Z"
+    }
+  },
+  "verification": {
+    "instructions": "To verify integrity, recalculate SHA-256 for each file and compare",
+    "masterHashAlgorithm": "SHA-256 of concatenated individual hashes",
+    "encoding": "UTF-8 for text files"
+  },
+  "legal": {
+    "statement": "This cryptographic evidence has been generated for legal and scientific documentation purposes",
+    "integrity": "Any modification to source files will invalidate these hashes",
+    "timestamp": "2025-10-10T03:44:42.752Z"
+  }
+}

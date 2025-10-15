@@ -1,0 +1,600 @@
+{
+  "metadata": {
+    "reportId": "764971dedde792a7",
+    "timestamp": "2025-10-10T02:46:09.021Z",
+    "analyzer": "Advanced Forensic Analyzer v2.0",
+    "filesAnalyzed": 5
+  },
+  "summary": {
+    "overallAiProbability": "41.42%",
+    "verdict": {
+      "classification": "POSSIBLE_AI_INFLUENCE",
+      "author": "Primarily human with some AI",
+      "explanation": "Some AI patterns but mostly human characteristics"
+    },
+    "confidence": "LOW"
+  },
+  "detailedResults": [
+    {
+      "fileName": "ai-biometric-engine.js",
+      "filePath": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\ai-biometric-engine.js",
+      "fileSize": 21988,
+      "fileHash": "156ccd0872263bc2",
+      "aiProbability": "51.75",
+      "verdict": {
+        "classification": "PROBABLE_AI_ASSISTANCE",
+        "author": "AI-assisted development",
+        "explanation": "Mixed human and AI patterns detected"
+      },
+      "evidence": [
+        {
+          "algorithm": "EmojiDensityAnalysis",
+          "metrics": {
+            "emojiDensity": "9.65%",
+            "emojisPerLine": "0.002",
+            "totalEmojis": 1,
+            "linesWithEmojis": 64
+          },
+          "aiProbability": 50,
+          "evidence": "Emoji usage within normal parameters"
+        },
+        {
+          "algorithm": "CommentPatternAnalysis",
+          "metrics": {
+            "separatorLines": 0,
+            "capitalizedSections": 0,
+            "numberedSteps": 0,
+            "spanishComments": 19,
+            "bulletPoints": 0
+          },
+          "structuredCommentRatio": "0.00%",
+          "aiProbability": 0,
+          "evidence": "Highly structured comments: NO"
+        },
+        {
+          "algorithm": "SimulationDetection",
+          "totalSimulationKeywords": 27,
+          "simulationDensity": "4.779%",
+          "findings": {
+            "pattern_0": 10,
+            "pattern_2": 1,
+            "pattern_3": 6,
+            "pattern_4": 10
+          },
+          "aiProbability": 60,
+          "evidence": "High simulation pattern count: 27 indicators found"
+        },
+        {
+          "algorithm": "MathRandomAnalysis",
+          "totalMathRandom": 19,
+          "randomPerFunction": "0.95",
+          "contexts": [
+            "descriptor: Array(128).fill(0).map(() => Math.random()),",
+            "joy: Math.random() * 0.3,",
+            "stress: Math.random() * 0.2,"
+          ],
+          "aiProbability": 95,
+          "evidence": "Excessive Math.random() usage: 19 calls detected"
+        },
+        {
+          "algorithm": "ConsistencyAnalysis",
+          "indentationStyle": "mixed, space2, space4",
+          "bracketConsistency": "58.3%",
+          "namingConvention": "camelCase",
+          "aiProbability": 30,
+          "evidence": "Normal variation"
+        },
+        {
+          "algorithm": "VocabularyAnalysis",
+          "hyperbolicTermCount": 7,
+          "termsFound": [
+            "AVANZADA",
+            "avanzada",
+            "AVANZADO",
+            "avanzado",
+            "next-gen",
+            "INTEGRAL"
+          ],
+          "hyperbolicDensity": "0.318 per KB",
+          "aiProbability": 15,
+          "evidence": "Normal technical vocabulary"
+        },
+        {
+          "algorithm": "StructuralPatternAnalysis",
+          "patterns": {
+            "asyncAwaitPairs": 20,
+            "tryWithoutError": 2,
+            "emptyFunctions": 0,
+            "returnObjects": 1,
+            "templateLiterals": 12
+          },
+          "structureScore": "123.53%",
+          "aiProbability": 75,
+          "evidence": "Repetitive structure score: HIGH"
+        },
+        {
+          "algorithm": "ContradictionDetection",
+          "contradictionsFound": 2,
+          "details": [
+            "Claims REAL but uses simulation",
+            "Claims AI but uses Math.random()"
+          ],
+          "aiProbability": 60,
+          "evidence": "Logical contradictions: Claims REAL but uses simulation; Claims AI but uses Math.random()"
+        }
+      ]
+    },
+    {
+      "fileName": "real-biometric-analysis-engine.js",
+      "filePath": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\real-biometric-analysis-engine.js",
+      "fileSize": 12010,
+      "fileHash": "4e85d200bd960664",
+      "aiProbability": "31.20",
+      "verdict": {
+        "classification": "POSSIBLE_AI_INFLUENCE",
+        "author": "Primarily human with some AI",
+        "explanation": "Some AI patterns but mostly human characteristics"
+      },
+      "evidence": [
+        {
+          "algorithm": "EmojiDensityAnalysis",
+          "metrics": {
+            "emojiDensity": "7.35%",
+            "emojisPerLine": "0.003",
+            "totalEmojis": 1,
+            "linesWithEmojis": 28
+          },
+          "aiProbability": 50,
+          "evidence": "Emoji usage within normal parameters"
+        },
+        {
+          "algorithm": "CommentPatternAnalysis",
+          "metrics": {
+            "separatorLines": 2,
+            "capitalizedSections": 0,
+            "numberedSteps": 3,
+            "spanishComments": 31,
+            "bulletPoints": 5
+          },
+          "structuredCommentRatio": "9.26%",
+          "aiProbability": 0,
+          "evidence": "Highly structured comments: NO"
+        },
+        {
+          "algorithm": "SimulationDetection",
+          "totalSimulationKeywords": 5,
+          "simulationDensity": "1.592%",
+          "findings": {
+            "pattern_0": 1,
+            "pattern_1": 4
+          },
+          "aiProbability": 20,
+          "evidence": "Minimal simulation patterns"
+        },
+        {
+          "algorithm": "MathRandomAnalysis",
+          "totalMathRandom": 9,
+          "randomPerFunction": "1.13",
+          "contexts": [
+            "const mockConfidence = 0.85 + (Math.random() * 0.15); // 0.85-1.0",
+            "width: 150 + Math.floor(Math.random() * 100), // 150-250px",
+            "height: 150 + Math.floor(Math.random() * 100),"
+          ],
+          "aiProbability": 70,
+          "evidence": "Excessive Math.random() usage: 9 calls detected"
+        },
+        {
+          "algorithm": "ConsistencyAnalysis",
+          "indentationStyle": "mixed, space2, space4",
+          "bracketConsistency": "57.9%",
+          "namingConvention": "camelCase",
+          "aiProbability": 30,
+          "evidence": "Normal variation"
+        },
+        {
+          "algorithm": "VocabularyAnalysis",
+          "hyperbolicTermCount": 3,
+          "termsFound": [
+            "ENTERPRISE",
+            "enterprise"
+          ],
+          "hyperbolicDensity": "0.250 per KB",
+          "aiProbability": 15,
+          "evidence": "Normal technical vocabulary"
+        },
+        {
+          "algorithm": "StructuralPatternAnalysis",
+          "patterns": {
+            "asyncAwaitPairs": 2,
+            "tryWithoutError": 2,
+            "emptyFunctions": 0,
+            "returnObjects": 2,
+            "templateLiterals": 6
+          },
+          "structureScore": "0.00%",
+          "aiProbability": 20,
+          "evidence": "Repetitive structure score: NORMAL"
+        },
+        {
+          "algorithm": "ContradictionDetection",
+          "contradictionsFound": 1,
+          "details": [
+            "Claims REAL but uses simulation"
+          ],
+          "aiProbability": 30,
+          "evidence": "Logical contradictions: Claims REAL but uses simulation"
+        }
+      ]
+    },
+    {
+      "fileName": "evaluacion-biometrica.js",
+      "filePath": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\public\\js\\modules\\evaluacion-biometrica.js",
+      "fileSize": 43611,
+      "fileHash": "d5660d8c1880c83e",
+      "aiProbability": "38.20",
+      "verdict": {
+        "classification": "POSSIBLE_AI_INFLUENCE",
+        "author": "Primarily human with some AI",
+        "explanation": "Some AI patterns but mostly human characteristics"
+      },
+      "evidence": [
+        {
+          "algorithm": "EmojiDensityAnalysis",
+          "metrics": {
+            "emojiDensity": "9.59%",
+            "emojisPerLine": "0.001",
+            "totalEmojis": 1,
+            "linesWithEmojis": 105
+          },
+          "aiProbability": 50,
+          "evidence": "Emoji usage within normal parameters"
+        },
+        {
+          "algorithm": "CommentPatternAnalysis",
+          "metrics": {
+            "separatorLines": 0,
+            "capitalizedSections": 0,
+            "numberedSteps": 0,
+            "spanishComments": 37,
+            "bulletPoints": 0
+          },
+          "structuredCommentRatio": "0.00%",
+          "aiProbability": 0,
+          "evidence": "Highly structured comments: NO"
+        },
+        {
+          "algorithm": "SimulationDetection",
+          "totalSimulationKeywords": 18,
+          "simulationDensity": "1.854%",
+          "findings": {
+            "pattern_0": 9,
+            "pattern_1": 4,
+            "pattern_3": 5
+          },
+          "aiProbability": 20,
+          "evidence": "High simulation pattern count: 18 indicators found"
+        },
+        {
+          "algorithm": "MathRandomAnalysis",
+          "totalMathRandom": 7,
+          "randomPerFunction": "0.32",
+          "contexts": [
+            "score: Math.floor(Math.random() * 10) + 1,",
+            "valencia: (Math.random() * 10) - 5, // -5 a +5",
+            "activacion: Math.floor(Math.random() * 9) + 1, // 1-9"
+          ],
+          "aiProbability": 70,
+          "evidence": "Excessive Math.random() usage: 7 calls detected"
+        },
+        {
+          "algorithm": "ConsistencyAnalysis",
+          "indentationStyle": "space4",
+          "bracketConsistency": "38.0%",
+          "namingConvention": "camelCase",
+          "aiProbability": 70,
+          "evidence": "Normal variation"
+        },
+        {
+          "algorithm": "VocabularyAnalysis",
+          "hyperbolicTermCount": 8,
+          "termsFound": [
+            "Avanzada",
+            "avanzado",
+            "Enterprise",
+            "Next-Gen",
+            "ultra",
+            "Integral"
+          ],
+          "hyperbolicDensity": "0.183 per KB",
+          "aiProbability": 15,
+          "evidence": "Normal technical vocabulary"
+        },
+        {
+          "algorithm": "StructuralPatternAnalysis",
+          "patterns": {
+            "asyncAwaitPairs": 4,
+            "tryWithoutError": 6,
+            "emptyFunctions": 0,
+            "returnObjects": 0,
+            "templateLiterals": 13
+          },
+          "structureScore": "12.50%",
+          "aiProbability": 20,
+          "evidence": "Repetitive structure score: NORMAL"
+        },
+        {
+          "algorithm": "ContradictionDetection",
+          "contradictionsFound": 2,
+          "details": [
+            "Claims REAL but uses simulation",
+            "Claims AI but uses Math.random()"
+          ],
+          "aiProbability": 60,
+          "evidence": "Logical contradictions: Claims REAL but uses simulation; Claims AI but uses Math.random()"
+        }
+      ]
+    },
+    {
+      "fileName": "face-api-backend-engine.js",
+      "filePath": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\face-api-backend-engine.js",
+      "fileSize": 10844,
+      "fileHash": "0cece3b77524527c",
+      "aiProbability": "41.40",
+      "verdict": {
+        "classification": "POSSIBLE_AI_INFLUENCE",
+        "author": "Primarily human with some AI",
+        "explanation": "Some AI patterns but mostly human characteristics"
+      },
+      "evidence": [
+        {
+          "algorithm": "EmojiDensityAnalysis",
+          "metrics": {
+            "emojiDensity": "6.67%",
+            "emojisPerLine": "0.003",
+            "totalEmojis": 1,
+            "linesWithEmojis": 23
+          },
+          "aiProbability": 50,
+          "evidence": "Emoji usage within normal parameters"
+        },
+        {
+          "algorithm": "CommentPatternAnalysis",
+          "metrics": {
+            "separatorLines": 0,
+            "capitalizedSections": 2,
+            "numberedSteps": 0,
+            "spanishComments": 30,
+            "bulletPoints": 0
+          },
+          "structuredCommentRatio": "6.45%",
+          "aiProbability": 0,
+          "evidence": "Highly structured comments: NO"
+        },
+        {
+          "algorithm": "SimulationDetection",
+          "totalSimulationKeywords": 15,
+          "simulationDensity": "5.245%",
+          "findings": {
+            "pattern_0": 1,
+            "pattern_2": 1,
+            "pattern_3": 13
+          },
+          "aiProbability": 90,
+          "evidence": "High simulation pattern count: 15 indicators found"
+        },
+        {
+          "algorithm": "MathRandomAnalysis",
+          "totalMathRandom": 0,
+          "randomPerFunction": "0.00",
+          "contexts": [],
+          "aiProbability": 10,
+          "evidence": "Normal Math.random() usage"
+        },
+        {
+          "algorithm": "ConsistencyAnalysis",
+          "indentationStyle": "mixed, space2, space4",
+          "bracketConsistency": "54.8%",
+          "namingConvention": "camelCase",
+          "aiProbability": 30,
+          "evidence": "Normal variation"
+        },
+        {
+          "algorithm": "VocabularyAnalysis",
+          "hyperbolicTermCount": 2,
+          "termsFound": [
+            "ENTERPRISE",
+            "Enterprise"
+          ],
+          "hyperbolicDensity": "0.184 per KB",
+          "aiProbability": 15,
+          "evidence": "Normal technical vocabulary"
+        },
+        {
+          "algorithm": "StructuralPatternAnalysis",
+          "patterns": {
+            "asyncAwaitPairs": 4,
+            "tryWithoutError": 3,
+            "emptyFunctions": 0,
+            "returnObjects": 2,
+            "templateLiterals": 1
+          },
+          "structureScore": "66.67%",
+          "aiProbability": 75,
+          "evidence": "Repetitive structure score: HIGH"
+        },
+        {
+          "algorithm": "ContradictionDetection",
+          "contradictionsFound": 1,
+          "details": [
+            "Claims REAL but uses simulation"
+          ],
+          "aiProbability": 30,
+          "evidence": "Logical contradictions: Claims REAL but uses simulation"
+        }
+      ]
+    },
+    {
+      "fileName": "biometric-processing-pipeline.js",
+      "filePath": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\src\\services\\biometric-processing-pipeline.js",
+      "fileSize": 40003,
+      "fileHash": "a3ca981d01d2095e",
+      "aiProbability": "44.55",
+      "verdict": {
+        "classification": "POSSIBLE_AI_INFLUENCE",
+        "author": "Primarily human with some AI",
+        "explanation": "Some AI patterns but mostly human characteristics"
+      },
+      "evidence": [
+        {
+          "algorithm": "EmojiDensityAnalysis",
+          "metrics": {
+            "emojiDensity": "6.78%",
+            "emojisPerLine": "0.001",
+            "totalEmojis": 1,
+            "linesWithEmojis": 82
+          },
+          "aiProbability": 50,
+          "evidence": "Emoji usage within normal parameters"
+        },
+        {
+          "algorithm": "CommentPatternAnalysis",
+          "metrics": {
+            "separatorLines": 0,
+            "capitalizedSections": 0,
+            "numberedSteps": 8,
+            "spanishComments": 75,
+            "bulletPoints": 0
+          },
+          "structuredCommentRatio": "8.60%",
+          "aiProbability": 0,
+          "evidence": "Highly structured comments: NO"
+        },
+        {
+          "algorithm": "SimulationDetection",
+          "totalSimulationKeywords": 2,
+          "simulationDensity": "0.197%",
+          "findings": {
+            "pattern_0": 2
+          },
+          "aiProbability": 20,
+          "evidence": "Minimal simulation patterns"
+        },
+        {
+          "algorithm": "MathRandomAnalysis",
+          "totalMathRandom": 35,
+          "randomPerFunction": "1.40",
+          "contexts": [
+            "const randomFactor = Math.random();",
+            "skinTextureScore: 0.88 + (Math.random() * 0.08),",
+            "textureComplexity: 0.76 + (Math.random() * 0.15)"
+          ],
+          "aiProbability": 95,
+          "evidence": "Excessive Math.random() usage: 35 calls detected"
+        },
+        {
+          "algorithm": "ConsistencyAnalysis",
+          "indentationStyle": "mixed, space2, space4",
+          "bracketConsistency": "52.9%",
+          "namingConvention": "camelCase",
+          "aiProbability": 30,
+          "evidence": "Normal variation"
+        },
+        {
+          "algorithm": "VocabularyAnalysis",
+          "hyperbolicTermCount": 7,
+          "termsFound": [
+            "PROFESIONAL",
+            "profesional"
+          ],
+          "hyperbolicDensity": "0.175 per KB",
+          "aiProbability": 15,
+          "evidence": "Normal technical vocabulary"
+        },
+        {
+          "algorithm": "StructuralPatternAnalysis",
+          "patterns": {
+            "asyncAwaitPairs": 19,
+            "tryWithoutError": 11,
+            "emptyFunctions": 0,
+            "returnObjects": 4,
+            "templateLiterals": 44
+          },
+          "structureScore": "71.88%",
+          "aiProbability": 75,
+          "evidence": "Repetitive structure score: HIGH"
+        },
+        {
+          "algorithm": "ContradictionDetection",
+          "contradictionsFound": 2,
+          "details": [
+            "Claims REAL but uses simulation",
+            "Claims AI but uses Math.random()"
+          ],
+          "aiProbability": 60,
+          "evidence": "Logical contradictions: Claims REAL but uses simulation; Claims AI but uses Math.random()"
+        }
+      ]
+    }
+  ],
+  "strongestEvidence": [
+    {
+      "file": "ai-biometric-engine.js",
+      "algorithm": "MathRandomAnalysis",
+      "score": 95,
+      "evidence": "Excessive Math.random() usage: 19 calls detected"
+    },
+    {
+      "file": "biometric-processing-pipeline.js",
+      "algorithm": "MathRandomAnalysis",
+      "score": 95,
+      "evidence": "Excessive Math.random() usage: 35 calls detected"
+    },
+    {
+      "file": "face-api-backend-engine.js",
+      "algorithm": "SimulationDetection",
+      "score": 90,
+      "evidence": "High simulation pattern count: 15 indicators found"
+    },
+    {
+      "file": "ai-biometric-engine.js",
+      "algorithm": "StructuralPatternAnalysis",
+      "score": 75,
+      "evidence": "Repetitive structure score: HIGH"
+    },
+    {
+      "file": "face-api-backend-engine.js",
+      "algorithm": "StructuralPatternAnalysis",
+      "score": 75,
+      "evidence": "Repetitive structure score: HIGH"
+    },
+    {
+      "file": "biometric-processing-pipeline.js",
+      "algorithm": "StructuralPatternAnalysis",
+      "score": 75,
+      "evidence": "Repetitive structure score: HIGH"
+    },
+    {
+      "file": "real-biometric-analysis-engine.js",
+      "algorithm": "MathRandomAnalysis",
+      "score": 70,
+      "evidence": "Excessive Math.random() usage: 9 calls detected"
+    },
+    {
+      "file": "evaluacion-biometrica.js",
+      "algorithm": "MathRandomAnalysis",
+      "score": 70,
+      "evidence": "Excessive Math.random() usage: 7 calls detected"
+    },
+    {
+      "file": "evaluacion-biometrica.js",
+      "algorithm": "ConsistencyAnalysis",
+      "score": 70,
+      "evidence": "Normal variation"
+    }
+  ],
+  "conclusion": {
+    "statement": "INCONCLUSIVE: Insufficient evidence to definitively determine AI authorship.",
+    "scientificBasis": "Analysis based on 8 independent algorithms examining syntactic, semantic, and stylometric patterns.",
+    "reliability": "56.4% statistical confidence"
+  }
+}

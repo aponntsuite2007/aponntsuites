@@ -11625,10 +11625,46 @@ async function showBiometricConsentContent(container) {
                     </div>
                 </div>
 
+                <!-- Filtros y Acciones -->
+                <div style="background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                        <select id="filter-status" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
+                            <option value="">Todos los estados</option>
+                            <option value="active">✅ Activos</option>
+                            <option value="pending">⏳ Pendientes</option>
+                            <option value="revoked">🚫 Revocados</option>
+                            <option value="expired">⏱️ Expirados</option>
+                        </select>
+                        <select id="filter-role" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
+                            <option value="">Todos los roles</option>
+                            <option value="employee">👤 Empleado</option>
+                            <option value="supervisor">👨‍💼 Supervisor</option>
+                            <option value="admin">🔑 Admin</option>
+                        </select>
+                        <select id="filter-method" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
+                            <option value="">Todos los métodos</option>
+                            <option value="facial">📸 Facial</option>
+                            <option value="fingerprint">👆 Huella</option>
+                            <option value="email">📧 Email</option>
+                        </select>
+                        <button onclick="window.applyConsentFilters()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            🔍 Filtrar
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="window.requestBulkConsent()" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            📧 Solicitar Consentimientos Pendientes
+                        </button>
+                        <button onclick="window.clearConsentFilters()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            ✖️ Limpiar Filtros
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Consents Table -->
                 <div style="background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
                     <div style="padding: 20px; border-bottom: 1px solid #e5e7eb;">
-                        <h3 style="margin: 0; color: #1f2937;">⚖️ Consentimientos por Usuario</h3>
+                        <h3 style="margin: 0; color: #1f2937;">⚖️ Consentimientos de Análisis Biométrico</h3>
                     </div>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse;">
@@ -11691,6 +11727,94 @@ function getConsentStatusBadge(status) {
     };
     return badges[status] || badges['pending'];
 }
+
+// ==================================================================
+// 🔍 FILTROS DE CONSENTIMIENTOS
+// ==================================================================
+window.applyConsentFilters = async function() {
+    const status = document.getElementById('filter-status')?.value || '';
+    const role = document.getElementById('filter-role')?.value || '';
+    const method = document.getElementById('filter-method')?.value || '';
+
+    const container = document.getElementById('biometric-main-content');
+    if (!container) return;
+
+    container.innerHTML = '<div style="padding: 40px; text-align: center;"><div style="font-size: 48px;">🔄</div><p>Aplicando filtros...</p></div>';
+
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            alert('Sesión expirada');
+            location.reload();
+            return;
+        }
+
+        const params = new URLSearchParams();
+        if (status) params.append('status', status);
+        if (role) params.append('role', role);
+        if (method) params.append('method', method);
+
+        const response = await fetch(`/api/v1/biometric/consents?${params}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Error al filtrar');
+
+        await showBiometricConsentContent(container);
+
+        // Restaurar valores de filtros
+        if (status) document.getElementById('filter-status').value = status;
+        if (role) document.getElementById('filter-role').value = role;
+        if (method) document.getElementById('filter-method').value = method;
+
+    } catch (error) {
+        console.error('Error aplicando filtros:', error);
+        alert('Error al aplicar filtros');
+    }
+};
+
+window.clearConsentFilters = function() {
+    document.getElementById('filter-status').value = '';
+    document.getElementById('filter-role').value = '';
+    document.getElementById('filter-method').value = '';
+    window.applyConsentFilters();
+};
+
+// ==================================================================
+// 📧 SOLICITAR CONSENTIMIENTOS MASIVOS
+// ==================================================================
+window.requestBulkConsent = async function() {
+    if (!confirm('¿Enviar solicitudes de consentimiento a todos los usuarios pendientes?')) {
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            alert('Sesión expirada');
+            location.reload();
+            return;
+        }
+
+        const response = await fetch('/api/v1/biometric/consents/request-bulk', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Error al enviar solicitudes');
+
+        const data = await response.json();
+        alert(`✅ ${data.emailsSent || 0} solicitudes enviadas correctamente`);
+        window.applyConsentFilters();
+
+    } catch (error) {
+        console.error('Error enviando solicitudes:', error);
+        alert('Error al enviar solicitudes de consentimiento');
+    }
+};
 
 // ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE
 window.showBiometricContent = showBiometricContent;
