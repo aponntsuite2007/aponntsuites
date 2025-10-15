@@ -5,19 +5,33 @@ const { v4: uuidv4 } = require('uuid');
 
 class BiometricConsentService {
     constructor() {
+        this.emailTransporter = null;
         this.initializeEmailTransporter();
     }
 
     initializeEmailTransporter() {
-        this.emailTransporter = nodemailer.createTransporter({
-            host: process.env.SMTP_HOST || 'smtp.gmail.com',
-            port: process.env.SMTP_PORT || 587,
-            secure: false,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
+        try {
+            // Verificar que nodemailer esté disponible
+            if (!nodemailer || typeof nodemailer.createTransporter !== 'function') {
+                console.warn('⚠️ nodemailer no está disponible. Servicio de email deshabilitado.');
+                return;
             }
-        });
+
+            this.emailTransporter = nodemailer.createTransporter({
+                host: process.env.SMTP_HOST || 'smtp.gmail.com',
+                port: process.env.SMTP_PORT || 587,
+                secure: false,
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS
+                }
+            });
+            console.log('✅ Email transporter inicializado correctamente');
+        } catch (error) {
+            console.error('⚠️ Error inicializando email transporter:', error.message);
+            console.warn('⚠️ Servicio de consentimientos funcionará sin envío de emails');
+            this.emailTransporter = null;
+        }
     }
 
     /**
@@ -355,6 +369,11 @@ class BiometricConsentService {
         `;
 
         try {
+            if (!this.emailTransporter) {
+                console.warn(`⚠️ Email transporter no disponible. No se puede enviar email a ${user.email}`);
+                return { messageId: 'email-disabled', warning: 'Email service not available' };
+            }
+
             const fromEmail = company.email || process.env.FROM_EMAIL || process.env.SMTP_USER;
             const fromName = `${company.name} - RRHH`;
 
@@ -528,6 +547,11 @@ class BiometricConsentService {
         `;
 
         try {
+            if (!this.emailTransporter) {
+                console.warn(`⚠️ Email transporter no disponible. No se puede enviar confirmación a ${user.email}`);
+                return { messageId: 'email-disabled', warning: 'Email service not available' };
+            }
+
             // Enviar email de confirmación
             const fromEmail = company.email || process.env.FROM_EMAIL || process.env.SMTP_USER;
             const fromName = `${company.name} - RRHH`;
