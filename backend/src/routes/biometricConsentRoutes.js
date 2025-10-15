@@ -14,6 +14,7 @@ const express = require('express');
 const router = express.Router();
 const { sequelize } = require('../config/database');
 const { auth, authorize, adminOnly } = require('../middleware/auth');
+const biometricConsentService = require('../services/biometricConsentService');
 
 // ========================================
 // GET /api/v1/biometric/consents
@@ -561,6 +562,75 @@ router.get('/consents/compliance-report', auth, authorize('admin', 'rrhh'), asyn
 
     } catch (error) {
         console.error('Error generando reporte:', error);
+        res.status(500).json({
+            error: 'Error interno',
+            message: error.message
+        });
+    }
+});
+
+// ========================================
+// POST /api/v1/biometric/consents/request-individual
+// Solicitar consentimiento a un usuario específico
+// ========================================
+router.post('/consents/request-individual', auth, authorize('admin', 'rrhh'), async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const { companyId: company_id, user_id: requestedBy } = req.user;
+
+        if (!userId) {
+            return res.status(400).json({
+                error: 'userId requerido'
+            });
+        }
+
+        const result = await biometricConsentService.requestConsent(
+            userId,
+            company_id,
+            requestedBy
+        );
+
+        res.json(result);
+
+    } catch (error) {
+        console.error('Error solicitando consentimiento individual:', error);
+        res.status(500).json({
+            error: 'Error interno',
+            message: error.message
+        });
+    }
+});
+
+// ========================================
+// POST /api/v1/biometric/consents/request-bulk
+// Solicitar consentimientos masivos a usuarios pendientes
+// ========================================
+router.post('/consents/request-bulk', auth, authorize('admin', 'rrhh'), async (req, res) => {
+    try {
+        const { filters = {} } = req.body;
+        const { companyId: company_id, user_id: requestedBy } = req.user;
+
+        console.log(`📧 [BULK-REQUEST] Iniciando solicitud masiva para empresa ${company_id}`);
+
+        const results = await biometricConsentService.requestBulkConsent(
+            company_id,
+            requestedBy,
+            filters
+        );
+
+        console.log(`✅ [BULK-REQUEST] Completado: ${results.sent}/${results.total} enviados`);
+
+        res.json({
+            success: true,
+            message: `Solicitudes enviadas: ${results.sent}/${results.total}`,
+            emailsSent: results.sent,
+            totalUsers: results.total,
+            failed: results.failed,
+            errors: results.errors
+        });
+
+    } catch (error) {
+        console.error('❌ [BULK-REQUEST] Error:', error);
         res.status(500).json({
             error: 'Error interno',
             message: error.message
