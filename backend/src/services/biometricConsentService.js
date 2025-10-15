@@ -192,7 +192,7 @@ class BiometricConsentService {
             let whereConditions = [
                 'u.company_id = :companyId',
                 'u.is_active = true',
-                `(c.consent_id IS NULL OR c.consent_given = false OR c.revoked = true OR c.expires_at < NOW())`
+                `(c.id IS NULL OR c.consent_given = false OR c.revoked = true OR c.expires_at < NOW())`
             ];
 
             const replacements = { companyId };

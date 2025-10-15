@@ -895,4 +895,116 @@ router.post('/consents/request-bulk', auth, authorize('admin', 'rrhh'), async (r
     }
 });
 
+// ========================================
+// GET /api/v1/biometric/consents/roles
+// Obtener roles disponibles de la empresa (multi-tenant)
+// ========================================
+router.get('/consents/roles', auth, authorize('admin', 'rrhh'), async (req, res) => {
+    try {
+        const { companyId: company_id } = req.user;
+
+        // Obtener roles únicos de usuarios activos de la empresa
+        const roles = await sequelize.query(`
+            SELECT DISTINCT role, COUNT(*) as user_count
+            FROM users
+            WHERE company_id = :company_id
+                AND is_active = true
+                AND role IS NOT NULL
+            GROUP BY role
+            ORDER BY user_count DESC, role ASC
+        `, {
+            replacements: { company_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        res.json({
+            success: true,
+            roles: roles.map(r => ({
+                value: r.role,
+                label: r.role,
+                userCount: parseInt(r.user_count)
+            }))
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo roles:', error);
+        res.status(500).json({
+            error: 'Error interno',
+            message: error.message
+        });
+    }
+});
+
+// ========================================
+// GET /api/v1/biometric/consents/legal-document
+// Obtener documento legal activo para vista previa
+// ========================================
+router.get('/consents/legal-document', auth, authorize('admin', 'rrhh'), async (req, res) => {
+    try {
+        const { companyId: company_id } = req.user;
+
+        const [docs] = await sequelize.query(`
+            SELECT
+                id, title, content, version,
+                effective_from, created_at
+            FROM consent_legal_documents
+            WHERE company_id = :company_id
+                AND is_active = true
+                AND document_type = 'consent_form'
+            ORDER BY effective_from DESC
+            LIMIT 1
+        `, {
+            replacements: { company_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!docs) {
+            return res.json({
+                success: true,
+                hasDocument: false,
+                document: null,
+                message: 'No hay documento legal configurado'
+            });
+        }
+
+        res.json({
+            success: true,
+            hasDocument: true,
+            document: {
+                id: docs.id,
+                title: docs.title,
+                content: docs.content,
+                version: docs.version,
+                effectiveFrom: docs.effective_from,
+                createdAt: docs.created_at,
+                // Enlaces a leyes oficiales
+                legalReferences: [
+                    {
+                        name: 'Ley 25.326 - Protección de Datos Personales (Argentina)',
+                        url: 'https://www.argentina.gob.ar/normativa/nacional/ley-25326-64790/texto',
+                        description: 'Ley de Protección de los Datos Personales de Argentina'
+                    },
+                    {
+                        name: 'GDPR - Reglamento General de Protección de Datos (EU)',
+                        url: 'https://gdpr.eu/tag/gdpr/',
+                        description: 'General Data Protection Regulation de la Unión Europea'
+                    },
+                    {
+                        name: 'BIPA - Biometric Information Privacy Act (Illinois, USA)',
+                        url: 'https://www.ilga.gov/legislation/ilcs/ilcs3.asp?ActID=3004',
+                        description: 'Ley de Privacidad de Información Biométrica de Illinois'
+                    }
+                ]
+            }
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo documento legal:', error);
+        res.status(500).json({
+            error: 'Error interno',
+            message: error.message
+        });
+    }
+});
+
 module.exports = router;
