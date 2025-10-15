@@ -308,7 +308,7 @@
         <div class="header">
             <div class="icon">🔐</div>
             <h1>Consentimiento Biométrico</h1>
-            <p>Sistema de Análisis Profesional</p>
+            <p id="header-company">Sistema de Análisis Profesional</p>
         </div>
 
         <div class="content" id="main-content">
@@ -319,7 +319,7 @@
         </div>
 
         <div class="footer">
-            APONNT - Sistema de Gestión Biométrica · Cumplimiento Ley 25.326 (ARG)
+            <span id="footer-company">Sistema de Gestión Biométrica</span> · Cumplimiento Ley 25.326 (ARG) · APONNT Suite
         </div>
     </div>
 
@@ -352,6 +352,10 @@
         function renderConsentForm(data) {
             const content = document.getElementById('main-content');
 
+            // Actualizar header y footer con nombre de empresa
+            document.getElementById('header-company').textContent = data.company.name;
+            document.getElementById('footer-company').textContent = data.company.name;
+
             content.innerHTML = `
                 <div class="user-info">
                     <h3>👤 Información del Empleado</h3>
@@ -363,10 +367,23 @@
                 <div class="info-box">
                     <h4>📋 ¿Qué datos se recopilan?</h4>
                     <ul>
-                        <li><strong>Imagen facial:</strong> Para reconocimiento y control de asistencia</li>
-                        <li><strong>Análisis emocional (opcional):</strong> Bienestar y fatiga laboral</li>
+                        <li><strong>Vectores matemáticos biométricos:</strong> NO se guardan fotos, solo números (128 dimensiones)</li>
+                        <li><strong>Análisis biométrico:</strong> Identificación para control de asistencia</li>
                         <li><strong>Timestamps:</strong> Fecha y hora de registros biométricos</li>
                     </ul>
+                </div>
+
+                <div class="info-box" style="background: #d1fae5; border-left-color: #10b981;">
+                    <h4 style="color: #065f46;">🔬 Garantía Técnica - Irreversibilidad</h4>
+                    <p style="color: #047857; margin-bottom: 8px; line-height: 1.6;">
+                        <strong>NO se almacenan fotografías de tu rostro.</strong> El sistema captura tu imagen
+                        momentáneamente y la convierte en un conjunto de números matemáticos (vector de 128 dimensiones)
+                        que representan características únicas de tu rostro.
+                    </p>
+                    <p style="color: #047857; line-height: 1.6;">
+                        ✅ <strong>Es matemáticamente imposible reconstruir tu imagen</strong> a partir de estos números.
+                        El proceso es unidireccional (como un hash criptográfico).
+                    </p>
                 </div>
 
                 <div class="legal-document">

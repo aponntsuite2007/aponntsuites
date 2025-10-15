@@ -139,10 +139,20 @@ class BiometricConsentService {
                 type: sequelize.QueryTypes.INSERT
             });
 
+            // Obtener datos de la empresa para el email
+            const [companies] = await sequelize.query(`
+                SELECT name, email FROM companies WHERE company_id = :companyId
+            `, {
+                replacements: { companyId },
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            const company = companies[0] || { name: 'Empresa', email: null };
+
             // Enviar email
             const consentUrl = `${process.env.FRONTEND_URL || 'https://aponntsuites.onrender.com'}/consent/${token}`;
 
-            await this.sendConsentRequestEmail(user, legalDoc, consentUrl, token);
+            await this.sendConsentRequestEmail(user, company, legalDoc, consentUrl, token);
 
             return {
                 success: true,
@@ -235,7 +245,7 @@ class BiometricConsentService {
     /**
      * Enviar email de solicitud de consentimiento
      */
-    async sendConsentRequestEmail(user, legalDoc, consentUrl, token) {
+    async sendConsentRequestEmail(user, company, legalDoc, consentUrl, token) {
         const html = `
 <!DOCTYPE html>
 <html>
@@ -251,7 +261,7 @@ class BiometricConsentService {
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
             <div style="font-size: 64px; margin-bottom: 10px;">🔐</div>
             <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Consentimiento Biométrico</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Sistema de Análisis Profesional</p>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">${company.name}</p>
         </div>
 
         <!-- Content -->
@@ -270,11 +280,25 @@ class BiometricConsentService {
                 <h3 style="margin: 0 0 12px 0; color: #2d3748; font-size: 16px;">📋 Información Importante</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #4a5568; line-height: 1.8;">
                     <li><strong>Cumplimiento legal:</strong> Ley 25.326, GDPR, BIPA</li>
-                    <li><strong>Datos recopilados:</strong> Imagen facial, análisis emocional</li>
-                    <li><strong>Finalidad:</strong> Control de asistencia y bienestar laboral</li>
-                    <li><strong>Tecnología:</strong> Microsoft Azure Face API</li>
+                    <li><strong>Datos recopilados:</strong> Vectores matemáticos biométricos (NO imágenes)</li>
+                    <li><strong>Finalidad:</strong> Control de asistencia y análisis biométrico</li>
+                    <li><strong>Tecnología:</strong> Microsoft Azure Face API (embeddings irreversibles)</li>
                     <li><strong>Conservación:</strong> Durante relación laboral + 90 días</li>
                 </ul>
+            </div>
+
+            <!-- Technical Guarantee Box -->
+            <div style="background: #d1fae5; border-left: 4px solid #10b981; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+                <h3 style="margin: 0 0 12px 0; color: #065f46; font-size: 16px;">🔬 Garantía Técnica</h3>
+                <p style="margin: 0 0 12px 0; color: #047857; line-height: 1.6; font-size: 14px;">
+                    <strong>NO se almacenan fotografías de tu rostro.</strong> El sistema captura tu imagen
+                    momentáneamente y la convierte en un conjunto de números matemáticos (vector de 128 dimensiones)
+                    que representan características únicas de tu rostro.
+                </p>
+                <p style="margin: 0; color: #047857; line-height: 1.6; font-size: 14px;">
+                    ✅ <strong>Irreversibilidad garantizada:</strong> Es matemáticamente imposible reconstruir
+                    tu imagen a partir de estos números. El proceso es unidireccional (como un hash criptográfico).
+                </p>
             </div>
 
             <!-- Rights Box -->
@@ -315,13 +339,14 @@ class BiometricConsentService {
         <!-- Footer -->
         <div style="background: #f7fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
             <p style="margin: 0 0 8px 0; font-size: 14px; color: #4a5568; font-weight: 600;">
-                APONNT - Sistema de Gestión Biométrica
+                ${company.name}
             </p>
             <p style="margin: 0; font-size: 12px; color: #a0aec0;">
                 Este email fue generado automáticamente. Por favor no responder a este mensaje.
             </p>
             <p style="margin: 12px 0 0 0; font-size: 11px; color: #cbd5e0;">
-                Documento versión: ${legalDoc.version} · Cumplimiento: Ley 25.326 (ARG)
+                Documento versión: ${legalDoc.version} · Cumplimiento: Ley 25.326 (ARG)<br>
+                Sistema: APONNT Biometric Suite
             </p>
         </div>
     </div>
@@ -330,8 +355,11 @@ class BiometricConsentService {
         `;
 
         try {
+            const fromEmail = company.email || process.env.FROM_EMAIL || process.env.SMTP_USER;
+            const fromName = `${company.name} - RRHH`;
+
             const result = await this.emailTransporter.sendMail({
-                from: `"APONNT Sistema Biométrico" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+                from: `"${fromName}" <${fromEmail}>`,
                 to: user.email,
                 subject: '🔐 Solicitud de Consentimiento para Análisis Biométrico',
                 html
@@ -368,6 +396,7 @@ class BiometricConsentService {
             <div style="font-size: 80px; margin-bottom: 10px;">✅</div>
             <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Consentimiento Confirmado</h1>
             <p style="color: rgba(255,255,255,0.95); margin: 10px 0 0 0; font-size: 16px;">Tu consentimiento ha sido registrado exitosamente</p>
+            <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">${company.name}</p>
         </div>
 
         <!-- Content -->
@@ -415,12 +444,28 @@ class BiometricConsentService {
             <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
                 <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px;">🔐 ¿Qué significa esto?</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #1e40af; line-height: 1.8;">
-                    <li>Tu imagen facial será procesada para <strong>control de asistencia</strong></li>
-                    <li>Se realizará <strong>análisis biométrico</strong> para identificación segura</li>
+                    <li><strong>NO se guardan fotos de tu rostro</strong> - Solo vectores matemáticos (128 números)</li>
+                    <li>El proceso es <strong>irreversible</strong> - Imposible reconstruir tu imagen</li>
+                    <li>Se usa para <strong>control de asistencia</strong> y análisis biométrico</li>
                     <li>Los datos se almacenan de forma <strong>cifrada y segura</strong></li>
                     <li>Cumplimos con <strong>Ley 25.326, GDPR y BIPA</strong></li>
-                    <li>Tecnología: <strong>Microsoft Azure Face API</strong></li>
+                    <li>Tecnología: <strong>Microsoft Azure Face API</strong> (embeddings)</li>
                 </ul>
+            </div>
+
+            <!-- Technical Details -->
+            <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+                <h3 style="margin: 0 0 12px 0; color: #065f46; font-size: 16px;">🔬 Detalles Técnicos</h3>
+                <p style="margin: 0 0 12px 0; color: #047857; line-height: 1.6; font-size: 14px;">
+                    Cuando te registrás, el sistema captura tu imagen momentáneamente y la procesa mediante
+                    algoritmos de inteligencia artificial que extraen características únicas de tu rostro
+                    (distancia entre ojos, forma de la nariz, etc.).
+                </p>
+                <p style="margin: 0; color: #047857; line-height: 1.6; font-size: 14px;">
+                    Estas características se convierten en un <strong>vector de 128 números</strong> (ej: [0.234, -0.567, 0.891...]).
+                    Este vector es lo único que se almacena. <strong>Tu fotografía original NO se guarda</strong>
+                    y no puede ser reconstruida matemáticamente a partir de estos números.
+                </p>
             </div>
 
             <!-- Your Rights -->
@@ -467,13 +512,14 @@ class BiometricConsentService {
         <!-- Footer -->
         <div style="background: #f7fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
             <p style="margin: 0 0 8px 0; font-size: 14px; color: #4a5568; font-weight: 600;">
-                APONNT - Sistema de Gestión Biométrica
+                ${company.name}
             </p>
             <p style="margin: 0; font-size: 12px; color: #a0aec0;">
                 Este email es tu comprobante oficial de consentimiento. Guardalo para tus registros.
             </p>
             <p style="margin: 12px 0 0 0; font-size: 11px; color: #cbd5e0;">
-                Cumplimiento: Ley 25.326 (ARG) · GDPR · BIPA · ${company.name}
+                Cumplimiento: Ley 25.326 (ARG) · GDPR · BIPA<br>
+                Sistema: APONNT Biometric Suite
             </p>
         </div>
     </div>
@@ -483,8 +529,11 @@ class BiometricConsentService {
 
         try {
             // Enviar email de confirmación
+            const fromEmail = company.email || process.env.FROM_EMAIL || process.env.SMTP_USER;
+            const fromName = `${company.name} - RRHH`;
+
             const result = await this.emailTransporter.sendMail({
-                from: `"APONNT Sistema Biométrico" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+                from: `"${fromName}" <${fromEmail}>`,
                 to: user.email,
                 subject: '✅ Confirmación: Consentimiento Biométrico Registrado',
                 html
