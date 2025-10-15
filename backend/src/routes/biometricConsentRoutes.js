@@ -901,14 +901,25 @@ router.post('/consents/request-bulk', auth, authorize('admin', 'rrhh'), async (r
 // ========================================
 router.get('/consents/roles', auth, async (req, res) => {
     try {
-        console.log('🔍 [ROLES] Endpoint llamado por usuario:', req.user);
-        const { companyId: company_id } = req.user;
+        console.log('🔍 [ROLES] Endpoint llamado');
+        console.log('🔍 [ROLES] req.user completo:', JSON.stringify(req.user, null, 2));
+        console.log('🔍 [ROLES] req.user.dataValues:', JSON.stringify(req.user?.dataValues, null, 2));
+
+        // Intentar obtener company_id de varias formas posibles
+        const company_id = req.user.companyId || req.user.company_id || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
+
+        console.log('🔍 [ROLES] company_id extraído:', company_id);
 
         if (!company_id) {
-            console.error('❌ [ROLES] company_id no encontrado en req.user');
+            console.error('❌ [ROLES] company_id no encontrado en ninguna propiedad');
+            console.error('❌ [ROLES] Propiedades disponibles:', Object.keys(req.user));
             return res.status(400).json({
                 success: false,
-                error: 'company_id requerido'
+                error: 'company_id requerido',
+                debug: {
+                    userKeys: Object.keys(req.user),
+                    dataValuesKeys: req.user.dataValues ? Object.keys(req.user.dataValues) : null
+                }
             });
         }
 
@@ -953,7 +964,8 @@ router.get('/consents/roles', auth, async (req, res) => {
 // ========================================
 router.get('/consents/legal-document', auth, async (req, res) => {
     try {
-        const { companyId: company_id } = req.user;
+        // Intentar obtener company_id de varias formas posibles
+        const company_id = req.user.companyId || req.user.company_id || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
 
         // Intentar obtener de tabla si existe, sino usar documento por defecto
         let document = null;
