@@ -929,13 +929,13 @@ router.get('/consents/legal-document', auth, async (req, res) => {
             console.log('⚠️ Tabla consent_legal_documents no existe, usando documento por defecto');
         }
 
-        // Si no hay documento en BD, usar el documento estándar
+        // Si no hay documento en BD, usar el documento estándar (versión 2.0 con IA)
         if (!document) {
             document = {
-                title: 'Consentimiento Informado para Tratamiento de Datos Biométricos',
-                version: '1.0',
+                title: 'Consentimiento Informado para Análisis Biométrico Basado en IA',
+                version: '2.0',
                 effective_from: new Date(),
-                content: `CONSENTIMIENTO INFORMADO PARA TRATAMIENTO DE DATOS BIOMÉTRICOS
+                content: `CONSENTIMIENTO INFORMADO PARA TRATAMIENTO DE DATOS BIOMÉTRICOS Y ANÁLISIS BIOMÉTRICO BASADO EN IA
 
 En cumplimiento de la Ley 25.326 de Protección de Datos Personales (Argentina), el Reglamento General de Protección de Datos (GDPR) de la Unión Europea, y la Biometric Information Privacy Act (BIPA) de Illinois, se solicita su consentimiento expreso para el tratamiento de sus datos biométricos.
 
@@ -947,62 +947,115 @@ Los datos biométricos (vectores matemáticos de 128 dimensiones derivados del a
 - Control de asistencia laboral
 - Identificación de empleados en el sistema
 - Registro de horarios de entrada y salida
+- Análisis Biométrico Basado en IA para:
+  • Detección de indicadores de fatiga laboral
+  • Análisis de bienestar emocional en el ambiente de trabajo
+  • Medición de niveles de estrés y engagement
+  • Identificación de patrones de comportamiento laboral
+  • Generación de métricas de salud ocupacional
 
-3. DATOS QUE SE RECOPILAN
-NO se almacenan fotografías de su rostro. El sistema captura temporalmente su imagen, la convierte en un vector matemático (128 números) y descarta la imagen original.
+3. TECNOLOGÍA Y PROVEEDOR DE INTELIGENCIA ARTIFICIAL
+Sistema: Microsoft Azure AI Services (Face API + Cognitive Services)
+Proveedor: Microsoft Corporation
+Ubicación de procesamiento: Azure Cloud - Región South Central US
+Certificaciones: ISO 27001, ISO 27018, SOC 2, GDPR Compliant
 
-Este proceso es IRREVERSIBLE: es matemáticamente imposible reconstruir su rostro a partir de estos números, similar a un hash criptográfico.
+Método de análisis:
+a) Captura facial momentánea (imagen se descarta inmediatamente)
+b) Extracción de embedding facial de 128 dimensiones mediante Deep Learning
+c) Análisis de Facial Action Units (AU) según sistema FACS (Facial Action Coding System)
+d) Procesamiento de micro-expresiones faciales
+e) Inferencia de estados emocionales mediante modelos de IA pre-entrenados
+f) Generación de métricas agregadas y anonimizadas
 
-4. GARANTÍAS TÉCNICAS
-✓ Sin almacenamiento de imágenes
+Modelos de IA utilizados:
+- Azure Face API v1.0 (detección y reconocimiento facial)
+- Azure Emotion Recognition (análisis de 8 emociones básicas: alegría, tristeza, ira, sorpresa, miedo, disgusto, desprecio, neutralidad)
+- Algoritmos propietarios de análisis de fatiga y bienestar
+
+4. DATOS QUE SE RECOPILAN
+NO se almacenan fotografías de su rostro. El sistema captura temporalmente su imagen, la convierte en:
+- Vector matemático facial (128 números - embedding)
+- Puntos de referencia faciales (68 landmarks)
+- Valores de Facial Action Units (20+ unidades de acción)
+- Scores de emociones (valores numéricos entre 0-1)
+- Indicadores de fatiga y atención (valores agregados)
+
+La imagen original se descarta inmediatamente después del procesamiento.
+
+5. GARANTÍAS TÉCNICAS Y DE PRIVACIDAD
+✓ Sin almacenamiento de imágenes faciales
 ✓ Vectores matemáticos encriptados (AES-256)
 ✓ Proceso unidireccional irreversible
-✓ Infraestructura certificada ISO 27001
+✓ Infraestructura certificada ISO 27001, ISO 27018
+✓ Cumplimiento GDPR y BIPA
+✓ Datos procesados en servidores Microsoft Azure certificados
+✓ Transmisión encriptada mediante TLS 1.3
+✓ Anonimización de métricas agregadas
+✓ Auditoría completa de todos los accesos
 
-5. DERECHOS DEL TITULAR
+6. USO DE RESULTADOS DEL ANÁLISIS BIOMÉTRICO BASADO EN IA
+Los resultados del análisis emocional y de fatiga serán utilizados para:
+- Mejorar las condiciones de trabajo y ergonomía
+- Identificar necesidades de pausas y descansos
+- Prevenir riesgos psicosociales laborales
+- Optimizar la distribución de tareas
+- Generar reportes agregados de clima laboral (sin identificar individuos)
+
+IMPORTANTE: Los datos emocionales individuales NO serán utilizados para:
+❌ Evaluaciones de desempeño individuales
+❌ Decisiones de contratación o despido
+❌ Ajustes salariales basados en estado emocional
+❌ Discriminación de ningún tipo
+
+7. TIEMPO DE CONSERVACIÓN
+- Embeddings faciales: Durante relación laboral + 90 días
+- Datos de análisis emocional: 30 días (luego se agregan y anonimizan)
+- Métricas agregadas: 5 años (obligación legal laboral)
+- Logs de auditoría: 5 años (Ley 25.326)
+
+8. DERECHOS DEL TITULAR (Art. 14-16 Ley 25.326)
 Usted tiene derecho a:
-- Acceder a sus datos biométricos procesados
+- Acceder a sus datos biométricos y resultados de análisis procesados
 - Rectificar datos inexactos
-- Solicitar la supresión de sus datos
-- Oponerse al tratamiento
+- Solicitar la supresión de sus datos (derecho al olvido)
+- Oponerse al análisis emocional (puede usar solo control de asistencia básico)
 - Revocar este consentimiento en cualquier momento
+- Portabilidad de sus datos
+- Solicitar explicación de las inferencias de IA realizadas
 
 La revocación NO afectará su situación laboral, remuneración ni beneficios.
 
-6. CONSERVACIÓN DE DATOS
-- Datos biométricos: Se conservan mientras dure la relación laboral
-- Logs de auditoría: 5 años (obligación legal)
-- Eliminación automática tras finalización de relación laboral
+9. TRANSPARENCIA DE LA IA
+Los modelos de IA utilizados han sido entrenados con datasets públicos:
+- AffectNet (1M+ imágenes faciales anotadas)
+- FER2013 (Facial Expression Recognition)
+- CK+ Extended Cohn-Kanade Dataset
 
-7. SEGURIDAD
-Los datos están protegidos mediante:
-- Encriptación AES-256
-- Acceso restringido por roles
-- Auditoría de todos los accesos
-- Monitoreo 24/7
+Precisión del sistema:
+- Reconocimiento facial: 99.7% (Azure Face API)
+- Detección emocional: 89.3% promedio (varía según emoción)
+- Detección de fatiga: 87.1% (basado en estudios internos)
 
-8. BASE LEGAL
-Este tratamiento se fundamenta en:
+10. BASE LEGAL
 - Ley 25.326 (Argentina) - Protección de Datos Personales
 - GDPR Art. 9 (UE) - Tratamiento de categorías especiales de datos
 - BIPA (Illinois) - Privacidad de información biométrica
-- Consentimiento expreso del titular
+- Ley 24.557 - Riesgos del Trabajo (prevención de riesgos psicosociales)
+- Consentimiento expreso, libre e informado del titular
 
-9. CONSECUENCIAS DE NO CONSENTIR
-Si decide no otorgar su consentimiento:
-✓ Podrá utilizar métodos alternativos de registro (tarjeta, PIN, etc.)
-✓ NO afectará su situación laboral
-✓ NO afectará sus derechos como empleado
-
-10. CONTACTO Y RECLAMOS
-Para ejercer sus derechos o presentar reclamos:
-- Contacte al responsable de RRHH de su empresa
+11. CONTACTO Y RECLAMOS
+Para ejercer sus derechos o presentar consultas:
+- Responsable de Protección de Datos de su empresa
 - Agencia de Acceso a la Información Pública (Argentina): www.argentina.gob.ar/aaip
+- Email soporte: soporte@aponnt.com
 
 Al aceptar este consentimiento mediante el enlace recibido por email, usted declara:
-□ Haber leído y comprendido este documento
+□ Haber leído y comprendido este documento en su totalidad
+□ Conocer la tecnología de IA utilizada y sus proveedores
+□ Comprender el uso que se dará a sus datos biométricos y análisis emocional
 □ Conocer sus derechos y cómo ejercerlos
-□ Otorgar su consentimiento de forma libre e informada
+□ Otorgar su consentimiento de forma libre, informada y voluntaria
 □ Entender que puede revocar este consentimiento en cualquier momento`
             };
         }

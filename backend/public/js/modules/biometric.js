@@ -12280,15 +12280,15 @@ window.showLegalDocumentPreview = async function() {
             return;
         }
 
-        // Crear loading modal
+        // Crear loading modal RESPONSIVE
         const modalHtml = `
-            <div id="legal-doc-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; align-items: center; justify-content: center;">
-                <div style="background: white; border-radius: 16px; max-width: 900px; width: 90%; max-height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-                    <div style="padding: 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                        <h3 style="margin: 0;">📄 Documento Legal de Consentimiento</h3>
-                        <button onclick="document.getElementById('legal-doc-modal').remove()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; line-height: 1;">&times;</button>
+            <div id="legal-doc-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 10px; box-sizing: border-box;">
+                <div style="background: white; border-radius: 16px; max-width: 900px; width: 100%; max-height: 95vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column;">
+                    <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; flex-shrink: 0;">
+                        <h3 style="margin: 0; font-size: clamp(16px, 4vw, 20px); line-height: 1.3;">🤖 Análisis Biométrico Basado en IA</h3>
+                        <button onclick="document.getElementById('legal-doc-modal').remove()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; line-height: 1; padding: 0; min-width: 30px; flex-shrink: 0;">&times;</button>
                     </div>
-                    <div id="legal-doc-content" style="padding: 30px; overflow-y: auto; max-height: calc(90vh - 140px);">
+                    <div id="legal-doc-content" style="padding: 20px; overflow-y: auto; flex: 1;">
                         <div style="text-align: center; padding: 40px;">
                             <div style="font-size: 48px; margin-bottom: 15px;">🔄</div>
                             <p style="color: #6b7280;">Cargando documento legal...</p>
@@ -12310,36 +12310,36 @@ window.showLegalDocumentPreview = async function() {
         const data = await response.json();
         const doc = data.document;
 
-        // Render document content
+        // Render document content RESPONSIVE
         const contentDiv = document.getElementById('legal-doc-content');
         if (contentDiv && doc) {
             contentDiv.innerHTML = `
-                <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 10px 0; color: #1f2937;">ℹ️ Información del Documento</h4>
-                    <p style="margin: 5px 0; color: #6b7280;"><strong>Título:</strong> ${doc.title || 'Consentimiento Biométrico'}</p>
-                    <p style="margin: 5px 0; color: #6b7280;"><strong>Versión:</strong> ${doc.version || '1.0'}</p>
-                    <p style="margin: 5px 0; color: #6b7280;"><strong>Vigencia:</strong> ${doc.effective_from ? new Date(doc.effective_from).toLocaleDateString('es-AR') : 'Inmediata'}</p>
+                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #1f2937; font-size: clamp(14px, 3vw, 18px);">ℹ️ Información del Documento</h4>
+                    <p style="margin: 5px 0; color: #6b7280; font-size: clamp(12px, 2.5vw, 14px); word-break: break-word;"><strong>Título:</strong> ${doc.title || 'Análisis Biométrico Basado en IA'}</p>
+                    <p style="margin: 5px 0; color: #6b7280; font-size: clamp(12px, 2.5vw, 14px);"><strong>Versión:</strong> ${doc.version || '2.0'}</p>
+                    <p style="margin: 5px 0; color: #6b7280; font-size: clamp(12px, 2.5vw, 14px);"><strong>Vigencia:</strong> ${doc.effectiveFrom ? new Date(doc.effectiveFrom).toLocaleDateString('es-AR') : 'Inmediata'}</p>
                 </div>
 
-                <div style="background: white; border: 2px solid #cbd5e1; border-radius: 12px; padding: 25px; margin-bottom: 25px; white-space: pre-wrap; line-height: 1.8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #334155;">
+                <div style="background: white; border: 2px solid #cbd5e1; border-radius: 12px; padding: 15px; margin-bottom: 20px; white-space: pre-wrap; line-height: 1.6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #334155; font-size: clamp(12px, 2.5vw, 14px); overflow-wrap: break-word; word-wrap: break-word;">
                     ${doc.content || 'No hay contenido disponible.'}
                 </div>
 
-                <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px;">
-                    <h4 style="margin: 0 0 15px 0; color: #1e40af;">⚖️ Referencias Legales Oficiales</h4>
-                    <p style="color: #1e40af; margin-bottom: 15px; font-size: 14px;">Haz clic en los enlaces para consultar el texto oficial de las leyes mencionadas:</p>
+                <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 12px 0; color: #1e40af; font-size: clamp(14px, 3vw, 16px);">⚖️ Referencias Legales Oficiales</h4>
+                    <p style="color: #1e40af; margin-bottom: 12px; font-size: clamp(11px, 2.3vw, 13px);">Haz clic en los enlaces para consultar el texto oficial de las leyes mencionadas:</p>
                     ${doc.legalReferences ? doc.legalReferences.map(ref => `
-                        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-                            <a href="${ref.url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: 600; text-decoration: none; display: block; margin-bottom: 5px;">
+                        <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                            <a href="${ref.url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: 600; text-decoration: none; display: block; margin-bottom: 5px; font-size: clamp(12px, 2.5vw, 14px); word-break: break-word;">
                                 🔗 ${ref.name}
                             </a>
-                            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 13px;">${ref.description}</p>
+                            <p style="margin: 5px 0 0 0; color: #64748b; font-size: clamp(11px, 2.3vw, 13px); line-height: 1.4;">${ref.description}</p>
                         </div>
-                    `).join('') : '<p style="color: #64748b;">No hay referencias disponibles.</p>'}
+                    `).join('') : '<p style="color: #64748b; font-size: clamp(11px, 2.3vw, 13px);">No hay referencias disponibles.</p>'}
                 </div>
 
-                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                    <button onclick="document.getElementById('legal-doc-modal').remove()" style="padding: 12px 30px; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px;">
+                <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+                    <button onclick="document.getElementById('legal-doc-modal').remove()" style="padding: 12px 24px; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: clamp(13px, 2.8vw, 15px); min-width: 120px;">
                         ✖️ Cerrar
                     </button>
                 </div>
