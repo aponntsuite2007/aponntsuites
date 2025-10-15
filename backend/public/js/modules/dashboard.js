@@ -9,11 +9,6 @@ function showDashboardContent() {
     content.innerHTML = `
         <div class="tab-content active" id="dashboard">
             <div class="welcome-section">
-                <div class="welcome-header">
-                    <h2>🏢 Bienvenido al Panel Empresarial</h2>
-                    <p>Gestiona tu empresa de manera integral con nuestros módulos especializados</p>
-                </div>
-
                 <div class="company-info-card">
                     <div class="company-details">
                         <h3 id="companyName">Cargando información...</h3>
