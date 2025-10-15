@@ -6,11 +6,15 @@ const { User } = require('../config/database');
  */
 const auth = async (req, res, next) => {
   try {
-    const authHeader = req.header('Authorization');
-    
+    const authHeader = req.header('Authorization') || req.headers['authorization'];
+
+    console.log('🔍 [AUTH] Headers recibidos:', Object.keys(req.headers));
+    console.log('🔍 [AUTH] Authorization header:', authHeader);
+
     if (!authHeader) {
-      return res.status(401).json({ 
-        error: 'Acceso denegado. Token no proporcionado.' 
+      console.log('❌ [AUTH] No se encontró header Authorization');
+      return res.status(401).json({
+        error: 'Acceso denegado. Token no proporcionado.'
       });
     }
 
@@ -37,7 +41,9 @@ const auth = async (req, res, next) => {
       id: user.user_id,
       email: user.email,
       company_id: user.company_id,
-      isActive: user.isActive
+      companyId: user.companyId,
+      isActive: user.isActive,
+      role: user.role
     } : 'NULL');
 
     if (!user) {
