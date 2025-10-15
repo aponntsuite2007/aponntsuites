@@ -749,9 +749,9 @@ router.post('/consents/accept', async (req, res) => {
 
         const updatedConsent = updatedConsents[0];
 
-        // Enviar email de confirmación con PDF
+        // Enviar email de confirmación
         try {
-            const emailResult = await biometricConsentService.sendConsentConfirmationEmail(
+            await biometricConsentService.sendConsentConfirmationEmail(
                 {
                     firstName: updatedConsent.firstName,
                     lastName: updatedConsent.lastName,
@@ -773,9 +773,6 @@ router.post('/consents/accept', async (req, res) => {
                 }
             );
             console.log(`✅ Email de confirmación enviado a ${updatedConsent.email}`);
-            if (emailResult.pdfGenerated) {
-                console.log(`📄 PDF generado y adjuntado`);
-            }
         } catch (emailError) {
             console.error('⚠️ Error enviando email de confirmación:', emailError);
             // No fallar la operación si el email falla
