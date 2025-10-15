@@ -20,17 +20,11 @@ const biometricConsentService = require('../services/biometricConsentService');
 // GET /api/v1/biometric/consents
 // Obtener todos los consentimientos de la empresa
 // ========================================
-router.get('/consents', auth, async (req, res) => {
+router.get('/consents', auth, authorize('admin', 'rrhh'), async (req, res) => {
     try {
-        const { companyId: company_id, role } = req.user;
+        // Obtener company_id de varias formas posibles (Sequelize)
+        const company_id = req.user.companyId || req.user.company_id || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
         const { status, role: roleFilter, method } = req.query;
-
-        if (!['admin', 'rrhh'].includes(role)) {
-            return res.status(403).json({
-                error: 'No autorizado',
-                message: 'Solo admin y RRHH pueden ver consentimientos'
-            });
-        }
 
         // Construir WHERE clause dinámico
         let whereConditions = ['u.company_id = :company_id', 'u.is_active = true'];

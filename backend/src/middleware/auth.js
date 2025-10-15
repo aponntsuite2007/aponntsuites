@@ -95,18 +95,47 @@ const auth = async (req, res, next) => {
  */
 const authorize = (...roles) => {
   return (req, res, next) => {
+    console.log('🔐 [AUTHORIZE] Verificando permisos...');
+    console.log('🔐 [AUTHORIZE] Roles permitidos:', roles);
+    console.log('🔐 [AUTHORIZE] Usuario:', {
+      user_id: req.user?.user_id,
+      email: req.user?.email,
+      role: req.user?.role
+    });
+
     if (!req.user) {
-      return res.status(401).json({ 
-        error: 'Usuario no autenticado.' 
+      console.error('❌ [AUTHORIZE] req.user no definido');
+      return res.status(401).json({
+        error: 'Usuario no autenticado.'
       });
     }
 
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ 
-        error: 'Acceso denegado. Permisos insuficientes.' 
+    // Obtener rol del usuario (puede estar en user.role o user.dataValues.role)
+    const userRole = req.user.role || req.user.dataValues?.role;
+
+    console.log('🔐 [AUTHORIZE] Rol del usuario:', userRole);
+
+    if (!userRole) {
+      console.error('❌ [AUTHORIZE] Usuario sin rol asignado');
+      return res.status(403).json({
+        error: 'Usuario sin rol asignado. Contacte al administrador.',
+        details: {
+          userId: req.user.user_id || req.user.id,
+          email: req.user.email
+        }
       });
     }
 
+    if (!roles.includes(userRole)) {
+      console.warn(`⚠️ [AUTHORIZE] Acceso denegado. Rol "${userRole}" no está en ${JSON.stringify(roles)}`);
+      return res.status(403).json({
+        error: 'Acceso denegado. Permisos insuficientes.',
+        required: roles,
+        current: userRole
+      });
+    }
+
+    console.log('✅ [AUTHORIZE] Acceso permitido');
     next();
   };
 };
