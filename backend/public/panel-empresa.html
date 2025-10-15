@@ -1492,21 +1492,24 @@
                 updateCompanyInfo(); // ✅ NUEVO v2.1.2: Forzar actualización header empresa
                 console.log('🔍 [HEADER DEBUG] Llamando initializeLanguageSelector()...');
                 initializeLanguageSelector(); // ACTIVADO
-                
+
                 // Inicializar sistema de traducción después de cargar
                 setTimeout(() => {
                     if (window.translator) {
                         window.translator.updateInterface();
                     }
                     // Reintentar selector si no se creó
-                    // initializeLanguageSelector(); // DESACTIVADO
+                    if (!document.getElementById('languageSelectorContainer')?.hasChildNodes()) {
+                        initializeLanguageSelector();
+                    }
                 }, 1000);
-                
+
                 // Otro intento después de 3 segundos
                 setTimeout(() => {
-                    // initializeLanguageSelector(); // DESACTIVADO
+                    if (!document.getElementById('languageSelectorContainer')?.hasChildNodes()) {
+                        initializeLanguageSelector();
+                    }
                 }, 3000);
-                } // ❌ FIN CÓDIGO DESHABILITADO
             });
         </script>
         <div class="header" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 35%, #3498db 70%, #87ceeb 100%); color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-bottom: 3px solid #2980b9;">
@@ -1547,7 +1550,7 @@
                     </div>
                     <div class="user-info" style="text-align: right;">
                         <!-- Info de Versiones en Header -->
-                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.1.3 | BE: v1.3.0</div>
+                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.1.4 | BE: v1.3.0</div>
                         <div id="currentUserName" style="font-size: 13px; font-weight: 600; color: white; margin-bottom: 2px;">Usuario</div>
                         <div id="currentUserRole" style="font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">Admin</div>
                     </div>
@@ -6140,8 +6143,13 @@
                 // Los empleados se cargarán automáticamente cuando se abra el módulo biométrico
                 console.log('🔄 [LOGIN] Empleados se cargarán al abrir módulo de registro biométrico');
 
-                console.log('✅ Login exitoso - mostrando dashboard');
+                console.log('✅ Login exitoso - mostrando interfaz');
                 showDashboard();
+
+                // NO hacer scroll automático - dejar que el usuario seleccione el módulo
+                setTimeout(() => {
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+                }, 100);
 
             } else {
                 throw new Error(data.error || 'Error de autenticación');
