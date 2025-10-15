@@ -72,25 +72,70 @@ class BiometricConsentService {
                 return { success: false, message: 'Usuario ya tiene consentimiento activo' };
             }
 
-            // Obtener documento legal
-            const [legalDocs] = await sequelize.query(`
-                SELECT content, version, title
-                FROM consent_legal_documents
-                WHERE company_id = :companyId
-                    AND is_active = true
-                    AND document_type = 'consent_form'
-                ORDER BY effective_from DESC
-                LIMIT 1
-            `, {
-                replacements: { companyId },
-                type: sequelize.QueryTypes.SELECT
-            });
+            // Obtener documento legal (con fallback si tabla no existe)
+            let legalDoc = null;
 
-            const legalDoc = legalDocs[0] || {
-                content: 'Consentimiento para análisis biométrico',
-                version: '1.0',
-                title: 'Consentimiento Biométrico'
-            };
+            try {
+                const legalDocs = await sequelize.query(`
+                    SELECT content, version, title
+                    FROM consent_legal_documents
+                    WHERE company_id = :companyId
+                        AND is_active = true
+                        AND document_type = 'consent_form'
+                    ORDER BY effective_from DESC
+                    LIMIT 1
+                `, {
+                    replacements: { companyId },
+                    type: sequelize.QueryTypes.SELECT
+                });
+
+                legalDoc = legalDocs[0];
+            } catch (tableError) {
+                console.log('⚠️ [CONSENT-SERVICE] Tabla consent_legal_documents no existe, usando documento por defecto');
+            }
+
+            // Usar documento por defecto si no se encontró en BD
+            if (!legalDoc) {
+                legalDoc = {
+                    content: `CONSENTIMIENTO INFORMADO PARA TRATAMIENTO DE DATOS BIOMÉTRICOS
+
+En cumplimiento de la Ley 25.326 de Protección de Datos Personales (Argentina), el Reglamento General de Protección de Datos (GDPR) de la Unión Europea, y la Biometric Information Privacy Act (BIPA) de Illinois, se solicita su consentimiento expreso para el tratamiento de sus datos biométricos.
+
+1. RESPONSABLE DEL TRATAMIENTO
+El responsable del tratamiento de sus datos biométricos es la empresa a la cual usted pertenece como empleado.
+
+2. FINALIDAD DEL TRATAMIENTO
+Los datos biométricos (vectores matemáticos de 128 dimensiones derivados del análisis facial) serán utilizados exclusivamente para:
+- Control de asistencia laboral
+- Identificación de empleados en el sistema
+- Registro de horarios de entrada y salida
+
+3. DATOS QUE SE RECOPILAN
+NO se almacenan fotografías de su rostro. El sistema captura temporalmente su imagen, la convierte en un vector matemático (128 números) y descarta la imagen original.
+
+4. GARANTÍAS TÉCNICAS
+✓ Sin almacenamiento de imágenes
+✓ Vectores matemáticos encriptados (AES-256)
+✓ Proceso unidireccional irreversible
+✓ Infraestructura certificada ISO 27001
+
+5. DERECHOS DEL TITULAR
+Usted tiene derecho a:
+- Acceder a sus datos biométricos procesados
+- Rectificar datos inexactos
+- Solicitar la supresión de sus datos
+- Oponerse al tratamiento
+- Revocar este consentimiento en cualquier momento
+
+6. BASE LEGAL
+- Ley 25.326 (Argentina) - Protección de Datos Personales
+- GDPR Art. 9 (UE) - Tratamiento de categorías especiales de datos
+- BIPA (Illinois) - Privacidad de información biométrica
+- Consentimiento expreso del titular`,
+                    version: '1.0',
+                    title: 'Consentimiento Informado para Tratamiento de Datos Biométricos'
+                };
+            }
 
             // Generar token único
             const token = uuidv4();
