@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { sequelize } = require('../config/database');
 const jwt = require('jsonwebtoken');
-const pdfGenerator = require('../utils/pdfGenerator');
+// const pdfGenerator = require('../utils/pdfGenerator'); // DESHABILITADO - Sin Puppeteer
 const fs = require('fs').promises;
 const path = require('path');
 const { checkPermission } = require('../middleware/permissions');
@@ -190,47 +190,9 @@ router.post('/communications', authenticateToken, checkPermission('legal-communi
         // Generar PDF si se solicita
         let pdfPath = null;
         if (generate_pdf) {
-            try {
-                const documentData = {
-                    employee_name: `${employee[0].firstName} ${employee[0].lastName}`,
-                    employee_id: employee[0].employeeId,
-                    employee_address: employee[0].email,
-                    reference_number: referenceNumber,
-                    communication_type_name: communicationType[0].name,
-                    legal_basis: communicationType[0].legal_basis,
-                    description: description,
-                    facts_description: facts_description,
-                    company_name: 'EMPRESA',
-                    company_cuit: 'XX-XXXXXXXX-X',
-                    company_address: 'Dirección de la Empresa'
-                };
-
-                const pdfBuffer = await pdfGenerator.generateLegalDocumentPDF(
-                    documentData,
-                    communicationType[0].template_content
-                );
-
-                // Crear directorio si no existe
-                const docsDir = path.join(__dirname, '../../uploads/legal-docs');
-                await fs.mkdir(docsDir, { recursive: true });
-
-                // Guardar PDF
-                pdfPath = path.join(docsDir, `${referenceNumber}.pdf`);
-                await fs.writeFile(pdfPath, pdfBuffer);
-
-                // Actualizar comunicación con la ruta del PDF
-                await sequelize.query(`
-                    UPDATE legal_communications 
-                    SET pdf_path = ?, status = 'generated'
-                    WHERE id = ?
-                `, { replacements: [pdfPath, communicationId] });
-
-                console.log(`PDF generado: ${pdfPath}`);
-
-            } catch (pdfError) {
-                console.error('Error generando PDF:', pdfError);
-                // Continuar sin PDF, pero registrar el error
-            }
+            console.log('⚠️ Generación de PDF deshabilitada (sin Puppeteer). Se continuará sin PDF.');
+            // PDF generation disabled to avoid Puppeteer dependency
+            // TODO: Implementar generación de PDF con alternativas como html-pdf-node o pdfkit
         }
 
         // Registrar en auditoría
