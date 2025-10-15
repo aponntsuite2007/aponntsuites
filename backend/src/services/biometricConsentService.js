@@ -55,21 +55,58 @@ class BiometricConsentService {
 
             const user = users[0];
 
-            // Verificar si ya tiene consentimiento activo
+            // Verificar si el usuario tiene email
+            if (!user.email) {
+                throw new Error(`Usuario ${user.firstName} ${user.lastName} no tiene email registrado. Por favor, agregue un email primero.`);
+            }
+
+            // Verificar si ya tiene consentimiento activo O enviado recientemente
             const existingConsent = await sequelize.query(`
-                SELECT id FROM biometric_consents
+                SELECT id, consent_given, consent_date, created_at, updated_at
+                FROM biometric_consents
                 WHERE user_id = :userId
                     AND company_id = :companyId
                     AND consent_type = 'biometric_analysis'
                     AND revoked = false
-                    AND (expires_at IS NULL OR expires_at > NOW())
             `, {
                 replacements: { userId, companyId },
                 type: sequelize.QueryTypes.SELECT
             });
 
             if (existingConsent.length > 0) {
-                return { success: false, message: 'Usuario ya tiene consentimiento activo' };
+                const consent = existingConsent[0];
+
+                // Si ya aceptó el consentimiento
+                if (consent.consent_given) {
+                    return {
+                        success: false,
+                        message: 'Usuario ya tiene consentimiento aceptado',
+                        email: user.email
+                    };
+                }
+
+                // Si se envió hace menos de 7 días, no permitir reenvío
+                const daysSinceSent = (Date.now() - new Date(consent.created_at).getTime()) / (1000 * 60 * 60 * 24);
+                if (daysSinceSent < 7) {
+                    return {
+                        success: false,
+                        message: `Solicitud ya enviada hace ${Math.floor(daysSinceSent)} días. Espere 7 días para reenviar.`,
+                        email: user.email,
+                        sentDate: consent.created_at
+                    };
+                }
+
+                // Si pasaron más de 7 días sin respuesta, permitir reenvío
+                console.log(`⏰ [CONSENT] Pasaron ${Math.floor(daysSinceSent)} días sin respuesta. Permitiendo reenvío...`);
+                // Marcar el anterior como expirado actualizando updated_at
+                await sequelize.query(`
+                    UPDATE biometric_consents
+                    SET updated_at = NOW()
+                    WHERE id = :id
+                `, {
+                    replacements: { id: consent.id },
+                    type: sequelize.QueryTypes.UPDATE
+                });
             }
 
             // Obtener documento legal (con fallback si tabla no existe)

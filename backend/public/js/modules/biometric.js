@@ -11945,22 +11945,34 @@ async function showBiometricConsentContent(container, filters = {}) {
         container.innerHTML = `
             <div style="padding: 20px;">
                 <!-- Stats Cards -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;">
                     <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #10b981; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">✅ Activos</div>
-                        <div style="font-size: 28px; font-weight: bold; color: #10b981;">${stats.active || 0}</div>
+                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">✅ Aceptados</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #10b981;">${stats.aceptado || 0}</div>
                     </div>
                     <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                         <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">⏳ Pendientes</div>
-                        <div style="font-size: 28px; font-weight: bold; color: #f59e0b;">${stats.pending || 0}</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #f59e0b;">${stats.pendiente || 0}</div>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">📧 Enviados</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #3b82f6;">${stats.enviado || 0}</div>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #8b5cf6; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">❓ Sin Respuesta</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #8b5cf6;">${stats.sin_respuesta || 0}</div>
                     </div>
                     <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #ef4444; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">🚫 Revocados</div>
-                        <div style="font-size: 28px; font-weight: bold; color: #ef4444;">${stats.revoked || 0}</div>
+                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">🚫 Rechazados</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #ef4444;">${stats.rechazado || 0}</div>
                     </div>
                     <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #6b7280; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                         <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">📊 Total</div>
                         <div style="font-size: 28px; font-weight: bold; color: #1f2937;">${stats.total || 0}</div>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #06b6d4; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">🤖 Con Biometría</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #06b6d4;">${stats.con_biometria || 0}</div>
                     </div>
                 </div>
 
@@ -11969,10 +11981,12 @@ async function showBiometricConsentContent(container, filters = {}) {
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                         <select id="filter-status" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
                             <option value="">Todos los estados</option>
-                            <option value="active">✅ Activos</option>
-                            <option value="pending">⏳ Pendientes</option>
-                            <option value="revoked">🚫 Revocados</option>
-                            <option value="expired">⏱️ Expirados</option>
+                            <option value="pendiente">⏳ Pendientes</option>
+                            <option value="enviado">📧 Enviados</option>
+                            <option value="sin respuesta">❓ Sin Respuesta</option>
+                            <option value="aceptado">✅ Aceptados</option>
+                            <option value="rechazado">🚫 Rechazados</option>
+                            <option value="expirado">⏱️ Expirados</option>
                         </select>
                         <select id="filter-role" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
                             <option value="">Cargando roles...</option>
@@ -12010,6 +12024,7 @@ async function showBiometricConsentContent(container, filters = {}) {
                                     <th style="padding: 12px; text-align: left; font-size: 13px; color: #6b7280; font-weight: 600;">Usuario</th>
                                     <th style="padding: 12px; text-align: left; font-size: 13px; color: #6b7280; font-weight: 600;">Email</th>
                                     <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Estado</th>
+                                    <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Biometría</th>
                                     <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Fecha</th>
                                     <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Método</th>
                                     <th style="padding: 12px; text-align: center; font-size: 13px; color: #6b7280; font-weight: 600;">Acciones</th>
@@ -12018,7 +12033,7 @@ async function showBiometricConsentContent(container, filters = {}) {
                             <tbody>
                                 ${consents.length === 0 ? `
                                     <tr>
-                                        <td colspan="6" style="padding: 40px; text-align: center; color: #6b7280;">
+                                        <td colspan="7" style="padding: 40px; text-align: center; color: #6b7280;">
                                             <div style="font-size: 48px; margin-bottom: 15px;">📝</div>
                                             <p style="margin: 0;">No hay consentimientos registrados</p>
                                         </td>
@@ -12032,6 +12047,11 @@ async function showBiometricConsentContent(container, filters = {}) {
                                         <td style="padding: 15px; text-align: center;">
                                             ${getConsentStatusBadge(consent.status)}
                                         </td>
+                                        <td style="padding: 15px; text-align: center;">
+                                            ${consent.has_biometry ?
+                                                '<span style="padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 12px; font-size: 12px; font-weight: 600;">✅ Registrada</span>' :
+                                                '<span style="padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 12px; font-size: 12px; font-weight: 600;">⏳ Pendiente</span>'}
+                                        </td>
                                         <td style="padding: 15px; text-align: center; color: #6b7280; font-size: 13px;">
                                             ${consent.consent_date ? new Date(consent.consent_date).toLocaleDateString('es-AR') : '-'}
                                         </td>
@@ -12039,17 +12059,19 @@ async function showBiometricConsentContent(container, filters = {}) {
                                             ${consent.validation_method || '-'}
                                         </td>
                                         <td style="padding: 15px; text-align: center;">
-                                            ${consent.status === 'pending' && consent.email ? `
+                                            ${(consent.status === 'pendiente' || consent.status === 'sin respuesta') && consent.email ? `
                                                 <button onclick="window.requestIndividualConsent('${consent.user_id}')"
                                                         style="padding: 6px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                                                                color: white; border: none; border-radius: 6px; cursor: pointer;
                                                                font-weight: 600; font-size: 13px; transition: transform 0.2s;"
                                                         onmouseover="this.style.transform='scale(1.05)'"
                                                         onmouseout="this.style.transform='scale(1)'">
-                                                    📧 Solicitar
+                                                    ${consent.status === 'sin respuesta' ? '🔄 Reenviar' : '📧 Solicitar'}
                                                 </button>
-                                            ` : consent.status === 'pending' && !consent.email ? `
+                                            ` : (consent.status === 'pendiente' || consent.status === 'sin respuesta') && !consent.email ? `
                                                 <span style="color: #ef4444; font-size: 12px;">❌ Sin email</span>
+                                            ` : consent.status === 'rechazado' ? `
+                                                <span style="color: #ef4444; font-size: 13px;">🚫</span>
                                             ` : `
                                                 <span style="color: #10b981; font-size: 13px;">✅</span>
                                             `}
@@ -12080,12 +12102,14 @@ async function showBiometricConsentContent(container, filters = {}) {
 
 function getConsentStatusBadge(status) {
     const badges = {
-        'active': '<span style="padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 12px; font-size: 12px; font-weight: 600;">✅ Activo</span>',
-        'pending': '<span style="padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 12px; font-size: 12px; font-weight: 600;">⏳ Pendiente</span>',
-        'revoked': '<span style="padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 12px; font-size: 12px; font-weight: 600;">🚫 Revocado</span>',
-        'expired': '<span style="padding: 4px 12px; background: #f3f4f6; color: #4b5563; border-radius: 12px; font-size: 12px; font-weight: 600;">⏱️ Expirado</span>'
+        'aceptado': '<span style="padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 12px; font-size: 12px; font-weight: 600;">✅ Aceptado</span>',
+        'pendiente': '<span style="padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 12px; font-size: 12px; font-weight: 600;">⏳ Pendiente</span>',
+        'enviado': '<span style="padding: 4px 12px; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 12px; font-weight: 600;">📧 Enviado</span>',
+        'sin respuesta': '<span style="padding: 4px 12px; background: #ede9fe; color: #5b21b6; border-radius: 12px; font-size: 12px; font-weight: 600;">❓ Sin Respuesta</span>',
+        'rechazado': '<span style="padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 12px; font-size: 12px; font-weight: 600;">🚫 Rechazado</span>',
+        'expirado': '<span style="padding: 4px 12px; background: #f3f4f6; color: #4b5563; border-radius: 12px; font-size: 12px; font-weight: 600;">⏱️ Expirado</span>'
     };
-    return badges[status] || badges['pending'];
+    return badges[status] || badges['pendiente'];
 }
 
 // ==================================================================

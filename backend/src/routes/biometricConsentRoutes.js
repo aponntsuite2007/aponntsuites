@@ -31,13 +31,17 @@ router.get('/consents', auth, authorize('admin', 'rrhh'), async (req, res) => {
         const replacements = { company_id };
 
         if (status) {
-            if (status === 'active') {
-                whereConditions.push('c.consent_given = true AND c.revoked = false AND (c.expires_at IS NULL OR c.expires_at > NOW())');
-            } else if (status === 'pending') {
-                whereConditions.push('(c.consent_id IS NULL OR c.consent_given = false)');
-            } else if (status === 'revoked') {
+            if (status === 'aceptado') {
+                whereConditions.push('c.consent_given = true AND c.revoked = false');
+            } else if (status === 'pendiente') {
+                whereConditions.push('(c.id IS NULL OR (c.consent_given = false AND c.created_at IS NULL))');
+            } else if (status === 'enviado') {
+                whereConditions.push('c.id IS NOT NULL AND c.consent_given = false AND EXTRACT(DAY FROM (NOW() - c.created_at)) < 7');
+            } else if (status === 'sin respuesta') {
+                whereConditions.push('c.id IS NOT NULL AND c.consent_given = false AND EXTRACT(DAY FROM (NOW() - c.created_at)) >= 7');
+            } else if (status === 'rechazado') {
                 whereConditions.push('c.revoked = true');
-            } else if (status === 'expired') {
+            } else if (status === 'expirado') {
                 whereConditions.push('c.expires_at IS NOT NULL AND c.expires_at < NOW()');
             }
         }
@@ -62,6 +66,7 @@ router.get('/consents', auth, authorize('admin', 'rrhh'), async (req, res) => {
                 c.consent_type,
                 c.consent_given,
                 c.consent_date,
+                c.created_at as consent_created_at,
                 c.revoked,
                 c.revoked_date,
                 c.revoked_reason,
@@ -70,16 +75,27 @@ router.get('/consents', auth, authorize('admin', 'rrhh'), async (req, res) => {
                 c.ip_address,
                 c.user_agent,
                 CASE
-                    WHEN c.revoked = true THEN 'revoked'
-                    WHEN c.expires_at IS NOT NULL AND c.expires_at < NOW() THEN 'expired'
-                    WHEN c.consent_given = true AND c.revoked = false THEN 'active'
-                    ELSE 'pending'
+                    WHEN bd.id IS NOT NULL THEN true
+                    ELSE false
+                END as has_biometry,
+                CASE
+                    WHEN c.revoked = true THEN 'rechazado'
+                    WHEN c.expires_at IS NOT NULL AND c.expires_at < NOW() THEN 'expirado'
+                    WHEN c.consent_given = true AND c.revoked = false THEN 'aceptado'
+                    WHEN c.id IS NOT NULL AND c.consent_given = false AND
+                         EXTRACT(DAY FROM (NOW() - c.created_at)) >= 7 THEN 'sin respuesta'
+                    WHEN c.id IS NOT NULL AND c.consent_given = false THEN 'enviado'
+                    ELSE 'pendiente'
                 END as status
             FROM users u
             LEFT JOIN biometric_consents c
                 ON u.user_id = c.user_id
                 AND c.consent_type = 'biometric_analysis'
                 AND u.company_id = c.company_id
+            LEFT JOIN biometric_data bd
+                ON u.user_id = bd."UserId"
+                AND bd.type = 'face'
+                AND bd."isActive" = true
             WHERE ${whereConditions.join(' AND ')}
             ORDER BY u."lastName", u."firstName"
         `, {
@@ -90,10 +106,14 @@ router.get('/consents', auth, authorize('admin', 'rrhh'), async (req, res) => {
         // Calcular estadísticas
         const stats = {
             total: results.length,
-            active: results.filter(r => r.status === 'active').length,
-            pending: results.filter(r => r.status === 'pending').length,
-            revoked: results.filter(r => r.status === 'revoked').length,
-            expired: results.filter(r => r.status === 'expired').length
+            aceptado: results.filter(r => r.status === 'aceptado').length,
+            pendiente: results.filter(r => r.status === 'pendiente').length,
+            enviado: results.filter(r => r.status === 'enviado').length,
+            sin_respuesta: results.filter(r => r.status === 'sin respuesta').length,
+            rechazado: results.filter(r => r.status === 'rechazado').length,
+            expirado: results.filter(r => r.status === 'expirado').length,
+            con_biometria: results.filter(r => r.has_biometry === true).length,
+            sin_biometria: results.filter(r => r.has_biometry === false).length
         };
 
         res.json({
@@ -737,20 +757,101 @@ router.post('/consents/reject', async (req, res) => {
     try {
         const { token } = req.body;
 
-        // Buscar y eliminar consentimiento pendiente
-        await sequelize.query(`
-            DELETE FROM biometric_consents
+        // Buscar consentimiento pendiente para obtener user_id y company_id
+        const consents = await sequelize.query(`
+            SELECT id, user_id, company_id
+            FROM biometric_consents
             WHERE consent_token = :token
                 AND consent_token_expires_at > NOW()
                 AND consent_given = false
         `, {
             replacements: { token },
-            type: sequelize.QueryTypes.DELETE
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (consents.length === 0) {
+            return res.status(404).json({
+                error: 'Token inválido o expirado'
+            });
+        }
+
+        const consent = consents[0];
+        const ipAddress = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+
+        // Marcar consentimiento como rechazado (revoked = true)
+        await sequelize.query(`
+            UPDATE biometric_consents
+            SET revoked = true,
+                revoked_date = NOW(),
+                revoked_reason = 'Rechazado por el usuario',
+                revoked_ip_address = :ipAddress,
+                updated_at = NOW()
+            WHERE id = :consentId
+        `, {
+            replacements: {
+                consentId: consent.id,
+                ipAddress
+            },
+            type: sequelize.QueryTypes.UPDATE
+        });
+
+        // Verificar si el usuario tiene biometría registrada
+        const biometricData = await sequelize.query(`
+            SELECT id
+            FROM biometric_data
+            WHERE "UserId" = :userId
+                AND type = 'face'
+                AND "isActive" = true
+        `, {
+            replacements: { userId: consent.user_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        let biometryDeleted = false;
+
+        // Si tiene biometría registrada, marcarla como inactiva
+        if (biometricData.length > 0) {
+            await sequelize.query(`
+                UPDATE biometric_data
+                SET "isActive" = false,
+                    notes = COALESCE(notes, '') || ' [ELIMINADO: Usuario rechazó consentimiento ' || NOW()::date || ']'
+                WHERE "UserId" = :userId
+                    AND type = 'face'
+                    AND "isActive" = true
+            `, {
+                replacements: { userId: consent.user_id },
+                type: sequelize.QueryTypes.UPDATE
+            });
+
+            biometryDeleted = true;
+            console.log(`🗑️ [CONSENT-REJECT] Biometría desactivada para usuario ${consent.user_id}`);
+        }
+
+        // Registrar en auditoría
+        await sequelize.query(`
+            INSERT INTO consent_audit_log (
+                company_id, user_id, consent_type, action,
+                action_timestamp, ip_address, reason, automated
+            ) VALUES (
+                :companyId, :userId, 'biometric_analysis', 'REJECTED',
+                NOW(), :ipAddress, :reason, false
+            )
+        `, {
+            replacements: {
+                companyId: consent.company_id,
+                userId: consent.user_id,
+                ipAddress,
+                reason: biometryDeleted ?
+                    'Consentimiento rechazado por usuario - Biometría eliminada' :
+                    'Consentimiento rechazado por usuario'
+            },
+            type: sequelize.QueryTypes.INSERT
         });
 
         res.json({
             success: true,
-            message: 'Consentimiento rechazado'
+            message: 'Consentimiento rechazado',
+            biometryDeleted
         });
 
     } catch (error) {
