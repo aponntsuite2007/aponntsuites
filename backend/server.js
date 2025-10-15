@@ -1829,8 +1829,9 @@ app.use('/api/v2/biometric-enterprise', biometricEnterpriseRoutes);
 const kioskEnterpriseRoutes = require('./src/routes/kiosk-enterprise');
 app.use('/api/v2/kiosk-enterprise', kioskEnterpriseRoutes);
 
-// 🔌 IMPORTAR WEBSOCKET SERVER ENTERPRISE
+// 🔌 IMPORTAR WEBSOCKET SERVERS ENTERPRISE
 const { initializeKioskWebSocketServer } = require('./src/services/kiosk-websocket-server');
+const { AdminPanelWebSocketServer } = require('./src/services/admin-panel-websocket');
 
 // 📱 CONFIGURAR API MÓVIL COMPLETA
 const mobileRoutes = require('./src/routes/mobileRoutes');
@@ -2082,9 +2083,20 @@ ${_getNetworkInterfaces().map(ip => `   • ${ip.interface}: ${ip.ip}${ip.isPrim
 ⚠️  NOTA: Si cambias de red, reinicia el servidor para detectar nueva IP
       `);
 
-      // 🔌 INICIALIZAR WEBSOCKET SERVER ENTERPRISE (sin await en callback)
-      initializeKioskWebSocketServer(server).then(() => {
+      // 🔌 INICIALIZAR WEBSOCKET SERVERS ENTERPRISE
+      initializeKioskWebSocketServer(server).then((kioskWsServer) => {
         console.log('🏭 [KIOSK-WS] WebSocket Server Enterprise inicializado para 20+ cámaras simultáneas');
+
+        // Inicializar Admin Panel WebSocket Server
+        console.log('🖥️ [ADMIN-WS] Inicializando WebSocket para panel administrativo...');
+        const adminWsServer = new AdminPanelWebSocketServer(server);
+
+        // Conectar ambos servidores para comunicación bidireccional
+        adminWsServer.connectToKioskServer(kioskWsServer);
+        kioskWsServer.adminPanelRef = adminWsServer;
+
+        console.log('✅ [ADMIN-WS] WebSocket para panel administrativo inicializado en /biometric-ws');
+        console.log('🔗 [WS] Servidores WebSocket conectados: Kiosk ↔ Admin Panel');
       }).catch(err => {
         console.error('❌ [KIOSK-WS] Error inicializando WebSocket server:', err);
       });

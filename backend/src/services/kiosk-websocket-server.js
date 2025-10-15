@@ -20,6 +20,7 @@ class KioskWebSocketServer {
         this.companies = new Map(); // Map de empresas activas
         this.processingQueue = []; // Cola de procesamiento
         this.isProcessing = false;
+        this.adminPanelRef = null; // Referencia al servidor de admin panel
         this.stats = {
             totalConnections: 0,
             activeKiosks: 0,
@@ -331,6 +332,19 @@ class KioskWebSocketServer {
                     timestamp: Date.now()
                 }, kiosk_id);
 
+                // Notificar al panel administrativo sobre la detección
+                if (this.adminPanelRef) {
+                    this.adminPanelRef.notifyEmployeeDetected(company_id, {
+                        employee_id: matchResult.employee.id,
+                        employee_name: `${matchResult.employee.firstName} ${matchResult.employee.lastName}`,
+                        employee_legajo: matchResult.employee.legajo,
+                        kiosk_id,
+                        confidence: matchResult.confidence,
+                        quality_score: faceResult.qualityScore,
+                        timestamp: Date.now()
+                    });
+                }
+
             } else {
                 // No reconocido
                 this.sendMessage(ws, {
@@ -572,9 +586,13 @@ class KioskWebSocketServer {
      * 🔔 NOTIFICAR PANEL ADMINISTRATIVO
      */
     notifyAdminPanel(companyId, data) {
-        // Implementar notificación a panel admin si está conectado
-        // Por ahora solo log
-        console.log(`🔔 [KIOSK-WS] Notificación para empresa ${companyId}:`, data);
+        // Notificar al Admin Panel WebSocket Server si está conectado
+        if (this.adminPanelRef) {
+            this.adminPanelRef.notifyNewAttendance(companyId, data);
+            console.log(`🔔 [KIOSK-WS] Notificación enviada a panel admin - Empresa ${companyId}`);
+        } else {
+            console.log(`⚠️ [KIOSK-WS] Admin Panel WS no conectado - Empresa ${companyId}:`, data);
+        }
     }
 
     /**
