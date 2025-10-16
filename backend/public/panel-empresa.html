@@ -1625,7 +1625,7 @@
                     </div>
                     <div class="user-info" style="text-align: right;">
                         <!-- Info de Versiones en Header -->
-                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.2.3 | BE: v1.3.0</div>
+                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.3.0 | BE: v1.3.0</div>
                         <div id="currentUserName" style="font-size: 13px; font-weight: 600; color: white; margin-bottom: 2px;">Usuario</div>
                         <div id="currentUserRole" style="font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">Admin</div>
                     </div>
@@ -6227,18 +6227,47 @@
 
                 // Actualizar banner con datos de empresa DIRECTAMENTE (sin leer de localStorage)
                 console.log('🔄 [LOGIN] Actualizando banner directamente...');
-                try {
-                    document.getElementById('companyNameDisplay').textContent = currentCompany.name || 'Empresa Cliente';
-                    document.getElementById('companyAddressDisplay').textContent = currentCompany.address || 'Dirección empresa';
-                    document.getElementById('companyPhoneDisplay').textContent = `📞 ${currentCompany.phone || 'Teléfono'}`;
-                    console.log('✅ [LOGIN] Banner actualizado con:', {
-                        nombre: currentCompany.name,
-                        direccion: currentCompany.address,
-                        telefono: currentCompany.phone
-                    });
-                } catch (error) {
-                    console.error('❌ [LOGIN] Error actualizando banner:', error);
-                }
+                console.log('🔄 [LOGIN] Datos para actualizar:', currentCompany);
+
+                // Usar setTimeout para asegurar que el DOM esté listo
+                setTimeout(() => {
+                    try {
+                        const nameEl = document.getElementById('companyNameDisplay');
+                        const addressEl = document.getElementById('companyAddressDisplay');
+                        const phoneEl = document.getElementById('companyPhoneDisplay');
+
+                        console.log('🔍 [LOGIN] Elementos encontrados:', {
+                            nameEl: !!nameEl,
+                            addressEl: !!addressEl,
+                            phoneEl: !!phoneEl
+                        });
+
+                        if (nameEl) {
+                            nameEl.textContent = currentCompany.name || 'Empresa Cliente';
+                            console.log('✅ [LOGIN] Nombre actualizado:', nameEl.textContent);
+                        } else {
+                            console.error('❌ [LOGIN] No se encontró companyNameDisplay');
+                        }
+
+                        if (addressEl) {
+                            addressEl.textContent = currentCompany.address || 'Dirección empresa';
+                            console.log('✅ [LOGIN] Dirección actualizada:', addressEl.textContent);
+                        } else {
+                            console.error('❌ [LOGIN] No se encontró companyAddressDisplay');
+                        }
+
+                        if (phoneEl) {
+                            phoneEl.textContent = `📞 ${currentCompany.phone || 'Teléfono'}`;
+                            console.log('✅ [LOGIN] Teléfono actualizado:', phoneEl.textContent);
+                        } else {
+                            console.error('❌ [LOGIN] No se encontró companyPhoneDisplay');
+                        }
+
+                        console.log('✅ [LOGIN] Banner actualización completada');
+                    } catch (error) {
+                        console.error('❌ [LOGIN] Error actualizando banner:', error);
+                    }
+                }, 500); // Esperar 500ms para que el DOM esté listo
 
                 // Los empleados se cargarán automáticamente cuando se abra el módulo biométrico
                 console.log('🔄 [LOGIN] Empleados se cargarán al abrir módulo de registro biométrico');

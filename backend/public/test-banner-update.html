@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Banner Update</title>
+</head>
+<body>
+    <h1>Test de Actualización de Banner</h1>
+
+    <div id="companyNameDisplay">Empresa Cliente</div>
+    <div id="companyAddressDisplay">Dirección empresa</div>
+    <div id="companyPhoneDisplay">📞 Teléfono</div>
+
+    <button onclick="testUpdate()">Probar Actualización</button>
+
+    <script>
+        function testUpdate() {
+            // Simular datos que vienen del backend
+            const currentCompany = {
+                name: "ISI",
+                address: "Villa Mercedes, San Luis, Argentina",
+                phone: "+54 2657 673741"
+            };
+
+            console.log('🔍 Intentando actualizar con:', currentCompany);
+
+            // Verificar que los elementos existan
+            const nameEl = document.getElementById('companyNameDisplay');
+            const addressEl = document.getElementById('companyAddressDisplay');
+            const phoneEl = document.getElementById('companyPhoneDisplay');
+
+            console.log('📋 Elementos encontrados:', {
+                nameEl: !!nameEl,
+                addressEl: !!addressEl,
+                phoneEl: !!phoneEl
+            });
+
+            // Actualizar
+            if (nameEl) nameEl.textContent = currentCompany.name;
+            if (addressEl) addressEl.textContent = currentCompany.address;
+            if (phoneEl) phoneEl.textContent = `📞 ${currentCompany.phone}`;
+
+            console.log('✅ Banner actualizado!');
+        }
+    </script>
+</body>
+</html>
