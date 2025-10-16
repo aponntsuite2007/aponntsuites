@@ -30,7 +30,7 @@ const QRCode = require('qrcode');
 const crypto = require('crypto');
 const fs = require('fs').promises;
 const path = require('path');
-const pool = require('../../config/database');
+const database = require('../config/database');
 
 class AuditReportService {
     constructor() {
@@ -152,7 +152,7 @@ class AuditReportService {
     async getComplianceData(companyId, params) {
         const { start_date, end_date } = params;
 
-        const result = await pool.query(`
+        const result = await database.sequelize.query(`
             SELECT
                 cv.id,
                 cv.rule_code,
@@ -173,7 +173,7 @@ class AuditReportService {
         `, [companyId, start_date, end_date]);
 
         // Estadísticas
-        const statsResult = await pool.query(`
+        const statsResult = await database.sequelize.query(`
             SELECT
                 COUNT(*) as total_violations,
                 COUNT(DISTINCT employee_id) as affected_employees,
@@ -200,7 +200,7 @@ class AuditReportService {
     async getSLAData(companyId, params) {
         const { start_date, end_date } = params;
 
-        const result = await pool.query(`
+        const result = await database.sequelize.query(`
             SELECT
                 nm.id,
                 nm.request_type,
@@ -223,7 +223,7 @@ class AuditReportService {
             ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
             : 0;
 
-        const statsResult = await pool.query(`
+        const statsResult = await database.sequelize.query(`
             SELECT
                 COUNT(*) as total_requests,
                 COUNT(DISTINCT approver_id) as total_approvers,
@@ -252,7 +252,7 @@ class AuditReportService {
     async getResourceData(companyId, params) {
         const { start_date, end_date } = params;
 
-        const result = await pool.query(`
+        const result = await database.sequelize.query(`
             SELECT
                 ct.id,
                 ct.employee_id,
@@ -318,10 +318,10 @@ class AuditReportService {
 
         query += ` ORDER BY a.date DESC, a.employee_id`;
 
-        const result = await pool.query(query, queryParams);
+        const result = await database.sequelize.query(query, queryParams);
 
         // Estadísticas
-        const statsResult = await pool.query(`
+        const statsResult = await database.sequelize.query(`
             SELECT
                 COUNT(*) as total_records,
                 COUNT(DISTINCT employee_id) as total_employees,
@@ -351,7 +351,7 @@ class AuditReportService {
         const { employee_id, start_date, end_date } = params;
 
         // Asistencia
-        const attendanceResult = await pool.query(`
+        const attendanceResult = await database.sequelize.query(`
             SELECT
                 COUNT(*) as total_days,
                 COUNT(CASE WHEN status = 'present' THEN 1 END) as present_days,
@@ -366,7 +366,7 @@ class AuditReportService {
         `, [companyId, employee_id, start_date, end_date]);
 
         // Violaciones
-        const violationsResult = await pool.query(`
+        const violationsResult = await database.sequelize.query(`
             SELECT COUNT(*) as total_violations
             FROM compliance_violations
             WHERE company_id = $1
@@ -375,7 +375,7 @@ class AuditReportService {
         `, [companyId, employee_id, start_date, end_date]);
 
         // Notificaciones y aprobaciones
-        const notificationsResult = await pool.query(`
+        const notificationsResult = await database.sequelize.query(`
             SELECT
                 COUNT(*) as total_notifications,
                 COUNT(CASE WHEN status = 'read' THEN 1 END) as read_notifications
@@ -400,7 +400,7 @@ class AuditReportService {
     async getViolationData(companyId, params) {
         const { start_date, end_date } = params;
 
-        const result = await pool.query(`
+        const result = await database.sequelize.query(`
             SELECT
                 cv.id,
                 cv.rule_code,
@@ -830,7 +830,7 @@ class AuditReportService {
      * Guardar registro de reporte en base de datos
      */
     async saveReportRecord(companyId, reportType, params, requestedBy, digitalSignature, verificationCode) {
-        const result = await pool.query(`
+        const result = await database.sequelize.query(`
             INSERT INTO audit_reports (
                 company_id,
                 report_type,
@@ -858,7 +858,7 @@ class AuditReportService {
      * Actualizar ruta del archivo
      */
     async updateReportFilePath(reportId, filename) {
-        await pool.query(`
+        await database.sequelize.query(`
             UPDATE audit_reports
             SET file_path = $1
             WHERE id = $2
@@ -872,7 +872,7 @@ class AuditReportService {
         console.log(`🔍 Verificando reporte: ${verificationCode}`);
 
         // Obtener registro
-        const result = await pool.query(`
+        const result = await database.sequelize.query(`
             SELECT *
             FROM audit_reports
             WHERE verification_code = $1
@@ -962,7 +962,7 @@ class AuditReportService {
         query += ` ORDER BY generated_at DESC LIMIT $${paramCount + 1}`;
         params.push(limit);
 
-        const result = await pool.query(query, params);
+        const result = await database.sequelize.query(query, params);
         return result.rows;
     }
 
@@ -970,7 +970,7 @@ class AuditReportService {
      * Descargar reporte
      */
     async downloadReport(reportId, companyId) {
-        const result = await pool.query(`
+        const result = await database.sequelize.query(`
             SELECT file_path, report_type, verification_code
             FROM audit_reports
             WHERE id = $1 AND company_id = $2
@@ -997,7 +997,7 @@ class AuditReportService {
      * Registrar acceso a reporte (auditoría)
      */
     async logReportAccess(reportId, accessType, success) {
-        await pool.query(`
+        await database.sequelize.query(`
             INSERT INTO report_access_log (
                 report_id,
                 access_type,
@@ -1011,7 +1011,7 @@ class AuditReportService {
      * Obtener estadísticas de reportes
      */
     async getReportStatistics(companyId, startDate, endDate) {
-        const result = await pool.query(`
+        const result = await database.sequelize.query(`
             SELECT
                 COUNT(*) as total_reports,
                 COUNT(DISTINCT report_type) as report_types,
