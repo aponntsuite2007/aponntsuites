@@ -695,7 +695,10 @@ document.createElement = function(tagName) {
 };
 
 // Interceptar innerHTML para traducir automáticamente
-const originalSetInnerHTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML').set;
+const originalInnerHTMLDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+const originalSetInnerHTML = originalInnerHTMLDescriptor.set;
+const originalGetInnerHTML = originalInnerHTMLDescriptor.get;
+
 Object.defineProperty(Element.prototype, 'innerHTML', {
     set: function(value) {
         originalSetInnerHTML.call(this, value);
@@ -708,7 +711,7 @@ Object.defineProperty(Element.prototype, 'innerHTML', {
         }
     },
     get: function() {
-        return this.innerHTML;
+        return originalGetInnerHTML.call(this);
     },
     configurable: true
 });
