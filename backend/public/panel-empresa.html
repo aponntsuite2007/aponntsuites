@@ -281,13 +281,22 @@
                                     html += '</div>';
                                     modulesContainer.innerHTML = html;
 
-                                    // 🌍 TRADUCIR MÓDULOS DESPUÉS DE CARGARLOS
-                                    console.log('🌍 [TRANSLATION] Traduciendo módulos dinámicos...');
+                                    // 🔥 TRADUCIR MÓDULOS INMEDIATAMENTE DESPUÉS DE CARGARLOS
+                                    console.log('🔥 [TRANSLATION] Traduciendo módulos dinámicos del dashboard...');
                                     if (window.translator) {
-                                        setTimeout(() => {
-                                            window.translator.updateInterface();
-                                            console.log('✅ [TRANSLATION] Módulos traducidos');
-                                        }, 200);
+                                        setTimeout(async () => {
+                                            const moduleElements = modulesContainer.querySelectorAll('[data-translate]');
+                                            console.log(`🔥 [DASHBOARD] Encontrados ${moduleElements.length} elementos para traducir`);
+
+                                            for (const element of moduleElements) {
+                                                const key = element.getAttribute('data-translate');
+                                                const translation = await window.translator.t(key);
+                                                element.textContent = translation;
+                                                console.log(`  ✅ ${key} → ${translation}`);
+                                            }
+
+                                            console.log('✅ [TRANSLATION] Módulos del dashboard traducidos');
+                                        }, 300);
                                     }
 
                                     // 🌍 AGREGAR LISTENER PARA CAMBIOS DE IDIOMA - RE-TRADUCIR MÓDULOS
