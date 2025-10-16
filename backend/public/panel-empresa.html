@@ -66,10 +66,126 @@
     <script src="js/port-config.js"></script>
     <script src="js/translation-system.js"></script>
 
+    <!-- ⏰ FUNCIONES GLOBALES - FECHA/HORA Y SELECTOR DE IDIOMAS -->
+    <script>
+        // Función para actualizar fecha y hora
+        function updateDateTime() {
+            const now = new Date();
+            const dateOptions = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+
+            const dateElement = document.getElementById('currentDate');
+            const timeElement = document.getElementById('currentTime');
+
+            if (dateElement) dateElement.textContent = now.toLocaleDateString('es-ES', dateOptions);
+            if (timeElement) timeElement.textContent = now.toLocaleTimeString('es-ES', timeOptions);
+        }
+
+        // Función para inicializar selector de idiomas
+        function initializeLanguageSelector() {
+            const container = document.getElementById('languageSelectorContainer');
+            if (!container) {
+                console.error('❌ [HEADER] No se encontró languageSelectorContainer');
+                return;
+            }
+
+            if (container.hasChildNodes()) {
+                console.log('⚠️ [HEADER] Selector de idioma ya existe');
+                return;
+            }
+
+            if (window.translator && typeof window.translator.createLanguageSelector === 'function') {
+                try {
+                    const selector = window.translator.createLanguageSelector();
+                    if (selector) {
+                        container.innerHTML = '';
+                        container.appendChild(selector);
+                        console.log('✅ [HEADER] Selector de idioma inicializado correctamente');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('❌ [HEADER] Error creando selector:', error);
+                }
+            }
+
+            // Fallback: crear selector simple si el translator no está disponible
+            console.warn('⚠️ [HEADER] Usando selector de idioma fallback');
+            const fallbackSelector = document.createElement('select');
+            fallbackSelector.style.cssText = `
+                padding: 4px 8px;
+                border: 1px solid rgba(255,255,255,0.3);
+                border-radius: 4px;
+                background: rgba(255,255,255,0.1);
+                color: white;
+                font-size: 11px;
+                min-width: 120px;
+                cursor: pointer;
+            `;
+
+            const languages = {
+                'es': '🇪🇸 ESPAÑOL',
+                'en': '🇺🇸 ENGLISH',
+                'pt': '🇧🇷 PORTUGUÊS',
+                'de': '🇩🇪 DEUTSCH',
+                'it': '🇮🇹 ITALIANO',
+                'fr': '🇫🇷 FRANÇAIS'
+            };
+
+            const currentLang = window.translator?.currentLanguage || 'es';
+
+            Object.entries(languages).forEach(([code, name]) => {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = name;
+                option.style.color = '#333';
+                option.style.background = 'white';
+                if (code === currentLang) option.selected = true;
+                fallbackSelector.appendChild(option);
+            });
+
+            fallbackSelector.addEventListener('change', async function() {
+                const selectedLang = this.value;
+                console.log('🌍 [LANGUAGE] Usuario cambió idioma a:', selectedLang);
+
+                if (window.translator && typeof window.translator.changeLanguage === 'function') {
+                    await window.translator.changeLanguage(selectedLang);
+                    console.log('✅ [LANGUAGE] Idioma cambiado con translator a:', selectedLang);
+                } else {
+                    localStorage.setItem('user_language', selectedLang);
+                    console.log('⚠️ [LANGUAGE] Idioma guardado sin translator, recargando...');
+                    location.reload();
+                }
+            });
+
+            container.innerHTML = '';
+            container.appendChild(fallbackSelector);
+            console.log('✅ [HEADER] Selector de idioma fallback creado y agregado al DOM');
+        }
+    </script>
+
     <!-- 🏢 GESTIÓN MULTI-TENANT DOM READY -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🏢 [DOM-READY] Iniciando gestión multi-tenant');
+
+            // Inicializar fecha/hora inmediatamente
+            console.log('📅 [DATETIME] Iniciando actualización de fecha/hora...');
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+
+            // Inicializar selector de idiomas
+            console.log('🌍 [LANGUAGE] Iniciando selector de idiomas...');
+            setTimeout(initializeLanguageSelector, 500);
 
             // SIEMPRE MOSTRAR LOGIN - NO VERIFICAR SESIONES
             console.log('🔐 [DOM-READY] SIEMPRE mostrando login');
@@ -1628,7 +1744,7 @@
                     </div>
                     <div class="user-info" style="text-align: right;">
                         <!-- Info de Versiones en Header -->
-                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.3.1 | BE: v1.3.0</div>
+                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.4.0 | BE: v1.3.0</div>
                         <div id="currentUserName" style="font-size: 13px; font-weight: 600; color: white; margin-bottom: 2px;">Usuario</div>
                         <div id="currentUserRole" style="font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">Admin</div>
                     </div>
