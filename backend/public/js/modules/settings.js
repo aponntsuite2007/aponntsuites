@@ -2,379 +2,379 @@
 console.log('⚙️ [SETTINGS] Módulo settings cargado');
 
 // Settings functions
-function showSettingsContent() {
+async function showSettingsContent() {
     const content = document.getElementById('mainContent');
     if (!content) return;
 
     content.innerHTML = `
         <div class="tab-content active" id="settings">
             <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                <h2>📡 Configuración del Servidor para APK</h2>
-                <p style="margin: 10px 0; font-size: 14px; opacity: 0.9;">
+                <h2 data-translate="settings.server.title">📡 Configuración del Servidor para APK</h2>
+                <p style="margin: 10px 0; font-size: 14px; opacity: 0.9;" data-translate="settings.server.subtitle">
                     Use esta información para configurar la APK Flutter manualmente
                 </p>
                 <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 15px 0;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div>
-                            <label style="font-weight: bold; font-size: 12px; opacity: 0.9;">DIRECCIÓN IP DEL SERVIDOR:</label>
+                            <label style="font-weight: bold; font-size: 12px; opacity: 0.9;" data-translate="settings.server.ip_label">DIRECCIÓN IP DEL SERVIDOR:</label>
                             <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center;">
-                                <span id="server-ip" style="font-family: monospace; font-size: 20px; font-weight: bold;">Cargando...</span>
-                                <button onclick="copyToClipboard('server-ip')" class="btn btn-sm" style="background: rgba(255,255,255,0.3); border: none; color: white;">📋 Copiar</button>
+                                <span id="server-ip" style="font-family: monospace; font-size: 20px; font-weight: bold;" data-translate="settings.server.loading">Cargando...</span>
+                                <button onclick="copyToClipboard('server-ip')" class="btn btn-sm" style="background: rgba(255,255,255,0.3); border: none; color: white;" data-translate="settings.server.copy_button">📋 Copiar</button>
                             </div>
                         </div>
                         <div>
-                            <label style="font-weight: bold; font-size: 12px; opacity: 0.9;">PUERTO:</label>
+                            <label style="font-weight: bold; font-size: 12px; opacity: 0.9;" data-translate="settings.server.port_label">PUERTO:</label>
                             <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center;">
-                                <span id="server-port" style="font-family: monospace; font-size: 20px; font-weight: bold;">Cargando...</span>
-                                <button onclick="copyToClipboard('server-port')" class="btn btn-sm" style="background: rgba(255,255,255,0.3); border: none; color: white;">📋 Copiar</button>
+                                <span id="server-port" style="font-family: monospace; font-size: 20px; font-weight: bold;" data-translate="settings.server.loading">Cargando...</span>
+                                <button onclick="copyToClipboard('server-port')" class="btn btn-sm" style="background: rgba(255,255,255,0.3); border: none; color: white;" data-translate="settings.server.copy_button">📋 Copiar</button>
                             </div>
                         </div>
                     </div>
                     <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center;">
-                        <strong>URL COMPLETA:</strong>
+                        <strong data-translate="settings.server.full_url_label">URL COMPLETA:</strong>
                         <span id="server-full-url" style="font-family: monospace; font-size: 16px; margin-left: 10px;">http://...</span>
-                        <button onclick="copyToClipboard('server-full-url')" class="btn btn-sm" style="background: rgba(255,255,255,0.3); border: none; color: white; margin-left: 10px;">📋 Copiar URL</button>
+                        <button onclick="copyToClipboard('server-full-url')" class="btn btn-sm" style="background: rgba(255,255,255,0.3); border: none; color: white; margin-left: 10px;" data-translate="settings.server.copy_url_button">📋 Copiar URL</button>
                     </div>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; font-size: 13px;">
-                    <strong>📱 Para configurar la APK:</strong><br>
-                    1. Abrir APK → Configuración<br>
-                    2. Ingresar IP: <span id="apk-ip-hint" style="font-family: monospace; font-weight: bold;">...</span><br>
-                    3. Ingresar Puerto: <span id="apk-port-hint" style="font-family: monospace; font-weight: bold;">...</span><br>
-                    4. Guardar y usar
+                    <strong data-translate="settings.server.apk_config_title">📱 Para configurar la APK:</strong><br>
+                    <span data-translate="settings.server.apk_step1">1. Abrir APK → Configuración</span><br>
+                    <span data-translate="settings.server.apk_step2">2. Ingresar IP:</span> <span id="apk-ip-hint" style="font-family: monospace; font-weight: bold;">...</span><br>
+                    <span data-translate="settings.server.apk_step3">3. Ingresar Puerto:</span> <span id="apk-port-hint" style="font-family: monospace; font-weight: bold;">...</span><br>
+                    <span data-translate="settings.server.apk_step4">4. Guardar y usar</span>
                 </div>
             </div>
 
             <div class="card">
-                <h2>🏢 Datos de la Empresa</h2>
+                <h2 data-translate="settings.company.title">🏢 Datos de la Empresa</h2>
                 <div class="form-group">
-                    <label>Nombre de la Empresa:</label>
-                    <input type="text" id="companyName" placeholder="Nombre de la empresa">
+                    <label data-translate="settings.company.name_label">Nombre de la Empresa:</label>
+                    <input type="text" id="companyName" data-translate-placeholder="settings.company.name_placeholder" placeholder="Nombre de la empresa">
                 </div>
                 <div class="form-group">
-                    <label>Zona Horaria:</label>
+                    <label data-translate="settings.company.timezone_label">Zona Horaria:</label>
                     <select id="timezone">
-                        <option value="America/Argentina/Buenos_Aires">Argentina/Buenos Aires</option>
-                        <option value="America/Mexico_City">México/Ciudad de México</option>
-                        <option value="America/Bogota">Colombia/Bogotá</option>
-                        <option value="America/Lima">Perú/Lima</option>
-                        <option value="America/Santiago">Chile/Santiago</option>
+                        <option value="America/Argentina/Buenos_Aires" data-translate="settings.company.timezone_argentina">Argentina/Buenos Aires</option>
+                        <option value="America/Mexico_City" data-translate="settings.company.timezone_mexico">México/Ciudad de México</option>
+                        <option value="America/Bogota" data-translate="settings.company.timezone_colombia">Colombia/Bogotá</option>
+                        <option value="America/Lima" data-translate="settings.company.timezone_peru">Perú/Lima</option>
+                        <option value="America/Santiago" data-translate="settings.company.timezone_chile">Chile/Santiago</option>
                     </select>
                 </div>
-                <button class="btn btn-success" onclick="saveCompanyConfig()">💾 Guardar Configuración</button>
+                <button class="btn btn-success" onclick="saveCompanyConfig()" data-translate="settings.company.save_button">💾 Guardar Configuración</button>
             </div>
-            
+
             <div class="card">
-                <h2>🔐 Configuración Biométrica</h2>
+                <h2 data-translate="settings.biometric.title">🔐 Configuración Biométrica</h2>
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" id="fingerprintEnabled" checked> Reconocimiento de Huella
+                        <input type="checkbox" id="fingerprintEnabled" checked> <span data-translate="settings.biometric.fingerprint_label">Reconocimiento de Huella</span>
                     </label>
                 </div>
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" id="faceRecognitionEnabled" checked> Reconocimiento Facial
+                        <input type="checkbox" id="faceRecognitionEnabled" checked> <span data-translate="settings.biometric.face_recognition_label">Reconocimiento Facial</span>
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Máximo de Huellas por Usuario:</label>
+                    <label data-translate="settings.biometric.max_fingerprints_label">Máximo de Huellas por Usuario:</label>
                     <input type="number" id="maxFingerprints" value="5" min="1" max="10">
                 </div>
-                <button class="btn btn-success" onclick="saveBiometricConfig()">💾 Guardar Biométrica</button>
+                <button class="btn btn-success" onclick="saveBiometricConfig()" data-translate="settings.biometric.save_button">💾 Guardar Biométrica</button>
             </div>
             
             <div class="card">
-                <h2>📧 Configuración de Comunicaciones</h2>
-                
-                <h3>📧 Email</h3>
+                <h2 data-translate="settings.communications.title">📧 Configuración de Comunicaciones</h2>
+
+                <h3 data-translate="settings.communications.email_section">📧 Email</h3>
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" id="emailNotifications" checked> Notificaciones por Email
+                        <input type="checkbox" id="emailNotifications" checked> <span data-translate="settings.communications.email_notifications_label">Notificaciones por Email</span>
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Servidor SMTP:</label>
-                    <input type="text" id="smtpServer" placeholder="smtp.gmail.com">
+                    <label data-translate="settings.communications.smtp_server_label">Servidor SMTP:</label>
+                    <input type="text" id="smtpServer" data-translate-placeholder="settings.communications.smtp_server_placeholder" placeholder="smtp.gmail.com">
                 </div>
                 <div class="form-group">
-                    <label>Email del Sistema:</label>
-                    <input type="email" id="systemEmail" placeholder="sistema@aponnt.com">
+                    <label data-translate="settings.communications.system_email_label">Email del Sistema:</label>
+                    <input type="email" id="systemEmail" data-translate-placeholder="settings.communications.system_email_placeholder" placeholder="sistema@aponnt.com">
                 </div>
-                <button class="btn btn-success" onclick="saveNotificationConfig()">💾 Guardar Notificaciones</button>
-                <button class="btn btn-warning" onclick="testEmail()">📧 Probar Email</button>
-                
-                <h3>📱 WhatsApp Business</h3>
+                <button class="btn btn-success" onclick="saveNotificationConfig()" data-translate="settings.communications.save_notifications_button">💾 Guardar Notificaciones</button>
+                <button class="btn btn-warning" onclick="testEmail()" data-translate="settings.communications.test_email_button">📧 Probar Email</button>
+
+                <h3 data-translate="settings.communications.whatsapp_section">📱 WhatsApp Business</h3>
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" id="whatsappEnabled" checked> WhatsApp Activado
+                        <input type="checkbox" id="whatsappEnabled" checked> <span data-translate="settings.communications.whatsapp_enabled_label">WhatsApp Activado</span>
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Token de WhatsApp Business:</label>
-                    <input type="password" id="whatsappToken" placeholder="Token de la API">
+                    <label data-translate="settings.communications.whatsapp_token_label">Token de WhatsApp Business:</label>
+                    <input type="password" id="whatsappToken" data-translate-placeholder="settings.communications.whatsapp_token_placeholder" placeholder="Token de la API">
                 </div>
                 <div class="form-group">
-                    <label>Número de WhatsApp:</label>
-                    <input type="tel" id="whatsappNumber" placeholder="+54 2657 673741">
+                    <label data-translate="settings.communications.whatsapp_number_label">Número de WhatsApp:</label>
+                    <input type="tel" id="whatsappNumber" data-translate-placeholder="settings.communications.whatsapp_number_placeholder" placeholder="+54 2657 673741">
                 </div>
-                <button class="btn btn-success" onclick="saveWhatsAppConfig()">💾 Guardar WhatsApp</button>
-                <button class="btn btn-warning" onclick="testWhatsApp()">📱 Probar WhatsApp</button>
+                <button class="btn btn-success" onclick="saveWhatsAppConfig()" data-translate="settings.communications.save_whatsapp_button">💾 Guardar WhatsApp</button>
+                <button class="btn btn-warning" onclick="testWhatsApp()" data-translate="settings.communications.test_whatsapp_button">📱 Probar WhatsApp</button>
             </div>
             
             <div class="card">
-                <h2>🏥 Configuración Médica General</h2>
+                <h2 data-translate="settings.medical.title">🏥 Configuración Médica General</h2>
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" id="medicalModuleEnabled" checked> Módulo Médico Activado
+                        <input type="checkbox" id="medicalModuleEnabled" checked> <span data-translate="settings.medical.module_enabled_label">Módulo Médico Activado</span>
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Días máximos para certificados:</label>
+                    <label data-translate="settings.medical.max_certificate_days_label">Días máximos para certificados:</label>
                     <input type="number" id="maxCertificateDays" value="30" min="1" max="365">
                 </div>
                 <div class="form-group">
-                    <label>Requiere auditoría médica:</label>
+                    <label data-translate="settings.medical.requires_audit_label">Requiere auditoría médica:</label>
                     <select id="requiresAudit">
-                        <option value="always">Siempre</option>
-                        <option value="over_days">Solo más de X días</option>
-                        <option value="never">Nunca</option>
+                        <option value="always" data-translate="settings.medical.requires_audit_always">Siempre</option>
+                        <option value="over_days" data-translate="settings.medical.requires_audit_over_days">Solo más de X días</option>
+                        <option value="never" data-translate="settings.medical.requires_audit_never">Nunca</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Días límite para auditoría:</label>
+                    <label data-translate="settings.medical.audit_days_limit_label">Días límite para auditoría:</label>
                     <input type="number" id="auditDaysLimit" value="7" min="1" max="30">
                 </div>
-                <button class="btn btn-success" onclick="saveMedicalGeneralConfig()">💾 Guardar Configuración Médica</button>
+                <button class="btn btn-success" onclick="saveMedicalGeneralConfig()" data-translate="settings.medical.save_button">💾 Guardar Configuración Médica</button>
             </div>
 
             <div class="card">
-                <h2>📋 Cuestionarios Médicos</h2>
-                <button class="btn btn-primary" onclick="showCreateQuestionnaireDialog()">➕ Crear Cuestionario</button>
+                <h2 data-translate="settings.questionnaires.title">📋 Cuestionarios Médicos</h2>
+                <button class="btn btn-primary" onclick="showCreateQuestionnaireDialog()" data-translate="settings.questionnaires.create_button">➕ Crear Cuestionario</button>
                 <div id="questionnaires-list" class="data-list" style="margin-top: 20px;">
                     <div class="questionnaire-item">
-                        <strong>Cuestionario COVID-19</strong>
-                        <span class="status-badge success">Activo</span>
-                        <button class="btn btn-sm btn-primary" onclick="editQuestionnaire(1)">✏️ Editar</button>
+                        <strong data-translate="settings.questionnaires.covid_title">Cuestionario COVID-19</strong>
+                        <span class="status-badge success" data-translate="settings.questionnaires.status_active">Activo</span>
+                        <button class="btn btn-sm btn-primary" onclick="editQuestionnaire(1)" data-translate="settings.questionnaires.edit_button">✏️ Editar</button>
                     </div>
                     <div class="questionnaire-item">
-                        <strong>Evaluación de Síntomas Generales</strong>
-                        <span class="status-badge success">Activo</span>
-                        <button class="btn btn-sm btn-primary" onclick="editQuestionnaire(2)">✏️ Editar</button>
+                        <strong data-translate="settings.questionnaires.symptoms_title">Evaluación de Síntomas Generales</strong>
+                        <span class="status-badge success" data-translate="settings.questionnaires.status_active">Activo</span>
+                        <button class="btn btn-sm btn-primary" onclick="editQuestionnaire(2)" data-translate="settings.questionnaires.edit_button">✏️ Editar</button>
                     </div>
                 </div>
             </div>
 
             <div class="card">
-                <h2>🚨 Configuración Multiple ART</h2>
+                <h2 data-translate="settings.art.title">🚨 Configuración Multiple ART</h2>
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" id="artNotificationsEnabled" checked> Notificaciones ART Activadas
+                        <input type="checkbox" id="artNotificationsEnabled" checked> <span data-translate="settings.art.notifications_enabled_label">Notificaciones ART Activadas</span>
                     </label>
                 </div>
-                
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
-                    <h4 style="color: #2c5aa0;">Proveedores ART Configurados</h4>
-                    <button class="btn btn-primary" onclick="addNewART()">➕ Agregar ART</button>
+                    <h4 style="color: #2c5aa0;" data-translate="settings.art.providers_title">Proveedores ART Configurados</h4>
+                    <button class="btn btn-primary" onclick="addNewART()" data-translate="settings.art.add_button">➕ Agregar ART</button>
                 </div>
-                
+
                 <div id="art-providers-list" style="margin: 15px 0;">
                     <div class="alert alert-info">
-                        <i>No hay proveedores ART configurados. Haga clic en "Agregar ART" para comenzar.</i>
+                        <i data-translate="settings.art.no_providers">No hay proveedores ART configurados. Haga clic en "Agregar ART" para comenzar.</i>
                     </div>
                 </div>
-                
+
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
                     <div class="form-group">
-                        <label>Canal global de notificación:</label>
+                        <label data-translate="settings.art.global_channel_label">Canal global de notificación:</label>
                         <select id="globalArtChannel">
-                            <option value="email">Email</option>
-                            <option value="sms">SMS</option>
-                            <option value="whatsapp">WhatsApp</option>
-                            <option value="all">Todos los canales</option>
+                            <option value="email" data-translate="settings.art.channel_email">Email</option>
+                            <option value="sms" data-translate="settings.art.channel_sms">SMS</option>
+                            <option value="whatsapp" data-translate="settings.art.channel_whatsapp">WhatsApp</option>
+                            <option value="all" data-translate="settings.art.channel_all">Todos los canales</option>
                         </select>
                     </div>
-                    <button class="btn btn-success" onclick="saveMultipleARTConfig()">💾 Guardar Configuración</button>
-                    <button class="btn btn-warning" onclick="testAllARTNotifications()">🚨 Probar Todas las ARTs</button>
+                    <button class="btn btn-success" onclick="saveMultipleARTConfig()" data-translate="settings.art.save_button">💾 Guardar Configuración</button>
+                    <button class="btn btn-warning" onclick="testAllARTNotifications()" data-translate="settings.art.test_all_button">🚨 Probar Todas las ARTs</button>
                 </div>
             </div>
             
             <div class="card">
-                <h2>🏖️ Régimen de Licencias y Vacaciones</h2>
-                
+                <h2 data-translate="settings.licenses.title">🏖️ Régimen de Licencias y Vacaciones</h2>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
-                    <h4 style="color: #2c5aa0;">Configuración de Vacaciones</h4>
-                    <button class="btn btn-info" onclick="showVacationCalculator()">🧮 Calculadora</button>
+                    <h4 style="color: #2c5aa0;" data-translate="settings.licenses.vacation_config_title">Configuración de Vacaciones</h4>
+                    <button class="btn btn-info" onclick="showVacationCalculator()" data-translate="settings.licenses.calculator_button">🧮 Calculadora</button>
                 </div>
-                
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
-                        <h6>📅 Días de Vacaciones por Antigüedad</h6>
+                        <h6 data-translate="settings.licenses.vacation_scale_title">📅 Días de Vacaciones por Antigüedad</h6>
                         <div id="vacation-scale">
                             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 5px; margin: 5px 0; font-weight: bold;">
-                                <span>Antigüedad</span>
-                                <span>Días</span>
-                                <span>Acción</span>
+                                <span data-translate="settings.licenses.seniority_label">Antigüedad</span>
+                                <span data-translate="settings.licenses.days_label">Días</span>
+                                <span data-translate="settings.licenses.action_label">Acción</span>
                             </div>
                             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 5px; margin: 5px 0;">
-                                <span>6 meses - 5 años</span>
+                                <span data-translate="settings.licenses.seniority_0_5">6 meses - 5 años</span>
                                 <input type="number" value="14" min="1" style="width: 50px;">
-                                <button class="btn btn-sm btn-success" onclick="updateVacationScale(1)">✓</button>
+                                <button class="btn btn-sm btn-success" onclick="updateVacationScale(1)" data-translate="settings.licenses.update_button">✓</button>
                             </div>
                             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 5px; margin: 5px 0;">
-                                <span>5 - 10 años</span>
+                                <span data-translate="settings.licenses.seniority_5_10">5 - 10 años</span>
                                 <input type="number" value="21" min="1" style="width: 50px;">
-                                <button class="btn btn-sm btn-success" onclick="updateVacationScale(2)">✓</button>
+                                <button class="btn btn-sm btn-success" onclick="updateVacationScale(2)" data-translate="settings.licenses.update_button">✓</button>
                             </div>
                             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 5px; margin: 5px 0;">
-                                <span>10 - 20 años</span>
+                                <span data-translate="settings.licenses.seniority_10_20">10 - 20 años</span>
                                 <input type="number" value="28" min="1" style="width: 50px;">
-                                <button class="btn btn-sm btn-success" onclick="updateVacationScale(3)">✓</button>
+                                <button class="btn btn-sm btn-success" onclick="updateVacationScale(3)" data-translate="settings.licenses.update_button">✓</button>
                             </div>
                             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 5px; margin: 5px 0;">
-                                <span>Más de 20 años</span>
+                                <span data-translate="settings.licenses.seniority_20_plus">Más de 20 años</span>
                                 <input type="number" value="35" min="1" style="width: 50px;">
-                                <button class="btn btn-sm btn-success" onclick="updateVacationScale(4)">✓</button>
+                                <button class="btn btn-sm btn-success" onclick="updateVacationScale(4)" data-translate="settings.licenses.update_button">✓</button>
                             </div>
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="addCustomVacationScale()">➕ Agregar Escala</button>
+                        <button class="btn btn-primary btn-sm" onclick="addCustomVacationScale()" data-translate="settings.licenses.add_scale_button">➕ Agregar Escala</button>
                     </div>
                     
                     <div style="background: #fff3e0; padding: 15px; border-radius: 8px;">
-                        <h6>🚨 Licencias Extraordinarias</h6>
+                        <h6 data-translate="settings.licenses.extraordinary_title">🚨 Licencias Extraordinarias</h6>
                         <div id="extraordinary-licenses">
                             <div style="margin: 10px 0;">
-                                <label>Fallecimiento familiar:</label>
+                                <label data-translate="settings.licenses.family_death_label">Fallecimiento familiar:</label>
                                 <div style="display: flex; gap: 5px; align-items: center;">
                                     <input type="number" value="3" min="1" style="width: 50px;">
-                                    <span>días</span>
+                                    <span data-translate="settings.licenses.days_unit">días</span>
                                     <select style="width: 80px;">
-                                        <option value="habil">Hábiles</option>
-                                        <option value="corrido">Corridos</option>
+                                        <option value="habil" data-translate="settings.licenses.day_type_habil">Hábiles</option>
+                                        <option value="corrido" data-translate="settings.licenses.day_type_corrido">Corridos</option>
                                     </select>
                                 </div>
                             </div>
                             <div style="margin: 10px 0;">
-                                <label>Matrimonio:</label>
+                                <label data-translate="settings.licenses.marriage_label">Matrimonio:</label>
                                 <div style="display: flex; gap: 5px; align-items: center;">
                                     <input type="number" value="10" min="1" style="width: 50px;">
-                                    <span>días</span>
+                                    <span data-translate="settings.licenses.days_unit">días</span>
                                     <select style="width: 80px;">
-                                        <option value="corrido" selected>Corridos</option>
-                                        <option value="habil">Hábiles</option>
+                                        <option value="corrido" selected data-translate="settings.licenses.day_type_corrido">Corridos</option>
+                                        <option value="habil" data-translate="settings.licenses.day_type_habil">Hábiles</option>
                                     </select>
                                 </div>
                             </div>
                             <div style="margin: 10px 0;">
-                                <label>Paternidad:</label>
+                                <label data-translate="settings.licenses.paternity_label">Paternidad:</label>
                                 <div style="display: flex; gap: 5px; align-items: center;">
                                     <input type="number" value="15" min="1" style="width: 50px;">
-                                    <span>días</span>
+                                    <span data-translate="settings.licenses.days_unit">días</span>
                                     <select style="width: 80px;">
-                                        <option value="corrido" selected>Corridos</option>
-                                        <option value="habil">Hábiles</option>
+                                        <option value="corrido" selected data-translate="settings.licenses.day_type_corrido">Corridos</option>
+                                        <option value="habil" data-translate="settings.licenses.day_type_habil">Hábiles</option>
                                     </select>
                                 </div>
                             </div>
                             <div style="margin: 10px 0;">
-                                <label>Examen médico:</label>
+                                <label data-translate="settings.licenses.medical_exam_label">Examen médico:</label>
                                 <div style="display: flex; gap: 5px; align-items: center;">
                                     <input type="number" value="1" min="1" style="width: 50px;">
-                                    <span>día</span>
+                                    <span data-translate="settings.licenses.day_unit">día</span>
                                     <select style="width: 80px;">
-                                        <option value="habil" selected>Hábil</option>
-                                        <option value="corrido">Corrido</option>
+                                        <option value="habil" selected data-translate="settings.licenses.day_type_habil">Hábil</option>
+                                        <option value="corrido" data-translate="settings.licenses.day_type_corrido">Corrido</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
-                        <button class="btn btn-success btn-sm" onclick="addCustomExtraordinaryLicense()">➕ Agregar Tipo</button>
+                        <button class="btn btn-success btn-sm" onclick="addCustomExtraordinaryLicense()" data-translate="settings.licenses.add_type_button">➕ Agregar Tipo</button>
                     </div>
                 </div>
                 
                 <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                    <h6>⚖️ Configuración de Cálculo</h6>
+                    <h6 data-translate="settings.licenses.calculation_title">⚖️ Configuración de Cálculo</h6>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
                             <label>
-                                <input type="checkbox" id="vacationInterruptible" checked> 
-                                Las vacaciones pueden interrumpirse por enfermedad
+                                <input type="checkbox" id="vacationInterruptible" checked>
+                                <span data-translate="settings.licenses.interruptible_label">Las vacaciones pueden interrumpirse por enfermedad</span>
                             </label>
                             <div style="margin: 10px 0;">
-                                <label>Período mínimo de vacaciones continuas:</label>
-                                <input type="number" id="minContinuousVacation" value="7" min="1"> días
+                                <label data-translate="settings.licenses.min_continuous_label">Período mínimo de vacaciones continuas:</label>
+                                <input type="number" id="minContinuousVacation" value="7" min="1"> <span data-translate="settings.licenses.days_unit">días</span>
                             </div>
                             <div style="margin: 10px 0;">
-                                <label>Período máximo de fraccionamiento:</label>
-                                <input type="number" id="maxFractions" value="3" min="1"> partes
+                                <label data-translate="settings.licenses.max_fractions_label">Período máximo de fraccionamiento:</label>
+                                <input type="number" id="maxFractions" value="3" min="1"> <span data-translate="settings.licenses.fractions_unit">partes</span>
                             </div>
                         </div>
                         <div>
                             <label>
                                 <input type="checkbox" id="autoScheduling" checked>
-                                Programación automática por compatibilidad de tareas
+                                <span data-translate="settings.licenses.auto_scheduling_label">Programación automática por compatibilidad de tareas</span>
                             </label>
                             <div style="margin: 10px 0;">
-                                <label>Antelación mínima para solicitar:</label>
-                                <input type="number" id="minAdvanceNotice" value="15" min="1"> días
+                                <label data-translate="settings.licenses.min_advance_label">Antelación mínima para solicitar:</label>
+                                <input type="number" id="minAdvanceNotice" value="15" min="1"> <span data-translate="settings.licenses.days_unit">días</span>
                             </div>
                             <div style="margin: 10px 0;">
-                                <label>Máximo de empleados simultáneos en vacaciones:</label>
-                                <input type="number" id="maxSimultaneousVacations" value="30" min="1">% del equipo
+                                <label data-translate="settings.licenses.max_simultaneous_label">Máximo de empleados simultáneos en vacaciones:</label>
+                                <input type="number" id="maxSimultaneousVacations" value="30" min="1"><span data-translate="settings.licenses.team_percent">% del equipo</span>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div style="text-align: center; margin: 20px 0;">
-                    <button class="btn btn-success" onclick="saveLicenseConfig()">💾 Guardar Configuración de Licencias</button>
-                    <button class="btn btn-primary" onclick="generateVacationSchedule()">📋 Generar Cronograma Automático</button>
-                    <button class="btn btn-info" onclick="showCompatibilityMatrix()">🔄 Ver Matriz de Compatibilidad</button>
+                    <button class="btn btn-success" onclick="saveLicenseConfig()" data-translate="settings.licenses.save_config_button">💾 Guardar Configuración de Licencias</button>
+                    <button class="btn btn-primary" onclick="generateVacationSchedule()" data-translate="settings.licenses.generate_schedule_button">📋 Generar Cronograma Automático</button>
+                    <button class="btn btn-info" onclick="showCompatibilityMatrix()" data-translate="settings.licenses.compatibility_matrix_button">🔄 Ver Matriz de Compatibilidad</button>
                 </div>
             </div>
-            
+
             <div class="card">
-                <h2>📱 Configuración de Código QR</h2>
+                <h2 data-translate="settings.barcode.title">📱 Configuración de Código QR</h2>
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" id="barcodeEnabled" checked> Permitir marcado con código de barras
+                        <input type="checkbox" id="barcodeEnabled" checked> <span data-translate="settings.barcode.enabled_label">Permitir marcado con código de barras</span>
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Formato del código:</label>
+                    <label data-translate="settings.barcode.format_label">Formato del código:</label>
                     <select id="barcodeFormat">
-                        <option value="employee_id">ID del Empleado</option>
-                        <option value="custom">Código personalizado</option>
-                        <option value="qr_code">QR Code con datos JSON</option>
+                        <option value="employee_id" data-translate="settings.barcode.format_employee_id">ID del Empleado</option>
+                        <option value="custom" data-translate="settings.barcode.format_custom">Código personalizado</option>
+                        <option value="qr_code" data-translate="settings.barcode.format_qr_json">QR Code con datos JSON</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Prefijo del código (opcional):</label>
-                    <input type="text" id="barcodePrefix" placeholder="EMP-">
+                    <label data-translate="settings.barcode.prefix_label">Prefijo del código (opcional):</label>
+                    <input type="text" id="barcodePrefix" data-translate-placeholder="settings.barcode.prefix_placeholder" placeholder="EMP-">
                 </div>
-                <button class="btn btn-success" onclick="saveBarcodeConfig()">💾 Guardar Configuración</button>
-                <button class="btn btn-primary" onclick="generateEmployeeBarcodes()">📊 Generar Códigos</button>
-                <button class="btn btn-warning" onclick="testBarcodeScanner()">📱 Probar Escáner</button>
-                
+                <button class="btn btn-success" onclick="saveBarcodeConfig()" data-translate="settings.barcode.save_button">💾 Guardar Configuración</button>
+                <button class="btn btn-primary" onclick="generateEmployeeBarcodes()" data-translate="settings.barcode.generate_button">📊 Generar Códigos</button>
+                <button class="btn btn-warning" onclick="testBarcodeScanner()" data-translate="settings.barcode.test_button">📱 Probar Escáner</button>
+
                 <div id="barcode-preview" style="margin-top: 20px;"></div>
             </div>
-            
+
             <div class="card">
-                <h2>⚠️ Sistema de Alertas Fuera de Turno</h2>
+                <h2 data-translate="settings.alerts.title">⚠️ Sistema de Alertas Fuera de Turno</h2>
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" id="outOfShiftAlerts" checked> Activar alertas para marcado fuera de turno
+                        <input type="checkbox" id="outOfShiftAlerts" checked> <span data-translate="settings.alerts.enabled_label">Activar alertas para marcado fuera de turno</span>
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Administradores a notificar:</label>
+                    <label data-translate="settings.alerts.admins_label">Administradores a notificar:</label>
                     <div id="admin-notifications" style="margin-top: 10px;">
-                        <label><input type="checkbox" id="notify-admin1" checked> Admin Principal - SMS: +54 2657 673741</label><br>
-                        <label><input type="checkbox" id="notify-admin2"> Admin Secundario - Email: admin2@empresa.com</label><br>
-                        <label><input type="checkbox" id="notify-whatsapp" checked> WhatsApp: +54 2657 673741</label>
+                        <label><input type="checkbox" id="notify-admin1" checked> <span data-translate="settings.alerts.admin_primary_label">Admin Principal - SMS:</span> +54 2657 673741</label><br>
+                        <label><input type="checkbox" id="notify-admin2"> <span data-translate="settings.alerts.admin_secondary_label">Admin Secundario - Email:</span> admin2@empresa.com</label><br>
+                        <label><input type="checkbox" id="notify-whatsapp" checked> <span data-translate="settings.alerts.whatsapp_label">WhatsApp:</span> +54 2657 673741</label>
                     </div>
                 </div>
-                <button class="btn btn-success" onclick="saveAlertConfig()">💾 Guardar Alertas</button>
-                <button class="btn btn-warning" onclick="testOutOfShiftAlert()">⚠️ Probar Alerta</button>
+                <button class="btn btn-success" onclick="saveAlertConfig()" data-translate="settings.alerts.save_button">💾 Guardar Alertas</button>
+                <button class="btn btn-warning" onclick="testOutOfShiftAlert()" data-translate="settings.alerts.test_button">⚠️ Probar Alerta</button>
             </div>
         </div>
     `;
@@ -385,16 +385,16 @@ function showSettingsContent() {
 }
 
 // Copiar al portapapeles
-function copyToClipboard(elementId) {
+async function copyToClipboard(elementId) {
     const element = document.getElementById(elementId);
     if (!element) return;
 
     const text = element.textContent;
-    navigator.clipboard.writeText(text).then(() => {
-        showSettingsMessage(`✅ Copiado: ${text}`, 'success');
-    }).catch(err => {
+    navigator.clipboard.writeText(text).then(async () => {
+        showSettingsMessage(await window.t('settings.messages.copied', { text }), 'success');
+    }).catch(async err => {
         console.error('Error copiando:', err);
-        showSettingsMessage('❌ Error copiando al portapapeles', 'error');
+        showSettingsMessage(await window.t('settings.messages.copy_error'), 'error');
     });
 }
 
@@ -432,7 +432,7 @@ async function loadServerInfo() {
 }
 
 // Load current settings from API or localStorage
-function loadCurrentSettings() {
+async function loadCurrentSettings() {
     console.log('⚙️ [SETTINGS] Cargando configuración actual...');
 
     // Set default values (would normally come from API)
@@ -452,32 +452,32 @@ function loadCurrentSettings() {
         }
     }
 
-    showSettingsMessage('⚙️ Configuración actual cargada', 'success');
+    showSettingsMessage(await window.t('settings.messages.config_loaded'), 'success');
 }
 
 // Save company configuration
 async function saveCompanyConfig() {
     const companyName = document.getElementById('companyName').value;
     const timezone = document.getElementById('timezone').value;
-    
+
     if (!companyName) {
-        showSettingsMessage('⚠️ Por favor ingrese el nombre de la empresa', 'warning');
+        showSettingsMessage(await window.t('settings.messages.enter_company_name'), 'warning');
         return;
     }
-    
+
     console.log('💾 [SETTINGS] Guardando configuración empresa:', { companyName, timezone });
-    
+
     try {
-        showSettingsMessage('🔄 Guardando configuración de empresa...', 'info');
-        
+        showSettingsMessage(await window.t('settings.messages.saving_company'), 'info');
+
         // Simulate API call
-        setTimeout(() => {
-            showSettingsMessage('✅ Configuración de empresa guardada exitosamente', 'success');
+        setTimeout(async () => {
+            showSettingsMessage(await window.t('settings.messages.company_saved'), 'success');
         }, 1000);
-        
+
     } catch (error) {
         console.error('❌ [SETTINGS] Error:', error);
-        showSettingsMessage('❌ Error guardando configuración: ' + error.message, 'error');
+        showSettingsMessage(await window.t('settings.messages.error_saving', { message: error.message }), 'error');
     }
 }
 
@@ -486,20 +486,20 @@ async function saveBiometricConfig() {
     const fingerprintEnabled = document.getElementById('fingerprintEnabled').checked;
     const faceEnabled = document.getElementById('faceRecognitionEnabled').checked;
     const maxFingerprints = document.getElementById('maxFingerprints').value;
-    
+
     console.log('🔐 [SETTINGS] Guardando config biométrica:', { fingerprintEnabled, faceEnabled, maxFingerprints });
-    
+
     try {
-        showSettingsMessage('🔄 Guardando configuración biométrica...', 'info');
-        
+        showSettingsMessage(await window.t('settings.messages.saving_biometric'), 'info');
+
         // Simulate API call
-        setTimeout(() => {
-            showSettingsMessage('✅ Configuración biométrica guardada exitosamente', 'success');
+        setTimeout(async () => {
+            showSettingsMessage(await window.t('settings.messages.biometric_saved'), 'success');
         }, 1000);
-        
+
     } catch (error) {
         console.error('❌ [SETTINGS] Error:', error);
-        showSettingsMessage('❌ Error guardando configuración biométrica: ' + error.message, 'error');
+        showSettingsMessage(await window.t('settings.messages.error_saving', { message: error.message }), 'error');
     }
 }
 
@@ -508,30 +508,30 @@ async function saveNotificationConfig() {
     const emailEnabled = document.getElementById('emailNotifications').checked;
     const smtpServer = document.getElementById('smtpServer').value;
     const systemEmail = document.getElementById('systemEmail').value;
-    
+
     console.log('📧 [SETTINGS] Guardando config notificaciones:', { emailEnabled, smtpServer, systemEmail });
-    
-    showSettingsMessage('🔄 Guardando configuración de notificaciones...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Configuración de notificaciones guardada', 'success');
+
+    showSettingsMessage(await window.t('settings.messages.saving_notifications'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.notifications_saved'), 'success');
     }, 1000);
 }
 
 // Test email
 async function testEmail() {
     const systemEmail = document.getElementById('systemEmail').value;
-    
+
     if (!systemEmail) {
-        showSettingsMessage('❌ Por favor ingresa un email del sistema', 'error');
+        showSettingsMessage(await window.t('settings.messages.enter_email'), 'error');
         return;
     }
-    
+
     console.log('📧 [SETTINGS] Probando email:', systemEmail);
-    showSettingsMessage('📧 Enviando email de prueba...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Email de prueba enviado exitosamente', 'success');
+    showSettingsMessage(await window.t('settings.messages.sending_test_email'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.test_email_sent'), 'success');
     }, 2000);
 }
 
@@ -540,30 +540,30 @@ async function saveWhatsAppConfig() {
     const whatsappEnabled = document.getElementById('whatsappEnabled').checked;
     const whatsappToken = document.getElementById('whatsappToken').value;
     const whatsappNumber = document.getElementById('whatsappNumber').value;
-    
+
     console.log('📱 [SETTINGS] Guardando config WhatsApp:', { whatsappEnabled, whatsappNumber });
-    
-    showSettingsMessage('🔄 Guardando configuración de WhatsApp...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Configuración de WhatsApp guardada', 'success');
+
+    showSettingsMessage(await window.t('settings.messages.saving_whatsapp'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.whatsapp_saved'), 'success');
     }, 1000);
 }
 
 // Test WhatsApp
 async function testWhatsApp() {
     const whatsappNumber = document.getElementById('whatsappNumber').value;
-    
+
     if (!whatsappNumber) {
-        showSettingsMessage('❌ Por favor ingresa un número de WhatsApp', 'error');
+        showSettingsMessage(await window.t('settings.messages.enter_whatsapp_number'), 'error');
         return;
     }
-    
+
     console.log('📱 [SETTINGS] Probando WhatsApp:', whatsappNumber);
-    showSettingsMessage('📱 Enviando mensaje de prueba por WhatsApp...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Mensaje de WhatsApp enviado exitosamente', 'success');
+    showSettingsMessage(await window.t('settings.messages.sending_test_whatsapp'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.test_whatsapp_sent'), 'success');
     }, 2000);
 }
 
@@ -573,51 +573,51 @@ async function saveMedicalGeneralConfig() {
     const maxCertDays = document.getElementById('maxCertificateDays').value;
     const requiresAudit = document.getElementById('requiresAudit').value;
     const auditDaysLimit = document.getElementById('auditDaysLimit').value;
-    
+
     console.log('🏥 [SETTINGS] Guardando config médica general:', { medicalEnabled, maxCertDays, requiresAudit });
-    
-    showSettingsMessage('🔄 Guardando configuración médica...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Configuración médica guardada exitosamente', 'success');
+
+    showSettingsMessage(await window.t('settings.messages.saving_medical'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.medical_saved'), 'success');
     }, 1000);
 }
 
 // Show create questionnaire dialog
-function showCreateQuestionnaireDialog() {
+async function showCreateQuestionnaireDialog() {
     console.log('📋 [SETTINGS] Creando nuevo cuestionario...');
-    showSettingsMessage('📋 Función crear cuestionario en desarrollo', 'info');
+    showSettingsMessage(await window.t('settings.messages.questionnaire_in_dev'), 'info');
 }
 
 // Edit questionnaire
-function editQuestionnaire(questionnaireId) {
+async function editQuestionnaire(questionnaireId) {
     console.log('✏️ [SETTINGS] Editando cuestionario:', questionnaireId);
-    showSettingsMessage('✏️ Función editar cuestionario en desarrollo', 'info');
+    showSettingsMessage(await window.t('settings.messages.edit_questionnaire_in_dev'), 'info');
 }
 
 // Save ART configuration
 async function saveARTConfig() {
     const artEnabled = document.getElementById('artNotificationsEnabled').checked;
-    const artChannel = document.getElementById('artNotificationChannel').value;
-    const artEmail = document.getElementById('artEmail').value;
-    const artPhone = document.getElementById('artPhone').value;
-    
+    const artChannel = document.getElementById('artNotificationChannel')?.value;
+    const artEmail = document.getElementById('artEmail')?.value;
+    const artPhone = document.getElementById('artPhone')?.value;
+
     console.log('🚨 [SETTINGS] Guardando config ART:', { artEnabled, artChannel, artEmail, artPhone });
-    
-    showSettingsMessage('🔄 Guardando configuración ART...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Configuración ART guardada exitosamente', 'success');
+
+    showSettingsMessage(await window.t('settings.messages.saving_art'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.art_saved'), 'success');
     }, 1000);
 }
 
 // Test ART notification
 async function testARTNotification() {
     console.log('🚨 [SETTINGS] Probando notificación ART...');
-    showSettingsMessage('🚨 Enviando notificación de prueba a ART...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Notificación ART enviada exitosamente', 'success');
+    showSettingsMessage(await window.t('settings.messages.sending_test_art'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.test_art_sent'), 'success');
     }, 2000);
 }
 
@@ -626,25 +626,25 @@ async function saveBarcodeConfig() {
     const barcodeEnabled = document.getElementById('barcodeEnabled').checked;
     const barcodeFormat = document.getElementById('barcodeFormat').value;
     const barcodePrefix = document.getElementById('barcodePrefix').value;
-    
+
     console.log('📱 [SETTINGS] Guardando config QR/Barcode:', { barcodeEnabled, barcodeFormat, barcodePrefix });
-    
-    showSettingsMessage('🔄 Guardando configuración de códigos...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Configuración de códigos guardada', 'success');
+
+    showSettingsMessage(await window.t('settings.messages.saving_barcode'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.barcode_saved'), 'success');
     }, 1000);
 }
 
 // Generate employee barcodes
-function generateEmployeeBarcodes() {
+async function generateEmployeeBarcodes() {
     console.log('📊 [SETTINGS] Generando códigos de empleados...');
-    showSettingsMessage('📊 Generando códigos para todos los empleados...', 'info');
-    
-    setTimeout(() => {
+    showSettingsMessage(await window.t('settings.messages.generating_barcodes'), 'info');
+
+    setTimeout(async () => {
         const preview = document.getElementById('barcode-preview');
         preview.innerHTML = `
-            <h4>📊 Códigos Generados</h4>
+            <h4 data-translate="settings.barcode.preview_title">📊 Códigos Generados</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                 <div class="barcode-item">
                     <strong>Juan Pérez (E001)</strong><br>
@@ -660,14 +660,14 @@ function generateEmployeeBarcodes() {
                 </div>
             </div>
         `;
-        showSettingsMessage('✅ Códigos generados exitosamente', 'success');
+        showSettingsMessage(await window.t('settings.messages.barcodes_generated'), 'success');
     }, 2000);
 }
 
 // Test barcode scanner
-function testBarcodeScanner() {
+async function testBarcodeScanner() {
     console.log('📱 [SETTINGS] Probando escáner...');
-    showSettingsMessage('📱 Función probar escáner en desarrollo', 'info');
+    showSettingsMessage(await window.t('settings.messages.test_scanner_in_dev'), 'info');
 }
 
 // Save alert configuration
@@ -676,23 +676,23 @@ async function saveAlertConfig() {
     const admin1 = document.getElementById('notify-admin1').checked;
     const admin2 = document.getElementById('notify-admin2').checked;
     const whatsappAlert = document.getElementById('notify-whatsapp').checked;
-    
+
     console.log('⚠️ [SETTINGS] Guardando config alertas:', { outOfShiftEnabled, admin1, admin2, whatsappAlert });
-    
-    showSettingsMessage('🔄 Guardando configuración de alertas...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Configuración de alertas guardada', 'success');
+
+    showSettingsMessage(await window.t('settings.messages.saving_alerts'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.alerts_saved'), 'success');
     }, 1000);
 }
 
 // Test out of shift alert
 async function testOutOfShiftAlert() {
     console.log('⚠️ [SETTINGS] Probando alerta fuera de turno...');
-    showSettingsMessage('⚠️ Simulando marcado fuera de turno...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Alerta de prueba enviada a administradores', 'success');
+    showSettingsMessage(await window.t('settings.messages.testing_alert'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.test_alert_sent'), 'success');
     }, 2000);
 }
 
@@ -736,84 +736,84 @@ function showSettingsMessage(message, type) {
 
 let artProviders = [];
 
-function addNewART() {
+async function addNewART() {
     if (document.getElementById('addARTModal')) {
         document.getElementById('addARTModal').remove();
     }
-    
+
     const modal = document.createElement('div');
     modal.id = 'addARTModal';
     modal.className = 'modal show';
     modal.innerHTML = `
         <div class="modal-dialog modal-lg">
             <form id="addARTForm" class="modal-content" style="background: #fff; padding: 25px; border-radius: 15px;">
-                <h5 style="color: #dc3545; margin-bottom: 20px;">🚨 Agregar Proveedor ART</h5>
-                
+                <h5 style="color: #dc3545; margin-bottom: 20px;" data-translate="settings.art.modal.title">🚨 Agregar Proveedor ART</h5>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
-                        <label>Nombre del Proveedor ART:</label>
-                        <input type="text" id="artProviderName" class="form-control" placeholder="Ej: Galeno ART" required>
+                        <label data-translate="settings.art.modal.name_label">Nombre del Proveedor ART:</label>
+                        <input type="text" id="artProviderName" class="form-control" data-translate-placeholder="settings.art.modal.name_placeholder" placeholder="Ej: Galeno ART" required>
                     </div>
                     <div>
-                        <label>Código/Número de Cliente:</label>
-                        <input type="text" id="artClientCode" class="form-control" placeholder="Cliente N°">
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
-                    <div>
-                        <label>Email Notificaciones:</label>
-                        <input type="email" id="artProviderEmail" class="form-control" placeholder="notificaciones@art.com" required>
-                    </div>
-                    <div>
-                        <label>Teléfono:</label>
-                        <input type="tel" id="artProviderPhone" class="form-control" placeholder="+54 11 1234-5678">
+                        <label data-translate="settings.art.modal.client_code_label">Código/Número de Cliente:</label>
+                        <input type="text" id="artClientCode" class="form-control" data-translate-placeholder="settings.art.modal.client_code_placeholder" placeholder="Cliente N°">
                     </div>
                 </div>
-                
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
                     <div>
-                        <label>Canal Preferido:</label>
+                        <label data-translate="settings.art.modal.email_label">Email Notificaciones:</label>
+                        <input type="email" id="artProviderEmail" class="form-control" data-translate-placeholder="settings.art.modal.email_placeholder" placeholder="notificaciones@art.com" required>
+                    </div>
+                    <div>
+                        <label data-translate="settings.art.modal.phone_label">Teléfono:</label>
+                        <input type="tel" id="artProviderPhone" class="form-control" data-translate-placeholder="settings.art.modal.phone_placeholder" placeholder="+54 11 1234-5678">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+                    <div>
+                        <label data-translate="settings.art.modal.preferred_channel_label">Canal Preferido:</label>
                         <select id="artPreferredChannel" class="form-control">
-                            <option value="email">Email</option>
-                            <option value="sms">SMS</option>
-                            <option value="whatsapp">WhatsApp</option>
+                            <option value="email" data-translate="settings.art.channel_email">Email</option>
+                            <option value="sms" data-translate="settings.art.channel_sms">SMS</option>
+                            <option value="whatsapp" data-translate="settings.art.channel_whatsapp">WhatsApp</option>
                             <option value="phone">Llamada</option>
                         </select>
                     </div>
                     <div>
-                        <label>Prioridad:</label>
+                        <label data-translate="settings.art.modal.priority_label">Prioridad:</label>
                         <select id="artPriority" class="form-control">
-                            <option value="primary">Principal</option>
-                            <option value="secondary">Secundaria</option>
-                            <option value="backup">Respaldo</option>
+                            <option value="primary" data-translate="settings.art.modal.priority_primary">Principal</option>
+                            <option value="secondary" data-translate="settings.art.modal.priority_secondary">Secundaria</option>
+                            <option value="backup" data-translate="settings.art.modal.priority_backup">Respaldo</option>
                         </select>
                     </div>
                 </div>
-                
+
                 <div style="margin: 15px 0;">
-                    <label>Contacto de Emergencia:</label>
-                    <input type="text" id="artEmergencyContact" class="form-control" placeholder="Dr. Juan Pérez">
+                    <label data-translate="settings.art.modal.emergency_contact_label">Contacto de Emergencia:</label>
+                    <input type="text" id="artEmergencyContact" class="form-control" data-translate-placeholder="settings.art.modal.emergency_contact_placeholder" placeholder="Dr. Juan Pérez">
                 </div>
-                
+
                 <div style="margin: 15px 0;">
-                    <label>Horarios de Atención:</label>
-                    <textarea id="artSchedule" class="form-control" rows="2" placeholder="Lun-Vie: 8-18hs, Emergencias 24hs"></textarea>
+                    <label data-translate="settings.art.modal.schedule_label">Horarios de Atención:</label>
+                    <textarea id="artSchedule" class="form-control" rows="2" data-translate-placeholder="settings.art.modal.schedule_placeholder" placeholder="Lun-Vie: 8-18hs, Emergencias 24hs"></textarea>
                 </div>
-                
+
                 <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" onclick="closeModal('addARTModal')" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Agregar ART</button>
+                    <button type="button" onclick="closeModal('addARTModal')" class="btn btn-secondary" data-translate="settings.art.modal.cancel_button">Cancelar</button>
+                    <button type="submit" class="btn btn-danger" data-translate="settings.art.modal.add_button">Agregar ART</button>
                 </div>
             </form>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
-    document.getElementById('addARTForm').onsubmit = (e) => {
+
+    document.getElementById('addARTForm').onsubmit = async (e) => {
         e.preventDefault();
-        
+
         const newART = {
             id: Date.now(),
             name: document.getElementById('artProviderName').value,
@@ -825,11 +825,11 @@ function addNewART() {
             contact: document.getElementById('artEmergencyContact').value,
             schedule: document.getElementById('artSchedule').value
         };
-        
+
         artProviders.push(newART);
         renderARTProviders();
         closeModal('addARTModal');
-        showSettingsMessage('✅ Proveedor ART agregado exitosamente', 'success');
+        showSettingsMessage(await window.t('settings.messages.art_provider_added'), 'success');
     };
 }
 
@@ -890,50 +890,50 @@ function renderARTProviders() {
     container.innerHTML = html;
 }
 
-function editART(artId) {
+async function editART(artId) {
     const art = artProviders.find(a => a.id === artId);
     if (!art) return;
-    
+
     // Similar modal to addNewART but pre-filled
-    showSettingsMessage('✏️ Función editar ART en desarrollo', 'info');
+    showSettingsMessage(await window.t('settings.messages.edit_art_in_dev'), 'info');
 }
 
-function removeART(artId) {
-    if (confirm('¿Está seguro de eliminar este proveedor ART?')) {
+async function removeART(artId) {
+    if (confirm(await window.t('settings.messages.confirm_delete_art'))) {
         artProviders = artProviders.filter(a => a.id !== artId);
         renderARTProviders();
-        showSettingsMessage('🗑️ Proveedor ART eliminado', 'warning');
+        showSettingsMessage(await window.t('settings.messages.art_provider_deleted'), 'warning');
     }
 }
 
-function saveMultipleARTConfig() {
+async function saveMultipleARTConfig() {
     const artEnabled = document.getElementById('artNotificationsEnabled').checked;
     const globalChannel = document.getElementById('globalArtChannel').value;
-    
+
     const config = {
         enabled: artEnabled,
         globalChannel,
         providers: artProviders
     };
-    
+
     console.log('🚨 [SETTINGS] Guardando configuración múltiple ART:', config);
-    showSettingsMessage('🔄 Guardando configuración múltiple ART...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage(`✅ Configuración ART guardada (${artProviders.length} proveedores)`, 'success');
+    showSettingsMessage(await window.t('settings.messages.saving_multiple_art'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.multiple_art_saved', { count: artProviders.length }), 'success');
     }, 1000);
 }
 
-function testAllARTNotifications() {
+async function testAllARTNotifications() {
     if (artProviders.length === 0) {
-        showSettingsMessage('⚠️ No hay proveedores ART configurados', 'warning');
+        showSettingsMessage(await window.t('settings.messages.no_art_providers'), 'warning');
         return;
     }
-    
-    showSettingsMessage(`🚨 Enviando notificación de prueba a ${artProviders.length} proveedores ART...`, 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Notificaciones enviadas a todas las ARTs', 'success');
+
+    showSettingsMessage(await window.t('settings.messages.testing_all_art', { count: artProviders.length }), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.all_art_tested'), 'success');
     }, 2000);
 }
 
@@ -953,126 +953,126 @@ let extraordinaryLicenses = [
     { type: 'Examen médico', days: 1, dayType: 'habil' }
 ];
 
-function updateVacationScale(scaleId) {
-    showSettingsMessage('✅ Escala de vacaciones actualizada', 'success');
+async function updateVacationScale(scaleId) {
+    showSettingsMessage(await window.t('settings.messages.vacation_scale_updated'), 'success');
 }
 
-function addCustomVacationScale() {
+async function addCustomVacationScale() {
     if (document.getElementById('customVacationModal')) {
         document.getElementById('customVacationModal').remove();
     }
-    
+
     const modal = document.createElement('div');
     modal.id = 'customVacationModal';
     modal.className = 'modal show';
     modal.innerHTML = `
         <div class="modal-dialog">
             <form id="customVacationForm" class="modal-content" style="background: #fff; padding: 25px; border-radius: 15px;">
-                <h5 style="color: #2c5aa0; margin-bottom: 20px;">📅 Agregar Escala de Vacaciones</h5>
-                
+                <h5 style="color: #2c5aa0; margin-bottom: 20px;" data-translate="settings.licenses.modal_vacation_scale.title">📅 Agregar Escala de Vacaciones</h5>
+
                 <div style="margin: 15px 0;">
-                    <label>Rango de Antigüedad:</label>
-                    <input type="text" id="vacationRange" class="form-control" placeholder="Ej: 25-30 años" required>
+                    <label data-translate="settings.licenses.modal_vacation_scale.range_label">Rango de Antigüedad:</label>
+                    <input type="text" id="vacationRange" class="form-control" data-translate-placeholder="settings.licenses.modal_vacation_scale.range_placeholder" placeholder="Ej: 25-30 años" required>
                 </div>
-                
+
                 <div style="margin: 15px 0;">
-                    <label>Días de Vacaciones:</label>
+                    <label data-translate="settings.licenses.modal_vacation_scale.days_label">Días de Vacaciones:</label>
                     <input type="number" id="vacationDays" class="form-control" min="1" max="60" required>
                 </div>
-                
+
                 <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" onclick="closeModal('customVacationModal')" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Agregar</button>
+                    <button type="button" onclick="closeModal('customVacationModal')" class="btn btn-secondary" data-translate="settings.licenses.modal_vacation_scale.cancel_button">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" data-translate="settings.licenses.modal_vacation_scale.add_button">Agregar</button>
                 </div>
             </form>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
-    document.getElementById('customVacationForm').onsubmit = (e) => {
+
+    document.getElementById('customVacationForm').onsubmit = async (e) => {
         e.preventDefault();
         const range = document.getElementById('vacationRange').value;
         const days = document.getElementById('vacationDays').value;
-        
+
         vacationScales.push({
             range,
             days: parseInt(days),
             id: Date.now()
         });
-        
+
         closeModal('customVacationModal');
-        showSettingsMessage('✅ Nueva escala de vacaciones agregada', 'success');
+        showSettingsMessage(await window.t('settings.messages.vacation_scale_added'), 'success');
     };
 }
 
-function addCustomExtraordinaryLicense() {
+async function addCustomExtraordinaryLicense() {
     if (document.getElementById('customLicenseModal')) {
         document.getElementById('customLicenseModal').remove();
     }
-    
+
     const modal = document.createElement('div');
     modal.id = 'customLicenseModal';
     modal.className = 'modal show';
     modal.innerHTML = `
         <div class="modal-dialog">
             <form id="customLicenseForm" class="modal-content" style="background: #fff; padding: 25px; border-radius: 15px;">
-                <h5 style="color: #d84315; margin-bottom: 20px;">🚨 Agregar Licencia Extraordinaria</h5>
-                
+                <h5 style="color: #d84315; margin-bottom: 20px;" data-translate="settings.licenses.modal_extraordinary.title">🚨 Agregar Licencia Extraordinaria</h5>
+
                 <div style="margin: 15px 0;">
-                    <label>Tipo de Licencia:</label>
-                    <input type="text" id="licenseType" class="form-control" placeholder="Ej: Mudanza" required>
+                    <label data-translate="settings.licenses.modal_extraordinary.type_label">Tipo de Licencia:</label>
+                    <input type="text" id="licenseType" class="form-control" data-translate-placeholder="settings.licenses.modal_extraordinary.type_placeholder" placeholder="Ej: Mudanza" required>
                 </div>
-                
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
                     <div>
-                        <label>Días:</label>
+                        <label data-translate="settings.licenses.modal_extraordinary.days_label">Días:</label>
                         <input type="number" id="licenseDays" class="form-control" min="1" required>
                     </div>
                     <div>
-                        <label>Tipo de Días:</label>
+                        <label data-translate="settings.licenses.modal_extraordinary.day_type_label">Tipo de Días:</label>
                         <select id="licenseDayType" class="form-control">
-                            <option value="habil">Hábiles</option>
-                            <option value="corrido">Corridos</option>
+                            <option value="habil" data-translate="settings.licenses.day_type_habil">Hábiles</option>
+                            <option value="corrido" data-translate="settings.licenses.day_type_corrido">Corridos</option>
                         </select>
                     </div>
                 </div>
-                
+
                 <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" onclick="closeModal('customLicenseModal')" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-warning">Agregar</button>
+                    <button type="button" onclick="closeModal('customLicenseModal')" class="btn btn-secondary" data-translate="settings.licenses.modal_extraordinary.cancel_button">Cancelar</button>
+                    <button type="submit" class="btn btn-warning" data-translate="settings.licenses.modal_extraordinary.add_button">Agregar</button>
                 </div>
             </form>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
-    document.getElementById('customLicenseForm').onsubmit = (e) => {
+
+    document.getElementById('customLicenseForm').onsubmit = async (e) => {
         e.preventDefault();
         const type = document.getElementById('licenseType').value;
         const days = document.getElementById('licenseDays').value;
         const dayType = document.getElementById('licenseDayType').value;
-        
+
         extraordinaryLicenses.push({
             type,
             days: parseInt(days),
             dayType
         });
-        
+
         closeModal('customLicenseModal');
-        showSettingsMessage('✅ Nueva licencia extraordinaria agregada', 'success');
+        showSettingsMessage(await window.t('settings.messages.extraordinary_license_added'), 'success');
     };
 }
 
-function saveLicenseConfig() {
+async function saveLicenseConfig() {
     const vacationInterruptible = document.getElementById('vacationInterruptible').checked;
     const minContinuous = document.getElementById('minContinuousVacation').value;
     const maxFractions = document.getElementById('maxFractions').value;
     const autoScheduling = document.getElementById('autoScheduling').checked;
     const minAdvance = document.getElementById('minAdvanceNotice').value;
     const maxSimultaneous = document.getElementById('maxSimultaneousVacations').value;
-    
+
     const config = {
         vacationInterruptible,
         minContinuous: parseInt(minContinuous),
@@ -1083,22 +1083,22 @@ function saveLicenseConfig() {
         vacationScales,
         extraordinaryLicenses
     };
-    
+
     console.log('🏖️ [SETTINGS] Guardando configuración de licencias:', config);
-    showSettingsMessage('🔄 Guardando configuración de licencias...', 'info');
-    
-    setTimeout(() => {
-        showSettingsMessage('✅ Configuración de licencias guardada exitosamente', 'success');
+    showSettingsMessage(await window.t('settings.messages.saving_licenses'), 'info');
+
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.licenses_saved'), 'success');
     }, 1000);
 }
 
-function generateVacationSchedule() {
-    showSettingsMessage('📋 Generando cronograma automático de vacaciones...', 'info');
-    
+async function generateVacationSchedule() {
+    showSettingsMessage(await window.t('settings.messages.generating_schedule'), 'info');
+
     // Simulación del algoritmo de programación automática
-    setTimeout(() => {
-        showSettingsMessage('✅ Cronograma automático generado basado en compatibilidad de tareas', 'success');
-        
+    setTimeout(async () => {
+        showSettingsMessage(await window.t('settings.messages.schedule_generated'), 'success');
+
         // Aquí se abriría un modal con el cronograma generado
         showVacationScheduleModal();
     }, 2000);
@@ -1167,40 +1167,40 @@ function showVacationScheduleModal() {
     document.body.appendChild(modal);
 }
 
-function acceptVacationSchedule() {
-    showSettingsMessage('✅ Cronograma de vacaciones aceptado y aplicado', 'success');
+async function acceptVacationSchedule() {
+    showSettingsMessage(await window.t('settings.messages.schedule_accepted'), 'success');
     closeModal('vacationScheduleModal');
 }
 
-function modifyVacationSchedule() {
-    showSettingsMessage('✏️ Cronograma habilitado para modificaciones de RH', 'info');
+async function modifyVacationSchedule() {
+    showSettingsMessage(await window.t('settings.messages.schedule_modifications_enabled'), 'info');
     closeModal('vacationScheduleModal');
 }
 
-function showCompatibilityMatrix() {
-    showSettingsMessage('🔄 Mostrando matriz de compatibilidad de tareas...', 'info');
-    
-    setTimeout(() => {
+async function showCompatibilityMatrix() {
+    showSettingsMessage(await window.t('settings.messages.showing_compatibility'), 'info');
+
+    setTimeout(async () => {
         if (document.getElementById('compatibilityModal')) {
             document.getElementById('compatibilityModal').remove();
         }
-        
+
         const modal = document.createElement('div');
         modal.id = 'compatibilityModal';
         modal.className = 'modal show';
         modal.innerHTML = `
             <div class="modal-dialog modal-lg">
                 <div class="modal-content" style="background: #fff; padding: 25px; border-radius: 15px;">
-                    <h5 style="color: #2c5aa0; margin-bottom: 20px;">🔄 Matriz de Compatibilidad de Tareas</h5>
-                    
+                    <h5 style="color: #2c5aa0; margin-bottom: 20px;" data-translate="settings.licenses.modal_compatibility.title">🔄 Matriz de Compatibilidad de Tareas</h5>
+
                     <div style="background: #f3e5f5; padding: 15px; border-radius: 8px;">
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="background: #6c757d; color: white;">
-                                    <th style="padding: 8px; border: 1px solid #ddd;">Empleado</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd;">Tareas Principales</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd;">Puede Cubrir</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd;">Compatibilidad</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd;" data-translate="settings.licenses.modal_compatibility.employee_col">Empleado</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd;" data-translate="settings.licenses.modal_compatibility.main_tasks_col">Tareas Principales</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd;" data-translate="settings.licenses.modal_compatibility.can_cover_col">Puede Cubrir</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd;" data-translate="settings.licenses.modal_compatibility.compatibility_col">Compatibilidad</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1219,20 +1219,20 @@ function showCompatibilityMatrix() {
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <div style="text-align: center; margin-top: 20px;">
-                        <button class="btn btn-secondary" onclick="closeModal('compatibilityModal')">Cerrar</button>
+                        <button class="btn btn-secondary" onclick="closeModal('compatibilityModal')" data-translate="settings.licenses.modal_compatibility.close_button">Cerrar</button>
                     </div>
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
     }, 1000);
 }
 
-function showVacationCalculator() {
-    showSettingsMessage('🧮 Abriendo calculadora de vacaciones...', 'info');
+async function showVacationCalculator() {
+    showSettingsMessage(await window.t('settings.messages.calculator_opening'), 'info');
 }
 
 function closeModal(modalId) {

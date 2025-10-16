@@ -14,54 +14,54 @@ function showAttendanceContent() {
     content.innerHTML = `
         <div class="tab-content active" id="attendance">
             <div class="card">
-                <h2>📋 Control de Asistencia Avanzado</h2>
-                
+                <h2 data-translate="attendance.title">📋 Control de Asistencia Avanzado</h2>
+
                 <!-- Grilla de Asistencia de Hoy -->
                 <div style="margin-bottom: 30px;">
-                    <h3>📅 Asistencia de Hoy</h3>
+                    <h3 data-translate="attendance.today_title">📅 Asistencia de Hoy</h3>
                     <div id="attendance-stats" class="stats-grid" style="margin: 15px 0;">
                         <div class="stat-item">
                             <div class="stat-value" id="present-count">--</div>
-                            <div class="stat-label">Presentes</div>
+                            <div class="stat-label" data-translate="attendance.present">Presentes</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value" id="late-count">--</div>
-                            <div class="stat-label">Tardanzas</div>
+                            <div class="stat-label" data-translate="attendance.late">Tardanzas</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value" id="absent-count">--</div>
-                            <div class="stat-label">Ausentes</div>
+                            <div class="stat-label" data-translate="attendance.absent">Ausentes</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value" id="total-hours">--</div>
-                            <div class="stat-label">Horas Trabajadas</div>
+                            <div class="stat-label" data-translate="attendance.total_hours">Horas Trabajadas</div>
                         </div>
                     </div>
-                    
+
                     <div style="margin: 20px 0;">
-                        <button class="btn btn-primary" onclick="loadAttendanceData()">🔄 Actualizar</button>
-                        <button class="btn btn-success" onclick="exportAttendanceData()">📊 Exportar Excel</button>
+                        <button class="btn btn-primary" onclick="loadAttendanceData()" data-translate="attendance.btn_refresh">🔄 Actualizar</button>
+                        <button class="btn btn-success" onclick="exportAttendanceData()" data-translate="attendance.btn_export_excel">📊 Exportar Excel</button>
                     </div>
                     
                     <div class="table-container">
                         <table id="attendance-table" class="data-table">
                             <thead>
                                 <tr>
-                                    <th>👤 Empleado</th>
-                                    <th>🏷️ Legajo</th>
-                                    <th>📅 Fecha</th>
-                                    <th>🟢 Estado</th>
-                                    <th>⏰ Entrada</th>
-                                    <th>⏰ Salida</th>
-                                    <th>🕐 Horas</th>
-                                    <th>📱 Método</th>
-                                    <th>📍 Ubicación</th>
-                                    <th>📝 Notas</th>
+                                    <th data-translate="attendance.col_employee">👤 Empleado</th>
+                                    <th data-translate="attendance.col_employee_id">🏷️ Legajo</th>
+                                    <th data-translate="attendance.col_date">📅 Fecha</th>
+                                    <th data-translate="attendance.col_status">🟢 Estado</th>
+                                    <th data-translate="attendance.col_check_in">⏰ Entrada</th>
+                                    <th data-translate="attendance.col_check_out">⏰ Salida</th>
+                                    <th data-translate="attendance.col_hours">🕐 Horas</th>
+                                    <th data-translate="attendance.col_method">📱 Método</th>
+                                    <th data-translate="attendance.col_location">📍 Ubicación</th>
+                                    <th data-translate="attendance.col_notes">📝 Notas</th>
                                 </tr>
                             </thead>
                             <tbody id="attendance-tbody">
                                 <tr>
-                                    <td colspan="10" style="text-align: center; padding: 20px;">
+                                    <td colspan="10" style="text-align: center; padding: 20px;" data-translate="attendance.click_refresh_to_load">
                                         Presiona "🔄 Actualizar" para cargar los datos de asistencia de hoy
                                     </td>
                                 </tr>
@@ -69,62 +69,62 @@ function showAttendanceContent() {
                         </table>
                     </div>
                 </div>
-                
+
                 <!-- Filtros y Reportes -->
                 <div style="margin-top: 30px;">
-                    <h3>📊 Reportes y Filtros</h3>
+                    <h3 data-translate="attendance.reports_filters_title">📊 Reportes y Filtros</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
                         <div>
-                            <label>📅 Fecha Desde:</label>
+                            <label data-translate="attendance.filter_date_from">📅 Fecha Desde:</label>
                             <input type="date" id="dateFrom" style="width: 100%; padding: 8px; margin-top: 5px;">
                         </div>
                         <div>
-                            <label>📅 Fecha Hasta:</label>
+                            <label data-translate="attendance.filter_date_to">📅 Fecha Hasta:</label>
                             <input type="date" id="dateTo" style="width: 100%; padding: 8px; margin-top: 5px;">
                         </div>
                         <div>
-                            <label>👤 Empleado:</label>
+                            <label data-translate="attendance.filter_employee">👤 Empleado:</label>
                             <select id="employeeFilter" style="width: 100%; padding: 8px; margin-top: 5px;">
-                                <option value="">Todos los empleados</option>
+                                <option value="" data-translate="attendance.all_employees">Todos los empleados</option>
                             </select>
                         </div>
                         <div>
-                            <label>🏢 Departamento:</label>
+                            <label data-translate="attendance.filter_department">🏢 Departamento:</label>
                             <select id="deptFilter" style="width: 100%; padding: 8px; margin-top: 5px;">
-                                <option value="">Todos los departamentos</option>
+                                <option value="" data-translate="attendance.all_departments">Todos los departamentos</option>
                                 <!-- Se cargarán dinámicamente desde la API -->
                             </select>
                         </div>
                     </div>
-                    
+
                     <div style="margin: 20px 0; text-align: center;">
-                        <button class="btn btn-primary" onclick="generateAttendanceReport()">📊 Generar Reporte</button>
-                        <button class="btn btn-warning" onclick="exportAttendanceReport()">📤 Exportar Reporte</button>
-                        <button class="btn btn-info" onclick="showAttendanceCharts()">📈 Ver Gráficos</button>
+                        <button class="btn btn-primary" onclick="generateAttendanceReport()" data-translate="attendance.btn_generate_report">📊 Generar Reporte</button>
+                        <button class="btn btn-warning" onclick="exportAttendanceReport()" data-translate="attendance.btn_export_report">📤 Exportar Reporte</button>
+                        <button class="btn btn-info" onclick="showAttendanceCharts()" data-translate="attendance.btn_view_charts">📈 Ver Gráficos</button>
                     </div>
 
                     <!-- Filtros por Tipo de Ausentismo -->
                     <div style="margin: 20px 0;">
-                        <h4>🔍 Filtros Avanzados</h4>
+                        <h4 data-translate="attendance.advanced_filters_title">🔍 Filtros Avanzados</h4>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                             <div>
-                                <label>📋 Estado:</label>
+                                <label data-translate="attendance.filter_status">📋 Estado:</label>
                                 <select id="statusFilter" style="width: 100%; padding: 8px; margin-top: 5px;">
-                                    <option value="">Todos los estados</option>
-                                    <option value="presente">Presente</option>
-                                    <option value="tardanza">Tardanza</option>
-                                    <option value="ausente">Ausente</option>
+                                    <option value="" data-translate="attendance.all_statuses">Todos los estados</option>
+                                    <option value="presente" data-translate="attendance.status_present">Presente</option>
+                                    <option value="tardanza" data-translate="attendance.status_late">Tardanza</option>
+                                    <option value="ausente" data-translate="attendance.status_absent">Ausente</option>
                                 </select>
                             </div>
                             <div>
-                                <label>🏥 Tipo de Ausentismo:</label>
+                                <label data-translate="attendance.filter_absence_type">🏥 Tipo de Ausentismo:</label>
                                 <select id="absenceTypeFilter" style="width: 100%; padding: 8px; margin-top: 5px;">
-                                    <option value="">Todos los tipos</option>
-                                    <option value="enfermedad">Enfermedad</option>
-                                    <option value="accidente">Accidente</option>
-                                    <option value="personal">Motivos Personales</option>
-                                    <option value="capacitacion">Capacitación</option>
-                                    <option value="vacaciones">Vacaciones</option>
+                                    <option value="" data-translate="attendance.all_types">Todos los tipos</option>
+                                    <option value="enfermedad" data-translate="attendance.type_illness">Enfermedad</option>
+                                    <option value="accidente" data-translate="attendance.type_accident">Accidente</option>
+                                    <option value="personal" data-translate="attendance.type_personal">Motivos Personales</option>
+                                    <option value="capacitacion" data-translate="attendance.type_training">Capacitación</option>
+                                    <option value="vacaciones" data-translate="attendance.type_vacation">Vacaciones</option>
                                 </select>
                             </div>
                         </div>
@@ -133,7 +133,7 @@ function showAttendanceContent() {
 
                 <!-- Gráficos Estadísticos -->
                 <div style="margin-top: 30px;" id="charts-section">
-                    <h3>📈 Estadísticas de Asistencia - Últimos 30 Días</h3>
+                    <h3 data-translate="attendance.stats_chart_title">📈 Estadísticas de Asistencia - Últimos 30 Días</h3>
                     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                         <canvas id="attendanceChart" width="400" height="200"></canvas>
                     </div>
@@ -141,21 +141,21 @@ function showAttendanceContent() {
 
                 <!-- 📊 LOGS DE DETECCIONES BIOMÉTRICAS -->
                 <div style="margin-top: 40px; border-top: 2px solid #e0e0e0; padding-top: 20px;">
-                    <h3>🔍 Logs de Detecciones Biométricas</h3>
-                    <p style="color: #666; margin-bottom: 15px;">
+                    <h3 data-translate="attendance.detection_logs_title">🔍 Logs de Detecciones Biométricas</h3>
+                    <p style="color: #666; margin-bottom: 15px;" data-translate="attendance.detection_logs_description">
                         Registro completo de TODAS las detecciones faciales (incluso las que no generaron fichada por cooldown)
                     </p>
 
                     <div style="margin: 20px 0;">
-                        <button class="btn btn-primary" onclick="loadDetectionLogs()">🔄 Cargar Logs</button>
-                        <button class="btn btn-info" onclick="refreshDetectionLogs()">♻️ Actualizar</button>
+                        <button class="btn btn-primary" onclick="loadDetectionLogs()" data-translate="attendance.btn_load_logs">🔄 Cargar Logs</button>
+                        <button class="btn btn-info" onclick="refreshDetectionLogs()" data-translate="attendance.btn_refresh_logs">♻️ Actualizar</button>
                         <span style="margin-left: 15px; color: #666; font-size: 0.9em;">
-                            Límite: <select id="logsLimit" style="padding: 5px;">
+                            <span data-translate="attendance.logs_limit">Límite:</span> <select id="logsLimit" style="padding: 5px;">
                                 <option value="50">50</option>
                                 <option value="100" selected>100</option>
                                 <option value="200">200</option>
                                 <option value="500">500</option>
-                            </select> registros
+                            </select> <span data-translate="attendance.logs_records">registros</span>
                         </span>
                     </div>
 
@@ -163,19 +163,19 @@ function showAttendanceContent() {
                         <table id="detection-logs-table" class="data-table">
                             <thead>
                                 <tr>
-                                    <th>🕐 Timestamp</th>
-                                    <th>👤 Empleado</th>
-                                    <th>🏷️ Legajo</th>
-                                    <th>📊 Similitud</th>
-                                    <th>✅ Fichó?</th>
-                                    <th>🔄 Tipo</th>
-                                    <th>⏭️ Razón Skip</th>
-                                    <th>⚡ Tiempo (ms)</th>
+                                    <th data-translate="attendance.log_col_timestamp">🕐 Timestamp</th>
+                                    <th data-translate="attendance.log_col_employee">👤 Empleado</th>
+                                    <th data-translate="attendance.log_col_employee_id">🏷️ Legajo</th>
+                                    <th data-translate="attendance.log_col_similarity">📊 Similitud</th>
+                                    <th data-translate="attendance.log_col_registered">✅ Fichó?</th>
+                                    <th data-translate="attendance.log_col_type">🔄 Tipo</th>
+                                    <th data-translate="attendance.log_col_skip_reason">⏭️ Razón Skip</th>
+                                    <th data-translate="attendance.log_col_time_ms">⚡ Tiempo (ms)</th>
                                 </tr>
                             </thead>
                             <tbody id="detection-logs-tbody">
                                 <tr>
-                                    <td colspan="8" style="text-align: center; padding: 20px;">
+                                    <td colspan="8" style="text-align: center; padding: 20px;" data-translate="attendance.click_load_logs">
                                         Presiona "🔄 Cargar Logs" para ver el registro de detecciones
                                     </td>
                                 </tr>
@@ -229,7 +229,7 @@ async function loadAttendanceData() {
     const tbody = document.getElementById('attendance-tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;">🔄 Cargando datos de asistencia...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 20px;">${await window.t('attendance.loading_data')}</td></tr>`;
 
     try {
         // Obtener filtros actuales
@@ -251,7 +251,7 @@ async function loadAttendanceData() {
         const token = getAuthToken();
         if (!token) {
             console.error('❌ [ATTENDANCE] No hay token de autenticación');
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;">❌ No autenticado. Haga login nuevamente.</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 20px;">${await window.t('attendance.error_not_authenticated')}</td></tr>`;
             return;
         }
 
@@ -273,27 +273,27 @@ async function loadAttendanceData() {
                 displayAttendanceTable(result.data, result.pagination);
             } else {
                 console.warn('⚠️ [ATTENDANCE] Sin datos o formato inesperado:', result);
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;">ℹ️ No hay datos de asistencia para los filtros seleccionados</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 20px;">${await window.t('attendance.no_data_for_filters')}</td></tr>`;
             }
         } else {
             const errorData = await response.json().catch(() => ({}));
             console.error('❌ [ATTENDANCE] Error HTTP:', response.status, errorData);
-            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 20px;">❌ Error del servidor (${response.status}): ${errorData.error || 'Error desconocido'}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 20px;">${await window.t('attendance.error_server', {status: response.status, error: errorData.error || await window.t('attendance.error_unknown')})}</td></tr>`;
         }
 
     } catch (error) {
         console.error('❌ [ATTENDANCE] Error de conexión:', error);
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;">❌ Error de conexión. Verifique su conexión a internet.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 20px;">${await window.t('attendance.error_connection')}</td></tr>`;
     }
 }
 
 // Display attendance table - Original style
-function displayAttendanceTable(attendanceData) {
+async function displayAttendanceTable(attendanceData) {
     const tbody = document.getElementById('attendance-tbody');
     if (!tbody) return;
-    
+
     if (!attendanceData || attendanceData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;">No hay datos de asistencia para mostrar</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 20px;">${await window.t('attendance.no_data_to_display')}</td></tr>`;
         return;
     }
     
@@ -317,7 +317,7 @@ function displayAttendanceTable(attendanceData) {
     });
     
     tbody.innerHTML = tableHTML;
-    showAttendanceMessage(`✅ ${attendanceData.length} registros de asistencia cargados`, 'success');
+    showAttendanceMessage(await window.t('attendance.records_loaded', {count: attendanceData.length}), 'success');
 }
 
 // Get status CSS class
@@ -361,7 +361,7 @@ async function loadEmployeeFilter() {
             console.log('✅ [ATTENDANCE] Empleados recibidos:', result);
 
             // Limpiar opciones existentes (excepto "Todos")
-            employeeSelect.innerHTML = '<option value="">Todos los empleados</option>';
+            employeeSelect.innerHTML = `<option value="">${await window.t('attendance.all_employees')}</option>`;
 
             // El endpoint devuelve { users: [...] }
             if (result.users && Array.isArray(result.users)) {
@@ -383,50 +383,50 @@ async function loadEmployeeFilter() {
         console.error('❌ [ATTENDANCE] Error cargando empleados:', error);
 
         // Fallback: mantener solo "Todos los empleados"
-        employeeSelect.innerHTML = '<option value="">Todos los empleados</option>';
+        employeeSelect.innerHTML = `<option value="">${await window.t('attendance.all_employees')}</option>`;
     }
 }
 
 // Export attendance data to Excel
-function exportAttendanceData() {
+async function exportAttendanceData() {
     console.log('📊 [ATTENDANCE] Exportando datos a Excel...');
-    showAttendanceMessage('📊 Función exportar Excel en desarrollo', 'info');
+    showAttendanceMessage(await window.t('attendance.export_excel_in_dev'), 'info');
 }
 
 // Generate attendance report
-function generateAttendanceReport() {
+async function generateAttendanceReport() {
     console.log('📊 [ATTENDANCE] Generando reporte de asistencia...');
-    
+
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
     const employee = document.getElementById('employeeFilter').value;
     const department = document.getElementById('deptFilter').value;
-    
+
     console.log('📊 Filtros:', { dateFrom, dateTo, employee, department });
-    
-    showAttendanceMessage('📊 Generando reporte con filtros aplicados...', 'info');
-    
+
+    showAttendanceMessage(await window.t('attendance.generating_report'), 'info');
+
     // Simulate report generation
-    setTimeout(() => {
-        showAttendanceMessage('✅ Reporte generado exitosamente (función en desarrollo)', 'success');
+    setTimeout(async () => {
+        showAttendanceMessage(await window.t('attendance.report_generated_success'), 'success');
     }, 2000);
 }
 
 // Export attendance report
-function exportAttendanceReport() {
+async function exportAttendanceReport() {
     console.log('📤 [ATTENDANCE] Exportando reporte...');
-    showAttendanceMessage('📤 Función exportar reporte en desarrollo', 'info');
+    showAttendanceMessage(await window.t('attendance.export_report_in_dev'), 'info');
 }
 
 // Show attendance charts - Updated with real functionality
-function showAttendanceCharts() {
+async function showAttendanceCharts() {
     console.log('📈 [ATTENDANCE] Mostrando gráficos de estadísticas...');
     const chartsSection = document.getElementById('charts-section');
     if (chartsSection) {
         chartsSection.scrollIntoView({ behavior: 'smooth' });
-        showAttendanceMessage('📈 Gráfico de tendencias mostrado abajo', 'success');
+        showAttendanceMessage(await window.t('attendance.chart_shown'), 'success');
     } else {
-        showAttendanceMessage('⚠️ Gráficos disponibles al cargar el módulo', 'warning');
+        showAttendanceMessage(await window.t('attendance.charts_on_load'), 'warning');
     }
 }
 
@@ -503,17 +503,17 @@ async function loadDepartmentsForAttendance() {
         // Fallback: mantener solo "Todos los departamentos"
         const deptSelect = document.getElementById('deptFilter');
         if (deptSelect) {
-            deptSelect.innerHTML = '<option value="">Todos los departamentos</option>';
+            deptSelect.innerHTML = `<option value="">${await window.t('attendance.all_departments')}</option>`;
         }
     }
 }
 
-function populateAttendanceDepartmentFilter(departments) {
+async function populateAttendanceDepartmentFilter(departments) {
     const select = document.getElementById('deptFilter');
     if (!select) return;
-    
+
     // Mantener la opción "Todos los departamentos"
-    select.innerHTML = '<option value="">Todos los departamentos</option>';
+    select.innerHTML = `<option value="">${await window.t('attendance.all_departments')}</option>`;
     
     // Agregar departamentos
     departments.forEach(dept => {
@@ -549,36 +549,46 @@ function getAuthToken() {
 
 // === MÁSCARAS DE TRADUCCIÓN ===
 // Mantener la BD en inglés, traducir solo en UI
-function translateStatus(status) {
-    const translations = {
-        'present': 'Presente',
-        'late': 'Tardanza',
-        'absent': 'Ausente',
-        'pending': 'Pendiente'
+async function translateStatus(status) {
+    const statusKey = status?.toLowerCase();
+    const translationKeys = {
+        'present': 'attendance.status_present_value',
+        'late': 'attendance.status_late_value',
+        'absent': 'attendance.status_absent_value',
+        'pending': 'attendance.status_pending_value'
     };
-    return translations[status?.toLowerCase()] || status || 'Sin datos';
+
+    if (translationKeys[statusKey]) {
+        return await window.t(translationKeys[statusKey]);
+    }
+    return status || await window.t('attendance.no_data');
 }
 
-function translateMethod(method) {
-    const translations = {
-        'face': 'Facial',
-        'fingerprint': 'Huella',
-        'pin': 'PIN',
-        'manual': 'Manual',
-        'mobile': 'Móvil',
-        'iris': 'Iris',
-        'voice': 'Voz'
+async function translateMethod(method) {
+    const methodKey = method?.toLowerCase();
+    const translationKeys = {
+        'face': 'attendance.method_face',
+        'fingerprint': 'attendance.method_fingerprint',
+        'pin': 'attendance.method_pin',
+        'manual': 'attendance.method_manual',
+        'mobile': 'attendance.method_mobile',
+        'iris': 'attendance.method_iris',
+        'voice': 'attendance.method_voice'
     };
-    return translations[method?.toLowerCase()] || method || 'Manual';
+
+    if (translationKeys[methodKey]) {
+        return await window.t(translationKeys[methodKey]);
+    }
+    return method || await window.t('attendance.method_manual');
 }
 
 // Update displayAttendanceTable to handle real API data
-function displayAttendanceTable(attendanceData, pagination) {
+async function displayAttendanceTable(attendanceData, pagination) {
     const tbody = document.getElementById('attendance-tbody');
     if (!tbody) return;
 
     if (!attendanceData || attendanceData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;">ℹ️ No hay registros de asistencia para mostrar</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 20px;">${await window.t('attendance.no_records_to_show')}</td></tr>`;
         return;
     }
 
@@ -599,7 +609,7 @@ function displayAttendanceTable(attendanceData, pagination) {
         // Los campos vienen como "User.firstName", "User.lastName" en la estructura plana
         const userName = record['User.firstName'] || record['User.lastName']
             ? `${record['User.firstName'] || ''} ${record['User.lastName'] || ''}`.trim()
-            : 'Usuario desconocido';
+            : await window.t('attendance.unknown_user');
         const employeeId = record['User.employeeId'] || 'N/A';
 
         // Formatear fecha SIN conversión de zona horaria (usar la fecha tal cual)
@@ -622,9 +632,9 @@ function displayAttendanceTable(attendanceData, pagination) {
         } else if (record.workingHours) {
             workingHours = `${record.workingHours}h`;
         }
-        const status = translateStatus(record.status);
-        const method = translateMethod(record.checkInMethod);
-        const location = record.checkInLocation || 'No especificado';
+        const status = await translateStatus(record.status);
+        const method = await translateMethod(record.checkInMethod);
+        const location = record.checkInLocation || await window.t('attendance.not_specified');
         const notes = record.notes || '';
 
         // Determinar clase CSS según status
@@ -708,7 +718,7 @@ async function loadAttendanceStats() {
                 if (absentEl) absentEl.textContent = stats.absentCount || '0';
                 if (totalHoursEl) totalHoursEl.textContent = `${Math.round(stats.totalOvertimeHours || 0)}h`;
 
-                showAttendanceMessage('📊 Estadísticas actualizadas desde base de datos', 'success');
+                showAttendanceMessage(await window.t('attendance.stats_updated'), 'success');
             } else {
                 console.warn('⚠️ [ATTENDANCE STATS] Sin datos o formato inesperado:', result);
             }
@@ -750,15 +760,15 @@ function loadChartLibraryAndInitialize() {
         console.log('✅ [ATTENDANCE] Chart.js cargado exitosamente');
         setTimeout(initializeAttendanceChart, 100);
     };
-    script.onerror = function() {
+    script.onerror = async function() {
         console.error('❌ [ATTENDANCE] Error cargando Chart.js');
-        showAttendanceMessage('❌ Error cargando librería de gráficos', 'error');
+        showAttendanceMessage(await window.t('attendance.error_loading_charts_lib'), 'error');
     };
     document.head.appendChild(script);
 }
 
 // Initialize the attendance statistics chart
-function initializeAttendanceChart() {
+async function initializeAttendanceChart() {
     console.log('📈 [ATTENDANCE] Inicializando gráfico de estadísticas...');
 
     const canvas = document.getElementById('attendanceChart');
@@ -775,7 +785,7 @@ function initializeAttendanceChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'Ausencias Diarias',
+                    label: await window.t('attendance.chart_daily_absences'),
                     data: [],
                     borderColor: '#ff6b6b',
                     backgroundColor: 'rgba(255, 107, 107, 0.1)',
@@ -784,7 +794,7 @@ function initializeAttendanceChart() {
                     tension: 0.4
                 },
                 {
-                    label: 'Llegadas Tarde',
+                    label: await window.t('attendance.chart_late_arrivals'),
                     data: [],
                     borderColor: '#ffa500',
                     backgroundColor: 'rgba(255, 165, 0, 0.1)',
@@ -793,7 +803,7 @@ function initializeAttendanceChart() {
                     tension: 0.4
                 },
                 {
-                    label: 'Presentes',
+                    label: await window.t('attendance.chart_present'),
                     data: [],
                     borderColor: '#4CAF50',
                     backgroundColor: 'rgba(76, 175, 80, 0.1)',
@@ -809,7 +819,7 @@ function initializeAttendanceChart() {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Tendencia de Asistencia - Últimos 30 Días (Datos Reales)',
+                    text: await window.t('attendance.chart_title'),
                     font: {
                         size: 16,
                         weight: 'bold'
@@ -825,13 +835,13 @@ function initializeAttendanceChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Número de Empleados'
+                        text: await window.t('attendance.chart_y_axis')
                     }
                 },
                 x: {
                     title: {
                         display: true,
-                        text: 'Fecha'
+                        text: await window.t('attendance.chart_x_axis')
                     }
                 }
             },
@@ -905,13 +915,13 @@ async function loadDetectionLogs() {
         return;
     }
 
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">🔄 Cargando logs...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px;">${await window.t('attendance.loading_logs')}</td></tr>`;
 
     try {
         const token = getAuthToken();
         if (!token) {
             console.error('❌ [DETECTION-LOGS] No hay token de autenticación');
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">❌ No autenticado</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px;">${await window.t('attendance.error_not_authenticated')}</td></tr>`;
             return;
         }
 
@@ -919,7 +929,7 @@ async function loadDetectionLogs() {
         const companyId = window.currentCompany?.id || window.selectedCompany?.id;
         if (!companyId) {
             console.error('❌ [DETECTION-LOGS] No hay company ID');
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">❌ No se detectó empresa</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px;">${await window.t('attendance.error_company_not_detected')}</td></tr>`;
             return;
         }
 
@@ -945,25 +955,25 @@ async function loadDetectionLogs() {
         if (result.success && result.data && result.data.length > 0) {
             displayDetectionLogs(result.data);
         } else {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">ℹ️ No hay logs de detecciones para mostrar</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px;">${await window.t('attendance.no_detection_logs')}</td></tr>`;
         }
 
     } catch (error) {
         console.error('❌ [DETECTION-LOGS] Error:', error);
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px;">❌ Error: ${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px;">${await window.t('attendance.error_message', {message: error.message})}</td></tr>`;
     }
 }
 
 /**
  * Mostrar logs en la tabla
  */
-function displayDetectionLogs(logs) {
+async function displayDetectionLogs(logs) {
     const tbody = document.getElementById('detection-logs-tbody');
     if (!tbody) return;
 
     let html = '';
 
-    logs.forEach(log => {
+    for (const log of logs) {
         // Formatear timestamp en formato 24hs
         const timestamp = new Date(log.detection_timestamp);
         const formattedTime = timestamp.toLocaleString('es-AR', {
@@ -981,13 +991,16 @@ function displayDetectionLogs(logs) {
 
         // Indicador de fichada
         const wasRegistered = log.was_registered
-            ? '<span style="color: green; font-weight: bold;">✅ Sí</span>'
-            : '<span style="color: orange;">⏭️ No</span>';
+            ? `<span style="color: green; font-weight: bold;">${await window.t('attendance.log_yes')}</span>`
+            : `<span style="color: orange;">${await window.t('attendance.log_no')}</span>`;
 
         // Tipo de operación
-        const operationType = log.operation_type
-            ? (log.operation_type === 'clock_in' ? '📥 Ingreso' : '📤 Salida')
-            : '--';
+        let operationType = '--';
+        if (log.operation_type) {
+            operationType = log.operation_type === 'clock_in'
+                ? await window.t('attendance.log_clock_in')
+                : await window.t('attendance.log_clock_out');
+        }
 
         // Razón de skip
         const skipReason = log.skip_reason || '--';
@@ -1009,7 +1022,7 @@ function displayDetectionLogs(logs) {
                 <td>${log.processing_time_ms || '--'}ms</td>
             </tr>
         `;
-    });
+    }
 
     tbody.innerHTML = html;
     console.log(`✅ [DETECTION-LOGS] Mostrando ${logs.length} logs`);

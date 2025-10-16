@@ -266,7 +266,7 @@ async function loadRealEmployeesData() {
         // Fallback: mostrar mensaje de error en dropdown
         const selector = document.getElementById('employeeSelector');
         if (selector) {
-            selector.innerHTML = '<option value="">❌ Error cargando empleados</option>';
+            selector.innerHTML = '<option value="" data-translate="biometric.employees.dropdown.error">❌ Error cargando empleados</option>';
         }
     }
 }
@@ -288,7 +288,7 @@ function updateEmployeeDropdown(employees) {
 
     // Preparar datos de empleados
     if (!employees || employees.length === 0) {
-        const emptyOption = '<option value="">❌ No hay empleados en esta empresa</option>';
+        const emptyOption = '<option value="" data-translate="biometric.employees.dropdown.noEmployees">❌ No hay empleados en esta empresa</option>';
         if (selector) {
             selector.innerHTML = emptyOption;
         }
@@ -302,7 +302,7 @@ function updateEmployeeDropdown(employees) {
     // Llenar dropdown de verificación
     if (selector) {
         console.log('✅ [DROPDOWN] Elemento employeeSelector encontrado');
-        selector.innerHTML = '<option value="">-- Seleccione un empleado --</option>';
+        selector.innerHTML = '<option value="" data-translate="biometric.employees.dropdown.placeholder">-- Seleccione un empleado --</option>';
 
         employees.forEach(employee => {
             const option = document.createElement('option');
@@ -331,7 +331,7 @@ function updateEmployeeDropdown(employees) {
     // Llenar dropdown de registro biométrico
     if (registrationSelector) {
         console.log('✅ [DROPDOWN] Elemento employee-select-registration encontrado');
-        registrationSelector.innerHTML = '<option value="">🔍 Seleccionar empleado...</option>';
+        registrationSelector.innerHTML = '<option value="" data-translate="biometric.employees.dropdown.registration.placeholder">🔍 Seleccionar empleado...</option>';
 
         employees.forEach(employee => {
             const option = document.createElement('option');
@@ -475,13 +475,13 @@ function getCurrentCompanyId() {
 /**
  * Función principal - Muestra el hub biométrico unificado
  */
-function showBiometricContent() {
+async function showBiometricContent() {
     console.log('🎭 [BIOMETRIC-HUB] Cargando centro de comando biométrico...');
 
     // Validar empresa seleccionada
     if (!selectedCompany?.company_id && !selectedCompany?.id) {
         console.warn('⚠️ [BIOMETRIC-HUB] No hay empresa seleccionada');
-        showBiometricError('Debe seleccionar una empresa para acceder al módulo biométrico');
+        showBiometricError(await window.t('biometric.hub.error.selectCompany'));
         return;
     }
 
@@ -499,8 +499,8 @@ function showBiometricContent() {
             <div class="hub-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h2 style="margin: 0; font-size: 28px;">🎭 Centro de Comando Biométrico</h2>
-                        <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 16px;">
+                        <h2 style="margin: 0; font-size: 28px;" data-translate="biometric.hub.title">🎭 Centro de Comando Biométrico</h2>
+                        <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 16px;" data-translate="biometric.hub.subtitle">
                             Análisis IA avanzado, gestión de templates y monitoreo tiempo real
                         </p>
                     </div>
@@ -508,7 +508,7 @@ function showBiometricContent() {
                         <div style="background: rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 10px;">
                             <div style="font-size: 18px; font-weight: bold;">🏢 ${selectedCompany.name}</div>
                             <div style="font-size: 14px; opacity: 0.8;">Tenant ID: ${selectedCompany.id}</div>
-                            <div id="websocket-status" style="font-size: 12px; margin-top: 5px;">
+                            <div id="websocket-status" style="font-size: 12px; margin-top: 5px;" data-translate="biometric.hub.status.disconnected">
                                 🔴 Desconectado
                             </div>
                         </div>
@@ -519,26 +519,26 @@ function showBiometricContent() {
             <!-- Navegación por Tabs -->
             <div class="biometric-navigation" style="background: white; border-radius: 12px; padding: 8px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                 <div class="biometric-tabs" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-                    <button class="biometric-tab-btn active" data-tab="dashboard" onclick="showBiometricTab('dashboard')" style="
+                    <button class="biometric-tab-btn active" data-tab="dashboard" onclick="showBiometricTab('dashboard')" data-translate="biometric.hub.tabs.dashboard" style="
                         padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
                         transition: all 0.3s; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                         color: white; box-shadow: 0 3px 8px rgba(102,126,234,0.3);
                     ">
                         📊 Dashboard Tiempo Real
                     </button>
-                    <button class="biometric-tab-btn" data-tab="employee-registration" onclick="showBiometricTab('employee-registration')" style="
+                    <button class="biometric-tab-btn" data-tab="employee-registration" onclick="showBiometricTab('employee-registration')" data-translate="biometric.hub.tabs.employeeRegistration" style="
                         padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
                         transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
                     ">
                         👤 Registro Biométrico Empleados
                     </button>
-                    <button class="biometric-tab-btn" data-tab="emotional-analysis" onclick="showBiometricTab('emotional-analysis')" style="
+                    <button class="biometric-tab-btn" data-tab="emotional-analysis" onclick="showBiometricTab('emotional-analysis')" data-translate="biometric.hub.tabs.emotionalAnalysis" style="
                         padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
                         transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
                     ">
                         😊 Análisis Emocional
                     </button>
-                    <button class="biometric-tab-btn" data-tab="biometric-consent" onclick="showBiometricTab('biometric-consent')" style="
+                    <button class="biometric-tab-btn" data-tab="biometric-consent" onclick="showBiometricTab('biometric-consent')" data-translate="biometric.hub.tabs.consent" style="
                         padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;
                         transition: all 0.3s; background: #f8f9fa; color: #495057; border: 2px solid #e9ecef;
                     ">
@@ -556,10 +556,10 @@ function showBiometricContent() {
             <div class="biometric-status-bar" style="margin-top: 25px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #28a745;">
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #495057;">
                     <div>
-                        <span id="biometric-status">✅ Hub biométrico inicializado</span>
+                        <span id="biometric-status" data-translate="biometric.hub.status.initialized">✅ Hub biométrico inicializado</span>
                     </div>
                     <div>
-                        <span>Última actualización: </span>
+                        <span data-translate="biometric.hub.lastUpdate">Última actualización: </span>
                         <span id="last-update">${new Date().toLocaleTimeString()}</span>
                     </div>
                 </div>
@@ -669,48 +669,48 @@ function showBiometricDashboard(container) {
                     <div style="display: flex; align-items: center; margin-bottom: 15px;">
                         <div style="font-size: 32px; margin-right: 15px;">⚡</div>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px;">Procesamiento</h3>
-                            <p style="margin: 0; opacity: 0.9; font-size: 14px;">Velocidad identificación</p>
+                            <h3 style="margin: 0; font-size: 18px;" data-translate="biometric.dashboard.metrics.processing.title">Procesamiento</h3>
+                            <p style="margin: 0; opacity: 0.9; font-size: 14px;" data-translate="biometric.dashboard.metrics.processing.subtitle">Velocidad identificación</p>
                         </div>
                     </div>
                     <div class="metric-value" id="processing-speed" style="font-size: 28px; font-weight: bold; margin-bottom: 10px;">0 emp/min</div>
-                    <div class="metric-detail" id="queue-status" style="font-size: 14px; opacity: 0.8;">Cola: 0 pendientes</div>
+                    <div class="metric-detail" id="queue-status" style="font-size: 14px; opacity: 0.8;" data-translate="biometric.dashboard.metrics.processing.queue">Cola: 0 pendientes</div>
                 </div>
 
                 <div class="metric-card attendance" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,123,255,0.2);">
                     <div style="display: flex; align-items: center; margin-bottom: 15px;">
                         <div style="font-size: 32px; margin-right: 15px;">📋</div>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px;">Asistencia Hoy</h3>
-                            <p style="margin: 0; opacity: 0.9; font-size: 14px;">Empleados registrados</p>
+                            <h3 style="margin: 0; font-size: 18px;" data-translate="biometric.dashboard.metrics.attendance.title">Asistencia Hoy</h3>
+                            <p style="margin: 0; opacity: 0.9; font-size: 14px;" data-translate="biometric.dashboard.metrics.attendance.subtitle">Empleados registrados</p>
                         </div>
                     </div>
                     <div class="metric-value" id="attendance-today" style="font-size: 28px; font-weight: bold; margin-bottom: 10px;">0</div>
-                    <div class="metric-detail" id="attendance-trend" style="font-size: 14px; opacity: 0.8;">+0% vs ayer</div>
+                    <div class="metric-detail" id="attendance-trend" style="font-size: 14px; opacity: 0.8;" data-translate="biometric.dashboard.metrics.attendance.trend">+0% vs ayer</div>
                 </div>
 
                 <div class="metric-card alerts" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(220,53,69,0.2);">
                     <div style="display: flex; align-items: center; margin-bottom: 15px;">
                         <div style="font-size: 32px; margin-right: 15px;">🚨</div>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px;">Alertas Activas</h3>
-                            <p style="margin: 0; opacity: 0.9; font-size: 14px;">Requieren atención</p>
+                            <h3 style="margin: 0; font-size: 18px;" data-translate="biometric.dashboard.metrics.alerts.title">Alertas Activas</h3>
+                            <p style="margin: 0; opacity: 0.9; font-size: 14px;" data-translate="biometric.dashboard.metrics.alerts.subtitle">Requieren atención</p>
                         </div>
                     </div>
                     <div class="metric-value" id="active-alerts" style="font-size: 28px; font-weight: bold; margin-bottom: 10px;">0</div>
-                    <div class="metric-detail" id="alert-summary" style="font-size: 14px; opacity: 0.8;">Todo normal</div>
+                    <div class="metric-detail" id="alert-summary" style="font-size: 14px; opacity: 0.8;" data-translate="biometric.dashboard.metrics.alerts.summary">Todo normal</div>
                 </div>
 
                 <div class="metric-card templates" style="background: linear-gradient(135deg, #8E24AA 0%, #6A1B9A 100%); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(142,36,170,0.2);">
                     <div style="display: flex; align-items: center; margin-bottom: 15px;">
                         <div style="font-size: 32px; margin-right: 15px;">🎭</div>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px;">Templates Activos</h3>
-                            <p style="margin: 0; opacity: 0.9; font-size: 14px;">Biometría registrada</p>
+                            <h3 style="margin: 0; font-size: 18px;" data-translate="biometric.dashboard.metrics.templates.title">Templates Activos</h3>
+                            <p style="margin: 0; opacity: 0.9; font-size: 14px;" data-translate="biometric.dashboard.metrics.templates.subtitle">Biometría registrada</p>
                         </div>
                     </div>
                     <div class="metric-value" id="active-templates" style="font-size: 28px; font-weight: bold; margin-bottom: 10px;">0</div>
-                    <div class="metric-detail" id="template-quality" style="font-size: 14px; opacity: 0.8;">Calidad promedio: 0%</div>
+                    <div class="metric-detail" id="template-quality" style="font-size: 14px; opacity: 0.8;" data-translate="biometric.dashboard.metrics.templates.quality">Calidad promedio: 0%</div>
                 </div>
             </div>
 
@@ -719,26 +719,26 @@ function showBiometricDashboard(container) {
                 <div class="analysis-panel fatigue-panel" style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                     <h3 style="margin: 0 0 20px 0; color: #495057; display: flex; align-items: center;">
                         <span style="font-size: 24px; margin-right: 10px;">😴</span>
-                        Análisis de Fatiga
+                        <span data-translate="biometric.dashboard.analysis.fatigue.title">Análisis de Fatiga</span>
                     </h3>
                     <div id="fatigue-chart" class="chart-container" style="height: 200px; background: #f8f9fa; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #6c757d;">
-                        📊 Cargando datos de fatiga...
+                        <span data-translate="biometric.dashboard.analysis.fatigue.loading">📊 Cargando datos de fatiga...</span>
                     </div>
                     <div id="fatigue-alerts" class="alert-list" style="margin-top: 15px;">
-                        <div style="font-size: 14px; color: #28a745;">✅ No hay alertas de fatiga detectadas</div>
+                        <div style="font-size: 14px; color: #28a745;" data-translate="biometric.dashboard.analysis.fatigue.noAlerts">✅ No hay alertas de fatiga detectadas</div>
                     </div>
                 </div>
 
                 <div class="analysis-panel emotion-panel" style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                     <h3 style="margin: 0 0 20px 0; color: #495057; display: flex; align-items: center;">
                         <span style="font-size: 24px; margin-right: 10px;">🧠</span>
-                        Estado Emocional
+                        <span data-translate="biometric.dashboard.analysis.emotion.title">Estado Emocional</span>
                     </h3>
                     <div id="emotion-chart" class="chart-container" style="height: 200px; background: #f8f9fa; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #6c757d;">
-                        📊 Cargando análisis emocional...
+                        <span data-translate="biometric.dashboard.analysis.emotion.loading">📊 Cargando análisis emocional...</span>
                     </div>
                     <div id="emotion-summary" class="summary" style="margin-top: 15px;">
-                        <div style="font-size: 14px; color: #007bff;">😊 Estado emocional general: Positivo</div>
+                        <div style="font-size: 14px; color: #007bff;" data-translate="biometric.dashboard.analysis.emotion.summary">😊 Estado emocional general: Positivo</div>
                     </div>
                 </div>
             </div>
@@ -747,11 +747,11 @@ function showBiometricDashboard(container) {
             <div class="recent-activity" style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                 <h3 style="margin: 0 0 20px 0; color: #495057; display: flex; align-items: center;">
                     <span style="font-size: 24px; margin-right: 10px;">📝</span>
-                    Actividad Reciente
+                    <span data-translate="biometric.dashboard.activity.title">Actividad Reciente</span>
                 </h3>
                 <div id="recent-scans" class="activity-list" style="max-height: 300px; overflow-y: auto;">
                     <div style="padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 10px;">
-                        <div style="font-weight: 600; color: #495057;">📊 Inicializando sistema...</div>
+                        <div style="font-weight: 600; color: #495057;" data-translate="biometric.dashboard.activity.initializing">📊 Inicializando sistema...</div>
                         <div style="font-size: 14px; color: #6c757d; margin-top: 5px;">
                             ${new Date().toLocaleString()} - Hub biométrico iniciado para ${selectedCompany.name}
                         </div>
@@ -2392,7 +2392,7 @@ function showBiometricError(message) {
         content.innerHTML = `
             <div style="text-align: center; padding: 50px;">
                 <div style="font-size: 64px; margin-bottom: 20px;">🚫</div>
-                <h2 style="color: #dc3545; margin-bottom: 15px;">Error Biométrico</h2>
+                <h2 style="color: #dc3545; margin-bottom: 15px;" data-translate="biometric.errors.general.title">Error Biométrico</h2>
                 <p style="color: #6c757d; margin-bottom: 20px;">${message}</p>
                 <button onclick="location.reload()" style="
                     padding: 12px 24px; background: #007bff; color: white; border: none;

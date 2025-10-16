@@ -1920,6 +1920,26 @@ app.use('/api/v1/visitors', visitorRoutes);
 const notificationRoutes = require('./src/routes/notificationRoutes');
 app.use('/api/v1/notifications', notificationRoutes);
 
+// 🔔 CONFIGURAR SISTEMA DE NOTIFICACIONES AVANZADO V2.0
+const complianceRoutes = require('./src/routes/compliance');
+const slaRoutes = require('./src/routes/sla');
+const auditReportsRoutes = require('./src/routes/auditReports');
+const proactiveRoutes = require('./src/routes/proactive');
+const resourceCenterRoutes = require('./src/routes/resourceCenter');
+
+app.use('/api/v1/compliance', complianceRoutes);
+app.use('/api/v1/sla', slaRoutes);
+app.use('/api/v1/audit-reports', auditReportsRoutes);
+app.use('/api/v1/proactive', proactiveRoutes);
+app.use('/api/v1/resource-center', resourceCenterRoutes);
+
+console.log('🔔 [NOTIFICATIONS-V2] Sistema de Notificaciones Avanzado V2.0 configurado:');
+console.log('   ⚖️ /api/v1/compliance/* - Compliance y reglas LCT');
+console.log('   ⏱️ /api/v1/sla/* - SLA tracking y métricas');
+console.log('   📋 /api/v1/audit-reports/* - Reportes con validez legal');
+console.log('   🔮 /api/v1/proactive/* - Notificaciones proactivas');
+console.log('   📚 /api/v1/resource-center/* - Centro de recursos');
+
 // 🔒 CONFIGURAR API BIOMÉTRICA
 // COMENTADO: Conflicto con biometricConsentRoutes en la misma ruta /api/v1/biometric
 // const biometricRoutes = require('./src/routes/biometricRoutes');

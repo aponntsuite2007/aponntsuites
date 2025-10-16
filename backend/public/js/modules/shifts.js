@@ -38,20 +38,20 @@ function showShiftsContent() {
     content.innerHTML = `
         <div class="tab-content active" id="shifts">
             <div class="card">
-                <h2>🕐 Sistema Avanzado de Turnos Flexibles</h2>
+                <h2 data-translate="shifts.title">🕐 Sistema Avanzado de Turnos Flexibles</h2>
                 <div class="quick-actions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px;">
-                    <button class="btn btn-primary" onclick="showAdvancedShiftCreator()">➕ Crear Turno Avanzado</button>
-                    <button class="btn btn-success" onclick="loadAdvancedShifts()">📋 Lista de Turnos</button>
-                    <button class="btn btn-info" onclick="showShiftCalendar()">📅 Calendario Visual</button>
-                    <button class="btn btn-secondary" onclick="showHourlyConfiguration()">💰 Config. Horas</button>
-                    <button class="btn btn-danger" onclick="showFlashShiftCreator()">⚡ Turno Flash</button>
+                    <button class="btn btn-primary" onclick="showAdvancedShiftCreator()" data-translate="shifts.buttons.create_advanced">➕ Crear Turno Avanzado</button>
+                    <button class="btn btn-success" onclick="loadAdvancedShifts()" data-translate="shifts.buttons.list">📋 Lista de Turnos</button>
+                    <button class="btn btn-info" onclick="showShiftCalendar()" data-translate="shifts.buttons.calendar">📅 Calendario Visual</button>
+                    <button class="btn btn-secondary" onclick="showHourlyConfiguration()" data-translate="shifts.buttons.config_hours">💰 Config. Horas</button>
+                    <button class="btn btn-danger" onclick="showFlashShiftCreator()" data-translate="shifts.buttons.flash_shift">⚡ Turno Flash</button>
                 </div>
-                
+
                 <!-- Tabs para diferentes vistas -->
                 <div class="shift-tabs" style="margin-bottom: 20px;">
-                    <button class="shift-tab active" onclick="showShiftTab('list')">📋 Lista</button>
-                    <button class="shift-tab" onclick="showShiftTab('calendar')">📅 Calendario</button>
-                    <button class="shift-tab" onclick="showShiftTab('config')">⚙️ Configuración</button>
+                    <button class="shift-tab active" onclick="showShiftTab('list')" data-translate="shifts.tabs.list">📋 Lista</button>
+                    <button class="shift-tab" onclick="showShiftTab('calendar')" data-translate="shifts.tabs.calendar">📅 Calendario</button>
+                    <button class="shift-tab" onclick="showShiftTab('config')" data-translate="shifts.tabs.config">⚙️ Configuración</button>
                 </div>
                 
                 <!-- Contenedor principal -->
@@ -61,45 +61,45 @@ function showShiftsContent() {
                         <div id="shifts-summary" class="stats-grid" style="margin-bottom: 20px;">
                             <div class="stat-item">
                                 <div class="stat-value" id="total-shifts">--</div>
-                                <div class="stat-label">Total Turnos</div>
+                                <div class="stat-label" data-translate="shifts.stats.total_shifts">Total Turnos</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-value" id="active-shifts">--</div>
-                                <div class="stat-label">Turnos Activos</div>
+                                <div class="stat-label" data-translate="shifts.stats.active_shifts">Turnos <span data-translate="common.active">Activo</span>s</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-value" id="assigned-employees">--</div>
-                                <div class="stat-label">Empleados Asignados</div>
+                                <div class="stat-label" data-translate="shifts.stats.assigned_employees">Empleados Asignados</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-value" id="flash-shifts">--</div>
-                                <div class="stat-label">Turnos Flash</div>
+                                <div class="stat-label" data-translate="shifts.stats.flash_shifts">Turnos Flash</div>
                             </div>
                         </div>
-                        
-                        <div id="shifts-list" class="server-info">
+
+                        <div id="shifts-list" class="server-info" data-translate="shifts.list.load_prompt">
                             Presiona "Lista de Turnos" para cargar los turnos configurados...
                         </div>
                     </div>
-                    
+
                     <!-- Calendario -->
                     <div id="shifts-calendar-tab" class="shift-tab-content">
                         <div id="calendar-container">
-                            <h3>📅 Calendario de Turnos</h3>
+                            <h3 data-translate="shifts.calendar.title">📅 Calendario de Turnos</h3>
                             <div id="shift-calendar" style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; min-height: 400px;">
                                 <div style="text-align: center; color: #666; margin-top: 150px;">
-                                    📅 Calendario visual en desarrollo<br>
-                                    Mostrará turnos por día con código de colores
+                                    <span data-translate="shifts.calendar.visual_calendar">📅 Calendario visual en desarrollo</span><br>
+                                    <span data-translate="shifts.calendar.description">Mostrará turnos por día con código de colores</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Configuración -->
                     <div id="shifts-config-tab" class="shift-tab-content">
                         <div id="hourly-config-container">
-                            <h3>💰 Configuración de Horas y Tarifas</h3>
-                            <div id="hourly-config-content">
+                            <h3 data-translate="shifts.hourly_config.title">💰 Configuración de Horas y Tarifas</h3>
+                            <div id="hourly-config-content" data-translate="shifts.hourly_config.description">
                                 Configuración de tarifas por tipo de hora...
                             </div>
                         </div>
@@ -208,7 +208,7 @@ async function loadAdvancedShifts() {
     const shiftsList = document.getElementById('shifts-list');
     if (!shiftsList) return;
     
-    shiftsList.innerHTML = '🔄 Cargando turnos avanzados...';
+    shiftsList.innerHTML = '<span data-translate="shifts.list.loading">🔄 Cargando turnos avanzados...</span>';
     
     try {
         // Obtener token de autenticación
@@ -337,17 +337,17 @@ async function loadAdvancedShifts() {
         
     } catch (error) {
         console.error('❌ [SHIFTS] Error cargando turnos:', error);
-        shiftsList.innerHTML = '❌ Error cargando turnos: ' + error.message;
+        shiftsList.innerHTML = `<span data-translate="shifts.messages.error_loading">❌ Error cargando turnos</span>: ${error.message}`;
     }
 }
 
 // Mostrar tabla avanzada de turnos
-function displayAdvancedShiftsTable(shifts) {
+async function displayAdvancedShiftsTable(shifts) {
     const shiftsList = document.getElementById('shifts-list');
     if (!shiftsList) return;
     
     if (!shifts || shifts.length === 0) {
-        shiftsList.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No hay turnos configurados</div>';
+        shiftsList.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><span data-translate="shifts.list.no_shifts_title">No hay turnos configurados</span></div>';
         return;
     }
     
@@ -356,14 +356,14 @@ function displayAdvancedShiftsTable(shifts) {
             <table class="data-table" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th>🕐 Turno</th>
-                        <th>📊 Tipo</th>
-                        <th>⏰ Horario</th>
-                        <th>📅 Patrón/Días</th>
-                        <th>👥 Empleados</th>
-                        <th>💰 Tarifas</th>
-                        <th>📍 Estado</th>
-                        <th>⚙️ Acciones</th>
+                        <th data-translate="shifts.table.shift">🕐 Turno</th>
+                        <th data-translate="shifts.table.type">📊 Tipo</th>
+                        <th data-translate="shifts.table.schedule">⏰ Horario</th>
+                        <th data-translate="shifts.table.pattern_days">📅 Patrón/Días</th>
+                        <th data-translate="shifts.table.employees">👥 Empleados</th>
+                        <th data-translate="shifts.table.rates">💰 Tarifas</th>
+                        <th data-translate="shifts.table.status">📍 Estado</th>
+                        <th data-translate="shifts.table.actions">⚙️ Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -401,11 +401,11 @@ function displayAdvancedShiftsTable(shifts) {
             <tr>
                 <td><strong>${shift.name}</strong></td>
                 <td><span class="shift-type-badge ${typeClass}">${typeLabel}</span></td>
-                <td>${shift.startTime} - ${shift.endTime}${shift.breakStart ? '<br><small>Descanso: ' + shift.breakStart + '-' + shift.breakEnd + '</small>' : ''}</td>
+                <td>${shift.startTime} - ${shift.endTime}${shift.breakStart ? '<br><small><span data-translate="shifts.table.break">Descanso:</span> ' + shift.breakStart + '-' + shift.breakEnd + '</small>' : ''}</td>
                 <td>${patternInfo}</td>
-                <td><span class="badge">${shift.employees} empleados</span></td>
+                <td><span class="badge">${shift.employees} <span data-translate="shifts.table.employees_count">empleados</span></span></td>
                 <td><small style="font-size: 0.75em;">${rateInfo}</small></td>
-                <td><span class="status-badge ${statusClass}">${shift.isActive ? 'Activo' : 'Inactivo'}</span></td>
+                <td><span class="status-badge ${statusClass}">${shift.isActive ? '<span data-translate="common.active">Activo</span>' : '<span data-translate="common.inactive">Inactivo</span>'}</span></td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="editAdvancedShift('${shift.id}')" title="Editar">✏️</button>
                     <button class="btn btn-sm btn-info" onclick="viewAdvancedShift('${shift.id}')" title="Ver">👁️</button>
@@ -424,7 +424,7 @@ function displayAdvancedShiftsTable(shifts) {
     `;
     
     shiftsList.innerHTML = tableHTML;
-    showShiftMessage(`✅ ${shifts.length} turnos cargados exitosamente`, 'success');
+    showShiftMessage(`✅ ${shifts.length} ${await window.t('shifts.messages.loaded_count')}`, 'success');
 }
 
 // Actualizar estadísticas de turnos
@@ -473,27 +473,27 @@ function showAdvancedShiftCreator() {
     
     modal.innerHTML = `
         <div style="background: white; padding: 30px; border-radius: 15px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto;">
-            <h3>➕ Crear Turno Avanzado</h3>
+            <h3 data-translate="shifts.form.modal_title_create">➕ Crear Turno Avanzado</h3>
             
             <!-- Selector de tipo de turno -->
             <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-                <h4>📊 Tipo de Turno</h4>
+                <h4 data-translate="shifts.form.type_section">📊 Tipo de Turno</h4>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
                     <label style="display: flex; align-items: center; cursor: pointer;">
                         <input type="radio" name="shiftType" value="standard" checked onchange="updateShiftForm()"> 
-                        <span style="margin-left: 8px;">📅 Estándar</span>
+                        <span style="margin-left: 8px;" data-translate="shifts.types.standard">📅 Estándar</span>
                     </label>
                     <label style="display: flex; align-items: center; cursor: pointer;">
                         <input type="radio" name="shiftType" value="rotative" onchange="updateShiftForm()"> 
-                        <span style="margin-left: 8px;">🔄 Rotativo</span>
+                        <span style="margin-left: 8px;" data-translate="shifts.types.rotative">🔄 Rotativo</span>
                     </label>
                     <label style="display: flex; align-items: center; cursor: pointer;">
                         <input type="radio" name="shiftType" value="permanent" onchange="updateShiftForm()"> 
-                        <span style="margin-left: 8px;">📌 Permanente</span>
+                        <span style="margin-left: 8px;" data-translate="shifts.types.permanent">📌 Permanente</span>
                     </label>
                     <label style="display: flex; align-items: center; cursor: pointer;">
                         <input type="radio" name="shiftType" value="flash" onchange="updateShiftForm()"> 
-                        <span style="margin-left: 8px;">⚡ Flash</span>
+                        <span style="margin-left: 8px;" data-translate="shifts.types.flash">⚡ Flash</span>
                     </label>
                 </div>
             </div>
@@ -501,22 +501,22 @@ function showAdvancedShiftCreator() {
             <!-- Información básica -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
                 <div>
-                    <label>🕐 Nombre del turno:</label>
-                    <input type="text" id="advShiftName" value="Turno Test 24hs" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="Ej: Turno Mañana">
+                    <label data-translate="shifts.form.name.label">🕐 Nombre del turno:</label>
+                    <input type="text" id="advShiftName" value="Turno Test 24hs" style="width: 100%; padding: 8px; margin-top: 5px;" data-translate-placeholder="shifts.form.name.placeholder" placeholder="Ej: Turno Mañana">
                 </div>
                 <div>
-                    <label>📊 Estado:</label>
+                    <label data-translate="shifts.form.status.label">📊 Estado:</label>
                     <select id="advShiftStatus" style="width: 100%; padding: 8px; margin-top: 5px;">
-                        <option value="true">Activo</option>
-                        <option value="false">Inactivo</option>
+                        <option value="true" data-translate="shifts.form.status.active"><span data-translate="common.active">Activo</span></option>
+                        <option value="false" data-translate="shifts.form.status.inactive"><span data-translate="common.inactive">Inactivo</span></option>
                     </select>
                 </div>
                 <div>
-                    <label>⏰ Hora inicio (24hs):</label>
+                    <label data-translate="shifts.form.start_time.label">⏰ Hora inicio (24hs):</label>
                     <input type="time" id="advShiftStart" value="08:00" style="width: 100%; padding: 8px; margin-top: 5px;">
                 </div>
                 <div>
-                    <label>⏰ Hora fin (24hs):</label>
+                    <label data-translate="shifts.form.end_time.label">⏰ Hora fin (24hs):</label>
                     <input type="time" id="advShiftEnd" value="17:00" style="width: 100%; padding: 8px; margin-top: 5px;">
                 </div>
             </div>
@@ -524,44 +524,44 @@ function showAdvancedShiftCreator() {
             <!-- Descanso (opcional) -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
                 <div>
-                    <label>☕ Descanso inicio (opcional):</label>
+                    <label data-translate="shifts.form.break_start.label">☕ Descanso inicio (opcional):</label>
                     <input type="time" id="advBreakStart" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="Opcional">
                 </div>
                 <div>
-                    <label>☕ Descanso fin (opcional):</label>
+                    <label data-translate="shifts.form.break_end.label">☕ Descanso fin (opcional):</label>
                     <input type="time" id="advBreakEnd" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="Opcional">
                 </div>
             </div>
 
             <!-- Tolerancia para marcado (Multi-tenant) -->
             <div style="margin: 20px 0; padding: 20px; background: #e8f5e8; border-radius: 8px;">
-                <h4>⏱️ Tolerancia de Marcado (Parametrizable por Empresa)</h4>
+                <h4 data-translate="shifts.form.tolerance_section">⏱️ Tolerancia de Marcado (Parametrizable por Empresa)</h4>
                 <p style="font-size: 0.9em; color: #666; margin: 5px 0 15px 0;">
                     Configure los minutos de tolerancia permitidos antes y después del horario establecido
                 </p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div style="background: #fff; padding: 15px; border-radius: 8px; border: 2px solid #4CAF50;">
-                        <h5 style="margin: 0 0 10px 0; color: #4CAF50;">🔵 Ingreso</h5>
+                        <h5 style="margin: 0 0 10px 0; color: #4CAF50;" data-translate="shifts.form.tolerance_entry">🔵 Ingreso</h5>
                         <div style="margin-bottom: 10px;">
-                            <label>⏰ Minutos antes (temprano):</label>
+                            <label data-translate="shifts.form.tolerance_before">⏰ Minutos antes (temprano):</label>
                             <input type="number" id="advToleranceEntryBefore" value="15" min="0" max="120" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="15">
                             <small style="color: #666;">Ej: 15 min = puede marcar desde las 07:45</small>
                         </div>
                         <div>
-                            <label>⏰ Minutos después (tardío):</label>
+                            <label data-translate="shifts.form.tolerance_after">⏰ Minutos después (tardío):</label>
                             <input type="number" id="advToleranceEntryAfter" value="10" min="0" max="120" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="10">
                             <small style="color: #666;">Ej: 10 min = puede marcar hasta las 08:10</small>
                         </div>
                     </div>
                     <div style="background: #fff; padding: 15px; border-radius: 8px; border: 2px solid #FF9800;">
-                        <h5 style="margin: 0 0 10px 0; color: #FF9800;">🔴 Egreso</h5>
+                        <h5 style="margin: 0 0 10px 0; color: #FF9800;" data-translate="shifts.form.tolerance_exit">🔴 Egreso</h5>
                         <div style="margin-bottom: 10px;">
-                            <label>⏰ Minutos antes (temprano):</label>
+                            <label data-translate="shifts.form.tolerance_before">⏰ Minutos antes (temprano):</label>
                             <input type="number" id="advToleranceExitBefore" value="10" min="0" max="120" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="10">
                             <small style="color: #666;">Ej: 10 min = puede salir desde las 16:50</small>
                         </div>
                         <div>
-                            <label>⏰ Minutos después (quedarse más):</label>
+                            <label data-translate="shifts.form.tolerance_after">⏰ Minutos después (quedarse más):</label>
                             <input type="number" id="advToleranceExitAfter" value="30" min="0" max="240" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="30">
                             <small style="color: #666;">Ej: 30 min = puede salir hasta las 17:30</small>
                         </div>
@@ -579,30 +579,30 @@ function showAdvancedShiftCreator() {
             
             <!-- Configuración de tarifas -->
             <div style="margin: 20px 0; padding: 20px; background: #fffbf0; border-radius: 8px;">
-                <h4>💰 Tarifas Horarias (multiplicadores)</h4>
+                <h4 data-translate="shifts.form.rates_section">💰 Tarifas Horarias (multiplicadores)</h4>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
                     <div>
-                        <label>⏰ Normales:</label>
+                        <label data-translate="shifts.form.rate_normal">⏰ Normales:</label>
                         <input type="number" id="rateNormal" value="1.0" step="0.1" min="0.1" style="width: 100%; padding: 5px;">
                     </div>
                     <div>
-                        <label>⏰ Extras:</label>
+                        <label data-translate="shifts.form.rate_overtime">⏰ Extras:</label>
                         <input type="number" id="rateOvertime" value="1.5" step="0.1" min="0.1" style="width: 100%; padding: 5px;">
                     </div>
                     <div>
-                        <label>🏖️ Fin Semana:</label>
+                        <label data-translate="shifts.form.rate_weekend">🏖️ Fin Semana:</label>
                         <input type="number" id="rateWeekend" value="1.5" step="0.1" min="0.1" style="width: 100%; padding: 5px;">
                     </div>
                     <div>
-                        <label>🎉 Feriados:</label>
+                        <label data-translate="shifts.form.rate_holiday">🎉 Feriados:</label>
                         <input type="number" id="rateHoliday" value="2.0" step="0.1" min="0.1" style="width: 100%; padding: 5px;">
                     </div>
                 </div>
             </div>
             
             <div style="text-align: center; margin-top: 20px;">
-                <button class="btn btn-primary" onclick="saveAdvancedShift()" style="margin-right: 10px;">💾 Crear Turno</button>
-                <button class="btn btn-secondary" onclick="closeAdvancedShiftModal()">❌ Cancelar</button>
+                <button class="btn btn-primary" onclick="saveAdvancedShift()" style="margin-right: 10px;" data-translate="shifts.buttons.save_shift">💾 Crear Turno</button>
+                <button class="btn btn-secondary" onclick="closeAdvancedShiftModal()" data-translate="shifts.buttons.cancel">❌ Cancelar</button>
             </div>
         </div>
     `;
@@ -619,17 +619,17 @@ function updateShiftForm() {
     switch(shiftType) {
         case 'standard':
             configDiv.innerHTML = `
-                <h4>📅 Turno Estándar</h4>
+                <h4 data-translate="shifts.form.standard_config.title">📅 Turno Estándar</h4>
                 <div style="margin: 15px 0;">
-                    <label>📅 Días de trabajo:</label>
+                    <label data-translate="shifts.form.standard_config.work_days">📅 Días de trabajo:</label>
                     <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
-                        <label><input type="checkbox" id="day0"> Domingo</label>
-                        <label><input type="checkbox" id="day1" checked> Lunes</label>
-                        <label><input type="checkbox" id="day2" checked> Martes</label>
-                        <label><input type="checkbox" id="day3" checked> Miércoles</label>
-                        <label><input type="checkbox" id="day4" checked> Jueves</label>
-                        <label><input type="checkbox" id="day5" checked> Viernes</label>
-                        <label><input type="checkbox" id="day6"> Sábado</label>
+                        <label><input type="checkbox" id="day0"> <span data-translate="shifts.form.days.sunday">Domingo</span></label>
+                        <label><input type="checkbox" id="day1" checked> <span data-translate="shifts.form.days.monday">Lunes</span></label>
+                        <label><input type="checkbox" id="day2" checked> <span data-translate="shifts.form.days.tuesday">Martes</span></label>
+                        <label><input type="checkbox" id="day3" checked> <span data-translate="shifts.form.days.wednesday">Miércoles</span></label>
+                        <label><input type="checkbox" id="day4" checked> <span data-translate="shifts.form.days.thursday">Jueves</span></label>
+                        <label><input type="checkbox" id="day5" checked> <span data-translate="shifts.form.days.friday">Viernes</span></label>
+                        <label><input type="checkbox" id="day6"> <span data-translate="shifts.form.days.saturday">Sábado</span></label>
                     </div>
                 </div>
             `;
@@ -637,30 +637,30 @@ function updateShiftForm() {
             
         case 'rotative':
             configDiv.innerHTML = `
-                <h4>🔄 Turno Rotativo</h4>
+                <h4 data-translate="shifts.form.rotative_config.title">🔄 Turno Rotativo</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
-                        <label>🔄 Patrón de rotación:</label>
+                        <label data-translate="shifts.form.rotative_config.pattern">🔄 Patrón de rotación:</label>
                         <select id="rotativePattern" style="width: 100%; padding: 8px; margin-top: 5px;">
-                            <option value="12x4">12 horas x 4 días descanso</option>
-                            <option value="6x2">6 horas x 2 días descanso</option>
-                            <option value="8x1">8 horas x 1 día descanso</option>
-                            <option value="custom">Personalizado</option>
+                            <option value="12x4" data-translate="shifts.form.rotative_config.pattern_12x4">12 horas x 4 días descanso</option>
+                            <option value="6x2" data-translate="shifts.form.rotative_config.pattern_6x2">6 horas x 2 días descanso</option>
+                            <option value="8x1" data-translate="shifts.form.rotative_config.pattern_8x1">8 horas x 1 día descanso</option>
+                            <option value="custom" data-translate="shifts.form.rotative_config.pattern_custom">Personalizado</option>
                         </select>
                     </div>
                     <div>
-                        <label>📅 Fecha inicio ciclo:</label>
+                        <label data-translate="shifts.form.rotative_config.cycle_start">📅 Fecha inicio ciclo:</label>
                         <input type="date" id="rotativeCycleStart" style="width: 100%; padding: 8px; margin-top: 5px;" value="${new Date().toISOString().split('T')[0]}">
                     </div>
                 </div>
                 <div id="customRotativeConfig" style="margin-top: 15px; display: none;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
-                            <label>Días trabajados:</label>
+                            <label data-translate="shifts.form.rotative_config.work_days_label">Días trabajados:</label>
                             <input type="number" id="customWorkDays" min="1" max="30" value="12" style="width: 100%; padding: 8px;">
                         </div>
                         <div>
-                            <label>Días de descanso:</label>
+                            <label data-translate="shifts.form.rotative_config.rest_days_label">Días de descanso:</label>
                             <input type="number" id="customRestDays" min="1" max="30" value="4" style="width: 100%; padding: 8px;">
                         </div>
                     </div>
@@ -676,26 +676,26 @@ function updateShiftForm() {
             
         case 'permanent':
             configDiv.innerHTML = `
-                <h4>📌 Turno Permanente</h4>
+                <h4 data-translate="shifts.form.permanent_config.title">📌 Turno Permanente</h4>
                 <div style="margin: 15px 0;">
-                    <label>📅 Días asignados:</label>
+                    <label data-translate="shifts.form.permanent_config.assigned_days">📅 Días asignados:</label>
                     <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
-                        <label><input type="checkbox" id="day0"> Domingo</label>
+                        <label><input type="checkbox" id="day0"> <span data-translate="shifts.form.days.sunday">Domingo</span></label>
                         <label><input type="checkbox" id="day1"> Lunes</label>
                         <label><input type="checkbox" id="day2"> Martes</label>
                         <label><input type="checkbox" id="day3"> Miércoles</label>
                         <label><input type="checkbox" id="day4"> Jueves</label>
                         <label><input type="checkbox" id="day5"> Viernes</label>
-                        <label><input type="checkbox" id="day6"> Sábado</label>
+                        <label><input type="checkbox" id="day6"> <span data-translate="shifts.form.days.saturday">Sábado</span></label>
                     </div>
                 </div>
                 <div style="margin: 15px 0;">
                     <label>🔒 Prioridad de asignación:</label>
                     <select id="permanentPriority" style="width: 100%; padding: 8px; margin-top: 5px;">
-                        <option value="low">Baja</option>
+                        <option value="low" data-translate="shifts.form.permanent_config.priority_low">Baja</option>
                         <option value="normal" selected>Normal</option>
-                        <option value="high">Alta</option>
-                        <option value="critical">Crítica</option>
+                        <option value="high" data-translate="shifts.form.permanent_config.priority_high">Alta</option>
+                        <option value="critical" data-translate="shifts.form.permanent_config.priority_critical">Crítica</option>
                     </select>
                 </div>
             `;
@@ -703,36 +703,36 @@ function updateShiftForm() {
             
         case 'flash':
             configDiv.innerHTML = `
-                <h4>⚡ Turno Flash (Temporal)</h4>
+                <h4 data-translate="shifts.form.flash_config.title">⚡ Turno Flash (Temporal)</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
-                        <label>📅 Fecha inicio:</label>
+                        <label data-translate="shifts.form.flash_config.start_date">📅 Fecha inicio:</label>
                         <input type="date" id="flashStartDate" style="width: 100%; padding: 8px; margin-top: 5px;" value="${new Date().toISOString().split('T')[0]}">
                     </div>
                     <div>
-                        <label>📅 Fecha fin:</label>
+                        <label data-translate="shifts.form.flash_config.end_date">📅 Fecha fin:</label>
                         <input type="date" id="flashEndDate" style="width: 100%; padding: 8px; margin-top: 5px;">
                     </div>
                 </div>
                 <div style="margin: 15px 0;">
-                    <label>📅 Días específicos:</label>
+                    <label data-translate="shifts.form.flash_config.specific_days">📅 Días específicos:</label>
                     <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
-                        <label><input type="checkbox" id="day0"> Domingo</label>
-                        <label><input type="checkbox" id="day1" checked> Lunes</label>
-                        <label><input type="checkbox" id="day2" checked> Martes</label>
-                        <label><input type="checkbox" id="day3" checked> Miércoles</label>
-                        <label><input type="checkbox" id="day4" checked> Jueves</label>
-                        <label><input type="checkbox" id="day5" checked> Viernes</label>
-                        <label><input type="checkbox" id="day6"> Sábado</label>
+                        <label><input type="checkbox" id="day0"> <span data-translate="shifts.form.days.sunday">Domingo</span></label>
+                        <label><input type="checkbox" id="day1" checked> <span data-translate="shifts.form.days.monday">Lunes</span></label>
+                        <label><input type="checkbox" id="day2" checked> <span data-translate="shifts.form.days.tuesday">Martes</span></label>
+                        <label><input type="checkbox" id="day3" checked> <span data-translate="shifts.form.days.wednesday">Miércoles</span></label>
+                        <label><input type="checkbox" id="day4" checked> <span data-translate="shifts.form.days.thursday">Jueves</span></label>
+                        <label><input type="checkbox" id="day5" checked> <span data-translate="shifts.form.days.friday">Viernes</span></label>
+                        <label><input type="checkbox" id="day6"> <span data-translate="shifts.form.days.saturday">Sábado</span></label>
                     </div>
                 </div>
                 <div style="margin: 15px 0;">
                     <label>🔥 Prioridad flash:</label>
                     <select id="flashPriority" style="width: 100%; padding: 8px; margin-top: 5px;">
-                        <option value="low">Baja</option>
-                        <option value="normal">Normal</option>
+                        <option value="low" data-translate="shifts.form.permanent_config.priority_low">Baja</option>
+                        <option value="normal" data-translate="shifts.form.permanent_config.priority_normal">Normal</option>
                         <option value="high" selected>Alta</option>
-                        <option value="urgent">Urgente</option>
+                        <option value="urgent" data-translate="shifts.form.flash_config.priority_urgent">Urgente</option>
                     </select>
                 </div>
                 <div style="margin: 15px 0;">
@@ -755,7 +755,7 @@ function showAdvancedAssignments() {
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="bi bi-clock-history"></i> Asignación de Turnos
+                        <i class="bi bi-clock-history"></i> <span data-translate="shifts.assignment.title">Asignación de Turnos</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -765,27 +765,27 @@ function showAdvancedAssignments() {
                         <div class="col-12 mb-3">
                             <div class="card">
                                 <div class="card-header">
-                                    <h6><i class="bi bi-funnel"></i> Filtros de Búsqueda</h6>
+                                    <h6><i class="bi bi-funnel"></i> <span data-translate="shifts.assignment.filters_title">Filtros de Búsqueda</span></h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-3">
-                                            <label class="form-label">DNI:</label>
-                                            <input type="text" id="assignDniSearch" class="form-control" placeholder="Buscar por DNI">
+                                            <label class="form-label" data-translate="shifts.assignment.dni_search">DNI:</label>
+                                            <input type="text" id="assignDniSearch" class="form-control" data-translate-placeholder="shifts.assignment.dni_placeholder" placeholder="Buscar por DNI">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Nombre/Apellido:</label>
-                                            <input type="text" id="assignNameSearch" class="form-control" placeholder="Buscar por nombre">
+                                            <label class="form-label" data-translate="shifts.assignment.name_search">Nombre/Apellido:</label>
+                                            <input type="text" id="assignNameSearch" class="form-control" data-translate-placeholder="shifts.assignment.name_placeholder" placeholder="Buscar por nombre">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Departamento:</label>
+                                            <label class="form-label" data-translate="shifts.assignment.department_filter">Departamento:</label>
                                             <select id="assignDeptFilter" class="form-control">
-                                                <option value="">Todos los departamentos</option>
+                                                <option value="" data-translate="shifts.assignment.all_departments">Todos los departamentos</option>
                                             </select>
                                         </div>
                                         <div class="col-md-3 d-flex align-items-end">
                                             <button type="button" id="clearAssignFilters" class="btn btn-outline-secondary">
-                                                <i class="bi bi-x-circle"></i> Limpiar
+                                                <i class="bi bi-x-circle"></i> <span data-translate="shifts.assignment.clear_button">Limpiar</span>
                                             </button>
                                         </div>
                                     </div>
@@ -797,7 +797,7 @@ function showAdvancedAssignments() {
                         <div class="col-md-4">
                             <div class="card">
                                 <div class="card-header">
-                                    <h6><i class="bi bi-clock"></i> Turnos Disponibles</h6>
+                                    <h6><i class="bi bi-clock"></i> <span data-translate="shifts.assignment.shifts_available">Turnos Disponibles</span></h6>
                                 </div>
                                 <div class="card-body">
                                     <div id="availableShifts" style="max-height: 300px; overflow-y: auto;">
@@ -811,13 +811,13 @@ function showAdvancedAssignments() {
                         <div class="col-md-8">
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6><i class="bi bi-people"></i> Usuarios (<span id="usersCount">0</span>)</h6>
+                                    <h6><i class="bi bi-people"></i> <span data-translate="shifts.assignment.users_title">Usuarios</span> (<span id="usersCount">0</span>)</h6>
                                     <div>
                                         <button type="button" id="selectAllUsers" class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-check-square"></i> Seleccionar Todo
+                                            <i class="bi bi-check-square"></i> <span data-translate="shifts.buttons.select_all">Seleccionar Todo</span>
                                         </button>
                                         <button type="button" id="deselectAllUsers" class="btn btn-outline-secondary btn-sm">
-                                            <i class="bi bi-square"></i> Deseleccionar
+                                            <i class="bi bi-square"></i> <span data-translate="shifts.buttons.deselect_all">Deseleccionar</span>
                                         </button>
                                     </div>
                                 </div>
@@ -829,10 +829,10 @@ function showAdvancedAssignments() {
                                                     <th width="50px">
                                                         <input type="checkbox" id="masterCheckbox" class="form-check-input">
                                                     </th>
-                                                    <th>DNI</th>
-                                                    <th>Nombre</th>
-                                                    <th>Departamento</th>
-                                                    <th>Turnos Actuales</th>
+                                                    <th data-translate="shifts.assignment.table.dni">DNI</th>
+                                                    <th data-translate="shifts.assignment.table.name">Nombre</th>
+                                                    <th data-translate="shifts.assignment.table.department">Departamento</th>
+                                                    <th data-translate="shifts.assignment.table.current_shifts">Turnos Actuales</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="assignUsersTableBody">
@@ -849,13 +849,13 @@ function showAdvancedAssignments() {
                     <div class="d-flex justify-content-between w-100">
                         <div>
                             <span class="text-muted">
-                                <span id="selectedUsersCount">0</span> usuarios seleccionados
+                                <span id="selectedUsersCount">0</span> <span data-translate="shifts.assignment.selected_count">usuarios seleccionados</span>
                             </span>
                         </div>
                         <div>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                             <button type="button" id="assignShiftsBtn" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> Asignar Turnos
+                                <i class="bi bi-check-circle"></i> <span data-translate="shifts.buttons.assign">Asignar Turnos</span>
                             </button>
                         </div>
                     </div>
@@ -957,7 +957,7 @@ function showAdvancedAssignments() {
             const currentShifts = user.shifts || [];
             const shiftsText = currentShifts.length > 0 
                 ? currentShifts.map(s => s.name).join(', ')
-                : 'Sin turnos';
+                : '<span data-translate="shifts.assignment.table.no_shifts">Sin turnos</span>';
 
             row.innerHTML = `
                 <td>
@@ -966,7 +966,7 @@ function showAdvancedAssignments() {
                 </td>
                 <td>${user.dni}</td>
                 <td>${user.name} ${user.surname}</td>
-                <td>${user.department ? user.department.name : 'Sin departamento'}</td>
+                <td>${user.department ? user.department.name : '<span data-translate="shifts.assignment.table.no_department">Sin departamento</span>'}</td>
                 <td><small class="text-muted">${shiftsText}</small></td>
             `;
             tbody.appendChild(row);
@@ -1143,14 +1143,14 @@ async function saveAdvancedShift() {
         // Verificar que el modal existe
         const modal = document.getElementById('advancedShiftModal');
         if (!modal) {
-            showShiftMessage('❌ Error: Modal no encontrado', 'error');
+            showShiftMessage(await window.t('shifts.messages.error_modal_not_found'), 'error');
             return;
         }
         
         // Obtener tipo de turno seleccionado
         const shiftTypeElement = document.querySelector('input[name="shiftType"]:checked');
         if (!shiftTypeElement) {
-            showShiftMessage('❌ Error: Tipo de turno no seleccionado', 'error');
+            showShiftMessage(await window.t('shifts.messages.error_form_elements'), 'error');
             return;
         }
         const shiftType = shiftTypeElement.value;
@@ -1164,7 +1164,7 @@ async function saveAdvancedShift() {
         const breakEndEl = document.getElementById('advBreakEnd');
         
         if (!nameEl || !statusEl || !startEl || !endEl) {
-            showShiftMessage('❌ Error: Faltan elementos del formulario', 'error');
+            showShiftMessage(await window.t('shifts.messages.error_form_elements'), 'error');
             return;
         }
         
@@ -1239,7 +1239,7 @@ async function saveAdvancedShift() {
         // Validaciones básicas con debugging específico
         if (!name) {
             console.error('❌ [VALIDATION] Nombre vacío');
-            showShiftMessage('⚠️ El nombre del turno es obligatorio', 'warning');
+            showShiftMessage(await window.t('shifts.validation.name_required'), 'warning');
             return;
         }
         
@@ -1250,13 +1250,13 @@ async function saveAdvancedShift() {
                 startEl: startEl,
                 startElValue: startEl ? startEl.value : 'elemento no encontrado'
             });
-            showShiftMessage('⚠️ La hora de inicio es obligatoria (formato 24hs)', 'warning');
+            showShiftMessage(await window.t('shifts.validation.start_time_required'), 'warning');
             return;
         }
         
         if (!endTime || endTime === '') {
             console.error('❌ [VALIDATION] Hora de fin vacía');
-            showShiftMessage('⚠️ La hora de fin es obligatoria (formato 24hs)', 'warning');
+            showShiftMessage(await window.t('shifts.validation.end_time_required'), 'warning');
             return;
         }
         
@@ -1309,7 +1309,7 @@ async function saveAdvancedShift() {
                 const cycleStartDate = document.getElementById('rotativeCycleStart')?.value;
                 
                 if (!rotationPattern || !cycleStartDate) {
-                    showShiftMessage('⚠️ Complete patrón y fecha de inicio para turno rotativo', 'warning');
+                    showShiftMessage(await window.t('shifts.validation.rotative_pattern_required'), 'warning');
                     return;
                 }
                 
@@ -1341,7 +1341,7 @@ async function saveAdvancedShift() {
                 const allowOverride = document.getElementById('flashOverride')?.checked;
                 
                 if (!flashStartDate || !flashEndDate) {
-                    showShiftMessage('⚠️ Complete fechas de inicio y fin para turno flash', 'warning');
+                    showShiftMessage(await window.t('shifts.validation.flash_dates_required'), 'warning');
                     return;
                 }
                 
@@ -1366,14 +1366,14 @@ async function saveAdvancedShift() {
         // Obtener token de autenticación
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
         if (!token) {
-            showShiftMessage('⚠️ No hay token de autenticación', 'error');
+            showShiftMessage(await window.t('shifts.messages.no_auth_token'), 'error');
             return;
         }
         
         // Verificar que progressiveAdmin está disponible
         if (!window.progressiveAdmin || typeof window.progressiveAdmin.getApiUrl !== 'function') {
             console.error('❌ [SHIFTS] window.progressiveAdmin no disponible');
-            showShiftMessage('❌ Error: Sistema no inicializado correctamente', 'error');
+            showShiftMessage(await window.t('shifts.messages.error_system_not_initialized'), 'error');
             return;
         }
         
@@ -1397,7 +1397,7 @@ async function saveAdvancedShift() {
         if (response.ok) {
             const result = await response.json();
             console.log('✅ [SHIFTS] Turno creado:', result);
-            showShiftMessage(`✅ Turno "${name}" creado exitosamente`, 'success');
+            showShiftMessage(`✅ ${await window.t('shifts.messages.success_created')}`, 'success');
             closeAdvancedShiftModal();
             
             // Recargar lista de turnos
@@ -1423,12 +1423,12 @@ async function saveAdvancedShift() {
                 data: errorData
             });
             
-            showShiftMessage(`❌ Error ${response.status}: ${errorData.error || response.statusText || 'Error desconocido'}`, 'error');
+            showShiftMessage(`❌ ${await window.t('shifts.messages.error_creating')}: ${errorData.error || response.statusText || await window.t('shifts.messages.error_connection')}`, 'error');
         }
         
     } catch (error) {
         console.error('❌ [SHIFTS] Error guardando turno:', error);
-        showShiftMessage(`❌ Error de conexión: ${error.message}`, 'error');
+        showShiftMessage(`❌ ${await window.t('shifts.messages.error_connection')}: ${error.message}`, 'error');
     }
 }
 
@@ -1440,7 +1440,7 @@ async function editAdvancedShift(shiftId) {
         // Buscar el turno en la lista actual
         const shift = currentShifts.find(s => s.id === shiftId);
         if (!shift) {
-            showShiftMessage('❌ Turno no encontrado', 'error');
+            showShiftMessage(await window.t('shifts.messages.error_not_found'), 'error');
             return;
         }
         
@@ -1469,7 +1469,7 @@ async function editAdvancedShift(shiftId) {
         
     } catch (error) {
         console.error('❌ [SHIFTS] Error editando turno:', error);
-        showShiftMessage('❌ Error cargando turno para edición', 'error');
+        showShiftMessage(await window.t('shifts.messages.error_loading'), 'error');
     }
 }
 
@@ -1587,13 +1587,13 @@ async function updateAdvancedShift(shiftId) {
         // Obtener datos del formulario (reutilizamos la lógica de saveAdvancedShift)
         const modal = document.getElementById('advancedShiftModal');
         if (!modal) {
-            showShiftMessage('❌ Error: Modal no encontrado', 'error');
+            showShiftMessage(await window.t('shifts.messages.error_modal_not_found'), 'error');
             return;
         }
         
         const shiftTypeElement = document.querySelector('input[name="shiftType"]:checked');
         if (!shiftTypeElement) {
-            showShiftMessage('❌ Error: Tipo de turno no seleccionado', 'error');
+            showShiftMessage(await window.t('shifts.messages.error_form_elements'), 'error');
             return;
         }
         const shiftType = shiftTypeElement.value;
@@ -1607,7 +1607,7 @@ async function updateAdvancedShift(shiftId) {
         const breakEndEl = document.getElementById('advBreakEnd');
         
         if (!nameEl || !statusEl || !startEl || !endEl) {
-            showShiftMessage('❌ Error: Faltan elementos del formulario', 'error');
+            showShiftMessage(await window.t('shifts.messages.error_form_elements'), 'error');
             return;
         }
         
@@ -1620,7 +1620,7 @@ async function updateAdvancedShift(shiftId) {
         
         // Validaciones básicas
         if (!name || !startTime || !endTime) {
-            showShiftMessage('❌ Los campos obligatorios deben estar completos', 'warning');
+            showShiftMessage(await window.t('shifts.validation.required_fields'), 'warning');
             return;
         }
         
@@ -1714,7 +1714,7 @@ async function updateAdvancedShift(shiftId) {
         if (response.ok) {
             const result = await response.json();
             console.log('✅ [SHIFTS] Turno actualizado:', result);
-            showShiftMessage(`✅ Turno "${name}" actualizado exitosamente`, 'success');
+            showShiftMessage(`✅ ${await window.t('shifts.messages.success_updated')}`, 'success');
             closeAdvancedShiftModal();
             
             // Recargar lista de turnos
@@ -1731,23 +1731,23 @@ async function updateAdvancedShift(shiftId) {
             }
             
             console.error('❌ [SHIFTS] Error actualizando turno:', errorData);
-            showShiftMessage(`❌ Error actualizando: ${errorData.error || 'Error desconocido'}`, 'error');
+            showShiftMessage(`❌ ${await window.t('shifts.messages.error_updating')}: ${errorData.error || await window.t('shifts.messages.error_connection')}`, 'error');
         }
         
     } catch (error) {
         console.error('❌ [SHIFTS] Error en actualización:', error);
-        showShiftMessage(`❌ Error de conexión: ${error.message}`, 'error');
+        showShiftMessage(`❌ ${await window.t('shifts.messages.error_connection')}: ${error.message}`, 'error');
     }
 }
 
-function viewAdvancedShift(shiftId) {
+async function viewAdvancedShift(shiftId) {
     console.log('👁️ [SHIFTS] Viendo turno avanzado:', shiftId);
     
     try {
         // Buscar el turno
         const shift = currentShifts.find(s => s.id === shiftId);
         if (!shift) {
-            showShiftMessage('❌ Turno no encontrado', 'error');
+            showShiftMessage(await window.t('shifts.messages.error_not_found'), 'error');
             return;
         }
         
@@ -1777,14 +1777,14 @@ function viewAdvancedShift(shiftId) {
                 <h3>👁️ Vista Detallada del Turno</h3>
                 
                 <div style="margin: 20px 0;">
-                    <h4>📋 Información Básica</h4>
+                    <h4 data-translate="shifts.view.basic_info">📋 Información Básica</h4>
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">🕐 Nombre:</td><td style="padding: 8px; border: 1px solid #ddd;">${shift.name}</td></tr>
                         <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">📊 Tipo:</td><td style="padding: 8px; border: 1px solid #ddd;">${typeText}</td></tr>
                         <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">⏰ Horario:</td><td style="padding: 8px; border: 1px solid #ddd;">${shift.startTime} - ${shift.endTime}</td></tr>
-                        <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">☕ Descanso:</td><td style="padding: 8px; border: 1px solid #ddd;">${shift.breakStartTime && shift.breakEndTime ? shift.breakStartTime + ' - ' + shift.breakEndTime : 'Sin descanso'}</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">☕ <span data-translate="shifts.table.break">Descanso:</span></td><td style="padding: 8px; border: 1px solid #ddd;">${shift.breakStartTime && shift.breakEndTime ? shift.breakStartTime + ' - ' + shift.breakEndTime : 'Sin descanso'}</td></tr>
                         <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">📅 Días:</td><td style="padding: 8px; border: 1px solid #ddd;">${daysText}</td></tr>
-                        <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">📍 Estado:</td><td style="padding: 8px; border: 1px solid #ddd;"><span style="color: ${shift.isActive ? '#4CAF50' : '#f44336'}">${shift.isActive ? '✅ Activo' : '❌ Inactivo'}</span></td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">📍 Estado:</td><td style="padding: 8px; border: 1px solid #ddd;"><span style="color: ${shift.isActive ? '#4CAF50' : '#f44336'}">${shift.isActive ? '✅ <span data-translate="common.active">Activo</span>' : '❌ <span data-translate="common.inactive">Inactivo</span>'}</span></td></tr>
                         <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">👥 Empleados:</td><td style="padding: 8px; border: 1px solid #ddd;">${shift.employees || 0} asignados</td></tr>
                     </table>
                 </div>
@@ -1831,7 +1831,7 @@ function viewAdvancedShift(shiftId) {
         
     } catch (error) {
         console.error('❌ [SHIFTS] Error viendo turno:', error);
-        showShiftMessage('❌ Error cargando vista del turno', 'error');
+        showShiftMessage(await window.t('shifts.messages.error_loading'), 'error');
     }
 }
 
@@ -1844,18 +1844,18 @@ function closeViewShiftModal() {
 }
 
 function assignEmployeesToShift(shiftId) {
-    console.log('👥 [SHIFTS] Asignando empleados al turno:', shiftId);
+    console.log('👥 [SHIFTS] Asignando <span data-translate="shifts.table.employees_count">empleados</span> al turno:', shiftId);
     showAdvancedAssignments();
 }
 
-function duplicateShift(shiftId) {
+async function duplicateShift(shiftId) {
     console.log('📋 [SHIFTS] Duplicando turno:', shiftId);
-    
+
     try {
         // Buscar el turno a duplicar
         const shift = currentShifts.find(s => s.id === shiftId);
         if (!shift) {
-            showShiftMessage('❌ Turno no encontrado', 'error');
+            showShiftMessage(await window.t('shifts.messages.error_not_found'), 'error');
             return;
         }
         
@@ -1876,13 +1876,13 @@ function duplicateShift(shiftId) {
             const modal = document.getElementById('advancedShiftModal');
             if (modal) {
                 const title = modal.querySelector('h3');
-                if (title) title.textContent = '📋 Duplicar Turno';
+                if (title) title.setAttribute('data-translate', 'shifts.form.modal_title_duplicate');
             }
         }, 200);
-        
+
     } catch (error) {
         console.error('❌ [SHIFTS] Error duplicando turno:', error);
-        showShiftMessage('❌ Error duplicando turno', 'error');
+        showShiftMessage(await window.t('shifts.messages.error_loading'), 'error');
     }
 }
 
@@ -1890,14 +1890,15 @@ async function deleteAdvancedShift(shiftId) {
     // Buscar el turno para mostrar nombre en confirmación
     const shift = currentShifts.find(s => s.id === shiftId);
     const shiftName = shift ? shift.name : 'este turno';
-    
-    if (confirm(`¿Está seguro que desea eliminar "${shiftName}"?\n\nEsta acción no se puede deshacer.`)) {
+
+    const confirmMsg = `${await window.t('shifts.confirm.delete_title', { name: shiftName })}\n\n${await window.t('shifts.confirm.delete_warning')}`;
+    if (confirm(confirmMsg)) {
         console.log('🗑️ [SHIFTS] Eliminando turno:', shiftId);
         
         try {
             // Verificar si es un turno de ejemplo
             if (shiftId.startsWith('example-')) {
-                showShiftMessage('❌ Los turnos de ejemplo no pueden ser eliminados', 'error');
+                showShiftMessage(await window.t('shifts.messages.example_cannot_delete'), 'error');
                 return;
             }
             
@@ -1915,7 +1916,7 @@ async function deleteAdvancedShift(shiftId) {
             if (response.ok) {
                 const result = await response.json();
                 console.log('✅ [SHIFTS] Turno eliminado:', result);
-                showShiftMessage(`🗑️ Turno "${shiftName}" eliminado exitosamente`, 'success');
+                showShiftMessage(`🗑️ ${await window.t('shifts.messages.success_deleted')}`, 'success');
                 
                 // Recargar lista de turnos
                 setTimeout(() => {
@@ -1931,12 +1932,12 @@ async function deleteAdvancedShift(shiftId) {
                 }
                 
                 console.error('❌ [SHIFTS] Error eliminando turno:', errorData);
-                showShiftMessage(`❌ Error eliminando: ${errorData.error || 'Error desconocido'}`, 'error');
+                showShiftMessage(`❌ ${await window.t('shifts.messages.error_deleting')}: ${errorData.error || await window.t('shifts.messages.error_connection')}`, 'error');
             }
             
         } catch (error) {
             console.error('❌ [SHIFTS] Error en eliminación:', error);
-            showShiftMessage(`❌ Error de conexión: ${error.message}`, 'error');
+            showShiftMessage(`❌ ${await window.t('shifts.messages.error_connection')}: ${error.message}`, 'error');
         }
     }
 }

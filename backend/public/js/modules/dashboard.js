@@ -1,5 +1,7 @@
 // Dashboard Module - v4.0 PROGRESSIVE
-console.log('📊 [DASHBOARD] Módulo dashboard cargado');
+(async () => {
+    console.log(`📊 [DASHBOARD] ${await window.t('dashboard.console.module_loaded')}`);
+})();
 
 // Dashboard functions - Versión Genérica para Sistema Modular
 function showDashboardContent() {
@@ -18,37 +20,37 @@ function showDashboardContent() {
 
 // Load company dashboard information
 async function loadCompanyDashboardInfo() {
-    console.log('🏢 [DASHBOARD] Cargando información de la empresa...');
+    console.log(`🏢 [DASHBOARD] ${await window.t('dashboard.console.loading_company_info')}`);
 
     try {
         // Load current company info
         if (typeof currentCompany !== 'undefined' && currentCompany) {
-            updateCompanyInfo(currentCompany);
+            await updateCompanyInfo(currentCompany);
         } else {
-            updateCompanyInfo({
-                name: 'Empresa de Ejemplo',
-                info: 'Información de empresa no disponible'
+            await updateCompanyInfo({
+                name: await window.t('dashboard.company.example_name'),
+                info: await window.t('dashboard.company.not_available')
             });
         }
 
         // Load quick access modules
-        loadQuickAccessModules();
+        await loadQuickAccessModules();
 
         // Load system notifications
-        loadSystemNotifications();
+        await loadSystemNotifications();
 
     } catch (error) {
-        console.log('ℹ️ [DASHBOARD] Error cargando información, usando datos por defecto');
+        console.log(`ℹ️ [DASHBOARD] ${await window.t('dashboard.console.error_loading')}`);
     }
 }
 
 // Update company information display
-function updateCompanyInfo(company) {
+async function updateCompanyInfo(company) {
     const nameEl = document.getElementById('companyName');
     const infoEl = document.getElementById('companyInfo');
 
     if (nameEl) {
-        nameEl.textContent = company.name || 'Mi Empresa';
+        nameEl.textContent = company.name || await window.t('dashboard.company.default_name');
     }
 
     if (infoEl) {
@@ -57,12 +59,12 @@ function updateCompanyInfo(company) {
         if (company.contact_email) info.push(company.contact_email);
         if (company.phone) info.push(company.phone);
 
-        infoEl.textContent = info.length > 0 ? info.join(' • ') : 'Sistema de gestión empresarial multi-módulo';
+        infoEl.textContent = info.length > 0 ? info.join(' • ') : await window.t('dashboard.company.default_info');
     }
 }
 
 // Load quick access modules grid
-function loadQuickAccessModules() {
+async function loadQuickAccessModules() {
     const container = document.getElementById('quickAccessModules');
     if (!container) return;
 
@@ -74,25 +76,26 @@ function loadQuickAccessModules() {
         .filter(module => popularModules.includes(module.id))
         .slice(0, 4);
 
+    const quickAccessLabel = await window.t('dashboard.quick_access.quick_access_label');
     if (quickModules.length > 0) {
         container.innerHTML = quickModules.map(module => `
             <div class="quick-module-card" onclick="showTab('${module.id}', this)">
                 <div class="module-icon">${module.icon}</div>
                 <div class="module-name">${module.name}</div>
-                <div class="module-desc">Acceso rápido</div>
+                <div class="module-desc">${quickAccessLabel}</div>
             </div>
         `).join('');
     } else {
         container.innerHTML = `
             <div class="no-modules-message">
-                <p>Los módulos de acceso rápido se cargarán una vez que tengas módulos disponibles</p>
+                <p data-translate="dashboard.quick_access.no_modules">${await window.t('dashboard.quick_access.no_modules')}</p>
             </div>
         `;
     }
 }
 
 // Load system notifications
-function loadSystemNotifications() {
+async function loadSystemNotifications() {
     const container = document.getElementById('systemNotifications');
     if (!container) return;
 
@@ -101,8 +104,8 @@ function loadSystemNotifications() {
         {
             type: 'info',
             icon: 'ℹ️',
-            title: 'Sistema Modular Activo',
-            desc: 'Todos los módulos están funcionando correctamente'
+            title: await window.t('dashboard.notifications.system_active_title'),
+            desc: await window.t('dashboard.notifications.system_active_desc')
         }
     ];
 
@@ -111,8 +114,8 @@ function loadSystemNotifications() {
         notifications.push({
             type: 'success',
             icon: '✅',
-            title: `${window.availableModules.length} Módulos Disponibles`,
-            desc: 'Haz clic en cualquier módulo para acceder a sus funcionalidades'
+            title: await window.t('dashboard.notifications.modules_available_title', { count: window.availableModules.length }),
+            desc: await window.t('dashboard.notifications.modules_available_desc')
         });
     }
 
@@ -128,12 +131,16 @@ function loadSystemNotifications() {
 }
 
 // Help and support functions
-function showSystemGuide() {
-    alert('🔍 Guía del Sistema:\n\n1. Utiliza los módulos en la barra superior\n2. Cada módulo tiene funcionalidades específicas\n3. Los datos están aislados por empresa\n4. Para soporte técnico, usa el botón de contacto');
+async function showSystemGuide() {
+    const title = await window.t('dashboard.help.guide_title');
+    const content = await window.t('dashboard.help.guide_content');
+    alert(`🔍 ${title}:\n\n${content}`);
 }
 
-function contactSupport() {
-    alert('📞 Contacto de Soporte:\n\nPuedes contactar al soporte técnico a través de:\n- Email: soporte@empresa.com\n- Teléfono: +54 11 1234-5678\n- Sistema de tickets interno');
+async function contactSupport() {
+    const title = await window.t('dashboard.help.support_title');
+    const content = await window.t('dashboard.help.support_content');
+    alert(`📞 ${title}:\n\n${content}`);
 }
 
 // Deprecated function - kept for compatibility
@@ -152,7 +159,7 @@ function updateDashboardStats(stats) {
 async function loadRecentActivity() {
     const activityContainer = document.getElementById('recentActivity');
     if (!activityContainer) return;
-    
+
     try {
         // Use mock data for now since recent-activity endpoint doesn't exist
         const activities = [
@@ -161,24 +168,26 @@ async function loadRecentActivity() {
             { time: '12:30', desc: 'Carlos López - Salida almuerzo', type: 'break' },
             { time: '13:45', desc: 'Ana Martín - Regreso almuerzo', type: 'return' }
         ];
-        
+
+        const noActivity = await window.t('dashboard.activity.no_activity');
         activityContainer.innerHTML = activities.map(activity => `
             <div class="activity-item">
                 <div class="activity-time">${activity.time}</div>
                 <div class="activity-desc">${activity.desc}</div>
             </div>
-        `).join('') || '<div class="activity-item"><div class="activity-desc">Sin actividad reciente</div></div>';
-        
+        `).join('') || `<div class="activity-item"><div class="activity-desc">${noActivity}</div></div>`;
+
     } catch (error) {
         console.error('❌ [DASHBOARD] Error cargando actividad:', error);
-        activityContainer.innerHTML = '<div class="activity-item"><div class="activity-desc">Error cargando actividad</div></div>';
+        const errorMsg = await window.t('dashboard.activity.error_loading');
+        activityContainer.innerHTML = `<div class="activity-item"><div class="activity-desc">${errorMsg}</div></div>`;
     }
 }
 
 // Export dashboard report
-function exportDashboardReport() {
-    console.log('📊 [DASHBOARD] Exportando reporte...');
-    alert('Función de exportación en desarrollo');
+async function exportDashboardReport() {
+    console.log(`📊 [DASHBOARD] ${await window.t('dashboard.console.exporting')}`);
+    alert(await window.t('dashboard.export.in_development'));
 }
 
 // Auto-refresh dashboard every 30 seconds
@@ -188,4 +197,6 @@ setInterval(() => {
     }
 }, 30000);
 
-console.log('✅ [DASHBOARD] Módulo dashboard configurado');
+(async () => {
+    console.log(`✅ [DASHBOARD] ${await window.t('dashboard.console.configured')}`);
+})();
