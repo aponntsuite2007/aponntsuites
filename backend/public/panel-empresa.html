@@ -795,10 +795,19 @@
                 if (timeElement) timeElement.textContent = now.toLocaleTimeString('es-ES', timeOptions);
             }
             
-            // Actualizar cada segundo
-            setInterval(updateDateTime, 1000);
-            // Actualizar inmediatamente
-            updateDateTime();
+            // Ejecutar cuando el DOM esté completamente cargado
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('📅 [DATETIME] Iniciando actualización de fecha/hora...');
+                    updateDateTime();
+                    setInterval(updateDateTime, 1000);
+                });
+            } else {
+                // El DOM ya está listo
+                console.log('📅 [DATETIME] DOM listo, iniciando fecha/hora...');
+                updateDateTime();
+                setInterval(updateDateTime, 1000);
+            }
             
             /* ✅ CÓDIGO FUNCIONAL PROTEGIDO - NO MODIFICAR SIN ANÁLISIS
              * 📅 Fecha: 23/SEP/2025 04:02:00
@@ -1013,28 +1022,22 @@
                 });
 
                 fallbackSelector.addEventListener('change', async function() {
-                            const selectedLang = this.value;
-                            console.log('🌍 [LANGUAGE] Usuario cambió idioma a:', selectedLang);
+                    const selectedLang = this.value;
+                    console.log('🌍 [LANGUAGE] Usuario cambió idioma a:', selectedLang);
 
-                            if (window.translator && typeof window.translator.changeLanguage === 'function') {
-                                await window.translator.changeLanguage(selectedLang);
-                                console.log('✅ [LANGUAGE] Idioma cambiado con translator a:', selectedLang);
-                            } else {
-                                localStorage.setItem('user_language', selectedLang);
-                                console.log('⚠️ [LANGUAGE] Idioma guardado sin translator, recargando...');
-                                location.reload();
-                            }
-                        });
-
-                        container.innerHTML = '';
-                        container.appendChild(fallbackSelector);
-                        console.log('✅ [HEADER] Selector de idioma fallback creado y agregado al DOM');
+                    if (window.translator && typeof window.translator.changeLanguage === 'function') {
+                        await window.translator.changeLanguage(selectedLang);
+                        console.log('✅ [LANGUAGE] Idioma cambiado con translator a:', selectedLang);
                     } else {
-                        console.warn('⚠️ [HEADER] Container ya tiene hijos, no se creó selector');
+                        localStorage.setItem('user_language', selectedLang);
+                        console.log('⚠️ [LANGUAGE] Idioma guardado sin translator, recargando...');
+                        location.reload();
                     }
-                } else {
-                    console.error('❌ [HEADER] languageSelectorContainer no encontrado en el DOM');
-                }
+                });
+
+                container.innerHTML = '';
+                container.appendChild(fallbackSelector);
+                console.log('✅ [HEADER] Selector de idioma fallback creado y agregado al DOM');
             }
             
             // ✅ FUNCIÓN PARA OBTENER DATOS REALES - V2.1.2
@@ -1625,7 +1628,7 @@
                     </div>
                     <div class="user-info" style="text-align: right;">
                         <!-- Info de Versiones en Header -->
-                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.3.0 | BE: v1.3.0</div>
+                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.3.1 | BE: v1.3.0</div>
                         <div id="currentUserName" style="font-size: 13px; font-weight: 600; color: white; margin-bottom: 2px;">Usuario</div>
                         <div id="currentUserRole" style="font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">Admin</div>
                     </div>
