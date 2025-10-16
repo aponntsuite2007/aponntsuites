@@ -688,7 +688,7 @@
             <form id="multiTenantLoginForm">
                 <!-- PASO 1: SELECCIONAR EMPRESA -->
                 <div class="form-group">
-                    <label for="companySelect">Empresa:</label>
+                    <label for="companySelect" data-translate="login.select_company">🏢 Seleccionar Empresa</label>
                     <select id="companySelect" class="form-control" required>
                         <option value="" data-translate="login.loading_companies">Cargando empresas...</option>
                     </select>
@@ -5768,6 +5768,14 @@
                     modal.style.alignItems = 'center';
                     modal.style.zIndex = '9999';
                     console.log('🔐 [INIT] Modal de login mostrado y centrado');
+
+                    // 🌍 TRADUCIR MODAL DESPUÉS DE MOSTRARLO
+                    setTimeout(() => {
+                        if (window.translator) {
+                            console.log('🌍 [TRANSLATION] Traduciendo modal de login...');
+                            window.translator.updateInterface();
+                        }
+                    }, 200);
                 }
             }, 100);
             
@@ -6152,6 +6160,14 @@
         try {
             await loadCompanies();
             setupEventListeners();
+
+            // 🌍 TRADUCIR FORMULARIO DE LOGIN DESPUÉS DE CARGARLO
+            setTimeout(() => {
+                if (window.translator) {
+                    console.log('🌍 [TRANSLATION] Traduciendo formulario multi-tenant...');
+                    window.translator.updateInterface();
+                }
+            }, 300);
         } catch (error) {
             console.error('❌ Error inicializando sistema:', error);
             showError('generalError', 'Error inicializando el sistema');
