@@ -904,54 +904,115 @@
                 }
             }
             
-            function initializeLanguageSelector() {
-                const container = document.getElementById('languageSelectorContainer');
-                if (container && !container.hasChildNodes()) {
-                    if (window.translator && typeof window.translator.createLanguageSelector === 'function') {
-                        try {
-                            const selector = window.translator.createLanguageSelector();
-                            if (selector) {
-                                container.innerHTML = '';
-                                container.appendChild(selector);
-                                console.log('✅ [HEADER] Selector de idioma inicializado correctamente');
-                                return;
-                            }
-                        } catch (error) {
-                            console.error('❌ [HEADER] Error creando selector:', error);
+            // Establecer idioma inicial basado en país de empresa
+            function setInitialLanguageFromCompany() {
+                try {
+                    const savedCompanyStr = localStorage.getItem('selectedCompany');
+                    const company = (savedCompanyStr && savedCompanyStr !== 'undefined') ? JSON.parse(savedCompanyStr) : null;
+
+                    if (company && company.country && window.translator) {
+                        // Mapeo de países a idiomas
+                        const countryToLanguage = {
+                            'Argentina': 'es',
+                            'España': 'es',
+                            'México': 'es',
+                            'Chile': 'es',
+                            'Colombia': 'es',
+                            'Perú': 'es',
+                            'Venezuela': 'es',
+                            'United States': 'en',
+                            'USA': 'en',
+                            'Estados Unidos': 'en',
+                            'United Kingdom': 'en',
+                            'Canada': 'en',
+                            'Brazil': 'pt',
+                            'Brasil': 'pt',
+                            'Portugal': 'pt',
+                            'Germany': 'de',
+                            'Alemania': 'de',
+                            'Italy': 'it',
+                            'Italia': 'it',
+                            'France': 'fr',
+                            'Francia': 'fr'
+                        };
+
+                        const language = countryToLanguage[company.country] || 'es';
+
+                        // Solo establecer si el usuario no ha seleccionado manualmente un idioma
+                        const userLang = localStorage.getItem('user_language');
+                        if (!userLang) {
+                            window.translator.currentLanguage = language;
+                            window.translator.setLicenseDefaultLanguage(language);
+                            console.log(`🌍 [LANGUAGE] Idioma establecido por país (${company.country}): ${language}`);
                         }
                     }
-                    
-                    // Fallback: crear selector simple si el translator no está disponible
-                    if (!container.hasChildNodes()) {
-                        const fallbackSelector = document.createElement('select');
-                        fallbackSelector.style.cssText = `
-                            padding: 4px 8px;
-                            border: 1px solid rgba(255,255,255,0.3);
-                            border-radius: 4px;
-                            background: rgba(255,255,255,0.1);
-                            color: white;
-                            font-size: 11px;
-                            min-width: 80px;
-                        `;
-                        
-                        const languages = {
-                            'es': '🇪🇸 ES',
-                            'en': '🇺🇸 EN',
-                            'pt': '🇧🇷 PT',
-                            'de': '🇩🇪 DE',
-                            'it': '🇮🇹 IT',
-                            'fr': '🇫🇷 FR'
-                        };
-                        
-                        Object.entries(languages).forEach(([code, name]) => {
-                            const option = document.createElement('option');
-                            option.value = code;
-                            option.textContent = name;
-                            if (code === 'es') option.selected = true;
-                            fallbackSelector.appendChild(option);
-                        });
-                        
-                        fallbackSelector.addEventListener('change', function() {
+                } catch (error) {
+                    console.error('❌ [LANGUAGE] Error estableciendo idioma inicial:', error);
+                }
+            }
+
+            function initializeLanguageSelector() {
+                const container = document.getElementById('languageSelectorContainer');
+                if (!container) {
+                    console.error('❌ [HEADER] No se encontró languageSelectorContainer');
+                    return;
+                }
+
+                if (container.hasChildNodes()) {
+                    console.log('⚠️ [HEADER] Selector de idioma ya existe');
+                    return;
+                }
+
+                if (window.translator && typeof window.translator.createLanguageSelector === 'function') {
+                    try {
+                        const selector = window.translator.createLanguageSelector();
+                        if (selector) {
+                            container.innerHTML = '';
+                            container.appendChild(selector);
+                            console.log('✅ [HEADER] Selector de idioma inicializado correctamente');
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('❌ [HEADER] Error creando selector:', error);
+                    }
+                }
+
+                // Fallback: crear selector simple si el translator no está disponible
+                console.warn('⚠️ [HEADER] Usando selector de idioma fallback');
+                const fallbackSelector = document.createElement('select');
+                fallbackSelector.style.cssText = `
+                    padding: 4px 8px;
+                    border: 1px solid rgba(255,255,255,0.3);
+                    border-radius: 4px;
+                    background: rgba(255,255,255,0.1);
+                    color: white;
+                    font-size: 11px;
+                    min-width: 120px;
+                    cursor: pointer;
+                `;
+
+                const languages = {
+                    'es': '🇪🇸 ESPAÑOL',
+                    'en': '🇺🇸 ENGLISH',
+                    'pt': '🇧🇷 PORTUGUÊS',
+                    'de': '🇩🇪 DEUTSCH',
+                    'it': '🇮🇹 ITALIANO',
+                    'fr': '🇫🇷 FRANÇAIS'
+                };
+
+                const currentLang = window.translator?.currentLanguage || 'es';
+
+                Object.entries(languages).forEach(([code, name]) => {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = name;
+                    option.style.color = '#333';
+                    option.style.background = 'white';
+                    if (code === currentLang) option.selected = true;
+                    fallbackSelector.appendChild(option);
+                });
+
+                fallbackSelector.addEventListener('change', async function() {
                             if (window.translator && typeof window.translator.setLanguage === 'function') {
                                 window.translator.setLanguage(this.value);
                             } else {
@@ -1490,6 +1551,10 @@
                 updateUserInfo();
                 console.log('🔍 [HEADER DEBUG] Llamando updateCompanyInfo()...');
                 updateCompanyInfo(); // ✅ NUEVO v2.1.2: Forzar actualización header empresa
+
+                // Establecer idioma inicial basado en país de empresa
+                setInitialLanguageFromCompany();
+
                 console.log('🔍 [HEADER DEBUG] Llamando initializeLanguageSelector()...');
                 initializeLanguageSelector(); // ACTIVADO
 
@@ -1550,7 +1615,7 @@
                     </div>
                     <div class="user-info" style="text-align: right;">
                         <!-- Info de Versiones en Header -->
-                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.1.4 | BE: v1.3.0</div>
+                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.2.0 | BE: v1.3.0</div>
                         <div id="currentUserName" style="font-size: 13px; font-weight: 600; color: white; margin-bottom: 2px;">Usuario</div>
                         <div id="currentUserRole" style="font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">Admin</div>
                     </div>
@@ -6114,12 +6179,18 @@
                 // Login exitoso
                 authToken = data.token;
                 currentUser = data.user;
-                currentCompany = data.company || {
-                    id: companyId,
-                    company_id: companyId,
-                    name: document.getElementById('companySelect').selectedOptions[0].textContent,
-                    address: null,
-                    phone: null
+
+                // Guardar datos COMPLETOS de empresa
+                currentCompany = {
+                    id: data.company?.company_id || companyId,
+                    company_id: data.company?.company_id || companyId,
+                    name: data.company?.name || document.getElementById('companySelect').selectedOptions[0].textContent,
+                    address: data.company?.address || '',
+                    phone: data.company?.phone || data.company?.contact_phone || '',
+                    contact_phone: data.company?.contact_phone || data.company?.phone || '',
+                    country: data.company?.country || 'Argentina',
+                    legal_name: data.company?.legal_name || data.company?.name || '',
+                    email: data.company?.email || ''
                 };
 
                 // Guardar en localStorage - REACTIVADO para módulos biométricos
@@ -6134,11 +6205,15 @@
                 window.companyAuthToken = authToken; // Para compatibilidad adicional
                 isAuthenticated = true;
 
+                console.log('✅ [LOGIN] Datos de empresa guardados:', currentCompany);
                 console.log('✅ Login exitoso - configurando variables globales:', {
                     selectedCompany: window.selectedCompany,
                     authToken: !!window.authToken,
                     isAuthenticated: window.isAuthenticated
                 });
+
+                // Actualizar banner con datos de empresa INMEDIATAMENTE
+                updateCompanyInfo();
 
                 // Los empleados se cargarán automáticamente cuando se abra el módulo biométrico
                 console.log('🔄 [LOGIN] Empleados se cargarán al abrir módulo de registro biométrico');
