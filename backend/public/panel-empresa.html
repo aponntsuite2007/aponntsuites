@@ -242,43 +242,13 @@
                     console.warn('⚠️ [DASHBOARD] No hay empresa seleccionada');
                 }
 
-                // DETECTAR Y CONFIGURAR IDIOMA AUTOMÁTICAMENTE POR PAÍS
-                const companyCountry = currentCompany?.country || selectedCompany?.country;
-                if (companyCountry && window.translator) {
-                    console.log('🌍 [AUTO-LANG] País de empresa detectado:', companyCountry);
-
-                    // Mapeo de países a idiomas
-                    const countryToLanguage = {
-                        'Argentina': 'es', 'España': 'es', 'México': 'es', 'Colombia': 'es',
-                        'Chile': 'es', 'Perú': 'es', 'Venezuela': 'es', 'Ecuador': 'es',
-                        'Uruguay': 'es', 'Paraguay': 'es', 'Bolivia': 'es', 'Costa Rica': 'es',
-                        'Guatemala': 'es', 'Honduras': 'es', 'Nicaragua': 'es', 'Panamá': 'es',
-                        'El Salvador': 'es', 'República Dominicana': 'es', 'Cuba': 'es', 'Puerto Rico': 'es',
-                        'United States': 'en', 'Canada': 'en', 'United Kingdom': 'en',
-                        'Australia': 'en', 'New Zealand': 'en', 'Ireland': 'en', 'South Africa': 'en',
-                        'Brasil': 'pt', 'Portugal': 'pt', 'Angola': 'pt', 'Mozambique': 'pt',
-                        'Germany': 'de', 'Austria': 'de', 'Switzerland': 'de',
-                        'Italy': 'it', 'San Marino': 'it', 'Vatican': 'it',
-                        'France': 'fr', 'Belgium': 'fr', 'Canada': 'fr', 'Switzerland': 'fr', 'Monaco': 'fr'
-                    };
-
-                    const detectedLanguage = countryToLanguage[companyCountry] || 'es';
-                    console.log(`🌍 [AUTO-LANG] Idioma detectado: ${detectedLanguage} para país: ${companyCountry}`);
-
-                    // Cambiar idioma automáticamente
-                    window.translator.changeLanguage(detectedLanguage).then(() => {
-                        console.log(`✅ [AUTO-LANG] Idioma cambiado automáticamente a: ${detectedLanguage}`);
-
-                        // DESACTIVADO - traducción simplificada
-                        // setTimeout(() => {
-                        //     if (typeof initializeLanguageSelector === 'function') {
-                        //         // initializeLanguageSelector(); // DESACTIVADO
-                        //     }
-                        // }, 500);
-                    });
-                } else {
-                    console.log('⚠️ [AUTO-LANG] No se detectó país o translator no disponible');
-                }
+                // 🌍 PLUG AND PLAY: Detectar y establecer idioma automáticamente según país de empresa
+                setTimeout(() => {
+                    if (typeof setInitialLanguageFromCompany === 'function') {
+                        setInitialLanguageFromCompany();
+                        console.log('🌍 [DASHBOARD] Idioma automático configurado');
+                    }
+                }, 800);
 
                 // CONFIGURAR PERMISOS DE ADMIN - YA SE CONFIGURA EN EL LOGIN
                 // NO sobrescribir currentUser aquí - ya viene del API de login con el ID real
@@ -303,13 +273,20 @@
                                         html += `
                                             <div onclick="window.openModuleDirect('${module.id}', '${module.name}')" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; background: white; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
                                                 <div style="font-size: 24px; margin-bottom: 10px;">${module.icon || '📦'}</div>
-                                                <div style="font-weight: bold; margin-bottom: 5px;">${module.name}</div>
-                                                <div style="font-size: 12px; color: #666;">${module.description || ''}</div>
+                                                <div style="font-weight: bold; margin-bottom: 5px;" data-translate="modules.${module.id}.title">${module.name}</div>
+                                                <div style="font-size: 12px; color: #666;" data-translate="modules.${module.id}.description">${module.description || ''}</div>
                                             </div>
                                         `;
                                     });
                                     html += '</div>';
                                     modulesContainer.innerHTML = html;
+
+                                    // 🌍 TRADUCIR MÓDULOS DESPUÉS DE CARGARLOS
+                                    console.log('🌍 [TRANSLATION] Traduciendo módulos dinámicos...');
+                                    if (window.translator) {
+                                        window.translator.updateInterface();
+                                        console.log('✅ [TRANSLATION] Módulos traducidos');
+                                    }
 
                                     // DEFINIR FUNCIÓN GLOBAL PARA ABRIR MÓDULOS
                                     window.openModuleDirect = function(moduleId, moduleName) {
@@ -720,20 +697,20 @@
 
                 <!-- PASO 2: INGRESAR USUARIO (CAMPO DE TEXTO LIBRE) -->
                 <div class="form-group">
-                    <label for="userInput">Usuario:</label>
-                    <input type="text" id="userInput" class="form-control" placeholder="Ingrese su usuario" required disabled>
+                    <label for="userInput" data-translate="login.username">Usuario:</label>
+                    <input type="text" id="userInput" class="form-control" placeholder="Ingrese su usuario" data-translate-placeholder="login.username" required disabled>
                     <div class="error-message" id="userError"></div>
                 </div>
 
                 <!-- PASO 3: CONTRASEÑA -->
                 <div class="form-group">
-                    <label for="passwordInput">Contraseña:</label>
+                    <label for="passwordInput" data-translate="login.password">Contraseña:</label>
                     <input type="password" id="passwordInput" class="form-control" required disabled>
                     <div class="error-message" id="passwordError"></div>
                 </div>
 
                 <!-- BOTÓN DE LOGIN -->
-                <button type="submit" id="loginButton" class="btn-primary" disabled>
+                <button type="submit" id="loginButton" class="btn-primary" data-translate="login.login_button" disabled>
                     🚀 Iniciar Sesión
                 </button>
 
@@ -1029,47 +1006,60 @@
                 }
             }
             
-            // Establecer idioma inicial basado en país de empresa
+            // Establecer idioma inicial basado en país de empresa (MEJORADO - PLUG AND PLAY)
             function setInitialLanguageFromCompany() {
                 try {
-                    const savedCompanyStr = localStorage.getItem('selectedCompany');
-                    const company = (savedCompanyStr && savedCompanyStr !== 'undefined') ? JSON.parse(savedCompanyStr) : null;
+                    // Intentar obtener empresa desde múltiples fuentes
+                    let company = window.currentCompany || window.selectedCompany;
 
-                    if (company && company.country && window.translator) {
-                        // Mapeo de países a idiomas
-                        const countryToLanguage = {
-                            'Argentina': 'es',
-                            'España': 'es',
-                            'México': 'es',
-                            'Chile': 'es',
-                            'Colombia': 'es',
-                            'Perú': 'es',
-                            'Venezuela': 'es',
-                            'United States': 'en',
-                            'USA': 'en',
-                            'Estados Unidos': 'en',
-                            'United Kingdom': 'en',
-                            'Canada': 'en',
-                            'Brazil': 'pt',
-                            'Brasil': 'pt',
-                            'Portugal': 'pt',
-                            'Germany': 'de',
-                            'Alemania': 'de',
-                            'Italy': 'it',
-                            'Italia': 'it',
-                            'France': 'fr',
-                            'Francia': 'fr'
-                        };
+                    if (!company) {
+                        const savedCompanyStr = localStorage.getItem('selectedCompany') || localStorage.getItem('currentCompany');
+                        company = (savedCompanyStr && savedCompanyStr !== 'undefined') ? JSON.parse(savedCompanyStr) : null;
+                    }
 
-                        const language = countryToLanguage[company.country] || 'es';
+                    if (!company || !window.translator) {
+                        console.log('⚠️ [LANGUAGE] No hay empresa o translator disponible');
+                        return;
+                    }
 
-                        // Solo establecer si el usuario no ha seleccionado manualmente un idioma
-                        const userLang = localStorage.getItem('user_language');
-                        if (!userLang) {
-                            window.translator.currentLanguage = language;
-                            window.translator.setLicenseDefaultLanguage(language);
-                            console.log(`🌍 [LANGUAGE] Idioma establecido por país (${company.country}): ${language}`);
+                    console.log('🌍 [LANGUAGE] Detectando idioma automático para empresa:', company.name);
+
+                    // Detectar país desde múltiples fuentes: country, address, location
+                    let detectedCountry = null;
+                    const addressString = (company.country || company.address || company.location || '').toLowerCase();
+
+                    // Mapeo inteligente de países/palabras clave a idiomas
+                    const countryPatterns = {
+                        'es': ['argentina', 'españa', 'spain', 'méxico', 'mexico', 'chile', 'colombia', 'perú', 'peru', 'venezuela', 'uruguay', 'paraguay', 'bolivia', 'ecuador', 'san luis', 'buenos aires', 'madrid', 'barcelona'],
+                        'en': ['united states', 'usa', 'estados unidos', 'united kingdom', 'uk', 'canada', 'australia', 'new zealand', 'ireland'],
+                        'pt': ['brazil', 'brasil', 'portugal', 'são paulo', 'rio de janeiro', 'lisboa'],
+                        'de': ['germany', 'alemania', 'deutschland', 'austria', 'österreich', 'schweiz', 'berlin', 'münchen'],
+                        'it': ['italy', 'italia', 'rome', 'roma', 'milan', 'milano'],
+                        'fr': ['france', 'francia', 'paris', 'lyon', 'marseille', 'belgium', 'bélgica', 'switzerland', 'suiza']
+                    };
+
+                    // Buscar coincidencia en la dirección
+                    let detectedLanguage = 'es'; // Default: español
+                    for (const [lang, patterns] of Object.entries(countryPatterns)) {
+                        for (const pattern of patterns) {
+                            if (addressString.includes(pattern)) {
+                                detectedLanguage = lang;
+                                detectedCountry = pattern;
+                                break;
+                            }
                         }
+                        if (detectedCountry) break;
+                    }
+
+                    console.log(`🌍 [LANGUAGE] País detectado: ${detectedCountry || 'default'} → Idioma: ${detectedLanguage}`);
+
+                    // Solo establecer si el usuario NO ha seleccionado manualmente un idioma
+                    const userLang = localStorage.getItem('user_language');
+                    if (!userLang) {
+                        window.translator.changeLanguage(detectedLanguage);
+                        console.log(`✅ [LANGUAGE] Idioma automático establecido: ${detectedLanguage}`);
+                    } else {
+                        console.log(`ℹ️ [LANGUAGE] Usando idioma seleccionado por usuario: ${userLang}`);
                     }
                 } catch (error) {
                     console.error('❌ [LANGUAGE] Error estableciendo idioma inicial:', error);
@@ -1744,7 +1734,7 @@
                     </div>
                     <div class="user-info" style="text-align: right;">
                         <!-- Info de Versiones en Header -->
-                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.4.0 | BE: v1.3.0</div>
+                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.6.0 | BE: v1.3.0</div>
                         <div id="currentUserName" style="font-size: 13px; font-weight: 600; color: white; margin-bottom: 2px;">Usuario</div>
                         <div id="currentUserRole" style="font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">Admin</div>
                     </div>
@@ -1824,8 +1814,8 @@
             <div id="modulesContainer">
                 <div id="loadingModules" style="text-align: center; padding: 40px; color: #666;">
                     <div style="font-size: 32px; margin-bottom: 15px;">⏳</div>
-                    <div style="font-size: 16px; font-weight: bold;">Cargando módulos contratados...</div>
-                    <div style="font-size: 12px; margin-top: 5px;">Verificando licencias de empresa</div>
+                    <div style="font-size: 16px; font-weight: bold;" data-translate="common.loading">Cargando módulos contratados...</div>
+                    <div style="font-size: 12px; margin-top: 5px;" data-translate="licenses.company_name">Verificando licencias de empresa</div>
                 </div>
             </div>
 
