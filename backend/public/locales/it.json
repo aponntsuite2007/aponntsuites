@@ -137,7 +137,13 @@
     "forgot_password": "Hai dimenticato la password?",
     "invalid_credentials": "Credenziali non valide",
     "login_success": "Accesso riuscito",
-    "login_error": "Errore di autenticazione"
+    "login_error": "Errore di autenticazione",
+    "select_company": "🏢 Seleziona Azienda...",
+    "loading_companies": "Caricamento aziende...",
+    "enter_username": "Inserisci il tuo nome utente",
+    "company_client": "Azienda Cliente",
+    "company_address": "Indirizzo azienda",
+    "company_phone": "Telefono"
   },
   "users": {
     "title": "Gestione Utenti",

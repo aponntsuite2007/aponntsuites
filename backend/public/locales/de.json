@@ -137,7 +137,13 @@
     "forgot_password": "Passwort vergessen?",
     "invalid_credentials": "Ungültige Anmeldedaten",
     "login_success": "Anmeldung erfolgreich",
-    "login_error": "Authentifizierungsfehler"
+    "login_error": "Authentifizierungsfehler",
+    "select_company": "🏢 Firma auswählen...",
+    "loading_companies": "Firmen werden geladen...",
+    "enter_username": "Geben Sie Ihren Benutzernamen ein",
+    "company_client": "Kundenfirma",
+    "company_address": "Firmenadresse",
+    "company_phone": "Telefon"
   },
   "users": {
     "title": "Benutzerverwaltung",

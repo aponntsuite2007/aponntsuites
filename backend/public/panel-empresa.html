@@ -245,10 +245,10 @@
                 // 🌍 PLUG AND PLAY: Detectar y establecer idioma automáticamente según país de empresa
                 setTimeout(() => {
                     if (typeof setInitialLanguageFromCompany === 'function') {
+                        console.log('🌍 [DASHBOARD] Iniciando configuración automática de idioma...');
                         setInitialLanguageFromCompany();
-                        console.log('🌍 [DASHBOARD] Idioma automático configurado');
                     }
-                }, 800);
+                }, 1500);
 
                 // CONFIGURAR PERMISOS DE ADMIN - YA SE CONFIGURA EN EL LOGIN
                 // NO sobrescribir currentUser aquí - ya viene del API de login con el ID real
@@ -690,7 +690,7 @@
                 <div class="form-group">
                     <label for="companySelect">Empresa:</label>
                     <select id="companySelect" class="form-control" required>
-                        <option value="">Cargando empresas...</option>
+                        <option value="" data-translate="login.loading_companies">Cargando empresas...</option>
                     </select>
                     <div class="error-message" id="companyError"></div>
                 </div>
@@ -698,7 +698,7 @@
                 <!-- PASO 2: INGRESAR USUARIO (CAMPO DE TEXTO LIBRE) -->
                 <div class="form-group">
                     <label for="userInput" data-translate="login.username">Usuario:</label>
-                    <input type="text" id="userInput" class="form-control" placeholder="Ingrese su usuario" data-translate-placeholder="login.username" required disabled>
+                    <input type="text" id="userInput" class="form-control" placeholder="Ingrese su usuario" data-translate-placeholder="login.enter_username" required disabled>
                     <div class="error-message" id="userError"></div>
                 </div>
 
@@ -742,7 +742,7 @@
             
             <div class="company-selector" style="margin: 10px 0;">
                 <select id="companySelect" style="width: 100%; padding: 10px; border: 2px solid #e1e8ff; border-radius: 6px; font-size: 15px; background: white;">
-                    <option value="">🏢 Seleccionar Empresa...</option>
+                    <option value="" data-translate="login.select_company">🏢 Seleccionar Empresa...</option>
                 </select>
             </div>
             
@@ -1006,7 +1006,7 @@
                 }
             }
             
-            // Establecer idioma inicial basado en país de empresa (MEJORADO - PLUG AND PLAY)
+            // Establecer idioma inicial basado en país de empresa (MEJORADO - PLUG AND PLAY v2)
             function setInitialLanguageFromCompany() {
                 try {
                     // Intentar obtener empresa desde múltiples fuentes
@@ -1017,16 +1017,26 @@
                         company = (savedCompanyStr && savedCompanyStr !== 'undefined') ? JSON.parse(savedCompanyStr) : null;
                     }
 
-                    if (!company || !window.translator) {
-                        console.log('⚠️ [LANGUAGE] No hay empresa o translator disponible');
+                    console.log('🌍 [AUTO-LANG] Iniciando detección automática...');
+                    console.log('🌍 [AUTO-LANG] Empresa:', company?.name);
+                    console.log('🌍 [AUTO-LANG] Translator disponible:', !!window.translator);
+
+                    if (!company) {
+                        console.warn('⚠️ [AUTO-LANG] No hay empresa disponible');
                         return;
                     }
 
-                    console.log('🌍 [LANGUAGE] Detectando idioma automático para empresa:', company.name);
+                    if (!window.translator) {
+                        console.warn('⚠️ [AUTO-LANG] Translator no disponible, reintentando en 500ms...');
+                        setTimeout(setInitialLanguageFromCompany, 500);
+                        return;
+                    }
 
                     // Detectar país desde múltiples fuentes: country, address, location
                     let detectedCountry = null;
                     const addressString = (company.country || company.address || company.location || '').toLowerCase();
+
+                    console.log('🌍 [AUTO-LANG] Dirección completa:', addressString);
 
                     // Mapeo inteligente de países/palabras clave a idiomas
                     const countryPatterns = {
@@ -1045,24 +1055,36 @@
                             if (addressString.includes(pattern)) {
                                 detectedLanguage = lang;
                                 detectedCountry = pattern;
+                                console.log(`✅ [AUTO-LANG] Coincidencia encontrada: "${pattern}" → ${lang}`);
                                 break;
                             }
                         }
                         if (detectedCountry) break;
                     }
 
-                    console.log(`🌍 [LANGUAGE] País detectado: ${detectedCountry || 'default'} → Idioma: ${detectedLanguage}`);
+                    console.log(`🌍 [AUTO-LANG] País detectado: "${detectedCountry || 'default'}" → Idioma: ${detectedLanguage}`);
 
-                    // Solo establecer si el usuario NO ha seleccionado manualmente un idioma
-                    const userLang = localStorage.getItem('user_language');
-                    if (!userLang) {
-                        window.translator.changeLanguage(detectedLanguage);
-                        console.log(`✅ [LANGUAGE] Idioma automático establecido: ${detectedLanguage}`);
-                    } else {
-                        console.log(`ℹ️ [LANGUAGE] Usando idioma seleccionado por usuario: ${userLang}`);
-                    }
+                    // SIEMPRE establecer el idioma automáticamente al hacer login (ignorar user_language en login)
+                    // El usuario puede cambiarlo manualmente después
+                    console.log(`🔄 [AUTO-LANG] Cambiando idioma automáticamente a: ${detectedLanguage}`);
+
+                    window.translator.changeLanguage(detectedLanguage).then(() => {
+                        console.log(`✅ [AUTO-LANG] Idioma cambiado exitosamente a: ${detectedLanguage.toUpperCase()}`);
+
+                        // Actualizar el selector de idioma para reflejar el cambio
+                        setTimeout(() => {
+                            const selector = document.querySelector('#languageSelectorContainer select');
+                            if (selector) {
+                                selector.value = detectedLanguage;
+                                console.log(`✅ [AUTO-LANG] Selector actualizado a: ${detectedLanguage}`);
+                            }
+                        }, 200);
+                    }).catch(error => {
+                        console.error('❌ [AUTO-LANG] Error cambiando idioma:', error);
+                    });
+
                 } catch (error) {
-                    console.error('❌ [LANGUAGE] Error estableciendo idioma inicial:', error);
+                    console.error('❌ [AUTO-LANG] Error en detección automática:', error);
                 }
             }
 
@@ -1716,10 +1738,10 @@
                     <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 40%, #3498db 100%); padding: 1px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); min-width: 280px; border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; gap: 10px;">
                         <span style="color: #f39c12; font-size: 20px;">🏢</span>
                         <div style="text-align: left; flex: 1;">
-                            <div id="companyNameDisplay" style="font-weight: 700; color: white; margin-bottom: 0px; font-size: 18px;">Empresa Cliente</div>
+                            <div id="companyNameDisplay" style="font-weight: 700; color: white; margin-bottom: 0px; font-size: 18px;" data-translate="login.company_client">Empresa Cliente</div>
                             <div style="font-size: 10px; color: rgba(255,255,255,0.9); line-height: 1.1;">
-                                <div id="companyAddressDisplay" style="margin-bottom: 1px;">Dirección empresa</div>
-                                <div id="companyPhoneDisplay">📞 Teléfono</div>
+                                <div id="companyAddressDisplay" style="margin-bottom: 1px;" data-translate="login.company_address">Dirección empresa</div>
+                                <div id="companyPhoneDisplay" data-translate="login.company_phone">📞 Teléfono</div>
                             </div>
                         </div>
                     </div>
@@ -1734,7 +1756,7 @@
                     </div>
                     <div class="user-info" style="text-align: right;">
                         <!-- Info de Versiones en Header -->
-                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.6.0 | BE: v1.3.0</div>
+                        <div id="version-info-header" style="font-size: 8px; color: rgba(255,255,255,0.7); font-family: monospace; margin-bottom: 2px; transform: translateY(-8px) translateX(5px); white-space: nowrap;">FE: v3.7.0 | BE: v1.3.0</div>
                         <div id="currentUserName" style="font-size: 13px; font-weight: 600; color: white; margin-bottom: 2px;">Usuario</div>
                         <div id="currentUserRole" style="font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">Admin</div>
                     </div>

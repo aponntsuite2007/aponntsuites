@@ -137,7 +137,13 @@
     "forgot_password": "Forgot your password?",
     "invalid_credentials": "Invalid credentials",
     "login_success": "Login successful",
-    "login_error": "Authentication error"
+    "login_error": "Authentication error",
+    "select_company": "🏢 Select Company...",
+    "loading_companies": "Loading companies...",
+    "enter_username": "Enter your username",
+    "company_client": "Client Company",
+    "company_address": "Company address",
+    "company_phone": "Phone"
   },
   "users": {
     "title": "User Management",

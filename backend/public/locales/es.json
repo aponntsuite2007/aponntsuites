@@ -137,7 +137,13 @@
     "forgot_password": "¿Olvidó su contraseña?",
     "invalid_credentials": "Credenciales inválidas",
     "login_success": "Login exitoso",
-    "login_error": "Error de autenticación"
+    "login_error": "Error de autenticación",
+    "select_company": "🏢 Seleccionar Empresa...",
+    "loading_companies": "Cargando empresas...",
+    "enter_username": "Ingrese su usuario",
+    "company_client": "Empresa Cliente",
+    "company_address": "Dirección empresa",
+    "company_phone": "Teléfono"
   },
   "users": {
     "title": "Gestión de Usuarios",

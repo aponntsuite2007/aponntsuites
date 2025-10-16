@@ -137,7 +137,13 @@
     "forgot_password": "Mot de passe oublié?",
     "invalid_credentials": "Identifiants invalides",
     "login_success": "Connexion réussie",
-    "login_error": "Erreur d'authentification"
+    "login_error": "Erreur d'authentification",
+    "select_company": "🏢 Sélectionner Entreprise...",
+    "loading_companies": "Chargement des entreprises...",
+    "enter_username": "Entrez votre nom d'utilisateur",
+    "company_client": "Entreprise Client",
+    "company_address": "Adresse de l'entreprise",
+    "company_phone": "Téléphone"
   },
   "users": {
     "title": "Gestion des Utilisateurs",
