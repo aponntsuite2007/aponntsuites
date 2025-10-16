@@ -290,15 +290,28 @@
                                         }, 200);
                                     }
 
-                                    // 🌍 AGREGAR LISTENER PARA CAMBIOS DE IDIOMA
+                                    // 🌍 AGREGAR LISTENER PARA CAMBIOS DE IDIOMA - RE-TRADUCIR MÓDULOS
                                     window.addEventListener('languageChanged', async function(event) {
                                         console.log('🌍 [TRANSLATION] Idioma cambiado a:', event.detail.language);
-                                        setTimeout(() => {
-                                            if (window.translator) {
-                                                console.log('🌍 [TRANSLATION] Re-traduciendo módulos...');
-                                                window.translator.updateInterface();
+
+                                        // 🔥 TRADUCIR MÓDULOS ESPECÍFICAMENTE
+                                        const modulesContainer = document.getElementById('modulesContainer');
+                                        if (modulesContainer && window.translator) {
+                                            const moduleElements = modulesContainer.querySelectorAll('[data-translate]');
+                                            console.log(`🔥 [MODULES-TRANSLATION] Encontrados ${moduleElements.length} elementos en módulos`);
+
+                                            for (const element of moduleElements) {
+                                                const key = element.getAttribute('data-translate');
+                                                const translation = await window.translator.t(key);
+                                                element.textContent = translation;
+                                                console.log(`  ✅ ${key} → ${translation}`);
                                             }
-                                        }, 300);
+                                        }
+
+                                        // También traducir el resto de la interfaz
+                                        if (window.translator) {
+                                            window.translator.updateInterface();
+                                        }
                                     });
 
                                     // DEFINIR FUNCIÓN GLOBAL PARA ABRIR MÓDULOS
