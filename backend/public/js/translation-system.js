@@ -1,6 +1,6 @@
-// Translation System v2.0 - Dynamic & Automatic
+// Translation System v3.9.0 - Dynamic & Automatic (Fixed infinite loop)
 // Sistema de traducción multiidioma automático y dinámico para Aponnt
-console.log('🌍 [TRANSLATION] Sistema de traducción avanzado cargado v2.0');
+console.log('🌍 [TRANSLATION] Sistema de traducción avanzado cargado v3.9.0 - FIXED');
 
 class TranslationSystem {
     constructor() {
