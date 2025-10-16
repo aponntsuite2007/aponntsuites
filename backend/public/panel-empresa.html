@@ -369,6 +369,69 @@
                                                         alert('Módulo settings: función no encontrada');
                                                     }
                                                     break;
+                                                case 'compliance-dashboard':
+                                                case 'compliance_dashboard':
+                                                    if (typeof ComplianceDashboard !== 'undefined' && ComplianceDashboard.init) {
+                                                        // Ocultar grid de módulos
+                                                        const moduleGrid = document.querySelector('.module-grid');
+                                                        if (moduleGrid) moduleGrid.style.display = 'none';
+                                                        // Mostrar contenido principal
+                                                        const mainContent = document.getElementById('mainContent');
+                                                        if (mainContent) mainContent.style.display = 'block';
+                                                        // Inicializar módulo
+                                                        ComplianceDashboard.init();
+                                                    } else {
+                                                        alert('Módulo Compliance Dashboard: no disponible');
+                                                    }
+                                                    break;
+                                                case 'sla-tracking':
+                                                case 'sla_tracking':
+                                                    if (typeof SLATracking !== 'undefined' && SLATracking.init) {
+                                                        const moduleGrid = document.querySelector('.module-grid');
+                                                        if (moduleGrid) moduleGrid.style.display = 'none';
+                                                        const mainContent = document.getElementById('mainContent');
+                                                        if (mainContent) mainContent.style.display = 'block';
+                                                        SLATracking.init();
+                                                    } else {
+                                                        alert('Módulo SLA Tracking: no disponible');
+                                                    }
+                                                    break;
+                                                case 'resource-center':
+                                                case 'resource_center':
+                                                    if (typeof ResourceCenter !== 'undefined' && ResourceCenter.init) {
+                                                        const moduleGrid = document.querySelector('.module-grid');
+                                                        if (moduleGrid) moduleGrid.style.display = 'none';
+                                                        const mainContent = document.getElementById('mainContent');
+                                                        if (mainContent) mainContent.style.display = 'block';
+                                                        ResourceCenter.init();
+                                                    } else {
+                                                        alert('Módulo Resource Center: no disponible');
+                                                    }
+                                                    break;
+                                                case 'proactive-notifications':
+                                                case 'proactive_notifications':
+                                                    if (typeof ProactiveNotifications !== 'undefined' && ProactiveNotifications.init) {
+                                                        const moduleGrid = document.querySelector('.module-grid');
+                                                        if (moduleGrid) moduleGrid.style.display = 'none';
+                                                        const mainContent = document.getElementById('mainContent');
+                                                        if (mainContent) mainContent.style.display = 'block';
+                                                        ProactiveNotifications.init();
+                                                    } else {
+                                                        alert('Módulo Proactive Notifications: no disponible');
+                                                    }
+                                                    break;
+                                                case 'audit-reports':
+                                                case 'audit_reports':
+                                                    if (typeof AuditReports !== 'undefined' && AuditReports.init) {
+                                                        const moduleGrid = document.querySelector('.module-grid');
+                                                        if (moduleGrid) moduleGrid.style.display = 'none';
+                                                        const mainContent = document.getElementById('mainContent');
+                                                        if (mainContent) mainContent.style.display = 'block';
+                                                        AuditReports.init();
+                                                    } else {
+                                                        alert('Módulo Audit Reports: no disponible');
+                                                    }
+                                                    break;
                                                 default:
                                                     // Para otros módulos, usar el sistema showModuleContent
                                                     if (typeof showModuleContent === 'function') {
@@ -1936,6 +1999,13 @@
     <script src="js/modules/art-management.js"></script>
     <script src="js/modules/terms-conditions.js"></script>
     <script src="js/modules/biometric-consent.js"></script>
+
+    <!-- Sistema de Notificaciones Avanzado V2.0 -->
+    <script src="js/modules/compliance-dashboard.js"></script>
+    <script src="js/modules/sla-tracking.js"></script>
+    <script src="js/modules/resource-center.js"></script>
+    <script src="js/modules/proactive-notifications.js"></script>
+    <script src="js/modules/audit-reports.js"></script>
 
     <!-- Geolocation & Mapping -->
     <script src="js/modules/google-maps-integration.js"></script>

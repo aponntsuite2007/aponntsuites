@@ -36,6 +36,13 @@ const { medicalRouter: medicalRoutes, adminRouter: adminRoutes } = require('./ro
 const aponntDashboardRoutes = require('./routes/aponntDashboard');
 const vendorAutomationRoutes = require('./routes/vendorAutomationRoutes');
 
+// Rutas del Sistema de Notificaciones Avanzado V2.0
+const complianceRoutes = require('./routes/compliance');
+const slaRoutes = require('./routes/sla');
+const resourceCenterRoutes = require('./routes/resourceCenter');
+const proactiveRoutes = require('./routes/proactive');
+const auditReportsRoutes = require('./routes/auditReports');
+
 // Crear aplicación Express
 const app = express();
 const server = http.createServer(app);
@@ -95,6 +102,13 @@ app.use(`${apiPrefix}/medical`, medicalRoutes);
 app.use(`${apiPrefix}/admin`, adminRoutes);
 app.use('/api/aponnt', aponntDashboardRoutes);
 app.use(`${apiPrefix}/vendor-automation`, vendorAutomationRoutes);
+
+// Rutas del Sistema de Notificaciones Avanzado V2.0
+app.use('/api/compliance', complianceRoutes);
+app.use('/api/sla', slaRoutes);
+app.use('/api/resources', resourceCenterRoutes);
+app.use('/api/proactive', proactiveRoutes);
+app.use('/api/audit-reports', auditReportsRoutes);
 
 // Ruta de estado del sistema
 app.get('/health', (req, res) => {
