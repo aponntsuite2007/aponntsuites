@@ -140,12 +140,17 @@ class TranslationSystem {
     // Actualizar toda la interfaz con el nuevo idioma
     async updateInterface() {
         console.log('🔄 [TRANSLATION] Actualizando interfaz...');
-        
+        console.log('🔄 [TRANSLATION] Idioma actual:', this.currentLanguage);
+
         // Actualizar elementos con atributo data-translate
         const elementsToTranslate = document.querySelectorAll('[data-translate]');
+        console.log('🔄 [TRANSLATION] Elementos encontrados con [data-translate]:', elementsToTranslate.length);
+
         for (const element of elementsToTranslate) {
             const key = element.getAttribute('data-translate');
-            element.textContent = await this.t(key);
+            const translation = await this.t(key);
+            console.log(`🔄 [TRANSLATION] ${key} → ${translation}`);
+            element.textContent = translation;
         }
 
         // Actualizar placeholders

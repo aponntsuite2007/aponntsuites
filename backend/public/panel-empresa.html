@@ -284,9 +284,22 @@
                                     // 🌍 TRADUCIR MÓDULOS DESPUÉS DE CARGARLOS
                                     console.log('🌍 [TRANSLATION] Traduciendo módulos dinámicos...');
                                     if (window.translator) {
-                                        window.translator.updateInterface();
-                                        console.log('✅ [TRANSLATION] Módulos traducidos');
+                                        setTimeout(() => {
+                                            window.translator.updateInterface();
+                                            console.log('✅ [TRANSLATION] Módulos traducidos');
+                                        }, 200);
                                     }
+
+                                    // 🌍 AGREGAR LISTENER PARA CAMBIOS DE IDIOMA
+                                    window.addEventListener('languageChanged', async function(event) {
+                                        console.log('🌍 [TRANSLATION] Idioma cambiado a:', event.detail.language);
+                                        setTimeout(() => {
+                                            if (window.translator) {
+                                                console.log('🌍 [TRANSLATION] Re-traduciendo módulos...');
+                                                window.translator.updateInterface();
+                                            }
+                                        }, 300);
+                                    });
 
                                     // DEFINIR FUNCIÓN GLOBAL PARA ABRIR MÓDULOS
                                     window.openModuleDirect = function(moduleId, moduleName) {
