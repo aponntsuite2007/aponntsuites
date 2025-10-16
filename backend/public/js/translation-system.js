@@ -142,6 +142,16 @@ class TranslationSystem {
         console.log('🔄 [TRANSLATION] Actualizando interfaz...');
         console.log('🔄 [TRANSLATION] Idioma actual:', this.currentLanguage);
 
+        // DEBUG: Verificar contenido de modulesContainer
+        const modulesContainer = document.getElementById('modulesContainer');
+        if (modulesContainer) {
+            console.log('🔍 [DEBUG] modulesContainer existe:', !!modulesContainer);
+            console.log('🔍 [DEBUG] modulesContainer.innerHTML length:', modulesContainer.innerHTML.length);
+            console.log('🔍 [DEBUG] Módulos en container:', modulesContainer.querySelectorAll('[data-translate]').length);
+        } else {
+            console.warn('⚠️ [DEBUG] modulesContainer NO EXISTE');
+        }
+
         // Actualizar elementos con atributo data-translate
         const elementsToTranslate = document.querySelectorAll('[data-translate]');
         console.log('🔄 [TRANSLATION] Elementos encontrados con [data-translate]:', elementsToTranslate.length);
