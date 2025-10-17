@@ -42,6 +42,7 @@ const slaRoutes = require('./routes/sla');
 const resourceCenterRoutes = require('./routes/resourceCenter');
 const proactiveRoutes = require('./routes/proactive');
 const auditReportsRoutes = require('./routes/auditReports');
+const inboxRoutes = require('./routes/inbox');
 
 // Crear aplicación Express
 const app = express();
@@ -109,6 +110,7 @@ app.use('/api/sla', slaRoutes);
 app.use('/api/resources', resourceCenterRoutes);
 app.use('/api/proactive', proactiveRoutes);
 app.use('/api/audit-reports', auditReportsRoutes);
+app.use('/api/inbox', inboxRoutes);
 
 // Ruta de estado del sistema
 app.get('/health', (req, res) => {
