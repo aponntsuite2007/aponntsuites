@@ -22,8 +22,7 @@ CREATE TABLE IF NOT EXISTS notification_groups (
     created_at TIMESTAMP DEFAULT NOW(),
     closed_at TIMESTAMP,
     closed_by VARCHAR(100),
-    metadata JSONB, -- Datos adicionales específicos del tipo de solicitud
-
+    metadata JSONB -- Datos adicionales específicos del tipo de solicitud
 );
 
 -- Mensajes individuales dentro de cada grupo
@@ -70,10 +69,7 @@ CREATE TABLE IF NOT EXISTS notification_messages (
 
     -- Auditoría (NO SE PUEDE BORRAR - sistema inmutable)
     is_deleted BOOLEAN DEFAULT false,
-    company_id INT NOT NULL
-
-
-
+    company_id INT NOT NULL,
     UNIQUE(group_id, sequence_number)
 );
 
@@ -88,7 +84,7 @@ CREATE TABLE IF NOT EXISTS notification_audit_log (
     timestamp TIMESTAMP DEFAULT NOW(),
     ip_address INET,
     user_agent TEXT,
-    metadata JSONB))
+    metadata JSONB
 );
 
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -232,7 +228,6 @@ CREATE TABLE IF NOT EXISTS company_modules (
     -- Límites
     user_limit INT, -- NULL = ilimitado
     usage_count INT DEFAULT 0,
-
     UNIQUE(company_id, module_code)
 );
 
@@ -374,7 +369,7 @@ CREATE TABLE IF NOT EXISTS cost_transactions (
     -- amount DECIMAL(10,2), -- REMOVIDO: No mostrar montos
     description TEXT,
     transaction_date TIMESTAMP DEFAULT NOW(),
-    metadata JSONB))
+    metadata JSONB
 );
 
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -414,7 +409,7 @@ CREATE TABLE IF NOT EXISTS proactive_executions (
     execution_time TIMESTAMP DEFAULT NOW(),
     matched_count INT DEFAULT 0,
     actions_taken INT DEFAULT 0,
-    execution_details JSONB)
+    execution_details JSONB
 );
 
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -457,7 +452,6 @@ CREATE TABLE IF NOT EXISTS approved_shift_swaps (
     -- Timestamps
     approved_at TIMESTAMP DEFAULT NOW(),
     executed_at TIMESTAMP, -- Cuando Juan efectivamente fichó
-
     UNIQUE(company_id, employee_1_id, employee_2_id, swap_date)
 );
 
@@ -574,7 +568,7 @@ CREATE TABLE IF NOT EXISTS report_access_log (
     accessed_by VARCHAR(100), -- NULL si es verificación pública
     success BOOLEAN DEFAULT true,
     ip_address INET,
-    user_agent TEXT))
+    user_agent TEXT
 );
 
 COMMENT ON TABLE audit_reports IS 'Reportes de auditoría con validez legal - Incluyen firma digital y código QR';
