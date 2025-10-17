@@ -181,7 +181,7 @@ app.get('/', (req, res) => {
 
 // Ruta específica para admin
 app.get('/admin', (req, res) => {
-  res.redirect('/admin-progressive.html');
+  res.redirect('/panel-empresa.html');
 });
 
 // Manejo de errores 404
