@@ -101,8 +101,8 @@ router.get('/test-token', async (req, res) => {
  */
 router.get('/my-company', auth, async (req, res) => {
   try {
-    // Obtener user_id del usuario autenticado
-    const userId = req.user?.id;
+    // Obtener user_id del usuario autenticado (Sequelize usa user_id como primary key)
+    const userId = req.user?.user_id || req.user?.id;
     if (!userId) {
       return res.status(401).json({
         error: 'Usuario sin autenticación'
@@ -110,7 +110,7 @@ router.get('/my-company', auth, async (req, res) => {
     }
 
     // Obtener company_id dinámicamente
-    let companyId = req.user?.company_id;
+    let companyId = req.user?.company_id || req.user?.companyId;
     if (!companyId) {
       const userQuery = await database.sequelize.query(
         'SELECT company_id FROM users WHERE user_id = ? AND is_active = true',
@@ -180,81 +180,16 @@ router.get('/my-company', auth, async (req, res) => {
 });
 
 /**
- * @route GET /api/v1/company-modules/:companyId
- * @desc Obtener módulos contratados por una empresa específica (SIMPLIFICADO)
- */
-router.get('/:companyId', async (req, res) => {
-  try {
-    const { companyId } = req.params;
-    console.log(`🧩 [COMPANY-MODULES] Solicitando módulos para empresa: ${companyId}`);
-
-    // Obtener módulos contratados por la empresa desde company_modules
-    const contractedModules = await database.sequelize.query(`
-      SELECT
-        cm.id,
-        cm.company_id,
-        cm.system_module_id,
-        sm.is_active,
-        cm.created_at as contracted_at,
-        sm.module_key,
-        sm.name,
-        sm.description,
-        sm.icon,
-        sm.color,
-        sm.category,
-        sm.base_price
-      FROM company_modules cm
-      INNER JOIN system_modules sm ON cm.system_module_id = sm.id
-      WHERE cm.company_id = ?
-      ORDER BY sm.category, sm.name ASC
-    `, {
-      replacements: [companyId],
-      type: database.sequelize.QueryTypes.SELECT
-    });
-
-    console.log(`✅ [COMPANY-MODULES] Empresa ${companyId} tiene ${contractedModules.length} módulos contratados`);
-
-    // Transformar a formato esperado por el frontend
-    const modules = contractedModules.map(module => ({
-      id: module.module_key,
-      name: module.name || 'Módulo Sin Nombre',
-      description: module.description || 'Sin descripción disponible',
-      icon: module.icon || '📦',
-      color: module.color || '#666666',
-      category: module.category || 'general',
-      price: module.base_price || 0,
-      isContracted: true,
-      isActive: module.is_active,
-      isOperational: module.is_active, // Si está contratado y activo, es operacional
-      contractedAt: module.contracted_at,
-      companyId: module.company_id
-    }));
-
-    res.json({
-      success: true,
-      modules,
-      company_id: companyId,
-      total_modules: modules.length
-    });
-
-  } catch (error) {
-    console.error('❌ [COMPANY-MODULES] Error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor'
-    });
-  }
-});
-
-/**
  * @route GET /api/v1/company-modules/my-modules
  * @desc Obtener módulos contratados por la empresa del usuario autenticado (LEGACY)
+ * IMPORTANTE: Esta ruta debe estar ANTES de /:companyId para evitar conflictos
  */
 router.get('/my-modules', simpleAuth, async (req, res) => {
   try {
-    // Obtener user_id del usuario autenticado
-    const userId = req.user?.id;
+    // Obtener user_id del usuario autenticado (Sequelize usa user_id como primary key)
+    const userId = req.user?.user_id || req.user?.id;
     if (!userId) {
+      console.log('❌ [COMPANY-MODULES] req.user no tiene user_id ni id:', req.user);
       return res.status(401).json({
         error: 'Usuario sin autenticación'
       });
@@ -268,7 +203,7 @@ router.get('/my-modules', simpleAuth, async (req, res) => {
       console.log(`🎯 [COMPANY-MODULES] Usando company_id desde dropdown: ${companyId}`);
     } else {
       // Fallback: usar company_id del usuario autenticado
-      companyId = req.user?.company_id;
+      companyId = req.user?.company_id || req.user?.companyId;
       if (!companyId) {
         console.log(`🔍 [COMPANY-MODULES] company_id no en req.user, buscando en DB para usuario: ${userId}`);
 
@@ -378,6 +313,74 @@ router.get('/my-modules', simpleAuth, async (req, res) => {
   } catch (error) {
     console.error('Error obteniendo módulos de empresa:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @route GET /api/v1/company-modules/:companyId
+ * @desc Obtener módulos contratados por una empresa específica (SIMPLIFICADO)
+ * IMPORTANTE: Esta ruta debe estar DESPUÉS de /my-modules para evitar conflictos
+ */
+router.get('/:companyId', async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    console.log(`🧩 [COMPANY-MODULES] Solicitando módulos para empresa: ${companyId}`);
+
+    // Obtener módulos contratados por la empresa desde company_modules
+    const contractedModules = await database.sequelize.query(`
+      SELECT
+        cm.id,
+        cm.company_id,
+        cm.system_module_id,
+        sm.is_active,
+        cm.created_at as contracted_at,
+        sm.module_key,
+        sm.name,
+        sm.description,
+        sm.icon,
+        sm.color,
+        sm.category,
+        sm.base_price
+      FROM company_modules cm
+      INNER JOIN system_modules sm ON cm.system_module_id = sm.id
+      WHERE cm.company_id = ?
+      ORDER BY sm.category, sm.name ASC
+    `, {
+      replacements: [companyId],
+      type: database.sequelize.QueryTypes.SELECT
+    });
+
+    console.log(`✅ [COMPANY-MODULES] Empresa ${companyId} tiene ${contractedModules.length} módulos contratados`);
+
+    // Transformar a formato esperado por el frontend
+    const modules = contractedModules.map(module => ({
+      id: module.module_key,
+      name: module.name || 'Módulo Sin Nombre',
+      description: module.description || 'Sin descripción disponible',
+      icon: module.icon || '📦',
+      color: module.color || '#666666',
+      category: module.category || 'general',
+      price: module.base_price || 0,
+      isContracted: true,
+      isActive: module.is_active,
+      isOperational: module.is_active, // Si está contratado y activo, es operacional
+      contractedAt: module.contracted_at,
+      companyId: module.company_id
+    }));
+
+    res.json({
+      success: true,
+      modules,
+      company_id: companyId,
+      total_modules: modules.length
+    });
+
+  } catch (error) {
+    console.error('❌ [COMPANY-MODULES] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
   }
 });
 

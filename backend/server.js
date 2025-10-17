@@ -1535,7 +1535,7 @@ app.get(`${API_PREFIX}/companies`, async (req, res) => {
     // Usar consulta SQL raw para evitar problemas con columnas faltantes
     const query = `
       SELECT
-        id,
+        company_id,
         name,
         name as display_name,
         slug,
