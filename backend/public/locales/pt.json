@@ -200,27 +200,514 @@
     "admin_users": "Administradores"
   },
   "departments": {
-    "title": "Gestão de Departamentos",
-    "add_department": "➕ Adicionar Departamento",
-    "department_list": "📋 Lista de Departamentos",
-    "gps_location": "Localização GPS",
-    "coverage_radius": "Raio de Cobertura"
+    "title": "🏢 Gestão de Departamentos",
+    "subtitle": "Sistema parametrizável com GPS",
+    "buttons": {
+      "create": "➕ Criar Departamento",
+      "list": "📋 Lista de Departamentos",
+      "statistics": "📊 Estatísticas",
+      "export": "📤 Exportar",
+      "retry": "🔄 Tentar Novamente",
+      "cancel": "❌ Cancelar",
+      "save": "💾 Criar Departamento",
+      "save_changes": "💾 Salvar Alterações",
+      "close": "✖️ Fechar",
+      "edit": "✏️ Editar",
+      "view": "👁️ Ver",
+      "delete": "🗑️ Excluir",
+      "view_on_maps": "🗺️ Ver no Google Maps"
+    },
+    "list": {
+      "title": "📋 Lista de Departamentos",
+      "loading": "🔄 Carregando departamentos...",
+      "load_prompt": "Pressione \"Lista de Departamentos\" para carregar...",
+      "empty_title": "📂 Não há departamentos",
+      "empty_message": "Crie o primeiro departamento usando o botão \"Criar Departamento\"",
+      "legend": {
+        "title": "📋 Legenda:",
+        "gps_configured": "✅ GPS Configurado",
+        "gps_not_configured": "❌ GPS Não Configurado",
+        "radius_info": "📏 Raio de cobertura em metros"
+      }
+    },
+    "table": {
+      "name": "🏢 Nome",
+      "description": "📝 Descrição",
+      "address": "📍 Endereço",
+      "gps": "🗺️ GPS",
+      "radius": "📏 Raio (m)",
+      "created": "📅 Criado",
+      "actions": "⚙️ Ações",
+      "no_description": "Sem descrição",
+      "no_address": "Sem endereço",
+      "gps_configured": "✅ {{lat}}, {{lng}}",
+      "gps_not_configured": "❌ Não configurado"
+    },
+    "stats": {
+      "total_departments": "Departamentos Totais",
+      "gps_configured": "Com GPS Configurado",
+      "avg_radius": "Raio Médio (m)"
+    },
+    "form": {
+      "modal_title_create": "🏢 Criar Novo Departamento",
+      "modal_title_edit": "✏️ Editar Departamento",
+      "modal_title_view": "🏢 {{name}}",
+      "branch": {
+        "label": "🏛️ Filial *:",
+        "placeholder": "Selecione uma filial...",
+        "help": "🏢 A empresa tem múltiplas filiais. Selecione a qual este departamento pertence."
+      },
+      "name": {
+        "label": "🏢 Nome do Departamento *:",
+        "placeholder": "Ex: TI, RH, Vendas"
+      },
+      "description": {
+        "label": "📝 Descrição:",
+        "placeholder": "Descrição do departamento"
+      },
+      "address": {
+        "label": "📍 Endereço Físico:",
+        "placeholder": "Ex: Escritório Principal - Andar 2"
+      },
+      "gps": {
+        "allow_title": "📱 Permitir registro por GPS desde APK Funcionário",
+        "allow_help": "Se ativado, os funcionários poderão registrar presença desde seu celular (APK) quando estiverem dentro do raio de cobertura do departamento",
+        "section_title": "📍 Localização GPS do Departamento:",
+        "section_help": "⚠️ Selecione a localização EXATA do departamento físico (não sua localização atual). Use o mapa ou insira coordenadas manualmente.",
+        "map_loading": "🗺️ Carregando Google Maps...",
+        "map_error": "⚠️ Erro carregando o mapa. Use coordenadas manuais.",
+        "latitude": "Latitude:",
+        "longitude": "Longitude:",
+        "radius": "📏 Raio (m):",
+        "tip": "💡 <strong>Dica:</strong> Arraste o marcador 📍 no mapa para ajustar a localização. O círculo amarelo mostra o raio de cobertura (área onde é possível registrar)."
+      },
+      "kiosks": {
+        "title": "🖥️ Kiosks Físicos Autorizados (opcional):",
+        "help": "📍 Selecione em quais kiosks físicos os funcionários podem registrar presença (além do GPS se habilitado)",
+        "loading": "Carregando kiosks...",
+        "none_available": "Não há kiosks disponíveis",
+        "all_kiosks": "✅ Todos os kiosks",
+        "mixed_mode": "ℹ️ <strong>Modo Misto:</strong> Você pode ativar GPS + Kiosks. Os funcionários poderão usar qualquer opção habilitada."
+      }
+    },
+    "view": {
+      "description": "📝 Descrição:",
+      "address": "📍 Endereço:",
+      "gps": "🗺️ Localização GPS:",
+      "radius": "📏 Raio de cobertura:",
+      "created": "📅 Criado:",
+      "updated": "📝 Última modificação:",
+      "gps_configured": "✅ {{lat}}, {{lng}}",
+      "gps_not_configured": "❌ Não configurado",
+      "no_description": "Sem descrição",
+      "no_address": "Sem endereço",
+      "map_section_title": "🗺️ Localização no Mapa",
+      "coordinates": "📍 Coordenadas: {{lat}}, {{lng}}",
+      "radius_meters": "{{radius}} metros"
+    },
+    "messages": {
+      "loading": "🔄 Carregando departamentos...",
+      "error_loading": "❌ Erro carregando departamentos",
+      "error_not_found": "❌ Departamento não encontrado",
+      "success_created": "✅ Departamento criado com sucesso",
+      "success_updated": "✅ Departamento atualizado com sucesso",
+      "success_deleted": "✅ Departamento excluído com sucesso",
+      "success_exported": "✅ Departamentos exportados com sucesso",
+      "error_creating": "❌ Erro criando departamento: {{message}}",
+      "error_updating": "❌ Erro atualizando departamento: {{message}}",
+      "error_deleting": "❌ Erro excluindo departamento: {{message}}",
+      "error_exporting": "❌ Não há departamentos para exportar"
+    },
+    "validation": {
+      "branch_required": "❌ Deve selecionar uma filial. A empresa tem múltiplas filiais.",
+      "name_required": "❌ O nome do departamento é obrigatório",
+      "name_min_length": "❌ O nome deve ter pelo menos 2 caracteres",
+      "one_option_required": "❌ Deve habilitar pelo menos UMA opção:\n- Permitir GPS desde APK, OU\n- Selecionar pelo menos um kiosk físico autorizado",
+      "gps_coordinates_required": "❌ Se permite GPS, deve inserir as coordenadas de localização do departamento.\nUse o mapa ou insira as coordenadas manualmente.",
+      "gps_radius_required": "❌ Se permite GPS, o raio de cobertura deve estar entre 10 e 1000 metros",
+      "gps_coordinates_invalid": "❌ Se habilitar registro por GPS, deve fornecer coordenadas válidas.",
+      "radius_invalid": "❌ O raio de cobertura deve estar entre 10 e 1000 metros"
+    },
+    "confirm": {
+      "delete_title": "❓ Tem certeza que deseja excluir o departamento \"{{name}}\"?",
+      "delete_warning": "⚠️ ATENÇÃO: Esta ação não pode ser desfeita.",
+      "delete_consequence": "Os usuários atribuídos a este departamento ficarão sem departamento atribuído."
+    }
   },
   "shifts": {
-    "title": "Gestão de Turnos",
-    "add_shift": "➕ Adicionar Turno",
-    "shift_list": "📋 Lista de Turnos",
-    "start_time": "Hora Início",
-    "end_time": "Hora Fim",
-    "work_hours": "Horas de Trabalho"
+    "title": "Sistema Avançado de Turnos Flexíveis",
+    "subtitle": "Gestão de turnos, horários e tarifas",
+    "buttons": {
+      "create_advanced": "Criar Turno Avançado",
+      "list": "Lista de Turnos",
+      "calendar": "Calendário Visual",
+      "config_hours": "Config. Horas",
+      "flash_shift": "Turno Flash",
+      "assign_employees": "Atribuir Funcionários",
+      "save_shift": "Criar Turno",
+      "update_shift": "Atualizar Turno",
+      "cancel": "Cancelar",
+      "close": "Fechar",
+      "edit": "Editar",
+      "view": "Ver",
+      "duplicate": "Duplicar",
+      "delete": "Excluir",
+      "select_all": "Selecionar Tudo",
+      "deselect_all": "Desselecionar",
+      "assign": "Atribuir Turnos"
+    },
+    "tabs": {
+      "list": "Lista",
+      "calendar": "Calendário",
+      "config": "Configuração"
+    },
+    "types": {
+      "standard": "Padrão",
+      "rotative": "Rotativo",
+      "permanent": "Permanente",
+      "flash": "Flash"
+    },
+    "stats": {
+      "total_shifts": "Total Turnos",
+      "active_shifts": "Turnos Ativos",
+      "assigned_employees": "Funcionários Atribuídos",
+      "flash_shifts": "Turnos Flash"
+    },
+    "list": {
+      "title": "Lista de Turnos",
+      "loading": "Carregando turnos avançados...",
+      "load_prompt": "Pressione \"Lista de Turnos\" para carregar os turnos configurados...",
+      "no_shifts_title": "Não há turnos configurados",
+      "no_shifts_message": "Crie o primeiro turno usando o botão \"Criar Turno Avançado\""
+    },
+    "table": {
+      "shift": "Turno",
+      "type": "Tipo",
+      "schedule": "Horário",
+      "pattern_days": "Padrão/Dias",
+      "employees": "Funcionários",
+      "rates": "Tarifas",
+      "status": "Status",
+      "actions": "Ações",
+      "break": "Intervalo",
+      "rate_normal": "N",
+      "rate_overtime": "E",
+      "rate_weekend": "W",
+      "rate_holiday": "F",
+      "employees_count": "funcionários"
+    },
+    "form": {
+      "modal_title_create": "Criar Turno Avançado",
+      "modal_title_edit": "Editar Turno Avançado",
+      "modal_title_duplicate": "Duplicar Turno",
+      "modal_title_view": "Vista Detalhada do Turno",
+      "type_section": "Tipo de Turno",
+      "basic_info": "Informação Básica",
+      "name": {
+        "label": "Nome do turno:",
+        "placeholder": "Ex: Turno Manhã"
+      },
+      "status": {
+        "label": "Status:",
+        "active": "Ativo",
+        "inactive": "Inativo"
+      },
+      "start_time": {
+        "label": "Hora início (24h):",
+        "placeholder": "08:00"
+      },
+      "end_time": {
+        "label": "Hora fim (24h):",
+        "placeholder": "17:00"
+      },
+      "break_section": "Intervalo (opcional)",
+      "break_start": {
+        "label": "Intervalo início (opcional):",
+        "placeholder": "Opcional"
+      },
+      "break_end": {
+        "label": "Intervalo fim (opcional):",
+        "placeholder": "Opcional"
+      },
+      "tolerance_section": "Tolerância de Registro (Parametrizável por Empresa)",
+      "tolerance_help": "Configure os minutos de tolerância permitidos antes e depois do horário estabelecido",
+      "tolerance_entry": "Entrada",
+      "tolerance_exit": "Saída",
+      "tolerance_before": "Minutos antes (antecipado):",
+      "tolerance_after": "Minutos depois (tardio):",
+      "tolerance_example_entry": "Ex: 15 min = pode registrar desde as 07:45",
+      "tolerance_example_late": "Ex: 10 min = pode registrar até as 08:10",
+      "tolerance_example_exit": "Ex: 10 min = pode sair desde as 16:50",
+      "tolerance_example_stay": "Ex: 30 min = pode sair até as 17:30",
+      "tolerance_important": "Importante: Estes valores são específicos para este turno e respeitam a política multi-tenant. Cada empresa pode configurar suas próprias tolerâncias segundo sua política laboral.",
+      "config_by_type": "Configuração específica por tipo",
+      "rates_section": "Tarifas Horárias (multiplicadores)",
+      "rate_normal": "Normais:",
+      "rate_overtime": "Extras:",
+      "rate_weekend": "Fim de Semana:",
+      "rate_holiday": "Feriados:",
+      "standard_config": {
+        "title": "Turno Padrão",
+        "work_days": "Dias de trabalho:"
+      },
+      "rotative_config": {
+        "title": "Turno Rotativo",
+        "pattern": "Padrão de rotação:",
+        "pattern_12x4": "12 horas x 4 dias descanso",
+        "pattern_6x2": "6 horas x 2 dias descanso",
+        "pattern_8x1": "8 horas x 1 dia descanso",
+        "pattern_custom": "Personalizado",
+        "cycle_start": "Data início ciclo:",
+        "work_days_label": "Dias trabalhados:",
+        "rest_days_label": "Dias de descanso:"
+      },
+      "permanent_config": {
+        "title": "Turno Permanente",
+        "assigned_days": "Dias atribuídos:",
+        "priority": "Prioridade de atribuição:",
+        "priority_low": "Baixa",
+        "priority_normal": "Normal",
+        "priority_high": "Alta",
+        "priority_critical": "Crítica"
+      },
+      "flash_config": {
+        "title": "Turno Flash (Temporal)",
+        "start_date": "Data início:",
+        "end_date": "Data fim:",
+        "specific_days": "Dias específicos:",
+        "priority": "Prioridade flash:",
+        "priority_low": "Baixa",
+        "priority_normal": "Normal",
+        "priority_high": "Alta",
+        "priority_urgent": "Urgente",
+        "allow_override": "Permitir sobreatribuição (sobre turnos permanentes)"
+      },
+      "days": {
+        "sunday": "Domingo",
+        "monday": "Segunda-feira",
+        "tuesday": "Terça-feira",
+        "wednesday": "Quarta-feira",
+        "thursday": "Quinta-feira",
+        "friday": "Sexta-feira",
+        "saturday": "Sábado"
+      },
+      "days_short": {
+        "sunday": "Dom",
+        "monday": "Seg",
+        "tuesday": "Ter",
+        "wednesday": "Qua",
+        "thursday": "Qui",
+        "friday": "Sex",
+        "saturday": "Sáb"
+      }
+    },
+    "view": {
+      "basic_info": "Informação Básica",
+      "name": "Nome:",
+      "type": "Tipo:",
+      "schedule": "Horário:",
+      "break": "Intervalo:",
+      "days": "Dias:",
+      "status": "Status:",
+      "employees": "Funcionários:",
+      "employees_assigned": "atribuídos",
+      "no_break": "Sem intervalo",
+      "flash_config": "Configuração Flash",
+      "start_date": "Data início:",
+      "end_date": "Data fim:",
+      "priority": "Prioridade:",
+      "override": "Sobreatribuição:",
+      "override_allowed": "Permitida",
+      "override_not_allowed": "Não permitida",
+      "rates": "Tarifas Horárias",
+      "rate_normal": "Normais:",
+      "rate_overtime": "Extras:",
+      "rate_weekend": "Fim de semana:",
+      "rate_holiday": "Feriados:",
+      "additional_info": "Informação Adicional",
+      "id": "ID:",
+      "created": "Criado:",
+      "updated": "Atualizado:",
+      "not_defined": "Não definida",
+      "normal": "Normal"
+    },
+    "calendar": {
+      "title": "Calendário de Turnos",
+      "visual_calendar": "Calendário visual em desenvolvimento",
+      "description": "Mostrará turnos por dia com código de cores"
+    },
+    "hourly_config": {
+      "title": "Configuração de Horas e Tarifas",
+      "description": "Configuração de tarifas por tipo de hora..."
+    },
+    "assignment": {
+      "title": "Atribuição de Turnos",
+      "filters_title": "Filtros de Busca",
+      "dni_search": "CPF:",
+      "dni_placeholder": "Buscar por CPF",
+      "name_search": "Nome/Sobrenome:",
+      "name_placeholder": "Buscar por nome",
+      "department_filter": "Departamento:",
+      "all_departments": "Todos os departamentos",
+      "clear_button": "Limpar",
+      "shifts_available": "Turnos Disponíveis",
+      "users_title": "Usuários",
+      "users_count": "usuários",
+      "selected_count": "usuários selecionados",
+      "table": {
+        "dni": "CPF",
+        "name": "Nome",
+        "department": "Departamento",
+        "current_shifts": "Turnos Atuais",
+        "no_shifts": "Sem turnos",
+        "no_department": "Sem departamento"
+      }
+    },
+    "messages": {
+      "loading": "Carregando turnos avançados...",
+      "loaded_count": "turnos carregados com sucesso",
+      "example_data": "Usando dados de exemplo...",
+      "error_loading": "Erro carregando turnos",
+      "error_api": "API não disponível ou erro",
+      "success_created": "Turno criado com sucesso",
+      "success_updated": "Turno atualizado com sucesso",
+      "success_deleted": "Turno excluído com sucesso",
+      "error_creating": "Erro criando turno",
+      "error_updating": "Erro atualizando",
+      "error_deleting": "Erro excluindo",
+      "error_connection": "Erro de conexão",
+      "error_not_found": "Turno não encontrado",
+      "error_modal_not_found": "Modal não encontrado",
+      "error_form_elements": "Faltam elementos do formulário",
+      "error_system_not_initialized": "Sistema não inicializado corretamente",
+      "no_auth_token": "Não há token de autenticação",
+      "example_cannot_delete": "Os turnos de exemplo não podem ser excluídos",
+      "assignment_success": "Turnos atribuídos com sucesso",
+      "assignment_error": "Erro ao atribuir turnos"
+    },
+    "validation": {
+      "name_required": "O nome do turno é obrigatório",
+      "start_time_required": "A hora de início é obrigatória (formato 24h)",
+      "end_time_required": "A hora de fim é obrigatória (formato 24h)",
+      "required_fields": "Os campos obrigatórios devem estar completos",
+      "rotative_pattern_required": "Complete padrão e data de início para turno rotativo",
+      "flash_dates_required": "Complete datas de início e fim para turno flash",
+      "select_user_first": "Selecione um usuário primeiro",
+      "select_one_user": "Deve selecionar pelo menos um usuário",
+      "select_one_shift": "Deve selecionar pelo menos um turno"
+    },
+    "confirm": {
+      "delete_title": "Tem certeza que deseja excluir \"{{name}}\"?",
+      "delete_warning": "Esta ação não pode ser desfeita.",
+      "assign_shifts": "Deseja atribuir {{shiftCount}} turno(s) a {{userCount}} usuário(s) selecionado(s)?"
+    }
   },
   "attendance": {
-    "title": "Controle de Presença",
+    "title": "📋 Controle de Presença Avançado",
+    "today_title": "📅 Presença de Hoje",
+    "present": "Presentes",
+    "late": "Atrasados",
+    "absent": "Ausentes",
+    "total_hours": "Horas Trabalhadas",
+    "btn_refresh": "🔄 Atualizar",
+    "btn_export_excel": "📊 Exportar Excel",
+    "col_employee": "👤 Funcionário",
+    "col_employee_id": "🏷️ Matrícula",
+    "col_date": "📅 Data",
+    "col_status": "🟢 Status",
+    "col_check_in": "⏰ Entrada",
+    "col_check_out": "⏰ Saída",
+    "col_hours": "🕐 Horas",
+    "col_method": "📱 Método",
+    "col_location": "📍 Localização",
+    "col_notes": "📝 Notas",
+    "click_refresh_to_load": "Clique em \"🔄 Atualizar\" para carregar os dados de presença de hoje",
+    "reports_filters_title": "📊 Relatórios e Filtros",
+    "filter_date_from": "📅 Data Inicial:",
+    "filter_date_to": "📅 Data Final:",
+    "filter_employee": "👤 Funcionário:",
+    "filter_department": "🏢 Departamento:",
+    "all_employees": "Todos os funcionários",
+    "all_departments": "Todos os departamentos",
+    "btn_generate_report": "📊 Gerar Relatório",
+    "btn_export_report": "📤 Exportar Relatório",
+    "btn_view_charts": "📈 Ver Gráficos",
+    "advanced_filters_title": "🔍 Filtros Avançados",
+    "filter_status": "📋 Status:",
+    "all_statuses": "Todos os status",
+    "status_present": "Presente",
+    "status_late": "Atraso",
+    "status_absent": "Ausente",
+    "filter_absence_type": "🏥 Tipo de Ausência:",
+    "all_types": "Todos os tipos",
+    "type_illness": "Doença",
+    "type_accident": "Acidente",
+    "type_personal": "Motivos Pessoais",
+    "type_training": "Treinamento",
+    "type_vacation": "Férias",
+    "stats_chart_title": "📈 Estatísticas de Presença - Últimos 30 Dias",
+    "detection_logs_title": "🔍 Logs de Detecções Biométricas",
+    "detection_logs_description": "Registro completo de TODAS as detecções faciais (mesmo aquelas que não geraram registro por cooldown)",
+    "btn_load_logs": "🔄 Carregar Logs",
+    "btn_refresh_logs": "♻️ Atualizar",
+    "logs_limit": "Limite:",
+    "logs_records": "registros",
+    "log_col_timestamp": "🕐 Timestamp",
+    "log_col_employee": "👤 Funcionário",
+    "log_col_employee_id": "🏷️ Matrícula",
+    "log_col_similarity": "📊 Similaridade",
+    "log_col_registered": "✅ Registrou?",
+    "log_col_type": "🔄 Tipo",
+    "log_col_skip_reason": "⏭️ Razão Skip",
+    "log_col_time_ms": "⚡ Tempo (ms)",
+    "click_load_logs": "Clique em \"🔄 Carregar Logs\" para ver o registro de detecções",
+    "loading_data": "🔄 Carregando dados de presença...",
+    "error_not_authenticated": "❌ Não autenticado. Faça login novamente.",
+    "no_data_for_filters": "ℹ️ Sem dados de presença para os filtros selecionados",
+    "error_server": "❌ Erro do servidor ({{status}}): {{error}}",
+    "error_unknown": "Erro desconhecido",
+    "error_connection": "❌ Erro de conexão. Verifique sua conexão à internet.",
+    "no_data_to_display": "Sem dados de presença para exibir",
+    "records_loaded": "✅ {{count}} registros de presença carregados",
+    "export_excel_in_dev": "📊 Função exportar Excel em desenvolvimento",
+    "generating_report": "📊 Gerando relatório com filtros aplicados...",
+    "report_generated_success": "✅ Relatório gerado com sucesso (função em desenvolvimento)",
+    "export_report_in_dev": "📤 Função exportar relatório em desenvolvimento",
+    "chart_shown": "📈 Gráfico de tendências mostrado abaixo",
+    "charts_on_load": "⚠️ Gráficos disponíveis ao carregar o módulo",
+    "no_records_to_show": "ℹ️ Sem registros de presença para mostrar",
+    "unknown_user": "Usuário desconhecido",
+    "not_specified": "Não especificado",
+    "status_present_value": "Presente",
+    "status_late_value": "Atraso",
+    "status_absent_value": "Ausente",
+    "status_pending_value": "Pendente",
+    "no_data": "Sem dados",
+    "method_face": "Facial",
+    "method_fingerprint": "Digital",
+    "method_pin": "PIN",
+    "method_manual": "Manual",
+    "method_mobile": "Móvel",
+    "method_iris": "Íris",
+    "method_voice": "Voz",
+    "stats_updated": "📊 Estatísticas atualizadas do banco de dados",
+    "error_loading_charts_lib": "❌ Erro carregando biblioteca de gráficos",
+    "chart_daily_absences": "Ausências Diárias",
+    "chart_late_arrivals": "Chegadas Atrasadas",
+    "chart_present": "Presentes",
+    "chart_title": "Tendência de Presença - Últimos 30 Dias (Dados Reais)",
+    "chart_y_axis": "Número de Funcionários",
+    "chart_x_axis": "Data",
+    "loading_logs": "🔄 Carregando logs...",
+    "error_company_not_detected": "❌ Empresa não detectada",
+    "no_detection_logs": "ℹ️ Sem logs de detecções para mostrar",
+    "error_message": "❌ Erro: {{message}}",
+    "log_yes": "✅ Sim",
+    "log_no": "⏭️ Não",
+    "log_clock_in": "📥 Entrada",
+    "log_clock_out": "📤 Saída",
     "check_in": "Entrada",
-    "check_out": "Saída",
-    "late": "Atraso",
-    "absent": "Ausente",
-    "present": "Presente"
+    "check_out": "Saída"
   },
   "licenses": {
     "title": "Configuração de Licenças",
@@ -246,5 +733,946 @@
     "invalid_file_type": "Apenas arquivos de imagem são permitidos.",
     "upload_error": "Erro ao enviar foto",
     "delete_confirm": "Tem certeza que deseja excluir a foto do usuário?"
+  },
+  "biometric": {
+    "hub": {
+      "title": "🎭 Centro de Comando Biométrico",
+      "subtitle": "Análise IA avançada, gestão de templates e monitoramento tempo real",
+      "tenantId": "Tenant ID",
+      "lastUpdate": "Última atualização",
+      "status": {
+        "disconnected": "🔴 Desconectado",
+        "initialized": "✅ Hub biométrico inicializado"
+      },
+      "tabs": {
+        "dashboard": "📊 Dashboard Tempo Real",
+        "employeeRegistration": "👤 Registro Biométrico Funcionários",
+        "emotionalAnalysis": "😊 Análise Emocional",
+        "consent": "🔐 Consentimentos Biométricos"
+      },
+      "error": {
+        "selectCompany": "Deve selecionar uma empresa para acessar o módulo biométrico"
+      }
+    },
+    "dashboard": {
+      "loading": "🔄 Carregando dashboard tempo real...",
+      "metrics": {
+        "processing": {
+          "title": "Processamento",
+          "subtitle": "Velocidade identificação",
+          "unit": "func/min",
+          "queue": "Fila: {{count}} pendentes"
+        },
+        "attendance": {
+          "title": "Presença Hoje",
+          "subtitle": "Funcionários registrados",
+          "trend": "+{{percent}}% vs ontem"
+        },
+        "alerts": {
+          "title": "Alertas Ativos",
+          "subtitle": "Requerem atenção",
+          "allClear": "Tudo normal"
+        },
+        "templates": {
+          "title": "Templates Ativos",
+          "subtitle": "Biometria registrada",
+          "avgQuality": "Qualidade média: {{percent}}%"
+        }
+      },
+      "panels": {
+        "fatigue": {
+          "title": "😴 Análise de Fadiga",
+          "loading": "📊 Carregando dados de fadiga...",
+          "noAlerts": "✅ Não há alertas de fadiga detectados"
+        },
+        "emotion": {
+          "title": "🧠 Estado Emocional",
+          "loading": "📊 Carregando análise emocional...",
+          "status": "😊 Estado emocional geral: Positivo"
+        }
+      },
+      "recentActivity": {
+        "title": "📝 Atividade Recente",
+        "initializing": "📊 Inicializando sistema...",
+        "hubStarted": "Hub biométrico iniciado para {{company}}"
+      }
+    },
+    "templates": {
+      "title": "🔬 Gestão de Templates Biométricos",
+      "header": {
+        "date": "Data:",
+        "updated": "Atualizado:"
+      },
+      "stats": {
+        "registered": "Templates Registrados",
+        "avgQuality": "Qualidade Média",
+        "successRate": "Taxa de Sucesso",
+        "pending": "Pendentes"
+      },
+      "actions": {
+        "newTemplate": "➕ Novo Template MIT",
+        "bulkImport": "📤 Importar Lote Stanford",
+        "export": "💾 Exportar Azure",
+        "qualityAudit": "🔍 Auditoria Qualidade"
+      },
+      "list": {
+        "title": "📋 Templates Registrados - {{company}}",
+        "updated": "Atualizado:",
+        "loading": "Carregando templates desde PostgreSQL...",
+        "actions": {
+          "edit": "✏️ Editar",
+          "delete": "🗑️ Excluir"
+        }
+      },
+      "messages": {
+        "registerSuccess": "Template registrado com sucesso com MIT FaceNet v2.0",
+        "importSuccess": "Importação concluída: {{count}} templates processados com Stanford OpenFace",
+        "exportSuccess": "Exportação concluída: {{filename}} gerado",
+        "editOpening": "Abrindo editor de template MIT/Stanford...",
+        "deleteSuccess": "Template excluído corretamente do sistema MIT"
+      },
+      "confirm": {
+        "delete": "Tem certeza de excluir este template biométrico?"
+      }
+    },
+    "employees": {
+      "dropdown": {
+        "error": "❌ Erro carregando funcionários",
+        "noEmployees": "❌ Não há funcionários nesta empresa",
+        "placeholder": "-- Selecione um funcionário --",
+        "tooltip": {
+          "email": "Email:",
+          "role": "Função:",
+          "position": "Cargo:",
+          "noPosition": "Sem cargo"
+        },
+        "registration": {
+          "placeholder": "🔍 Selecionar funcionário..."
+        }
+      }
+    },
+    "errors": {
+      "general": {
+        "title": "Erro Biométrico",
+        "reloadButton": "Recarregar"
+      }
+    },
+    "websocket": {
+      "messages": {
+        "connected": "Conectado ao sistema em tempo real",
+        "subscribed": "Recebendo eventos em tempo real da empresa {{company}}"
+      },
+      "attendance": {
+        "entry": "ENTROU",
+        "exit": "SAIU",
+        "registered": "registrou"
+      },
+      "detection": {
+        "recognizing": "Reconhecendo:",
+        "confidence": "confiança",
+        "detectedIn": "detectado em"
+      },
+      "kiosk": {
+        "label": "Kiosk",
+        "online": "ONLINE",
+        "offline": "OFFLINE"
+      },
+      "initial": {
+        "kioskOnline": "kiosks online"
+      }
+    },
+    "facial": {
+      "title": "Gestão de Biometria Facial",
+      "actions": {
+        "register": "Registrar Biometria Facial",
+        "viewData": "Ver Dados Registrados",
+        "stats": "Estatísticas",
+        "test": "Testar Verificação"
+      },
+      "system": {
+        "title": "Sistema de Reconhecimento Facial",
+        "features": {
+          "title": "Funcionalidades disponíveis:",
+          "register": "✅ Registro de templates biométricos faciais",
+          "verify": "🔍 Verificação de identidade por reconhecimento facial",
+          "stats": "📊 Estatísticas de uso e precisão",
+          "config": "⚙️ Configuração de limiares de confiança",
+          "validate": "🔬 Validação supervisionada de templates"
+        },
+        "prompt": "Pressione \"Ver Dados Registrados\" para carregar a informação biométrica..."
+      },
+      "stats": {
+        "totalTemplates": "Templates Totais",
+        "activeTemplates": "Templates Ativos",
+        "validatedTemplates": "Templates Validados",
+        "avgQuality": "Qualidade Média"
+      },
+      "register": {
+        "title": "Registrar Biometria Facial",
+        "selectUser": "Selecionar Usuário:",
+        "userPlaceholder": "Selecione um usuário...",
+        "captureLabel": "Captura de Imagem Facial Real:",
+        "startCapture": "🎥 Iniciar Captura com Câmera",
+        "simulateCapture": "🎭 Simular Captura (Demo)",
+        "capturePrompt": "A captura facial aparecerá aqui...",
+        "cancelButton": "Cancelar",
+        "saveButton": "💾 Salvar Template",
+        "dropdown": {
+          "placeholder": "Selecione um usuário..."
+        },
+        "result": {
+          "successTitle": "✅ Captura Bem-Sucedida",
+          "quality": "Qualidade:",
+          "templateId": "Template ID:",
+          "size": "Tamanho:",
+          "errorTitle": "❌ Erro na Captura",
+          "errorAdvice": "Tente novamente com melhor iluminação"
+        },
+        "processing": {
+          "title": "⏳ Processando Captura...",
+          "message": "Analisando características faciais..."
+        }
+      },
+      "data": {
+        "noData": {
+          "title": "ℹ️ Não há dados biométricos registrados",
+          "message": "Pressione \"Registrar Biometria Facial\" para começar"
+        },
+        "title": "Registros Biométricos Faciais",
+        "table": {
+          "user": "Usuário",
+          "quality": "Qualidade",
+          "date": "Data",
+          "status": "Status",
+          "actions": "Ações",
+          "statusActive": "Ativo",
+          "statusInactive": "Inativo",
+          "verifyButton": "Verificar",
+          "deleteButton": "Excluir"
+        },
+        "error": {
+          "title": "❌ Erro carregando dados biométricos",
+          "code": "Código:",
+          "connection": "❌ Erro de conexão"
+        }
+      },
+      "verification": {
+        "title": "Testar Verificação Facial",
+        "selectUser": "Selecionar Usuário a Verificar:",
+        "userPlaceholder": "Selecione um usuário com biometria registrada...",
+        "captureLabel": "Capturar Foto para Verificação:",
+        "startButton": "🎥 Iniciar Verificação",
+        "simulateButton": "🎭 Simular Verificação",
+        "resultPrompt": "O resultado da verificação aparecerá aqui...",
+        "closeButton": "Fechar",
+        "error": {
+          "selectUser": "Selecione um usuário primeiro"
+        },
+        "processing": {
+          "title": "⏳ Processando Verificação...",
+          "message": "Comparando com template registrado..."
+        },
+        "result": {
+          "successTitle": "✅ VERIFICAÇÃO BEM-SUCEDIDA",
+          "confidence": "Confiança:",
+          "user": "Usuário:",
+          "time": "Tempo:",
+          "accessGranted": "ACESSO AUTORIZADO",
+          "failTitle": "❌ VERIFICAÇÃO FALHOU",
+          "failReason": "Razão: Template não coincide",
+          "accessDenied": "ACESSO NEGADO"
+        }
+      }
+    },
+    "employeeReg": {
+      "title": "Registro Biométrico de Funcionários",
+      "subtitle": "Módulo unificado para captura e armazenamento de templates biométricos multi-modais",
+      "devices": {
+        "title": "Controle de Dispositivos Biométricos",
+        "autoDetection": "Auto-detecção Ativa",
+        "detectButton": "Detectar Dispositivos",
+        "prompt": "Pressione para detectar dispositivos biométricos conectados",
+        "cameras": {
+          "title": "Câmeras Detectadas"
+        },
+        "microphones": {
+          "title": "Microfones Detectados"
+        },
+        "fingerprints": {
+          "title": "Leitores de Digitais Detectados"
+        }
+      }
+    },
+    "ai": {
+      "error": {
+        "selectCompany": "Deve selecionar uma empresa para acessar a análise IA"
+      },
+      "header": {
+        "title": "Análise IA Avançada - Harvard Medical + MIT CSAIL + Stanford AI Lab",
+        "company": "Empresa:",
+        "status": "Status:",
+        "statusActive": "Ativo com dados em tempo real"
+      },
+      "metrics": {
+        "emotion": {
+          "title": "Harvard Medical - Análise Emocional",
+          "status": "Estado emocional geral positivo"
+        },
+        "fatigue": {
+          "title": "Stanford Sleep Lab - Fadiga",
+          "status": "Nível de fadiga baixo - Normal"
+        },
+        "behavior": {
+          "title": "MIT CSAIL - Comportamento",
+          "status": "Sem anomalias detectadas"
+        },
+        "who": {
+          "title": "WHO-GDHI Compliance",
+          "status": "Excelente higiene pessoal"
+        }
+      },
+      "individual": {
+        "title": "Análise Individual por Funcionário",
+        "insights": "IA Insights: Funcionário modelo com excelentes indicadores de bem-estar",
+        "score": "Score Global:",
+        "lastUpdate": "Última atualização:"
+      },
+      "charts": {
+        "emotion": {
+          "title": "Tendência Emocional (Últimas 24h)",
+          "trend": "Estável - Tendência positiva"
+        }
+      },
+      "alerts": {
+        "title": "Alertas Inteligentes",
+        "allClear": {
+          "title": "Tudo Normal",
+          "message": "Não foram detectadas anomalias nos últimos 7 dias"
+        },
+        "recommendation": {
+          "title": "Recomendação IA",
+          "message": "Continuar com monitoramento preventivo atual"
+        }
+      },
+      "controls": {
+        "title": "Centro de Controle IA - Harvard + MIT + Stanford",
+        "emotionDeep": "Análise Emocional Profunda",
+        "fatigue": "Detecção de Fadiga Stanford",
+        "behavior": "Análise Comportamental MIT",
+        "who": "Avaliação WHO-GDHI"
+      }
+    },
+    "monitoring": {
+      "title": "Monitoramento Biométrico em Tempo Real",
+      "header": {
+        "status": "Status:"
+      },
+      "metrics": {
+        "sessions": {
+          "title": "Sessões Ativas",
+          "subtitle": "Funcionários conectados"
+        },
+        "processing": {
+          "title": "Processamento IA",
+          "subtitle": "Scans processados"
+        },
+        "accuracy": {
+          "title": "Precisão Total",
+          "subtitle": "Identificação bem-sucedida"
+        },
+        "health": {
+          "title": "Estado Sistema",
+          "subtitle": "Saúde do sistema"
+        }
+      },
+      "feed": {
+        "title": "Feed Stanford Real-Time Vision",
+        "startButton": "Iniciar Monitoramento",
+        "subtitle": "Stanford WebSocket Real-Time Analytics",
+        "waiting": "Esperando conexões..."
+      },
+      "alerts": {
+        "title": "Alertas MIT em Tempo Real",
+        "noAlerts": "Não há alertas ativos - Sistema funcionando normalmente"
+      }
+    },
+    "config": {
+      "title": "Configuração Biométrica Avançada",
+      "header": {
+        "date": "Data:",
+        "status": "Status:",
+        "statusActive": "Sistema Ativo"
+      },
+      "sections": {
+        "algorithms": {
+          "title": "Algoritmos Oxford Biometric",
+          "confidence": "Confiança Mínima (Oxford FaceNet):",
+          "value": "Valor:",
+          "quality": "Qualidade Imagem (Cambridge Vision):",
+          "speed": "Velocidade Processamento (ETH Optimization):",
+          "speedOptions": {
+            "balanced": "Balanceado (Recomendado)",
+            "fast": "Rápido (ETH Turbo)",
+            "accurate": "Precisão Máxima (Oxford Lab)",
+            "enterprise": "Modo Empresarial (Cambridge)"
+          }
+        },
+        "ai": {
+          "title": "IA Cambridge Advanced Systems",
+          "neural": "Cambridge Neural Networks",
+          "neuralDesc": "Análise IA com redes neurais profundas",
+          "emotion": "Oxford EmotiNet v3.2",
+          "emotionDesc": "Análise emocional automática em tempo real",
+          "fatigue": "ETH Fatigue Detection",
+          "fatigueDesc": "Detecção avançada de fadiga laboral",
+          "behavior": "Cambridge Behavior AI",
+          "behaviorDesc": "Análise comportamental preditiva"
+        },
+        "devices": {
+          "title": "ETH IoT Device Management",
+          "registered": "Dispositivos Registrados:",
+          "detecting": "Detectando dispositivos ETH IoT...",
+          "addNew": "Adicionar Novo Dispositivo:",
+          "namePlaceholder": "Nome do dispositivo",
+          "addButton": "Adicionar"
+        },
+        "security": {
+          "title": "Oxford Security & Alerts",
+          "alerts": "Alertas Tempo Real",
+          "alertsDesc": "Notificações instantâneas Oxford",
+          "reports": "Relatórios Automáticos",
+          "reportsDesc": "Informes diários por email",
+          "emailLabel": "Email para Alertas Oxford:",
+          "levelLabel": "Nível de Segurança:",
+          "levels": {
+            "standard": "Padrão (Recomendado)",
+            "high": "Alto (Oxford Enhanced)",
+            "maximum": "Máximo (Cambridge Military)",
+            "custom": "Personalizado (ETH Custom)"
+          }
+        }
+      },
+      "actions": {
+        "save": "Salvar Configuração Oxford",
+        "reset": "Restaurar Padrões",
+        "export": "Exportar Config ETH"
+      },
+      "footer": "Configuração respaldada automaticamente em servidores Oxford/Cambridge/ETH Zurich",
+      "messages": {
+        "deviceNameRequired": "Por favor insira um nome para o dispositivo",
+        "deviceAdded": "Dispositivo adicionado corretamente ao sistema ETH",
+        "saved": "Configuração salva em servidores Oxford/Cambridge/ETH Zurich",
+        "reset": "Configuração restaurada aos valores padrão",
+        "exported": "Configuração exportada corretamente"
+      }
+    },
+    "emotion": {
+      "analysis": {
+        "title": "Harvard Medical School - Análise Emocional Profunda",
+        "initializing": "Inicializando EmotiNet v3.2...",
+        "steps": {
+          "microExpressions": "Analisando micro-expressões faciais...",
+          "valence": "Processando valência emocional com Russell's Circumplex...",
+          "arousal": "Avaliando ativação emocional (arousal)...",
+          "emotinet": "Aplicando Harvard EmotiNet v3.2...",
+          "complete": "Análise emocional concluída com sucesso"
+        }
+      },
+      "results": {
+        "title": "Resultados da Análise Emocional Harvard",
+        "state": {
+          "label": "Estado Emocional:",
+          "positive": "Positivo"
+        },
+        "valence": {
+          "label": "Valência:",
+          "veryPositive": "Muito positiva"
+        },
+        "arousal": {
+          "label": "Ativação:",
+          "moderate": "Moderada"
+        },
+        "emotions": {
+          "title": "Emoções Detectadas:",
+          "joy": "Alegria:",
+          "serenity": "Serenidade:",
+          "focus": "Concentração:"
+        },
+        "insight": "Insight Harvard: Excelente estado emocional. Funcionário mostra sinais de bem-estar e satisfação laboral. Recomendação: Manter condições atuais."
+      }
+    },
+    "fatigue": {
+      "title": "Stanford Sleep Lab - Detecção de Fadiga",
+      "preparing": "Preparando análise Stanford...",
+      "steps": {
+        "perclos": "Analisando frequência de piscar (PERCLOS)...",
+        "sleepiness": "Avaliando Stanford Sleepiness Scale...",
+        "karolinska": "Processando Karolinska Sleepiness Scale...",
+        "complete": "Avaliação de fadiga concluída"
+      },
+      "results": {
+        "title": "Resultados Stanford Sleep Lab",
+        "level": {
+          "label": "Nível de Fadiga",
+          "lowNormal": "Baixo - Normal"
+        },
+        "perclos": {
+          "optimal": "Ótimo"
+        },
+        "karolinska": {
+          "veryAlert": "Muito alerta"
+        },
+        "recommendation": "Recomendação Stanford: Funcionário mostra excelente estado de alerta. Não são requeridas medidas preventivas. Continuar com monitoramento rotineiro."
+      }
+    },
+    "behavior": {
+      "title": "MIT CSAIL - Análise Comportamental",
+      "initializing": "Inicializando DeepBehavior MIT...",
+      "steps": {
+        "movement": "Analisando padrões de movimento...",
+        "violence": "Avaliando indicadores de violência...",
+        "anomalies": "Detectando anomalias comportamentais...",
+        "deepBehavior": "Aplicando MIT DeepBehavior...",
+        "complete": "Análise comportamental concluída"
+      },
+      "results": {
+        "title": "Resultados MIT CSAIL",
+        "security": {
+          "label": "Segurança Comportamental:"
+        },
+        "violence": {
+          "label": "Indicadores de Violência:",
+          "none": "Nenhum"
+        },
+        "anomalies": {
+          "label": "Anomalias Detectadas:"
+        },
+        "movement": {
+          "label": "Padrões de Movimento:",
+          "normal": "Normais"
+        },
+        "stress": {
+          "label": "Stress Comportamental:",
+          "low": "Baixo"
+        },
+        "confidence": "Confidence Score:",
+        "conclusion": "Resultado MIT: Funcionário apresenta comportamento completamente normal. Sem indícios de agressividade, violência ou anomalias comportamentais. Perfil de segurança ótimo."
+      }
+    },
+    "who": {
+      "title": "WHO Global Digital Health Index - Assessment",
+      "connecting": "Conectando com padrões WHO...",
+      "steps": {
+        "hygiene": "Avaliando higiene pessoal...",
+        "presentation": "Analisando apresentação profissional...",
+        "criteria": "Aplicando critérios WHO-GDHI...",
+        "complete": "Avaliação WHO concluída"
+      },
+      "results": {
+        "title": "Resultados WHO-GDHI Assessment",
+        "score": {
+          "label": "Score WHO-GDHI",
+          "excellent": "Excelente"
+        },
+        "hygiene": {
+          "label": "Higiene Pessoal",
+          "optimal": "Ótima"
+        },
+        "rating": {
+          "label": "Qualificação",
+          "compliant": "WHO Compliant"
+        },
+        "certification": "Certificação WHO: Funcionário cumpre com todos os padrões internacionais de higiene pessoal segundo WHO-GDHI. Apto para trabalhar em ambientes de alta exigência sanitária."
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "console": {
+      "module_loaded": "Módulo dashboard carregado",
+      "loading_company_info": "Carregando informações da empresa...",
+      "error_loading": "Erro carregando informações, usando dados padrão",
+      "exporting": "Exportando relatório...",
+      "configured": "Módulo dashboard configurado"
+    },
+    "company": {
+      "default_name": "Minha Empresa",
+      "default_info": "Sistema de gestão empresarial multi-módulo",
+      "example_name": "Empresa de Exemplo",
+      "not_available": "Informações da empresa não disponíveis"
+    },
+    "quick_access": {
+      "title": "Acesso Rápido",
+      "quick_access_label": "Acesso rápido",
+      "no_modules": "Os módulos de acesso rápido serão carregados quando você tiver módulos disponíveis"
+    },
+    "notifications": {
+      "system_active_title": "Sistema Modular Ativo",
+      "system_active_desc": "Todos os módulos estão funcionando corretamente",
+      "modules_available_title": "{{count}} Módulos Disponíveis",
+      "modules_available_desc": "Clique em qualquer módulo para acessar suas funcionalidades"
+    },
+    "help": {
+      "guide_title": "Guia do Sistema",
+      "guide_content": "1. Use os módulos na barra superior\n2. Cada módulo tem funcionalidades específicas\n3. Os dados estão isolados por empresa\n4. Para suporte técnico, use o botão de contato",
+      "support_title": "Contato de Suporte",
+      "support_content": "Você pode contatar o suporte técnico através de:\n- Email: suporte@empresa.com\n- Telefone: +55 11 1234-5678\n- Sistema de tickets interno"
+    },
+    "activity": {
+      "no_activity": "Sem atividade recente",
+      "error_loading": "Erro carregando atividade"
+    },
+    "export": {
+      "in_development": "Função de exportação em desenvolvimento"
+    }
+  },
+  "modules": {
+    "users": {
+      "title": "Gestão de Usuários",
+      "description": "Gerenciar funcionários"
+    },
+    "attendance": {
+      "title": "Controle de Presença",
+      "description": "Registro de ponto"
+    },
+    "departments": {
+      "title": "Departamentos",
+      "description": "Gestão organizacional"
+    },
+    "branches": {
+      "title": "Filiais",
+      "description": "Locais de trabalho"
+    },
+    "shifts": {
+      "title": "Horários e Turnos",
+      "description": "Configuração horária"
+    },
+    "biometric": {
+      "title": "Gestão Biométrica",
+      "description": "Controle de identidade"
+    },
+    "reports": {
+      "title": "Relatórios",
+      "description": "Informes e estatísticas"
+    },
+    "permissions": {
+      "title": "Permissões e Licenças",
+      "description": "Gestão de ausências"
+    },
+    "medical": {
+      "title": "Dashboard Médico",
+      "description": "Saúde ocupacional"
+    },
+    "documents": {
+      "title": "Gestão de Documentos",
+      "description": "Arquivos e expedientes"
+    },
+    "legal": {
+      "title": "Dashboard Legal",
+      "description": "Cumprimento normativo"
+    },
+    "training": {
+      "title": "Treinamentos",
+      "description": "Formação e desenvolvimento"
+    },
+    "notifications": {
+      "title": "Notificações",
+      "description": "Sistema de mensagens"
+    },
+    "job-postings": {
+      "title": "Vagas",
+      "description": "Oportunidades de emprego"
+    },
+    "payroll": {
+      "title": "Folha de Pagamento",
+      "description": "Pagamentos e nómina"
+    },
+    "art": {
+      "title": "Configuração ART",
+      "description": "Seguradoras de risco"
+    },
+    "settings": {
+      "title": "Configurações",
+      "description": "Ajustes do sistema",
+      "server": {
+        "title": "📡 Configuração do Servidor para APK",
+        "subtitle": "Use esta informação para configurar o APK Flutter manualmente",
+        "ip_label": "ENDEREÇO IP DO SERVIDOR:",
+        "port_label": "PORTA:",
+        "full_url_label": "URL COMPLETA:",
+        "loading": "Carregando...",
+        "copy_button": "📋 Copiar",
+        "copy_url_button": "📋 Copiar URL",
+        "apk_config_title": "📱 Para configurar o APK:",
+        "apk_step1": "1. Abrir APK → Configurações",
+        "apk_step2": "2. Inserir IP:",
+        "apk_step3": "3. Inserir Porta:",
+        "apk_step4": "4. Salvar e usar"
+      },
+      "company": {
+        "title": "🏢 Dados da Empresa",
+        "name_label": "Nome da Empresa:",
+        "name_placeholder": "Nome da empresa",
+        "timezone_label": "Fuso Horário:",
+        "timezone_argentina": "Argentina/Buenos Aires",
+        "timezone_mexico": "México/Cidade do México",
+        "timezone_colombia": "Colômbia/Bogotá",
+        "timezone_peru": "Peru/Lima",
+        "timezone_chile": "Chile/Santiago",
+        "save_button": "💾 Salvar Configuração"
+      },
+      "biometric": {
+        "title": "🔐 Configuração Biométrica",
+        "fingerprint_label": "Reconhecimento de Digital",
+        "face_recognition_label": "Reconhecimento Facial",
+        "max_fingerprints_label": "Máximo de Digitais por Usuário:",
+        "save_button": "💾 Salvar Biométrica"
+      },
+      "communications": {
+        "title": "📧 Configuração de Comunicações",
+        "email_section": "📧 Email",
+        "email_notifications_label": "Notificações por Email",
+        "smtp_server_label": "Servidor SMTP:",
+        "smtp_server_placeholder": "smtp.gmail.com",
+        "system_email_label": "Email do Sistema:",
+        "system_email_placeholder": "sistema@aponnt.com",
+        "save_notifications_button": "💾 Salvar Notificações",
+        "test_email_button": "📧 Testar Email",
+        "whatsapp_section": "📱 WhatsApp Business",
+        "whatsapp_enabled_label": "WhatsApp Ativado",
+        "whatsapp_token_label": "Token do WhatsApp Business:",
+        "whatsapp_token_placeholder": "Token da API",
+        "whatsapp_number_label": "Número de WhatsApp:",
+        "whatsapp_number_placeholder": "+55 11 91234-5678",
+        "save_whatsapp_button": "💾 Salvar WhatsApp",
+        "test_whatsapp_button": "📱 Testar WhatsApp"
+      },
+      "medical": {
+        "title": "🏥 Configuração Médica Geral",
+        "module_enabled_label": "Módulo Médico Ativado",
+        "max_certificate_days_label": "Dias máximos para atestados:",
+        "requires_audit_label": "Requer auditoria médica:",
+        "requires_audit_always": "Sempre",
+        "requires_audit_over_days": "Somente mais de X dias",
+        "requires_audit_never": "Nunca",
+        "audit_days_limit_label": "Limite de dias para auditoria:",
+        "save_button": "💾 Salvar Configuração Médica"
+      },
+      "questionnaires": {
+        "title": "📋 Questionários Médicos",
+        "create_button": "➕ Criar Questionário",
+        "covid_title": "Questionário COVID-19",
+        "symptoms_title": "Avaliação de Sintomas Gerais",
+        "status_active": "Ativo",
+        "edit_button": "✏️ Editar"
+      },
+      "art": {
+        "title": "🚨 Configuração Múltipla ART",
+        "notifications_enabled_label": "Notificações ART Ativadas",
+        "providers_title": "Provedores ART Configurados",
+        "add_button": "➕ Adicionar ART",
+        "no_providers": "Nenhum provedor ART configurado. Clique em \"Adicionar ART\" para começar.",
+        "global_channel_label": "Canal global de notificação:",
+        "channel_email": "Email",
+        "channel_sms": "SMS",
+        "channel_whatsapp": "WhatsApp",
+        "channel_all": "Todos os canais",
+        "save_button": "💾 Salvar Configuração",
+        "test_all_button": "🚨 Testar Todas as ARTs",
+        "modal": {
+          "title": "🚨 Adicionar Provedor ART",
+          "name_label": "Nome do Provedor ART:",
+          "name_placeholder": "Ex: Seguradora ART",
+          "client_code_label": "Código/Número de Cliente:",
+          "client_code_placeholder": "Cliente Nº",
+          "email_label": "Email Notificações:",
+          "email_placeholder": "notificacoes@art.com",
+          "phone_label": "Telefone:",
+          "phone_placeholder": "+55 11 1234-5678",
+          "preferred_channel_label": "Canal Preferido:",
+          "priority_label": "Prioridade:",
+          "priority_primary": "Principal",
+          "priority_secondary": "Secundária",
+          "priority_backup": "Backup",
+          "emergency_contact_label": "Contato de Emergência:",
+          "emergency_contact_placeholder": "Dr. João Silva",
+          "schedule_label": "Horários de Atendimento:",
+          "schedule_placeholder": "Seg-Sex: 8-18h, Emergências 24h",
+          "cancel_button": "Cancelar",
+          "add_button": "Adicionar ART"
+        },
+        "card": {
+          "client_label": "Cliente:",
+          "channel_label": "Canal:",
+          "no_phone": "Sem telefone",
+          "contact_label": "Contato:",
+          "edit_button": "✏️",
+          "delete_button": "🗑️"
+        }
+      },
+      "licenses": {
+        "title": "🏖️ Regime de Licenças e Férias",
+        "vacation_config_title": "Configuração de Férias",
+        "calculator_button": "🧮 Calculadora",
+        "vacation_scale_title": "📅 Dias de Férias por Antiguidade",
+        "seniority_label": "Antiguidade",
+        "days_label": "Dias",
+        "action_label": "Ação",
+        "seniority_0_5": "6 meses - 5 anos",
+        "seniority_5_10": "5 - 10 anos",
+        "seniority_10_20": "10 - 20 anos",
+        "seniority_20_plus": "Mais de 20 anos",
+        "update_button": "✓",
+        "add_scale_button": "➕ Adicionar Escala",
+        "extraordinary_title": "🚨 Licenças Extraordinárias",
+        "family_death_label": "Falecimento familiar:",
+        "marriage_label": "Casamento:",
+        "paternity_label": "Paternidade:",
+        "medical_exam_label": "Exame médico:",
+        "days_unit": "dias",
+        "day_unit": "dia",
+        "day_type_habil": "Úteis",
+        "day_type_corrido": "Corridos",
+        "add_type_button": "➕ Adicionar Tipo",
+        "calculation_title": "⚖️ Configuração de Cálculo",
+        "interruptible_label": "As férias podem ser interrompidas por doença",
+        "min_continuous_label": "Período mínimo de férias contínuas:",
+        "max_fractions_label": "Período máximo de fracionamento:",
+        "fractions_unit": "partes",
+        "auto_scheduling_label": "Programação automática por compatibilidade de tarefas",
+        "min_advance_label": "Antecedência mínima para solicitar:",
+        "max_simultaneous_label": "Máximo de funcionários simultâneos em férias:",
+        "team_percent": "% da equipe",
+        "save_config_button": "💾 Salvar Configuração de Licenças",
+        "generate_schedule_button": "📋 Gerar Cronograma Automático",
+        "compatibility_matrix_button": "🔄 Ver Matriz de Compatibilidade",
+        "modal_vacation_scale": {
+          "title": "📅 Adicionar Escala de Férias",
+          "range_label": "Faixa de Antiguidade:",
+          "range_placeholder": "Ex: 25-30 anos",
+          "days_label": "Dias de Férias:",
+          "cancel_button": "Cancelar",
+          "add_button": "Adicionar"
+        },
+        "modal_extraordinary": {
+          "title": "🚨 Adicionar Licença Extraordinária",
+          "type_label": "Tipo de Licença:",
+          "type_placeholder": "Ex: Mudança",
+          "days_label": "Dias:",
+          "day_type_label": "Tipo de Dias:",
+          "cancel_button": "Cancelar",
+          "add_button": "Adicionar"
+        },
+        "modal_schedule": {
+          "title": "📋 Cronograma Automático de Férias",
+          "algorithm_title": "🔍 Algoritmo de Programação Objetiva",
+          "algorithm_desc": "O sistema analisou as tarefas de cada funcionário e gerou um cronograma que garante a cobertura de todas as atividades críticas durante os períodos de férias.",
+          "employee_col": "Funcionário",
+          "period_col": "Período Sugerido",
+          "days_col": "Dias",
+          "status_col": "Status",
+          "status_optimal": "✅ Ótimo",
+          "status_review": "⚠️ Revisar",
+          "accept_button": "✅ Aceitar Cronograma",
+          "modify_button": "✏️ Permitir Modificações RH",
+          "close_button": "Fechar"
+        },
+        "modal_compatibility": {
+          "title": "🔄 Matriz de Compatibilidade de Tarefas",
+          "employee_col": "Funcionário",
+          "main_tasks_col": "Tarefas Principais",
+          "can_cover_col": "Pode Cobrir",
+          "compatibility_col": "Compatibilidade",
+          "close_button": "Fechar"
+        }
+      },
+      "barcode": {
+        "title": "📱 Configuração de Código QR",
+        "enabled_label": "Permitir registro com código de barras",
+        "format_label": "Formato do código:",
+        "format_employee_id": "ID do Funcionário",
+        "format_custom": "Código personalizado",
+        "format_qr_json": "QR Code com dados JSON",
+        "prefix_label": "Prefixo do código (opcional):",
+        "prefix_placeholder": "FUNC-",
+        "save_button": "💾 Salvar Configuração",
+        "generate_button": "📊 Gerar Códigos",
+        "test_button": "📱 Testar Leitor",
+        "preview_title": "📊 Códigos Gerados"
+      },
+      "alerts": {
+        "title": "⚠️ Sistema de Alertas Fora de Turno",
+        "enabled_label": "Ativar alertas para registros fora do turno",
+        "admins_label": "Administradores a notificar:",
+        "admin_primary_label": "Admin Principal - SMS:",
+        "admin_secondary_label": "Admin Secundário - Email:",
+        "whatsapp_label": "WhatsApp:",
+        "save_button": "💾 Salvar Alertas",
+        "test_button": "⚠️ Testar Alerta"
+      },
+      "messages": {
+        "copied": "✅ Copiado: {{text}}",
+        "copy_error": "❌ Erro copiando para área de transferência",
+        "config_loaded": "⚙️ Configuração atual carregada",
+        "enter_company_name": "⚠️ Por favor insira o nome da empresa",
+        "saving_company": "🔄 Salvando configuração da empresa...",
+        "company_saved": "✅ Configuração da empresa salva com sucesso",
+        "saving_biometric": "🔄 Salvando configuração biométrica...",
+        "biometric_saved": "✅ Configuração biométrica salva com sucesso",
+        "saving_notifications": "🔄 Salvando configuração de notificações...",
+        "notifications_saved": "✅ Configuração de notificações salva",
+        "enter_email": "❌ Por favor insira um email do sistema",
+        "sending_test_email": "📧 Enviando email de teste...",
+        "test_email_sent": "✅ Email de teste enviado com sucesso",
+        "saving_whatsapp": "🔄 Salvando configuração do WhatsApp...",
+        "whatsapp_saved": "✅ Configuração do WhatsApp salva",
+        "enter_whatsapp_number": "❌ Por favor insira um número de WhatsApp",
+        "sending_test_whatsapp": "📱 Enviando mensagem de teste por WhatsApp...",
+        "test_whatsapp_sent": "✅ Mensagem do WhatsApp enviada com sucesso",
+        "saving_medical": "🔄 Salvando configuração médica...",
+        "medical_saved": "✅ Configuração médica salva com sucesso",
+        "questionnaire_in_dev": "📋 Função criar questionário em desenvolvimento",
+        "edit_questionnaire_in_dev": "✏️ Função editar questionário em desenvolvimento",
+        "saving_art": "🔄 Salvando configuração ART...",
+        "art_saved": "✅ Configuração ART salva com sucesso",
+        "sending_test_art": "🚨 Enviando notificação de teste à ART...",
+        "test_art_sent": "✅ Notificação ART enviada com sucesso",
+        "art_provider_added": "✅ Provedor ART adicionado com sucesso",
+        "edit_art_in_dev": "✏️ Função editar ART em desenvolvimento",
+        "art_provider_deleted": "🗑️ Provedor ART excluído",
+        "confirm_delete_art": "Tem certeza que deseja excluir este provedor ART?",
+        "saving_multiple_art": "🔄 Salvando configuração múltipla ART...",
+        "multiple_art_saved": "✅ Configuração ART salva ({{count}} provedores)",
+        "no_art_providers": "⚠️ Nenhum provedor ART configurado",
+        "testing_all_art": "🚨 Enviando notificação de teste para {{count}} provedores ART...",
+        "all_art_tested": "✅ Notificações enviadas para todas as ARTs",
+        "vacation_scale_updated": "✅ Escala de férias atualizada",
+        "vacation_scale_added": "✅ Nova escala de férias adicionada",
+        "extraordinary_license_added": "✅ Nova licença extraordinária adicionada",
+        "saving_licenses": "🔄 Salvando configuração de licenças...",
+        "licenses_saved": "✅ Configuração de licenças salva com sucesso",
+        "generating_schedule": "📋 Gerando cronograma automático de férias...",
+        "schedule_generated": "✅ Cronograma automático gerado baseado em compatibilidade de tarefas",
+        "schedule_accepted": "✅ Cronograma de férias aceito e aplicado",
+        "schedule_modifications_enabled": "✏️ Cronograma habilitado para modificações de RH",
+        "showing_compatibility": "🔄 Mostrando matriz de compatibilidade de tarefas...",
+        "calculator_opening": "🧮 Abrindo calculadora de férias...",
+        "saving_barcode": "🔄 Salvando configuração de códigos...",
+        "barcode_saved": "✅ Configuração de códigos salva",
+        "generating_barcodes": "📊 Gerando códigos para todos os funcionários...",
+        "barcodes_generated": "✅ Códigos gerados com sucesso",
+        "test_scanner_in_dev": "📱 Função testar leitor em desenvolvimento",
+        "saving_alerts": "🔄 Salvando configuração de alertas...",
+        "alerts_saved": "✅ Configuração de alertas salva",
+        "testing_alert": "⚠️ Simulando registro fora de turno...",
+        "test_alert_sent": "✅ Alerta de teste enviado aos administradores",
+        "error_saving": "❌ Erro salvando configuração: {{message}}",
+        "error_loading_server": "❌ Erro carregando info servidor"
+      }
+    },
+    "employee_map": {
+      "title": "Mapa Funcionários",
+      "description": "Localização em tempo real"
+    }
   }
 }

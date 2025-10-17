@@ -1,616 +1,1678 @@
 {
   "common": {
-    "save": "Speichern",
-    "cancel": "Abbrechen",
-    "delete": "Löschen",
-    "edit": "Bearbeiten",
-    "view": "Ansehen",
-    "add": "Hinzufügen",
-    "search": "Suchen",
-    "loading": "Wird geladen...",
-    "error": "Fehler",
-    "success": "Erfolg",
-    "warning": "Warnung",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "add": "Add",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
     "info": "Information",
-    "yes": "Ja",
-    "no": "Nein",
-    "close": "Schließen",
-    "back": "Zurück",
-    "next": "Weiter",
-    "previous": "Vorherige",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
     "name": "Name",
-    "email": "E-Mail",
-    "phone": "Telefon",
-    "address": "Adresse",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
     "status": "Status",
-    "actions": "Aktionen",
-    "active": "Aktiv",
-    "inactive": "Inaktiv",
-    "date": "Datum",
-    "time": "Zeit",
-    "confirm": "Bestätigen",
-    "accept": "Akzeptieren",
-    "reject": "Ablehnen",
-    "submit": "Senden",
-    "reset": "Zurücksetzen",
-    "clear": "Löschen",
-    "select": "Auswählen",
-    "choose": "Wählen",
-    "upload": "Hochladen",
-    "download": "Herunterladen",
-    "print": "Drucken",
-    "export": "Exportieren",
-    "import": "Importieren",
-    "refresh": "Aktualisieren",
-    "reload": "Neu laden",
-    "settings": "Einstellungen",
-    "preferences": "Voreinstellungen",
-    "help": "Hilfe",
-    "about": "Über",
-    "logout": "Abmelden",
-    "login": "Anmelden",
-    "register": "Registrieren",
-    "profile": "Profil",
+    "actions": "Actions",
+    "active": "Active",
+    "inactive": "Inactive",
+    "date": "Date",
+    "time": "Time",
+    "confirm": "Confirm",
+    "accept": "Accept",
+    "reject": "Reject",
+    "submit": "Submit",
+    "reset": "Reset",
+    "clear": "Clear",
+    "select": "Select",
+    "choose": "Choose",
+    "upload": "Upload",
+    "download": "Download",
+    "print": "Print",
+    "export": "Export",
+    "import": "Import",
+    "refresh": "Refresh",
+    "reload": "Reload",
+    "settings": "Settings",
+    "preferences": "Preferences",
+    "help": "Help",
+    "about": "About",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "profile": "Profile",
     "dashboard": "Dashboard",
-    "menu": "Menü",
-    "options": "Optionen",
-    "tools": "Werkzeuge",
-    "filters": "Filter",
-    "sort": "Sortieren",
-    "group": "Gruppieren",
+    "menu": "Menu",
+    "options": "Options",
+    "tools": "Tools",
+    "filters": "Filters",
+    "sort": "Sort",
+    "group": "Group",
     "details": "Details",
-    "summary": "Zusammenfassung",
-    "total": "Gesamt",
-    "subtotal": "Zwischensumme",
-    "description": "Beschreibung",
-    "title": "Titel",
-    "category": "Kategorie",
-    "type": "Typ",
-    "priority": "Priorität",
-    "urgent": "Dringend",
-    "high": "Hoch",
-    "medium": "Mittel",
-    "low": "Niedrig",
-    "enabled": "Aktiviert",
-    "disabled": "Deaktiviert",
-    "public": "Öffentlich",
-    "private": "Privat",
-    "visible": "Sichtbar",
-    "hidden": "Versteckt",
-    "required": "Erforderlich",
+    "summary": "Summary",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "description": "Description",
+    "title": "Title",
+    "category": "Category",
+    "type": "Type",
+    "priority": "Priority",
+    "urgent": "Urgent",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "public": "Public",
+    "private": "Private",
+    "visible": "Visible",
+    "hidden": "Hidden",
+    "required": "Required",
     "optional": "Optional",
-    "available": "Verfügbar",
-    "unavailable": "Nicht verfügbar",
+    "available": "Available",
+    "unavailable": "Unavailable",
     "online": "Online",
     "offline": "Offline",
-    "connected": "Verbunden",
-    "disconnected": "Getrennt",
-    "processing": "Verarbeitung",
-    "completed": "Abgeschlossen",
-    "failed": "Fehlgeschlagen",
-    "pending": "Ausstehend",
-    "approved": "Genehmigt",
-    "rejected": "Abgelehnt",
-    "draft": "Entwurf",
-    "published": "Veröffentlicht",
-    "archived": "Archiviert",
-    "deleted": "Gelöscht",
-    "are_you_sure": "Sind Sie sicher?",
-    "item_deleted": "Element gelöscht",
-    "operation_successful": "Operation erfolgreich",
-    "processing_error": "Verarbeitungsfehler",
-    "please_complete": "Bitte vervollständigen",
-    "data_saved": "Daten gespeichert",
-    "changes_saved": "Änderungen gespeichert",
-    "no_data": "Keine Daten",
-    "no_results": "Keine Ergebnisse",
-    "not_found": "Nicht gefunden",
-    "access_denied": "Zugriff verweigert",
-    "permission_denied": "Berechtigung verweigert",
-    "session_expired": "Sitzung abgelaufen",
-    "connection_error": "Verbindungsfehler",
-    "server_error": "Serverfehler",
-    "invalid_data": "Ungültige Daten",
-    "required_field": "Pflichtfeld",
-    "invalid_format": "Ungültiges Format",
-    "min_length": "Mindestlänge",
-    "max_length": "Maximale Länge",
-    "min_value": "Mindestwert",
-    "max_value": "Maximalwert",
-    "select_option": "Option auswählen",
-    "enter_text": "Text eingeben",
-    "choose_file": "Datei auswählen",
-    "drag_drop": "Ziehen und ablegen",
-    "click_upload": "Zum Hochladen klicken"
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "draft": "Draft",
+    "published": "Published",
+    "archived": "Archived",
+    "deleted": "Deleted",
+    "are_you_sure": "Are you sure?",
+    "item_deleted": "Item deleted",
+    "operation_successful": "Operation successful",
+    "processing_error": "Processing error",
+    "please_complete": "Please complete",
+    "data_saved": "Data saved",
+    "changes_saved": "Changes saved",
+    "no_data": "No data",
+    "no_results": "No results",
+    "not_found": "Not found",
+    "access_denied": "Access denied",
+    "permission_denied": "Permission denied",
+    "session_expired": "Session expired",
+    "connection_error": "Connection error",
+    "server_error": "Server error",
+    "invalid_data": "Invalid data",
+    "required_field": "Required field",
+    "invalid_format": "Invalid format",
+    "min_length": "Minimum length",
+    "max_length": "Maximum length",
+    "min_value": "Minimum value",
+    "max_value": "Maximum value",
+    "select_option": "Select an option",
+    "enter_text": "Enter text",
+    "choose_file": "Choose file",
+    "drag_drop": "Drag and drop",
+    "click_upload": "Click to upload"
   },
   "header": {
-    "system_title": "Integriertes HR-System",
-    "developed_by": "Entwickelt von:",
-    "language_selector": "Sprache:"
+    "system_title": "Comprehensive HR System",
+    "developed_by": "Developed by:",
+    "language_selector": "Language:"
   },
   "login": {
-    "title": "Anmelden",
-    "welcome": "Willkommen",
-    "username": "Benutzer / E-Mail / Ausweis",
-    "password": "Passwort",
-    "login_button": "🚀 Anmelden",
-    "forgot_password": "Passwort vergessen?",
-    "invalid_credentials": "Ungültige Anmeldedaten",
-    "login_success": "Anmeldung erfolgreich",
-    "login_error": "Authentifizierungsfehler",
-    "select_company": "🏢 Firma auswählen...",
-    "loading_companies": "Firmen werden geladen...",
-    "enter_username": "Geben Sie Ihren Benutzernamen ein",
-    "company_client": "Kundenfirma",
-    "company_address": "Firmenadresse",
-    "company_phone": "Telefon"
+    "title": "Sign In",
+    "welcome": "Welcome",
+    "username": "User / Email / ID",
+    "password": "Password",
+    "login_button": "🚀 Sign In",
+    "forgot_password": "Forgot your password?",
+    "invalid_credentials": "Invalid credentials",
+    "login_success": "Login successful",
+    "login_error": "Authentication error",
+    "select_company": "🏢 Select Company...",
+    "loading_companies": "Loading companies...",
+    "enter_username": "Enter your username",
+    "company_client": "Client Company",
+    "company_address": "Company address",
+    "company_phone": "Phone"
   },
   "users": {
-    "title": "Benutzerverwaltung",
-    "list_title": "Benutzerliste",
-    "add_user": "➕ Benutzer hinzufügen",
-    "user_list": "📋 Benutzerliste",
-    "statistics": "📊 Statistiken",
-    "export_csv": "📤 CSV exportieren",
-    "bulk_actions": "⚡ Massenaktionen",
-    "search_dni": "🔍 Nach Ausweis suchen:",
-    "search_name": "👤 Nach Name/Nachname suchen:",
-    "clear_filters": "🧹 Löschen",
-    "employee_id": "Mitarbeiter-ID",
-    "first_name": "Vorname",
-    "last_name": "Nachname",
-    "department": "Abteilung",
-    "role": "Rolle",
-    "contract": "Vertrag",
-    "gps_radius": "GPS-Radius",
-    "shifts": "Schichten",
+    "title": "User Management",
+    "list_title": "User List",
+    "add_user": "➕ Add User",
+    "user_list": "📋 User List",
+    "statistics": "📊 Statistics",
+    "export_csv": "📤 Export CSV",
+    "bulk_actions": "⚡ Bulk Actions",
+    "search_dni": "🔍 Search by ID:",
+    "search_name": "👤 Search by Name/Surname:",
+    "clear_filters": "🧹 Clear",
+    "employee_id": "Employee ID",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "department": "Department",
+    "role": "Role",
+    "contract": "Contract",
+    "gps_radius": "GPS Radius",
+    "shifts": "Shifts",
     "biometric": "Bio",
-    "assign_shifts": "Schichten zuweisen",
-    "reset_password": "Zurücksetzen",
-    "personal_data": "👤 Persönliche Daten",
-    "change_photo": "📷 Foto ändern",
-    "remove_photo": "🗑️ Entfernen",
-    "basic_data": "Grunddaten",
-    "full_name": "Vollständiger Name",
-    "birth_date": "Geburtsdatum",
-    "hire_date": "Einstellungsdatum",
-    "not_specified": "Nicht angegeben",
-    "contacts": "📞 Kontakte",
-    "emergency_contact": "Notfallkontakt",
-    "emergency_phone": "Notfalltelefon",
-    "health_insurance": "🏥 Krankenversicherung",
-    "configure": "⚙️ Konfigurieren",
-    "coverage": "Abdeckung",
+    "assign_shifts": "Assign Shifts",
+    "reset_password": "Reset",
+    "personal_data": "👤 Personal Data",
+    "change_photo": "📷 Change Photo",
+    "remove_photo": "🗑️ Remove",
+    "basic_data": "Basic Data",
+    "full_name": "Full Name",
+    "birth_date": "Birth Date",
+    "hire_date": "Hire Date",
+    "not_specified": "Not specified",
+    "contacts": "📞 Contacts",
+    "emergency_contact": "Emergency",
+    "emergency_phone": "Emergency Phone",
+    "health_insurance": "🏥 Health Insurance",
+    "configure": "⚙️ Configure",
+    "coverage": "Coverage",
     "plan": "Plan",
-    "mode": "Modus",
-    "company_percentage": "% Unternehmen",
-    "no_assigned": "Nicht zugewiesen",
-    "education": "🎓 Bildung",
-    "primary": "Grundschule",
-    "secondary": "Gymnasium",
-    "tertiary": "Fachhochschule",
-    "university": "Universität",
-    "titles": "Titel",
-    "training": "Schulungen",
-    "none_registered": "Keine registriert",
-    "personal_documents": "📄 Persönliche Dokumente",
-    "manage": "⚙️ Verwalten",
-    "total_users": "Benutzer Gesamt",
-    "active_users": "Aktive Benutzer",
-    "admin_users": "Administratoren"
+    "mode": "Mode",
+    "company_percentage": "% Company",
+    "no_assigned": "Not assigned",
+    "education": "🎓 Education",
+    "primary": "Primary",
+    "secondary": "Secondary",
+    "tertiary": "Tertiary",
+    "university": "University",
+    "titles": "Titles",
+    "training": "Training",
+    "none_registered": "None registered",
+    "personal_documents": "📄 Personal Documents",
+    "manage": "⚙️ Manage",
+    "total_users": "Total Users",
+    "active_users": "Active Users",
+    "admin_users": "Administrators"
   },
   "departments": {
-    "title": "Abteilungsverwaltung",
-    "add_department": "➕ Abteilung hinzufügen",
-    "department_list": "📋 Abteilungsliste",
-    "gps_location": "GPS-Standort",
-    "coverage_radius": "Abdeckungsradius"
+    "title": "🏢 Department Management",
+    "subtitle": "Parametrizable GPS System",
+    "buttons": {
+      "create": "➕ Create Department",
+      "list": "📋 Department List",
+      "statistics": "📊 Statistics",
+      "export": "📤 Export",
+      "retry": "🔄 Retry",
+      "cancel": "❌ Cancel",
+      "save": "💾 Create Department",
+      "save_changes": "💾 Save Changes",
+      "close": "✖️ Close",
+      "edit": "✏️ Edit",
+      "view": "👁️ View",
+      "delete": "🗑️ Delete",
+      "view_on_maps": "🗺️ View on Google Maps"
+    },
+    "list": {
+      "title": "📋 Department List",
+      "loading": "🔄 Loading departments...",
+      "load_prompt": "Click \"Department List\" to load...",
+      "empty_title": "📂 No departments",
+      "empty_message": "Create the first department using the \"Create Department\" button",
+      "legend": {
+        "title": "📋 Legend:",
+        "gps_configured": "✅ GPS Configured",
+        "gps_not_configured": "❌ GPS Not Configured",
+        "radius_info": "📏 Coverage radius in meters"
+      }
+    },
+    "table": {
+      "name": "🏢 Name",
+      "description": "📝 Description",
+      "address": "📍 Address",
+      "gps": "🗺️ GPS",
+      "radius": "📏 Radius (m)",
+      "created": "📅 Created",
+      "actions": "⚙️ Actions",
+      "no_description": "No description",
+      "no_address": "No address",
+      "gps_configured": "✅ {{lat}}, {{lng}}",
+      "gps_not_configured": "❌ Not configured"
+    },
+    "stats": {
+      "total_departments": "Total Departments",
+      "gps_configured": "With GPS Configured",
+      "avg_radius": "Average Radius (m)"
+    },
+    "form": {
+      "modal_title_create": "🏢 Create New Department",
+      "modal_title_edit": "✏️ Edit Department",
+      "modal_title_view": "🏢 {{name}}",
+      "branch": {
+        "label": "🏛️ Branch *:",
+        "placeholder": "Select a branch...",
+        "help": "🏢 The company has multiple branches. Select which one this department belongs to."
+      },
+      "name": {
+        "label": "🏢 Department Name *:",
+        "placeholder": "Ex: IT, HR, Sales"
+      },
+      "description": {
+        "label": "📝 Description:",
+        "placeholder": "Department description"
+      },
+      "address": {
+        "label": "📍 Physical Address:",
+        "placeholder": "Ex: Main Office - Floor 2"
+      },
+      "gps": {
+        "allow_title": "📱 Allow GPS check-in from Employee APK",
+        "allow_help": "If enabled, employees can check in from their mobile phone (APK) when within the department's coverage radius",
+        "section_title": "📍 Department GPS Location:",
+        "section_help": "⚠️ Select the EXACT location of the physical department (not your current location). Use the map or enter coordinates manually.",
+        "map_loading": "🗺️ Loading Google Maps...",
+        "map_error": "⚠️ Error loading map. Use manual coordinates.",
+        "latitude": "Latitude:",
+        "longitude": "Longitude:",
+        "radius": "📏 Radius (m):",
+        "tip": "💡 <strong>Tip:</strong> Drag the marker 📍 on the map to adjust the location. The yellow circle shows the coverage radius (area where check-in is allowed)."
+      },
+      "kiosks": {
+        "title": "🖥️ Authorized Physical Kiosks (optional):",
+        "help": "📍 Select which physical kiosks employees can use to check in (in addition to GPS if enabled)",
+        "loading": "Loading kiosks...",
+        "none_available": "No kiosks available",
+        "all_kiosks": "✅ All kiosks",
+        "mixed_mode": "ℹ️ <strong>Mixed Mode:</strong> You can enable GPS + Kiosks. Employees can use any enabled option."
+      }
+    },
+    "view": {
+      "description": "📝 Description:",
+      "address": "📍 Address:",
+      "gps": "🗺️ GPS Location:",
+      "radius": "📏 Coverage radius:",
+      "created": "📅 Created:",
+      "updated": "📝 Last modified:",
+      "gps_configured": "✅ {{lat}}, {{lng}}",
+      "gps_not_configured": "❌ Not configured",
+      "no_description": "No description",
+      "no_address": "No address",
+      "map_section_title": "🗺️ Map Location",
+      "coordinates": "📍 Coordinates: {{lat}}, {{lng}}",
+      "radius_meters": "{{radius}} meters"
+    },
+    "messages": {
+      "loading": "🔄 Loading departments...",
+      "error_loading": "❌ Error loading departments",
+      "error_not_found": "❌ Department not found",
+      "success_created": "✅ Department created successfully",
+      "success_updated": "✅ Department updated successfully",
+      "success_deleted": "✅ Department deleted successfully",
+      "success_exported": "✅ Departments exported successfully",
+      "error_creating": "❌ Error creating department: {{message}}",
+      "error_updating": "❌ Error updating department: {{message}}",
+      "error_deleting": "❌ Error deleting department: {{message}}",
+      "error_exporting": "❌ No departments to export"
+    },
+    "validation": {
+      "branch_required": "❌ You must select a branch. The company has multiple branches.",
+      "name_required": "❌ Department name is required",
+      "name_min_length": "❌ Name must be at least 2 characters long",
+      "one_option_required": "❌ You must enable at least ONE option:\n- Allow GPS from APK, OR\n- Select at least one authorized physical kiosk",
+      "gps_coordinates_required": "❌ If you allow GPS, you must enter the department location coordinates.\nUse the map or enter coordinates manually.",
+      "gps_radius_required": "❌ If you allow GPS, coverage radius must be between 10 and 1000 meters",
+      "gps_coordinates_invalid": "❌ If GPS check-in is enabled, you must provide valid coordinates.",
+      "radius_invalid": "❌ Coverage radius must be between 10 and 1000 meters"
+    },
+    "confirm": {
+      "delete_title": "❓ Are you sure you want to delete the department \"{{name}}\"?",
+      "delete_warning": "⚠️ WARNING: This action cannot be undone.",
+      "delete_consequence": "Users assigned to this department will be left without a department."
+    }
   },
   "shifts": {
-    "title": "Schichtverwaltung",
-    "add_shift": "➕ Schicht hinzufügen",
-    "shift_list": "📋 Schichtliste",
-    "start_time": "Startzeit",
-    "end_time": "Endzeit",
-    "work_hours": "Arbeitszeit"
+    "title": "Advanced Flexible Shift System",
+    "subtitle": "Shift, schedule and rate management",
+    "buttons": {
+      "create_advanced": "Create Advanced Shift",
+      "list": "Shift List",
+      "calendar": "Visual Calendar",
+      "config_hours": "Hours Config",
+      "flash_shift": "Flash Shift",
+      "assign_employees": "Assign Employees",
+      "save_shift": "Create Shift",
+      "update_shift": "Update Shift",
+      "cancel": "Cancel",
+      "close": "Close",
+      "edit": "Edit",
+      "view": "View",
+      "duplicate": "Duplicate",
+      "delete": "Delete",
+      "select_all": "Select All",
+      "deselect_all": "Deselect All",
+      "assign": "Assign Shifts"
+    },
+    "tabs": {
+      "list": "List",
+      "calendar": "Calendar",
+      "config": "Configuration"
+    },
+    "types": {
+      "standard": "Standard",
+      "rotative": "Rotative",
+      "permanent": "Permanent",
+      "flash": "Flash"
+    },
+    "stats": {
+      "total_shifts": "Total Shifts",
+      "active_shifts": "Active Shifts",
+      "assigned_employees": "Assigned Employees",
+      "flash_shifts": "Flash Shifts"
+    },
+    "list": {
+      "title": "Shift List",
+      "loading": "Loading advanced shifts...",
+      "load_prompt": "Press \"Shift List\" to load configured shifts...",
+      "no_shifts_title": "No shifts configured",
+      "no_shifts_message": "Create the first shift using the \"Create Advanced Shift\" button"
+    },
+    "table": {
+      "shift": "Shift",
+      "type": "Type",
+      "schedule": "Schedule",
+      "pattern_days": "Pattern/Days",
+      "employees": "Employees",
+      "rates": "Rates",
+      "status": "Status",
+      "actions": "Actions",
+      "break": "Break",
+      "rate_normal": "N",
+      "rate_overtime": "O",
+      "rate_weekend": "W",
+      "rate_holiday": "H",
+      "employees_count": "employees"
+    },
+    "form": {
+      "modal_title_create": "Create Advanced Shift",
+      "modal_title_edit": "Edit Advanced Shift",
+      "modal_title_duplicate": "Duplicate Shift",
+      "modal_title_view": "Detailed Shift View",
+      "type_section": "Shift Type",
+      "basic_info": "Basic Information",
+      "name": {
+        "label": "Shift name:",
+        "placeholder": "Ex: Morning Shift"
+      },
+      "status": {
+        "label": "Status:",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "start_time": {
+        "label": "Start time (24h):",
+        "placeholder": "08:00"
+      },
+      "end_time": {
+        "label": "End time (24h):",
+        "placeholder": "17:00"
+      },
+      "break_section": "Break (optional)",
+      "break_start": {
+        "label": "Break start (optional):",
+        "placeholder": "Optional"
+      },
+      "break_end": {
+        "label": "Break end (optional):",
+        "placeholder": "Optional"
+      },
+      "tolerance_section": "Clock-in Tolerance (Company Configurable)",
+      "tolerance_help": "Configure the allowed tolerance minutes before and after the established time",
+      "tolerance_entry": "Entry",
+      "tolerance_exit": "Exit",
+      "tolerance_before": "Minutes before (early):",
+      "tolerance_after": "Minutes after (late):",
+      "tolerance_example_entry": "Ex: 15 min = can clock in from 07:45",
+      "tolerance_example_late": "Ex: 10 min = can clock in until 08:10",
+      "tolerance_example_exit": "Ex: 10 min = can clock out from 16:50",
+      "tolerance_example_stay": "Ex: 30 min = can clock out until 17:30",
+      "tolerance_important": "Important: These values are specific to this shift and respect multi-tenant policy. Each company can configure its own tolerances according to its work policy.",
+      "config_by_type": "Type-specific configuration",
+      "rates_section": "Hourly Rates (multipliers)",
+      "rate_normal": "Normal:",
+      "rate_overtime": "Overtime:",
+      "rate_weekend": "Weekend:",
+      "rate_holiday": "Holiday:",
+      "standard_config": {
+        "title": "Standard Shift",
+        "work_days": "Work days:"
+      },
+      "rotative_config": {
+        "title": "Rotative Shift",
+        "pattern": "Rotation pattern:",
+        "pattern_12x4": "12 hours x 4 days off",
+        "pattern_6x2": "6 hours x 2 days off",
+        "pattern_8x1": "8 hours x 1 day off",
+        "pattern_custom": "Custom",
+        "cycle_start": "Cycle start date:",
+        "work_days_label": "Work days:",
+        "rest_days_label": "Rest days:"
+      },
+      "permanent_config": {
+        "title": "Permanent Shift",
+        "assigned_days": "Assigned days:",
+        "priority": "Assignment priority:",
+        "priority_low": "Low",
+        "priority_normal": "Normal",
+        "priority_high": "High",
+        "priority_critical": "Critical"
+      },
+      "flash_config": {
+        "title": "Flash Shift (Temporary)",
+        "start_date": "Start date:",
+        "end_date": "End date:",
+        "specific_days": "Specific days:",
+        "priority": "Flash priority:",
+        "priority_low": "Low",
+        "priority_normal": "Normal",
+        "priority_high": "High",
+        "priority_urgent": "Urgent",
+        "allow_override": "Allow override (over permanent shifts)"
+      },
+      "days": {
+        "sunday": "Sunday",
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday"
+      },
+      "days_short": {
+        "sunday": "Sun",
+        "monday": "Mon",
+        "tuesday": "Tue",
+        "wednesday": "Wed",
+        "thursday": "Thu",
+        "friday": "Fri",
+        "saturday": "Sat"
+      }
+    },
+    "view": {
+      "basic_info": "Basic Information",
+      "name": "Name:",
+      "type": "Type:",
+      "schedule": "Schedule:",
+      "break": "Break:",
+      "days": "Days:",
+      "status": "Status:",
+      "employees": "Employees:",
+      "employees_assigned": "assigned",
+      "no_break": "No break",
+      "flash_config": "Flash Configuration",
+      "start_date": "Start date:",
+      "end_date": "End date:",
+      "priority": "Priority:",
+      "override": "Override:",
+      "override_allowed": "Allowed",
+      "override_not_allowed": "Not allowed",
+      "rates": "Hourly Rates",
+      "rate_normal": "Normal:",
+      "rate_overtime": "Overtime:",
+      "rate_weekend": "Weekend:",
+      "rate_holiday": "Holiday:",
+      "additional_info": "Additional Information",
+      "id": "ID:",
+      "created": "Created:",
+      "updated": "Updated:",
+      "not_defined": "Not defined",
+      "normal": "Normal"
+    },
+    "calendar": {
+      "title": "Shift Calendar",
+      "visual_calendar": "Visual calendar in development",
+      "description": "Will display shifts by day with color coding"
+    },
+    "hourly_config": {
+      "title": "Hours and Rates Configuration",
+      "description": "Configuration of rates by hour type..."
+    },
+    "assignment": {
+      "title": "Shift Assignment",
+      "filters_title": "Search Filters",
+      "dni_search": "ID:",
+      "dni_placeholder": "Search by ID",
+      "name_search": "Name/Surname:",
+      "name_placeholder": "Search by name",
+      "department_filter": "Department:",
+      "all_departments": "All departments",
+      "clear_button": "Clear",
+      "shifts_available": "Available Shifts",
+      "users_title": "Users",
+      "users_count": "users",
+      "selected_count": "users selected",
+      "table": {
+        "dni": "ID",
+        "name": "Name",
+        "department": "Department",
+        "current_shifts": "Current Shifts",
+        "no_shifts": "No shifts",
+        "no_department": "No department"
+      }
+    },
+    "messages": {
+      "loading": "Loading advanced shifts...",
+      "loaded_count": "shifts loaded successfully",
+      "example_data": "Using example data...",
+      "error_loading": "Error loading shifts",
+      "error_api": "API not available or error",
+      "success_created": "Shift created successfully",
+      "success_updated": "Shift updated successfully",
+      "success_deleted": "Shift deleted successfully",
+      "error_creating": "Error creating shift",
+      "error_updating": "Error updating",
+      "error_deleting": "Error deleting",
+      "error_connection": "Connection error",
+      "error_not_found": "Shift not found",
+      "error_modal_not_found": "Modal not found",
+      "error_form_elements": "Missing form elements",
+      "error_system_not_initialized": "System not initialized correctly",
+      "no_auth_token": "No authentication token",
+      "example_cannot_delete": "Example shifts cannot be deleted",
+      "assignment_success": "Shifts assigned successfully",
+      "assignment_error": "Error assigning shifts"
+    },
+    "validation": {
+      "name_required": "Shift name is required",
+      "start_time_required": "Start time is required (24h format)",
+      "end_time_required": "End time is required (24h format)",
+      "required_fields": "Required fields must be completed",
+      "rotative_pattern_required": "Complete pattern and start date for rotative shift",
+      "flash_dates_required": "Complete start and end dates for flash shift",
+      "select_user_first": "Select a user first",
+      "select_one_user": "Must select at least one user",
+      "select_one_shift": "Must select at least one shift"
+    },
+    "confirm": {
+      "delete_title": "Are you sure you want to delete \"{{name}}\"?",
+      "delete_warning": "This action cannot be undone.",
+      "assign_shifts": "Do you want to assign {{shiftCount}} shift(s) to {{userCount}} selected user(s)?"
+    }
   },
   "attendance": {
-    "title": "Anwesenheitskontrolle",
-    "check_in": "Einchecken",
-    "check_out": "Auschecken",
-    "late": "Verspätung",
-    "absent": "Abwesend",
-    "present": "Anwesend"
+    "title": "📋 Advanced Attendance Control",
+    "today_title": "📅 Today's Attendance",
+    "present": "Present",
+    "late": "Late",
+    "absent": "Absent",
+    "total_hours": "Hours Worked",
+    "btn_refresh": "🔄 Refresh",
+    "btn_export_excel": "📊 Export Excel",
+    "col_employee": "👤 Employee",
+    "col_employee_id": "🏷️ Employee ID",
+    "col_date": "📅 Date",
+    "col_status": "🟢 Status",
+    "col_check_in": "⏰ Check In",
+    "col_check_out": "⏰ Check Out",
+    "col_hours": "🕐 Hours",
+    "col_method": "📱 Method",
+    "col_location": "📍 Location",
+    "col_notes": "📝 Notes",
+    "click_refresh_to_load": "Click \"🔄 Refresh\" to load today's attendance data",
+    "reports_filters_title": "📊 Reports and Filters",
+    "filter_date_from": "📅 Date From:",
+    "filter_date_to": "📅 Date To:",
+    "filter_employee": "👤 Employee:",
+    "filter_department": "🏢 Department:",
+    "all_employees": "All employees",
+    "all_departments": "All departments",
+    "btn_generate_report": "📊 Generate Report",
+    "btn_export_report": "📤 Export Report",
+    "btn_view_charts": "📈 View Charts",
+    "advanced_filters_title": "🔍 Advanced Filters",
+    "filter_status": "📋 Status:",
+    "all_statuses": "All statuses",
+    "status_present": "Present",
+    "status_late": "Late",
+    "status_absent": "Absent",
+    "filter_absence_type": "🏥 Absence Type:",
+    "all_types": "All types",
+    "type_illness": "Illness",
+    "type_accident": "Accident",
+    "type_personal": "Personal Reasons",
+    "type_training": "Training",
+    "type_vacation": "Vacation",
+    "stats_chart_title": "📈 Attendance Statistics - Last 30 Days",
+    "detection_logs_title": "🔍 Biometric Detection Logs",
+    "detection_logs_description": "Complete record of ALL face detections (even those that didn't generate clock-in due to cooldown)",
+    "btn_load_logs": "🔄 Load Logs",
+    "btn_refresh_logs": "♻️ Refresh",
+    "logs_limit": "Limit:",
+    "logs_records": "records",
+    "log_col_timestamp": "🕐 Timestamp",
+    "log_col_employee": "👤 Employee",
+    "log_col_employee_id": "🏷️ Employee ID",
+    "log_col_similarity": "📊 Similarity",
+    "log_col_registered": "✅ Clocked?",
+    "log_col_type": "🔄 Type",
+    "log_col_skip_reason": "⏭️ Skip Reason",
+    "log_col_time_ms": "⚡ Time (ms)",
+    "click_load_logs": "Click \"🔄 Load Logs\" to view detection records",
+    "loading_data": "🔄 Loading attendance data...",
+    "error_not_authenticated": "❌ Not authenticated. Please login again.",
+    "no_data_for_filters": "ℹ️ No attendance data for selected filters",
+    "error_server": "❌ Server error ({{status}}): {{error}}",
+    "error_unknown": "Unknown error",
+    "error_connection": "❌ Connection error. Please check your internet connection.",
+    "no_data_to_display": "No attendance data to display",
+    "records_loaded": "✅ {{count}} attendance records loaded",
+    "export_excel_in_dev": "📊 Export Excel function in development",
+    "generating_report": "📊 Generating report with applied filters...",
+    "report_generated_success": "✅ Report generated successfully (function in development)",
+    "export_report_in_dev": "📤 Export report function in development",
+    "chart_shown": "📈 Trend chart shown below",
+    "charts_on_load": "⚠️ Charts available when module loads",
+    "no_records_to_show": "ℹ️ No attendance records to show",
+    "unknown_user": "Unknown user",
+    "not_specified": "Not specified",
+    "status_present_value": "Present",
+    "status_late_value": "Late",
+    "status_absent_value": "Absent",
+    "status_pending_value": "Pending",
+    "no_data": "No data",
+    "method_face": "Face",
+    "method_fingerprint": "Fingerprint",
+    "method_pin": "PIN",
+    "method_manual": "Manual",
+    "method_mobile": "Mobile",
+    "method_iris": "Iris",
+    "method_voice": "Voice",
+    "stats_updated": "📊 Statistics updated from database",
+    "error_loading_charts_lib": "❌ Error loading charts library",
+    "chart_daily_absences": "Daily Absences",
+    "chart_late_arrivals": "Late Arrivals",
+    "chart_present": "Present",
+    "chart_title": "Attendance Trend - Last 30 Days (Real Data)",
+    "chart_y_axis": "Number of Employees",
+    "chart_x_axis": "Date",
+    "loading_logs": "🔄 Loading logs...",
+    "error_company_not_detected": "❌ Company not detected",
+    "no_detection_logs": "ℹ️ No detection logs to show",
+    "error_message": "❌ Error: {{message}}",
+    "log_yes": "✅ Yes",
+    "log_no": "⏭️ No",
+    "log_clock_in": "📥 Clock In",
+    "log_clock_out": "📤 Clock Out",
+    "check_in": "Check In",
+    "check_out": "Check Out"
   },
   "licenses": {
-    "title": "Lizenzkonfiguration",
-    "company_name": "Firmenname",
-    "license_type": "Lizenztyp",
-    "default_language": "Standardsprache",
-    "available_languages": "Verfügbare Sprachen",
+    "title": "License Configuration",
+    "company_name": "Company Name",
+    "license_type": "License Type",
+    "default_language": "Default Language",
+    "available_languages": "Available Languages",
     "standard": "Standard",
     "premium": "Premium",
     "enterprise": "Enterprise"
   },
   "messages": {
-    "loading_users": "Benutzer werden geladen...",
-    "users_loaded": "Benutzer erfolgreich geladen",
-    "user_added": "Benutzer erfolgreich hinzugefügt",
-    "user_updated": "Benutzer erfolgreich aktualisiert",
-    "user_deleted": "Benutzer erfolgreich gelöscht",
-    "photo_updated": "Foto erfolgreich aktualisiert",
-    "photo_removed": "Foto erfolgreich entfernt",
-    "no_token": "Kein Authentifizierungstoken",
-    "connection_error": "Verbindungsfehler",
-    "file_too_large": "Bild ist zu groß. Maximum 5MB erlaubt.",
-    "invalid_file_type": "Nur Bilddateien sind erlaubt.",
-    "upload_error": "Fehler beim Hochladen des Fotos",
-    "delete_confirm": "Sind Sie sicher, dass Sie das Foto des Benutzers löschen möchten?"
+    "loading_users": "Loading users...",
+    "users_loaded": "users loaded successfully",
+    "user_added": "User added successfully",
+    "user_updated": "User updated successfully",
+    "user_deleted": "User deleted successfully",
+    "photo_updated": "Photo updated successfully",
+    "photo_removed": "Photo removed successfully",
+    "no_token": "No authentication token",
+    "connection_error": "Connection error",
+    "file_too_large": "Image is too large. Maximum 5MB allowed.",
+    "invalid_file_type": "Only image files are allowed.",
+    "upload_error": "Error uploading photo",
+    "delete_confirm": "Are you sure you want to delete the user's photo?"
+  },
+  "biometric": {
+    "hub": {
+      "title": "🎭 Biometric Command Center",
+      "subtitle": "Advanced AI analysis, template management and real-time monitoring",
+      "tenantId": "Tenant ID",
+      "lastUpdate": "Last update",
+      "status": {
+        "disconnected": "🔴 Disconnected",
+        "initialized": "✅ Biometric hub initialized"
+      },
+      "tabs": {
+        "dashboard": "📊 Real-Time Dashboard",
+        "employeeRegistration": "👤 Employee Biometric Registration",
+        "emotionalAnalysis": "😊 Emotional Analysis",
+        "consent": "🔐 Biometric Consents"
+      },
+      "error": {
+        "selectCompany": "You must select a company to access the biometric module"
+      }
+    },
+    "dashboard": {
+      "loading": "🔄 Loading real-time dashboard...",
+      "metrics": {
+        "processing": {
+          "title": "Processing",
+          "subtitle": "Identification speed",
+          "unit": "emp/min",
+          "queue": "Queue: {{count}} pending"
+        },
+        "attendance": {
+          "title": "Attendance Today",
+          "subtitle": "Registered employees",
+          "trend": "+{{percent}}% vs yesterday"
+        },
+        "alerts": {
+          "title": "Active Alerts",
+          "subtitle": "Require attention",
+          "allClear": "All clear"
+        },
+        "templates": {
+          "title": "Active Templates",
+          "subtitle": "Biometry registered",
+          "avgQuality": "Average quality: {{percent}}%"
+        }
+      },
+      "panels": {
+        "fatigue": {
+          "title": "😴 Fatigue Analysis",
+          "loading": "📊 Loading fatigue data...",
+          "noAlerts": "✅ No fatigue alerts detected"
+        },
+        "emotion": {
+          "title": "🧠 Emotional State",
+          "loading": "📊 Loading emotional analysis...",
+          "status": "😊 Overall emotional state: Positive"
+        }
+      },
+      "recentActivity": {
+        "title": "📝 Recent Activity",
+        "initializing": "📊 Initializing system...",
+        "hubStarted": "Biometric hub started for {{company}}"
+      }
+    },
+    "templates": {
+      "title": "🔬 Biometric Template Management",
+      "header": {
+        "date": "Date:",
+        "updated": "Updated:"
+      },
+      "stats": {
+        "registered": "Registered Templates",
+        "avgQuality": "Average Quality",
+        "successRate": "Success Rate",
+        "pending": "Pending"
+      },
+      "actions": {
+        "newTemplate": "➕ New MIT Template",
+        "bulkImport": "📤 Import Stanford Batch",
+        "export": "💾 Export Azure",
+        "qualityAudit": "🔍 Quality Audit"
+      },
+      "list": {
+        "title": "📋 Registered Templates - {{company}}",
+        "updated": "Updated:",
+        "loading": "Loading templates from PostgreSQL...",
+        "actions": {
+          "edit": "✏️ Edit",
+          "delete": "🗑️ Delete"
+        }
+      },
+      "messages": {
+        "registerSuccess": "Template registered successfully with MIT FaceNet v2.0",
+        "importSuccess": "Import completed: {{count}} templates processed with Stanford OpenFace",
+        "exportSuccess": "Export completed: {{filename}} generated",
+        "editOpening": "Opening MIT/Stanford template editor...",
+        "deleteSuccess": "Template deleted successfully from MIT system"
+      },
+      "confirm": {
+        "delete": "Are you sure you want to delete this biometric template?"
+      }
+    },
+    "employees": {
+      "dropdown": {
+        "error": "❌ Error loading employees",
+        "noEmployees": "❌ No employees in this company",
+        "placeholder": "-- Select an employee --",
+        "tooltip": {
+          "email": "Email:",
+          "role": "Role:",
+          "position": "Position:",
+          "noPosition": "No position"
+        },
+        "registration": {
+          "placeholder": "🔍 Select employee..."
+        }
+      }
+    },
+    "errors": {
+      "general": {
+        "title": "Biometric Error",
+        "reloadButton": "Reload"
+      }
+    },
+    "websocket": {
+      "messages": {
+        "connected": "Connected to real-time system",
+        "subscribed": "Receiving real-time events from company {{company}}"
+      },
+      "attendance": {
+        "entry": "ENTERED",
+        "exit": "EXITED",
+        "registered": "registered"
+      },
+      "detection": {
+        "recognizing": "Recognizing:",
+        "confidence": "confidence",
+        "detectedIn": "detected in"
+      },
+      "kiosk": {
+        "label": "Kiosk",
+        "online": "ONLINE",
+        "offline": "OFFLINE"
+      },
+      "initial": {
+        "kioskOnline": "kiosks online"
+      }
+    },
+    "facial": {
+      "title": "Facial Biometry Management",
+      "actions": {
+        "register": "Register Facial Biometry",
+        "viewData": "View Registered Data",
+        "stats": "Statistics",
+        "test": "Test Verification"
+      },
+      "system": {
+        "title": "Facial Recognition System",
+        "features": {
+          "title": "Available features:",
+          "register": "✅ Facial biometric template registration",
+          "verify": "🔍 Identity verification by facial recognition",
+          "stats": "📊 Usage and accuracy statistics",
+          "config": "⚙️ Confidence threshold configuration",
+          "validate": "🔬 Supervised template validation"
+        },
+        "prompt": "Press \"View Registered Data\" to load biometric information..."
+      },
+      "stats": {
+        "totalTemplates": "Total Templates",
+        "activeTemplates": "Active Templates",
+        "validatedTemplates": "Validated Templates",
+        "avgQuality": "Average Quality"
+      },
+      "register": {
+        "title": "Register Facial Biometry",
+        "selectUser": "Select User:",
+        "userPlaceholder": "Select a user...",
+        "captureLabel": "Real Facial Image Capture:",
+        "startCapture": "🎥 Start Camera Capture",
+        "simulateCapture": "🎭 Simulate Capture (Demo)",
+        "capturePrompt": "Facial capture will appear here...",
+        "cancelButton": "Cancel",
+        "saveButton": "💾 Save Template",
+        "dropdown": {
+          "placeholder": "Select a user..."
+        },
+        "result": {
+          "successTitle": "✅ Successful Capture",
+          "quality": "Quality:",
+          "templateId": "Template ID:",
+          "size": "Size:",
+          "errorTitle": "❌ Capture Error",
+          "errorAdvice": "Try again with better lighting"
+        },
+        "processing": {
+          "title": "⏳ Processing Capture...",
+          "message": "Analyzing facial features..."
+        }
+      },
+      "data": {
+        "noData": {
+          "title": "ℹ️ No biometric data registered",
+          "message": "Press \"Register Facial Biometry\" to begin"
+        },
+        "title": "Facial Biometric Records",
+        "table": {
+          "user": "User",
+          "quality": "Quality",
+          "date": "Date",
+          "status": "Status",
+          "actions": "Actions",
+          "statusActive": "Active",
+          "statusInactive": "Inactive",
+          "verifyButton": "Verify",
+          "deleteButton": "Delete"
+        },
+        "error": {
+          "title": "❌ Error loading biometric data",
+          "code": "Code:",
+          "connection": "❌ Connection error"
+        }
+      },
+      "verification": {
+        "title": "Test Facial Verification",
+        "selectUser": "Select User to Verify:",
+        "userPlaceholder": "Select a user with registered biometry...",
+        "captureLabel": "Capture Photo for Verification:",
+        "startButton": "🎥 Start Verification",
+        "simulateButton": "🎭 Simulate Verification",
+        "resultPrompt": "Verification result will appear here...",
+        "closeButton": "Close",
+        "error": {
+          "selectUser": "Select a user first"
+        },
+        "processing": {
+          "title": "⏳ Processing Verification...",
+          "message": "Comparing with registered template..."
+        },
+        "result": {
+          "successTitle": "✅ VERIFICATION SUCCESSFUL",
+          "confidence": "Confidence:",
+          "user": "User:",
+          "time": "Time:",
+          "accessGranted": "ACCESS GRANTED",
+          "failTitle": "❌ VERIFICATION FAILED",
+          "failReason": "Reason: Template does not match",
+          "accessDenied": "ACCESS DENIED"
+        }
+      }
+    },
+    "employeeReg": {
+      "title": "Employee Biometric Registration",
+      "subtitle": "Unified module for capture and storage of multi-modal biometric templates",
+      "devices": {
+        "title": "Biometric Device Control",
+        "autoDetection": "Auto-detection Active",
+        "detectButton": "Detect Devices",
+        "prompt": "Press to detect connected biometric devices",
+        "cameras": {
+          "title": "Detected Cameras"
+        },
+        "microphones": {
+          "title": "Detected Microphones"
+        },
+        "fingerprints": {
+          "title": "Detected Fingerprint Readers"
+        }
+      }
+    },
+    "ai": {
+      "error": {
+        "selectCompany": "You must select a company to access AI analysis"
+      },
+      "header": {
+        "title": "Advanced AI Analysis - Harvard Medical + MIT CSAIL + Stanford AI Lab",
+        "company": "Company:",
+        "status": "Status:",
+        "statusActive": "Active with real-time data"
+      },
+      "metrics": {
+        "emotion": {
+          "title": "Harvard Medical - Emotional Analysis",
+          "status": "Overall positive emotional state"
+        },
+        "fatigue": {
+          "title": "Stanford Sleep Lab - Fatigue",
+          "status": "Low fatigue level - Normal"
+        },
+        "behavior": {
+          "title": "MIT CSAIL - Behavior",
+          "status": "No anomalies detected"
+        },
+        "who": {
+          "title": "WHO-GDHI Compliance",
+          "status": "Excellent personal hygiene"
+        }
+      },
+      "individual": {
+        "title": "Individual Analysis by Employee",
+        "insights": "AI Insights: Model employee with excellent wellness indicators",
+        "score": "Global Score:",
+        "lastUpdate": "Last update:"
+      },
+      "charts": {
+        "emotion": {
+          "title": "Emotional Trend (Last 24h)",
+          "trend": "Stable - Positive trend"
+        }
+      },
+      "alerts": {
+        "title": "Smart Alerts",
+        "allClear": {
+          "title": "All Clear",
+          "message": "No anomalies detected in the last 7 days"
+        },
+        "recommendation": {
+          "title": "AI Recommendation",
+          "message": "Continue with current preventive monitoring"
+        }
+      },
+      "controls": {
+        "title": "AI Control Center - Harvard + MIT + Stanford",
+        "emotionDeep": "Deep Emotional Analysis",
+        "fatigue": "Stanford Fatigue Detection",
+        "behavior": "MIT Behavioral Analysis",
+        "who": "WHO-GDHI Assessment"
+      }
+    },
+    "monitoring": {
+      "title": "Real-Time Biometric Monitoring",
+      "header": {
+        "status": "Status:"
+      },
+      "metrics": {
+        "sessions": {
+          "title": "Active Sessions",
+          "subtitle": "Connected employees"
+        },
+        "processing": {
+          "title": "AI Processing",
+          "subtitle": "Processed scans"
+        },
+        "accuracy": {
+          "title": "Total Accuracy",
+          "subtitle": "Successful identification"
+        },
+        "health": {
+          "title": "System Status",
+          "subtitle": "System health"
+        }
+      },
+      "feed": {
+        "title": "Stanford Real-Time Vision Feed",
+        "startButton": "Start Monitoring",
+        "subtitle": "Stanford WebSocket Real-Time Analytics",
+        "waiting": "Waiting for connections..."
+      },
+      "alerts": {
+        "title": "MIT Real-Time Alerts",
+        "noAlerts": "No active alerts - System running normally"
+      }
+    },
+    "config": {
+      "title": "Advanced Biometric Configuration",
+      "header": {
+        "date": "Date:",
+        "status": "Status:",
+        "statusActive": "System Active"
+      },
+      "sections": {
+        "algorithms": {
+          "title": "Oxford Biometric Algorithms",
+          "confidence": "Minimum Confidence (Oxford FaceNet):",
+          "value": "Value:",
+          "quality": "Image Quality (Cambridge Vision):",
+          "speed": "Processing Speed (ETH Optimization):",
+          "speedOptions": {
+            "balanced": "Balanced (Recommended)",
+            "fast": "Fast (ETH Turbo)",
+            "accurate": "Maximum Precision (Oxford Lab)",
+            "enterprise": "Enterprise Mode (Cambridge)"
+          }
+        },
+        "ai": {
+          "title": "Cambridge Advanced AI Systems",
+          "neural": "Cambridge Neural Networks",
+          "neuralDesc": "AI analysis with deep neural networks",
+          "emotion": "Oxford EmotiNet v3.2",
+          "emotionDesc": "Automatic real-time emotional analysis",
+          "fatigue": "ETH Fatigue Detection",
+          "fatigueDesc": "Advanced workplace fatigue detection",
+          "behavior": "Cambridge Behavior AI",
+          "behaviorDesc": "Predictive behavioral analysis"
+        },
+        "devices": {
+          "title": "ETH IoT Device Management",
+          "registered": "Registered Devices:",
+          "detecting": "Detecting ETH IoT devices...",
+          "addNew": "Add New Device:",
+          "namePlaceholder": "Device name",
+          "addButton": "Add"
+        },
+        "security": {
+          "title": "Oxford Security & Alerts",
+          "alerts": "Real-Time Alerts",
+          "alertsDesc": "Oxford instant notifications",
+          "reports": "Automatic Reports",
+          "reportsDesc": "Daily email reports",
+          "emailLabel": "Email for Oxford Alerts:",
+          "levelLabel": "Security Level:",
+          "levels": {
+            "standard": "Standard (Recommended)",
+            "high": "High (Oxford Enhanced)",
+            "maximum": "Maximum (Cambridge Military)",
+            "custom": "Custom (ETH Custom)"
+          }
+        }
+      },
+      "actions": {
+        "save": "Save Oxford Configuration",
+        "reset": "Restore Defaults",
+        "export": "Export ETH Config"
+      },
+      "footer": "Configuration automatically backed up on Oxford/Cambridge/ETH Zurich servers",
+      "messages": {
+        "deviceNameRequired": "Please enter a device name",
+        "deviceAdded": "Device added successfully to ETH system",
+        "saved": "Configuration saved on Oxford/Cambridge/ETH Zurich servers",
+        "reset": "Configuration restored to default values",
+        "exported": "Configuration exported successfully"
+      }
+    },
+    "emotion": {
+      "analysis": {
+        "title": "Harvard Medical School - Deep Emotional Analysis",
+        "initializing": "Initializing EmotiNet v3.2...",
+        "steps": {
+          "microExpressions": "Analyzing facial micro-expressions...",
+          "valence": "Processing emotional valence with Russell's Circumplex...",
+          "arousal": "Evaluating emotional arousal...",
+          "emotinet": "Applying Harvard EmotiNet v3.2...",
+          "complete": "Emotional analysis completed successfully"
+        }
+      },
+      "results": {
+        "title": "Harvard Emotional Analysis Results",
+        "state": {
+          "label": "Emotional State:",
+          "positive": "Positive"
+        },
+        "valence": {
+          "label": "Valence:",
+          "veryPositive": "Very positive"
+        },
+        "arousal": {
+          "label": "Arousal:",
+          "moderate": "Moderate"
+        },
+        "emotions": {
+          "title": "Detected Emotions:",
+          "joy": "Joy:",
+          "serenity": "Serenity:",
+          "focus": "Focus:"
+        },
+        "insight": "Harvard Insight: Excellent emotional state. Employee shows signs of well-being and job satisfaction. Recommendation: Maintain current conditions."
+      }
+    },
+    "fatigue": {
+      "title": "Stanford Sleep Lab - Fatigue Detection",
+      "preparing": "Preparing Stanford analysis...",
+      "steps": {
+        "perclos": "Analyzing blink frequency (PERCLOS)...",
+        "sleepiness": "Evaluating Stanford Sleepiness Scale...",
+        "karolinska": "Processing Karolinska Sleepiness Scale...",
+        "complete": "Fatigue assessment completed"
+      },
+      "results": {
+        "title": "Stanford Sleep Lab Results",
+        "level": {
+          "label": "Fatigue Level",
+          "lowNormal": "Low - Normal"
+        },
+        "perclos": {
+          "optimal": "Optimal"
+        },
+        "karolinska": {
+          "veryAlert": "Very alert"
+        },
+        "recommendation": "Stanford Recommendation: Employee shows excellent alertness state. No preventive measures required. Continue with routine monitoring."
+      }
+    },
+    "behavior": {
+      "title": "MIT CSAIL - Behavioral Analysis",
+      "initializing": "Initializing MIT DeepBehavior...",
+      "steps": {
+        "movement": "Analyzing movement patterns...",
+        "violence": "Evaluating violence indicators...",
+        "anomalies": "Detecting behavioral anomalies...",
+        "deepBehavior": "Applying MIT DeepBehavior...",
+        "complete": "Behavioral analysis completed"
+      },
+      "results": {
+        "title": "MIT CSAIL Results",
+        "security": {
+          "label": "Behavioral Security:"
+        },
+        "violence": {
+          "label": "Violence Indicators:",
+          "none": "None"
+        },
+        "anomalies": {
+          "label": "Detected Anomalies:"
+        },
+        "movement": {
+          "label": "Movement Patterns:",
+          "normal": "Normal"
+        },
+        "stress": {
+          "label": "Behavioral Stress:",
+          "low": "Low"
+        },
+        "confidence": "Confidence Score:",
+        "conclusion": "MIT Result: Employee presents completely normal behavior. No signs of aggression, violence or behavioral anomalies. Optimal security profile."
+      }
+    },
+    "who": {
+      "title": "WHO Global Digital Health Index - Assessment",
+      "connecting": "Connecting to WHO standards...",
+      "steps": {
+        "hygiene": "Evaluating personal hygiene...",
+        "presentation": "Analyzing professional presentation...",
+        "criteria": "Applying WHO-GDHI criteria...",
+        "complete": "WHO assessment completed"
+      },
+      "results": {
+        "title": "WHO-GDHI Assessment Results",
+        "score": {
+          "label": "WHO-GDHI Score",
+          "excellent": "Excellent"
+        },
+        "hygiene": {
+          "label": "Personal Hygiene",
+          "optimal": "Optimal"
+        },
+        "rating": {
+          "label": "Rating",
+          "compliant": "WHO Compliant"
+        },
+        "certification": "WHO Certification: Employee meets all international personal hygiene standards according to WHO-GDHI. Suitable to work in high sanitary demand environments."
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "console": {
+      "module_loaded": "Dashboard module loaded",
+      "loading_company_info": "Loading company information...",
+      "error_loading": "Error loading information, using default data",
+      "exporting": "Exporting report...",
+      "configured": "Dashboard module configured"
+    },
+    "company": {
+      "default_name": "My Company",
+      "default_info": "Multi-module business management system",
+      "example_name": "Example Company",
+      "not_available": "Company information not available"
+    },
+    "quick_access": {
+      "title": "Quick Access",
+      "quick_access_label": "Quick access",
+      "no_modules": "Quick access modules will load once you have available modules"
+    },
+    "notifications": {
+      "system_active_title": "Modular System Active",
+      "system_active_desc": "All modules are working correctly",
+      "modules_available_title": "{{count}} Modules Available",
+      "modules_available_desc": "Click on any module to access its functionalities"
+    },
+    "help": {
+      "guide_title": "System Guide",
+      "guide_content": "1. Use the modules in the top bar\n2. Each module has specific functionalities\n3. Data is isolated by company\n4. For technical support, use the contact button",
+      "support_title": "Support Contact",
+      "support_content": "You can contact technical support through:\n- Email: support@company.com\n- Phone: +1 555 1234-5678\n- Internal ticket system"
+    },
+    "activity": {
+      "no_activity": "No recent activity",
+      "error_loading": "Error loading activity"
+    },
+    "export": {
+      "in_development": "Export function under development"
+    }
   },
   "modules": {
     "users": {
-      "title": "Benutzerverwaltung",
-      "description": "Mitarbeiter und Benutzerkonten verwalten",
-      "add_new": "Neuen Benutzer hinzufügen",
-      "edit": "Benutzer bearbeiten",
-      "delete": "Benutzer löschen",
-      "view": "Benutzer ansehen",
-      "list": "Benutzerliste",
-      "search": "Benutzer suchen",
-      "export": "Benutzer exportieren",
-      "import": "Benutzer importieren",
-      "statistics": "Benutzerstatistiken"
+      "title": "User Management",
+      "description": "Manage employees"
     },
     "attendance": {
-      "title": "Anwesenheitsverwaltung",
-      "description": "Mitarbeiteranwesenheit und Zeiterfassung verwalten",
-      "add_new": "Neuen Anwesenheitseintrag hinzufügen",
-      "edit": "Anwesenheit bearbeiten",
-      "delete": "Anwesenheitseintrag löschen",
-      "view": "Anwesenheit ansehen",
-      "list": "Anwesenheitsliste",
-      "search": "Anwesenheit suchen",
-      "export": "Anwesenheit exportieren",
-      "import": "Anwesenheit importieren",
-      "statistics": "Anwesenheitsstatistiken"
-    },
-    "biometric": {
-      "title": "Biometrische Verwaltung",
-      "description": "Biometrische Daten und Geräte verwalten",
-      "add_new": "Neue biometrische Daten hinzufügen",
-      "edit": "Biometrische Daten bearbeiten",
-      "delete": "Biometrische Daten löschen",
-      "view": "Biometrische Daten ansehen",
-      "list": "Liste biometrischer Daten",
-      "search": "Biometrische Daten suchen",
-      "export": "Biometrische Daten exportieren",
-      "import": "Biometrische Daten importieren",
-      "statistics": "Biometrische Statistiken"
+      "title": "Attendance Control", 
+      "description": "Clock in and out"
     },
     "departments": {
-      "title": "Abteilungsverwaltung",
-      "description": "Organisationsabteilungen verwalten",
-      "add_new": "Neue Abteilung hinzufügen",
-      "edit": "Abteilung bearbeiten",
-      "delete": "Abteilung löschen",
-      "view": "Abteilung ansehen",
-      "list": "Abteilungsliste",
-      "search": "Abteilung suchen",
-      "export": "Abteilungen exportieren",
-      "import": "Abteilungen importieren",
-      "statistics": "Abteilungsstatistiken"
+      "title": "Departments",
+      "description": "Organizational management"
+    },
+    "branches": {
+      "title": "Branches",
+      "description": "Work locations"
     },
     "shifts": {
-      "title": "Schichtverwaltung",
-      "description": "Arbeitsschichten und Zeitpläne verwalten",
-      "add_new": "Neue Schicht hinzufügen",
-      "edit": "Schicht bearbeiten",
-      "delete": "Schicht löschen",
-      "view": "Schicht ansehen",
-      "list": "Schichtliste",
-      "search": "Schicht suchen",
-      "export": "Schichten exportieren",
-      "import": "Schichten importieren",
-      "statistics": "Schichtstatistiken"
+      "title": "Schedules & Shifts",
+      "description": "Time configuration"
     },
-    "settings": {
-      "title": "Systemeinstellungen",
-      "description": "Systemkonfiguration und Präferenzen verwalten",
-      "add_new": "Neue Einstellung hinzufügen",
-      "edit": "Einstellung bearbeiten",
-      "delete": "Einstellung löschen",
-      "view": "Einstellung ansehen",
-      "list": "Einstellungsliste",
-      "search": "Einstellung suchen",
-      "export": "Einstellungen exportieren",
-      "import": "Einstellungen importieren",
-      "statistics": "Systemstatistiken"
+    "biometric": {
+      "title": "Biometric Management",
+      "description": "Identity control"
     },
-    "dashboard": {
-      "title": "Dashboard",
-      "description": "Übersichts-Dashboard und Kennzahlen",
-      "add_new": "Neues Widget hinzufügen",
-      "edit": "Dashboard bearbeiten",
-      "delete": "Widget löschen",
-      "view": "Dashboard ansehen",
-      "list": "Widget-Liste",
-      "search": "Dashboard suchen",
-      "export": "Dashboard exportieren",
-      "import": "Dashboard importieren",
-      "statistics": "Dashboard-Statistiken"
+    "reports": {
+      "title": "Reports",
+      "description": "Reports and statistics"
     },
-    "training": {
-      "title": "Schulungsverwaltung",
-      "description": "Mitarbeiterschulungen und Weiterbildung verwalten",
-      "add_new": "Neue Schulung hinzufügen",
-      "edit": "Schulung bearbeiten",
-      "delete": "Schulung löschen",
-      "view": "Schulung ansehen",
-      "list": "Schulungsliste",
-      "search": "Schulung suchen",
-      "export": "Schulungen exportieren",
-      "import": "Schulungen importieren",
-      "statistics": "Schulungsstatistiken"
+    "permissions": {
+      "title": "Permissions & Licenses",
+      "description": "Absence management"
     },
     "medical": {
-      "title": "Medizinische Verwaltung",
-      "description": "Medizinische Untersuchungen und Gesundheitsakten verwalten",
-      "add_new": "Neuen medizinischen Eintrag hinzufügen",
-      "edit": "Medizinischen Eintrag bearbeiten",
-      "delete": "Medizinischen Eintrag löschen",
-      "view": "Medizinischen Eintrag ansehen",
-      "list": "Medizinische Einträge",
-      "search": "Medizinische Einträge suchen",
-      "export": "Medizinische Daten exportieren",
-      "import": "Medizinische Daten importieren",
-      "statistics": "Medizinische Statistiken"
+      "title": "Medical Dashboard",
+      "description": "Occupational health"
     },
-    "psychological": {
-      "title": "Psychologische Verwaltung",
-      "description": "Psychologische Bewertungen und Berichte verwalten",
-      "add_new": "Neue psychologische Bewertung hinzufügen",
-      "edit": "Psychologische Bewertung bearbeiten",
-      "delete": "Psychologische Bewertung löschen",
-      "view": "Psychologische Bewertung ansehen",
-      "list": "Psychologische Bewertungen",
-      "search": "Psychologische Bewertungen suchen",
-      "export": "Psychologische Daten exportieren",
-      "import": "Psychologische Daten importieren",
-      "statistics": "Psychologische Statistiken"
+    "documents": {
+      "title": "Document Management",
+      "description": "Files and records"
     },
-    "emotional": {
-      "title": "Emotionale Verwaltung",
-      "description": "Emotionales Wohlbefinden und Unterstützung verwalten",
-      "add_new": "Neuen emotionalen Eintrag hinzufügen",
-      "edit": "Emotionalen Eintrag bearbeiten",
-      "delete": "Emotionalen Eintrag löschen",
-      "view": "Emotionalen Eintrag ansehen",
-      "list": "Emotionale Einträge",
-      "search": "Emotionale Einträge suchen",
-      "export": "Emotionale Daten exportieren",
-      "import": "Emotionale Daten importieren",
-      "statistics": "Emotionale Statistiken"
+    "legal": {
+      "title": "Legal Dashboard",
+      "description": "Regulatory compliance"
     },
-    "sanctions": {
-      "title": "Sanktionsverwaltung",
-      "description": "Disziplinarmaßnahmen und Sanktionen verwalten",
-      "add_new": "Neue Sanktion hinzufügen",
-      "edit": "Sanktion bearbeiten",
-      "delete": "Sanktion löschen",
-      "view": "Sanktion ansehen",
-      "list": "Sanktionsliste",
-      "search": "Sanktion suchen",
-      "export": "Sanktionen exportieren",
-      "import": "Sanktionen importieren",
-      "statistics": "Sanktionsstatistiken"
-    },
-    "vacation": {
-      "title": "Urlaubsverwaltung",
-      "description": "Urlaubsanträge und Freizeit verwalten",
-      "add_new": "Neuen Urlaubsantrag hinzufügen",
-      "edit": "Urlaubsantrag bearbeiten",
-      "delete": "Urlaubsantrag löschen",
-      "view": "Urlaubsantrag ansehen",
-      "list": "Urlaubsliste",
-      "search": "Urlaub suchen",
-      "export": "Urlaub exportieren",
-      "import": "Urlaub importieren",
-      "statistics": "Urlaubsstatistiken"
+    "training": {
+      "title": "Training",
+      "description": "Learning and development"
     },
     "notifications": {
-      "title": "Benachrichtigungsverwaltung",
-      "description": "Systembenachrichtigungen und Warnungen verwalten",
-      "add_new": "Neue Benachrichtigung hinzufügen",
-      "edit": "Benachrichtigung bearbeiten",
-      "delete": "Benachrichtigung löschen",
-      "view": "Benachrichtigung ansehen",
-      "list": "Benachrichtigungsliste",
-      "search": "Benachrichtigung suchen",
-      "export": "Benachrichtigungen exportieren",
-      "import": "Benachrichtigungen importieren",
-      "statistics": "Benachrichtigungsstatistiken"
-    },
-    "access-control": {
-      "title": "Zugriffskontrollverwaltung",
-      "description": "Zugriffsberechtigungen und Sicherheit verwalten",
-      "add_new": "Neue Zugriffskontrolle hinzufügen",
-      "edit": "Zugriffskontrolle bearbeiten",
-      "delete": "Zugriffskontrolle löschen",
-      "view": "Zugriffskontrolle ansehen",
-      "list": "Zugriffskontrollliste",
-      "search": "Zugriffskontrolle suchen",
-      "export": "Zugriffskontrollen exportieren",
-      "import": "Zugriffskontrollen importieren",
-      "statistics": "Zugriffskontrollstatistiken"
-    },
-    "kiosks": {
-      "title": "Kioskverwaltung",
-      "description": "Selbstbedienungskioske und Terminals verwalten",
-      "add_new": "Neuen Kiosk hinzufügen",
-      "edit": "Kiosk bearbeiten",
-      "delete": "Kiosk löschen",
-      "view": "Kiosk ansehen",
-      "list": "Kioskliste",
-      "search": "Kiosk suchen",
-      "export": "Kioske exportieren",
-      "import": "Kioske importieren",
-      "statistics": "Kioskstatistiken"
-    },
-    "visitors": {
-      "title": "Besucherverwaltung",
-      "description": "Besucherregistrierung und Zugang verwalten",
-      "add_new": "Neuen Besucher hinzufügen",
-      "edit": "Besucher bearbeiten",
-      "delete": "Besucher löschen",
-      "view": "Besucher ansehen",
-      "list": "Besucherliste",
-      "search": "Besucher suchen",
-      "export": "Besucher exportieren",
-      "import": "Besucher importieren",
-      "statistics": "Besucherstatistiken"
+      "title": "Notifications",
+      "description": "Messaging system"
     },
     "job-postings": {
-      "title": "Stellenausschreibungsverwaltung",
-      "description": "Stellenangebote und Rekrutierung verwalten",
-      "add_new": "Neue Stellenausschreibung hinzufügen",
-      "edit": "Stellenausschreibung bearbeiten",
-      "delete": "Stellenausschreibung löschen",
-      "view": "Stellenausschreibung ansehen",
-      "list": "Stellenausschreibungsliste",
-      "search": "Stellenausschreibung suchen",
-      "export": "Stellenausschreibungen exportieren",
-      "import": "Stellenausschreibungen importieren",
-      "statistics": "Rekrutierungsstatistiken"
+      "title": "Job Postings",
+      "description": "Job opportunities"
     },
-    "document-management": {
-      "title": "Dokumentenverwaltung",
-      "description": "Unternehmensdokumente und Dateien verwalten",
-      "add_new": "Neues Dokument hinzufügen",
-      "edit": "Dokument bearbeiten",
-      "delete": "Dokument löschen",
-      "view": "Dokument ansehen",
-      "list": "Dokumentenliste",
-      "search": "Dokument suchen",
-      "export": "Dokumente exportieren",
-      "import": "Dokumente importieren",
-      "statistics": "Dokumentenstatistiken"
+    "payroll": {
+      "title": "Payroll Processing",
+      "description": "Payroll and payments"
     },
-    "employee-map": {
-      "title": "Mitarbeiterkarte",
-      "description": "Mitarbeiterstandorte und geografische Verteilung",
-      "add_new": "Neuen Standort hinzufügen",
-      "edit": "Standort bearbeiten",
-      "delete": "Standort löschen",
-      "view": "Karte ansehen",
-      "list": "Standortliste",
-      "search": "Standort suchen",
-      "export": "Standorte exportieren",
-      "import": "Standorte importieren",
-      "statistics": "Standortstatistiken"
+    "art": {
+      "title": "ART Configuration",
+      "description": "Risk insurers"
     },
-    "legal-dashboard": {
-      "title": "Rechts-Dashboard",
-      "description": "Rechtliche Compliance und Dokumentation",
-      "add_new": "Neues Rechtsdokument hinzufügen",
-      "edit": "Rechtsdokument bearbeiten",
-      "delete": "Rechtsdokument löschen",
-      "view": "Rechts-Dashboard ansehen",
-      "list": "Rechtsdokumentenliste",
-      "search": "Rechtsdokument suchen",
-      "export": "Rechtsdokumente exportieren",
-      "import": "Rechtsdokumente importieren",
-      "statistics": "Rechtsstatistiken"
+    "settings": {
+      "title": "Settings",
+      "description": "System configuration",
+      "server": {
+        "title": "📡 Server Configuration for APK",
+        "subtitle": "Use this information to configure the Flutter APK manually",
+        "ip_label": "SERVER IP ADDRESS:",
+        "port_label": "PORT:",
+        "full_url_label": "FULL URL:",
+        "loading": "Loading...",
+        "copy_button": "📋 Copy",
+        "copy_url_button": "📋 Copy URL",
+        "apk_config_title": "📱 To configure the APK:",
+        "apk_step1": "1. Open APK → Settings",
+        "apk_step2": "2. Enter IP:",
+        "apk_step3": "3. Enter Port:",
+        "apk_step4": "4. Save and use"
+      },
+      "company": {
+        "title": "🏢 Company Information",
+        "name_label": "Company Name:",
+        "name_placeholder": "Company name",
+        "timezone_label": "Time Zone:",
+        "timezone_argentina": "Argentina/Buenos Aires",
+        "timezone_mexico": "Mexico/Mexico City",
+        "timezone_colombia": "Colombia/Bogota",
+        "timezone_peru": "Peru/Lima",
+        "timezone_chile": "Chile/Santiago",
+        "save_button": "💾 Save Configuration"
+      },
+      "biometric": {
+        "title": "🔐 Biometric Configuration",
+        "fingerprint_label": "Fingerprint Recognition",
+        "face_recognition_label": "Facial Recognition",
+        "max_fingerprints_label": "Maximum Fingerprints per User:",
+        "save_button": "💾 Save Biometric Settings"
+      },
+      "communications": {
+        "title": "📧 Communications Configuration",
+        "email_section": "📧 Email",
+        "email_notifications_label": "Email Notifications",
+        "smtp_server_label": "SMTP Server:",
+        "smtp_server_placeholder": "smtp.gmail.com",
+        "system_email_label": "System Email:",
+        "system_email_placeholder": "system@aponnt.com",
+        "save_notifications_button": "💾 Save Notifications",
+        "test_email_button": "📧 Test Email",
+        "whatsapp_section": "📱 WhatsApp Business",
+        "whatsapp_enabled_label": "WhatsApp Enabled",
+        "whatsapp_token_label": "WhatsApp Business Token:",
+        "whatsapp_token_placeholder": "API Token",
+        "whatsapp_number_label": "WhatsApp Number:",
+        "whatsapp_number_placeholder": "+1 555 123-4567",
+        "save_whatsapp_button": "💾 Save WhatsApp",
+        "test_whatsapp_button": "📱 Test WhatsApp"
+      },
+      "medical": {
+        "title": "🏥 General Medical Configuration",
+        "module_enabled_label": "Medical Module Enabled",
+        "max_certificate_days_label": "Maximum days for certificates:",
+        "requires_audit_label": "Requires medical audit:",
+        "requires_audit_always": "Always",
+        "requires_audit_over_days": "Only over X days",
+        "requires_audit_never": "Never",
+        "audit_days_limit_label": "Day limit for audit:",
+        "save_button": "💾 Save Medical Configuration"
+      },
+      "questionnaires": {
+        "title": "📋 Medical Questionnaires",
+        "create_button": "➕ Create Questionnaire",
+        "covid_title": "COVID-19 Questionnaire",
+        "symptoms_title": "General Symptoms Assessment",
+        "status_active": "Active",
+        "edit_button": "✏️ Edit"
+      },
+      "art": {
+        "title": "🚨 Multiple ART Configuration",
+        "notifications_enabled_label": "ART Notifications Enabled",
+        "providers_title": "Configured ART Providers",
+        "add_button": "➕ Add ART",
+        "no_providers": "No ART providers configured. Click \"Add ART\" to begin.",
+        "global_channel_label": "Global notification channel:",
+        "channel_email": "Email",
+        "channel_sms": "SMS",
+        "channel_whatsapp": "WhatsApp",
+        "channel_all": "All channels",
+        "save_button": "💾 Save Configuration",
+        "test_all_button": "🚨 Test All ARTs",
+        "modal": {
+          "title": "🚨 Add ART Provider",
+          "name_label": "ART Provider Name:",
+          "name_placeholder": "Ex: Safety ART",
+          "client_code_label": "Client Code/Number:",
+          "client_code_placeholder": "Client No.",
+          "email_label": "Notifications Email:",
+          "email_placeholder": "notifications@art.com",
+          "phone_label": "Phone:",
+          "phone_placeholder": "+1 555 1234-5678",
+          "preferred_channel_label": "Preferred Channel:",
+          "priority_label": "Priority:",
+          "priority_primary": "Primary",
+          "priority_secondary": "Secondary",
+          "priority_backup": "Backup",
+          "emergency_contact_label": "Emergency Contact:",
+          "emergency_contact_placeholder": "Dr. John Smith",
+          "schedule_label": "Service Hours:",
+          "schedule_placeholder": "Mon-Fri: 8AM-6PM, 24hr Emergency",
+          "cancel_button": "Cancel",
+          "add_button": "Add ART"
+        },
+        "card": {
+          "client_label": "Client:",
+          "channel_label": "Channel:",
+          "no_phone": "No phone",
+          "contact_label": "Contact:",
+          "edit_button": "✏️",
+          "delete_button": "🗑️"
+        }
+      },
+      "licenses": {
+        "title": "🏖️ Leave and Vacation Policy",
+        "vacation_config_title": "Vacation Configuration",
+        "calculator_button": "🧮 Calculator",
+        "vacation_scale_title": "📅 Vacation Days by Seniority",
+        "seniority_label": "Seniority",
+        "days_label": "Days",
+        "action_label": "Action",
+        "seniority_0_5": "6 months - 5 years",
+        "seniority_5_10": "5 - 10 years",
+        "seniority_10_20": "10 - 20 years",
+        "seniority_20_plus": "Over 20 years",
+        "update_button": "✓",
+        "add_scale_button": "➕ Add Scale",
+        "extraordinary_title": "🚨 Extraordinary Leave",
+        "family_death_label": "Family death:",
+        "marriage_label": "Marriage:",
+        "paternity_label": "Paternity:",
+        "medical_exam_label": "Medical exam:",
+        "days_unit": "days",
+        "day_unit": "day",
+        "day_type_habil": "Business days",
+        "day_type_corrido": "Consecutive days",
+        "add_type_button": "➕ Add Type",
+        "calculation_title": "⚖️ Calculation Configuration",
+        "interruptible_label": "Vacations can be interrupted by illness",
+        "min_continuous_label": "Minimum continuous vacation period:",
+        "max_fractions_label": "Maximum number of splits:",
+        "fractions_unit": "parts",
+        "auto_scheduling_label": "Automatic scheduling by task compatibility",
+        "min_advance_label": "Minimum advance notice to request:",
+        "max_simultaneous_label": "Maximum simultaneous employees on vacation:",
+        "team_percent": "% of team",
+        "save_config_button": "💾 Save Leave Configuration",
+        "generate_schedule_button": "📋 Generate Automatic Schedule",
+        "compatibility_matrix_button": "🔄 View Compatibility Matrix",
+        "modal_vacation_scale": {
+          "title": "📅 Add Vacation Scale",
+          "range_label": "Seniority Range:",
+          "range_placeholder": "Ex: 25-30 years",
+          "days_label": "Vacation Days:",
+          "cancel_button": "Cancel",
+          "add_button": "Add"
+        },
+        "modal_extraordinary": {
+          "title": "🚨 Add Extraordinary Leave",
+          "type_label": "Leave Type:",
+          "type_placeholder": "Ex: Relocation",
+          "days_label": "Days:",
+          "day_type_label": "Day Type:",
+          "cancel_button": "Cancel",
+          "add_button": "Add"
+        },
+        "modal_schedule": {
+          "title": "📋 Automatic Vacation Schedule",
+          "algorithm_title": "🔍 Objective Scheduling Algorithm",
+          "algorithm_desc": "The system has analyzed each employee's tasks and generated a schedule that ensures coverage of all critical activities during vacation periods.",
+          "employee_col": "Employee",
+          "period_col": "Suggested Period",
+          "days_col": "Days",
+          "status_col": "Status",
+          "status_optimal": "✅ Optimal",
+          "status_review": "⚠️ Review",
+          "accept_button": "✅ Accept Schedule",
+          "modify_button": "✏️ Allow HR Modifications",
+          "close_button": "Close"
+        },
+        "modal_compatibility": {
+          "title": "🔄 Task Compatibility Matrix",
+          "employee_col": "Employee",
+          "main_tasks_col": "Main Tasks",
+          "can_cover_col": "Can Cover",
+          "compatibility_col": "Compatibility",
+          "close_button": "Close"
+        }
+      },
+      "barcode": {
+        "title": "📱 QR Code Configuration",
+        "enabled_label": "Allow barcode clock-in",
+        "format_label": "Code format:",
+        "format_employee_id": "Employee ID",
+        "format_custom": "Custom code",
+        "format_qr_json": "QR Code with JSON data",
+        "prefix_label": "Code prefix (optional):",
+        "prefix_placeholder": "EMP-",
+        "save_button": "💾 Save Configuration",
+        "generate_button": "📊 Generate Codes",
+        "test_button": "📱 Test Scanner",
+        "preview_title": "📊 Generated Codes"
+      },
+      "alerts": {
+        "title": "⚠️ Off-Shift Clock-in Alert System",
+        "enabled_label": "Enable alerts for off-shift clock-ins",
+        "admins_label": "Administrators to notify:",
+        "admin_primary_label": "Primary Admin - SMS:",
+        "admin_secondary_label": "Secondary Admin - Email:",
+        "whatsapp_label": "WhatsApp:",
+        "save_button": "💾 Save Alerts",
+        "test_button": "⚠️ Test Alert"
+      },
+      "messages": {
+        "copied": "✅ Copied: {{text}}",
+        "copy_error": "❌ Error copying to clipboard",
+        "config_loaded": "⚙️ Current configuration loaded",
+        "enter_company_name": "⚠️ Please enter the company name",
+        "saving_company": "🔄 Saving company configuration...",
+        "company_saved": "✅ Company configuration saved successfully",
+        "saving_biometric": "🔄 Saving biometric configuration...",
+        "biometric_saved": "✅ Biometric configuration saved successfully",
+        "saving_notifications": "🔄 Saving notifications configuration...",
+        "notifications_saved": "✅ Notifications configuration saved",
+        "enter_email": "❌ Please enter a system email",
+        "sending_test_email": "📧 Sending test email...",
+        "test_email_sent": "✅ Test email sent successfully",
+        "saving_whatsapp": "🔄 Saving WhatsApp configuration...",
+        "whatsapp_saved": "✅ WhatsApp configuration saved",
+        "enter_whatsapp_number": "❌ Please enter a WhatsApp number",
+        "sending_test_whatsapp": "📱 Sending test WhatsApp message...",
+        "test_whatsapp_sent": "✅ WhatsApp message sent successfully",
+        "saving_medical": "🔄 Saving medical configuration...",
+        "medical_saved": "✅ Medical configuration saved successfully",
+        "questionnaire_in_dev": "📋 Create questionnaire function in development",
+        "edit_questionnaire_in_dev": "✏️ Edit questionnaire function in development",
+        "saving_art": "🔄 Saving ART configuration...",
+        "art_saved": "✅ ART configuration saved successfully",
+        "sending_test_art": "🚨 Sending test ART notification...",
+        "test_art_sent": "✅ ART notification sent successfully",
+        "art_provider_added": "✅ ART provider added successfully",
+        "edit_art_in_dev": "✏️ Edit ART function in development",
+        "art_provider_deleted": "🗑️ ART provider deleted",
+        "confirm_delete_art": "Are you sure you want to delete this ART provider?",
+        "saving_multiple_art": "🔄 Saving multiple ART configuration...",
+        "multiple_art_saved": "✅ ART configuration saved ({{count}} providers)",
+        "no_art_providers": "⚠️ No ART providers configured",
+        "testing_all_art": "🚨 Sending test notification to {{count}} ART providers...",
+        "all_art_tested": "✅ Notifications sent to all ARTs",
+        "vacation_scale_updated": "✅ Vacation scale updated",
+        "vacation_scale_added": "✅ New vacation scale added",
+        "extraordinary_license_added": "✅ New extraordinary leave added",
+        "saving_licenses": "🔄 Saving leave configuration...",
+        "licenses_saved": "✅ Leave configuration saved successfully",
+        "generating_schedule": "📋 Generating automatic vacation schedule...",
+        "schedule_generated": "✅ Automatic schedule generated based on task compatibility",
+        "schedule_accepted": "✅ Vacation schedule accepted and applied",
+        "schedule_modifications_enabled": "✏️ Schedule enabled for HR modifications",
+        "showing_compatibility": "🔄 Showing task compatibility matrix...",
+        "calculator_opening": "🧮 Opening vacation calculator...",
+        "saving_barcode": "🔄 Saving code configuration...",
+        "barcode_saved": "✅ Code configuration saved",
+        "generating_barcodes": "📊 Generating codes for all employees...",
+        "barcodes_generated": "✅ Codes generated successfully",
+        "test_scanner_in_dev": "📱 Test scanner function in development",
+        "saving_alerts": "🔄 Saving alert configuration...",
+        "alerts_saved": "✅ Alert configuration saved",
+        "testing_alert": "⚠️ Simulating off-shift clock-in...",
+        "test_alert_sent": "✅ Test alert sent to administrators",
+        "error_saving": "❌ Error saving configuration: {{message}}",
+        "error_loading_server": "❌ Error loading server info"
+      }
     },
-    "licensing-management": {
-      "title": "Lizenzverwaltung",
-      "description": "Systemlizenzen und Abonnements verwalten",
-      "add_new": "Neue Lizenz hinzufügen",
-      "edit": "Lizenz bearbeiten",
-      "delete": "Lizenz löschen",
-      "view": "Lizenz ansehen",
-      "list": "Lizenzliste",
-      "search": "Lizenz suchen",
-      "export": "Lizenzen exportieren",
-      "import": "Lizenzen importieren",
-      "statistics": "Lizenzstatistiken"
-    },
-    "payroll-liquidation": {
-      "title": "Gehaltsabrechnung",
-      "description": "Gehaltsabrechnung und Vergütung verwalten",
-      "add_new": "Neue Gehaltsabrechnung hinzufügen",
-      "edit": "Gehaltsabrechnung bearbeiten",
-      "delete": "Gehaltsabrechnung löschen",
-      "view": "Gehaltsabrechnung ansehen",
-      "list": "Gehaltsabrechnungsliste",
-      "search": "Gehaltsabrechnung suchen",
-      "export": "Gehaltsabrechnungen exportieren",
-      "import": "Gehaltsabrechnungen importieren",
-      "statistics": "Gehaltsstatistiken"
-    },
-    "art-management": {
-      "title": "ART-Verwaltung",
-      "description": "Arbeitsrisikobewertung und Prävention verwalten",
-      "add_new": "Neue ART-Bewertung hinzufügen",
-      "edit": "ART-Bewertung bearbeiten",
-      "delete": "ART-Bewertung löschen",
-      "view": "ART-Bewertung ansehen",
-      "list": "ART-Bewertungsliste",
-      "search": "ART-Bewertung suchen",
-      "export": "ART-Bewertungen exportieren",
-      "import": "ART-Bewertungen importieren",
-      "statistics": "ART-Statistiken"
-    },
-    "clientes": {
-      "title": "Kundenverwaltung",
-      "description": "Kundenkonten und Beziehungen verwalten",
-      "add_new": "Neuen Kunden hinzufügen",
-      "edit": "Kunde bearbeiten",
-      "delete": "Kunde löschen",
-      "view": "Kunde ansehen",
-      "list": "Kundenliste",
-      "search": "Kunde suchen",
-      "export": "Kunden exportieren",
-      "import": "Kunden importieren",
-      "statistics": "Kundenstatistiken"
-    },
-    "facturacion": {
-      "title": "Rechnungsverwaltung",
-      "description": "Rechnungen und Abrechnungen verwalten",
-      "add_new": "Neue Rechnung hinzufügen",
-      "edit": "Rechnung bearbeiten",
-      "delete": "Rechnung löschen",
-      "view": "Rechnung ansehen",
-      "list": "Rechnungsliste",
-      "search": "Rechnung suchen",
-      "export": "Rechnungen exportieren",
-      "import": "Rechnungen importieren",
-      "statistics": "Rechnungsstatistiken"
-    },
-    "plantillas-fiscales": {
-      "title": "Steuerformularverwaltung",
-      "description": "Steuerformulare und Compliance verwalten",
-      "add_new": "Neues Steuerformular hinzufügen",
-      "edit": "Steuerformular bearbeiten",
-      "delete": "Steuerformular löschen",
-      "view": "Steuerformular ansehen",
-      "list": "Steuerformularliste",
-      "search": "Steuerformular suchen",
-      "export": "Steuerformulare exportieren",
-      "import": "Steuerformulare importieren",
-      "statistics": "Steuerstatistiken"
-    },
-    "terms-conditions": {
-      "title": "Allgemeine Geschäftsbedingungen",
-      "description": "Nutzungsbedingungen und Richtlinien verwalten",
-      "add_new": "Neue Bedingung hinzufügen",
-      "edit": "Bedingung bearbeiten",
-      "delete": "Bedingung löschen",
-      "view": "Bedingungen ansehen",
-      "list": "Bedingungsliste",
-      "search": "Bedingung suchen",
-      "export": "Bedingungen exportieren",
-      "import": "Bedingungen importieren",
-      "statistics": "Compliance-Statistiken"
+    "employee_map": {
+      "title": "Employee Map",
+      "description": "Real-time location"
     }
   }
 }
