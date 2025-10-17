@@ -3851,6 +3851,47 @@
                         }
                         break;
 
+                    // ✅ SISTEMA DE NOTIFICACIONES AVANZADO V2.0 - 5 MÓDULOS
+                    case 'compliance-dashboard':
+                        if (typeof ComplianceDashboard !== 'undefined' && ComplianceDashboard.init) {
+                            ComplianceDashboard.init();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'compliance-dashboard.js no cargado');
+                        }
+                        break;
+
+                    case 'sla-tracking':
+                        if (typeof SLATracking !== 'undefined' && SLATracking.init) {
+                            SLATracking.init();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'sla-tracking.js no cargado');
+                        }
+                        break;
+
+                    case 'audit-reports':
+                        if (typeof AuditReports !== 'undefined' && AuditReports.init) {
+                            AuditReports.init();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'audit-reports.js no cargado');
+                        }
+                        break;
+
+                    case 'proactive-notifications':
+                        if (typeof ProactiveNotifications !== 'undefined' && ProactiveNotifications.init) {
+                            ProactiveNotifications.init();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'proactive-notifications.js no cargado');
+                        }
+                        break;
+
+                    case 'resource-center':
+                        if (typeof ResourceCenter !== 'undefined' && ResourceCenter.init) {
+                            ResourceCenter.init();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'resource-center.js no cargado');
+                        }
+                        break;
+
                     /* ✅ CÓDIGO FUNCIONAL PROTEGIDO - NO MODIFICAR SIN ANÁLISIS
                      * 📅 Fecha: 23/SEP/2025 04:07:00
                      * 🏷️ Versión: v2.1.2-BIOMETRIC-HUB
