@@ -157,9 +157,9 @@ class ComplianceService {
                 WHERE rest_hours < 12
                 ORDER BY work_date DESC
                 LIMIT 100
-            `, [companyId]);
+            `, { replacements: [companyId], type: db.sequelize.QueryTypes.SELECT });
 
-            return result.rows.map(row => ({
+            return result.map(row => ({
                 employee_id: row.employee_id,
                 violation_date: row.work_date,
                 details: {
@@ -195,9 +195,9 @@ class ComplianceService {
                 AND overtime_hours > 0
                 GROUP BY employee_id, DATE_TRUNC('month', date)
                 HAVING SUM(overtime_hours) > 30
-            `, [companyId]);
+            `, { replacements: [companyId], type: db.sequelize.QueryTypes.SELECT });
 
-            return result.rows.map(row => ({
+            return result.map(row => ({
                 employee_id: row.employee_id,
                 violation_date: new Date(),
                 details: {
@@ -233,9 +233,9 @@ class ComplianceService {
                 AND expiry_date < CURRENT_DATE + INTERVAL '60 days'
                 AND expiry_date > CURRENT_DATE
                 ORDER BY expiry_date ASC
-            `, [companyId]);
+            `, { replacements: [companyId], type: db.sequelize.QueryTypes.SELECT });
 
-            return result.rows.map(row => ({
+            return result.map(row => ({
                 employee_id: row.employee_id,
                 violation_date: row.expiry_date,
                 details: {
@@ -269,9 +269,9 @@ class ComplianceService {
                 AND ml.certificate_file IS NULL
                 AND ml.start_date >= CURRENT_DATE - INTERVAL '90 days'
                 AND ml.status = 'active'
-            `, [companyId]);
+            `, { replacements: [companyId], type: db.sequelize.QueryTypes.SELECT });
 
-            return result.rows.map(row => ({
+            return result.map(row => ({
                 employee_id: row.employee_id,
                 violation_date: row.start_date,
                 details: {
@@ -305,9 +305,9 @@ class ComplianceService {
                 AND worked_hours > 9
                 AND date >= CURRENT_DATE - INTERVAL '30 days'
                 ORDER BY date DESC
-            `, [companyId]);
+            `, { replacements: [companyId], type: db.sequelize.QueryTypes.SELECT });
 
-            return result.rows.map(row => ({
+            return result.map(row => ({
                 employee_id: row.employee_id,
                 violation_date: row.date,
                 details: {
@@ -339,28 +339,31 @@ class ComplianceService {
                     AND employee_id = $3
                     AND violation_date = $4
                     AND status = 'active'
-                `, [companyId, rule.rule_code, violation.employee_id, violation.violation_date]);
+                `, { replacements: [companyId, rule.rule_code, violation.employee_id, violation.violation_date], type: db.sequelize.QueryTypes.SELECT });
 
-                if (existing.rows.length > 0) {
+                if (existing.length > 0) {
                     // Ya existe, actualizar
                     await db.sequelize.query(`
                         UPDATE compliance_violations
                         SET violation_data = $1, updated_at = NOW()
                         WHERE id = $2
-                    `, [JSON.stringify(violation.details), existing.rows[0].id]);
+                    `, { replacements: [JSON.stringify(violation.details), existing[0].id], type: db.sequelize.QueryTypes.UPDATE });
                 } else {
                     // Crear nueva violación
                     await db.sequelize.query(`
                         INSERT INTO compliance_violations
                         (company_id, rule_code, employee_id, violation_date, violation_data, status)
                         VALUES ($1, $2, $3, $4, $5, 'active')
-                    `, [
-                        companyId,
-                        rule.rule_code,
-                        violation.employee_id,
-                        violation.violation_date,
-                        JSON.stringify(violation.details)
-                    ]);
+                    `, {
+                        replacements: [
+                            companyId,
+                            rule.rule_code,
+                            violation.employee_id,
+                            violation.violation_date,
+                            JSON.stringify(violation.details)
+                        ],
+                        type: db.sequelize.QueryTypes.INSERT
+                    });
                 }
             }
 
@@ -389,7 +392,7 @@ class ComplianceService {
                 WHERE cv.company_id = $1
                 AND cv.status = 'active'
                 GROUP BY cr.severity
-            `, [companyId]);
+            `, { replacements: [companyId], type: db.sequelize.QueryTypes.SELECT });
 
             // Obtener top 5 reglas más violadas
             const topViolations = await db.sequelize.query(`
@@ -405,7 +408,7 @@ class ComplianceService {
                 GROUP BY cv.rule_code, cr.legal_reference, cr.severity
                 ORDER BY violation_count DESC
                 LIMIT 5
-            `, [companyId]);
+            `, { replacements: [companyId], type: db.sequelize.QueryTypes.SELECT });
 
             // Métricas por categoría
             const metrics = {
@@ -423,8 +426,8 @@ class ComplianceService {
                     critical_violations: validation.violations.filter(v => v.severity === 'critical').length,
                     warning_violations: validation.violations.filter(v => v.severity === 'warning').length
                 },
-                violations_by_severity: violationsBySeverity.rows,
-                top_violations: topViolations.rows,
+                violations_by_severity: violationsBySeverity,
+                top_violations: topViolations,
                 metrics: metrics,
                 last_validation: validation.validated_at
             };
@@ -448,9 +451,9 @@ class ComplianceService {
                 JOIN compliance_rules cr ON cv.rule_code = cr.rule_code
                 WHERE cv.company_id = $1
                 AND cr.rule_type = $2
-            `, [companyId, ruleType]);
+            `, { replacements: [companyId, ruleType], type: db.sequelize.QueryTypes.SELECT });
 
-            const data = result.rows[0];
+            const data = result[0];
             const total = parseInt(data.active_violations) + parseInt(data.resolved_violations);
             const compliant = total > 0 ? ((parseInt(data.resolved_violations) / total) * 100).toFixed(1) : 100;
 
@@ -476,7 +479,7 @@ class ComplianceService {
                     resolved_at = NOW(),
                     resolution_notes = $1
                 WHERE id = $2
-            `, [notes, violationId]);
+            `, { replacements: [notes, violationId], type: db.sequelize.QueryTypes.UPDATE });
 
             console.log(`✅ [COMPLIANCE] Violación ${violationId} resuelta por ${resolvedBy}`);
 
@@ -550,9 +553,9 @@ class ComplianceService {
                 SELECT * FROM compliance_rules
                 WHERE active = true
                 ORDER BY severity DESC
-            `);
+            `, { type: db.sequelize.QueryTypes.SELECT });
 
-            return result.rows;
+            return result;
 
         } catch (error) {
             console.error('❌ Error obteniendo reglas:', error);
@@ -595,9 +598,12 @@ class ComplianceService {
                 query += ` LIMIT $${params.length}`;
             }
 
-            const result = await db.query(query, params);
+            const result = await db.sequelize.query(query, {
+                replacements: params,
+                type: db.sequelize.QueryTypes.SELECT
+            });
 
-            return result.rows;
+            return result;
 
         } catch (error) {
             console.error('❌ Error obteniendo violaciones:', error);
