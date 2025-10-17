@@ -12,9 +12,212 @@ const SLATracking = {
 
     init() {
         console.log('⏱️ Iniciando SLA Tracking...');
+        this.injectStyles();
         this.renderDashboard();
         this.attachEventListeners();
         this.loadDashboard();
+    },
+
+    injectStyles() {
+        // Remove existing styles if any
+        const existingStyle = document.getElementById('sla-tracking-styles');
+        if (existingStyle) existingStyle.remove();
+
+        const style = document.createElement('style');
+        style.id = 'sla-tracking-styles';
+        style.textContent = `
+            .sla-tracking {
+                padding: 20px;
+            }
+
+            .sla-tracking .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #e0e0e0;
+            }
+
+            .sla-tracking .header-actions {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+
+            .sla-tracking .metrics-section {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+
+            .sla-tracking .metric-card {
+                background: white;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                text-align: center;
+            }
+
+            .sla-tracking .metric-card h4 {
+                margin: 0 0 10px 0;
+                font-size: 14px;
+                color: #666;
+                text-transform: uppercase;
+            }
+
+            .sla-tracking .metric-card .value {
+                font-size: 32px;
+                font-weight: bold;
+                color: #007bff;
+                margin-bottom: 5px;
+            }
+
+            .sla-tracking .metric-card .unit {
+                font-size: 14px;
+                color: #999;
+            }
+
+            .sla-tracking .rankings-section, .sla-tracking .bottlenecks-section, .sla-tracking .comparison-section {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .sla-tracking .tabs {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+
+            .sla-tracking .tab-btn {
+                padding: 10px 20px;
+                border: none;
+                background: #f8f9fa;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .sla-tracking .tab-btn.active {
+                background: #007bff;
+                color: white;
+            }
+
+            .sla-tracking .tab-btn:hover {
+                background: #e9ecef;
+            }
+
+            .sla-tracking .tab-btn.active:hover {
+                background: #0056b3;
+            }
+
+            .sla-tracking .ranking-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .sla-tracking .ranking-table th {
+                background: #f8f9fa;
+                padding: 12px;
+                text-align: left;
+                border-bottom: 2px solid #dee2e6;
+            }
+
+            .sla-tracking .ranking-table td {
+                padding: 12px;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .sla-tracking .ranking-table tr:hover {
+                background: #f8f9fa;
+            }
+
+            .sla-tracking .rank-badge {
+                display: inline-block;
+                width: 30px;
+                height: 30px;
+                line-height: 30px;
+                text-align: center;
+                border-radius: 50%;
+                font-weight: bold;
+                color: white;
+            }
+
+            .sla-tracking .rank-badge.gold { background: #ffd700; color: #333; }
+            .sla-tracking .rank-badge.silver { background: #c0c0c0; color: #333; }
+            .sla-tracking .rank-badge.bronze { background: #cd7f32; color: white; }
+            .sla-tracking .rank-badge.other { background: #6c757d; color: white; }
+
+            .sla-tracking .progress-bar {
+                height: 20px;
+                background: #e9ecef;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+
+            .sla-tracking .progress-fill {
+                height: 100%;
+                background: #28a745;
+                transition: width 0.3s;
+            }
+
+            .sla-tracking .progress-fill.low { background: #dc3545; }
+            .sla-tracking .progress-fill.medium { background: #ffc107; }
+            .sla-tracking .progress-fill.high { background: #28a745; }
+
+            .sla-tracking .bottleneck-card {
+                background: #fff3cd;
+                border-left: 4px solid #ffc107;
+                padding: 15px;
+                margin-bottom: 10px;
+                border-radius: 4px;
+            }
+
+            .sla-tracking .bottleneck-card.critical {
+                background: #f8d7da;
+                border-left-color: #dc3545;
+            }
+
+            .sla-tracking .comparison-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-top: 20px;
+            }
+
+            .sla-tracking .comparison-card {
+                padding: 20px;
+                background: #f8f9fa;
+                border-radius: 8px;
+            }
+
+            .sla-tracking .comparison-card h4 {
+                margin: 0 0 15px 0;
+            }
+
+            .sla-tracking .trend-indicator {
+                display: inline-block;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .sla-tracking .trend-indicator.up {
+                background: #d4edda;
+                color: #155724;
+            }
+
+            .sla-tracking .trend-indicator.down {
+                background: #f8d7da;
+                color: #721c24;
+            }
+        `;
+        document.head.appendChild(style);
     },
 
     renderDashboard() {
@@ -72,199 +275,6 @@ const SLATracking = {
                     <div id="comparisonContent"></div>
                 </div>
             </div>
-
-            <style>
-                .sla-tracking {
-                    padding: 20px;
-                }
-
-                .header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 30px;
-                    padding-bottom: 15px;
-                    border-bottom: 2px solid #e0e0e0;
-                }
-
-                .header-actions {
-                    display: flex;
-                    gap: 10px;
-                    align-items: center;
-                }
-
-                .metrics-section {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 20px;
-                    margin-bottom: 30px;
-                }
-
-                .metric-card {
-                    background: white;
-                    border-radius: 8px;
-                    padding: 20px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    text-align: center;
-                }
-
-                .metric-card h4 {
-                    margin: 0 0 10px 0;
-                    font-size: 14px;
-                    color: #666;
-                    text-transform: uppercase;
-                }
-
-                .metric-card .value {
-                    font-size: 32px;
-                    font-weight: bold;
-                    color: #007bff;
-                    margin-bottom: 5px;
-                }
-
-                .metric-card .unit {
-                    font-size: 14px;
-                    color: #999;
-                }
-
-                .rankings-section, .bottlenecks-section, .comparison-section {
-                    background: white;
-                    padding: 20px;
-                    border-radius: 8px;
-                    margin-bottom: 20px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-
-                .tabs {
-                    display: flex;
-                    gap: 10px;
-                    margin-bottom: 20px;
-                }
-
-                .tab-btn {
-                    padding: 10px 20px;
-                    border: none;
-                    background: #f8f9fa;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                }
-
-                .tab-btn.active {
-                    background: #007bff;
-                    color: white;
-                }
-
-                .tab-btn:hover {
-                    background: #e9ecef;
-                }
-
-                .tab-btn.active:hover {
-                    background: #0056b3;
-                }
-
-                .ranking-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                }
-
-                .ranking-table th {
-                    background: #f8f9fa;
-                    padding: 12px;
-                    text-align: left;
-                    border-bottom: 2px solid #dee2e6;
-                }
-
-                .ranking-table td {
-                    padding: 12px;
-                    border-bottom: 1px solid #dee2e6;
-                }
-
-                .ranking-table tr:hover {
-                    background: #f8f9fa;
-                }
-
-                .rank-badge {
-                    display: inline-block;
-                    width: 30px;
-                    height: 30px;
-                    line-height: 30px;
-                    text-align: center;
-                    border-radius: 50%;
-                    font-weight: bold;
-                    color: white;
-                }
-
-                .rank-badge.gold { background: #ffd700; color: #333; }
-                .rank-badge.silver { background: #c0c0c0; color: #333; }
-                .rank-badge.bronze { background: #cd7f32; color: white; }
-                .rank-badge.other { background: #6c757d; color: white; }
-
-                .progress-bar {
-                    height: 20px;
-                    background: #e9ecef;
-                    border-radius: 10px;
-                    overflow: hidden;
-                }
-
-                .progress-fill {
-                    height: 100%;
-                    background: #28a745;
-                    transition: width 0.3s;
-                }
-
-                .progress-fill.low { background: #dc3545; }
-                .progress-fill.medium { background: #ffc107; }
-                .progress-fill.high { background: #28a745; }
-
-                .bottleneck-card {
-                    background: #fff3cd;
-                    border-left: 4px solid #ffc107;
-                    padding: 15px;
-                    margin-bottom: 10px;
-                    border-radius: 4px;
-                }
-
-                .bottleneck-card.critical {
-                    background: #f8d7da;
-                    border-left-color: #dc3545;
-                }
-
-                .comparison-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 20px;
-                    margin-top: 20px;
-                }
-
-                .comparison-card {
-                    padding: 20px;
-                    background: #f8f9fa;
-                    border-radius: 8px;
-                }
-
-                .comparison-card h4 {
-                    margin: 0 0 15px 0;
-                }
-
-                .trend-indicator {
-                    display: inline-block;
-                    padding: 5px 10px;
-                    border-radius: 4px;
-                    font-size: 14px;
-                    font-weight: 500;
-                }
-
-                .trend-indicator.up {
-                    background: #d4edda;
-                    color: #155724;
-                }
-
-                .trend-indicator.down {
-                    background: #f8d7da;
-                    color: #721c24;
-                }
-            </style>
         `;
     },
 

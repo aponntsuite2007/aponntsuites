@@ -12,9 +12,175 @@ const ResourceCenter = {
 
     init() {
         console.log('📦 Iniciando Resource Center...');
+        this.injectStyles();
         this.renderDashboard();
         this.attachEventListeners();
         this.loadDashboard();
+    },
+
+    injectStyles() {
+        // Remove existing styles if any
+        const existingStyle = document.getElementById('resource-center-styles');
+        if (existingStyle) existingStyle.remove();
+
+        const style = document.createElement('style');
+        style.id = 'resource-center-styles';
+        style.textContent = `
+            .resource-center {
+                padding: 20px;
+            }
+
+            .resource-center .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #e0e0e0;
+            }
+
+            .resource-center .header-actions {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+
+            .resource-center .summary-section {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+
+            .resource-center .summary-card {
+                background: white;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                text-align: center;
+            }
+
+            .resource-center .summary-card h4 {
+                margin: 0 0 10px 0;
+                font-size: 14px;
+                color: #666;
+                text-transform: uppercase;
+            }
+
+            .resource-center .summary-card .value {
+                font-size: 36px;
+                font-weight: bold;
+                color: #007bff;
+                margin-bottom: 5px;
+            }
+
+            .resource-center .summary-card .unit {
+                font-size: 14px;
+                color: #999;
+            }
+
+            .resource-center .charts-section {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+
+            .resource-center .chart-container {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .resource-center .overload-section,
+            .resource-center .employees-section,
+            .resource-center .budget-section,
+            .resource-center .comparison-section {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .resource-center .overload-card {
+                background: #fff3cd;
+                border-left: 4px solid #ffc107;
+                padding: 15px;
+                margin-bottom: 10px;
+                border-radius: 4px;
+            }
+
+            .resource-center .overload-card.critical {
+                background: #f8d7da;
+                border-left-color: #dc3545;
+            }
+
+            .resource-center .overload-card.high {
+                background: #f8d7da;
+                border-left-color: #fd7e14;
+            }
+
+            .resource-center .overload-card.medium {
+                background: #fff3cd;
+                border-left-color: #ffc107;
+            }
+
+            .resource-center .overload-card.low {
+                background: #d1ecf1;
+                border-left-color: #17a2b8;
+            }
+
+            .resource-center .employees-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+            }
+
+            .resource-center .employees-table th {
+                background: #f8f9fa;
+                padding: 12px;
+                text-align: left;
+                border-bottom: 2px solid #dee2e6;
+            }
+
+            .resource-center .employees-table td {
+                padding: 12px;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .resource-center .employees-table tr:hover {
+                background: #f8f9fa;
+            }
+
+            .resource-center .budget-card {
+                background: #d1ecf1;
+                border-left: 4px solid #17a2b8;
+                padding: 15px;
+                margin-bottom: 10px;
+                border-radius: 4px;
+            }
+
+            .resource-center .budget-card.exceeded {
+                background: #f8d7da;
+                border-left-color: #dc3545;
+            }
+
+            .resource-center .comparison-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-top: 20px;
+            }
+
+            .resource-center .comparison-card {
+                padding: 20px;
+                background: #f8f9fa;
+                border-radius: 8px;
+            }
+        `;
+        document.head.appendChild(style);
     },
 
     renderDashboard() {
@@ -85,159 +251,6 @@ const ResourceCenter = {
                     <div id="resourceComparisonContent"></div>
                 </div>
             </div>
-
-            <style>
-                .resource-center {
-                    padding: 20px;
-                }
-
-                .header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 30px;
-                    padding-bottom: 15px;
-                    border-bottom: 2px solid #e0e0e0;
-                }
-
-                .header-actions {
-                    display: flex;
-                    gap: 10px;
-                    align-items: center;
-                }
-
-                .summary-section {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                    gap: 20px;
-                    margin-bottom: 30px;
-                }
-
-                .summary-card {
-                    background: white;
-                    border-radius: 8px;
-                    padding: 20px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    text-align: center;
-                }
-
-                .summary-card h4 {
-                    margin: 0 0 10px 0;
-                    font-size: 14px;
-                    color: #666;
-                    text-transform: uppercase;
-                }
-
-                .summary-card .value {
-                    font-size: 36px;
-                    font-weight: bold;
-                    color: #007bff;
-                    margin-bottom: 5px;
-                }
-
-                .summary-card .unit {
-                    font-size: 14px;
-                    color: #999;
-                }
-
-                .charts-section {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-                    gap: 20px;
-                    margin-bottom: 30px;
-                }
-
-                .chart-container {
-                    background: white;
-                    padding: 20px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-
-                .overload-section, .employees-section, .budget-section, .comparison-section {
-                    background: white;
-                    padding: 20px;
-                    border-radius: 8px;
-                    margin-bottom: 20px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-
-                .overload-card {
-                    background: #fff3cd;
-                    border-left: 4px solid #ffc107;
-                    padding: 15px;
-                    margin-bottom: 10px;
-                    border-radius: 4px;
-                }
-
-                .overload-card.critical {
-                    background: #f8d7da;
-                    border-left-color: #dc3545;
-                }
-
-                .overload-card.high {
-                    background: #f8d7da;
-                    border-left-color: #fd7e14;
-                }
-
-                .overload-card.medium {
-                    background: #fff3cd;
-                    border-left-color: #ffc107;
-                }
-
-                .overload-card.low {
-                    background: #d1ecf1;
-                    border-left-color: #17a2b8;
-                }
-
-                .employees-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 15px;
-                }
-
-                .employees-table th {
-                    background: #f8f9fa;
-                    padding: 12px;
-                    text-align: left;
-                    border-bottom: 2px solid #dee2e6;
-                }
-
-                .employees-table td {
-                    padding: 12px;
-                    border-bottom: 1px solid #dee2e6;
-                }
-
-                .employees-table tr:hover {
-                    background: #f8f9fa;
-                }
-
-                .budget-card {
-                    background: #d1ecf1;
-                    border-left: 4px solid #17a2b8;
-                    padding: 15px;
-                    margin-bottom: 10px;
-                    border-radius: 4px;
-                }
-
-                .budget-card.exceeded {
-                    background: #f8d7da;
-                    border-left-color: #dc3545;
-                }
-
-                .comparison-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 20px;
-                    margin-top: 20px;
-                }
-
-                .comparison-card {
-                    padding: 20px;
-                    background: #f8f9fa;
-                    border-radius: 8px;
-                }
-            </style>
         `;
     },
 

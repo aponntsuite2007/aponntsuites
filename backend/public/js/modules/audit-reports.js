@@ -12,10 +12,125 @@ const AuditReports = {
 
     init() {
         console.log('📄 Iniciando Audit Reports...');
+        this.injectStyles();
         this.renderDashboard();
         this.attachEventListeners();
         this.loadReportTypes();
         this.loadHistory();
+    },
+
+    injectStyles() {
+        // Remove existing styles if any
+        const existingStyle = document.getElementById('audit-reports-styles');
+        if (existingStyle) existingStyle.remove();
+
+        const style = document.createElement('style');
+        style.id = 'audit-reports-styles';
+        style.textContent = `
+            .audit-reports { padding: 20px; }
+
+            .audit-reports .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #e0e0e0;
+            }
+
+            .audit-reports .header-actions {
+                display: flex;
+                gap: 10px;
+            }
+
+            .audit-reports .report-types-section,
+            .audit-reports .generator-section,
+            .audit-reports .history-section {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .audit-reports .report-types-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 15px;
+                margin-top: 15px;
+            }
+
+            .audit-reports .report-type-card {
+                background: #f8f9fa;
+                border-radius: 8px;
+                padding: 15px;
+                cursor: pointer;
+                transition: all 0.3s;
+                border-left: 4px solid #007bff;
+            }
+
+            .audit-reports .report-type-card:hover {
+                background: #e9ecef;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+
+            .audit-reports .report-type-card h4 {
+                margin: 0 0 10px 0;
+                color: #007bff;
+            }
+
+            .audit-reports .report-type-card p {
+                margin: 0;
+                font-size: 14px;
+                color: #666;
+            }
+
+            .audit-reports .form-group {
+                margin-bottom: 15px;
+            }
+
+            .audit-reports .form-group label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: 500;
+            }
+
+            .audit-reports .form-control {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+            }
+
+            .audit-reports .history-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+            }
+
+            .audit-reports .history-table th {
+                background: #f8f9fa;
+                padding: 12px;
+                text-align: left;
+                border-bottom: 2px solid #dee2e6;
+            }
+
+            .audit-reports .history-table td {
+                padding: 12px;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .audit-reports .history-table tr:hover {
+                background: #f8f9fa;
+            }
+
+            .audit-reports .qr-code-preview {
+                width: 100px;
+                height: 100px;
+            }
+        `;
+        document.head.appendChild(style);
     },
 
     renderDashboard() {
@@ -71,26 +186,6 @@ const AuditReports = {
                     <div id="historyTable"></div>
                 </div>
             </div>
-
-            <style>
-                .audit-reports { padding: 20px; }
-                .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px solid #e0e0e0; }
-                .header-actions { display: flex; gap: 10px; }
-                .report-types-section, .generator-section, .history-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                .report-types-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px; }
-                .report-type-card { background: #f8f9fa; border-radius: 8px; padding: 15px; cursor: pointer; transition: all 0.3s; border-left: 4px solid #007bff; }
-                .report-type-card:hover { background: #e9ecef; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-                .report-type-card h4 { margin: 0 0 10px 0; color: #007bff; }
-                .report-type-card p { margin: 0; font-size: 14px; color: #666; }
-                .form-group { margin-bottom: 15px; }
-                .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-                .form-control { width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; }
-                .history-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                .history-table th { background: #f8f9fa; padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; }
-                .history-table td { padding: 12px; border-bottom: 1px solid #dee2e6; }
-                .history-table tr:hover { background: #f8f9fa; }
-                .qr-code-preview { width: 100px; height: 100px; }
-            </style>
         `;
     },
 

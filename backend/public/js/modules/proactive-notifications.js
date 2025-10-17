@@ -12,9 +12,93 @@ const ProactiveNotifications = {
 
     init() {
         console.log('🔔 Iniciando Proactive Notifications...');
+        this.injectStyles();
         this.renderDashboard();
         this.attachEventListeners();
         this.loadDashboard();
+    },
+
+    injectStyles() {
+        // Remove existing styles if any
+        const existingStyle = document.getElementById('proactive-notifications-styles');
+        if (existingStyle) existingStyle.remove();
+
+        const style = document.createElement('style');
+        style.id = 'proactive-notifications-styles';
+        style.textContent = `
+            .proactive-notifications { padding: 20px; }
+
+            .proactive-notifications .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #e0e0e0;
+            }
+
+            .proactive-notifications .header-actions {
+                display: flex;
+                gap: 10px;
+            }
+
+            .proactive-notifications .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+
+            .proactive-notifications .stat-card {
+                background: white;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                text-align: center;
+            }
+
+            .proactive-notifications .stat-card .value {
+                font-size: 32px;
+                font-weight: bold;
+                color: #007bff;
+            }
+
+            .proactive-notifications .rules-list,
+            .proactive-notifications .execution-history {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .proactive-notifications .rule-card {
+                background: #f8f9fa;
+                border-left: 4px solid #007bff;
+                padding: 15px;
+                margin-bottom: 10px;
+                border-radius: 4px;
+            }
+
+            .proactive-notifications .rule-card.critical {
+                border-left-color: #dc3545;
+            }
+
+            .proactive-notifications .rule-card.high {
+                border-left-color: #fd7e14;
+            }
+
+            .proactive-notifications .rule-card h4 {
+                margin: 0 0 10px 0;
+            }
+
+            .proactive-notifications .rule-actions {
+                display: flex;
+                gap: 10px;
+                margin-top: 10px;
+            }
+        `;
+        document.head.appendChild(style);
     },
 
     renderDashboard() {
@@ -47,21 +131,6 @@ const ProactiveNotifications = {
                     <div id="historyContent"></div>
                 </div>
             </div>
-
-            <style>
-                .proactive-notifications { padding: 20px; }
-                .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px solid #e0e0e0; }
-                .header-actions { display: flex; gap: 10px; }
-                .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-                .stat-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
-                .stat-card .value { font-size: 32px; font-weight: bold; color: #007bff; }
-                .rules-list, .execution-history { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                .rule-card { background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin-bottom: 10px; border-radius: 4px; }
-                .rule-card.critical { border-left-color: #dc3545; }
-                .rule-card.high { border-left-color: #fd7e14; }
-                .rule-card h4 { margin: 0 0 10px 0; }
-                .rule-actions { display: flex; gap: 10px; margin-top: 10px; }
-            </style>
         `;
     },
 

@@ -20,9 +20,250 @@ const ComplianceDashboard = {
      */
     init() {
         console.log('🔍 Iniciando Compliance Dashboard...');
+        this.injectStyles();
         this.renderDashboard();
         this.attachEventListeners();
         this.loadDashboard();
+    },
+
+    injectStyles() {
+        // Remove existing styles if any
+        const existingStyle = document.getElementById('compliance-dashboard-styles');
+        if (existingStyle) existingStyle.remove();
+
+        const style = document.createElement('style');
+        style.id = 'compliance-dashboard-styles';
+        style.textContent = `
+            .compliance-dashboard {
+                padding: 20px;
+            }
+
+            .compliance-dashboard .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #e0e0e0;
+            }
+
+            .compliance-dashboard .header h2 {
+                margin: 0;
+                color: #333;
+            }
+
+            .compliance-dashboard .header-actions {
+                display: flex;
+                gap: 10px;
+            }
+
+            .compliance-dashboard .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+
+            .compliance-dashboard .stat-card {
+                background: white;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                border-left: 4px solid #007bff;
+            }
+
+            .compliance-dashboard .stat-card.critical { border-left-color: #dc3545; }
+            .compliance-dashboard .stat-card.high { border-left-color: #fd7e14; }
+            .compliance-dashboard .stat-card.warning { border-left-color: #ffc107; }
+            .compliance-dashboard .stat-card.success { border-left-color: #28a745; }
+
+            .compliance-dashboard .stat-card h4 {
+                margin: 0 0 10px 0;
+                font-size: 14px;
+                color: #666;
+                text-transform: uppercase;
+            }
+
+            .compliance-dashboard .stat-card .value {
+                font-size: 36px;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 5px;
+            }
+
+            .compliance-dashboard .stat-card .label {
+                font-size: 14px;
+                color: #999;
+            }
+
+            .compliance-dashboard .filters-section {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .compliance-dashboard .filters-row {
+                display: flex;
+                gap: 15px;
+                align-items: flex-end;
+                flex-wrap: wrap;
+            }
+
+            .compliance-dashboard .filter-group {
+                flex: 1;
+                min-width: 200px;
+            }
+
+            .compliance-dashboard .filter-group label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: 500;
+                color: #555;
+            }
+
+            .compliance-dashboard .violations-section, .compliance-dashboard .rules-section {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .compliance-dashboard .violations-table, .compliance-dashboard .rules-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+            }
+
+            .compliance-dashboard .violations-table th, .compliance-dashboard .rules-table th {
+                background: #f8f9fa;
+                padding: 12px;
+                text-align: left;
+                font-weight: 600;
+                color: #333;
+                border-bottom: 2px solid #dee2e6;
+            }
+
+            .compliance-dashboard .violations-table td, .compliance-dashboard .rules-table td {
+                padding: 12px;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .compliance-dashboard .violations-table tr:hover, .compliance-dashboard .rules-table tr:hover {
+                background: #f8f9fa;
+            }
+
+            .compliance-dashboard .badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: 500;
+            }
+
+            .compliance-dashboard .badge-critical { background: #dc3545; color: white; }
+            .compliance-dashboard .badge-high { background: #fd7e14; color: white; }
+            .compliance-dashboard .badge-warning { background: #ffc107; color: #333; }
+            .compliance-dashboard .badge-info { background: #17a2b8; color: white; }
+            .compliance-dashboard .badge-active { background: #dc3545; color: white; }
+            .compliance-dashboard .badge-resolved { background: #28a745; color: white; }
+
+            .compliance-dashboard .loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(255,255,255,0.9);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            }
+
+            .compliance-dashboard .spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #007bff;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            .compliance-dashboard .btn {
+                padding: 10px 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.3s;
+            }
+
+            .compliance-dashboard .btn-primary {
+                background: #007bff;
+                color: white;
+            }
+
+            .compliance-dashboard .btn-primary:hover {
+                background: #0056b3;
+            }
+
+            .compliance-dashboard .btn-secondary {
+                background: #6c757d;
+                color: white;
+            }
+
+            .compliance-dashboard .btn-secondary:hover {
+                background: #5a6268;
+            }
+
+            .compliance-dashboard .btn-info {
+                background: #17a2b8;
+                color: white;
+            }
+
+            .compliance-dashboard .btn-info:hover {
+                background: #138496;
+            }
+
+            .compliance-dashboard .btn-success {
+                background: #28a745;
+                color: white;
+            }
+
+            .compliance-dashboard .btn-success:hover {
+                background: #218838;
+            }
+
+            .compliance-dashboard .btn-danger {
+                background: #dc3545;
+                color: white;
+            }
+
+            .compliance-dashboard .btn-danger:hover {
+                background: #c82333;
+            }
+
+            .compliance-dashboard .btn-sm {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+
+            .compliance-dashboard .no-data {
+                text-align: center;
+                padding: 40px;
+                color: #999;
+            }
+        `;
+        document.head.appendChild(style);
     },
 
     /**
@@ -115,237 +356,6 @@ const ComplianceDashboard = {
                     <div id="rulesTable"></div>
                 </div>
             </div>
-
-            <style>
-                .compliance-dashboard {
-                    padding: 20px;
-                }
-
-                .header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 30px;
-                    padding-bottom: 15px;
-                    border-bottom: 2px solid #e0e0e0;
-                }
-
-                .header h2 {
-                    margin: 0;
-                    color: #333;
-                }
-
-                .header-actions {
-                    display: flex;
-                    gap: 10px;
-                }
-
-                .stats-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                    gap: 20px;
-                    margin-bottom: 30px;
-                }
-
-                .stat-card {
-                    background: white;
-                    border-radius: 8px;
-                    padding: 20px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    border-left: 4px solid #007bff;
-                }
-
-                .stat-card.critical { border-left-color: #dc3545; }
-                .stat-card.high { border-left-color: #fd7e14; }
-                .stat-card.warning { border-left-color: #ffc107; }
-                .stat-card.success { border-left-color: #28a745; }
-
-                .stat-card h4 {
-                    margin: 0 0 10px 0;
-                    font-size: 14px;
-                    color: #666;
-                    text-transform: uppercase;
-                }
-
-                .stat-card .value {
-                    font-size: 36px;
-                    font-weight: bold;
-                    color: #333;
-                    margin-bottom: 5px;
-                }
-
-                .stat-card .label {
-                    font-size: 14px;
-                    color: #999;
-                }
-
-                .filters-section {
-                    background: white;
-                    padding: 20px;
-                    border-radius: 8px;
-                    margin-bottom: 20px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-
-                .filters-row {
-                    display: flex;
-                    gap: 15px;
-                    align-items: flex-end;
-                    flex-wrap: wrap;
-                }
-
-                .filter-group {
-                    flex: 1;
-                    min-width: 200px;
-                }
-
-                .filter-group label {
-                    display: block;
-                    margin-bottom: 5px;
-                    font-weight: 500;
-                    color: #555;
-                }
-
-                .violations-section, .rules-section {
-                    background: white;
-                    padding: 20px;
-                    border-radius: 8px;
-                    margin-bottom: 20px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-
-                .violations-table, .rules-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 15px;
-                }
-
-                .violations-table th, .rules-table th {
-                    background: #f8f9fa;
-                    padding: 12px;
-                    text-align: left;
-                    font-weight: 600;
-                    color: #333;
-                    border-bottom: 2px solid #dee2e6;
-                }
-
-                .violations-table td, .rules-table td {
-                    padding: 12px;
-                    border-bottom: 1px solid #dee2e6;
-                }
-
-                .violations-table tr:hover, .rules-table tr:hover {
-                    background: #f8f9fa;
-                }
-
-                .badge {
-                    display: inline-block;
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    font-weight: 500;
-                }
-
-                .badge-critical { background: #dc3545; color: white; }
-                .badge-high { background: #fd7e14; color: white; }
-                .badge-warning { background: #ffc107; color: #333; }
-                .badge-info { background: #17a2b8; color: white; }
-                .badge-active { background: #dc3545; color: white; }
-                .badge-resolved { background: #28a745; color: white; }
-
-                .loading-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(255,255,255,0.9);
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    z-index: 9999;
-                }
-
-                .spinner {
-                    border: 4px solid #f3f3f3;
-                    border-top: 4px solid #007bff;
-                    border-radius: 50%;
-                    width: 50px;
-                    height: 50px;
-                    animation: spin 1s linear infinite;
-                }
-
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-
-                .btn {
-                    padding: 10px 20px;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-size: 14px;
-                    transition: all 0.3s;
-                }
-
-                .btn-primary {
-                    background: #007bff;
-                    color: white;
-                }
-
-                .btn-primary:hover {
-                    background: #0056b3;
-                }
-
-                .btn-secondary {
-                    background: #6c757d;
-                    color: white;
-                }
-
-                .btn-secondary:hover {
-                    background: #5a6268;
-                }
-
-                .btn-info {
-                    background: #17a2b8;
-                    color: white;
-                }
-
-                .btn-info:hover {
-                    background: #138496;
-                }
-
-                .btn-success {
-                    background: #28a745;
-                    color: white;
-                }
-
-                .btn-success:hover {
-                    background: #218838;
-                }
-
-                .btn-danger {
-                    background: #dc3545;
-                    color: white;
-                }
-
-                .btn-danger:hover {
-                    background: #c82333;
-                }
-
-                .btn-sm {
-                    padding: 5px 10px;
-                    font-size: 12px;
-                }
-
-                .no-data {
-                    text-align: center;
-                    padding: 40px;
-                    color: #999;
-                }
-            </style>
         `;
     },
 
