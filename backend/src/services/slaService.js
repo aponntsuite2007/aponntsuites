@@ -26,28 +26,11 @@ class SLAService {
         try {
             console.log(`📊 [SLA] Calculando métricas para empresa ${companyId}...`);
 
-            // Obtener todos los mensajes con respuesta en el período
-            const result = await db.query(`
-                SELECT
-                    nm.sender_id as approver_id,
-                    nm.sender_type as approver_role,
-                    ng.group_type as request_type,
-                    nm.created_at,
-                    nm.deadline_at,
-                    nm.responded_at,
-                    EXTRACT(EPOCH FROM (nm.responded_at - nm.created_at)) / 3600 as response_hours,
-                    CASE
-                        WHEN nm.responded_at <= nm.deadline_at THEN true
-                        ELSE false
-                    END as within_sla
-                FROM notification_messages nm
-                JOIN notification_groups ng ON nm.group_id = ng.id
-                WHERE nm.company_id = $1
-                AND nm.requires_response = true
-                AND nm.responded_at IS NOT NULL
-                AND nm.created_at BETWEEN $2 AND $3
-                ORDER BY nm.created_at DESC
-            `, [companyId, startDate, endDate]);
+            // Por ahora retornar datos vacíos ya que las tablas no tienen las columnas necesarias
+            // TODO: Migrar base de datos para agregar columnas: deadline_at, responded_at, requires_response
+            console.log(`⚠️ [SLA] Sistema temporalmente deshabilitado - esperando migración de BD`);
+
+            const result = { rows: [] };
 
             // Calcular estadísticas por aprobador
             const approverMetrics = this.aggregateByApprover(result.rows);
@@ -344,28 +327,11 @@ class SLAService {
      */
     async getApproverStats(approverId, companyId, startDate, endDate) {
         try {
-            const result = await db.query(`
-                SELECT
-                    nm.id,
-                    ng.group_type as request_type,
-                    nm.created_at,
-                    nm.deadline_at,
-                    nm.responded_at,
-                    EXTRACT(EPOCH FROM (nm.responded_at - nm.created_at)) / 3600 as response_hours,
-                    CASE
-                        WHEN nm.responded_at <= nm.deadline_at THEN true
-                        ELSE false
-                    END as within_sla,
-                    nm.message_type
-                FROM notification_messages nm
-                JOIN notification_groups ng ON nm.group_id = ng.id
-                WHERE nm.sender_id = $1
-                AND nm.company_id = $2
-                AND nm.requires_response = true
-                AND nm.responded_at IS NOT NULL
-                AND nm.created_at BETWEEN $3 AND $4
-                ORDER BY nm.created_at DESC
-            `, [approverId, companyId, startDate, endDate]);
+            // Por ahora retornar datos vacíos ya que las tablas no tienen las columnas necesarias
+            // TODO: Migrar base de datos para agregar columnas: deadline_at, responded_at, requires_response
+            console.log(`⚠️ [SLA] getApproverStats temporalmente deshabilitado - esperando migración de BD`);
+
+            const result = { rows: [] };
 
             if (result.rows.length === 0) {
                 return {

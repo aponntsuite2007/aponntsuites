@@ -11,6 +11,11 @@
  */
 
 const db = require('../config/database');
+
+// TODO: Este servicio requiere migraciones de BD para las siguientes tablas:
+// - attendance_records, vacation_balances, medical_leaves
+// - compliance_violations, compliance_rules
+// Temporalmente deshabilitado hasta ejecutar migraciones
 const moduleService = require('./moduleService');
 
 class ComplianceService {
@@ -379,33 +384,10 @@ class ComplianceService {
             // Validar todas las reglas
             const validation = await this.validateAllRules(companyId);
 
-            // Obtener violaciones activas por severidad
-            const violationsBySeverity = await db.query(`
-                SELECT
-                    cr.severity,
-                    COUNT(cv.id) as count
-                FROM compliance_violations cv
-                JOIN compliance_rules cr ON cv.rule_code = cr.rule_code
-                WHERE cv.company_id = $1
-                AND cv.status = 'active'
-                GROUP BY cr.severity
-            `, [companyId]);
-
-            // Obtener top 5 reglas más violadas
-            const topViolations = await db.query(`
-                SELECT
-                    cv.rule_code,
-                    cr.legal_reference,
-                    cr.severity,
-                    COUNT(cv.id) as violation_count
-                FROM compliance_violations cv
-                JOIN compliance_rules cr ON cv.rule_code = cr.rule_code
-                WHERE cv.company_id = $1
-                AND cv.status = 'active'
-                GROUP BY cv.rule_code, cr.legal_reference, cr.severity
-                ORDER BY violation_count DESC
-                LIMIT 5
-            `, [companyId]);
+            // TODO: Tablas compliance_violations y compliance_rules no existen
+            // Retornar datos vacíos temporalmente
+            const violationsBySeverity = { rows: [] };
+            const topViolations = { rows: [] };
 
             // Métricas por categoría
             const metrics = {
@@ -546,13 +528,9 @@ class ComplianceService {
      */
     async getActiveRules() {
         try {
-            const result = await db.query(`
-                SELECT * FROM compliance_rules
-                WHERE active = true
-                ORDER BY severity DESC
-            `);
-
-            return result.rows;
+            // TODO: Tabla compliance_rules no existe - retornar array vacío temporalmente
+            console.log('⚠️ [COMPLIANCE] Sistema temporalmente deshabilitado - esperando migración de BD');
+            return [];
 
         } catch (error) {
             console.error('❌ Error obteniendo reglas:', error);
