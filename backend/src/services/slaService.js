@@ -47,16 +47,16 @@ class SLAService {
                 AND nm.responded_at IS NOT NULL
                 AND nm.created_at BETWEEN $2 AND $3
                 ORDER BY nm.created_at DESC
-            `, [companyId, startDate, endDate]);
+            `, { replacements: [companyId, startDate, endDate], type: db.sequelize.QueryTypes.SELECT });
 
             // Calcular estadísticas por aprobador
-            const approverMetrics = this.aggregateByApprover(result.rows);
+            const approverMetrics = this.aggregateByApprover(result);
 
             // Calcular estadísticas por tipo de solicitud
-            const requestTypeMetrics = this.aggregateByRequestType(result.rows);
+            const requestTypeMetrics = this.aggregateByRequestType(result);
 
             // Calcular estadísticas globales
-            const globalMetrics = this.calculateGlobalMetrics(result.rows);
+            const globalMetrics = this.calculateGlobalMetrics(result);
 
             return {
                 period: {
@@ -66,7 +66,7 @@ class SLAService {
                 global_metrics: globalMetrics,
                 approver_metrics: approverMetrics,
                 request_type_metrics: requestTypeMetrics,
-                total_requests: result.rows.length
+                total_requests: result.length
             };
 
         } catch (error) {
@@ -365,9 +365,9 @@ class SLAService {
                 AND nm.responded_at IS NOT NULL
                 AND nm.created_at BETWEEN $3 AND $4
                 ORDER BY nm.created_at DESC
-            `, [approverId, companyId, startDate, endDate]);
+            `, { replacements: [approverId, companyId, startDate, endDate], type: db.sequelize.QueryTypes.SELECT });
 
-            if (result.rows.length === 0) {
+            if (result.length === 0) {
                 return {
                     approver_id: approverId,
                     total_requests: 0,
@@ -375,12 +375,12 @@ class SLAService {
                 };
             }
 
-            const times = result.rows.map(r => parseFloat(r.response_hours)).sort((a, b) => a - b);
-            const withinSLA = result.rows.filter(r => r.within_sla).length;
+            const times = result.map(r => parseFloat(r.response_hours)).sort((a, b) => a - b);
+            const withinSLA = result.filter(r => r.within_sla).length;
 
             // Agrupar por tipo de solicitud
             const byRequestType = {};
-            result.rows.forEach(row => {
+            result.forEach(row => {
                 if (!byRequestType[row.request_type]) {
                     byRequestType[row.request_type] = { count: 0, within_sla: 0 };
                 }
@@ -396,16 +396,16 @@ class SLAService {
                     start: startDate,
                     end: endDate
                 },
-                total_requests: result.rows.length,
+                total_requests: result.length,
                 avg_response_hours: this.calculateAverage(times),
                 median_response_hours: this.calculateMedian(times),
                 min_response_hours: Math.min(...times),
                 max_response_hours: Math.max(...times),
                 within_sla_count: withinSLA,
-                outside_sla_count: result.rows.length - withinSLA,
-                sla_compliance_percent: ((withinSLA / result.rows.length) * 100).toFixed(2),
+                outside_sla_count: result.length - withinSLA,
+                sla_compliance_percent: ((withinSLA / result.length) * 100).toFixed(2),
                 by_request_type: byRequestType,
-                recent_requests: result.rows.slice(0, 10) // Últimas 10 solicitudes
+                recent_requests: result.slice(0, 10) // Últimas 10 solicitudes
             };
 
         } catch (error) {

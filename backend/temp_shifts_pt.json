@@ -1,0 +1,270 @@
+{
+  "shifts": {
+    "title": "Sistema Avançado de Turnos Flexíveis",
+    "subtitle": "Gestão de turnos, horários e tarifas",
+    "buttons": {
+      "create_advanced": "Criar Turno Avançado",
+      "list": "Lista de Turnos",
+      "calendar": "Calendário Visual",
+      "config_hours": "Config. Horas",
+      "flash_shift": "Turno Flash",
+      "assign_employees": "Atribuir Funcionários",
+      "save_shift": "Criar Turno",
+      "update_shift": "Atualizar Turno",
+      "cancel": "Cancelar",
+      "close": "Fechar",
+      "edit": "Editar",
+      "view": "Ver",
+      "duplicate": "Duplicar",
+      "delete": "Excluir",
+      "select_all": "Selecionar Tudo",
+      "deselect_all": "Desselecionar Tudo",
+      "assign": "Atribuir Turnos"
+    },
+    "tabs": {
+      "list": "Lista",
+      "calendar": "Calendário",
+      "config": "Configuração"
+    },
+    "types": {
+      "standard": "Padrão",
+      "rotative": "Rotativo",
+      "permanent": "Permanente",
+      "flash": "Flash"
+    },
+    "stats": {
+      "total_shifts": "Total Turnos",
+      "active_shifts": "Turnos Ativos",
+      "assigned_employees": "Funcionários Atribuídos",
+      "flash_shifts": "Turnos Flash"
+    },
+    "list": {
+      "title": "Lista de Turnos",
+      "loading": "Carregando turnos avançados...",
+      "load_prompt": "Pressione \"Lista de Turnos\" para carregar os turnos configurados...",
+      "no_shifts_title": "Não há turnos configurados",
+      "no_shifts_message": "Crie o primeiro turno usando o botão \"Criar Turno Avançado\""
+    },
+    "table": {
+      "shift": "Turno",
+      "type": "Tipo",
+      "schedule": "Horário",
+      "pattern_days": "Padrão/Dias",
+      "employees": "Funcionários",
+      "rates": "Tarifas",
+      "status": "Status",
+      "actions": "Ações",
+      "break": "Descanso",
+      "rate_normal": "N",
+      "rate_overtime": "E",
+      "rate_weekend": "F",
+      "rate_holiday": "F",
+      "employees_count": "funcionários"
+    },
+    "form": {
+      "modal_title_create": "Criar Turno Avançado",
+      "modal_title_edit": "Editar Turno Avançado",
+      "modal_title_duplicate": "Duplicar Turno",
+      "modal_title_view": "Vista Detalhada do Turno",
+      "type_section": "Tipo de Turno",
+      "basic_info": "Informação Básica",
+      "name": {
+        "label": "Nome do turno:",
+        "placeholder": "Ex: Turno Manhã"
+      },
+      "status": {
+        "label": "Status:",
+        "active": "Ativo",
+        "inactive": "Inativo"
+      },
+      "start_time": {
+        "label": "Hora início (24h):",
+        "placeholder": "08:00"
+      },
+      "end_time": {
+        "label": "Hora fim (24h):",
+        "placeholder": "17:00"
+      },
+      "break_section": "Descanso (opcional)",
+      "break_start": {
+        "label": "Descanso início (opcional):",
+        "placeholder": "Opcional"
+      },
+      "break_end": {
+        "label": "Descanso fim (opcional):",
+        "placeholder": "Opcional"
+      },
+      "tolerance_section": "Tolerância de Registro (Parametrizável por Empresa)",
+      "tolerance_help": "Configure os minutos de tolerância permitidos antes e depois do horário estabelecido",
+      "tolerance_entry": "Entrada",
+      "tolerance_exit": "Saída",
+      "tolerance_before": "Minutos antes (cedo):",
+      "tolerance_after": "Minutos depois (tardio):",
+      "tolerance_example_entry": "Ex: 15 min = pode registrar desde as 07:45",
+      "tolerance_example_late": "Ex: 10 min = pode registrar até as 08:10",
+      "tolerance_example_exit": "Ex: 10 min = pode sair desde as 16:50",
+      "tolerance_example_stay": "Ex: 30 min = pode sair até as 17:30",
+      "tolerance_important": "Importante: Estes valores são específicos para este turno e respeitam a política multi-tenant. Cada empresa pode configurar suas próprias tolerâncias segundo sua política laboral.",
+      "config_by_type": "Configuração específica por tipo",
+      "rates_section": "Tarifas Horárias (multiplicadores)",
+      "rate_normal": "Normais:",
+      "rate_overtime": "Extras:",
+      "rate_weekend": "Fim Semana:",
+      "rate_holiday": "Feriados:",
+      "standard_config": {
+        "title": "Turno Padrão",
+        "work_days": "Dias de trabalho:"
+      },
+      "rotative_config": {
+        "title": "Turno Rotativo",
+        "pattern": "Padrão de rotação:",
+        "pattern_12x4": "12 horas x 4 dias descanso",
+        "pattern_6x2": "6 horas x 2 dias descanso",
+        "pattern_8x1": "8 horas x 1 dia descanso",
+        "pattern_custom": "Personalizado",
+        "cycle_start": "Data início ciclo:",
+        "work_days_label": "Dias trabalhados:",
+        "rest_days_label": "Dias de descanso:"
+      },
+      "permanent_config": {
+        "title": "Turno Permanente",
+        "assigned_days": "Dias atribuídos:",
+        "priority": "Prioridade de atribuição:",
+        "priority_low": "Baixa",
+        "priority_normal": "Normal",
+        "priority_high": "Alta",
+        "priority_critical": "Crítica"
+      },
+      "flash_config": {
+        "title": "Turno Flash (Temporal)",
+        "start_date": "Data início:",
+        "end_date": "Data fim:",
+        "specific_days": "Dias específicos:",
+        "priority": "Prioridade flash:",
+        "priority_low": "Baixa",
+        "priority_normal": "Normal",
+        "priority_high": "Alta",
+        "priority_urgent": "Urgente",
+        "allow_override": "Permitir sobrescrição (sobre turnos permanentes)"
+      },
+      "days": {
+        "sunday": "Domingo",
+        "monday": "Segunda-feira",
+        "tuesday": "Terça-feira",
+        "wednesday": "Quarta-feira",
+        "thursday": "Quinta-feira",
+        "friday": "Sexta-feira",
+        "saturday": "Sábado"
+      },
+      "days_short": {
+        "sunday": "Dom",
+        "monday": "Seg",
+        "tuesday": "Ter",
+        "wednesday": "Qua",
+        "thursday": "Qui",
+        "friday": "Sex",
+        "saturday": "Sáb"
+      }
+    },
+    "view": {
+      "basic_info": "Informação Básica",
+      "name": "Nome:",
+      "type": "Tipo:",
+      "schedule": "Horário:",
+      "break": "Descanso:",
+      "days": "Dias:",
+      "status": "Status:",
+      "employees": "Funcionários:",
+      "employees_assigned": "atribuídos",
+      "no_break": "Sem descanso",
+      "flash_config": "Configuração Flash",
+      "start_date": "Data início:",
+      "end_date": "Data fim:",
+      "priority": "Prioridade:",
+      "override": "Sobrescrição:",
+      "override_allowed": "Permitida",
+      "override_not_allowed": "Não permitida",
+      "rates": "Tarifas Horárias",
+      "rate_normal": "Normais:",
+      "rate_overtime": "Extras:",
+      "rate_weekend": "Fim de semana:",
+      "rate_holiday": "Feriados:",
+      "additional_info": "Informação Adicional",
+      "id": "ID:",
+      "created": "Criado:",
+      "updated": "Atualizado:",
+      "not_defined": "Não definida",
+      "normal": "Normal"
+    },
+    "calendar": {
+      "title": "Calendário de Turnos",
+      "visual_calendar": "Calendário visual em desenvolvimento",
+      "description": "Mostrará turnos por dia com código de cores"
+    },
+    "hourly_config": {
+      "title": "Configuração de Horas e Tarifas",
+      "description": "Configuração de tarifas por tipo de hora..."
+    },
+    "assignment": {
+      "title": "Atribuição de Turnos",
+      "filters_title": "Filtros de Busca",
+      "dni_search": "CPF:",
+      "dni_placeholder": "Buscar por CPF",
+      "name_search": "Nome/Sobrenome:",
+      "name_placeholder": "Buscar por nome",
+      "department_filter": "Departamento:",
+      "all_departments": "Todos os departamentos",
+      "clear_button": "Limpar",
+      "shifts_available": "Turnos Disponíveis",
+      "users_title": "Usuários",
+      "users_count": "usuários",
+      "selected_count": "usuários selecionados",
+      "table": {
+        "dni": "CPF",
+        "name": "Nome",
+        "department": "Departamento",
+        "current_shifts": "Turnos Atuais",
+        "no_shifts": "Sem turnos",
+        "no_department": "Sem departamento"
+      }
+    },
+    "messages": {
+      "loading": "Carregando turnos avançados...",
+      "loaded_count": "turnos carregados com sucesso",
+      "example_data": "Usando dados de exemplo...",
+      "error_loading": "Erro carregando turnos",
+      "error_api": "API não disponível ou erro",
+      "success_created": "Turno criado com sucesso",
+      "success_updated": "Turno atualizado com sucesso",
+      "success_deleted": "Turno excluído com sucesso",
+      "error_creating": "Erro criando turno",
+      "error_updating": "Erro atualizando",
+      "error_deleting": "Erro excluindo",
+      "error_connection": "Erro de conexão",
+      "error_not_found": "Turno não encontrado",
+      "error_modal_not_found": "Modal não encontrado",
+      "error_form_elements": "Faltam elementos do formulário",
+      "error_system_not_initialized": "Sistema não inicializado corretamente",
+      "no_auth_token": "Sem token de autenticação",
+      "example_cannot_delete": "Os turnos de exemplo não podem ser excluídos",
+      "assignment_success": "Turnos atribuídos com sucesso",
+      "assignment_error": "Erro ao atribuir turnos"
+    },
+    "validation": {
+      "name_required": "O nome do turno é obrigatório",
+      "start_time_required": "A hora de início é obrigatória (formato 24h)",
+      "end_time_required": "A hora de fim é obrigatória (formato 24h)",
+      "required_fields": "Os campos obrigatórios devem estar completos",
+      "rotative_pattern_required": "Complete padrão e data de início para turno rotativo",
+      "flash_dates_required": "Complete datas de início e fim para turno flash",
+      "select_user_first": "Selecione um usuário primeiro",
+      "select_one_user": "Deve selecionar pelo menos um usuário",
+      "select_one_shift": "Deve selecionar pelo menos um turno"
+    },
+    "confirm": {
+      "delete_title": "Tem certeza que deseja excluir \"{{name}}\"?",
+      "delete_warning": "Esta ação não pode ser desfeita.",
+      "assign_shifts": "Deseja atribuir {{shiftCount}} turno(s) a {{userCount}} usuário(s) selecionado(s)?"
+    }
+  }
+}

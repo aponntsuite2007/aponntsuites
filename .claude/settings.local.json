@@ -9,7 +9,21 @@
       "Bash(DATABASE_URL=\"postgresql://attendance_system_866u_user:Ihb9jdoOTYzb4c0u7cXxGo8XaIb1Iyvt@dpg-d3i4mqjipnbc73dsnd6g-a.oregon-postgres.render.com/attendance_system_866u\" node check-tables-prod.js)",
       "Bash(cmd.exe:*)",
       "Bash(git revert:*)",
-      "Read(//c/Bio/**)"
+      "Read(//c/Bio/**)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git checkout:*)",
+      "Bash(DATABASE_URL=\"postgresql://attendance_system_866u_user:Ihb9jdoOTYzb4c0u7cXxGo8XaIb1Iyvt@dpg-d3i4mqjipnbc73dsnd6g-a.oregon-postgres.render.com/attendance_system_866u\" node:*)",
+      "Bash(git rm:*)",
+      "Bash(npm run deploy:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(PORT=9998 npm start)",
+      "Bash(node fix-all-module-icons.js:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
