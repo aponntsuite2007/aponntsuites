@@ -1796,6 +1796,7 @@ const userRoutes = require('./src/routes/userRoutes');
 const usersSimpleRoutes = require('./src/routes/usersSimple');
 const authorizationRoutes = require('./src/routes/authorizationRoutes');
 const diagnosticRoutes = require('./src/routes/diagnostic');
+const adminMigrationsRoutes = require('./src/routes/admin-migrations');
 
 // Importar rutas del sistema APONNT
 const aponntDashboardRoutes = require('./src/routes/aponntDashboard');
@@ -1832,6 +1833,7 @@ app.use('/api/v1/legal', legalRoutes);
 app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exitosa
 app.use('/api/v1/authorization', authorizationRoutes); // Sistema de autorizaciones de llegadas tardías
 app.use('/api/v1/diagnostic', diagnosticRoutes); // Endpoint de diagnóstico para verificar schema
+app.use('/api/v1/admin/migrations', adminMigrationsRoutes); // Endpoints administrativos de migraciones
 // app.use('/api/v1/users', usersSimpleRoutes); // Versión simplificada - ya no necesaria
 
 // Configurar rutas del sistema APONNT
