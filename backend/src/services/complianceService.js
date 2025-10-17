@@ -11,11 +11,6 @@
  */
 
 const db = require('../config/database');
-
-// TODO: Este servicio requiere migraciones de BD para las siguientes tablas:
-// - attendance_records, vacation_balances, medical_leaves
-// - compliance_violations, compliance_rules
-// Temporalmente deshabilitado hasta ejecutar migraciones
 const moduleService = require('./moduleService');
 
 class ComplianceService {
@@ -132,7 +127,7 @@ class ComplianceService {
     async validateRestPeriod(companyId, rule) {
         try {
             // Obtener empleados con violación de período de descanso
-            const result = await db.query(`
+            const result = await db.sequelize.query(`
                 WITH employee_shifts AS (
                     SELECT
                         a1.employee_id,
@@ -189,7 +184,7 @@ class ComplianceService {
     async validateOvertimeLimit(companyId, rule) {
         try {
             // Empleados que exceden 30h extras mensuales
-            const result = await db.query(`
+            const result = await db.sequelize.query(`
                 SELECT
                     employee_id,
                     DATE_TRUNC('month', date) as month,
@@ -226,7 +221,7 @@ class ComplianceService {
     async validateVacationExpiry(companyId, rule) {
         try {
             // Empleados con vacaciones próximas a vencer (60 días)
-            const result = await db.query(`
+            const result = await db.sequelize.query(`
                 SELECT
                     employee_id,
                     balance,
@@ -263,7 +258,7 @@ class ComplianceService {
     async validateDocumentation(companyId, rule) {
         try {
             // Licencias médicas sin certificado
-            const result = await db.query(`
+            const result = await db.sequelize.query(`
                 SELECT
                     ml.employee_id,
                     ml.start_date,
@@ -300,7 +295,7 @@ class ComplianceService {
     async validateWorkingHours(companyId, rule) {
         try {
             // Empleados con jornadas superiores a 9 horas
-            const result = await db.query(`
+            const result = await db.sequelize.query(`
                 SELECT
                     employee_id,
                     date,
@@ -337,7 +332,7 @@ class ComplianceService {
         try {
             for (const violation of violations) {
                 // Verificar si ya existe
-                const existing = await db.query(`
+                const existing = await db.sequelize.query(`
                     SELECT id FROM compliance_violations
                     WHERE company_id = $1
                     AND rule_code = $2
@@ -348,14 +343,14 @@ class ComplianceService {
 
                 if (existing.rows.length > 0) {
                     // Ya existe, actualizar
-                    await db.query(`
+                    await db.sequelize.query(`
                         UPDATE compliance_violations
                         SET violation_data = $1, updated_at = NOW()
                         WHERE id = $2
                     `, [JSON.stringify(violation.details), existing.rows[0].id]);
                 } else {
                     // Crear nueva violación
-                    await db.query(`
+                    await db.sequelize.query(`
                         INSERT INTO compliance_violations
                         (company_id, rule_code, employee_id, violation_date, violation_data, status)
                         VALUES ($1, $2, $3, $4, $5, 'active')
@@ -384,10 +379,33 @@ class ComplianceService {
             // Validar todas las reglas
             const validation = await this.validateAllRules(companyId);
 
-            // TODO: Tablas compliance_violations y compliance_rules no existen
-            // Retornar datos vacíos temporalmente
-            const violationsBySeverity = { rows: [] };
-            const topViolations = { rows: [] };
+            // Obtener violaciones activas por severidad
+            const violationsBySeverity = await db.sequelize.query(`
+                SELECT
+                    cr.severity,
+                    COUNT(cv.id) as count
+                FROM compliance_violations cv
+                JOIN compliance_rules cr ON cv.rule_code = cr.rule_code
+                WHERE cv.company_id = $1
+                AND cv.status = 'active'
+                GROUP BY cr.severity
+            `, [companyId]);
+
+            // Obtener top 5 reglas más violadas
+            const topViolations = await db.sequelize.query(`
+                SELECT
+                    cv.rule_code,
+                    cr.legal_reference,
+                    cr.severity,
+                    COUNT(cv.id) as violation_count
+                FROM compliance_violations cv
+                JOIN compliance_rules cr ON cv.rule_code = cr.rule_code
+                WHERE cv.company_id = $1
+                AND cv.status = 'active'
+                GROUP BY cv.rule_code, cr.legal_reference, cr.severity
+                ORDER BY violation_count DESC
+                LIMIT 5
+            `, [companyId]);
 
             // Métricas por categoría
             const metrics = {
@@ -422,7 +440,7 @@ class ComplianceService {
      */
     async getMetricByType(companyId, ruleType) {
         try {
-            const result = await db.query(`
+            const result = await db.sequelize.query(`
                 SELECT
                     COUNT(cv.id) FILTER (WHERE cv.status = 'active') as active_violations,
                     COUNT(cv.id) FILTER (WHERE cv.status = 'resolved') as resolved_violations
@@ -452,7 +470,7 @@ class ComplianceService {
      */
     async resolveViolation(violationId, resolvedBy, notes) {
         try {
-            await db.query(`
+            await db.sequelize.query(`
                 UPDATE compliance_violations
                 SET status = 'resolved',
                     resolved_at = NOW(),
@@ -528,9 +546,13 @@ class ComplianceService {
      */
     async getActiveRules() {
         try {
-            // TODO: Tabla compliance_rules no existe - retornar array vacío temporalmente
-            console.log('⚠️ [COMPLIANCE] Sistema temporalmente deshabilitado - esperando migración de BD');
-            return [];
+            const result = await db.sequelize.query(`
+                SELECT * FROM compliance_rules
+                WHERE active = true
+                ORDER BY severity DESC
+            `);
+
+            return result.rows;
 
         } catch (error) {
             console.error('❌ Error obteniendo reglas:', error);
