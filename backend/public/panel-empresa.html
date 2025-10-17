@@ -2001,6 +2001,7 @@
     <script src="js/modules/biometric-consent.js"></script>
 
     <!-- Sistema de Notificaciones Avanzado V2.0 -->
+    <script src="js/modules/notifications-inbox.js"></script>
     <script src="js/modules/compliance-dashboard.js"></script>
     <script src="js/modules/sla-tracking.js"></script>
     <script src="js/modules/resource-center.js"></script>
@@ -3889,6 +3890,14 @@
                             ResourceCenter.init();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'resource-center.js no cargado');
+                        }
+                        break;
+
+                    case 'notifications-inbox':
+                        if (typeof NotificationsInbox !== 'undefined' && NotificationsInbox.init) {
+                            NotificationsInbox.init();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'notifications-inbox.js no cargado');
                         }
                         break;
 
