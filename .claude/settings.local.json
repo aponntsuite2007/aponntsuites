@@ -23,7 +23,11 @@
       "Bash(python:*)",
       "Bash(PORT=9998 npm start)",
       "Bash(node fix-all-module-icons.js:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(timeout:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

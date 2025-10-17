@@ -4538,7 +4538,7 @@
                     <div class="${cardClass}" ${clickHandler ? `onclick="${clickHandler}"` : ''} data-module="${moduleId}">
                         <div class="module-header">
                             <div class="module-info">
-                                <span class="module-icon">${module.icon}</span>
+                                <span class="module-icon"><i class="fas fa-${module.icon || 'cube'}"></i></span>
                                 <span class="module-name">${module.name}</span>
                             </div>
                             <div class="module-price">U$S ${price.toFixed(2)}</div>
@@ -4719,7 +4719,7 @@
 
                 selectedModulesList += `
                     <div class="selected-module">
-                        <span>${module.icon} ${module.name}</span>
+                        <span><i class="fas fa-${module.icon || 'cube'}"></i> ${module.name}</span>
                         <span>$ ${totalPrice.toFixed(2)}</span>
                     </div>
                 `;
@@ -5387,7 +5387,7 @@
                     ${Object.entries(pricingConfig.modules).map(([moduleId, module]) => `
                         <div class="module-pricing">
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                                <span style="font-size: 1.5rem;">${module.icon}</span>
+                                <span style="font-size: 1.5rem;"><i class="fas fa-${module.icon || 'cube'}"></i></span>
                                 <strong>${module.name}</strong>
                             </div>
                             <div class="tier-selector">
@@ -7171,7 +7171,7 @@
                     
                     selectedModulesList += `
                         <div class="selected-module">
-                            <span>${module.icon} ${module.name} (nuevo)</span>
+                            <span><i class="fas fa-${module.icon || 'cube'}"></i> ${module.name} (nuevo)</span>
                             <span>U$S ${totalPrice.toFixed(2)}</span>
                         </div>
                     `;
