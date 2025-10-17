@@ -70,8 +70,7 @@ router.post('/groups/:groupId/messages', async (req, res) => {
   try {
     const { groupId } = req.params;
     const userId = req.headers['x-user-id'];
-    const userName = req.headers['x-user-name'] || 'Unknown User';
-    const { content, recipientType, recipientId, recipientName, subject, attachments, requiresResponse } = req.body;
+    const { messageText, metadata } = req.body;
 
     if (!userId) {
       return res.status(400).json({
@@ -80,10 +79,10 @@ router.post('/groups/:groupId/messages', async (req, res) => {
       });
     }
 
-    if (!content) {
+    if (!messageText) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required field: content'
+        error: 'Missing required field: messageText'
       });
     }
 
@@ -91,16 +90,8 @@ router.post('/groups/:groupId/messages', async (req, res) => {
       groupId,
       userId,
       'user',
-      userName,
-      content,
-      {
-        recipientType,
-        recipientId,
-        recipientName,
-        subject,
-        attachments,
-        requiresResponse
-      }
+      messageText,
+      metadata
     );
 
     res.status(201).json({

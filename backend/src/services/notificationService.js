@@ -13,45 +13,28 @@ class NotificationService {
     try {
       const query = `
         SELECT
-          ng.id,
+          ng.group_id,
           ng.company_id,
-          ng.group_type,
-          ng.initiator_type,
-          ng.initiator_id,
-          ng.subject,
+          ng.context_type,
           ng.status,
           ng.priority,
-          ng.metadata,
+          ng.participants,
+          ng.group_metadata,
           ng.created_at,
-          ng.closed_at,
-          ng.closed_by,
-          COUNT(nm.id) as message_count,
-          COUNT(nm.id) FILTER (WHERE nm.read_at IS NULL) as unread_count,
+          COUNT(nm.message_id) as message_count,
+          COUNT(nm.message_id) FILTER (WHERE NOT (nm.read_by @> ARRAY[:userId]::text[])) as unread_count,
           MAX(nm.created_at) as last_message_at
         FROM notification_groups ng
-        LEFT JOIN notification_messages nm ON ng.id = nm.group_id
+        LEFT JOIN notification_messages nm ON ng.group_id = nm.group_id
         WHERE ng.company_id = :companyId
-          AND ng.metadata->'participants' @> :userIdJson::jsonb
+          AND ng.participants @> ARRAY[:userId]::text[]
           AND ng.status != 'resolved'
-          AND ng.status != 'closed'
-        GROUP BY ng.id
-        ORDER BY
-          CASE ng.priority
-            WHEN 'critical' THEN 1
-            WHEN 'high' THEN 2
-            WHEN 'medium' THEN 3
-            WHEN 'low' THEN 4
-            ELSE 5
-          END,
-          MAX(nm.created_at) DESC NULLS LAST
+        GROUP BY ng.group_id
+        ORDER BY ng.priority DESC, MAX(nm.created_at) DESC NULLS LAST
       `;
 
       const groups = await database.sequelize.query(query, {
-        replacements: {
-          companyId,
-          userId,
-          userIdJson: JSON.stringify([userId])
-        },
+        replacements: { companyId, userId },
         type: QueryTypes.SELECT
       });
 
@@ -71,17 +54,14 @@ class NotificationService {
     try {
       // First verify user has access to this group
       const accessQuery = `
-        SELECT id
+        SELECT group_id
         FROM notification_groups
-        WHERE id = :groupId
-          AND metadata->'participants' @> :userIdJson::jsonb
+        WHERE group_id = :groupId
+          AND participants @> ARRAY[:userId]::text[]
       `;
 
       const accessCheck = await database.sequelize.query(accessQuery, {
-        replacements: {
-          groupId,
-          userIdJson: JSON.stringify([userId])
-        },
+        replacements: { groupId, userId },
         type: QueryTypes.SELECT
       });
 
@@ -92,33 +72,17 @@ class NotificationService {
       // Get messages
       const query = `
         SELECT
-          id,
+          message_id,
           group_id,
-          sequence_number,
-          sender_type,
           sender_id,
-          sender_name,
-          recipient_type,
-          recipient_id,
-          recipient_name,
-          message_type,
-          subject,
-          content,
-          created_at,
-          deadline_at,
-          requires_response,
-          delivered_at,
-          read_at,
-          responded_at,
-          channels,
-          channel_status,
-          attachments,
-          is_deleted,
-          company_id
+          sender_type,
+          message_text,
+          message_metadata,
+          read_by,
+          created_at
         FROM notification_messages
         WHERE group_id = :groupId
-          AND is_deleted = false
-        ORDER BY sequence_number ASC, created_at ASC
+        ORDER BY created_at ASC
       `;
 
       const messages = await database.sequelize.query(query, {
@@ -137,18 +101,17 @@ class NotificationService {
    * @param {string} groupId - Group ID
    * @param {string} senderId - Sender ID
    * @param {string} senderType - Sender type (user, system, admin)
-   * @param {string} senderName - Sender name
-   * @param {string} content - Message content
-   * @param {object} options - Message options (recipientType, recipientId, recipientName, subject, attachments, etc)
+   * @param {string} messageText - Message text
+   * @param {object} metadata - Message metadata
    * @returns {Promise<object>} Created message
    */
-  async createMessage(groupId, senderId, senderType, senderName, content, options = {}) {
+  async createMessage(groupId, senderId, senderType, messageText, metadata = {}) {
     try {
       // Verify group exists
       const groupQuery = `
-        SELECT id, status, company_id
+        SELECT group_id, status
         FROM notification_groups
-        WHERE id = :groupId
+        WHERE group_id = :groupId
       `;
 
       const groupCheck = await database.sequelize.query(groupQuery, {
@@ -160,53 +123,26 @@ class NotificationService {
         throw new Error('Group not found');
       }
 
-      if (groupCheck[0].status === 'resolved' || groupCheck[0].status === 'closed') {
-        throw new Error('Cannot add messages to a resolved or closed group');
+      if (groupCheck[0].status === 'resolved') {
+        throw new Error('Cannot add messages to a resolved group');
       }
-
-      // Get next sequence number
-      const sequenceQuery = `
-        SELECT COALESCE(MAX(sequence_number), 0) + 1 as next_sequence
-        FROM notification_messages
-        WHERE group_id = :groupId
-      `;
-
-      const sequenceResult = await database.sequelize.query(sequenceQuery, {
-        replacements: { groupId },
-        type: QueryTypes.SELECT
-      });
-
-      const sequenceNumber = sequenceResult[0].next_sequence;
 
       // Create message
       const query = `
         INSERT INTO notification_messages
-          (id, group_id, sequence_number, sender_type, sender_id, sender_name,
-           recipient_type, recipient_id, recipient_name, message_type, subject,
-           content, created_at, requires_response, attachments, is_deleted, company_id)
+          (message_id, group_id, sender_id, sender_type, message_text, message_metadata, read_by, created_at)
         VALUES
-          (gen_random_uuid(), :groupId, :sequenceNumber, :senderType, :senderId, :senderName,
-           :recipientType, :recipientId, :recipientName, :messageType, :subject,
-           :content, NOW(), :requiresResponse, :attachments, false, :companyId)
+          (gen_random_uuid(), :groupId, :senderId, :senderType, :messageText, :metadata, ARRAY[]::text[], NOW())
         RETURNING *
       `;
 
       const messages = await database.sequelize.query(query, {
         replacements: {
           groupId,
-          sequenceNumber,
           senderId,
           senderType,
-          senderName,
-          recipientType: options.recipientType || null,
-          recipientId: options.recipientId || null,
-          recipientName: options.recipientName || null,
-          messageType: options.messageType || 'text',
-          subject: options.subject || null,
-          content,
-          requiresResponse: options.requiresResponse || false,
-          attachments: options.attachments ? JSON.stringify(options.attachments) : null,
-          companyId: groupCheck[0].company_id
+          messageText,
+          metadata: JSON.stringify(metadata)
         },
         type: QueryTypes.INSERT
       });
@@ -227,10 +163,10 @@ class NotificationService {
     try {
       const query = `
         UPDATE notification_messages
-        SET read_at = NOW()
+        SET read_by = array_append(read_by, :userId)
         WHERE group_id = :groupId
-          AND read_at IS NULL
-        RETURNING id
+          AND NOT (read_by @> ARRAY[:userId]::text[])
+        RETURNING message_id
       `;
 
       const result = await database.sequelize.query(query, {
@@ -257,21 +193,17 @@ class NotificationService {
     try {
       const query = `
         UPDATE notification_messages nm
-        SET read_at = NOW()
+        SET read_by = array_append(read_by, :userId)
         FROM notification_groups ng
-        WHERE nm.group_id = ng.id
+        WHERE nm.group_id = ng.group_id
           AND ng.company_id = :companyId
-          AND ng.metadata->'participants' @> :userIdJson::jsonb
-          AND nm.read_at IS NULL
-        RETURNING nm.id
+          AND ng.participants @> ARRAY[:userId]::text[]
+          AND NOT (nm.read_by @> ARRAY[:userId]::text[])
+        RETURNING nm.message_id
       `;
 
       const result = await database.sequelize.query(query, {
-        replacements: {
-          companyId,
-          userId,
-          userIdJson: JSON.stringify([userId])
-        },
+        replacements: { companyId, userId },
         type: QueryTypes.UPDATE
       });
 
@@ -294,17 +226,14 @@ class NotificationService {
     try {
       // Verify user has access
       const accessQuery = `
-        SELECT id
+        SELECT group_id
         FROM notification_groups
-        WHERE id = :groupId
-          AND metadata->'participants' @> :userIdJson::jsonb
+        WHERE group_id = :groupId
+          AND participants @> ARRAY[:userId]::text[]
       `;
 
       const accessCheck = await database.sequelize.query(accessQuery, {
-        replacements: {
-          groupId,
-          userIdJson: JSON.stringify([userId])
-        },
+        replacements: { groupId, userId },
         type: QueryTypes.SELECT
       });
 
@@ -315,15 +244,13 @@ class NotificationService {
       // Resolve group
       const query = `
         UPDATE notification_groups
-        SET status = 'resolved',
-            closed_at = NOW(),
-            closed_by = :userId
-        WHERE id = :groupId
+        SET status = 'resolved'
+        WHERE group_id = :groupId
         RETURNING *
       `;
 
       const result = await database.sequelize.query(query, {
-        replacements: { groupId, userId },
+        replacements: { groupId },
         type: QueryTypes.UPDATE
       });
 
@@ -336,42 +263,29 @@ class NotificationService {
   /**
    * Create a new notification group
    * @param {string} companyId - Company ID
-   * @param {string} groupType - Group type
-   * @param {string} subject - Group subject/title
-   * @param {string} initiatorType - Initiator type (employee, system, admin)
-   * @param {string} initiatorId - Initiator ID
+   * @param {string} contextType - Context type
    * @param {Array<string>} participants - Array of participant IDs
    * @param {object} metadata - Group metadata
-   * @param {string} priority - Priority level (critical, high, medium, low)
-   * @param {string} status - Initial status (default: 'open')
+   * @param {string} priority - Priority level (high, normal, low)
    * @returns {Promise<object>} Created group
    */
-  async createGroup(companyId, groupType, subject, initiatorType, initiatorId, participants, metadata = {}, priority = 'medium', status = 'open') {
+  async createGroup(companyId, contextType, participants, metadata = {}, priority = 'normal') {
     try {
-      // Merge participants into metadata
-      const fullMetadata = {
-        ...metadata,
-        participants: participants
-      };
-
       const query = `
         INSERT INTO notification_groups
-          (id, group_type, initiator_type, initiator_id, subject, status, priority, company_id, created_at, metadata)
+          (group_id, company_id, context_type, status, priority, participants, group_metadata, created_at)
         VALUES
-          (gen_random_uuid(), :groupType, :initiatorType, :initiatorId, :subject, :status, :priority, :companyId, NOW(), :metadata)
+          (gen_random_uuid(), :companyId, :contextType, 'active', :priority, :participants, :metadata, NOW())
         RETURNING *
       `;
 
       const groups = await database.sequelize.query(query, {
         replacements: {
           companyId,
-          groupType,
-          subject,
-          initiatorType,
-          initiatorId,
-          status,
+          contextType,
           priority,
-          metadata: JSON.stringify(fullMetadata)
+          participants: `{${participants.join(',')}}`,
+          metadata: JSON.stringify(metadata)
         },
         type: QueryTypes.INSERT
       });
@@ -393,27 +307,20 @@ class NotificationService {
     try {
       const query = `
         SELECT
-          COUNT(DISTINCT ng.id) as total_groups,
-          COUNT(DISTINCT CASE WHEN ng.status = 'open' THEN ng.id END) as open_groups,
-          COUNT(DISTINCT CASE WHEN ng.status = 'pending' THEN ng.id END) as pending_groups,
-          COUNT(DISTINCT CASE WHEN ng.priority = 'critical' THEN ng.id END) as critical_priority_groups,
-          COUNT(DISTINCT CASE WHEN ng.priority = 'high' THEN ng.id END) as high_priority_groups,
-          COUNT(nm.id) as total_messages,
-          COUNT(nm.id) FILTER (WHERE nm.read_at IS NULL) as unread_messages
+          COUNT(DISTINCT ng.group_id) as total_groups,
+          COUNT(DISTINCT CASE WHEN ng.status = 'active' THEN ng.group_id END) as active_groups,
+          COUNT(DISTINCT CASE WHEN ng.priority = 'high' THEN ng.group_id END) as high_priority_groups,
+          COUNT(nm.message_id) as total_messages,
+          COUNT(nm.message_id) FILTER (WHERE NOT (nm.read_by @> ARRAY[:userId]::text[])) as unread_messages
         FROM notification_groups ng
-        LEFT JOIN notification_messages nm ON ng.id = nm.group_id
+        LEFT JOIN notification_messages nm ON ng.group_id = nm.group_id
         WHERE ng.company_id = :companyId
-          AND ng.metadata->'participants' @> :userIdJson::jsonb
+          AND ng.participants @> ARRAY[:userId]::text[]
           AND ng.status != 'resolved'
-          AND ng.status != 'closed'
       `;
 
       const stats = await database.sequelize.query(query, {
-        replacements: {
-          companyId,
-          userId,
-          userIdJson: JSON.stringify([userId])
-        },
+        replacements: { companyId, userId },
         type: QueryTypes.SELECT
       });
 
