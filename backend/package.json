@@ -19,7 +19,6 @@
     "db:create-migration": "sequelize-cli migration:generate --name",
     "db:fix-render": "node execute-fix-render.js",
     "migrate:notifications": "node run-migrations.js",
-    "postinstall": "npm run migrate:notifications",
     "seed": "node database/seeds/seed.js",
     "backup": "node scripts/backup/backup.js"
   },
