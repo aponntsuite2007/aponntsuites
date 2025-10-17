@@ -13,7 +13,8 @@
 
     console.log('🔔 [NOTIFICATIONS-V2] Inicializando Sistema de Notificaciones Avanzado V2.0');
 
-    window.renderNotificationsComplete = function() {
+    // Función principal de renderizado
+    function renderContent() {
         console.log('📋 [NOTIFICATIONS-V2] Renderizando panel principal');
 
         const contentArea = document.getElementById('content-area');
@@ -56,7 +57,11 @@
 
         contentArea.innerHTML = html;
         console.log('✅ [NOTIFICATIONS-V2] Panel principal renderizado');
-    };
+    }
+
+    // Exportar con ambos nombres para compatibilidad
+    window.renderNotificationsComplete = renderContent;
+    window.showNotificationsContent = renderContent;
 
     console.log('✅ [NOTIFICATIONS-V2] Módulo principal cargado');
 
