@@ -4449,6 +4449,45 @@
                 const companyData = await companyResponse.json();
                 console.log('📦 [MODULES] Respuesta de API módulos:', companyData);
 
+                // Crear mapa de iconos desde definición local (línea 4130)
+                const localModules = [
+                    { id: 'users', name: 'Usuarios', icon: '👥' },
+                    { id: 'departments', name: 'Departamentos', icon: '🏢' },
+                    { id: 'kiosks', name: 'Kioscos', icon: '📟' },
+                    { id: 'visitors', name: 'Visitantes', icon: '👥' },
+                    { id: 'inbox', name: 'Bandeja Notificaciones', icon: '📬' },
+                    { id: 'shifts', name: 'Turnos', icon: '🕐' },
+                    { id: 'attendance', name: 'Asistencia', icon: '📋' },
+                    { id: 'facial-biometric', name: 'Biometría Analítica', icon: '🎭' },
+                    { id: 'biometric', name: 'Dashboard Biométrico', icon: '🎭' },
+                    { id: 'medical-dashboard', name: 'Médico', icon: '👩‍⚕️' },
+                    { id: 'art-management', name: 'ART', icon: '🏥' },
+                    { id: 'document-management', name: 'Documentos', icon: '📄' },
+                    { id: 'legal-dashboard', name: 'Legal', icon: '⚖️' },
+                    { id: 'compliance-dashboard', name: 'Compliance Legal', icon: '⚖️' },
+                    { id: 'sla-tracking', name: 'SLA Tracking', icon: '⏱️' },
+                    { id: 'resource-center', name: 'Centro Recursos', icon: '📊' },
+                    { id: 'proactive-notifications', name: 'Alertas Proactivas', icon: '🔔' },
+                    { id: 'audit-reports', name: 'Reportes Auditoría', icon: '📄' },
+                    { id: 'network', name: 'Red de Atención', icon: '🏥' },
+                    { id: 'settings', name: 'Configuración', icon: '⚙️' },
+                    { id: 'medical-config', name: 'Config. Médico', icon: '⚕️' },
+                    { id: 'fehaciente-consent', name: 'Consents Fehacientes', icon: '✍️' },
+                    { id: 'terms-conditions', name: 'Términos y Condiciones', icon: '📜' },
+                    { id: 'absence-notifications', name: 'Notif. Ausencias', icon: '📢' },
+                    { id: 'employee-map', name: 'Mapa Empleados', icon: '🗺️' },
+                    { id: 'training-management', name: 'Gestión Capacitaciones', icon: '📚' },
+                    { id: 'notifications', name: 'Notificaciones', icon: '🔔' },
+                    { id: 'job-postings', name: 'Avisos de Empleo', icon: '💼' },
+                    { id: 'payroll-liquidation', name: 'Liquidación Sueldos', icon: '💰' },
+                    { id: 'emotional-analysis', name: 'Análisis Emocional', icon: '😊' }
+                ];
+
+                const iconMap = {};
+                localModules.forEach(mod => {
+                    iconMap[mod.id] = mod.icon;
+                });
+
                 // Extraer módulos del formato correcto de la API
                 let modules = [];
                 if (companyData.success && companyData.modules && Array.isArray(companyData.modules)) {
@@ -4471,7 +4510,9 @@
                 let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px;">';
 
                 modules.forEach(module => {
-                    const moduleIcon = module.icon || '📦';
+                    // Buscar icono en el mapa local usando moduleKey o name como fallback
+                    const moduleId = module.moduleKey || module.id || module.name?.toLowerCase().replace(/\s+/g, '-');
+                    const moduleIcon = iconMap[moduleId] || module.icon || '📦';
                     const moduleName = module.name || 'Módulo';
                     const moduleDescription = module.description || 'Sin descripción';
 
