@@ -74,10 +74,14 @@ class SLAService {
 
         return {
             period: { start: startDate, end: endDate },
-            summary: {
+            global_metrics: {
                 total_requests: 0,
                 avg_response_hours: 0,
                 median_response_hours: 0,
+                min_response_hours: 0,
+                max_response_hours: 0,
+                within_sla_count: 0,
+                outside_sla_count: 0,
                 sla_compliance_percent: 100
             },
             top_approvers: [],
