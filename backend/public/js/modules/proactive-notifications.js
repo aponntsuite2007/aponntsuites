@@ -448,3 +448,11 @@ const ProactiveNotifications = {
 };
 
 window.ProactiveNotifications = ProactiveNotifications;
+
+// Función wrapper para integración con panel-empresa.html
+function showProactiveNotificationsContent() {
+    console.log('🔄 [MODULE] Ejecutando showProactiveNotificationsContent()');
+    ProactiveNotifications.init();
+}
+
+window.showProactiveNotificationsContent = showProactiveNotificationsContent;

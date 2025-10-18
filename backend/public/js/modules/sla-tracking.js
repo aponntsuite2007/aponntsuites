@@ -622,3 +622,11 @@ const SLATracking = {
 };
 
 window.SLATracking = SLATracking;
+
+// Función wrapper para integración con panel-empresa.html
+function showSlaTrackingContent() {
+    console.log('🔄 [MODULE] Ejecutando showSlaTrackingContent()');
+    SLATracking.init();
+}
+
+window.showSlaTrackingContent = showSlaTrackingContent;

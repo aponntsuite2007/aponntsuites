@@ -881,3 +881,11 @@ ${(this.selectedGroup.participants || []).join('\n')}
 };
 
 window.NotificationsInbox = NotificationsInbox;
+
+// Función wrapper para integración con panel-empresa.html
+function showInboxContent() {
+    console.log('🔄 [MODULE] Ejecutando showInboxContent()');
+    NotificationsInbox.init();
+}
+
+window.showInboxContent = showInboxContent;

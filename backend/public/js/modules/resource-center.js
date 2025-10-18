@@ -633,3 +633,11 @@ const ResourceCenter = {
 };
 
 window.ResourceCenter = ResourceCenter;
+
+// Función wrapper para integración con panel-empresa.html
+function showResourceCenterContent() {
+    console.log('🔄 [MODULE] Ejecutando showResourceCenterContent()');
+    ResourceCenter.init();
+}
+
+window.showResourceCenterContent = showResourceCenterContent;

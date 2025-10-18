@@ -802,3 +802,12 @@ const ComplianceDashboard = {
 
 // Exportar para uso global
 window.ComplianceDashboard = ComplianceDashboard;
+
+// Función wrapper para integración con panel-empresa.html
+function showComplianceDashboardContent() {
+    console.log('🔄 [MODULE] Ejecutando showComplianceDashboardContent()');
+    ComplianceDashboard.init();
+}
+
+// Exportar función wrapper
+window.showComplianceDashboardContent = showComplianceDashboardContent;

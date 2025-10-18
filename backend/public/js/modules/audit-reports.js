@@ -509,3 +509,11 @@ const AuditReports = {
 };
 
 window.AuditReports = AuditReports;
+
+// Función wrapper para integración con panel-empresa.html
+function showAuditReportsContent() {
+    console.log('🔄 [MODULE] Ejecutando showAuditReportsContent()');
+    AuditReports.init();
+}
+
+window.showAuditReportsContent = showAuditReportsContent;
