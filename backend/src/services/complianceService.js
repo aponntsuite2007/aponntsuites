@@ -54,12 +54,13 @@ class ComplianceService {
 
     async getComplianceDashboard(companyId) {
         return {
-            summary: {
-                compliance_percent: 100,
-                total_violations: 0,
-                critical_violations: 0,
-                warning_violations: 0
-            },
+            total_rules: 5,
+            total_violations: 0,
+            critical_violations: 0,
+            warning_violations: 0,
+            compliance_percent: 100,
+            affected_employees: 0,
+            last_check: new Date(),
             violations_by_severity: [],
             top_violations: [],
             metrics: {
