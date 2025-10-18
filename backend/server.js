@@ -1774,7 +1774,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'panel-empresa-v2.html'));
+  res.sendFile(path.join(__dirname, 'public', 'panel-empresa.html'));
 });
 
 app.get('/admin.html', (req, res) => {
