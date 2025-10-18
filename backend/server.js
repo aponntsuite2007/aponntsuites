@@ -106,8 +106,10 @@ app.use((req, res, next) => {
 });
 
 // 🔧 MIDDLEWARE CRÍTICO: Comentar scripts V2.0 para evitar doble carga
+// DEBE IR ANTES de express.static() para interceptar la petición
 app.use((req, res, next) => {
   if (req.path === '/panel-empresa.html' || req.path === '/admin') {
+    console.log('🔧 [MIDDLEWARE] Interceptando petición:', req.path);
     const htmlPath = path.join(__dirname, 'public', 'panel-empresa.html');
     fs.readFile(htmlPath, 'utf8', (err, html) => {
       if (err) {
@@ -126,12 +128,19 @@ app.use((req, res, next) => {
       ];
 
       let modifiedHtml = html;
+      let modificationsCount = 0;
+
       scriptsToComment.forEach(scriptName => {
         const regex = new RegExp(`<script src="js/modules/${scriptName}"></script>`, 'g');
+        const beforeCount = (modifiedHtml.match(regex) || []).length;
         modifiedHtml = modifiedHtml.replace(regex, `<!-- <script src="js/modules/${scriptName}"></script> -->`);
+        modificationsCount += beforeCount;
       });
 
+      console.log(`✅ [MIDDLEWARE] ${modificationsCount} scripts comentados dinámicamente`);
+
       res.set('Content-Type', 'text/html');
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(modifiedHtml);
     });
   } else {
@@ -139,7 +148,7 @@ app.use((req, res, next) => {
   }
 });
 
-// Servir archivos estáticos
+// Servir archivos estáticos (DESPUÉS del middleware de comentar scripts)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/docs', express.static(path.join(__dirname, '../docs')));
 app.use('/data', express.static(path.join(__dirname, 'data')));
