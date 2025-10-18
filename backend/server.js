@@ -1928,19 +1928,22 @@ const slaRoutes = require('./src/routes/sla');
 const auditReportsRoutes = require('./src/routes/auditReports');
 const proactiveRoutes = require('./src/routes/proactive');
 const resourceCenterRoutes = require('./src/routes/resourceCenter');
+const inboxRoutes = require('./src/routes/inbox');
 
-app.use('/api/v1/compliance', complianceRoutes);
-app.use('/api/v1/sla', slaRoutes);
-app.use('/api/v1/audit-reports', auditReportsRoutes);
-app.use('/api/v1/proactive', proactiveRoutes);
-app.use('/api/v1/resource-center', resourceCenterRoutes);
+app.use('/api/compliance', complianceRoutes);
+app.use('/api/sla', slaRoutes);
+app.use('/api/audit-reports', auditReportsRoutes);
+app.use('/api/proactive', proactiveRoutes);
+app.use('/api/resources', resourceCenterRoutes);
+app.use('/api/inbox', inboxRoutes);
 
 console.log('🔔 [NOTIFICATIONS-V2] Sistema de Notificaciones Avanzado V2.0 configurado:');
-console.log('   ⚖️ /api/v1/compliance/* - Compliance y reglas LCT');
-console.log('   ⏱️ /api/v1/sla/* - SLA tracking y métricas');
-console.log('   📋 /api/v1/audit-reports/* - Reportes con validez legal');
-console.log('   🔮 /api/v1/proactive/* - Notificaciones proactivas');
-console.log('   📚 /api/v1/resource-center/* - Centro de recursos');
+console.log('   ⚖️ /api/compliance/* - Compliance y reglas LCT');
+console.log('   ⏱️ /api/sla/* - SLA tracking y métricas');
+console.log('   📋 /api/audit-reports/* - Reportes con validez legal');
+console.log('   🔮 /api/proactive/* - Notificaciones proactivas');
+console.log('   📚 /api/resources/* - Centro de recursos');
+console.log('   📬 /api/inbox/* - Bandeja de notificaciones');
 
 // 🔒 CONFIGURAR API BIOMÉTRICA
 // COMENTADO: Conflicto con biometricConsentRoutes en la misma ruta /api/v1/biometric
