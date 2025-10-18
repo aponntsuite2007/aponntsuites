@@ -10,7 +10,7 @@
  * @date 2025-10-16
  */
 
-const db = require('../config/database');
+const { sequelize } = require('../config/database');
 
 class ProactiveNotificationService {
 
@@ -144,7 +144,7 @@ class ProactiveNotificationService {
         try {
             const threshold = rule.trigger_threshold.days_until_expiry || 60;
 
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT
                     employee_id,
                     balance,
@@ -184,7 +184,7 @@ class ProactiveNotificationService {
             const percentage = rule.trigger_threshold.percentage || 90;
             const threshold = (monthlyLimit * percentage) / 100;
 
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT
                     employee_id,
                     SUM((metadata->>'hours')::numeric) as overtime_hours,
@@ -225,7 +225,7 @@ class ProactiveNotificationService {
             const minimumHours = rule.trigger_threshold.minimum_hours || 12;
 
             // Obtener empleados con próximo turno programado
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT DISTINCT
                     a.employee_id,
                     a.date as last_work_date,
@@ -273,7 +273,7 @@ class ProactiveNotificationService {
         try {
             const threshold = rule.trigger_threshold.days_until_expiry || 30;
 
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT
                     employee_id,
                     document_type,
@@ -312,7 +312,7 @@ class ProactiveNotificationService {
         try {
             const threshold = rule.trigger_threshold.days_until_expiry || 7;
 
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT
                     employee_id,
                     start_date,
@@ -444,7 +444,7 @@ class ProactiveNotificationService {
      */
     async logExecution(ruleId, matchedCount, actionsTaken, matches) {
         try {
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 INSERT INTO proactive_executions
                 (rule_id, execution_time, matched_count, actions_taken, execution_details)
                 VALUES ($1, NOW(), $2, $3, $4)
@@ -464,7 +464,7 @@ class ProactiveNotificationService {
      */
     async updateLastChecked(ruleId) {
         try {
-            await db.query(`
+            await sequelize.query(`
                 UPDATE proactive_rules
                 SET last_checked = NOW()
                 WHERE id = $1
@@ -480,7 +480,7 @@ class ProactiveNotificationService {
      */
     async getActiveRules(companyId) {
         try {
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT * FROM proactive_rules
                 WHERE company_id = $1
                 AND active = true
@@ -510,7 +510,7 @@ class ProactiveNotificationService {
                 check_frequency
             } = ruleData;
 
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 INSERT INTO proactive_rules
                 (company_id, rule_name, rule_type, trigger_threshold, auto_action,
                  notification_recipients, priority, check_frequency, active)
@@ -559,7 +559,7 @@ class ProactiveNotificationService {
 
             values.push(ruleId);
 
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 UPDATE proactive_rules
                 SET ${fields.join(', ')}
                 WHERE id = $${index}
@@ -579,7 +579,7 @@ class ProactiveNotificationService {
      */
     async deactivateRule(ruleId) {
         try {
-            await db.query(`
+            await sequelize.query(`
                 UPDATE proactive_rules
                 SET active = false
                 WHERE id = $1
@@ -598,7 +598,7 @@ class ProactiveNotificationService {
      */
     async getExecutionHistory(ruleId, limit = 50) {
         try {
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT * FROM proactive_executions
                 WHERE rule_id = $1
                 ORDER BY execution_time DESC
@@ -622,7 +622,7 @@ class ProactiveNotificationService {
 
             // Obtener última ejecución de cada regla
             const rulesWithStats = await Promise.all(rules.map(async (rule) => {
-                const lastExecution = await db.query(`
+                const lastExecution = await sequelize.query(`
                     SELECT * FROM proactive_executions
                     WHERE rule_id = $1
                     ORDER BY execution_time DESC
@@ -636,7 +636,7 @@ class ProactiveNotificationService {
             }));
 
             // Estadísticas globales
-            const stats = await db.query(`
+            const stats = await sequelize.query(`
                 SELECT
                     COUNT(*) as total_executions,
                     SUM(matched_count) as total_matches,

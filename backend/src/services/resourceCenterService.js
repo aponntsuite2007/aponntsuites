@@ -10,7 +10,7 @@
  * @date 2025-10-16
  */
 
-const db = require('../config/database');
+const { sequelize } = require('../config/database');
 
 class ResourceCenterService {
 
@@ -28,7 +28,7 @@ class ResourceCenterService {
      */
     async recordTransaction(companyId, departmentId, employeeId, category, hours, description, metadata = {}) {
         try {
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 INSERT INTO cost_transactions
                 (company_id, department_id, employee_id, cost_category, description, metadata, transaction_date)
                 VALUES ($1, $2, $3, $4, $5, $6, NOW())
@@ -77,7 +77,7 @@ class ResourceCenterService {
 
             query += ` GROUP BY cost_category ORDER BY total_hours DESC`;
 
-            const result = await db.query(query, params);
+            const result = await sequelize.query(query, params);
 
             // Calcular totales generales
             const totalHours = result.rows.reduce((sum, row) => sum + parseFloat(row.total_hours || 0), 0);
@@ -117,7 +117,7 @@ class ResourceCenterService {
      */
     async getDepartmentUtilization(companyId, startDate, endDate) {
         try {
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT
                     department_id,
                     cost_category as category,
@@ -187,7 +187,7 @@ class ResourceCenterService {
      */
     async getEmployeeUtilization(companyId, startDate, endDate, limit = 50) {
         try {
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT
                     employee_id,
                     department_id,
@@ -253,7 +253,7 @@ class ResourceCenterService {
      */
     async detectWorkloadOverload(companyId, startDate, endDate, overtimeThreshold = 30) {
         try {
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT
                     employee_id,
                     department_id,
@@ -307,7 +307,7 @@ class ResourceCenterService {
     async getBudgetAlerts(companyId, startDate, endDate) {
         try {
             // Obtener budgets definidos
-            const budgets = await db.query(`
+            const budgets = await sequelize.query(`
                 SELECT
                     id,
                     department_id,
@@ -329,7 +329,7 @@ class ResourceCenterService {
 
             for (const budget of budgets.rows) {
                 // Calcular horas gastadas para este budget
-                const spent = await db.query(`
+                const spent = await sequelize.query(`
                     SELECT
                         COALESCE(SUM((metadata->>'hours')::numeric), 0) as total_hours
                     FROM cost_transactions
@@ -426,7 +426,7 @@ class ResourceCenterService {
      */
     async getEmployeeStats(employeeId, companyId, startDate, endDate) {
         try {
-            const result = await db.query(`
+            const result = await sequelize.query(`
                 SELECT
                     cost_category as category,
                     COUNT(*) as transactions_count,
