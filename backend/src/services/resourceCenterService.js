@@ -399,14 +399,12 @@ class ResourceCenterService {
             return {
                 period: { start: startDate, end: endDate },
                 summary: summary.summary,
-                hours_by_category: summary.by_category,
+                by_category: summary.by_category,
                 department_utilization: departmentUtilization.slice(0, 10), // Top 10 departamentos
                 top_employees: topEmployees.slice(0, 10), // Top 10 empleados
-                alerts: {
-                    workload_overload: overloadAlerts,
-                    budget_alerts: budgetAlerts,
-                    total_alerts: overloadAlerts.length + budgetAlerts.length
-                }
+                overload_alerts: overloadAlerts,
+                budget_alerts: budgetAlerts,
+                total_alerts: overloadAlerts.length + budgetAlerts.length
             };
 
         } catch (error) {

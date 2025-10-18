@@ -647,13 +647,31 @@ class ProactiveNotificationService {
                 AND pe.execution_time >= CURRENT_DATE - INTERVAL '30 days'
             `, [companyId]);
 
+            // Obtener última ejecución global
+            const lastExec = await sequelize.query(`
+                SELECT MAX(execution_time) as last_execution
+                FROM proactive_executions pe
+                JOIN proactive_rules pr ON pe.rule_id = pr.id
+                WHERE pr.company_id = $1
+            `, [companyId]);
+
+            // Detecciones de hoy
+            const todayStats = await sequelize.query(`
+                SELECT SUM(matched_count) as today_detections
+                FROM proactive_executions pe
+                JOIN proactive_rules pr ON pe.rule_id = pr.id
+                WHERE pr.company_id = $1
+                AND DATE(pe.execution_time) = CURRENT_DATE
+            `, [companyId]);
+
             return {
-                summary: {
-                    total_rules: rules.length,
-                    total_executions_30d: parseInt(stats.rows[0].total_executions || 0),
-                    total_matches_30d: parseInt(stats.rows[0].total_matches || 0),
-                    total_actions_30d: parseInt(stats.rows[0].total_actions || 0)
-                },
+                total_rules: rules.length,
+                active_rules: rules.filter(r => r.active).length,
+                last_execution: lastExec.rows[0].last_execution || null,
+                today_detections: parseInt(todayStats.rows[0].today_detections || 0),
+                total_executions_30d: parseInt(stats.rows[0].total_executions || 0),
+                total_matches_30d: parseInt(stats.rows[0].total_matches || 0),
+                total_actions_30d: parseInt(stats.rows[0].total_actions || 0),
                 rules: rulesWithStats
             };
 
