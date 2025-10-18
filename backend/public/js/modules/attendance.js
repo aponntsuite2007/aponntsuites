@@ -594,7 +594,9 @@ async function displayAttendanceTable(attendanceData, pagination) {
 
     tbody.innerHTML = '';
 
-    attendanceData.forEach((record, index) => {
+    for (let index = 0; index < attendanceData.length; index++) {
+        const record = attendanceData[index];
+
         // Log para debug - ver estructura de datos
         if (index === 0) {
             console.log('🔍 [ATTENDANCE] Estructura del primer registro:', record);
@@ -670,7 +672,7 @@ async function displayAttendanceTable(attendanceData, pagination) {
         `;
 
         tbody.appendChild(row);
-    });
+    }
 
     // Mostrar información de paginación si está disponible
     if (pagination) {
