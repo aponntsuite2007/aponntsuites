@@ -363,7 +363,8 @@ router.get('/companies/:id/modules', async (req, res) => {
         sm.module_key,
         sm.name as module_name,
         sm.description,
-        sm.category
+        sm.category,
+        sm.icon
       FROM company_modules cm
       INNER JOIN system_modules sm ON cm.system_module_id = sm.id
       WHERE cm.company_id = ?
@@ -403,6 +404,7 @@ router.get('/companies/:id/modules', async (req, res) => {
           name: module.module_name,
           description: module.description,
           category: module.category,
+          icon: module.icon,
           contractedPrice: parseFloat(module.contracted_price || 0)
         })),
         inactive: inactiveModules.map(module => ({
@@ -411,6 +413,7 @@ router.get('/companies/:id/modules', async (req, res) => {
           name: module.module_name,
           description: module.description,
           category: module.category,
+          icon: module.icon,
           contractedPrice: parseFloat(module.contracted_price || 0)
         }))
       }
