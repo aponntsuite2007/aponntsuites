@@ -1856,6 +1856,9 @@ const jobPostingsRoutes = require('./src/routes/jobPostingsRoutes');
 const biometricApiRoutes = require('./src/routes/biometric-api');
 const biometricHubRoutes = require('./src/routes/biometric-hub');
 
+// 🖥️ IMPORTAR RUTAS DE KIOSKS BIOMÉTRICOS
+const kiosksRoutes = require('./src/routes/kiosks')(db);
+
 // 🚛 IMPORTAR RUTAS DE TRANSPORTE GANADERO
 const transportRoutes = require('./src/routes/transportRoutes');
 const transportFleetRoutes = require('./src/routes/transportFleetRoutes');
@@ -1893,6 +1896,9 @@ app.use('/api/job-postings', jobPostingsRoutes);
 // 🔬 CONFIGURAR API BIOMÉTRICA NEXT-GEN
 app.use('/api/v2/biometric', biometricApiRoutes);
 app.use('/api/biometric', biometricHubRoutes);
+
+// 🖥️ CONFIGURAR RUTAS DE KIOSKS BIOMÉTRICOS
+app.use('/api/kiosks', kiosksRoutes);
 
 // 🐘 CONFIGURAR API POSTGRESQL PARTICIONADO PROFESIONAL
 const postgresqlPartitioningRoutes = require('./src/routes/postgresql-partitioning');
