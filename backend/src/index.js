@@ -1,6 +1,7 @@
 /**
  * Sistema de Asistencia Biométrico v1.0
  * Servidor Principal
+ * Last update: 2025-10-17 21:50 - Sistema de Notificaciones V2.0 activo
  */
 
 const express = require('express');
