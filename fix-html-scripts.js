@@ -9,6 +9,15 @@ const path = require('path');
 const htmlPath = path.join(__dirname, 'backend/public/panel-empresa.html');
 
 console.log('🔧 Corrigiendo panel-empresa.html...');
+console.log('📍 Ruta:', htmlPath);
+
+// Verificar que el archivo existe
+if (!fs.existsSync(htmlPath)) {
+    console.error('❌ ERROR: No se encuentra el archivo HTML en:', htmlPath);
+    console.log('📂 Directorio actual:', __dirname);
+    console.log('📂 Contenido del directorio:', fs.readdirSync(__dirname));
+    process.exit(1);
+}
 
 let html = fs.readFileSync(htmlPath, 'utf8');
 

@@ -105,6 +105,40 @@ app.use((req, res, next) => {
   next();
 });
 
+// 🔧 MIDDLEWARE CRÍTICO: Comentar scripts V2.0 para evitar doble carga
+app.use((req, res, next) => {
+  if (req.path === '/panel-empresa.html' || req.path === '/admin') {
+    const htmlPath = path.join(__dirname, 'public', 'panel-empresa.html');
+    fs.readFile(htmlPath, 'utf8', (err, html) => {
+      if (err) {
+        console.error('❌ Error leyendo panel-empresa.html:', err);
+        return next();
+      }
+
+      // Comentar los 6 scripts de módulos V2.0
+      const scriptsToComment = [
+        'notifications-inbox.js',
+        'compliance-dashboard.js',
+        'sla-tracking.js',
+        'resource-center.js',
+        'proactive-notifications.js',
+        'audit-reports.js'
+      ];
+
+      let modifiedHtml = html;
+      scriptsToComment.forEach(scriptName => {
+        const regex = new RegExp(`<script src="js/modules/${scriptName}"></script>`, 'g');
+        modifiedHtml = modifiedHtml.replace(regex, `<!-- <script src="js/modules/${scriptName}"></script> -->`);
+      });
+
+      res.set('Content-Type', 'text/html');
+      res.send(modifiedHtml);
+    });
+  } else {
+    next();
+  }
+});
+
 // Servir archivos estáticos
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/docs', express.static(path.join(__dirname, '../docs')));
