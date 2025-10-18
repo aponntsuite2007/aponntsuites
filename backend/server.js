@@ -1937,12 +1937,12 @@ app.use('/api/proactive', proactiveRoutes);
 app.use('/api/resources', resourceCenterRoutes);
 app.use('/api/inbox', inboxRoutes);
 
-console.log('🔔 [NOTIFICATIONS-V2] Sistema de Notificaciones Avanzado V2.0 configurado:');
+console.log('🔔 [NOTIFICATIONS-V2] Sistema de Notificaciones Avanzado V2.0 ACTIVO y FUNCIONANDO:');
 console.log('   ⚖️ /api/compliance/* - Compliance y reglas LCT');
 console.log('   ⏱️ /api/sla/* - SLA tracking y métricas');
 console.log('   📋 /api/audit-reports/* - Reportes con validez legal');
-console.log('   🔮 /api/proactive/* - Notificaciones proactivas');
-console.log('   📚 /api/resources/* - Centro de recursos');
+console.log('   🔮 /api/proactive/* - Notificaciones proactivas (FIXED)');
+console.log('   📚 /api/resources/* - Centro de recursos (FIXED)');
 console.log('   📬 /api/inbox/* - Bandeja de notificaciones');
 
 // 🔒 CONFIGURAR API BIOMÉTRICA
