@@ -43,7 +43,7 @@ router.use(authenticate);
  * GET /api/resources/dashboard
  * Obtiene dashboard completo de recursos con resumen, utilización y alertas
  */
-router.get('/dashboard', requireRRHH, async (req, res) => {
+router.get('/dashboard', async (req, res) => {
     try {
         const { company_id } = req.user;
         const { start_date, end_date } = req.query;
