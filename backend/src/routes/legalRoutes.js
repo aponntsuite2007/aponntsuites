@@ -10,6 +10,9 @@ const { checkPermission } = require('../middleware/permissions');
 // Importar servicio de notificaciones enterprise
 const NotificationWorkflowService = require('../services/NotificationWorkflowService');
 
+// Importar sistema modular Plug & Play
+const { useModuleIfAvailable } = require('../utils/moduleHelper');
+
 const JWT_SECRET = process.env.JWT_SECRET || 'tu_secreto_jwt_aqui';
 
 async function authenticateToken(req, res, next) {
@@ -497,46 +500,53 @@ async function sendLegalCommunicationNotification(communicationId, employee, com
         console.log(`🔔 [LEGAL] Generando notificación de comunicación legal: ${employeeData.firstName} ${employeeData.lastName} - ${communicationType.category}`);
 
         // 🔔 GENERAR NOTIFICACIÓN CON WORKFLOW SI REQUIERE RESPUESTA
-        await NotificationWorkflowService.createNotification({
-            module: 'legal',
-            notificationType: 'legal_communication_received',
-            companyId: employeeData.company_id,
-            category: requiresAction ? 'action_required' : 'informational',
-            priority: priority,
-            templateKey: 'legal_communication_received',
-            variables: {
-                employee_name: `${employeeData.firstName} ${employeeData.lastName}`,
-                employee_id: employeeData.employeeId || employeeData.user_id.substring(0, 8),
-                department: employeeData.department?.name || 'Sin departamento',
-                communication_type: communicationType.name,
-                communication_category: communicationType.category,
-                severity: communicationType.severity,
-                subject: details.subject,
-                description: details.description || 'Ver detalles completos en el sistema',
-                reference_number: details.reference_number,
-                legal_basis: communicationType.legal_basis || 'No especificado',
-                requires_response: requiresAction ? 'Sí' : 'No',
-                response_deadline: requiresAction ? '5 días hábiles' : 'N/A'
-            },
-            relatedEntityType: 'legal_communication',
-            relatedEntityId: communicationId,
-            relatedUserId: employeeData.user_id,
-            relatedDepartmentId: employeeData.department?.id,
-            recipientRole: 'employee', // Va directo al empleado
-            recipientUserId: employeeData.user_id,
-            entity: {
-                communication_type: communicationType.category,
-                severity: communicationType.severity,
-                requires_response: requiresAction
-            },
-            sendEmail: true, // Siempre enviar email para comunicaciones legales
-            metadata: {
-                communication_id: communicationId,
-                type_id: communicationType.id,
-                category: communicationType.category,
-                severity: communicationType.severity,
-                auto_generated: true
-            }
+        // 🔌 PLUG & PLAY: Solo se envía si el módulo 'notifications-enterprise' está activo
+        await useModuleIfAvailable(employeeData.company_id, 'notifications-enterprise', async () => {
+            return await NotificationWorkflowService.createNotification({
+                module: 'legal',
+                notificationType: 'legal_communication_received',
+                companyId: employeeData.company_id,
+                category: requiresAction ? 'action_required' : 'informational',
+                priority: priority,
+                templateKey: 'legal_communication_received',
+                variables: {
+                    employee_name: `${employeeData.firstName} ${employeeData.lastName}`,
+                    employee_id: employeeData.employeeId || employeeData.user_id.substring(0, 8),
+                    department: employeeData.department?.name || 'Sin departamento',
+                    communication_type: communicationType.name,
+                    communication_category: communicationType.category,
+                    severity: communicationType.severity,
+                    subject: details.subject,
+                    description: details.description || 'Ver detalles completos en el sistema',
+                    reference_number: details.reference_number,
+                    legal_basis: communicationType.legal_basis || 'No especificado',
+                    requires_response: requiresAction ? 'Sí' : 'No',
+                    response_deadline: requiresAction ? '5 días hábiles' : 'N/A'
+                },
+                relatedEntityType: 'legal_communication',
+                relatedEntityId: communicationId,
+                relatedUserId: employeeData.user_id,
+                relatedDepartmentId: employeeData.department?.id,
+                recipientRole: 'employee', // Va directo al empleado
+                recipientUserId: employeeData.user_id,
+                entity: {
+                    communication_type: communicationType.category,
+                    severity: communicationType.severity,
+                    requires_response: requiresAction
+                },
+                sendEmail: true, // Siempre enviar email para comunicaciones legales
+                metadata: {
+                    communication_id: communicationId,
+                    type_id: communicationType.id,
+                    category: communicationType.category,
+                    severity: communicationType.severity,
+                    auto_generated: true
+                }
+            });
+        }, () => {
+            // Fallback: Módulo no activo, comunicación registrada sin notificar
+            console.log('⏭️  [LEGAL] Módulo notificaciones no activo - Comunicación registrada sin notificar');
+            return null;
         });
 
         console.log(`✅ [LEGAL] Notificación generada para comunicación ${communicationId}`);
@@ -602,41 +612,48 @@ async function sendLegalStatusChangeNotification(communicationId, newStatus, not
         console.log(`🔔 [LEGAL] Generando notificación de cambio de estado: ${employeeData.firstName} ${employeeData.lastName} - ${statusText}`);
 
         // 🔔 GENERAR NOTIFICACIÓN INFORMATIVA
-        await NotificationWorkflowService.createNotification({
-            module: 'legal',
-            notificationType: 'legal_communication_status_change',
-            companyId: employeeData.company_id,
-            category: 'informational',
-            priority: newStatus === 'sent' ? 'urgent' : 'high',
-            templateKey: 'legal_communication_status_change',
-            variables: {
-                employee_name: `${employeeData.firstName} ${employeeData.lastName}`,
-                employee_id: employeeData.employeeId || employeeData.user_id.substring(0, 8),
-                communication_type: comm.type_name,
-                reference_number: comm.reference_number,
-                subject: comm.subject,
-                status: statusText,
-                status_color: newStatus === 'delivered' ? 'warning' : 'info',
-                notes: notes || 'Sin notas adicionales',
-                update_date: new Date().toLocaleDateString('es-AR')
-            },
-            relatedEntityType: 'legal_communication',
-            relatedEntityId: communicationId,
-            relatedUserId: employeeData.user_id,
-            relatedDepartmentId: employeeData.department?.id,
-            recipientRole: 'employee',
-            recipientUserId: employeeData.user_id,
-            entity: {
-                status: newStatus,
-                communication_id: communicationId
-            },
-            sendEmail: ['sent', 'delivered'].includes(newStatus), // Email solo en estados importantes
-            metadata: {
-                communication_id: communicationId,
-                previous_status: comm.status,
-                new_status: newStatus,
-                auto_generated: true
-            }
+        // 🔌 PLUG & PLAY: Solo se envía si el módulo 'notifications-enterprise' está activo
+        await useModuleIfAvailable(employeeData.company_id, 'notifications-enterprise', async () => {
+            return await NotificationWorkflowService.createNotification({
+                module: 'legal',
+                notificationType: 'legal_communication_status_change',
+                companyId: employeeData.company_id,
+                category: 'informational',
+                priority: newStatus === 'sent' ? 'urgent' : 'high',
+                templateKey: 'legal_communication_status_change',
+                variables: {
+                    employee_name: `${employeeData.firstName} ${employeeData.lastName}`,
+                    employee_id: employeeData.employeeId || employeeData.user_id.substring(0, 8),
+                    communication_type: comm.type_name,
+                    reference_number: comm.reference_number,
+                    subject: comm.subject,
+                    status: statusText,
+                    status_color: newStatus === 'delivered' ? 'warning' : 'info',
+                    notes: notes || 'Sin notas adicionales',
+                    update_date: new Date().toLocaleDateString('es-AR')
+                },
+                relatedEntityType: 'legal_communication',
+                relatedEntityId: communicationId,
+                relatedUserId: employeeData.user_id,
+                relatedDepartmentId: employeeData.department?.id,
+                recipientRole: 'employee',
+                recipientUserId: employeeData.user_id,
+                entity: {
+                    status: newStatus,
+                    communication_id: communicationId
+                },
+                sendEmail: ['sent', 'delivered'].includes(newStatus), // Email solo en estados importantes
+                metadata: {
+                    communication_id: communicationId,
+                    previous_status: comm.status,
+                    new_status: newStatus,
+                    auto_generated: true
+                }
+            });
+        }, () => {
+            // Fallback: Módulo no activo, cambio de estado registrado sin notificar
+            console.log('⏭️  [LEGAL] Módulo notificaciones no activo - Cambio de estado registrado sin notificar');
+            return null;
         });
 
         console.log(`✅ [LEGAL] Notificación de cambio de estado generada para comunicación ${communicationId}`);

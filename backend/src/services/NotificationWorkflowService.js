@@ -21,6 +21,9 @@ const {
   Shift
 } = require('../config/database');
 
+const workflowConfigHelper = require('../utils/workflowConfigHelper');
+const { isModuleActive } = require('../utils/moduleHelper');
+
 class NotificationWorkflowService {
 
   /**
@@ -75,11 +78,12 @@ class NotificationWorkflowService {
         notification_type: data.notificationType,
         priority: data.priority || 'medium',
 
-        // Destinatario
+        // Destinatario (NUEVO: soporta múltiples con recipient_custom_list)
         recipient_user_id: recipientData.userId,
         recipient_role: recipientData.role,
         recipient_department_id: recipientData.departmentId,
         recipient_shift_id: recipientData.shiftId,
+        recipient_custom_list: recipientData.userIds || [],  // NUEVO: Array de user IDs
         is_broadcast: recipientData.isBroadcast || false,
 
         // Contenido
@@ -338,54 +342,135 @@ class NotificationWorkflowService {
 
   /**
    * Resolver destinatario según workflow y paso
+   * NUEVO: Usa configuración dinámica en vez de hardcodear
    */
   async resolveRecipient(data, workflow, stepNumber) {
-    if (!workflow) {
-      return {
-        userId: data.recipient?.userId,
-        role: data.recipient?.role,
-        departmentId: data.recipient?.departmentId,
-        shiftId: data.recipient?.shiftId,
-        isBroadcast: data.recipient?.isBroadcast || false
-      };
-    }
+    try {
+      // 1. Si no hay workflow, usar destinatario manual
+      if (!workflow) {
+        return {
+          userId: data.recipient?.userId,
+          role: data.recipient?.role,
+          departmentId: data.recipient?.departmentId,
+          shiftId: data.recipient?.shiftId,
+          isBroadcast: data.recipient?.isBroadcast || false,
+          userIds: data.recipient?.userId ? [data.recipient.userId] : []
+        };
+      }
 
-    const step = workflow.getStep(stepNumber);
-    if (!step) {
-      throw new Error(`Step ${stepNumber} not found in workflow`);
-    }
+      const step = workflow.getStep(stepNumber);
+      if (!step) {
+        throw new Error(`Step ${stepNumber} not found in workflow`);
+      }
 
-    // Resolver por rol
-    if (step.approver_role) {
+      // 2. NUEVO: Intentar resolver con configuración dinámica
+      const workflowKey = workflow.workflow_key;
+
+      let resolvedUserIds = [];
+
+      if (stepNumber === 1) {
+        // Paso inicial: usar recipients configurados
+        resolvedUserIds = await workflowConfigHelper.resolveRecipients(
+          data.companyId,
+          workflowKey,
+          {
+            relatedUserId: data.relatedUserId,
+            entity: data.entity,
+            specificUserId: data.recipient?.userId
+          }
+        );
+      } else {
+        // Paso de escalamiento: usar escalation_chain
+        const escalationStep = await workflowConfigHelper.resolveEscalationStep(
+          data.companyId,
+          workflowKey,
+          stepNumber - 1,  // escalation_chain es 0-indexed
+          {
+            relatedUserId: data.relatedUserId,
+            entity: data.entity
+          }
+        );
+
+        if (escalationStep) {
+          resolvedUserIds = escalationStep.recipients;
+        }
+      }
+
+      // 3. Si se resolvieron usuarios dinámicamente, usarlos
+      if (resolvedUserIds && resolvedUserIds.length > 0) {
+        console.log(`✅ [WORKFLOW] Resueltos ${resolvedUserIds.length} destinatarios dinámicamente`);
+
+        return {
+          userId: resolvedUserIds[0],  // Compatibilidad con código legacy
+          userIds: resolvedUserIds,     // NUEVO: Lista completa
+          role: null,
+          departmentId: null,
+          shiftId: null,
+          isBroadcast: resolvedUserIds.length > 1  // Si hay múltiples, es broadcast
+        };
+      }
+
+      // 4. FALLBACK: Usar lógica legacy (approver_role, approver_field)
+      console.log(`⚠️  [WORKFLOW] Sin config dinámica, usando lógica legacy`);
+
+      // Resolver por rol (legacy)
+      if (step.approver_role) {
+        const users = await User.findAll({
+          where: {
+            company_id: data.companyId,
+            role: step.approver_role,
+            is_active: true
+          },
+          attributes: ['id']
+        });
+
+        const userIds = users.map(u => u.id);
+
+        return {
+          userId: userIds[0] || null,
+          userIds: userIds,
+          role: step.approver_role,
+          departmentId: null,
+          shiftId: null,
+          isBroadcast: userIds.length > 1
+        };
+      }
+
+      // Resolver por campo específico (legacy - ej: supervisor_id)
+      if (step.approver_field && data.relatedUserId) {
+        const employee = await User.findByPk(data.relatedUserId, {
+          attributes: ['id', step.approver_field]
+        });
+
+        const supervisorId = employee?.[step.approver_field];
+
+        if (supervisorId) {
+          return {
+            userId: supervisorId,
+            userIds: [supervisorId],
+            role: null,
+            departmentId: null,
+            shiftId: null,
+            isBroadcast: false
+          };
+        }
+      }
+
+      // 5. No se pudo resolver ningún destinatario
+      console.warn(`⚠️  [WORKFLOW] No se pudieron resolver destinatarios para paso ${stepNumber}`);
       return {
         userId: null,
-        role: step.approver_role,
-        departmentId: null,
-        shiftId: null,
-        isBroadcast: false
-      };
-    }
-
-    // Resolver por campo específico (ej: supervisor_id)
-    if (step.approver_field) {
-      // Aquí debería buscar el usuario específico basándose en el campo
-      // Por simplicidad, devolvemos el campo para que se resuelva en la creación
-      return {
-        userId: null, // Se resolverá dinámicamente
+        userIds: [],
         role: null,
         departmentId: null,
         shiftId: null,
         isBroadcast: false
       };
-    }
 
-    return {
-      userId: null,
-      role: null,
-      departmentId: null,
-      shiftId: null,
-      isBroadcast: false
-    };
+    } catch (error) {
+      console.error(`❌ [WORKFLOW] Error resolviendo destinatarios:`, error.message);
+      throw error;
+    }
   }
 
   /**

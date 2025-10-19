@@ -27,6 +27,9 @@ const {
 // Importar servicio de notificaciones enterprise
 const NotificationWorkflowService = require('../services/NotificationWorkflowService');
 
+// Importar sistema modular Plug & Play
+const { useModuleIfAvailable } = require('../utils/moduleHelper');
+
 // Importar servicio de notificaciones (temporal mock para WhatsApp/SMS)
 // const notificationService = require('../services/notificationService');
 const notificationService = {
@@ -559,45 +562,52 @@ async function sendMedicalCertificateNotifications(certificate, employee) {
     console.log(`🔔 [MEDICAL] Generando notificación de certificado médico: ${employee.firstName} ${employee.lastName} - ${certificate.requestedDays} días`);
 
     // 🔔 GENERAR NOTIFICACIÓN CON WORKFLOW AUTOMÁTICO
-    await NotificationWorkflowService.createNotification({
-      module: 'medical',
-      notificationType: 'certificate_submitted',
-      companyId: employee.company_id,
-      category: 'approval_request',
-      priority: priority,
-      templateKey: 'medical_certificate_review',
-      variables: {
-        employee_name: `${employee.firstName} ${employee.lastName}`,
-        employee_id: employee.employeeId || employee.user_id.substring(0, 8),
-        department: userWithDept?.department?.name || 'Sin departamento',
-        requested_days: certificate.requestedDays,
-        start_date: certificate.startDate.toLocaleDateString('es-AR'),
-        end_date: certificate.endDate.toLocaleDateString('es-AR'),
-        symptoms: certificate.symptoms,
-        has_visited_doctor: certificate.hasVisitedDoctor ? 'Sí' : 'No',
-        medical_center: certificate.medicalCenter || 'No especificado',
-        attending_physician: certificate.attendingPhysician || 'No especificado',
-        diagnosis: certificate.diagnosis || 'Sin diagnóstico',
-        issue_date: certificate.issueDate.toLocaleDateString('es-AR')
-      },
-      relatedEntityType: 'medical_certificate',
-      relatedEntityId: certificate.id,
-      relatedUserId: employee.user_id,
-      relatedDepartmentId: userWithDept?.department?.id,
-      relatedMedicalCertificateId: certificate.id,
-      entity: {
-        requested_days: certificate.requestedDays,
-        has_visited_doctor: certificate.hasVisitedDoctor,
-        needs_audit: certificate.needsAudit
-      },
-      sendEmail: certificate.requestedDays > 7, // Enviar email si son más de 7 días
-      metadata: {
-        certificate_id: certificate.id,
-        symptoms: certificate.symptoms,
-        diagnosis_code: certificate.diagnosisCode,
-        medical_center: certificate.medicalCenter,
-        auto_generated: true
-      }
+    // 🔌 PLUG & PLAY: Solo se envía si el módulo 'notifications-enterprise' está activo
+    await useModuleIfAvailable(employee.company_id, 'notifications-enterprise', async () => {
+      return await NotificationWorkflowService.createNotification({
+        module: 'medical',
+        notificationType: 'certificate_submitted',
+        companyId: employee.company_id,
+        category: 'approval_request',
+        priority: priority,
+        templateKey: 'medical_certificate_review',
+        variables: {
+          employee_name: `${employee.firstName} ${employee.lastName}`,
+          employee_id: employee.employeeId || employee.user_id.substring(0, 8),
+          department: userWithDept?.department?.name || 'Sin departamento',
+          requested_days: certificate.requestedDays,
+          start_date: certificate.startDate.toLocaleDateString('es-AR'),
+          end_date: certificate.endDate.toLocaleDateString('es-AR'),
+          symptoms: certificate.symptoms,
+          has_visited_doctor: certificate.hasVisitedDoctor ? 'Sí' : 'No',
+          medical_center: certificate.medicalCenter || 'No especificado',
+          attending_physician: certificate.attendingPhysician || 'No especificado',
+          diagnosis: certificate.diagnosis || 'Sin diagnóstico',
+          issue_date: certificate.issueDate.toLocaleDateString('es-AR')
+        },
+        relatedEntityType: 'medical_certificate',
+        relatedEntityId: certificate.id,
+        relatedUserId: employee.user_id,
+        relatedDepartmentId: userWithDept?.department?.id,
+        relatedMedicalCertificateId: certificate.id,
+        entity: {
+          requested_days: certificate.requestedDays,
+          has_visited_doctor: certificate.hasVisitedDoctor,
+          needs_audit: certificate.needsAudit
+        },
+        sendEmail: certificate.requestedDays > 7, // Enviar email si son más de 7 días
+        metadata: {
+          certificate_id: certificate.id,
+          symptoms: certificate.symptoms,
+          diagnosis_code: certificate.diagnosisCode,
+          medical_center: certificate.medicalCenter,
+          auto_generated: true
+        }
+      });
+    }, () => {
+      // Fallback: Módulo no activo, certificado guardado sin notificar
+      console.log('⏭️  [MEDICAL] Módulo notificaciones no activo - Certificado guardado sin notificar');
+      return null;
     });
 
     console.log(`✅ [MEDICAL] Notificación generada para certificado ${certificate.id}`);
@@ -631,46 +641,53 @@ async function sendMedicalResponseNotifications(certificate, auditor) {
     console.log(`🔔 [MEDICAL] Generando notificación de respuesta: ${employee.firstName} ${employee.lastName} - ${statusText}`);
 
     // 🔔 GENERAR NOTIFICACIÓN INFORMATIVA (NO REQUIERE ACCIÓN)
-    await NotificationWorkflowService.createNotification({
-      module: 'medical',
-      notificationType: 'certificate_response',
-      companyId: employee.company_id,
-      category: 'informational',
-      priority: 'high',
-      templateKey: 'medical_certificate_response',
-      variables: {
-        employee_name: `${employee.firstName} ${employee.lastName}`,
-        employee_id: employee.employeeId || employee.user_id.substring(0, 8),
-        status: statusText,
-        status_color: certificate.isJustified ? 'success' : 'danger',
-        requested_days: certificate.requestedDays,
-        approved_days: certificate.approvedDays || 0,
-        auditor_name: `${auditor.firstName} ${auditor.lastName}`,
-        auditor_response: certificate.auditorResponse,
-        audit_date: new Date().toLocaleDateString('es-AR'),
-        start_date: certificate.startDate.toLocaleDateString('es-AR'),
-        end_date: certificate.endDate.toLocaleDateString('es-AR')
-      },
-      relatedEntityType: 'medical_certificate',
-      relatedEntityId: certificate.id,
-      relatedUserId: employee.user_id,
-      relatedDepartmentId: employee.department?.id,
-      relatedMedicalCertificateId: certificate.id,
-      recipientRole: 'employee', // Esta notificación va al empleado directamente
-      recipientUserId: employee.user_id,
-      entity: {
-        status: status,
-        approved_days: certificate.approvedDays,
-        is_justified: certificate.isJustified
-      },
-      sendEmail: true, // Siempre enviar email en respuestas
-      metadata: {
-        certificate_id: certificate.id,
-        auditor_id: auditor.user_id,
-        audit_date: new Date(),
-        final_decision: status,
-        auto_generated: true
-      }
+    // 🔌 PLUG & PLAY: Solo se envía si el módulo 'notifications-enterprise' está activo
+    await useModuleIfAvailable(employee.company_id, 'notifications-enterprise', async () => {
+      return await NotificationWorkflowService.createNotification({
+        module: 'medical',
+        notificationType: 'certificate_response',
+        companyId: employee.company_id,
+        category: 'informational',
+        priority: 'high',
+        templateKey: 'medical_certificate_response',
+        variables: {
+          employee_name: `${employee.firstName} ${employee.lastName}`,
+          employee_id: employee.employeeId || employee.user_id.substring(0, 8),
+          status: statusText,
+          status_color: certificate.isJustified ? 'success' : 'danger',
+          requested_days: certificate.requestedDays,
+          approved_days: certificate.approvedDays || 0,
+          auditor_name: `${auditor.firstName} ${auditor.lastName}`,
+          auditor_response: certificate.auditorResponse,
+          audit_date: new Date().toLocaleDateString('es-AR'),
+          start_date: certificate.startDate.toLocaleDateString('es-AR'),
+          end_date: certificate.endDate.toLocaleDateString('es-AR')
+        },
+        relatedEntityType: 'medical_certificate',
+        relatedEntityId: certificate.id,
+        relatedUserId: employee.user_id,
+        relatedDepartmentId: employee.department?.id,
+        relatedMedicalCertificateId: certificate.id,
+        recipientRole: 'employee', // Esta notificación va al empleado directamente
+        recipientUserId: employee.user_id,
+        entity: {
+          status: status,
+          approved_days: certificate.approvedDays,
+          is_justified: certificate.isJustified
+        },
+        sendEmail: true, // Siempre enviar email en respuestas
+        metadata: {
+          certificate_id: certificate.id,
+          auditor_id: auditor.user_id,
+          audit_date: new Date(),
+          final_decision: status,
+          auto_generated: true
+        }
+      });
+    }, () => {
+      // Fallback: Módulo no activo, respuesta registrada sin notificar
+      console.log('⏭️  [MEDICAL] Módulo notificaciones no activo - Respuesta registrada sin notificar');
+      return null;
     });
 
     console.log(`✅ [MEDICAL] Notificación de respuesta generada para certificado ${certificate.id}`);

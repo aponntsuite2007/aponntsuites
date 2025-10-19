@@ -8,6 +8,9 @@ const { Op, QueryTypes } = require('sequelize');
 // Importar servicio de notificaciones enterprise
 const NotificationWorkflowService = require('../services/NotificationWorkflowService');
 
+// Importar sistema modular Plug & Play
+const { useModuleIfAvailable } = require('../utils/moduleHelper');
+
 /**
  * @route POST /api/v1/attendance/checkin
  * @desc Registrar entrada
@@ -638,42 +641,49 @@ async function calculateAttendanceStats(attendance) {
       // 🔔 GENERAR NOTIFICACIÓN CON WORKFLOW AUTOMÁTICO
       console.log(`🔔 [ATTENDANCE] Generando notificación de llegada tarde: ${user.firstName} ${user.lastName} - ${minutesLate} min`);
 
-      await NotificationWorkflowService.createNotification({
-        module: 'attendance',
-        notificationType: 'late_arrival_approval',
-        companyId: user.company_id,
-        category: 'approval_request',
-        priority: minutesLate > 30 ? 'high' : 'medium',
-        templateKey: 'attendance_late_arrival_approval',
-        variables: {
-          employee_name: `${user.firstName} ${user.lastName}`,
-          employee_id: user.employeeId || user.user_id.substring(0, 8),
-          department: user.department?.name || 'Sin departamento',
-          minutes_late: minutesLate,
-          shift_name: shift?.name || 'Sin turno asignado',
-          tolerance_minutes: toleranceMinutes,
-          kiosk_name: attendance.kiosk_id ? `Kiosk ${attendance.kiosk_id}` : 'Manual',
-          check_in_time: checkIn.format('HH:mm'),
-          expected_time: scheduledStart.format('HH:mm')
-        },
-        relatedEntityType: 'attendance',
-        relatedEntityId: attendance.id,
-        relatedUserId: user.user_id,
-        relatedDepartmentId: user.department?.id,
-        relatedKioskId: attendance.kiosk_id,
-        relatedAttendanceId: attendance.id,
-        entity: {
-          requires_authorization: true,
-          minutes_late: minutesLate
-        },
-        sendEmail: minutesLate > 30, // Enviar email si es retraso mayor a 30 min
-        metadata: {
-          shift_id: shift?.id,
-          scheduled_time: scheduledStart.format(),
-          actual_time: checkIn.format(),
-          tolerance: toleranceMinutes,
-          auto_generated: true
-        }
+      // 🔌 PLUG & PLAY: Solo se envía si el módulo 'notifications-enterprise' está activo
+      await useModuleIfAvailable(user.company_id, 'notifications-enterprise', async () => {
+        return await NotificationWorkflowService.createNotification({
+          module: 'attendance',
+          notificationType: 'late_arrival_approval',
+          companyId: user.company_id,
+          category: 'approval_request',
+          priority: minutesLate > 30 ? 'high' : 'medium',
+          templateKey: 'attendance_late_arrival_approval',
+          variables: {
+            employee_name: `${user.firstName} ${user.lastName}`,
+            employee_id: user.employeeId || user.user_id.substring(0, 8),
+            department: user.department?.name || 'Sin departamento',
+            minutes_late: minutesLate,
+            shift_name: shift?.name || 'Sin turno asignado',
+            tolerance_minutes: toleranceMinutes,
+            kiosk_name: attendance.kiosk_id ? `Kiosk ${attendance.kiosk_id}` : 'Manual',
+            check_in_time: checkIn.format('HH:mm'),
+            expected_time: scheduledStart.format('HH:mm')
+          },
+          relatedEntityType: 'attendance',
+          relatedEntityId: attendance.id,
+          relatedUserId: user.user_id,
+          relatedDepartmentId: user.department?.id,
+          relatedKioskId: attendance.kiosk_id,
+          relatedAttendanceId: attendance.id,
+          entity: {
+            requires_authorization: true,
+            minutes_late: minutesLate
+          },
+          sendEmail: minutesLate > 30, // Enviar email si es retraso mayor a 30 min
+          metadata: {
+            shift_id: shift?.id,
+            scheduled_time: scheduledStart.format(),
+            actual_time: checkIn.format(),
+            tolerance: toleranceMinutes,
+            auto_generated: true
+          }
+        });
+      }, () => {
+        // Fallback: Módulo no activo, asistencia registrada sin notificar
+        console.log('⏭️  [ATTENDANCE] Módulo notificaciones no activo - Asistencia registrada sin notificar');
+        return null;
       });
 
       console.log(`✅ [ATTENDANCE] Notificación generada para asistencia ${attendance.id}`);
