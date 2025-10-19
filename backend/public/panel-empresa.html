@@ -61,7 +61,37 @@
      Cualquier modificación futura debe ser cuidadosa para no romper el diseño.
 -->
     <!-- Sistema de Versionado Movido al Header 23/SEP/2025 13:45:00 -->
+
+    <!-- Bootstrap 5 - Requerido para módulo Kiosks Profesional -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
     <link rel="stylesheet" href="css/admin-complete.css">
+
+    <!-- CSS Overrides para asegurar compatibilidad Bootstrap + estilos custom -->
+    <style>
+        /* Asegurar que los modales de Bootstrap se muestren correctamente */
+        .modal {
+            z-index: 1055 !important;
+        }
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
+
+        /* Asegurar que los modales sean scrollables */
+        .modal-dialog-scrollable .modal-body {
+            overflow-y: auto;
+        }
+
+        /* Fix para que botones de Bootstrap no interfieran con estilos custom */
+        .modal .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+    </style>
+
     <!-- CONFIGURACIÓN DINÁMICA DE PUERTOS - DEBE SER EL PRIMER SCRIPT -->
     <script src="js/port-config.js"></script>
     <script src="js/translation-system.js"></script>
@@ -6693,5 +6723,8 @@
         // Cerrar sidebar al cambiar de orientación
         window.addEventListener('orientationchange', closeMobileSidebar);
     </script>
+
+    <!-- Bootstrap 5 JavaScript Bundle (incluye Popper.js para modales) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
