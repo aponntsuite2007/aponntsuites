@@ -133,6 +133,13 @@ const SupportTicket = require('../models/SupportTicket')(sequelize);
 const SupportPackageAuction = require('../models/SupportPackageAuction')(sequelize);
 const VendorReferral = require('../models/VendorReferral')(sequelize);
 
+// Modelos para sistema de notificaciones enterprise
+const Notification = require('../models/Notification')(sequelize);
+const NotificationWorkflow = require('../models/NotificationWorkflow')(sequelize);
+const NotificationActionsLog = require('../models/NotificationActionsLog')(sequelize);
+const NotificationTemplate = require('../models/NotificationTemplate')(sequelize);
+const UserNotificationPreference = require('../models/UserNotificationPreference')(sequelize);
+
 // SuperUser eliminado - se unificó con tabla User
 
 // Definir asociaciones
@@ -350,6 +357,73 @@ VendorReferral.belongsTo(User, { foreignKey: 'referredId', targetKey: 'user_id',
 VendorCommission.belongsTo(VendorReferral, { foreignKey: 'referralId', as: 'referral' });
 VendorReferral.hasMany(VendorCommission, { foreignKey: 'referralId', as: 'commissions' });
 
+// =========================================================================
+// Asociaciones del sistema de notificaciones enterprise
+// =========================================================================
+
+// Notification associations
+Company.hasMany(Notification, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'notifications' });
+Notification.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(Notification, { foreignKey: 'recipient_user_id', sourceKey: 'user_id', as: 'notifications' });
+Notification.belongsTo(User, { foreignKey: 'recipient_user_id', targetKey: 'user_id', as: 'recipient' });
+
+User.hasMany(Notification, { foreignKey: 'related_user_id', sourceKey: 'user_id', as: 'relatedToNotifications' });
+Notification.belongsTo(User, { foreignKey: 'related_user_id', targetKey: 'user_id', as: 'relatedUser' });
+
+User.hasMany(Notification, { foreignKey: 'created_by', sourceKey: 'user_id', as: 'createdNotifications' });
+Notification.belongsTo(User, { foreignKey: 'created_by', targetKey: 'user_id', as: 'creator' });
+
+User.hasMany(Notification, { foreignKey: 'read_by', sourceKey: 'user_id', as: 'readNotifications' });
+Notification.belongsTo(User, { foreignKey: 'read_by', targetKey: 'user_id', as: 'reader' });
+
+User.hasMany(Notification, { foreignKey: 'action_taken_by', sourceKey: 'user_id', as: 'actedNotifications' });
+Notification.belongsTo(User, { foreignKey: 'action_taken_by', targetKey: 'user_id', as: 'actor' });
+
+Department.hasMany(Notification, { foreignKey: 'recipient_department_id', as: 'departmentNotifications' });
+Notification.belongsTo(Department, { foreignKey: 'recipient_department_id', as: 'recipientDepartment' });
+
+Shift.hasMany(Notification, { foreignKey: 'recipient_shift_id', as: 'shiftNotifications' });
+Notification.belongsTo(Shift, { foreignKey: 'recipient_shift_id', as: 'recipientShift' });
+
+Department.hasMany(Notification, { foreignKey: 'related_department_id', as: 'relatedNotifications' });
+Notification.belongsTo(Department, { foreignKey: 'related_department_id', as: 'relatedDepartment' });
+
+Kiosk.hasMany(Notification, { foreignKey: 'related_kiosk_id', as: 'kioskNotifications' });
+Notification.belongsTo(Kiosk, { foreignKey: 'related_kiosk_id', as: 'relatedKiosk' });
+
+Attendance.hasMany(Notification, { foreignKey: 'related_attendance_id', as: 'attendanceNotifications' });
+Notification.belongsTo(Attendance, { foreignKey: 'related_attendance_id', as: 'relatedAttendance' });
+
+// Escalation chain
+Notification.belongsTo(Notification, { foreignKey: 'escalated_from_notification_id', as: 'escalatedFrom' });
+Notification.hasOne(Notification, { foreignKey: 'escalated_from_notification_id', as: 'escalatedTo' });
+
+// NotificationWorkflow associations
+Company.hasMany(NotificationWorkflow, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'workflows' });
+NotificationWorkflow.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// NotificationActionsLog associations
+Notification.hasMany(NotificationActionsLog, { foreignKey: 'notification_id', as: 'actionsLog' });
+NotificationActionsLog.belongsTo(Notification, { foreignKey: 'notification_id', as: 'notification' });
+
+Company.hasMany(NotificationActionsLog, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'notificationActions' });
+NotificationActionsLog.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(NotificationActionsLog, { foreignKey: 'action_by', sourceKey: 'user_id', as: 'notificationActions' });
+NotificationActionsLog.belongsTo(User, { foreignKey: 'action_by', targetKey: 'user_id', as: 'actionBy' });
+
+// NotificationTemplate associations
+Company.hasMany(NotificationTemplate, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'notificationTemplates' });
+NotificationTemplate.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// UserNotificationPreference associations
+User.hasMany(UserNotificationPreference, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'notificationPreferences' });
+UserNotificationPreference.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+Company.hasMany(UserNotificationPreference, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'userNotificationPreferences' });
+UserNotificationPreference.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
 // SuperUser asociaciones removidas - funcionalidad movida a User
 
 module.exports = {
@@ -399,7 +473,12 @@ module.exports = {
   SupportTicket,
   SupportPackageAuction,
   VendorReferral,
-  
+  Notification,
+  NotificationWorkflow,
+  NotificationActionsLog,
+  NotificationTemplate,
+  UserNotificationPreference,
+
   connect: async () => {
     try {
       await sequelize.authenticate();

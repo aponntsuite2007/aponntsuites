@@ -5,14 +5,18 @@
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
-const { 
-  VacationConfiguration, 
-  VacationScale, 
-  ExtraordinaryLicense, 
-  VacationRequest, 
+const {
+  VacationConfiguration,
+  VacationScale,
+  ExtraordinaryLicense,
+  VacationRequest,
   TaskCompatibility,
-  User 
+  User,
+  Department
 } = require('../config/database');
+
+// Importar servicio de notificaciones enterprise
+const NotificationWorkflowService = require('../services/NotificationWorkflowService');
 
 // ======== CONFIGURACIÓN DE VACACIONES ========
 
@@ -412,8 +416,12 @@ router.post('/requests', async (req, res) => {
       endDate,
       totalDays,
       reason,
-      status: 'pending'
+      status: 'pending',
+      company_id: req.user?.company_id || req.body.company_id || 1
     });
+
+    // 🔔 GENERAR NOTIFICACIÓN AUTOMÁTICA
+    await sendVacationRequestNotification(newRequest);
 
     res.status(201).json({
       success: true,
@@ -464,6 +472,9 @@ router.put('/requests/:id/approval', async (req, res) => {
       approvalDate: new Date(),
       approvalComments
     });
+
+    // 🔔 GENERAR NOTIFICACIÓN DE RESPUESTA AL EMPLEADO
+    await sendVacationResponseNotification(request, approvedBy, status);
 
     res.json({
       success: true,
@@ -910,5 +921,160 @@ router.get('/calculate-days/:userId', async (req, res) => {
     });
   }
 });
+
+// ======== FUNCIONES AUXILIARES PARA NOTIFICACIONES ========
+
+// Enviar notificación de nueva solicitud de vacaciones
+async function sendVacationRequestNotification(vacationRequest) {
+  try {
+    // Obtener datos completos del empleado y departamento
+    const employee = await User.findByPk(vacationRequest.userId, {
+      include: [
+        {
+          model: Department,
+          as: 'department',
+          attributes: ['id', 'name', 'supervisor_id']
+        }
+      ]
+    });
+
+    if (!employee) {
+      console.error('[sendVacationRequestNotification] Empleado no encontrado');
+      return;
+    }
+
+    // Obtener tipo de licencia si es extraordinaria
+    let licenseTypeText = 'Vacaciones';
+    if (vacationRequest.requestType === 'extraordinary' && vacationRequest.extraordinaryLicenseId) {
+      const licenseType = await ExtraordinaryLicense.findByPk(vacationRequest.extraordinaryLicenseId);
+      if (licenseType) {
+        licenseTypeText = licenseType.type;
+      }
+    }
+
+    // Determinar prioridad según días solicitados
+    const priority = vacationRequest.totalDays > 14 ? 'high' :
+                     vacationRequest.totalDays > 7 ? 'medium' : 'normal';
+
+    console.log(`🔔 [VACATION] Generando notificación de solicitud: ${employee.firstName} ${employee.lastName} - ${vacationRequest.totalDays} días`);
+
+    // 🔔 GENERAR NOTIFICACIÓN CON WORKFLOW AUTOMÁTICO
+    await NotificationWorkflowService.createNotification({
+      module: 'vacation',
+      notificationType: 'vacation_request_approval',
+      companyId: employee.company_id,
+      category: 'approval_request',
+      priority: priority,
+      templateKey: 'vacation_request_approval',
+      variables: {
+        employee_name: `${employee.firstName} ${employee.lastName}`,
+        employee_id: employee.employeeId || employee.user_id.substring(0, 8),
+        department: employee.department?.name || 'Sin departamento',
+        total_days: vacationRequest.totalDays,
+        start_date: new Date(vacationRequest.startDate).toLocaleDateString('es-AR'),
+        end_date: new Date(vacationRequest.endDate).toLocaleDateString('es-AR'),
+        request_type: vacationRequest.requestType,
+        license_type: licenseTypeText,
+        reason: vacationRequest.reason || 'Sin motivo especificado',
+        request_date: new Date().toLocaleDateString('es-AR')
+      },
+      relatedEntityType: 'vacation_request',
+      relatedEntityId: vacationRequest.id,
+      relatedUserId: employee.user_id,
+      relatedDepartmentId: employee.department?.id,
+      entity: {
+        request_type: vacationRequest.requestType,
+        total_days: vacationRequest.totalDays
+      },
+      sendEmail: vacationRequest.totalDays > 14, // Email si son más de 14 días
+      metadata: {
+        vacation_request_id: vacationRequest.id,
+        request_type: vacationRequest.requestType,
+        license_id: vacationRequest.extraordinaryLicenseId,
+        auto_generated: true
+      }
+    });
+
+    console.log(`✅ [VACATION] Notificación generada para solicitud ${vacationRequest.id}`);
+
+  } catch (error) {
+    console.error('[sendVacationRequestNotification] Error:', error);
+  }
+}
+
+// Enviar notificación de respuesta a solicitud de vacaciones
+async function sendVacationResponseNotification(vacationRequest, approvedBy, status) {
+  try {
+    const employee = await User.findByPk(vacationRequest.userId, {
+      include: [
+        {
+          model: Department,
+          as: 'department',
+          attributes: ['id', 'name']
+        }
+      ]
+    });
+
+    if (!employee) {
+      console.error('[sendVacationResponseNotification] Empleado no encontrado');
+      return;
+    }
+
+    const approver = await User.findByPk(approvedBy);
+    if (!approver) {
+      console.error('[sendVacationResponseNotification] Aprobador no encontrado');
+      return;
+    }
+
+    const statusText = status === 'approved' ? 'APROBADA' : 'RECHAZADA';
+
+    console.log(`🔔 [VACATION] Generando notificación de respuesta: ${employee.firstName} ${employee.lastName} - ${statusText}`);
+
+    // 🔔 GENERAR NOTIFICACIÓN INFORMATIVA (NO REQUIERE ACCIÓN)
+    await NotificationWorkflowService.createNotification({
+      module: 'vacation',
+      notificationType: 'vacation_response',
+      companyId: employee.company_id,
+      category: 'informational',
+      priority: 'high',
+      templateKey: 'vacation_request_response',
+      variables: {
+        employee_name: `${employee.firstName} ${employee.lastName}`,
+        employee_id: employee.employeeId || employee.user_id.substring(0, 8),
+        status: statusText,
+        status_color: status === 'approved' ? 'success' : 'danger',
+        total_days: vacationRequest.totalDays,
+        start_date: new Date(vacationRequest.startDate).toLocaleDateString('es-AR'),
+        end_date: new Date(vacationRequest.endDate).toLocaleDateString('es-AR'),
+        approver_name: `${approver.firstName} ${approver.lastName}`,
+        approval_comments: vacationRequest.approvalComments || 'Sin comentarios',
+        approval_date: new Date().toLocaleDateString('es-AR')
+      },
+      relatedEntityType: 'vacation_request',
+      relatedEntityId: vacationRequest.id,
+      relatedUserId: employee.user_id,
+      relatedDepartmentId: employee.department?.id,
+      recipientRole: 'employee', // Esta notificación va al empleado directamente
+      recipientUserId: employee.user_id,
+      entity: {
+        status: status,
+        total_days: vacationRequest.totalDays
+      },
+      sendEmail: true, // Siempre enviar email en respuestas
+      metadata: {
+        vacation_request_id: vacationRequest.id,
+        approver_id: approvedBy,
+        approval_date: new Date(),
+        final_decision: status,
+        auto_generated: true
+      }
+    });
+
+    console.log(`✅ [VACATION] Notificación de respuesta generada para solicitud ${vacationRequest.id}`);
+
+  } catch (error) {
+    console.error('[sendVacationResponseNotification] Error:', error);
+  }
+}
 
 module.exports = router;

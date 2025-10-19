@@ -10,7 +10,7 @@ const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 
 // Importar modelos desde database.js
-const { 
+const {
   MedicalCertificate,
   MedicalPrescription,
   MedicalQuestionnaire,
@@ -20,10 +20,14 @@ const {
   EmployeeMedicalRecord,
   MedicalHistory,
   User,
-  Message
+  Message,
+  Department
 } = require('../config/database');
 
-// Importar servicio de notificaciones (temporal mock)
+// Importar servicio de notificaciones enterprise
+const NotificationWorkflowService = require('../services/NotificationWorkflowService');
+
+// Importar servicio de notificaciones (temporal mock para WhatsApp/SMS)
 // const notificationService = require('../services/notificationService');
 const notificationService = {
   sendNotification: async () => ({ success: true, message: 'Notification sent' })
@@ -537,94 +541,142 @@ function requireRole(roles) {
 // Enviar notificaciones de nuevo certificado
 async function sendMedicalCertificateNotifications(certificate, employee) {
   try {
-    // Buscar médicos y personal de RRHH para notificar
-    const medicalStaff = await User.findAll({
-      where: {
-        [Op.or]: [
-          { role: 'medical' },
-          { role: 'admin' },
-          { role: 'supervisor' }
-        ],
-        isActive: true
+    // Obtener departamento del empleado
+    const userWithDept = await User.findByPk(employee.user_id, {
+      include: [
+        {
+          model: Department,
+          as: 'department',
+          attributes: ['id', 'name']
+        }
+      ]
+    });
+
+    // Determinar prioridad según días solicitados
+    const priority = certificate.requestedDays > 7 ? 'high' :
+                     certificate.requestedDays > 3 ? 'medium' : 'normal';
+
+    console.log(`🔔 [MEDICAL] Generando notificación de certificado médico: ${employee.firstName} ${employee.lastName} - ${certificate.requestedDays} días`);
+
+    // 🔔 GENERAR NOTIFICACIÓN CON WORKFLOW AUTOMÁTICO
+    await NotificationWorkflowService.createNotification({
+      module: 'medical',
+      notificationType: 'certificate_submitted',
+      companyId: employee.company_id,
+      category: 'approval_request',
+      priority: priority,
+      templateKey: 'medical_certificate_review',
+      variables: {
+        employee_name: `${employee.firstName} ${employee.lastName}`,
+        employee_id: employee.employeeId || employee.user_id.substring(0, 8),
+        department: userWithDept?.department?.name || 'Sin departamento',
+        requested_days: certificate.requestedDays,
+        start_date: certificate.startDate.toLocaleDateString('es-AR'),
+        end_date: certificate.endDate.toLocaleDateString('es-AR'),
+        symptoms: certificate.symptoms,
+        has_visited_doctor: certificate.hasVisitedDoctor ? 'Sí' : 'No',
+        medical_center: certificate.medicalCenter || 'No especificado',
+        attending_physician: certificate.attendingPhysician || 'No especificado',
+        diagnosis: certificate.diagnosis || 'Sin diagnóstico',
+        issue_date: certificate.issueDate.toLocaleDateString('es-AR')
+      },
+      relatedEntityType: 'medical_certificate',
+      relatedEntityId: certificate.id,
+      relatedUserId: employee.user_id,
+      relatedDepartmentId: userWithDept?.department?.id,
+      relatedMedicalCertificateId: certificate.id,
+      entity: {
+        requested_days: certificate.requestedDays,
+        has_visited_doctor: certificate.hasVisitedDoctor,
+        needs_audit: certificate.needsAudit
+      },
+      sendEmail: certificate.requestedDays > 7, // Enviar email si son más de 7 días
+      metadata: {
+        certificate_id: certificate.id,
+        symptoms: certificate.symptoms,
+        diagnosis_code: certificate.diagnosisCode,
+        medical_center: certificate.medicalCenter,
+        auto_generated: true
       }
     });
 
-    const message = `Nueva solicitud de ausencia médica de ${employee.firstName} ${employee.lastName}. ` +
-                   `Días solicitados: ${certificate.requestedDays}. ` +
-                   `Fecha inicio: ${certificate.startDate.toLocaleDateString()}`;
-
-    // Crear mensajes internos
-    for (const staff of medicalStaff) {
-      await Message.create({
-        senderId: certificate.userId,
-        receiverId: staff.id,
-        title: 'Nueva Ausencia Médica',
-        content: message,
-        type: 'medical_certificate',
-        priority: 'high'
-      });
-    }
-
-    // Enviar notificaciones WhatsApp/SMS
-    const employeeData = {
-      firstName: employee.firstName,
-      lastName: employee.lastName,
-      medicalStaffPhone: medicalStaff.find(s => s.role === 'medical')?.phone,
-      hrPhone: medicalStaff.find(s => s.role === 'admin')?.phone
-    };
-
-    const certificateData = {
-      primaryDiagnosis: certificate.diagnosis,
-      startDate: certificate.startDate,
-      endDate: certificate.endDate,
-      totalDays: certificate.requestedDays
-    };
-
-    await notificationService.notifyMedicalCertificateSubmitted(employeeData, certificateData);
+    console.log(`✅ [MEDICAL] Notificación generada para certificado ${certificate.id}`);
 
   } catch (error) {
-    console.error('Error sending notifications:', error);
+    console.error('[sendMedicalCertificateNotifications] Error:', error);
   }
 }
 
 // Enviar notificaciones de respuesta médica
 async function sendMedicalResponseNotifications(certificate, auditor) {
   try {
-    const message = `Respuesta a su solicitud de ausencia médica: ${certificate.isJustified ? 'APROBADA' : 'RECHAZADA'}. ` +
-                   `Días aprobados: ${certificate.approvedDays || 0}. ` +
-                   `Observaciones: ${certificate.auditorResponse}`;
-
-    // Mensaje al empleado
-    await Message.create({
-      senderId: auditor.id,
-      receiverId: certificate.userId,
-      title: `Respuesta Ausencia Médica - ${certificate.isJustified ? 'APROBADA' : 'RECHAZADA'}`,
-      content: message,
-      type: 'medical_response',
-      priority: 'high'
+    const employee = await User.findByPk(certificate.userId, {
+      include: [
+        {
+          model: Department,
+          as: 'department',
+          attributes: ['id', 'name']
+        }
+      ]
     });
 
-    // Enviar notificaciones WhatsApp/SMS al empleado
-    const employee = await User.findByPk(certificate.userId);
-    
-    if (employee) {
-      const employeeData = {
-        firstName: employee.firstName,
-        lastName: employee.lastName,
-        phone: employee.phone,
-        personalPhone: employee.personalPhone
-      };
-
-      const reviewData = {
-        status: certificate.isJustified ? 'approved' : 'rejected',
-        comments: certificate.auditorResponse
-      };
-
-      await notificationService.notifyMedicalReview(employeeData, certificate, reviewData);
+    if (!employee) {
+      console.error('[sendMedicalResponseNotifications] Empleado no encontrado');
+      return;
     }
 
+    const status = certificate.isJustified ? 'approved' : 'rejected';
+    const statusText = certificate.isJustified ? 'APROBADO' : 'RECHAZADO';
+
+    console.log(`🔔 [MEDICAL] Generando notificación de respuesta: ${employee.firstName} ${employee.lastName} - ${statusText}`);
+
+    // 🔔 GENERAR NOTIFICACIÓN INFORMATIVA (NO REQUIERE ACCIÓN)
+    await NotificationWorkflowService.createNotification({
+      module: 'medical',
+      notificationType: 'certificate_response',
+      companyId: employee.company_id,
+      category: 'informational',
+      priority: 'high',
+      templateKey: 'medical_certificate_response',
+      variables: {
+        employee_name: `${employee.firstName} ${employee.lastName}`,
+        employee_id: employee.employeeId || employee.user_id.substring(0, 8),
+        status: statusText,
+        status_color: certificate.isJustified ? 'success' : 'danger',
+        requested_days: certificate.requestedDays,
+        approved_days: certificate.approvedDays || 0,
+        auditor_name: `${auditor.firstName} ${auditor.lastName}`,
+        auditor_response: certificate.auditorResponse,
+        audit_date: new Date().toLocaleDateString('es-AR'),
+        start_date: certificate.startDate.toLocaleDateString('es-AR'),
+        end_date: certificate.endDate.toLocaleDateString('es-AR')
+      },
+      relatedEntityType: 'medical_certificate',
+      relatedEntityId: certificate.id,
+      relatedUserId: employee.user_id,
+      relatedDepartmentId: employee.department?.id,
+      relatedMedicalCertificateId: certificate.id,
+      recipientRole: 'employee', // Esta notificación va al empleado directamente
+      recipientUserId: employee.user_id,
+      entity: {
+        status: status,
+        approved_days: certificate.approvedDays,
+        is_justified: certificate.isJustified
+      },
+      sendEmail: true, // Siempre enviar email en respuestas
+      metadata: {
+        certificate_id: certificate.id,
+        auditor_id: auditor.user_id,
+        audit_date: new Date(),
+        final_decision: status,
+        auto_generated: true
+      }
+    });
+
+    console.log(`✅ [MEDICAL] Notificación de respuesta generada para certificado ${certificate.id}`);
+
   } catch (error) {
-    console.error('Error sending response notifications:', error);
+    console.error('[sendMedicalResponseNotifications] Error:', error);
   }
 }
 

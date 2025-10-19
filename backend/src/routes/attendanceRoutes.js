@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { Attendance, User, Branch, Shift, sequelize } = require('../config/database');
+const { Attendance, User, Branch, Shift, Department, sequelize } = require('../config/database');
 const { auth, supervisorOrAdmin } = require('../middleware/auth');
 const moment = require('moment-timezone');
 const { Op, QueryTypes } = require('sequelize');
+
+// Importar servicio de notificaciones enterprise
+const NotificationWorkflowService = require('../services/NotificationWorkflowService');
 
 /**
  * @route POST /api/v1/attendance/checkin
@@ -550,6 +553,10 @@ router.get('/stats/chart', auth, async (req, res) => {
 /**
  * Función auxiliar para calcular estadísticas de asistencia
  */
+/**
+ * Calcular estadísticas de asistencia y generar notificaciones si es necesario
+ * INTEGRADO CON SISTEMA DE NOTIFICACIONES ENTERPRISE V3.0
+ */
 async function calculateAttendanceStats(attendance) {
   if (!attendance.check_in) return;
 
@@ -562,19 +569,143 @@ async function calculateAttendanceStats(attendance) {
     attendance.workingHours = duration.asHours();
   }
 
-  // TODO: Implementar lógica más compleja basada en turnos asignados
-  // Por ahora, lógica básica
-  const scheduledStart = moment(attendance.date + ' 08:00', 'YYYY-MM-DD HH:mm');
-  const toleranceMinutes = parseInt(process.env.TOLERANCE_MINUTES_ENTRY) || 10;
+  try {
+    // Obtener usuario con turno y departamento
+    const user = await User.findByPk(attendance.user_id, {
+      include: [
+        {
+          model: Department,
+          as: 'department',
+          attributes: ['id', 'name', 'supervisor_id']
+        }
+      ]
+    });
 
-  if (checkIn.isAfter(scheduledStart.clone().add(toleranceMinutes, 'minutes'))) {
-    attendance.status = 'late';
-    // attendance.lateMinutes = moment.duration(checkIn.diff(scheduledStart)).asMinutes(); // Field doesn't exist in table
-  } else {
+    if (!user) {
+      console.log('[calculateAttendanceStats] Usuario no encontrado');
+      attendance.status = 'present';
+      await attendance.save();
+      return;
+    }
+
+    // Obtener turno del usuario
+    let shift = null;
+    if (user.primary_shift_id) {
+      shift = await Shift.findByPk(user.primary_shift_id);
+    }
+
+    // Si no tiene turno asignado, usar horario por defecto
+    const scheduledStart = shift
+      ? moment(attendance.date + ' ' + shift.start_time, 'YYYY-MM-DD HH:mm:ss')
+      : moment(attendance.date + ' 08:00', 'YYYY-MM-DD HH:mm');
+
+    // Obtener tolerancia del turno o usar por defecto
+    const toleranceMinutes = shift?.tolerance_minutes_entry
+      || parseInt(process.env.TOLERANCE_MINUTES_ENTRY)
+      || 10;
+
+    // Calcular minutos de retraso
+    const minutesLate = checkIn.diff(scheduledStart, 'minutes');
+
+    // Determinar si está dentro de tolerancia
+    const isWithinTolerance = minutesLate <= toleranceMinutes;
+    const requiresAuthorization = minutesLate > toleranceMinutes;
+
+    // Actualizar attendance
+    if (requiresAuthorization) {
+      attendance.status = 'late';
+      attendance.minutes_late = minutesLate;
+      attendance.is_within_tolerance = false;
+      attendance.requires_authorization = true;
+      attendance.authorization_status = 'pending_supervisor';
+
+      // Calcular deadline para el supervisor (30 minutos)
+      const deadline = moment(attendance.check_in).add(30, 'minutes').toDate();
+      attendance.supervisor_authorization_deadline = deadline;
+
+      // Obtener supervisor del turno o departamento
+      let supervisorId = null;
+      if (shift && shift.supervisor_id) {
+        supervisorId = shift.supervisor_id;
+      } else if (user.department && user.department.supervisor_id) {
+        supervisorId = user.department.supervisor_id;
+      }
+
+      attendance.supervisor_id = supervisorId;
+
+      await attendance.save();
+
+      // 🔔 GENERAR NOTIFICACIÓN CON WORKFLOW AUTOMÁTICO
+      console.log(`🔔 [ATTENDANCE] Generando notificación de llegada tarde: ${user.firstName} ${user.lastName} - ${minutesLate} min`);
+
+      await NotificationWorkflowService.createNotification({
+        module: 'attendance',
+        notificationType: 'late_arrival_approval',
+        companyId: user.company_id,
+        category: 'approval_request',
+        priority: minutesLate > 30 ? 'high' : 'medium',
+        templateKey: 'attendance_late_arrival_approval',
+        variables: {
+          employee_name: `${user.firstName} ${user.lastName}`,
+          employee_id: user.employeeId || user.user_id.substring(0, 8),
+          department: user.department?.name || 'Sin departamento',
+          minutes_late: minutesLate,
+          shift_name: shift?.name || 'Sin turno asignado',
+          tolerance_minutes: toleranceMinutes,
+          kiosk_name: attendance.kiosk_id ? `Kiosk ${attendance.kiosk_id}` : 'Manual',
+          check_in_time: checkIn.format('HH:mm'),
+          expected_time: scheduledStart.format('HH:mm')
+        },
+        relatedEntityType: 'attendance',
+        relatedEntityId: attendance.id,
+        relatedUserId: user.user_id,
+        relatedDepartmentId: user.department?.id,
+        relatedKioskId: attendance.kiosk_id,
+        relatedAttendanceId: attendance.id,
+        entity: {
+          requires_authorization: true,
+          minutes_late: minutesLate
+        },
+        sendEmail: minutesLate > 30, // Enviar email si es retraso mayor a 30 min
+        metadata: {
+          shift_id: shift?.id,
+          scheduled_time: scheduledStart.format(),
+          actual_time: checkIn.format(),
+          tolerance: toleranceMinutes,
+          auto_generated: true
+        }
+      });
+
+      console.log(`✅ [ATTENDANCE] Notificación generada para asistencia ${attendance.id}`);
+
+    } else if (minutesLate > 0 && minutesLate <= toleranceMinutes) {
+      // Llegó tarde pero dentro de tolerancia
+      attendance.status = 'present';
+      attendance.minutes_late = minutesLate;
+      attendance.is_within_tolerance = true;
+      attendance.requires_authorization = false;
+      await attendance.save();
+
+      console.log(`ℹ️ [ATTENDANCE] Llegada dentro de tolerancia: ${user.firstName} ${user.lastName} - ${minutesLate} min`);
+
+    } else {
+      // Llegó a tiempo o temprano
+      attendance.status = 'present';
+      attendance.minutes_late = 0;
+      attendance.minutes_early = minutesLate < 0 ? Math.abs(minutesLate) : 0;
+      attendance.is_within_tolerance = true;
+      attendance.requires_authorization = false;
+      await attendance.save();
+
+      console.log(`✅ [ATTENDANCE] Llegada puntual: ${user.firstName} ${user.lastName}`);
+    }
+
+  } catch (error) {
+    console.error('[calculateAttendanceStats] Error:', error);
+    // Si falla, al menos guardar status básico
     attendance.status = 'present';
+    await attendance.save();
   }
-
-  await attendance.save();
 }
 
 /**

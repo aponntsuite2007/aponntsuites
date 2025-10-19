@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { sequelize } = require('../config/database');
+const { sequelize, User, Department } = require('../config/database');
 const jwt = require('jsonwebtoken');
 // const pdfGenerator = require('../utils/pdfGenerator'); // DESHABILITADO - Sin Puppeteer
 const fs = require('fs').promises;
 const path = require('path');
 const { checkPermission } = require('../middleware/permissions');
+
+// Importar servicio de notificaciones enterprise
+const NotificationWorkflowService = require('../services/NotificationWorkflowService');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'tu_secreto_jwt_aqui';
 
@@ -199,13 +202,21 @@ router.post('/communications', authenticateToken, checkPermission('legal-communi
         await sequelize.query(`
             INSERT INTO audit_logs (userId, action, moduleId, entityType, entityId, details, success, createdAt)
             VALUES (?, 'create_legal_communication', 'legal-communications', 'legal_communication', ?, ?, 1, NOW())
-        `, { 
+        `, {
             replacements: [
                 req.user.user_id,
                 communicationId,
                 JSON.stringify({ type_id, employee_id, subject })
             ]
         });
+
+        // 🔔 GENERAR NOTIFICACIÓN AUTOMÁTICA AL EMPLEADO
+        await sendLegalCommunicationNotification(
+            communicationId,
+            employee[0],
+            communicationType[0],
+            { subject, description, reference_number: referenceNumber }
+        );
 
         res.status(201).json({
             success: true,
@@ -336,7 +347,7 @@ router.put('/communications/:id/status', authenticateToken, checkPermission('leg
         }
 
         await sequelize.query(`
-            UPDATE legal_communications 
+            UPDATE legal_communications
             SET status = ?, notes = ?, updated_at = NOW()
             WHERE id = ?
         `, { replacements: [status, notes, id] });
@@ -345,13 +356,18 @@ router.put('/communications/:id/status', authenticateToken, checkPermission('leg
         await sequelize.query(`
             INSERT INTO audit_logs (userId, action, moduleId, entityType, entityId, details, success, createdAt)
             VALUES (?, 'update_legal_communication_status', 'legal-communications', 'legal_communication', ?, ?, 1, NOW())
-        `, { 
+        `, {
             replacements: [
                 req.user.user_id,
                 id,
                 JSON.stringify({ new_status: status, notes })
             ]
         });
+
+        // 🔔 GENERAR NOTIFICACIÓN AL EMPLEADO SEGÚN EL ESTADO
+        if (['sent', 'delivered'].includes(status)) {
+            await sendLegalStatusChangeNotification(id, status, notes);
+        }
 
         res.json({
             success: true,
@@ -443,5 +459,191 @@ router.get('/dashboard/stats', authenticateToken, checkPermission('legal-dashboa
         });
     }
 });
+
+// ======== FUNCIONES AUXILIARES PARA NOTIFICACIONES ========
+
+// Enviar notificación de nueva comunicación legal al empleado
+async function sendLegalCommunicationNotification(communicationId, employee, communicationType, details) {
+    try {
+        // Obtener datos completos del empleado
+        const employeeData = await User.findOne({
+            where: { user_id: employee.id },
+            include: [
+                {
+                    model: Department,
+                    as: 'department',
+                    attributes: ['id', 'name']
+                }
+            ]
+        });
+
+        if (!employeeData) {
+            console.error('[sendLegalCommunicationNotification] Empleado no encontrado');
+            return;
+        }
+
+        // Determinar prioridad según severidad
+        const priorityMap = {
+            'critical': 'urgent',
+            'high': 'high',
+            'medium': 'medium',
+            'low': 'normal'
+        };
+        const priority = priorityMap[communicationType.severity] || 'high';
+
+        // Determinar si requiere acción (respuesta)
+        const requiresAction = communicationType.requires_response || false;
+
+        console.log(`🔔 [LEGAL] Generando notificación de comunicación legal: ${employeeData.firstName} ${employeeData.lastName} - ${communicationType.category}`);
+
+        // 🔔 GENERAR NOTIFICACIÓN CON WORKFLOW SI REQUIERE RESPUESTA
+        await NotificationWorkflowService.createNotification({
+            module: 'legal',
+            notificationType: 'legal_communication_received',
+            companyId: employeeData.company_id,
+            category: requiresAction ? 'action_required' : 'informational',
+            priority: priority,
+            templateKey: 'legal_communication_received',
+            variables: {
+                employee_name: `${employeeData.firstName} ${employeeData.lastName}`,
+                employee_id: employeeData.employeeId || employeeData.user_id.substring(0, 8),
+                department: employeeData.department?.name || 'Sin departamento',
+                communication_type: communicationType.name,
+                communication_category: communicationType.category,
+                severity: communicationType.severity,
+                subject: details.subject,
+                description: details.description || 'Ver detalles completos en el sistema',
+                reference_number: details.reference_number,
+                legal_basis: communicationType.legal_basis || 'No especificado',
+                requires_response: requiresAction ? 'Sí' : 'No',
+                response_deadline: requiresAction ? '5 días hábiles' : 'N/A'
+            },
+            relatedEntityType: 'legal_communication',
+            relatedEntityId: communicationId,
+            relatedUserId: employeeData.user_id,
+            relatedDepartmentId: employeeData.department?.id,
+            recipientRole: 'employee', // Va directo al empleado
+            recipientUserId: employeeData.user_id,
+            entity: {
+                communication_type: communicationType.category,
+                severity: communicationType.severity,
+                requires_response: requiresAction
+            },
+            sendEmail: true, // Siempre enviar email para comunicaciones legales
+            metadata: {
+                communication_id: communicationId,
+                type_id: communicationType.id,
+                category: communicationType.category,
+                severity: communicationType.severity,
+                auto_generated: true
+            }
+        });
+
+        console.log(`✅ [LEGAL] Notificación generada para comunicación ${communicationId}`);
+
+    } catch (error) {
+        console.error('[sendLegalCommunicationNotification] Error:', error);
+    }
+}
+
+// Enviar notificación de cambio de estado de comunicación legal
+async function sendLegalStatusChangeNotification(communicationId, newStatus, notes) {
+    try {
+        // Obtener datos de la comunicación
+        const [communication] = await sequelize.query(`
+            SELECT
+                lc.*,
+                lct.name as type_name,
+                lct.category,
+                lct.severity,
+                u.user_id as employee_user_id,
+                u.firstName as employee_first_name,
+                u.lastName as employee_last_name,
+                u.employeeId,
+                u.company_id
+            FROM legal_communications lc
+            JOIN legal_communication_types lct ON lc.type_id = lct.id
+            JOIN users u ON lc.employee_id = u.id
+            WHERE lc.id = ?
+        `, { replacements: [communicationId] });
+
+        if (communication.length === 0) {
+            console.error('[sendLegalStatusChangeNotification] Comunicación no encontrada');
+            return;
+        }
+
+        const comm = communication[0];
+
+        // Obtener empleado con departamento
+        const employeeData = await User.findOne({
+            where: { user_id: comm.employee_user_id },
+            include: [
+                {
+                    model: Department,
+                    as: 'department',
+                    attributes: ['id', 'name']
+                }
+            ]
+        });
+
+        if (!employeeData) {
+            console.error('[sendLegalStatusChangeNotification] Empleado no encontrado');
+            return;
+        }
+
+        const statusTexts = {
+            'sent': 'ENVIADA',
+            'delivered': 'ENTREGADA',
+            'responded': 'RESPONDIDA',
+            'closed': 'CERRADA'
+        };
+        const statusText = statusTexts[newStatus] || newStatus.toUpperCase();
+
+        console.log(`🔔 [LEGAL] Generando notificación de cambio de estado: ${employeeData.firstName} ${employeeData.lastName} - ${statusText}`);
+
+        // 🔔 GENERAR NOTIFICACIÓN INFORMATIVA
+        await NotificationWorkflowService.createNotification({
+            module: 'legal',
+            notificationType: 'legal_communication_status_change',
+            companyId: employeeData.company_id,
+            category: 'informational',
+            priority: newStatus === 'sent' ? 'urgent' : 'high',
+            templateKey: 'legal_communication_status_change',
+            variables: {
+                employee_name: `${employeeData.firstName} ${employeeData.lastName}`,
+                employee_id: employeeData.employeeId || employeeData.user_id.substring(0, 8),
+                communication_type: comm.type_name,
+                reference_number: comm.reference_number,
+                subject: comm.subject,
+                status: statusText,
+                status_color: newStatus === 'delivered' ? 'warning' : 'info',
+                notes: notes || 'Sin notas adicionales',
+                update_date: new Date().toLocaleDateString('es-AR')
+            },
+            relatedEntityType: 'legal_communication',
+            relatedEntityId: communicationId,
+            relatedUserId: employeeData.user_id,
+            relatedDepartmentId: employeeData.department?.id,
+            recipientRole: 'employee',
+            recipientUserId: employeeData.user_id,
+            entity: {
+                status: newStatus,
+                communication_id: communicationId
+            },
+            sendEmail: ['sent', 'delivered'].includes(newStatus), // Email solo en estados importantes
+            metadata: {
+                communication_id: communicationId,
+                previous_status: comm.status,
+                new_status: newStatus,
+                auto_generated: true
+            }
+        });
+
+        console.log(`✅ [LEGAL] Notificación de cambio de estado generada para comunicación ${communicationId}`);
+
+    } catch (error) {
+        console.error('[sendLegalStatusChangeNotification] Error:', error);
+    }
+}
 
 module.exports = router;
