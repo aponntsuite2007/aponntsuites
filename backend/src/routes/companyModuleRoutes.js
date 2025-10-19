@@ -180,6 +180,65 @@ router.get('/my-company', auth, async (req, res) => {
 });
 
 /**
+ * @route GET /api/v1/company-modules/active
+ * @desc Obtener SOLO módulos ACTIVOS/OPERACIONALES de la empresa (PLUG & PLAY)
+ */
+router.get('/active', simpleAuth, async (req, res) => {
+  try {
+    const userId = req.user?.user_id || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuario sin autenticación' });
+    }
+
+    let companyId = req.query.company_id || req.user?.company_id || req.user?.companyId;
+
+    if (!companyId) {
+      const userQuery = await database.sequelize.query(
+        'SELECT company_id FROM users WHERE user_id = ? AND is_active = true',
+        { replacements: [userId], type: database.sequelize.QueryTypes.SELECT }
+      );
+      if (!userQuery.length) {
+        return res.status(401).json({ error: 'Usuario no encontrado o inactivo' });
+      }
+      companyId = userQuery[0].company_id;
+    }
+
+    // Obtener SOLO módulos operacionales (activos + no expirados + no suspendidos)
+    const activeModules = await database.sequelize.query(`
+      SELECT
+        sm.module_key as "moduleKey",
+        sm.name as "moduleName",
+        sm.category,
+        sm.icon,
+        sm.color,
+        cm.configuration,
+        cm.contracted_at as "contractedAt",
+        cm.expires_at as "expiresAt"
+      FROM company_modules cm
+      INNER JOIN system_modules sm ON cm.system_module_id = sm.id
+      WHERE cm.company_id = ?
+        AND cm.is_active = true
+        AND (cm.expires_at IS NULL OR cm.expires_at > NOW())
+        AND cm.suspended_at IS NULL
+      ORDER BY sm.category, sm.name ASC
+    `, {
+      replacements: [companyId],
+      type: database.sequelize.QueryTypes.SELECT
+    });
+
+    res.json({
+      success: true,
+      modules: activeModules,
+      count: activeModules.length
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo módulos activos:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
  * @route GET /api/v1/company-modules/my-modules
  * @desc Obtener módulos contratados por la empresa del usuario autenticado (LEGACY)
  * IMPORTANTE: Esta ruta debe estar ANTES de /:companyId para evitar conflictos

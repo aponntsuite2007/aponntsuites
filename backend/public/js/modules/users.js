@@ -1,9 +1,18 @@
-// Users Module - v4.0 PROGRESSIVE
-console.log('👥 [USERS] Módulo users FINAL v5.0 cargado - Email editable + Reset password funcionando');
+// Users Module - v5.0 PROGRESSIVE + PLUG & PLAY
+console.log('👥 [USERS] Módulo users v6.0 - PLUG & PLAY SYSTEM INTEGRADO');
 
 // Global variables for users
 let allUsers = [];
 let filteredUsers = [];
+
+// 🔌 MODULE CONFIGURATION - Define which features require which modules
+const USER_MODULE_FEATURES = {
+    'biometric-verification': 'biometric-enterprise',
+    'shift-assignment': 'shifts-enterprise',
+    'bulk-actions': 'users-advanced',
+    'export-csv': 'reports-advanced',
+    'user-stats': 'analytics-basic'
+};
 
 // Users functions
 async function showUsersContent() {
@@ -17,9 +26,9 @@ async function showUsersContent() {
                 <div class="quick-actions">
                     <button class="btn btn-primary" onclick="showAddUser()" data-translate="users.add_user">➕ Agregar Usuario</button>
                     <button class="btn btn-success" onclick="loadUsers()" data-translate="users.user_list">📋 Lista de Usuarios</button>
-                    <button class="btn btn-warning" onclick="showUserStats()" data-translate="users.statistics">📊 Estadísticas</button>
-                    <button class="btn btn-info" onclick="exportUsers()" data-translate="users.export_csv">📤 Exportar CSV</button>
-                    <button class="btn btn-secondary" onclick="showBulkActions()" data-translate="users.bulk_actions">⚡ Acciones Masivas</button>
+                    <button class="btn btn-warning" onclick="showUserStats()" data-translate="users.statistics" data-module="analytics-basic">📊 Estadísticas</button>
+                    <button class="btn btn-info" onclick="exportUsers()" data-translate="users.export_csv" data-module="reports-advanced">📤 Exportar CSV</button>
+                    <button class="btn btn-secondary" onclick="showBulkActions()" data-translate="users.bulk_actions" data-module="users-advanced">⚡ Acciones Masivas</button>
                 </div>
                 
                 <div id="users-container">
@@ -74,7 +83,13 @@ async function showUsersContent() {
     if (window.translator) {
         await window.translator.updateInterface();
     }
-    
+
+    // 🔌 Apply module visibility (show/hide features based on contracted modules)
+    if (window.moduleHelper) {
+        console.log('🔌 [USERS] Aplicando visibilidad de módulos...');
+        await window.moduleHelper.applyModuleVisibility();
+    }
+
     // Auto load user stats on tab show
     setTimeout(showUserStats, 300);
 }
@@ -206,10 +221,15 @@ async function loadUsers() {
         await fetchBiometricStatusForUsers(users);
         
         displayUsersTable(users);
-        
+
         // Update stats
         updateUserStatsFromData(users);
-        
+
+        // 🔌 Apply module visibility to dynamically generated buttons
+        if (window.moduleHelper) {
+            await window.moduleHelper.applyModuleVisibility();
+        }
+
     } catch (error) {
         console.error('❌ [USERS] Error cargando usuarios:', error);
         usersList.innerHTML = '❌ Error cargando usuarios: ' + error.message;
@@ -304,13 +324,13 @@ function displayUsersTable(users) {
                 <td style="font-size: 0.85em; max-width: 150px; overflow: hidden; text-overflow: ellipsis;" title="${shiftsText}">${shiftsText}</td>
                 <td>
                     <span class="status-badge ${biometricClass}">${user.biometric}</span>
-                    ${user.biometricDetails && (user.biometricDetails.face || user.biometricDetails.fingerprint) ? 
-                        `<button class="btn-mini btn-primary" onclick="verifyUserBiometric('${user.user_id}', '${user.name}')" 
-                         title="Verificar biometría" style="margin-left: 5px;">🔍</button>` : ''}
+                    ${user.biometricDetails && (user.biometricDetails.face || user.biometricDetails.fingerprint) ?
+                        `<button class="btn-mini btn-primary" onclick="verifyUserBiometric('${user.user_id}', '${user.name}')"
+                         title="Verificar biometría" style="margin-left: 5px;" data-module="biometric-enterprise">🔍</button>` : ''}
                 </td>
                 <td style="white-space: nowrap; min-width: 90px;">
                     <div style="display: flex; flex-direction: column; gap: 2px; align-items: center;">
-                        <button class="btn-mini btn-success" onclick="assignUserShifts('${user.user_id}', '${user.name}')" title="Asignar Turnos">🕐</button>
+                        <button class="btn-mini btn-success" onclick="assignUserShifts('${user.user_id}', '${user.name}')" title="Asignar Turnos" data-module="shifts-enterprise">🕐</button>
                         <button class="btn-mini btn-warning" onclick="resetPassword('${user.user_id}', '${user.name}')" title="Reset">🔑</button>
                         <button class="btn-mini btn-info" onclick="viewUser('${user.user_id}')" title="Ver">👁️</button>
                         <button class="btn-mini btn-danger" onclick="deleteUser('${user.user_id}')" title="Eliminar">🗑️</button>
@@ -395,14 +415,15 @@ function updateUserStatsFromData(users) {
 // Fetch biometric status for all users
 async function fetchBiometricStatusForUsers(users) {
     console.log('🔍 [USERS] Obteniendo estado biométrico de usuarios...');
-    
+    console.time('⏱️ Tiempo carga biometría');
+
     if (!users || users.length === 0) return;
-    
+
     const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
     if (!token) return;
-    
-    // Fetch biometric data for each user
-    for (let user of users) {
+
+    // ✅ OPTIMIZACIÓN: Fetch EN PARALELO con Promise.all() (100x más rápido!)
+    const promises = users.map(async (user) => {
         try {
             const apiUrl = window.progressiveAdmin.getApiUrl(`/api/v1/facial-biometric/user/${user.user_id}`);
             const response = await fetch(apiUrl, {
@@ -412,14 +433,14 @@ async function fetchBiometricStatusForUsers(users) {
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             if (response.ok) {
                 const bioData = await response.json();
                 if (bioData && bioData.length > 0) {
                     // User has biometric data
                     const hasFace = bioData.some(b => b.faceEmbedding);
                     const hasFingerprint = bioData.some(b => b.fingerprintTemplate);
-                    
+
                     if (hasFace && hasFingerprint) {
                         user.biometric = '👤👆 Completo';
                         user.biometricDetails = { face: true, fingerprint: true };
@@ -447,8 +468,12 @@ async function fetchBiometricStatusForUsers(users) {
             user.biometric = '⚠️ Error';
             user.biometricDetails = { face: false, fingerprint: false };
         }
-    }
-    
+    });
+
+    // Esperar a que TODAS las promesas se resuelvan en paralelo
+    await Promise.allSettled(promises);  // allSettled = continúa aunque algunas fallen
+
+    console.timeEnd('⏱️ Tiempo carga biometría');
     console.log('✅ [USERS] Estado biométrico actualizado');
 }
 
