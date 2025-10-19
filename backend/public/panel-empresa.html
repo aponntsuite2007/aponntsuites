@@ -3952,6 +3952,14 @@
                         }
                         break;
 
+                    case 'notifications-enterprise':
+                        if (typeof NotificationsEnterprise !== 'undefined' && NotificationsEnterprise.init) {
+                            NotificationsEnterprise.init();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'notifications-enterprise.js no cargado');
+                        }
+                        break;
+
                     /* ✅ CÓDIGO FUNCIONAL PROTEGIDO - NO MODIFICAR SIN ANÁLISIS
                      * 📅 Fecha: 23/SEP/2025 04:07:00
                      * 🏷️ Versión: v2.1.2-BIOMETRIC-HUB
@@ -4507,6 +4515,7 @@
                     { id: 'kiosks', name: 'Kioscos', icon: '📟' },
                     { id: 'visitors', name: 'Visitantes', icon: '👥' },
                     { id: 'notifications-inbox', name: 'Bandeja Notificaciones', icon: '📬' },
+                    { id: 'notifications-enterprise', name: 'Notificaciones Enterprise V3.0', icon: '🔔' },
                     { id: 'shifts', name: 'Turnos', icon: '🕐' },
                     { id: 'attendance', name: 'Asistencia', icon: '📋' },
                     { id: 'facial-biometric', name: 'Biometría Analítica', icon: '🎭' },
@@ -4984,6 +4993,9 @@
                 } else if (tabName === 'kiosks') {
                     script.src = `js/modules/kiosks-professional.js?v=${cacheBuster}`;
                     console.log(`📦 [PROGRESSIVE] Usando versión PROFESSIONAL para kiosks`);
+                } else if (tabName === 'notifications-enterprise') {
+                    script.src = `js/modules/notifications-enterprise.js?v=${cacheBuster}`;
+                    console.log(`📦 [PROGRESSIVE] Cargando NOTIFICATIONS ENTERPRISE V3.0`);
                 } else {
                     script.src = `js/modules/${tabName}.js?v=${cacheBuster}`;
                 }
