@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 
-// CONFIGURACIÓN POSTGRESQL - Compatible con Railway y Local
-// Railway provee DATABASE_URL, Local usa POSTGRES_*
+// CONFIGURACIÓN POSTGRESQL - Compatible con Render y Local
+// Render provee DATABASE_URL, Local usa POSTGRES_*
 let sequelize;
 
 // DEBUG: Verificar variables de entorno
@@ -10,8 +10,8 @@ console.log('🔍 [DEBUG] DATABASE_URL value:', process.env.DATABASE_URL ? proce
 console.log('🔍 [DEBUG] NODE_ENV:', process.env.NODE_ENV);
 
 if (process.env.DATABASE_URL) {
-  // RAILWAY/PRODUCCIÓN: Usar DATABASE_URL
-  console.log('🚂 Conectando a Railway PostgreSQL via DATABASE_URL');
+  // RENDER/PRODUCCIÓN: Usar DATABASE_URL
+  console.log('🚀 Conectando a Render PostgreSQL via DATABASE_URL');
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     logging: false, // DESACTIVAR logging en producción

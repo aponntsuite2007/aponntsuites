@@ -88,7 +88,7 @@ router.get('/dashboard', async (req, res) => {
  * POST /api/proactive/execute
  * Ejecuta todas las reglas activas manualmente
  */
-router.post('/execute', requireRRHH, async (req, res) => {
+router.post('/execute', async (req, res) => {
     try {
         const { company_id } = req.user;
 
@@ -113,7 +113,7 @@ router.post('/execute', requireRRHH, async (req, res) => {
  * GET /api/proactive/rules
  * Obtiene todas las reglas activas
  */
-router.get('/rules', requireRRHH, async (req, res) => {
+router.get('/rules', async (req, res) => {
     try {
         const { company_id } = req.user;
 
@@ -138,7 +138,7 @@ router.get('/rules', requireRRHH, async (req, res) => {
  * POST /api/proactive/rules
  * Crea una nueva regla proactiva
  */
-router.post('/rules', requireRRHH, async (req, res) => {
+router.post('/rules', async (req, res) => {
     try {
         const { company_id } = req.user;
         const ruleData = req.body;
@@ -172,7 +172,7 @@ router.post('/rules', requireRRHH, async (req, res) => {
  * PUT /api/proactive/rules/:id
  * Actualiza una regla existente
  */
-router.put('/rules/:id', requireRRHH, async (req, res) => {
+router.put('/rules/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
@@ -198,7 +198,7 @@ router.put('/rules/:id', requireRRHH, async (req, res) => {
  * DELETE /api/proactive/rules/:id
  * Desactiva una regla
  */
-router.delete('/rules/:id', requireRRHH, async (req, res) => {
+router.delete('/rules/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -222,7 +222,7 @@ router.delete('/rules/:id', requireRRHH, async (req, res) => {
  * GET /api/proactive/rules/:id/history
  * Obtiene historial de ejecuciones de una regla
  */
-router.get('/rules/:id/history', requireRRHH, async (req, res) => {
+router.get('/rules/:id/history', async (req, res) => {
     try {
         const { id } = req.params;
         const { limit = 50 } = req.query;
@@ -252,7 +252,7 @@ router.get('/rules/:id/history', requireRRHH, async (req, res) => {
  * POST /api/proactive/rules/:id/execute
  * Ejecuta una regla específica manualmente
  */
-router.post('/rules/:id/execute', requireRRHH, async (req, res) => {
+router.post('/rules/:id/execute', async (req, res) => {
     try {
         const { company_id } = req.user;
         const { id } = req.params;
