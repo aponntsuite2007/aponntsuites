@@ -8,6 +8,8 @@ import 'screens/config_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/biometric_selector_screen.dart';
 import 'services/config_service.dart';
+import 'services/hardware_profile_service.dart';
+import 'services/offline_queue_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -108,6 +110,40 @@ class _StartupScreenState extends State<StartupScreen> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
+
+      // 🖥️ PASO 0: Detectar hardware profile del dispositivo (una sola vez)
+      final hasHardwareProfile = prefs.getString('hardware_profile_id') != null;
+
+      if (!hasHardwareProfile) {
+        print('🔍 [STARTUP] Detectando perfil de hardware del dispositivo...');
+        final hardwareService = HardwareProfileService();
+        final profileResult = await hardwareService.detectHardwareProfile();
+
+        if (profileResult.success && profileResult.profile != null) {
+          final profile = profileResult.profile!;
+
+          // Guardar perfil detectado
+          await prefs.setString('hardware_profile_id', profile.id);
+          await prefs.setString('hardware_profile_name', profile.name);
+          await prefs.setString('hardware_profile_brand', profile.brand);
+          await prefs.setInt('hardware_performance_score', profile.performanceScore);
+          await prefs.setString('hardware_profile_json', jsonEncode(profile.toJson()));
+
+          print('✅ [STARTUP] Hardware detectado: ${profile.name} (${profile.performanceScore}/100)');
+          print('   Walk-through: ${profile.supportsWalkthrough}');
+          print('   Liveness: ${profile.supportsLiveness}');
+        } else {
+          print('⚠️ [STARTUP] No se pudo detectar hardware: ${profileResult.message}');
+        }
+      } else {
+        final profileName = prefs.getString('hardware_profile_name');
+        print('✅ [STARTUP] Hardware ya detectado: $profileName');
+      }
+
+      // 💾 Inicializar servicio de cola offline
+      final offlineQueue = OfflineQueueService();
+      final stats = await offlineQueue.getStats();
+      print('💾 [STARTUP] Cola offline: ${stats.pending} pendientes, ${stats.synced} sincronizados');
 
       // 1. Verificar si tiene servidor configurado
       final isConfigured = await ConfigService.isConfigured();
