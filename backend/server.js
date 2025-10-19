@@ -2175,17 +2175,16 @@ async function startServer() {
     // Inicializar base de datos primero
     await initializeDatabase();
 
-    // Ejecutar migraciones de notificaciones enterprise (no crítico)
-    console.log('\n🔧 [MIGRATIONS] Intentando ejecutar migraciones de notificaciones enterprise...');
-    try {
-      const runAllMigrations = require('./scripts/run-all-migrations');
-      await runAllMigrations();
-      console.log('✅ [MIGRATIONS] Migraciones ejecutadas correctamente\n');
-    } catch (migrationError) {
-      console.warn('⚠️  [MIGRATIONS] No se pudieron ejecutar migraciones automáticamente:', migrationError.message);
-      console.warn('⚠️  [MIGRATIONS] El servidor continuará normalmente. Si es necesario, ejecute las migraciones manualmente.');
-      // Servidor continúa normalmente - las migraciones se pueden ejecutar después
-    }
+    // TEMPORALMENTE DESHABILITADO - Sistema de Notificaciones Enterprise
+    // console.log('\n🔧 [MIGRATIONS] Intentando ejecutar migraciones de notificaciones enterprise...');
+    // try {
+    //   const runAllMigrations = require('./scripts/run-all-migrations');
+    //   await runAllMigrations();
+    //   console.log('✅ [MIGRATIONS] Migraciones ejecutadas correctamente\n');
+    // } catch (migrationError) {
+    //   console.warn('⚠️  [MIGRATIONS] No se pudieron ejecutar migraciones automáticamente:', migrationError.message);
+    //   console.warn('⚠️  [MIGRATIONS] El servidor continuará normalmente. Si es necesario, ejecute las migraciones manualmente.');
+    // }
 
     // Iniciar servidor HTTP
     server.listen(PORT, HOST, () => {
