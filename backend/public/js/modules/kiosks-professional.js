@@ -2347,6 +2347,7 @@ const PROFESSIONAL_STYLES = `
     background: white;
     transition: all 0.3s ease;
     cursor: pointer;
+    max-height: 400px !important;
 }
 
 .hardware-select:hover {
@@ -2358,6 +2359,13 @@ const PROFESSIONAL_STYLES = `
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1);
+}
+
+/* Limitar altura del dropdown del select */
+.hardware-select option,
+.hardware-select optgroup {
+    font-size: 0.95rem;
+    padding: 0.5rem;
 }
 
 /* Hardware Detail Card */
@@ -2692,32 +2700,30 @@ async function showKiosksContent() {
     try {
         console.log('📱 [KIOSKS-PRO] Cargando módulo...');
 
-        // Inyectar estilos profesionales
+        // Inyectar estilos profesionales SOLO UNA VEZ
         if (!document.getElementById('kiosks-pro-styles')) {
-            const styleEl = document.createElement('div');
+            const styleEl = document.createElement('style');
             styleEl.id = 'kiosks-pro-styles';
-            styleEl.innerHTML = PROFESSIONAL_STYLES;
+            styleEl.textContent = PROFESSIONAL_STYLES.replace(/<\/?style>/g, ''); // Extraer solo el CSS
             document.head.appendChild(styleEl);
         }
 
         const content = `
-            ${PROFESSIONAL_STYLES}
-
             <div class="module-header-pro">
-                <h2>🖥️ Gestión de Kiosks Biométricos</h2>
-                <p>Configuración profesional de hardware facial + huella digital</p>
+                <h2>🖥️ Gestión de Kioscos Biométricos</h2>
+                <p>Configuración profesional de hardware facial + lector de huellas</p>
             </div>
 
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4>📋 Kiosks Registrados</h4>
+                        <h4>📋 Kioscos Registrados</h4>
                         <button class="btn btn-primary btn-lg" onclick="showAddKioskModal()">
-                            <i class="fas fa-plus-circle"></i> Crear Nuevo Kiosk
+                            <i class="fas fa-plus-circle"></i> Crear Nuevo Kiosco
                         </button>
                     </div>
 
-                    <!-- Tabla de Kiosks -->
+                    <!-- Tabla de Kioscos -->
                     <div class="table-responsive">
                         <table class="table table-hover" id="kiosks-table">
                             <thead class="table-dark">
@@ -2725,8 +2731,8 @@ async function showKiosksContent() {
                                     <th>ID</th>
                                     <th>Nombre</th>
                                     <th>Hardware Facial</th>
-                                    <th>Huella Digital</th>
-                                    <th>Performance</th>
+                                    <th>Lector de Huella</th>
+                                    <th>Rendimiento</th>
                                     <th>Walk-through</th>
                                     <th>Liveness</th>
                                     <th>Estado</th>
@@ -2926,7 +2932,7 @@ async function showAddKioskModal(kioskId = null) {
                         <div class="modal-header bg-primary text-white">
                             <h5 class="modal-title">
                                 <i class="fas fa-desktop"></i>
-                                ${isEdit ? 'Editar Kiosk' : 'Crear Nuevo Kiosk'}
+                                ${isEdit ? 'Editar Kiosco' : 'Crear Nuevo Kiosco'}
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
@@ -2940,12 +2946,12 @@ async function showAddKioskModal(kioskId = null) {
                                     <div class="card-body">
                                         <div class="row g-3">
                                             <div class="col-md-6">
-                                                <label class="form-label">Nombre del Kiosk *</label>
+                                                <label class="form-label">Nombre del Kiosco *</label>
                                                 <input type="text"
                                                        class="form-control"
                                                        id="kiosk-name"
                                                        value="${kioskData?.name || ''}"
-                                                       placeholder="Ej: Kiosk Recepción Principal"
+                                                       placeholder="Ej: Kiosco Recepción Principal"
                                                        required>
                                             </div>
                                             <div class="col-md-6">
@@ -3126,7 +3132,7 @@ async function showAddKioskModal(kioskId = null) {
                                 <i class="fas fa-times"></i> Cancelar
                             </button>
                             <button type="button" class="btn btn-primary" onclick="saveKiosk(${kioskId})">
-                                <i class="fas fa-save"></i> ${isEdit ? 'Guardar Cambios' : 'Crear Kiosk'}
+                                <i class="fas fa-save"></i> ${isEdit ? 'Guardar Cambios' : 'Crear Kiosco'}
                             </button>
                         </div>
                     </div>
