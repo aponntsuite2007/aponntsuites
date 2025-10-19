@@ -2875,24 +2875,24 @@ function renderKiosksTable(kiosks) {
                         : '<span class="badge bg-danger">Inactivo</span>'}
                 </td>
                 <td>
-                    <div class="btn-group btn-group-sm" role="group" style="gap: 4px;">
-                        <button class="btn btn-info btn-sm px-2 py-1"
+                    <div style="display: flex; flex-direction: row; gap: 3px; align-items: center;">
+                        <button class="btn btn-info"
                                 onclick="showKioskDetails(${kiosk.id})"
                                 title="Ver Detalles"
-                                style="font-size: 0.75rem;">
-                            <i class="fas fa-eye"></i>
+                                style="font-size: 0.65rem; padding: 3px 6px; line-height: 1;">
+                            <i class="fas fa-eye" style="font-size: 0.7rem;"></i>
                         </button>
-                        <button class="btn btn-warning btn-sm px-2 py-1"
+                        <button class="btn btn-warning"
                                 onclick="showEditKioskModal(${kiosk.id})"
                                 title="Editar"
-                                style="font-size: 0.75rem;">
-                            <i class="fas fa-edit"></i>
+                                style="font-size: 0.65rem; padding: 3px 6px; line-height: 1;">
+                            <i class="fas fa-edit" style="font-size: 0.7rem;"></i>
                         </button>
-                        <button class="btn btn-danger btn-sm px-2 py-1"
+                        <button class="btn btn-danger"
                                 onclick="deleteKiosk(${kiosk.id})"
                                 title="Eliminar"
-                                style="font-size: 0.75rem;">
-                            <i class="fas fa-trash"></i>
+                                style="font-size: 0.65rem; padding: 3px 6px; line-height: 1;">
+                            <i class="fas fa-trash" style="font-size: 0.7rem;"></i>
                         </button>
                     </div>
                 </td>
@@ -2920,9 +2920,9 @@ async function showAddKioskModal(kioskId = null) {
         }
 
         const modalHTML = `
-            <div class="modal fade" id="kioskModal" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true" style="z-index: 1056 !important;">
-                <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                    <div class="modal-content" style="position: relative; z-index: 1057 !important;">
+            <div class="modal fade" id="kioskModal" tabindex="-1" style="z-index: 1056 !important;">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable" style="z-index: 1058 !important;">
+                    <div class="modal-content" style="position: relative; z-index: 1059 !important; pointer-events: auto !important;">
                         <div class="modal-header bg-primary text-white">
                             <h5 class="modal-title">
                                 <i class="fas fa-desktop"></i>
@@ -3141,9 +3141,19 @@ async function showAddKioskModal(kioskId = null) {
         // Agregar nuevo modal al DOM
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-        // Mostrar modal
-        const modal = new bootstrap.Modal(document.getElementById('kioskModal'));
+        // Mostrar modal SIN backdrop que bloquee todo
+        const modalElement = document.getElementById('kioskModal');
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: false,  // NO crear backdrop que bloquea todo
+            keyboard: true,   // Permitir ESC para cerrar
+            focus: true       // Auto-focus en el modal
+        });
         modal.show();
+
+        // Agregar listener para limpiar al cerrar
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            this.remove();
+        }, { once: true });
 
         // Si es edición, mostrar detalles del hardware seleccionado
         if (isEdit && kioskData?.hardware_profile) {
