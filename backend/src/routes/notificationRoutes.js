@@ -165,6 +165,64 @@ router.get('/unread-count', auth, async (req, res) => {
 });
 
 /**
+ * @route GET /api/v1/notifications/groups
+ * @desc Obtener notificaciones agrupadas por tipo
+ */
+router.get('/groups', auth, async (req, res) => {
+  try {
+    const companyId = req.user?.company_id || 1;
+    const userId = req.user?.user_id || req.user?.id;
+
+    console.log(`📊 [NOTIFICATIONS] Obteniendo grupos de notificaciones para empresa ${companyId}`);
+
+    const notifications = await AccessNotification.findAll({
+      where: {
+        company_id: companyId,
+        [require('sequelize').Op.or]: [
+          { recipient_user_id: userId },
+          { recipient_user_id: null }
+        ]
+      },
+      attributes: ['id', 'notification_type', 'priority', 'is_read', 'title', 'message', 'created_at'],
+      order: [['created_at', 'DESC']]
+    });
+
+    // Agrupar por tipo
+    const grouped = {};
+    notifications.forEach(notif => {
+      const type = notif.notification_type || 'general';
+      if (!grouped[type]) {
+        grouped[type] = {
+          type: type,
+          count: 0,
+          unread: 0,
+          notifications: []
+        };
+      }
+      grouped[type].count++;
+      if (!notif.is_read) grouped[type].unread++;
+      grouped[type].notifications.push(formatNotification(notif));
+    });
+
+    const groups = Object.values(grouped);
+
+    res.json({
+      success: true,
+      groups: groups,
+      totalCount: notifications.length
+    });
+
+  } catch (error) {
+    console.error('❌ [NOTIFICATIONS] Error obteniendo grupos:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+/**
  * @route GET /api/v1/notifications/critical
  * @desc Obtener notificaciones críticas sin atender
  */

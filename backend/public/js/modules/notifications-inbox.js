@@ -496,9 +496,8 @@ const NotificationsInbox = {
         try {
             const response = await fetch('/api/v1/notifications/groups', {
                 headers: {
-                    'x-company-id': sessionStorage.getItem('company_id') || '11',
-                    'x-role': sessionStorage.getItem('role') || 'rrhh',
-                    'x-user-id': sessionStorage.getItem('user_id') || sessionStorage.getItem('employee_id')
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'Content-Type': 'application/json'
                 }
             });
 

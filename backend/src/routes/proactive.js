@@ -12,25 +12,46 @@ const express = require('express');
 const router = express.Router();
 const proactiveService = require('../services/proactiveNotificationService');
 
-// Middleware de autenticación
-const authenticate = (req, res, next) => {
-    req.user = {
-        employee_id: req.headers['x-employee-id'] || 'EMP-ISI-001',
-        company_id: parseInt(req.headers['x-company-id']) || 11,
-        role: req.headers['x-role'] || 'employee'
-    };
-    next();
-};
+// Middleware de autenticación con JWT
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'aponnt_2024_secret_key_ultra_secure';
 
-// Middleware para verificar rol de RRHH o admin
-const requireRRHH = (req, res, next) => {
-    if (req.user.role !== 'rrhh' && req.user.role !== 'admin') {
-        return res.status(403).json({
+const authenticate = (req, res, next) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            // Fallback a headers custom para compatibilidad
+            req.user = {
+                employee_id: req.headers['x-employee-id'] || 'EMP-DEFAULT',
+                company_id: parseInt(req.headers['x-company-id']) || null,
+                role: req.headers['x-role'] || 'employee'
+            };
+            return next();
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                error: 'Token mal formado'
+            });
+        }
+
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = {
+            employee_id: decoded.employee_id || decoded.id,
+            company_id: decoded.company_id || decoded.companyId,
+            role: decoded.role || 'employee'
+        };
+
+        next();
+    } catch (error) {
+        console.error('❌ Error verificando token:', error.message);
+        return res.status(401).json({
             success: false,
-            error: 'Acceso denegado. Se requiere rol de RRHH o administrador'
+            error: 'Token inválido o expirado'
         });
     }
-    next();
 };
 
 router.use(authenticate);
@@ -43,7 +64,7 @@ router.use(authenticate);
  * GET /api/proactive/dashboard
  * Obtiene dashboard de reglas proactivas con estadísticas
  */
-router.get('/dashboard', requireRRHH, async (req, res) => {
+router.get('/dashboard', async (req, res) => {
     try {
         const { company_id } = req.user;
 

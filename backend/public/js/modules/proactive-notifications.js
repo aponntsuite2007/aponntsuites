@@ -145,8 +145,8 @@ const ProactiveNotifications = {
         try {
             const response = await fetch('/api/proactive/dashboard', {
                 headers: {
-                    'x-company-id': sessionStorage.getItem('company_id') || '11',
-                    'x-role': sessionStorage.getItem('role') || 'rrhh'
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'Content-Type': 'application/json'
                 }
             });
 
