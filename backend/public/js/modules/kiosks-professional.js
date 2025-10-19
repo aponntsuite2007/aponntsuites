@@ -2821,30 +2821,31 @@ function renderKiosksTable(kiosks) {
                     <strong>${kiosk.name || 'Kiosk ' + kiosk.id}</strong><br>
                     <small class="text-muted">${kiosk.location || 'Sin ubicación'}</small>
                 </td>
-                <td>
+                <td style="max-width: 200px;">
                     ${facialProfile ? `
-                        <div class="d-flex align-items-center">
-                            <div style="width: 30px; height: 30px; margin-right: 8px;">
+                        <div class="d-flex align-items-center" style="gap: 8px;">
+                            <div style="width: 24px; height: 24px; flex-shrink: 0;">
                                 ${facialProfile.logo}
                             </div>
-                            <div>
-                                <strong>${facialProfile.name}</strong><br>
-                                <small class="text-muted">${facialProfile.category}</small>
+                            <div style="line-height: 1.2;">
+                                <div style="font-size: 0.85rem; font-weight: 600;">${facialProfile.brand}</div>
+                                <small class="text-muted" style="font-size: 0.75rem;">${facialProfile.name.replace(facialProfile.brand, '').trim()}</small>
                             </div>
                         </div>
-                    ` : '<span class="text-muted">No configurado</span>'}
+                    ` : '<span class="text-muted" style="font-size: 0.85rem;">No configurado</span>'}
                 </td>
-                <td>
+                <td style="max-width: 200px;">
                     ${fingerprintProfile ? `
-                        <div class="d-flex align-items-center">
-                            <div style="width: 30px; height: 30px; margin-right: 8px;">
+                        <div class="d-flex align-items-center" style="gap: 8px;">
+                            <div style="width: 24px; height: 24px; flex-shrink: 0;">
                                 ${fingerprintProfile.logo}
                             </div>
-                            <div>
-                                <strong>${fingerprintProfile.name}</strong>
+                            <div style="line-height: 1.2;">
+                                <div style="font-size: 0.85rem; font-weight: 600;">${fingerprintProfile.brand}</div>
+                                <small class="text-muted" style="font-size: 0.75rem;">${fingerprintProfile.name.replace(fingerprintProfile.brand, '').trim()}</small>
                             </div>
                         </div>
-                    ` : '<span class="text-muted">N/A</span>'}
+                    ` : '<span class="text-muted" style="font-size: 0.85rem;">N/A</span>'}
                 </td>
                 <td>
                     <div class="progress" style="height: 25px;">
@@ -2874,20 +2875,23 @@ function renderKiosksTable(kiosks) {
                         : '<span class="badge bg-danger">Inactivo</span>'}
                 </td>
                 <td>
-                    <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-info"
+                    <div class="btn-group btn-group-sm" role="group" style="gap: 4px;">
+                        <button class="btn btn-info btn-sm px-2 py-1"
                                 onclick="showKioskDetails(${kiosk.id})"
-                                title="Ver Detalles">
+                                title="Ver Detalles"
+                                style="font-size: 0.75rem;">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn btn-sm btn-warning"
+                        <button class="btn btn-warning btn-sm px-2 py-1"
                                 onclick="showEditKioskModal(${kiosk.id})"
-                                title="Editar">
+                                title="Editar"
+                                style="font-size: 0.75rem;">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger"
+                        <button class="btn btn-danger btn-sm px-2 py-1"
                                 onclick="deleteKiosk(${kiosk.id})"
-                                title="Eliminar">
+                                title="Eliminar"
+                                style="font-size: 0.75rem;">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -2916,9 +2920,9 @@ async function showAddKioskModal(kioskId = null) {
         }
 
         const modalHTML = `
-            <div class="modal fade" id="kioskModal" tabindex="-1">
-                <div class="modal-dialog modal-xl">
-                    <div class="modal-content">
+            <div class="modal fade" id="kioskModal" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true" style="z-index: 1056 !important;">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content" style="position: relative; z-index: 1057 !important;">
                         <div class="modal-header bg-primary text-white">
                             <h5 class="modal-title">
                                 <i class="fas fa-desktop"></i>
