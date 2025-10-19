@@ -2767,7 +2767,7 @@ async function loadKiosks() {
     try {
         const response = await fetch('/api/kiosks', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
         });
 
@@ -2912,7 +2912,7 @@ async function showAddKioskModal(kioskId = null) {
         if (isEdit) {
             const response = await fetch(`/api/kiosks/${kioskId}`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
             });
             if (!response.ok) throw new Error('Error al cargar kiosk');
@@ -3348,7 +3348,7 @@ async function saveKiosk(kioskId = null) {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             },
             body: JSON.stringify(formData)
         });
@@ -3387,7 +3387,7 @@ async function deleteKiosk(kioskId) {
         const response = await fetch(`/api/kiosks/${kioskId}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
         });
 
@@ -3409,7 +3409,7 @@ async function showKioskDetails(kioskId) {
     try {
         const response = await fetch(`/api/kiosks/${kioskId}`, {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
         });
 

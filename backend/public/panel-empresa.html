@@ -4981,6 +4981,9 @@
                 if (tabName === 'notifications') {
                     script.src = `js/modules/${tabName}-complete.js?v=${cacheBuster}`;
                     console.log(`📦 [PROGRESSIVE] Usando versión COMPLETA para notifications`);
+                } else if (tabName === 'kiosks') {
+                    script.src = `js/modules/kiosks-professional.js?v=${cacheBuster}`;
+                    console.log(`📦 [PROGRESSIVE] Usando versión PROFESSIONAL para kiosks`);
                 } else {
                     script.src = `js/modules/${tabName}.js?v=${cacheBuster}`;
                 }
