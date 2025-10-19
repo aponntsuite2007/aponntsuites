@@ -1994,18 +1994,19 @@ console.log('   🔮 /api/proactive/* - Notificaciones proactivas (FIXED)');
 console.log('   📚 /api/resources/* - Centro de recursos (FIXED)');
 console.log('   📬 /api/inbox/* - Bandeja de notificaciones');
 
+// TEMPORALMENTE DESHABILITADO - Sistema de Notificaciones Enterprise V3.0
 // 🔔 CONFIGURAR SISTEMA DE NOTIFICACIONES ENTERPRISE V3.0 (WORKFLOWS + MULTI-CANAL)
-const notificationsEnterpriseRoutes = require('./src/routes/notificationsEnterprise');
-app.use('/api/v1/enterprise/notifications', notificationsEnterpriseRoutes);
+// const notificationsEnterpriseRoutes = require('./src/routes/notificationsEnterprise');
+// app.use('/api/v1/enterprise/notifications', notificationsEnterpriseRoutes);
 
-console.log('🔔 [NOTIFICATIONS-ENTERPRISE] Sistema de Notificaciones Enterprise V3.0 ACTIVO:');
-console.log('   📬 /api/v1/enterprise/notifications - CRUD notificaciones');
-console.log('   ✅ /api/v1/enterprise/notifications/:id/action - Aprobar/Rechazar');
-console.log('   📊 /api/v1/enterprise/notifications/stats - Estadísticas');
-console.log('   🔄 /api/v1/enterprise/notifications/workflows - Workflows multi-nivel');
-console.log('   📝 /api/v1/enterprise/notifications/templates - Templates reutilizables');
-console.log('   ⚙️ /api/v1/enterprise/notifications/preferences - Preferencias usuario');
-console.log('   🔥 Características: Workflows automáticos, escalamiento, multi-canal');
+// console.log('🔔 [NOTIFICATIONS-ENTERPRISE] Sistema de Notificaciones Enterprise V3.0 ACTIVO:');
+// console.log('   📬 /api/v1/enterprise/notifications - CRUD notificaciones');
+// console.log('   ✅ /api/v1/enterprise/notifications/:id/action - Aprobar/Rechazar');
+// console.log('   📊 /api/v1/enterprise/notifications/stats - Estadísticas');
+// console.log('   🔄 /api/v1/enterprise/notifications/workflows - Workflows multi-nivel');
+// console.log('   📝 /api/v1/enterprise/notifications/templates - Templates reutilizables');
+// console.log('   ⚙️ /api/v1/enterprise/notifications/preferences - Preferencias usuario');
+// console.log('   🔥 Características: Workflows automáticos, escalamiento, multi-canal');
 
 // 🔒 CONFIGURAR API BIOMÉTRICA
 // COMENTADO: Conflicto con biometricConsentRoutes en la misma ruta /api/v1/biometric
