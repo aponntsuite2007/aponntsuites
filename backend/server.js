@@ -1857,7 +1857,7 @@ const biometricApiRoutes = require('./src/routes/biometric-api');
 const biometricHubRoutes = require('./src/routes/biometric-hub');
 
 // 🖥️ IMPORTAR RUTAS DE KIOSKS BIOMÉTRICOS
-const kiosksRoutes = require('./src/routes/kiosks')(db);
+const kiosksRoutes = require('./src/routes/kiosks')(database);
 
 // 🚛 IMPORTAR RUTAS DE TRANSPORTE GANADERO
 const transportRoutes = require('./src/routes/transportRoutes');
