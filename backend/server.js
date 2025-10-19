@@ -2174,7 +2174,18 @@ async function startServer() {
   try {
     // Inicializar base de datos primero
     await initializeDatabase();
-    
+
+    // Ejecutar migraciones de notificaciones enterprise
+    console.log('\n🔧 [MIGRATIONS] Ejecutando migraciones de notificaciones enterprise...');
+    try {
+      const runAllMigrations = require('./scripts/run-all-migrations');
+      await runAllMigrations();
+      console.log('✅ [MIGRATIONS] Migraciones ejecutadas correctamente\n');
+    } catch (migrationError) {
+      console.warn('⚠️  [MIGRATIONS] Error ejecutando migraciones (puede ser que ya existan):', migrationError.message);
+      // No fallar el inicio si las migraciones fallan (pueden ya existir)
+    }
+
     // Iniciar servidor HTTP
     server.listen(PORT, HOST, () => {
       console.log(`
