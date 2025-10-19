@@ -15,14 +15,34 @@ module.exports = (db) => {
     // MIDDLEWARE: Extraer company_id del token JWT
     // ========================================================================
 
-    const getCompanyId = (req, res, next) => {
-        // Asumiendo que el middleware de autenticación ya ejecutó y dejó user en req
-        if (!req.user) {
-            return res.status(401).json({ error: 'No autenticado' });
-        }
+    const jwt = require('jsonwebtoken');
+    const JWT_SECRET = process.env.JWT_SECRET || 'aponnt_2024_secret_key_ultra_secure';
 
-        req.companyId = req.user.company_id;
-        next();
+    const getCompanyId = (req, res, next) => {
+        try {
+            const authHeader = req.headers['authorization'];
+            if (!authHeader) {
+                return res.status(401).json({ error: 'No se proporcionó token de autenticación' });
+            }
+
+            const token = authHeader.split(' ')[1]; // "Bearer TOKEN"
+            if (!token) {
+                return res.status(401).json({ error: 'Token mal formado' });
+            }
+
+            const decoded = jwt.verify(token, JWT_SECRET);
+            req.companyId = decoded.company_id || decoded.companyId;
+            req.user = decoded; // Por compatibilidad
+
+            if (!req.companyId) {
+                return res.status(401).json({ error: 'Token no contiene company_id' });
+            }
+
+            next();
+        } catch (error) {
+            console.error('❌ Error verificando token:', error.message);
+            return res.status(401).json({ error: 'Token inválido o expirado' });
+        }
     };
 
     // ========================================================================
