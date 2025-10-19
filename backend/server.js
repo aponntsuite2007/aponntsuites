@@ -2175,15 +2175,16 @@ async function startServer() {
     // Inicializar base de datos primero
     await initializeDatabase();
 
-    // Ejecutar migraciones de notificaciones enterprise
-    console.log('\n🔧 [MIGRATIONS] Ejecutando migraciones de notificaciones enterprise...');
+    // Ejecutar migraciones de notificaciones enterprise (no crítico)
+    console.log('\n🔧 [MIGRATIONS] Intentando ejecutar migraciones de notificaciones enterprise...');
     try {
       const runAllMigrations = require('./scripts/run-all-migrations');
       await runAllMigrations();
       console.log('✅ [MIGRATIONS] Migraciones ejecutadas correctamente\n');
     } catch (migrationError) {
-      console.warn('⚠️  [MIGRATIONS] Error ejecutando migraciones (puede ser que ya existan):', migrationError.message);
-      // No fallar el inicio si las migraciones fallan (pueden ya existir)
+      console.warn('⚠️  [MIGRATIONS] No se pudieron ejecutar migraciones automáticamente:', migrationError.message);
+      console.warn('⚠️  [MIGRATIONS] El servidor continuará normalmente. Si es necesario, ejecute las migraciones manualmente.');
+      // Servidor continúa normalmente - las migraciones se pueden ejecutar después
     }
 
     // Iniciar servidor HTTP

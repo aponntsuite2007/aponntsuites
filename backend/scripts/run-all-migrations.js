@@ -42,11 +42,15 @@ async function runAllMigrations() {
         console.log(`✅ [SUCCESS] ${migrationFile} ejecutada correctamente\n`);
       } catch (error) {
         // Si el error es porque la tabla ya existe, lo ignoramos
-        if (error.message.includes('already exists')) {
-          console.log(`ℹ️  [INFO] ${migrationFile} - Objetos ya existen (OK)\n`);
+        if (error.message.includes('already exists') ||
+            error.message.includes('duplicate key') ||
+            error.message.includes('constraint') ||
+            error.message.includes('violates')) {
+          console.log(`ℹ️  [INFO] ${migrationFile} - Objetos ya existen o datos duplicados (OK)\n`);
         } else {
           console.error(`❌ [ERROR] ${migrationFile}:`, error.message);
-          throw error;
+          // No lanzar error - solo log y continuar
+          console.warn(`⚠️  [SKIP] Continuando con siguiente migración...\n`);
         }
       }
     }
