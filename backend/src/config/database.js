@@ -362,7 +362,7 @@ VendorReferral.hasMany(VendorCommission, { foreignKey: 'referralId', as: 'commis
 // =========================================================================
 
 // Notification associations
-Company.hasMany(Notification, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'notifications' });
+Company.hasMany(Notification, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'companyNotifications' });
 Notification.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
 
 User.hasMany(Notification, { foreignKey: 'recipient_user_id', sourceKey: 'user_id', as: 'notifications' });
