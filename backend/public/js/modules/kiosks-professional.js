@@ -2748,7 +2748,7 @@ async function showKiosksContent() {
             </div>
         `;
 
-        document.getElementById('app-content').innerHTML = content;
+        document.getElementById('mainContent').innerHTML = content;
 
         // Cargar kiosks desde la base de datos
         await loadKiosks();
@@ -3482,14 +3482,14 @@ async function showKioskDetails(kioskId) {
  * Helper: mostrar toast
  */
 function showToast(message, type = 'info') {
-    // Si existe una función global showToast, usarla
-    if (typeof window.showToast === 'function') {
-        window.showToast(message, type);
+    // Si existe una función global de toasts (no la nuestra), usarla
+    if (typeof window.showAlert === 'function') {
+        window.showAlert(message, type);
         return;
     }
 
-    // Fallback: alert simple
-    alert(message);
+    // Fallback: console log (evitar alert que molesta)
+    console.log(`[${type.toUpperCase()}] ${message}`);
 }
 
 // ============================================================================
