@@ -6814,6 +6814,347 @@
     <!-- ✅ ASISTENTE IA - Ollama + Llama 3.1 (Chat Flotante con Tech Badges) -->
     <script src="js/modules/ai-assistant-chat.js"></script>
 
+    <!-- ✅ AUTODIAGNÓSTICO AUTOMÁTICO - Sistema de Salud -->
+    <script>
+        (function() {
+            'use strict';
+
+            // Configuración
+            const CONFIG = {
+                apiBaseURL: window.progressiveAdmin?.getApiUrl() || window.location.origin,
+                autoRunDelay: 3000, // Esperar 3 segundos después de cargar la página
+                showNotifications: true,
+                storageKey: 'systemHealth_lastCheck'
+            };
+
+            // Estilos CSS para el indicador de salud
+            const styles = `
+                <style id="system-health-styles">
+                    #system-health-indicator {
+                        position: fixed;
+                        top: 70px;
+                        right: 20px;
+                        z-index: 999;
+                        background: white;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                        padding: 12px 16px;
+                        display: none;
+                        align-items: center;
+                        gap: 10px;
+                        font-size: 13px;
+                        font-weight: 500;
+                        transition: all 0.3s ease;
+                        cursor: pointer;
+                        animation: slideInRight 0.5s ease-out;
+                    }
+
+                    #system-health-indicator:hover {
+                        transform: translateX(-5px);
+                        box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+                    }
+
+                    #system-health-indicator.health-excellent {
+                        border-left: 4px solid #10b981;
+                        color: #10b981;
+                    }
+
+                    #system-health-indicator.health-good {
+                        border-left: 4px solid #3b82f6;
+                        color: #3b82f6;
+                    }
+
+                    #system-health-indicator.health-warning {
+                        border-left: 4px solid #f59e0b;
+                        color: #f59e0b;
+                    }
+
+                    #system-health-indicator.health-critical {
+                        border-left: 4px solid #ef4444;
+                        color: #ef4444;
+                        animation: pulse 2s infinite;
+                    }
+
+                    #system-health-indicator.health-running {
+                        border-left: 4px solid #6366f1;
+                        color: #6366f1;
+                    }
+
+                    .health-icon {
+                        font-size: 20px;
+                        display: flex;
+                        align-items: center;
+                    }
+
+                    .health-spinner {
+                        width: 18px;
+                        height: 18px;
+                        border: 2px solid #e5e7eb;
+                        border-top-color: #6366f1;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                    }
+
+                    .health-details {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 2px;
+                    }
+
+                    .health-title {
+                        font-weight: 600;
+                        font-size: 13px;
+                    }
+
+                    .health-subtitle {
+                        font-size: 11px;
+                        color: #6b7280;
+                    }
+
+                    @keyframes slideInRight {
+                        from {
+                            opacity: 0;
+                            transform: translateX(100px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateX(0);
+                        }
+                    }
+
+                    @keyframes spin {
+                        to { transform: rotate(360deg); }
+                    }
+
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.7; }
+                    }
+                </style>
+            `;
+
+            // Inyectar estilos
+            document.head.insertAdjacentHTML('beforeend', styles);
+
+            // Crear indicador visual de salud del sistema
+            const healthIndicatorHTML = `
+                <div id="system-health-indicator" class="health-running">
+                    <div class="health-icon">
+                        <div class="health-spinner"></div>
+                    </div>
+                    <div class="health-details">
+                        <div class="health-title">Diagnóstico en curso...</div>
+                        <div class="health-subtitle">Analizando sistema</div>
+                    </div>
+                </div>
+            `;
+
+            // Insertar indicador en el DOM
+            document.body.insertAdjacentHTML('beforeend', healthIndicatorHTML);
+            const healthIndicator = document.getElementById('system-health-indicator');
+
+            // Función para obtener el rol del usuario
+            function getUserRole() {
+                return localStorage.getItem('userRole') || localStorage.getItem('role');
+            }
+
+            // Función para obtener token de autenticación
+            function getAuthToken() {
+                return localStorage.getItem('authToken') || localStorage.getItem('token');
+            }
+
+            // Función para actualizar el indicador visual
+            function updateHealthIndicator(status, title, subtitle) {
+                const iconMap = {
+                    running: '<div class="health-spinner"></div>',
+                    excellent: '✅',
+                    good: '✓',
+                    warning: '⚠️',
+                    critical: '❌'
+                };
+
+                healthIndicator.className = `health-${status}`;
+                healthIndicator.querySelector('.health-icon').innerHTML = iconMap[status] || iconMap.good;
+                healthIndicator.querySelector('.health-title').textContent = title;
+                healthIndicator.querySelector('.health-subtitle').textContent = subtitle;
+                healthIndicator.style.display = 'flex';
+
+                // Auto-ocultar después de 10 segundos si no es crítico
+                if (status !== 'critical' && status !== 'running') {
+                    setTimeout(() => {
+                        healthIndicator.style.display = 'none';
+                    }, 10000);
+                }
+            }
+
+            // Función para ejecutar el autodiagnóstico
+            async function runSystemDiagnostic() {
+                const token = getAuthToken();
+                if (!token) {
+                    console.log('🔍 [AUTODIAGNÓSTICO] No hay token de autenticación');
+                    return;
+                }
+
+                try {
+                    updateHealthIndicator('running', 'Diagnóstico en curso...', 'Analizando sistema');
+                    console.log('🔍 [AUTODIAGNÓSTICO] Iniciando diagnóstico automático del sistema...');
+
+                    const response = await fetch(`${CONFIG.apiBaseURL}/api/audit/run`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                            'X-User-Role': getUserRole()
+                        },
+                        body: JSON.stringify({
+                            autoRun: true,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            console.log('🔍 [AUTODIAGNÓSTICO] Usuario no es admin - diagnóstico deshabilitado');
+                            healthIndicator.style.display = 'none';
+                            return;
+                        }
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('✅ [AUTODIAGNÓSTICO] Diagnóstico completado:', result);
+
+                    // Guardar resultado en localStorage
+                    localStorage.setItem(CONFIG.storageKey, JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        result: result
+                    }));
+
+                    // Analizar resultados y actualizar indicador
+                    analyzeAndDisplayResults(result);
+
+                } catch (error) {
+                    console.error('❌ [AUTODIAGNÓSTICO] Error:', error);
+                    updateHealthIndicator('warning', 'Diagnóstico no disponible', 'Sistema funcionando normalmente');
+
+                    // Ocultar después de 5 segundos
+                    setTimeout(() => {
+                        healthIndicator.style.display = 'none';
+                    }, 5000);
+                }
+            }
+
+            // Función para analizar resultados y determinar el estado de salud
+            function analyzeAndDisplayResults(result) {
+                if (!result.success || !result.data) {
+                    updateHealthIndicator('warning', 'Diagnóstico incompleto', 'Algunos tests no se pudieron ejecutar');
+                    return;
+                }
+
+                const { execution_id, tests_run, tests_passed, tests_failed, tests_warning } = result.data;
+                const totalTests = tests_run || 0;
+                const passed = tests_passed || 0;
+                const failed = tests_failed || 0;
+                const warnings = tests_warning || 0;
+
+                let status, title, subtitle;
+
+                if (totalTests === 0) {
+                    status = 'warning';
+                    title = 'Sin resultados';
+                    subtitle = 'No se ejecutaron tests';
+                } else {
+                    const passRate = (passed / totalTests) * 100;
+
+                    if (failed === 0 && warnings === 0) {
+                        status = 'excellent';
+                        title = 'Sistema óptimo';
+                        subtitle = `${passed}/${totalTests} tests aprobados`;
+                    } else if (failed === 0 && warnings > 0) {
+                        status = 'good';
+                        title = 'Sistema funcional';
+                        subtitle = `${passed} ok, ${warnings} advertencias`;
+                    } else if (failed <= 2) {
+                        status = 'warning';
+                        title = 'Problemas menores';
+                        subtitle = `${failed} errores detectados`;
+                    } else {
+                        status = 'critical';
+                        title = 'Atención requerida';
+                        subtitle = `${failed} errores críticos`;
+                    }
+                }
+
+                updateHealthIndicator(status, title, subtitle);
+
+                // Hacer click para ver detalles (abre el dashboard del auditor)
+                healthIndicator.onclick = () => {
+                    if (typeof openModuleDirect === 'function') {
+                        openModuleDirect('auditor-dashboard');
+                    }
+                };
+
+                // Mostrar notificación si hay problemas críticos
+                if (status === 'critical' && CONFIG.showNotifications && typeof showAlert === 'function') {
+                    showAlert(`Se detectaron ${failed} errores críticos en el sistema. Click en el indicador para ver detalles.`, 'warning');
+                }
+            }
+
+            // Función para verificar si el último diagnóstico es reciente (menos de 30 minutos)
+            function isRecentDiagnostic() {
+                const lastCheck = localStorage.getItem(CONFIG.storageKey);
+                if (!lastCheck) return false;
+
+                try {
+                    const data = JSON.parse(lastCheck);
+                    const lastTime = new Date(data.timestamp);
+                    const now = new Date();
+                    const diffMinutes = (now - lastTime) / 1000 / 60;
+
+                    return diffMinutes < 30; // Menos de 30 minutos
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // Inicializar autodiagnóstico
+            function initAutodiagnostic() {
+                // Verificar que sea admin
+                const userRole = getUserRole();
+                if (!userRole || userRole.toLowerCase() !== 'admin') {
+                    console.log('🔍 [AUTODIAGNÓSTICO] Usuario no es admin - diagnóstico deshabilitado');
+                    healthIndicator.style.display = 'none';
+                    return;
+                }
+
+                // Si hay un diagnóstico reciente, mostrarlo
+                if (isRecentDiagnostic()) {
+                    const lastCheck = JSON.parse(localStorage.getItem(CONFIG.storageKey));
+                    console.log('🔍 [AUTODIAGNÓSTICO] Usando diagnóstico reciente:', lastCheck);
+                    analyzeAndDisplayResults(lastCheck.result);
+                    return;
+                }
+
+                // Ejecutar nuevo diagnóstico después del delay
+                console.log(`🔍 [AUTODIAGNÓSTICO] Programado para ejecutarse en ${CONFIG.autoRunDelay}ms`);
+                setTimeout(runSystemDiagnostic, CONFIG.autoRunDelay);
+            }
+
+            // Exponer función global para ejecutar diagnóstico manualmente
+            window.runSystemDiagnostic = runSystemDiagnostic;
+
+            // Ejecutar cuando el DOM esté listo
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initAutodiagnostic);
+            } else {
+                // DOM ya está listo
+                initAutodiagnostic();
+            }
+
+            console.log('🔍 [AUTODIAGNÓSTICO] Sistema de diagnóstico automático inicializado');
+        })();
+    </script>
+
     <!-- Bootstrap 5 JavaScript Bundle (incluye Popper.js para modales) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
