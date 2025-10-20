@@ -20,6 +20,7 @@
 
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
 
 // Middleware de autenticación (solo admins pueden usar el auditor)
 const requireAdmin = (req, res, next) => {
@@ -31,6 +32,9 @@ const requireAdmin = (req, res, next) => {
   }
   next();
 };
+
+// Aplicar autenticación JWT a todas las rutas del auditor
+router.use(auth);
 
 module.exports = (database) => {
   const { AuditLog } = database;

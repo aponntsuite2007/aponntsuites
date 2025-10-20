@@ -611,6 +611,17 @@
 
     // Make chat draggable
     makeDraggable();
+
+    // Global keyboard shortcut: Ctrl+K para abrir chat
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        if (!STATE.isOpen) {
+          toggleChat();
+        }
+        document.getElementById('ai-assistant-input').focus();
+      }
+    });
   }
 
   // ═══════════════════════════════════════════════════════════
