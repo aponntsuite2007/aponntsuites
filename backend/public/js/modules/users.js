@@ -5,6 +5,11 @@ console.log('👥 [USERS] Módulo users v6.0 - PLUG & PLAY SYSTEM INTEGRADO');
 let allUsers = [];
 let filteredUsers = [];
 
+// 📄 PAGINATION VARIABLES
+let currentPage = 1;
+let itemsPerPage = 25; // Default: 25 users per page
+let totalPages = 1;
+
 // 🔌 MODULE CONFIGURATION - Define which features require which modules
 const USER_MODULE_FEATURES = {
     'biometric-verification': 'biometric-enterprise',
@@ -55,10 +60,16 @@ async function showUsersContent() {
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- 📄 PAGINATION CONTROLS TOP -->
+                    <div id="pagination-top" style="display: none; margin: 15px 0;"></div>
+
                     <div id="users-list" class="server-info" data-translate="messages.loading_users">
                         Presiona "Lista de Usuarios" para cargar...
                     </div>
+
+                    <!-- 📄 PAGINATION CONTROLS BOTTOM -->
+                    <div id="pagination-bottom" style="display: none; margin: 15px 0;"></div>
                 </div>
                 
                 <div id="user-stats" class="stats-grid" style="margin-top: 20px;">
@@ -236,16 +247,27 @@ async function loadUsers() {
     }
 }
 
-// Display users in table format - Original style
+// Display users in table format - WITH PAGINATION
 function displayUsersTable(users) {
     const usersList = document.getElementById('users-list');
     if (!usersList) return;
-    
+
     if (!users || users.length === 0) {
         usersList.innerHTML = 'No hay usuarios registrados';
+        hidePaginationControls();
         return;
     }
-    
+
+    // 📄 CALCULATE PAGINATION
+    totalPages = Math.ceil(users.length / itemsPerPage);
+    if (currentPage > totalPages) currentPage = 1; // Reset if out of bounds
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedUsers = users.slice(startIndex, endIndex);
+
+    console.log(`📄 [PAGINATION] Mostrando usuarios ${startIndex + 1}-${Math.min(endIndex, users.length)} de ${users.length} (Página ${currentPage}/${totalPages})`);
+
     let tableHTML = `
         <div class="table-container" style="margin-top: 15px;">
             <table class="data-table" style="width: 100%;">
@@ -299,8 +321,9 @@ function displayUsersTable(users) {
                 </thead>
                 <tbody>
     `;
-    
-    users.forEach(user => {
+
+    // 📄 RENDER ONLY CURRENT PAGE USERS
+    paginatedUsers.forEach(user => {
         const statusClass = user.status === 'Activo' ? 'success' : 'error';
         const biometricClass = user.biometric === 'Registrado' ? 'success' : 'warning';
         
@@ -345,10 +368,161 @@ function displayUsersTable(users) {
             </table>
         </div>
     `;
-    
+
     usersList.innerHTML = tableHTML;
+
+    // 📄 RENDER PAGINATION CONTROLS
+    renderPaginationControls(users.length, startIndex, Math.min(endIndex, users.length));
+
     showUserMessage(`✅ ${users.length} usuarios cargados exitosamente`, 'success');
 }
+
+// 📄 ========== PAGINATION FUNCTIONS ==========
+
+/**
+ * Render pagination controls (top and bottom)
+ */
+function renderPaginationControls(totalUsers, startIndex, endIndex) {
+    const paginationHTML = createPaginationHTML(totalUsers, startIndex, endIndex);
+
+    const topControls = document.getElementById('pagination-top');
+    const bottomControls = document.getElementById('pagination-bottom');
+
+    if (topControls) {
+        topControls.innerHTML = paginationHTML;
+        topControls.style.display = 'block';
+    }
+
+    if (bottomControls) {
+        bottomControls.innerHTML = paginationHTML;
+        bottomControls.style.display = 'block';
+    }
+}
+
+/**
+ * Create pagination HTML
+ */
+function createPaginationHTML(totalUsers, startIndex, endIndex) {
+    const maxVisiblePages = 5; // Show max 5 page numbers
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    // Adjust start if we're near the end
+    if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    let pagesHTML = '';
+    for (let i = startPage; i <= endPage; i++) {
+        const activeClass = i === currentPage ? 'background: #2c5aa0; color: white; font-weight: bold;' : 'background: #f8f9fa; color: #495057;';
+        pagesHTML += `
+            <button onclick="goToPage(${i})"
+                    style="padding: 6px 12px; margin: 0 2px; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer; ${activeClass}">
+                ${i}
+            </button>
+        `;
+    }
+
+    return `
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;">
+            <!-- Info Section -->
+            <div style="font-size: 14px; color: #495057;">
+                Mostrando <strong>${startIndex + 1}</strong> a <strong>${endIndex}</strong> de <strong>${totalUsers}</strong> usuarios
+            </div>
+
+            <!-- Controls Section -->
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <!-- Items per page selector -->
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <label style="font-size: 14px; color: #495057;">Por página:</label>
+                    <select onchange="changeItemsPerPage(this.value)"
+                            style="padding: 6px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px;">
+                        <option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10</option>
+                        <option value="25" ${itemsPerPage === 25 ? 'selected' : ''}>25</option>
+                        <option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50</option>
+                        <option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100</option>
+                        <option value="9999" ${itemsPerPage === 9999 ? 'selected' : ''}>Todos</option>
+                    </select>
+                </div>
+
+                <!-- Navigation buttons -->
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}
+                            style="padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 4px; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'}; background: ${currentPage === 1 ? '#e9ecef' : '#fff'};">
+                        ⏮️ Primera
+                    </button>
+                    <button onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''}
+                            style="padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 4px; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'}; background: ${currentPage === 1 ? '#e9ecef' : '#fff'};">
+                        ◀️ Anterior
+                    </button>
+
+                    ${pagesHTML}
+
+                    <button onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''}
+                            style="padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 4px; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'}; background: ${currentPage === totalPages ? '#e9ecef' : '#fff'};">
+                        Siguiente ▶️
+                    </button>
+                    <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}
+                            style="padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 4px; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'}; background: ${currentPage === totalPages ? '#e9ecef' : '#fff'};">
+                        Última ⏭️
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Hide pagination controls
+ */
+function hidePaginationControls() {
+    const topControls = document.getElementById('pagination-top');
+    const bottomControls = document.getElementById('pagination-bottom');
+
+    if (topControls) topControls.style.display = 'none';
+    if (bottomControls) bottomControls.style.display = 'none';
+}
+
+/**
+ * Go to specific page
+ */
+function goToPage(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    displayUsersTable(filteredUsers.length > 0 ? filteredUsers : allUsers);
+}
+
+/**
+ * Go to next page
+ */
+function nextPage() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        displayUsersTable(filteredUsers.length > 0 ? filteredUsers : allUsers);
+    }
+}
+
+/**
+ * Go to previous page
+ */
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        displayUsersTable(filteredUsers.length > 0 ? filteredUsers : allUsers);
+    }
+}
+
+/**
+ * Change items per page
+ */
+function changeItemsPerPage(value) {
+    itemsPerPage = parseInt(value);
+    currentPage = 1; // Reset to first page
+    console.log(`📄 [PAGINATION] Items per page cambiado a: ${itemsPerPage}`);
+    displayUsersTable(filteredUsers.length > 0 ? filteredUsers : allUsers);
+}
+
+// 📄 ========== END PAGINATION FUNCTIONS ==========
 
 // Display users in the list
 function displayUsers(users) {
@@ -2872,7 +3046,7 @@ console.log('🏢 [USERS] Funciones de departamentos y kioscos dinámicos agrega
 function filterUsers() {
     const dniSearch = document.getElementById('searchDNI')?.value.trim().toLowerCase() || '';
     const nameSearch = document.getElementById('searchName')?.value.trim().toLowerCase() || '';
-    
+
     if (!dniSearch && !nameSearch) {
         filteredUsers = [...allUsers];
     } else {
@@ -2884,11 +3058,14 @@ function filterUsers() {
                 (user.lastName && user.lastName.toLowerCase().includes(nameSearch)) ||
                 (user.email && user.email.toLowerCase().includes(nameSearch))
             );
-            
+
             return (!dniSearch || matchesDNI) && (!nameSearch || matchesName);
         });
     }
-    
+
+    // 📄 Reset pagination to first page when filtering
+    currentPage = 1;
+
     displayUsersTable(filteredUsers);
     updateFilterResults();
 }
@@ -2897,6 +3074,10 @@ function clearFilters() {
     document.getElementById('searchDNI').value = '';
     document.getElementById('searchName').value = '';
     filteredUsers = [...allUsers];
+
+    // 📄 Reset pagination to first page when clearing filters
+    currentPage = 1;
+
     displayUsersTable(filteredUsers);
     updateFilterResults();
 }
