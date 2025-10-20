@@ -118,7 +118,7 @@
       right: 20px;
       width: 420px;
       max-width: calc(100vw - 40px);
-      height: 600px;
+      height: 320px;
       max-height: calc(100vh - 120px);
       background: white;
       border-radius: 16px;
@@ -153,6 +153,8 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: move;
+      user-select: none;
     }
 
     #ai-assistant-header-left {
@@ -606,6 +608,70 @@
       input.style.height = 'auto';
       input.style.height = Math.min(input.scrollHeight, 100) + 'px';
     });
+
+    // Make chat draggable
+    makeDraggable();
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // DRAGGABLE FUNCTIONALITY
+  // ═══════════════════════════════════════════════════════════
+
+  function makeDraggable() {
+    const chatWindow = document.getElementById('ai-assistant-window');
+    const header = document.getElementById('ai-assistant-header');
+
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+
+    header.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+
+    function dragStart(e) {
+      // Don't drag if clicking on close button
+      if (e.target.id === 'ai-assistant-close-button' || e.target.closest('#ai-assistant-close-button')) {
+        return;
+      }
+
+      initialX = e.clientX - xOffset;
+      initialY = e.clientY - yOffset;
+
+      if (e.target === header || header.contains(e.target)) {
+        isDragging = true;
+        chatWindow.style.transition = 'none';
+      }
+    }
+
+    function drag(e) {
+      if (isDragging) {
+        e.preventDefault();
+
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
+
+        xOffset = currentX;
+        yOffset = currentY;
+
+        setTranslate(currentX, currentY, chatWindow);
+      }
+    }
+
+    function dragEnd(e) {
+      initialX = currentX;
+      initialY = currentY;
+      isDragging = false;
+      chatWindow.style.transition = '';
+    }
+
+    function setTranslate(xPos, yPos, el) {
+      el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+    }
   }
 
   function toggleChat() {
