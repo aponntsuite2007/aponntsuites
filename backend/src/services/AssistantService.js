@@ -80,7 +80,7 @@ class AssistantService {
       // PASO 4: Generar respuesta con Ollama (Augmented Generation)
       const generatedAnswer = await this.generateAnswer(question, fullContext, diagnosticResults);
 
-      // PASO 5: Guardar en knowledge base
+      // PASO 5: Guardar en knowledge base GLOBAL (para aprendizaje compartido)
       const savedEntry = await this.saveToKnowledgeBase({
         companyId,
         userId,
@@ -99,13 +99,28 @@ class AssistantService {
         quickReplies: generatedAnswer.quickReplies
       });
 
+      // PASO 6: Guardar conversación MULTI-TENANT (historial privado)
+      const conversation = await this.saveConversation({
+        companyId,
+        userId,
+        question,
+        answer: generatedAnswer.answer,
+        knowledgeEntryId: savedEntry.id,
+        context,
+        answerSource: generatedAnswer.source,
+        confidenceScore: generatedAnswer.confidence,
+        responseTimeMs: Date.now() - startTime,
+        diagnosticTriggered: needsDiagnostic
+      });
+
       console.log(`✅ Respuesta generada en ${Date.now() - startTime}ms`);
       console.log(`   Fuente: ${generatedAnswer.source}`);
       console.log(`   Confianza: ${generatedAnswer.confidence}`);
-      console.log(`   ID guardado: ${savedEntry.id}`);
+      console.log(`   Knowledge base: ${savedEntry.id} (global)`);
+      console.log(`   Conversación: ${conversation.id} (multi-tenant)`);
 
       return {
-        id: savedEntry.id,
+        id: conversation.id, // Retornar ID de conversación (multi-tenant)
         answer: generatedAnswer.answer,
         source: generatedAnswer.source,
         confidence: generatedAnswer.confidence,
@@ -122,8 +137,8 @@ class AssistantService {
       // Fallback: respuesta genérica si Ollama falla
       const fallbackAnswer = this.getFallbackAnswer(question, context);
 
-      // Guardar error en knowledge base
-      await this.saveToKnowledgeBase({
+      // Guardar error en knowledge base GLOBAL
+      const fallbackEntry = await this.saveToKnowledgeBase({
         companyId,
         userId,
         userRole,
@@ -136,7 +151,22 @@ class AssistantService {
         confidenceScore: 0.3
       });
 
+      // Guardar conversación MULTI-TENANT
+      const fallbackConversation = await this.saveConversation({
+        companyId,
+        userId,
+        question,
+        answer: fallbackAnswer,
+        knowledgeEntryId: fallbackEntry.id,
+        context,
+        answerSource: 'fallback',
+        confidenceScore: 0.3,
+        responseTimeMs: Date.now() - startTime,
+        diagnosticTriggered: false
+      });
+
       return {
+        id: fallbackConversation.id,
         answer: fallbackAnswer,
         source: 'fallback',
         confidence: 0.3,
@@ -148,19 +178,21 @@ class AssistantService {
 
   /**
    * Busca respuestas similares en knowledge base (RAG)
+   * BÚSQUEDA GLOBAL - No filtra por empresa (aprendizaje compartido)
    */
   async searchKnowledgeBase(question, companyId, moduleName = null) {
     try {
       const query = `
-        SELECT * FROM search_similar_answers($1, $2, $3, 3)
+        SELECT * FROM search_similar_answers($1, NULL, $2, 3)
       `;
 
+      // Pasar NULL como company_id para búsqueda GLOBAL
       const result = await database.sequelize.query(query, {
-        bind: [question, companyId, moduleName],
+        bind: [question, moduleName],
         type: database.sequelize.QueryTypes.SELECT
       });
 
-      console.log(`📚 Knowledge base: ${result.length} respuestas similares encontradas`);
+      console.log(`🌐 Knowledge base GLOBAL: ${result.length} respuestas similares encontradas`);
 
       return result;
     } catch (error) {
@@ -422,7 +454,7 @@ class AssistantService {
   }
 
   /**
-   * Guarda conversación en knowledge base
+   * Guarda conversación en knowledge base GLOBAL (opcional company_id para analytics)
    */
   async saveToKnowledgeBase(data) {
     try {
@@ -434,9 +466,9 @@ class AssistantService {
         .replace(/[\u0300-\u036f]/g, ''); // Quitar acentos
 
       const entry = await AssistantKnowledgeBase.create({
-        company_id: data.companyId,
-        user_id: data.userId,
-        user_role: data.userRole,
+        company_id: data.companyId || null, // OPCIONAL para analytics
+        user_id: data.userId || null,
+        user_role: data.userRole || null,
         question: data.question,
         question_normalized: normalizedQuestion,
         context: data.context,
@@ -454,6 +486,8 @@ class AssistantService {
         quick_replies: data.quickReplies || null
       });
 
+      console.log(`🌐 Guardado en knowledge base GLOBAL: ${entry.id}`);
+
       return entry;
     } catch (error) {
       console.error('❌ Error guardando en knowledge base:', error.message);
@@ -462,13 +496,50 @@ class AssistantService {
   }
 
   /**
+   * Guarda conversación en historial MULTI-TENANT (company_id obligatorio)
+   */
+  async saveConversation(data) {
+    try {
+      const { AssistantConversation } = database;
+
+      if (!data.companyId) {
+        throw new Error('company_id es obligatorio para conversaciones');
+      }
+
+      const conversation = await AssistantConversation.create({
+        company_id: data.companyId,
+        user_id: data.userId,
+        question: data.question,
+        answer: data.answer,
+        knowledge_entry_id: data.knowledgeEntryId || null,
+        context: data.context,
+        module_name: data.context?.module || null,
+        screen_name: data.context?.screen || null,
+        answer_source: data.answerSource,
+        confidence: data.confidenceScore || 0.0,
+        response_time_ms: data.responseTimeMs,
+        diagnostic_triggered: data.diagnosticTriggered || false
+      });
+
+      console.log(`🔒 Conversación guardada (multi-tenant): ${conversation.id} - Empresa: ${data.companyId}`);
+
+      return conversation;
+    } catch (error) {
+      console.error('❌ Error guardando conversación:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Registra feedback del usuario (👍👎)
+   * El entryId es el ID de la CONVERSACIÓN (multi-tenant)
    */
   async submitFeedback(entryId, helpful, comment = null) {
     try {
-      const { AssistantKnowledgeBase } = database;
+      const { AssistantConversation, AssistantKnowledgeBase } = database;
 
-      await AssistantKnowledgeBase.update(
+      // 1. Actualizar conversación (multi-tenant)
+      await AssistantConversation.update(
         {
           helpful,
           feedback_comment: comment,
@@ -479,14 +550,38 @@ class AssistantService {
         }
       );
 
-      // Si es positivo, incrementar reused_count para futuras búsquedas
-      if (helpful) {
-        await AssistantKnowledgeBase.increment('reused_count', {
-          where: { id: entryId }
-        });
-      }
+      // 2. Buscar si esta conversación está vinculada a una entrada del knowledge base
+      const conversation = await AssistantConversation.findOne({
+        where: { id: entryId },
+        attributes: ['knowledge_entry_id']
+      });
 
-      console.log(`📊 Feedback registrado: ${helpful ? '👍' : '👎'} para entry ${entryId}`);
+      // 3. Si existe vinculación, actualizar también el knowledge base GLOBAL
+      if (conversation && conversation.knowledge_entry_id) {
+        await AssistantKnowledgeBase.update(
+          {
+            helpful,
+            feedback_comment: comment,
+            feedback_at: new Date()
+          },
+          {
+            where: { id: conversation.knowledge_entry_id }
+          }
+        );
+
+        // Si es positivo, incrementar reused_count para futuras búsquedas GLOBALES
+        if (helpful) {
+          await AssistantKnowledgeBase.increment('reused_count', {
+            where: { id: conversation.knowledge_entry_id }
+          });
+        }
+
+        console.log(`📊 Feedback registrado: ${helpful ? '👍' : '👎'}`);
+        console.log(`   Conversación: ${entryId}`);
+        console.log(`   Knowledge base: ${conversation.knowledge_entry_id}`);
+      } else {
+        console.log(`📊 Feedback registrado: ${helpful ? '👍' : '👎'} (solo conversación ${entryId})`);
+      }
 
       return { success: true };
     } catch (error) {
@@ -536,12 +631,12 @@ class AssistantService {
   }
 
   /**
-   * Obtiene estadísticas del asistente
+   * Obtiene estadísticas del asistente (MULTI-TENANT - por empresa)
    */
   async getStats(companyId, daysBack = 30) {
     try {
       const query = `
-        SELECT * FROM get_assistant_stats($1, $2)
+        SELECT * FROM get_company_conversation_stats($1, $2)
       `;
 
       const result = await database.sequelize.query(query, {
@@ -549,10 +644,22 @@ class AssistantService {
         type: database.sequelize.QueryTypes.SELECT
       });
 
-      return result[0] || {};
+      // También obtener stats globales del knowledge base
+      const globalQuery = `
+        SELECT * FROM get_global_knowledge_stats()
+      `;
+
+      const globalResult = await database.sequelize.query(globalQuery, {
+        type: database.sequelize.QueryTypes.SELECT
+      });
+
+      return {
+        company: result[0] || {},
+        global: globalResult[0] || {}
+      };
     } catch (error) {
       console.error('❌ Error obteniendo stats:', error.message);
-      return {};
+      return { company: {}, global: {} };
     }
   }
 }

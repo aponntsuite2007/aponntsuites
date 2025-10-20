@@ -145,6 +145,7 @@ const AuditLog = require('../models/AuditLog')(sequelize);
 
 // ✅ MODELO - Sistema de Asistente IA (Ollama + Llama 3.1)
 const AssistantKnowledgeBase = require('../models/AssistantKnowledgeBase')(sequelize);
+const AssistantConversation = require('../models/AssistantConversation')(sequelize);
 
 // SuperUser eliminado - se unificó con tabla User
 
@@ -432,6 +433,30 @@ UserNotificationPreference.belongsTo(Company, { foreignKey: 'company_id', target
 
 // SuperUser asociaciones removidas - funcionalidad movida a User
 
+// ============================================================================
+// ASOCIACIONES - Sistema de Asistente IA
+// ============================================================================
+
+// AssistantKnowledgeBase associations (GLOBAL - company_id opcional)
+Company.hasMany(AssistantKnowledgeBase, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'knowledgeEntries' });
+AssistantKnowledgeBase.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(AssistantKnowledgeBase, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'knowledgeEntries' });
+AssistantKnowledgeBase.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+User.hasMany(AssistantKnowledgeBase, { foreignKey: 'verified_by_admin', sourceKey: 'user_id', as: 'verifiedKnowledge' });
+AssistantKnowledgeBase.belongsTo(User, { foreignKey: 'verified_by_admin', targetKey: 'user_id', as: 'verifier' });
+
+// AssistantConversation associations (MULTI-TENANT - company_id obligatorio)
+Company.hasMany(AssistantConversation, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'conversations' });
+AssistantConversation.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(AssistantConversation, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'conversations' });
+AssistantConversation.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+AssistantConversation.belongsTo(AssistantKnowledgeBase, { foreignKey: 'knowledge_entry_id', targetKey: 'id', as: 'knowledgeEntry' });
+AssistantKnowledgeBase.hasMany(AssistantConversation, { foreignKey: 'knowledge_entry_id', sourceKey: 'id', as: 'conversations' });
+
 module.exports = {
   sequelize,
   User,
@@ -489,6 +514,7 @@ module.exports = {
   AuditLog,
   // ✅ EXPORT - Sistema de Asistente IA
   AssistantKnowledgeBase,
+  AssistantConversation,
 
   connect: async () => {
     try {

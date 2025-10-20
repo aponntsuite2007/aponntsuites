@@ -174,17 +174,17 @@ router.get('/history', authenticate, async (req, res) => {
   try {
     const { limit = 20, module = null } = req.query;
 
-    const { AssistantKnowledgeBase } = database;
+    const { AssistantConversation } = database;
 
     const where = {
-      company_id: req.user.companyId
+      company_id: req.user.companyId // MULTI-TENANT: Filtrar por empresa
     };
 
     if (module) {
       where.module_name = module;
     }
 
-    const history = await AssistantKnowledgeBase.findAll({
+    const history = await AssistantConversation.findAll({
       where,
       order: [['created_at', 'DESC']],
       limit: parseInt(limit),
@@ -193,10 +193,11 @@ router.get('/history', authenticate, async (req, res) => {
         'question',
         'answer',
         'answer_source',
-        'confidence_score',
+        'confidence',
         'helpful',
         'diagnostic_triggered',
         'module_name',
+        'screen_name',
         'created_at'
       ]
     });
@@ -204,7 +205,11 @@ router.get('/history', authenticate, async (req, res) => {
     res.json({
       success: true,
       data: history,
-      count: history.length
+      count: history.length,
+      meta: {
+        source: 'multi-tenant', // Historial privado por empresa
+        global_knowledge: false
+      }
     });
 
   } catch (error) {
