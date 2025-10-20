@@ -2015,6 +2015,18 @@ console.log('🔍 [AUDITOR] Sistema de Auditoría y Auto-Diagnóstico ACTIVO:');
 console.log('   🔍 /api/audit/run - Ejecutar auditoría completa');
 console.log('   📊 /api/audit/status - Estado actual');
 console.log('   📋 /api/audit/registry - Ver módulos del sistema');
+
+// ✅ CONFIGURAR SISTEMA DE ASISTENTE IA (Ollama + Llama 3.1)
+const assistantRoutes = require('./src/routes/assistantRoutes');
+app.use('/api/assistant', assistantRoutes);
+
+console.log('🤖 [ASSISTANT] Sistema de Asistente IA ACTIVO:');
+console.log('   💬 /api/assistant/chat - Chat con el asistente');
+console.log('   👍 /api/assistant/feedback - Registrar feedback');
+console.log('   📜 /api/assistant/history - Historial de conversaciones');
+console.log('   📊 /api/assistant/stats - Estadísticas de uso');
+console.log('   🏥 /api/assistant/health - Estado de Ollama');
+console.log('   🧠 Technology: Ollama + Llama 3.1 (8B) + RAG + PostgreSQL');
 console.log('   🔧 /api/audit/bundles - Sugerencias comerciales');
 console.log('   🌱 /api/audit/seed/:module - Generar datos de prueba');
 console.log('   🔥 Auto-diagnóstico, Auto-reparación híbrida, Análisis de dependencias');

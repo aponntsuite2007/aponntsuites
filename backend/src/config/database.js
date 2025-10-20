@@ -143,6 +143,9 @@ const UserNotificationPreference = require('../models/UserNotificationPreference
 // ✅ MODELO - Sistema de Auditoría y Auto-Diagnóstico
 const AuditLog = require('../models/AuditLog')(sequelize);
 
+// ✅ MODELO - Sistema de Asistente IA (Ollama + Llama 3.1)
+const AssistantKnowledgeBase = require('../models/AssistantKnowledgeBase')(sequelize);
+
 // SuperUser eliminado - se unificó con tabla User
 
 // Definir asociaciones
@@ -484,6 +487,8 @@ module.exports = {
   UserNotificationPreference,
   // ✅ EXPORT - Sistema de Auditoría
   AuditLog,
+  // ✅ EXPORT - Sistema de Asistente IA
+  AssistantKnowledgeBase,
 
   connect: async () => {
     try {
