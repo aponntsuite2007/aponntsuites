@@ -376,6 +376,57 @@ async function showSettingsContent() {
                 <button class="btn btn-success" onclick="saveAlertConfig()" data-translate="settings.alerts.save_button">💾 Guardar Alertas</button>
                 <button class="btn btn-warning" onclick="testOutOfShiftAlert()" data-translate="settings.alerts.test_button">⚠️ Probar Alerta</button>
             </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h2>🔍 Sistema de Auditoría y Auto-Diagnóstico</h2>
+                <p style="margin: 10px 0; font-size: 14px; opacity: 0.9;">
+                    Sistema profesional de auditoría, testing automático y auto-reparación
+                </p>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <div style="font-size: 32px; margin-bottom: 8px;">📊</div>
+                            <div style="font-weight: bold;">Tests Automáticos</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Base de datos, endpoints, integridad</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <div style="font-size: 32px; margin-bottom: 8px;">🔧</div>
+                            <div style="font-weight: bold;">Auto-Reparación</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Fixes automáticos híbridos</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <div style="font-size: 32px; margin-bottom: 8px;">📈</div>
+                            <div style="font-weight: bold;">Análisis de Salud</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Métricas por módulo</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <div style="font-size: 32px; margin-bottom: 8px;">🎯</div>
+                            <div style="font-weight: bold;">Dependencias</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Análisis de impacto</div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <button
+                            onclick="window.openModuleDirect('auditor-dashboard', 'Auditoría y Auto-Diagnóstico')"
+                            class="btn btn-lg"
+                            style="background: white; color: #667eea; font-weight: bold; padding: 15px 40px; font-size: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                            🔍 Abrir Sistema de Auditoría
+                        </button>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; font-size: 13px;">
+                    <strong>✨ Características:</strong><br>
+                    • Diagnóstico completo del sistema en tiempo real<br>
+                    • Detección automática de errores y problemas<br>
+                    • Sugerencias inteligentes de soluciones<br>
+                    • Análisis de dependencias entre módulos<br>
+                    • Recomendaciones de bundles comerciales<br>
+                    • Historial de auditorías y métricas
+                </div>
+            </div>
         </div>
     `;
     

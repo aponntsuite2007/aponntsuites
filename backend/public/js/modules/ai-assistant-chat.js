@@ -123,7 +123,6 @@
       background: white;
       border-radius: 16px;
       box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
-      display: flex;
       flex-direction: column;
       overflow: hidden;
       animation: slideUp 0.3s ease-out;
