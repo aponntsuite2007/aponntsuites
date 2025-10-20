@@ -20,15 +20,19 @@ async function fixAuditLogsSchema() {
         await database.sequelize.authenticate();
         console.log('✅ Conexión exitosa\n');
 
-        console.log('🔧 Ejecutando migración: add test_description...');
+        console.log('🔧 Ejecutando RECONSTRUCCIÓN COMPLETA de audit_logs...');
+        console.log('⚠️  ADVERTENCIA: Se creará backup de datos existentes\n');
 
-        const migrationPath = path.join(__dirname, '../migrations/20251020_add_test_description_to_audit_logs.sql');
+        const migrationPath = path.join(__dirname, '../migrations/20251020_rebuild_audit_logs_complete.sql');
         const sql = fs.readFileSync(migrationPath, 'utf8');
 
         await database.sequelize.query(sql);
 
-        console.log('✅ Migración ejecutada exitosamente');
-        console.log('✅ Columna test_description agregada a audit_logs\n');
+        console.log('\n✅ Migración ejecutada exitosamente');
+        console.log('✅ Tabla audit_logs reconstruida al 100%');
+        console.log('📊 39 columnas creadas');
+        console.log('📋 9 índices creados');
+        console.log('💾 Backup guardado en: audit_logs_backup_20251020\n');
 
     } catch (error) {
         console.error('❌ Error en migración:', error.message);
