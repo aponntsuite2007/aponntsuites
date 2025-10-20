@@ -478,10 +478,48 @@ function renderStatus(status) {
         ` : ''}
       </div>
     `;
+  } else if (status.last_execution) {
+    // Mostrar última ejecución completada
+    const lastEx = status.last_execution;
+    const summary = lastEx.summary || {};
+    const duration = lastEx.duration ? (lastEx.duration / 1000).toFixed(2) : '?';
+    const statusClass = summary.failed > 0 ? 'error' : summary.warnings > 0 ? 'warning' : 'success';
+
+    html += `
+      <div class="last-execution">
+        <h4>✅ Última Auditoría Completada</h4>
+        <p><strong>ID:</strong> ${lastEx.id}</p>
+        <p><strong>Duración:</strong> ${duration}s</p>
+
+        <div class="summary-stats ${statusClass}">
+          <div class="stat">
+            <span class="stat-label">Total</span>
+            <span class="stat-value">${summary.total || 0}</span>
+          </div>
+          <div class="stat success">
+            <span class="stat-label">✅ Passed</span>
+            <span class="stat-value">${summary.passed || 0}</span>
+          </div>
+          <div class="stat error">
+            <span class="stat-label">❌ Failed</span>
+            <span class="stat-value">${summary.failed || 0}</span>
+          </div>
+          <div class="stat warning">
+            <span class="stat-label">⚠️ Warnings</span>
+            <span class="stat-value">${summary.warnings || 0}</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="runFullAudit()" style="margin-top: 15px;">
+          ▶️ Ejecutar Nueva Auditoría
+        </button>
+      </div>
+    `;
   } else {
     html += `
       <div class="no-execution">
         <p>No hay auditorías en ejecución actualmente</p>
+        <p style="color: #666; font-size: 13px; margin: 10px 0;">No se han ejecutado auditorías aún</p>
         <button class="btn-primary" onclick="runFullAudit()">
           ▶️ Iniciar Auditoría Completa
         </button>
@@ -1067,11 +1105,52 @@ function injectAuditorStyles() {
       50% { opacity: 0.7; }
     }
 
-    .execution-info {
+    .execution-info, .last-execution {
       background: #f5f5f5;
       padding: 15px;
       border-radius: 6px;
       margin-top: 15px;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin: 15px 0;
+    }
+
+    .summary-stats .stat {
+      background: white;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .summary-stats .stat-label {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .summary-stats .stat-value {
+      display: block;
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .summary-stats .stat.success .stat-value {
+      color: #4caf50;
+    }
+
+    .summary-stats .stat.error .stat-value {
+      color: #f44336;
+    }
+
+    .summary-stats .stat.warning .stat-value {
+      color: #ff9800;
     }
 
     .progress-bar {

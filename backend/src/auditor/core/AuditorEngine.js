@@ -42,6 +42,7 @@ class AuditorEngine extends EventEmitter {
 
     // Estado de la ejecución actual
     this.currentExecution = null;
+    this.lastExecution = null; // Última ejecución completada
     this.isRunning = false;
   }
 
@@ -135,7 +136,12 @@ class AuditorEngine extends EventEmitter {
 
       throw error;
     } finally {
+      // Guardar última ejecución completada
+      if (this.currentExecution) {
+        this.lastExecution = { ...this.currentExecution };
+      }
       this.isRunning = false;
+      this.currentExecution = null;
     }
   }
 
@@ -338,8 +344,9 @@ class AuditorEngine extends EventEmitter {
 
   getStatus() {
     return {
-      isRunning: this.isRunning,
-      currentExecution: this.currentExecution,
+      is_running: this.isRunning,
+      current_execution: this.currentExecution,
+      last_execution: this.lastExecution, // Última ejecución completada
       collectors: Array.from(this.collectors.keys()),
       analyzers: Array.from(this.analyzers.keys()),
       healers: Array.from(this.healers.keys()),
