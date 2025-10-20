@@ -20,7 +20,7 @@
 
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // Middleware de autenticación (solo admins pueden usar el auditor)
 const requireAdmin = (req, res, next) => {
@@ -32,9 +32,6 @@ const requireAdmin = (req, res, next) => {
   }
   next();
 };
-
-// Aplicar autenticación JWT a todas las rutas del auditor
-router.use(auth);
 
 module.exports = (database) => {
   const { AuditLog } = database;
@@ -83,7 +80,7 @@ module.exports = (database) => {
    * POST /api/audit/run
    * Ejecutar auditoría completa del sistema
    */
-  router.post('/run', requireAdmin, async (req, res) => {
+  router.post('/run', auth, requireAdmin, async (req, res) => {
     try {
       const { auditorEngine } = await getAuditor();
 
@@ -124,7 +121,7 @@ module.exports = (database) => {
    * POST /api/audit/run/:module
    * Auditar módulo específico
    */
-  router.post('/run/:module', requireAdmin, async (req, res) => {
+  router.post('/run/:module', auth, requireAdmin, async (req, res) => {
     try {
       const { auditorEngine } = await getAuditor();
       const { module } = req.params;
@@ -157,7 +154,7 @@ module.exports = (database) => {
    * GET /api/audit/status
    * Obtener estado actual del auditor
    */
-  router.get('/status', requireAdmin, async (req, res) => {
+  router.get('/status', auth, requireAdmin, async (req, res) => {
     try {
       const { auditorEngine } = await getAuditor();
       const status = auditorEngine.getStatus();
@@ -179,7 +176,7 @@ module.exports = (database) => {
    * GET /api/audit/executions
    * Obtener histórico de ejecuciones
    */
-  router.get('/executions', requireAdmin, async (req, res) => {
+  router.get('/executions', auth, requireAdmin, async (req, res) => {
     try {
       const { auditorEngine } = await getAuditor();
       const limit = parseInt(req.query.limit) || 10;
@@ -203,7 +200,7 @@ module.exports = (database) => {
    * GET /api/audit/executions/:id
    * Detalle de una ejecución específica
    */
-  router.get('/executions/:id', requireAdmin, async (req, res) => {
+  router.get('/executions/:id', auth, requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
 
@@ -237,7 +234,7 @@ module.exports = (database) => {
    * POST /api/audit/heal/:logId
    * Aplicar fix sugerido
    */
-  router.post('/heal/:logId', requireAdmin, async (req, res) => {
+  router.post('/heal/:logId', auth, requireAdmin, async (req, res) => {
     try {
       const { logId } = req.params;
       const { suggestionIndex } = req.body;
@@ -285,7 +282,7 @@ module.exports = (database) => {
    * POST /api/audit/seed/:module
    * Generar datos de prueba
    */
-  router.post('/seed/:module', requireAdmin, async (req, res) => {
+  router.post('/seed/:module', auth, requireAdmin, async (req, res) => {
     try {
       const { module } = req.params;
       const count = parseInt(req.body.count) || 10;
@@ -316,7 +313,7 @@ module.exports = (database) => {
    * DELETE /api/audit/cleanup
    * Limpiar datos de prueba
    */
-  router.delete('/cleanup', requireAdmin, async (req, res) => {
+  router.delete('/cleanup', auth, requireAdmin, async (req, res) => {
     try {
       const UniversalSeeder = require('../auditor/seeders/UniversalSeeder');
       const { systemRegistry } = await getAuditor();
@@ -345,7 +342,7 @@ module.exports = (database) => {
    * GET /api/audit/registry
    * Ver registry completo del sistema
    */
-  router.get('/registry', requireAdmin, async (req, res) => {
+  router.get('/registry', auth, requireAdmin, async (req, res) => {
     try {
       const { systemRegistry } = await getAuditor();
 
@@ -376,7 +373,7 @@ module.exports = (database) => {
    * GET /api/audit/registry/:module
    * Ver módulo específico del registry
    */
-  router.get('/registry/:module', requireAdmin, async (req, res) => {
+  router.get('/registry/:module', auth, requireAdmin, async (req, res) => {
     try {
       const { systemRegistry } = await getAuditor();
       const { module } = req.params;
@@ -407,7 +404,7 @@ module.exports = (database) => {
    * GET /api/audit/dependencies/:module
    * Analizar dependencias de un módulo
    */
-  router.get('/dependencies/:module', requireAdmin, async (req, res) => {
+  router.get('/dependencies/:module', auth, requireAdmin, async (req, res) => {
     try {
       const { systemRegistry } = await getAuditor();
       const { module } = req.params;
@@ -434,7 +431,7 @@ module.exports = (database) => {
    * GET /api/audit/bundles
    * Sugerir bundles comerciales para la empresa
    */
-  router.get('/bundles', requireAdmin, async (req, res) => {
+  router.get('/bundles', auth, requireAdmin, async (req, res) => {
     try {
       const { systemRegistry } = await getAuditor();
 

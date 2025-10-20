@@ -31,8 +31,9 @@ class AssistantService {
     this.timeout = parseInt(process.env.OLLAMA_TIMEOUT || '30000');
 
     // Instancias de otros servicios
-    this.systemRegistry = new SystemRegistry();
-    this.auditorEngine = new AuditorEngine();
+    // TODO: Inicializar cuando se necesiten (lazy loading)
+    // this.systemRegistry = new SystemRegistry(database);
+    // this.auditorEngine = new AuditorEngine(database);
 
     console.log('🤖 AssistantService inicializado');
     console.log(`   Ollama URL: ${this.ollamaBaseURL}`);
