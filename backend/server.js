@@ -2007,6 +2007,18 @@ console.log('   📝 /api/v1/enterprise/notifications/templates - Templates reut
 console.log('   ⚙️ /api/v1/enterprise/notifications/preferences - Preferencias usuario');
 console.log('   🔥 Características: Workflows automáticos, escalamiento, multi-canal');
 
+// ✅ CONFIGURAR SISTEMA DE AUDITORÍA Y AUTO-DIAGNÓSTICO
+const auditorRoutes = require('./src/routes/auditorRoutes')(database);
+app.use('/api/audit', auditorRoutes);
+
+console.log('🔍 [AUDITOR] Sistema de Auditoría y Auto-Diagnóstico ACTIVO:');
+console.log('   🔍 /api/audit/run - Ejecutar auditoría completa');
+console.log('   📊 /api/audit/status - Estado actual');
+console.log('   📋 /api/audit/registry - Ver módulos del sistema');
+console.log('   🔧 /api/audit/bundles - Sugerencias comerciales');
+console.log('   🌱 /api/audit/seed/:module - Generar datos de prueba');
+console.log('   🔥 Auto-diagnóstico, Auto-reparación híbrida, Análisis de dependencias');
+
 // 🔒 CONFIGURAR API BIOMÉTRICA
 // COMENTADO: Conflicto con biometricConsentRoutes en la misma ruta /api/v1/biometric
 // const biometricRoutes = require('./src/routes/biometricRoutes');

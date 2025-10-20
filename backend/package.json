@@ -25,6 +25,7 @@
   "dependencies": {
     "@azure/cognitiveservices-face": "^5.0.0",
     "@azure/ms-rest-azure-js": "^2.1.0",
+    "@faker-js/faker": "^10.1.0",
     "@hapi/boom": "^10.0.1",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",

@@ -421,6 +421,28 @@
                                                         alert('Módulo settings: función no encontrada');
                                                     }
                                                     break;
+                                                case 'auditor-dashboard':
+                                                case 'auditor':
+                                                    // Cargar módulo del auditor
+                                                    loadModuleContent('auditor-dashboard').then(() => {
+                                                        // Ocultar grid de módulos
+                                                        const moduleGrid = document.querySelector('.module-grid');
+                                                        if (moduleGrid) moduleGrid.style.display = 'none';
+                                                        // Mostrar contenido principal
+                                                        const mainContent = document.getElementById('mainContent');
+                                                        if (mainContent) mainContent.style.display = 'block';
+                                                        // Llamar a función del auditor
+                                                        if (typeof showAuditorContent === 'function') {
+                                                            showAuditorContent();
+                                                        } else {
+                                                            console.error('❌ [AUDITOR] showAuditorContent no está disponible');
+                                                            alert('Módulo Auditor: función no encontrada');
+                                                        }
+                                                    }).catch(error => {
+                                                        console.error('❌ [AUDITOR] Error cargando módulo:', error);
+                                                        alert('Error cargando módulo Auditor');
+                                                    });
+                                                    break;
                                                 case 'compliance-dashboard':
                                                 case 'compliance_dashboard':
                                                     if (typeof ComplianceDashboard !== 'undefined' && ComplianceDashboard.init) {
@@ -4592,6 +4614,28 @@
                 });
 
                 html += '</div>';
+
+                // AGREGAR MÓDULOS DEL SISTEMA (solo para admins)
+                if (window.currentUser && window.currentUser.role === 'admin') {
+                    html += `
+                        <div style="padding: 20px 20px 0 20px;">
+                            <h3 style="margin: 20px 0 10px 0; color: #667eea; font-size: 14px; text-transform: uppercase; font-weight: 600;">
+                                ⚙️ Módulos del Sistema
+                            </h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                                <div onclick="window.openModuleDirect('auditor-dashboard', 'Auditoría y Auto-Diagnóstico')"
+                                     style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);"
+                                     onmouseover="this.style.boxShadow='0 6px 12px rgba(102, 126, 234, 0.5)'; this.style.transform='translateY(-3px)'"
+                                     onmouseout="this.style.boxShadow='0 2px 4px rgba(102, 126, 234, 0.3)'; this.style.transform='translateY(0)'">
+                                    <div style="font-size: 32px; margin-bottom: 10px;">🔍</div>
+                                    <div style="font-weight: bold; margin-bottom: 5px; font-size: 15px;">Auditor y Auto-Diagnóstico</div>
+                                    <div style="font-size: 11px; opacity: 0.9;">Sistema de auditoría, testing y auto-reparación</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 modulesContainer.innerHTML = html;
 
                 console.log(`✅ [MODULES] ${modules.length} módulos de empresa ${selectedCompany.name} mostrados exitosamente`);
@@ -4999,6 +5043,9 @@
                 } else if (tabName === 'notifications-enterprise') {
                     script.src = `js/modules/notifications-enterprise.js?v=${cacheBuster}`;
                     console.log(`📦 [PROGRESSIVE] Cargando NOTIFICATIONS ENTERPRISE V3.0`);
+                } else if (tabName === 'auditor-dashboard' || tabName === 'auditor') {
+                    script.src = `js/modules/auditor-dashboard.js?v=${cacheBuster}`;
+                    console.log(`📦 [PROGRESSIVE] Cargando AUDITOR DASHBOARD - Sistema Auto-Diagnóstico`);
                 } else {
                     script.src = `js/modules/${tabName}.js?v=${cacheBuster}`;
                 }

@@ -140,6 +140,9 @@ const NotificationActionsLog = require('../models/NotificationActionsLog')(seque
 const NotificationTemplate = require('../models/NotificationTemplate')(sequelize);
 const UserNotificationPreference = require('../models/UserNotificationPreference')(sequelize);
 
+// ✅ MODELO - Sistema de Auditoría y Auto-Diagnóstico
+const AuditLog = require('../models/AuditLog')(sequelize);
+
 // SuperUser eliminado - se unificó con tabla User
 
 // Definir asociaciones
@@ -479,6 +482,8 @@ module.exports = {
   NotificationActionsLog,
   NotificationTemplate,
   UserNotificationPreference,
+  // ✅ EXPORT - Sistema de Auditoría
+  AuditLog,
 
   connect: async () => {
     try {
