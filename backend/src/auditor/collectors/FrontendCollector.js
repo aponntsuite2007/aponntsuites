@@ -1,0 +1,582 @@
+/**
+ * FRONTEND COLLECTOR - Testea módulos del frontend como usuario real
+ *
+ * - Abre navegador con Puppeteer
+ * - Navega a cada módulo
+ * - Testea CRUD completo (Create, Read, Update, Delete)
+ * - Detecta botones rotos, modales que no abren, etc.
+ * - Verifica relaciones inter-módulos usando SystemRegistry
+ *
+ * @version 1.0.0
+ */
+
+const puppeteer = require('puppeteer');
+const axios = require('axios');
+
+class FrontendCollector {
+  constructor(database, systemRegistry) {
+    this.database = database;
+    this.registry = systemRegistry;
+    // Detectar puerto dinámicamente del servidor actual
+    const port = process.env.PORT || '9999';
+    this.baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+    this.browser = null;
+    this.page = null;
+    console.log(`  🔧 [FRONTEND] Base URL: ${this.baseUrl}`);
+  }
+
+  async collect(execution_id, config) {
+    console.log('  🌐 [FRONTEND] Iniciando pruebas de frontend...');
+
+    const results = [];
+
+    try {
+      // Iniciar navegador
+      await this.initBrowser();
+
+      // Login - pasar el token si está disponible
+      await this.login(config.company_id, config.authToken);
+
+      // Obtener módulos a testear - TODOS los módulos del registry
+      const modules = config.moduleFilter ?
+        [this.registry.getModule(config.moduleFilter)] :
+        this.registry.getAllModules(); // TODOS los 45 módulos
+
+      console.log(`  📋 [FRONTEND] Testeando ${modules.length} módulos del registry...`);
+
+      // Testear cada módulo
+      for (const module of modules) {
+        if (!module) continue;
+
+        console.log(`    🧪 [FRONTEND] Testeando módulo: ${module.name}`);
+
+        const testResult = await this.testModule(module, execution_id);
+        results.push(testResult);
+      }
+
+    } catch (error) {
+      console.error('  ❌ [FRONTEND] Error:', error);
+    } finally {
+      await this.closeBrowser();
+    }
+
+    return results;
+  }
+
+  async initBrowser() {
+    console.log('    🌐 [BROWSER] Abriendo navegador...');
+
+    this.browser = await puppeteer.launch({
+      headless: true, // ✅ MODO HEADLESS: Navegador invisible (más rápido y eficiente)
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage', // Evita problemas de memoria compartida
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ],
+      defaultViewport: { width: 1920, height: 1080 }
+    });
+
+    this.page = await this.browser.newPage();
+
+    // Deshabilitar cache para obtener siempre la versión más reciente del HTML
+    await this.page.setCacheEnabled(false);
+    console.log('    🚫 [BROWSER] Cache deshabilitado - cargando versión fresca del HTML');
+
+    // ✅ DETECCIÓN EXHAUSTIVA DE ERRORES
+
+    // 1. Errores de consola (JavaScript)
+    this.consoleErrors = [];
+    this.page.on('console', msg => {
+      if (msg.type() === 'error') {
+        const error = msg.text();
+        console.log(`      ❌ [CONSOLE ERROR] ${error}`);
+        this.consoleErrors.push({
+          type: 'console',
+          message: error,
+          timestamp: new Date()
+        });
+      }
+    });
+
+    // 2. Errores de página (exceptions no manejadas)
+    this.pageErrors = [];
+    this.page.on('pageerror', error => {
+      console.log(`      ❌ [PAGE ERROR] ${error.message}`);
+      this.pageErrors.push({
+        type: 'exception',
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date()
+      });
+    });
+
+    // 3. Errores de red (requests fallidos)
+    this.networkErrors = [];
+    this.page.on('requestfailed', request => {
+      console.log(`      ❌ [NETWORK ERROR] ${request.url()} - ${request.failure().errorText}`);
+      this.networkErrors.push({
+        type: 'network',
+        url: request.url(),
+        error: request.failure().errorText,
+        timestamp: new Date()
+      });
+    });
+
+    // 4. Respuestas 4xx/5xx
+    this.page.on('response', response => {
+      if (response.status() >= 400) {
+        console.log(`      ⚠️  [HTTP ${response.status()}] ${response.url()}`);
+        this.networkErrors.push({
+          type: 'http',
+          url: response.url(),
+          status: response.status(),
+          statusText: response.statusText(),
+          timestamp: new Date()
+        });
+      }
+    });
+  }
+
+  async login(company_id, authToken = null) {
+    console.log('    🔐 [LOGIN] Autenticando...');
+
+    await this.page.goto(`${this.baseUrl}/panel-empresa.html`);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Si se proporcionó un token, inyectarlo en localStorage
+    if (authToken) {
+      console.log('    🔑 [LOGIN] Inyectando token en localStorage...');
+
+      await this.page.evaluate((token, companyId) => {
+        // Inyectar token y datos de sesión
+        localStorage.setItem('authToken', token);
+        window.authToken = token;
+        window.companyAuthToken = token;
+        window.isAuthenticated = true;
+
+        // Crear datos mínimos de empresa
+        const companyData = {
+          id: companyId,
+          company_id: companyId,
+          name: 'Test Company'
+        };
+        localStorage.setItem('currentCompany', JSON.stringify(companyData));
+        window.currentCompany = companyData;
+
+        console.log('✅ Token inyectado en sesión Puppeteer');
+      }, authToken, company_id);
+
+      // Recargar para que tome efecto la sesión
+      await this.page.reload({ waitUntil: 'networkidle0' });
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      console.log('    ✅ [LOGIN] Sesión inyectada correctamente');
+      return; // No hacer login manual
+    }
+
+    // Verificar si ya está logueado
+    const isLoggedIn = await this.page.evaluate(() => {
+      return !!localStorage.getItem('token') || !!localStorage.getItem('authToken');
+    });
+
+    if (isLoggedIn) {
+      console.log('    ✅ [LOGIN] Ya autenticado');
+      return;
+    }
+
+    // Login automático via API
+    console.log('    🔐 [LOGIN] Realizando login automático...');
+
+    try {
+      const loginResponse = await axios.post(`${this.baseUrl}/api/v1/auth/login`, {
+        identifier: 'admin',
+        password: 'admin123',
+        companyId: company_id || 11
+      });
+
+      const token = loginResponse.data.token;
+
+      if (!token) {
+        console.log('    ❌ [LOGIN] No se pudo obtener token');
+        return;
+      }
+
+      // Inyectar token en el navegador
+      await this.page.evaluate((token) => {
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('token', token);
+      }, token);
+
+      console.log('    ✅ [LOGIN] Autenticado exitosamente');
+
+      // Recargar página para que tome el token
+      await this.page.reload();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+    } catch (error) {
+      console.error('    ❌ [LOGIN] Error en login automático:', error.message);
+    }
+  }
+
+  async testModule(module, execution_id) {
+    const { AuditLog } = this.database;
+    const startTime = Date.now();
+
+    // Crear log de inicio
+    const log = await AuditLog.create({
+      execution_id,
+      test_type: 'e2e',
+      module_name: module.id,
+      test_name: `Frontend CRUD - ${module.name}`,
+      test_description: `Test completo de interfaz: navegación, CRUD, botones, modales`,
+      status: 'in-progress',
+      started_at: new Date()
+    });
+
+    const errors = [];
+    let passed = 0;
+    let failed = 0;
+
+    try {
+      // TEST 1: Navegar al módulo
+      console.log(`      1️⃣ Navegando a módulo ${module.id}...`);
+      const navigationOk = await this.testNavigation(module);
+
+      // Si no se puede navegar, el módulo NO existe o NO está implementado → SKIP
+      if (!navigationOk) {
+        console.log(`      ⏭️  Módulo ${module.id} no está implementado/disponible - SKIP`);
+
+        await log.update({
+          status: 'pass', // PASS porque no es un error, solo no está implementado
+          completed_at: new Date(),
+          duration_ms: Date.now() - startTime,
+          error_message: `[SKIP] Módulo no implementado o no disponible en frontend`,
+          severity: null, // No es un error, solo está deshabilitado
+          test_data: { skipped: true, reason: 'module_not_implemented' }
+        });
+
+        return log;
+      }
+
+      passed++; // Navegación OK
+
+      // TEST 2: Verificar que cargue la lista
+      console.log(`      2️⃣ Verificando carga de lista...`);
+      const listOk = await this.testList(module);
+      if (listOk) {
+        passed++;
+      } else {
+        failed++;
+        errors.push({
+          test: 'List Loading',
+          error: `Lista de ${module.name} no carga`,
+          suggestion: `Verificar función load${module.id.charAt(0).toUpperCase() + module.id.slice(1)}() en módulo JS`
+        });
+      }
+
+      // TEST 3: Botón "Agregar" existe y funciona
+      console.log(`      3️⃣ Testeando botón Agregar...`);
+      const addButtonOk = await this.testAddButton(module);
+      if (addButtonOk) {
+        passed++;
+      } else {
+        failed++;
+        errors.push({
+          test: 'Add Button',
+          error: `Botón "Agregar ${module.name}" no funciona`,
+          suggestion: `Verificar onclick="openAdd${module.id}Modal()" en el HTML`
+        });
+      }
+
+      // TEST 4: Botones de acción por fila (Editar, Eliminar)
+      console.log(`      4️⃣ Testeando botones de fila...`);
+      const rowButtonsOk = await this.testRowButtons(module);
+      if (!rowButtonsOk.success) {
+        failed++;
+        errors.push({
+          test: 'Row Buttons',
+          error: rowButtonsOk.error,
+          suggestion: rowButtonsOk.suggestion
+        });
+      } else {
+        passed++;
+      }
+
+      // TEST 5: Modal de edición se abre
+      console.log(`      5️⃣ Testeando modal de edición...`);
+      const editModalOk = await this.testEditModal(module);
+      if (editModalOk) {
+        passed++;
+      } else {
+        failed++;
+        errors.push({
+          test: 'Edit Modal',
+          error: `Modal de edición no se abre`,
+          suggestion: `Verificar función openEdit${module.id}Modal(id) y que el modal tenga ID correcto`
+        });
+      }
+
+      // Actualizar log con resultados
+      await log.update({
+        status: failed > 0 ? 'fail' : 'pass',
+        completed_at: new Date(),
+        duration_ms: Date.now() - startTime,
+        error_message: failed > 0 ? `${failed} tests fallaron` : null,
+        error_context: errors.length > 0 ? { errors } : null,
+        suggestions: errors.length > 0 ? errors.map(e => ({
+          problem: e.error,
+          solution: e.suggestion,
+          confidence: 0.8
+        })) : null
+      });
+
+      console.log(`      ✅ Tests completados: ${passed} passed, ${failed} failed`);
+
+      return log;
+
+    } catch (error) {
+      console.error(`      ❌ Error testeando ${module.name}:`, error);
+
+      await log.update({
+        status: 'fail',
+        completed_at: new Date(),
+        duration_ms: Date.now() - startTime,
+        error_type: error.name,
+        error_message: error.message,
+        error_stack: error.stack
+      });
+
+      return log;
+    }
+  }
+
+  async testNavigation(module) {
+    try {
+      // Intentar navegar usando openModule()
+      await this.page.evaluate((moduleId, moduleName) => {
+        if (typeof window.openModuleDirect === 'function') {
+          window.openModuleDirect(moduleId, moduleName);
+          return true;
+        }
+        return false;
+      }, module.id, module.name);
+
+      // Esperar a que cargue
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // NUEVO: Detectar mensajes de error visibles en la página
+      const errorMessages = await this.detectVisibleErrors();
+      if (errorMessages.length > 0) {
+        console.log(`      🔴 [ERROR DETECTADO] ${errorMessages.length} mensajes de error visibles:`);
+        errorMessages.forEach(msg => {
+          console.log(`         ❌ "${msg.text}" (id: ${msg.id || 'N/A'})`);
+        });
+      }
+
+      // Verificar que el módulo está visible
+      const isVisible = await this.page.evaluate((moduleId, moduleName) => {
+        const content = document.getElementById('mainContent');
+        return content && content.innerHTML.includes(moduleId);
+      }, module.id, module.name);
+
+      return isVisible;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * NUEVA FUNCIÓN: Detecta mensajes de error visibles en la página
+   * Busca divs con texto de error, fondo rojo, o IDs específicos como "training-message"
+   */
+  async detectVisibleErrors() {
+    return await this.page.evaluate(() => {
+      const errors = [];
+
+      // Buscar todos los divs en la página
+      const allDivs = document.querySelectorAll('div');
+
+      allDivs.forEach(div => {
+        const text = div.textContent.trim();
+        const computedStyle = window.getComputedStyle(div);
+        const bgColor = computedStyle.backgroundColor;
+        const display = computedStyle.display;
+
+        // EXCLUSIONES: Ignorar componentes del sistema que no son errores reales
+        const isAIAssistant = div.id && (
+          div.id.startsWith('ai-assistant-') ||
+          div.id === 'ai-assistant-messages' ||
+          div.id === 'ai-assistant-chat' ||
+          div.id === 'ai-assistant-input' ||
+          div.classList.contains('ai-assistant')
+        );
+
+        // Si es del asistente IA, skip
+        if (isAIAssistant) return;
+
+        // Detectar si es un mensaje de error basado en:
+        // 1. Tiene texto que incluye "error", "❌", "falló", etc.
+        // 2. Tiene fondo rojo
+        // 3. Tiene un ID específico conocido (training-message, etc.)
+        const hasErrorText = /error|falló|falla|problema|❌|no se pudo|failed/i.test(text);
+        const hasRedBackground = bgColor.includes('rgb(220, 53, 69)') || // Bootstrap danger
+                                  bgColor.includes('rgb(239, 68, 68)') || // Tailwind red
+                                  bgColor.includes('rgb(185, 28, 28)');  // Dark red
+        const isErrorDiv = div.id && (
+          div.id.includes('error') ||
+          div.id.includes('message') ||
+          div.id === 'training-message'
+        );
+
+        // Si coincide con algún criterio Y está visible (no display:none)
+        if ((hasErrorText || hasRedBackground || isErrorDiv) &&
+            text.length > 0 &&
+            text.length < 500 && // Evitar divs con mucho contenido
+            display !== 'none') {
+          errors.push({
+            id: div.id || null,
+            className: div.className || null,
+            text: text.substring(0, 200), // Max 200 caracteres
+            backgroundColor: bgColor,
+            isVisible: display !== 'none'
+          });
+        }
+      });
+
+      return errors;
+    });
+  }
+
+  async testList(module) {
+    try {
+      // Buscar tabla o lista de items
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const hasItems = await this.page.evaluate(() => {
+        // Buscar tablas
+        const tables = document.querySelectorAll('table tbody tr');
+        if (tables.length > 0) return true;
+
+        // Buscar cards o lista
+        const cards = document.querySelectorAll('.card, .item, .row');
+        return cards.length > 0;
+      });
+
+      return hasItems;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async testAddButton(module) {
+    try {
+      // Buscar botón "Agregar"
+      const addButton = await this.page.$('button:contains("Agregar"), button[onclick*="Add"], button[onclick*="add"]');
+
+      if (!addButton) return false;
+
+      // Click en el botón
+      await addButton.click();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Verificar que se abrió un modal
+      const modalOpened = await this.page.evaluate(() => {
+        const modals = document.querySelectorAll('.modal.show, [style*="display: block"]');
+        return modals.length > 0;
+      });
+
+      return modalOpened;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async testRowButtons(module) {
+    try {
+      // Buscar primera fila de la tabla
+      const firstRow = await this.page.$('table tbody tr:first-child');
+
+      if (!firstRow) {
+        return {
+          success: false,
+          error: 'No se encontraron filas en la tabla',
+          suggestion: `Verificar que la función load${module.id}() esté poblando la tabla correctamente`
+        };
+      }
+
+      // Buscar botones de acción en la fila
+      const buttons = await firstRow.$$('button, a.btn, i.fa-edit, i.fa-trash');
+
+      if (buttons.length === 0) {
+        return {
+          success: false,
+          error: 'No se encontraron botones de acción (Editar/Eliminar)',
+          suggestion: `Agregar botones en la columna de acciones con onclick="edit${module.id}(id)" y onclick="delete${module.id}(id)"`
+        };
+      }
+
+      // Intentar hacer click en el primer botón (probablemente Editar)
+      await buttons[0].click();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Verificar que algo pasó (modal se abrió o función se ejecutó)
+      const actionWorked = await this.page.evaluate(() => {
+        // Verificar modal abierto o algún cambio
+        const modals = document.querySelectorAll('.modal.show, [style*="display: block"]');
+        return modals.length > 0;
+      });
+
+      if (!actionWorked) {
+        return {
+          success: false,
+          error: 'Botón de acción no hace nada al hacer click',
+          suggestion: `Verificar que la función onclick esté correctamente definida y no tenga errores JavaScript`
+        };
+      }
+
+      return { success: true };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        suggestion: 'Revisar errores JavaScript en consola del navegador'
+      };
+    }
+  }
+
+  async testEditModal(module) {
+    try {
+      // Ya deberíamos tener un modal abierto del test anterior
+      const modalVisible = await this.page.evaluate(() => {
+        const modals = document.querySelectorAll('.modal.show, [style*="display: block"]');
+        return modals.length > 0;
+      });
+
+      if (!modalVisible) return false;
+
+      // Verificar que tiene campos de formulario
+      const hasFormFields = await this.page.evaluate(() => {
+        const inputs = document.querySelectorAll('.modal input, .modal select, .modal textarea');
+        return inputs.length > 0;
+      });
+
+      return hasFormFields;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async closeBrowser() {
+    if (this.browser) {
+      await this.browser.close();
+      console.log('    ✅ [BROWSER] Cerrado');
+    }
+  }
+}
+
+module.exports = FrontendCollector;

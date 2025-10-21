@@ -188,8 +188,8 @@ class DatabaseCollector {
       const [orphanedUsers] = await this.sequelize.query(`
         SELECT COUNT(*) as count
         FROM users u
-        LEFT JOIN companies c ON u.company_id = c.id
-        WHERE c.id IS NULL;
+        LEFT JOIN companies c ON u.company_id = c.company_id
+        WHERE u.company_id IS NULL OR c.company_id IS NULL;
       `);
 
       const count = parseInt(orphanedUsers[0].count);
