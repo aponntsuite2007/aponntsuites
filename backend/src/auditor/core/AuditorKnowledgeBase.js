@@ -99,7 +99,7 @@ class AuditorKnowledgeBase {
           COUNT(*) as total_applied,
           SUM(CASE WHEN status = 'pass' THEN 1 ELSE 0 END) as successes
         FROM audit_logs
-        WHERE fix_applied = true
+        WHERE fix_applied = 'true'
           AND fix_strategy IS NOT NULL
         GROUP BY fix_strategy
         ORDER BY successes DESC

@@ -22,6 +22,10 @@ class FrontendCollector {
     this.baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
     this.browser = null;
     this.page = null;
+
+    // Módulos que NO tienen CRUD separado (son páginas principales/dashboards)
+    this.nonCrudModules = ['dashboard', 'settings']; // Dashboard principal y Settings no tienen CRUD separado
+
     console.log(`  🔧 [FRONTEND] Base URL: ${this.baseUrl}`);
   }
 
@@ -242,6 +246,22 @@ class FrontendCollector {
     let failed = 0;
 
     try {
+      // CHECK: Si es un módulo sin CRUD (dashboard principal, settings), skip automático
+      if (this.nonCrudModules.includes(module.id)) {
+        console.log(`      ⏭️  Módulo ${module.id} es página principal (sin CRUD separado) - SKIP`);
+
+        await log.update({
+          status: 'pass', // PASS porque no es un error, es por diseño
+          completed_at: new Date(),
+          duration_ms: Date.now() - startTime,
+          error_message: `[SKIP] Módulo es página principal sin CRUD separado`,
+          severity: null,
+          test_data: { skipped: true, reason: 'non_crud_module' }
+        });
+
+        return log;
+      }
+
       // TEST 1: Navegar al módulo
       console.log(`      1️⃣ Navegando a módulo ${module.id}...`);
       const navigationOk = await this.testNavigation(module);
@@ -320,13 +340,56 @@ class FrontendCollector {
         });
       }
 
-      // Actualizar log con resultados
+      // NUEVO: Evaluar errores de red y consola capturados
+      const criticalHttpErrors = this.networkErrors.filter(err =>
+        err.type === 'http' && [401, 403, 500, 503].includes(err.status)
+      );
+      if (criticalHttpErrors.length > 0) {
+        failed++;
+        criticalHttpErrors.forEach(err => {
+          errors.push({
+            test: 'HTTP Errors',
+            error: `${err.status} ${err.statusText} - ${err.url}`,
+            suggestion: `Verificar autenticación y permisos para: ${err.url}`
+          });
+        });
+      }
+
+      const criticalConsoleErrors = this.consoleErrors.filter(err => {
+        const msg = err.message.toLowerCase();
+        return msg.includes('error') || msg.includes('failed') || msg.includes('unauthorized');
+      });
+      if (criticalConsoleErrors.length > 0) {
+        failed++;
+        errors.push({
+          test: 'Console Errors',
+          error: `${criticalConsoleErrors.length} errores críticos de consola detectados`,
+          suggestion: `Revisar errores en consola del navegador al cargar ${module.name}`
+        });
+      }
+
+      const networkFailures = this.networkErrors.filter(err => err.type === 'network');
+      if (networkFailures.length > 0) {
+        failed++;
+        errors.push({
+          test: 'Network Errors',
+          error: `${networkFailures.length} requests fallaron`,
+          suggestion: `Verificar conectividad y endpoints del módulo ${module.name}`
+        });
+      }
+
+      // Actualizar log con resultados (incluyendo errores de red/consola)
       await log.update({
         status: failed > 0 ? 'fail' : 'pass',
         completed_at: new Date(),
         duration_ms: Date.now() - startTime,
         error_message: failed > 0 ? `${failed} tests fallaron` : null,
-        error_context: errors.length > 0 ? { errors } : null,
+        error_context: errors.length > 0 ? {
+          errors,
+          http_errors: criticalHttpErrors,
+          console_errors: criticalConsoleErrors.slice(0, 5),
+          network_errors: networkFailures.slice(0, 5)
+        } : null,
         suggestions: errors.length > 0 ? errors.map(e => ({
           problem: e.error,
           solution: e.suggestion,
