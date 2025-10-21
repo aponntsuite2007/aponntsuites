@@ -55,6 +55,7 @@ module.exports = (database) => {
       const FrontendCollector = require('../auditor/collectors/FrontendCollector');
       const IntegrationCollector = require('../auditor/collectors/IntegrationCollector');
       const AndroidKioskCollector = require('../auditor/collectors/AndroidKioskCollector');
+      const E2ECollector = require('../auditor/collectors/E2ECollector');
       const HybridHealer = require('../auditor/healers/HybridHealer');
       const AdvancedHealer = require('../auditor/healers/AdvancedHealer');
 
@@ -84,6 +85,8 @@ module.exports = (database) => {
       auditorEngine.registerCollector('integration', new IntegrationCollector(database, systemRegistry));
       // ✅ NUEVO: AndroidKioskCollector para auditar APK
       auditorEngine.registerCollector('android-kiosk', new AndroidKioskCollector(database, systemRegistry));
+      // ✅ NUEVO: E2ECollector para tests completos end-to-end desde experiencia de usuario
+      auditorEngine.registerCollector('e2e', new E2ECollector(database, systemRegistry));
 
       // Registrar healers (orden: advanced primero, hybrid como fallback)
       auditorEngine.registerHealer('advanced', new AdvancedHealer(database, systemRegistry));
@@ -93,6 +96,7 @@ module.exports = (database) => {
       console.log('   🧠 Knowledge Base: inicializada');
       console.log('   🔍 Module Scanner: listo');
       console.log('   📱 Android Kiosk Collector: registrado');
+      console.log('   🎭 E2E Collector: registrado (tests de experiencia de usuario)');
     }
 
     return { auditorEngine, systemRegistry, moduleScanner, knowledgeBase };
