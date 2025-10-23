@@ -232,6 +232,61 @@
     .ai-tech-badge.postgresql { border-color: #336791; color: #336791; }
     .ai-tech-badge.rag { border-color: #764ba2; color: #764ba2; }
 
+    /* Estado de IA detallado */
+    .ai-status-indicator {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin: 8px 0;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ai-status-local, .ai-status-render {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      text-align: center;
+    }
+
+    .ai-status-divider {
+      width: 1px;
+      height: 30px;
+      background: #e0e0e0;
+      margin: 0 10px;
+    }
+
+    .ai-status-icon {
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    .ai-status-label {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .ai-status-value {
+      color: #666;
+      font-size: 10px;
+    }
+
+    .ai-models-available {
+      background: rgba(240, 248, 255, 0.9);
+      border: 1px solid #b3d9ff;
+      border-radius: 8px;
+      padding: 6px 8px;
+      margin: 4px 0;
+      font-size: 10px;
+      color: #0066cc;
+      text-align: center;
+    }
+
     /* MENSAJES */
     #ai-assistant-messages {
       flex: 1;
@@ -476,6 +531,9 @@
     // Check Ollama health
     checkOllamaHealth();
 
+    // Verificar estado IA (local y render)
+    updateAIStatus();
+
     // Detectar módulo actual
     detectCurrentContext();
 
@@ -532,6 +590,26 @@
               <span class="ai-tech-badge-icon">📚</span>
               RAG
             </span>
+          </div>
+
+          <!-- INDICADOR DE ESTADO IA -->
+          <div class="ai-status-indicator">
+            <div class="ai-status-local">
+              <div class="ai-status-icon" id="ai-local-icon">🔴</div>
+              <div class="ai-status-label">Localhost</div>
+              <div class="ai-status-value" id="ai-local-status">Verificando...</div>
+            </div>
+            <div class="ai-status-divider"></div>
+            <div class="ai-status-render">
+              <div class="ai-status-icon" id="ai-render-icon">🟡</div>
+              <div class="ai-status-label">Render</div>
+              <div class="ai-status-value" id="ai-render-status">Fallback</div>
+            </div>
+          </div>
+
+          <!-- MODELOS DISPONIBLES -->
+          <div class="ai-models-available" id="ai-models-info">
+            📚 Compatible: OpenAI GPT-4, Claude 3.5, Ollama (Local)
           </div>
 
           <!-- MENSAJES -->
@@ -969,6 +1047,62 @@
     } catch (error) {
       console.warn('⚠️ No se pudo verificar estado de Ollama:', error);
       STATE.ollamaStatus = 'unknown';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // VERIFICACIÓN DE ESTADO IA DETALLADO
+  // ═══════════════════════════════════════════════════════════
+
+  async function updateAIStatus() {
+    try {
+      // Verificar estado localhost vs render
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+      // Verificar estado de Ollama
+      const healthResponse = await fetch(CONFIG.apiBaseURL + CONFIG.endpoints.health);
+      const healthData = await healthResponse.json();
+
+      const localIcon = document.getElementById('ai-local-icon');
+      const localStatus = document.getElementById('ai-local-status');
+      const renderIcon = document.getElementById('ai-render-icon');
+      const renderStatus = document.getElementById('ai-render-status');
+      const modelsInfo = document.getElementById('ai-models-info');
+
+      if (isLocalhost) {
+        // LOCALHOST
+        if (healthData.ollama?.available) {
+          localIcon.textContent = '🟢';
+          localStatus.textContent = 'Ollama Activo';
+        } else {
+          localIcon.textContent = '🔴';
+          localStatus.textContent = 'Ollama NO instalado';
+        }
+
+        // Render simulado
+        renderIcon.textContent = '🟡';
+        renderStatus.textContent = 'Fallback Ready';
+
+        modelsInfo.innerHTML = '🏠 <strong>Localhost:</strong> Ollama + Llama 3.1 | ☁️ <strong>Render:</strong> Fallback + RAG';
+      } else {
+        // RENDER/PRODUCCIÓN
+        localIcon.textContent = '🔴';
+        localStatus.textContent = 'No disponible';
+
+        renderIcon.textContent = '🟡';
+        renderStatus.textContent = 'Fallback + RAG';
+
+        modelsInfo.innerHTML = '💰 <strong>Upgrade disponible:</strong> OpenAI GPT-4 ($5-15/mes) | Claude 3.5 ($10-25/mes)';
+      }
+
+    } catch (error) {
+      console.warn('⚠️ Error verificando estado IA:', error);
+
+      // Estado de error
+      document.getElementById('ai-local-icon').textContent = '❓';
+      document.getElementById('ai-local-status').textContent = 'Error';
+      document.getElementById('ai-render-icon').textContent = '❓';
+      document.getElementById('ai-render-status').textContent = 'Error';
     }
   }
 
