@@ -138,31 +138,29 @@ class BiometricAttendanceModule {
       throw new Error('Face-api.js library not loaded');
     }
 
+    // ⚠️ LEGACY CODE - Face-API.js deshabilitado (sistema productivo usa Azure Face API)
+    /* COMENTADO - Este código causaba errores 404 innecesarios
     try {
       console.log('🧠 [FACE-API] Loading models...');
-
       await Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri(this.config.faceApiModelsPath),
         faceapi.nets.faceLandmark68Net.loadFromUri(this.config.faceApiModelsPath),
         faceapi.nets.faceRecognitionNet.loadFromUri(this.config.faceApiModelsPath)
       ]).catch(async () => {
-        // Fallback to CDN
         console.log('🌐 [FACE-API] Using CDN fallback...');
         const cdnUrl = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/';
-
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(cdnUrl),
           faceapi.nets.faceLandmark68Net.loadFromUri(cdnUrl),
           faceapi.nets.faceRecognitionNet.loadFromUri(cdnUrl)
         ]);
       });
-
       console.log('✅ [FACE-API] Models loaded successfully');
-
     } catch (error) {
       console.error('❌ [FACE-API] Failed to load models:', error);
       throw error;
     }
+    */
   }
 
   /**

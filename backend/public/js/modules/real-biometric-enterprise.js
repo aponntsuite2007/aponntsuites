@@ -53,8 +53,8 @@ class RealBiometricEnterprise {
     try {
       console.log('🚀 [REAL-BIOMETRIC] Initializing real technologies...');
 
-      // Load Face-api.js
-      await this.loadFaceApiJS();
+      // ⚠️ LEGACY CODE - Face-API.js deshabilitado (sistema productivo usa Azure Face API)
+      // await this.loadFaceApiJS();
 
       // Initialize MediaDevices API
       await this.initializeMediaDevices();

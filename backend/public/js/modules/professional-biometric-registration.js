@@ -64,9 +64,9 @@ class ProfessionalBiometricRegistration {
     try {
       console.log('🚀 [BIOMETRIC-REGISTRATION] Initializing professional system...');
 
-      // Load Face-api.js library and models
-      await this.loadFaceApiLibrary();
-      await this.loadFaceApiModels();
+      // ⚠️ LEGACY CODE - Face-API.js deshabilitado (sistema productivo usa Azure Face API)
+      // await this.loadFaceApiLibrary();
+      // await this.loadFaceApiModels();
 
       // Setup UI components
       this.setupUI();

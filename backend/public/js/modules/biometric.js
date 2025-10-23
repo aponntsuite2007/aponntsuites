@@ -37,38 +37,32 @@ async function initializeFaceAPI() {
 
         console.log('✅ [FACE-API] Librería cargada, iniciando modelos...');
 
-        // Cargar modelos - Usar mismo CDN que la librería (face-api.js 0.22.2)
+        // ⚠️ LEGACY CODE - Face-API.js deshabilitado (sistema productivo usa Azure Face API)
+        /* COMENTADO - Este código causaba errores 404 innecesarios
         try {
             console.log('📡 [FACE-API] Cargando modelos desde CDN (face-api.js 0.22.2)...');
-
-            // Usar el mismo CDN que carga la librería (justadudewhohacks 0.22.2)
             const cdnUrl = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/';
-
             await Promise.all([
                 faceapi.nets.tinyFaceDetector.loadFromUri(cdnUrl),
                 faceapi.nets.faceLandmark68Net.loadFromUri(cdnUrl)
             ]);
-
             console.log('✅ [FACE-API] Modelos cargados exitosamente (compatibles con 0.22.2)');
         } catch (cdnError) {
             console.error('❌ [FACE-API] Error cargando modelos:', cdnError);
-
-            // Fallback: usar GitHub directo
             try {
                 console.log('📡 [FACE-API] Intentando GitHub directo...');
                 const githubUrl = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights/';
-
                 await Promise.all([
                     faceapi.nets.tinyFaceDetector.loadFromUri(githubUrl),
                     faceapi.nets.faceLandmark68Net.loadFromUri(githubUrl)
                 ]);
-
                 console.log('✅ [FACE-API] Modelos GitHub cargados exitosamente');
             } catch (githubError) {
                 console.error('❌ [FACE-API] Error en ambas fuentes:', githubError);
                 throw githubError;
             }
         }
+        */
 
         faceAPIInitialized = true;
         window.faceDetectionModel = true;
