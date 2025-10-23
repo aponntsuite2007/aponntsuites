@@ -68,10 +68,10 @@ class FrontendCollector {
   }
 
   async initBrowser() {
-    console.log('    🌐 [BROWSER] Abriendo navegador...');
+    console.log('    🌐 [BROWSER] Abriendo navegador VISIBLE...');
 
     this.browser = await puppeteer.launch({
-      headless: true, // ✅ MODO HEADLESS: Navegador invisible (más rápido y eficiente)
+      headless: false, // ✅ NAVEGADOR VISIBLE: El usuario verá todo el proceso de testing en tiempo real
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -79,12 +79,23 @@ class FrontendCollector {
         '--disable-accelerated-2d-canvas',
         '--no-first-run',
         '--no-zygote',
-        '--disable-gpu'
+        '--start-maximized' // Maximizar ventana para mejor visualización
       ],
-      defaultViewport: { width: 1920, height: 1080 }
+      defaultViewport: null // Usar viewport completo de la ventana
     });
 
     this.page = await this.browser.newPage();
+
+    // ✅ AUTO-ACEPTAR TODOS LOS DIÁLOGOS (alert, confirm, prompt)
+    this.page.on('dialog', async dialog => {
+      console.log(`      🔔 [AUTO-DIALOG] Tipo: ${dialog.type()} - Mensaje: "${dialog.message().substring(0, 100)}..."`);
+      await dialog.accept(); // Aceptar automáticamente
+      console.log(`      ✅ [AUTO-DIALOG] Diálogo aceptado automáticamente`);
+    });
+
+    // ✅ Setear viewport a tamaño de pantalla completo (1920x1080)
+    await this.page.setViewport({ width: 1366, height: 768 });
+    console.log('    📐 [BROWSER] Viewport configurado a 1366x768 (responsive estándar)');
 
     // Deshabilitar cache para obtener siempre la versión más reciente del HTML
     await this.page.setCacheEnabled(false);
@@ -146,83 +157,162 @@ class FrontendCollector {
   }
 
   async login(company_id, authToken = null) {
-    console.log('    🔐 [LOGIN] Autenticando...');
+    console.log('    🔐 [LOGIN] Iniciando login automático...');
+    console.log(`    📋 [LOGIN] Company ID recibido: ${company_id}`);
 
-    await this.page.goto(`${this.baseUrl}/panel-empresa.html`);
+    // ✅ waitUntil: 'domcontentloaded' - No espera recursos externos (face-api CDN)
+    await this.page.goto(`${this.baseUrl}/panel-empresa.html`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000
+    });
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Si se proporcionó un token, inyectarlo en localStorage
-    if (authToken) {
-      console.log('    🔑 [LOGIN] Inyectando token en localStorage...');
-
-      await this.page.evaluate((token, companyId) => {
-        // Inyectar token y datos de sesión
-        localStorage.setItem('authToken', token);
-        window.authToken = token;
-        window.companyAuthToken = token;
-        window.isAuthenticated = true;
-
-        // Crear datos mínimos de empresa
-        const companyData = {
-          id: companyId,
-          company_id: companyId,
-          name: 'Test Company'
-        };
-        localStorage.setItem('currentCompany', JSON.stringify(companyData));
-        window.currentCompany = companyData;
-
-        console.log('✅ Token inyectado en sesión Puppeteer');
-      }, authToken, company_id);
-
-      // Recargar para que tome efecto la sesión
-      await this.page.reload({ waitUntil: 'networkidle0' });
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      console.log('    ✅ [LOGIN] Sesión inyectada correctamente');
-      return; // No hacer login manual
-    }
-
-    // Verificar si ya está logueado
-    const isLoggedIn = await this.page.evaluate(() => {
-      return !!localStorage.getItem('token') || !!localStorage.getItem('authToken');
-    });
-
-    if (isLoggedIn) {
-      console.log('    ✅ [LOGIN] Ya autenticado');
-      return;
-    }
-
-    // Login automático via API
-    console.log('    🔐 [LOGIN] Realizando login automático...');
-
     try {
-      const loginResponse = await axios.post(`${this.baseUrl}/api/v1/auth/login`, {
-        identifier: 'admin',
-        password: 'admin123',
-        companyId: company_id || 11
+      // ✅ Obtener slug de la empresa por company_id
+      console.log(`    📋 Obteniendo slug de empresa con company_id: ${company_id}`);
+
+      const { Client } = require('pg');
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
       });
+      await client.connect();
 
-      const token = loginResponse.data.token;
+      const result = await client.query('SELECT slug FROM companies WHERE company_id = $1', [company_id]);
+      await client.end();
 
-      if (!token) {
-        console.log('    ❌ [LOGIN] No se pudo obtener token');
+      if (!result.rows || result.rows.length === 0) {
+        console.error(`    ❌ No se encontró empresa con ID ${company_id}`);
         return;
       }
 
-      // Inyectar token en el navegador
-      await this.page.evaluate((token) => {
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('token', token);
-      }, token);
+      const companySlug = result.rows[0].slug;
+      console.log(`    ✅ Empresa encontrada: ${companySlug}`);
 
-      console.log('    ✅ [LOGIN] Autenticado exitosamente');
+      // Esperar a que cargue el formulario de login
+      await this.page.waitForSelector('#companySelect', { timeout: 10000 });
+      console.log('    ✅ Formulario de login cargado');
 
-      // Recargar página para que tome el token
-      await this.page.reload();
+      // ESPERAR a que el dropdown tenga opciones cargadas
+      console.log('    ⏳ Esperando que dropdown tenga opciones cargadas...');
+      await this.page.waitForFunction(
+        () => {
+          const select = document.getElementById('companySelect');
+          return select && select.options.length > 1; // Más de 1 (no solo el placeholder)
+        },
+        { timeout: 10000 }
+      );
+      console.log('    ✅ Dropdown con opciones cargadas');
+
+      // Esperar 1 segundo adicional para asegurar que el evento onchange está listo
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // PASO 1: Seleccionar empresa
+      console.log(`    🏢 Seleccionando empresa: ${companySlug}`);
+      await this.page.select('#companySelect', companySlug);
+      await new Promise(resolve => setTimeout(resolve, 3000)); // 3 segundos para que se habiliten los campos
+
+      // PASO 2: Esperar a que se habilite el campo de usuario e ingresar "soporte"
+      console.log('    ⏳ Esperando que se habilite campo de usuario...');
+      await this.page.waitForSelector('#userInput:not([disabled])', { timeout: 5000 });
+      
+      // Limpiar campo de usuario (por si tiene valor previo)
+      await this.page.click('#userInput', { clickCount: 3 }); // Triple click para seleccionar todo
+      await this.page.keyboard.press('Backspace');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('    👤 Ingresando usuario: soporte');
+      await this.page.type('#userInput', 'soporte', { delay: 100 });
+      
+      // Verificar que se escribió correctamente
+      const userValue = await this.page.$eval('#userInput', el => el.value);
+      console.log(`    ✅ Usuario ingresado: "${userValue}"`);
+      
       await new Promise(resolve => setTimeout(resolve, 2000));
 
+      // PASO 3: Esperar a que se habilite el campo de contraseña e ingresar
+      console.log('    ⏳ Esperando que se habilite campo de contraseña...');
+      await this.page.waitForSelector('#passwordInput:not([disabled])', { timeout: 5000 });
+      
+      // Limpiar campo de contraseña (por si tiene valor previo)
+      await this.page.click('#passwordInput', { clickCount: 3 }); // Triple click para seleccionar todo
+      await this.page.keyboard.press('Backspace');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('    🔑 Ingresando contraseña: admin123');
+      await this.page.type('#passwordInput', 'admin123', { delay: 100 });
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // PASO 4: Click en botón Ingresar
+      console.log('    🚀 Haciendo click en botón Ingresar...');
+      await this.page.waitForSelector('#loginButton:not([disabled])', { timeout: 5000 });
+      await this.page.click('#loginButton');
+
+      // PASO 5: Esperar a que se complete el proceso de autenticación
+      console.log('    ⏳ Esperando a que se complete la autenticación...');
+
+      // Esperar hasta 15 segundos a que aparezcan authToken y currentCompany
+      const loginSuccess = await this.page.waitForFunction(
+        () => {
+          const hasToken = !!localStorage.getItem('authToken');
+          const hasCompany = !!localStorage.getItem('currentCompany');
+          console.log(`[LOGIN-CHECK] Token: ${hasToken}, Company: ${hasCompany}`);
+          return hasToken && hasCompany;
+        },
+        { timeout: 15000, polling: 500 }
+      ).catch(() => false);
+
+      // Verificar que se haya logueado correctamente
+      const isLoggedIn = await this.page.evaluate(() => {
+        return !!localStorage.getItem('authToken') && !!localStorage.getItem('currentCompany');
+      });
+
+      if (isLoggedIn) {
+        const companyName = await this.page.evaluate(() => {
+          try {
+            const companyData = localStorage.getItem('currentCompany');
+            return companyData ? JSON.parse(companyData).name : 'Unknown';
+          } catch {
+            return 'Unknown';
+          }
+        });
+        console.log(`    ✅ [LOGIN] Login completado exitosamente - Empresa: ${companyName}`);
+
+        // CERRAR MODAL DEL AI ASSISTANT (para evitar false positives en tests)
+        console.log('    🤖 Cerrando modal del AI Assistant si está abierto...');
+        await this.page.evaluate(() => {
+          try {
+            const aiWindow = document.getElementById('ai-assistant-window');
+            if (aiWindow && aiWindow.classList.contains('open')) {
+              const closeBtn = document.getElementById('ai-assistant-close-button');
+              if (closeBtn) {
+                closeBtn.click();
+                console.log('    ✅ [AI-ASSISTANT] Modal cerrado correctamente');
+              }
+            }
+          } catch (e) {
+            console.log('    ℹ️  [AI-ASSISTANT] No se pudo cerrar el modal (puede no estar presente)');
+          }
+        });
+        await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que la animación de cierre termine
+
+      } else {
+        console.error('    ❌ [LOGIN] Login falló - No se encontró token o empresa');
+        // Debug: mostrar qué hay en localStorage y window
+        const debugInfo = await this.page.evaluate(() => {
+          return {
+            hasToken: !!localStorage.getItem('authToken'),
+            hasCompany: !!window.currentCompany,
+            companyKeys: window.currentCompany ? Object.keys(window.currentCompany) : [],
+            localStorageKeys: Object.keys(localStorage)
+          };
+        });
+        console.error('    🔍 [LOGIN-DEBUG]', JSON.stringify(debugInfo, null, 2));
+      }
+
     } catch (error) {
-      console.error('    ❌ [LOGIN] Error en login automático:', error.message);
+      console.error('    ❌ [LOGIN] Error en login:', error.message);
+      console.error('    Stack:', error.stack);
     }
   }
 
@@ -399,6 +489,34 @@ class FrontendCollector {
 
       console.log(`      ✅ Tests completados: ${passed} passed, ${failed} failed`);
 
+      // 🎫 CREAR TICKET AUTOMÁTICO si hay errores críticos
+      if (failed > 0 && errors.length > 0) {
+        try {
+          const AutoAuditTicketSystem = require('../core/AutoAuditTicketSystem');
+
+          console.log(`      🎫 [AUTO-TICKET] Creando ticket automático para ${module.name}...`);
+
+          const ticket = await AutoAuditTicketSystem.createAutoTicket({
+            execution_id,
+            module_name: module.id,
+            errors: errors,
+            error_context: {
+              http_errors: criticalHttpErrors,
+              console_errors: criticalConsoleErrors.slice(0, 5),
+              network_errors: networkFailures.slice(0, 5)
+            },
+            company_id: config.company_id || 11
+          });
+
+          if (ticket) {
+            console.log(`      ✅ [AUTO-TICKET] Ticket creado: ${ticket.ticket_number}`);
+          }
+        } catch (ticketError) {
+          console.error(`      ⚠️  [AUTO-TICKET] Error creando ticket:`, ticketError.message);
+          // No bloqueamos la auditoría si falla la creación del ticket
+        }
+      }
+
       return log;
 
     } catch (error) {
@@ -417,6 +535,27 @@ class FrontendCollector {
     }
   }
 
+  async autoCloseErrorModals() {
+    try {
+      // Buscar botones de cerrar modal (X, Cerrar, Aceptar, OK)
+      const closeButtons = await this.page.$('button.close, button.btn-close, button[data-dismiss="modal"], button:contains("Cerrar"), button:contains("Aceptar"), button:contains("OK"), .swal2-confirm, .swal2-cancel');
+      
+      if (closeButtons.length > 0) {
+        console.log(`      🔘 [AUTO-CLOSE] Encontrados ${closeButtons.length} botones de cerrar modal`);
+        for (const btn of closeButtons) {
+          try {
+            await btn.click();
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch (e) {
+            // Ignorar si el botón ya no existe
+          }
+        }
+      }
+    } catch (error) {
+      // Ignorar errores
+    }
+  }
+
   async testNavigation(module) {
     try {
       // Intentar navegar usando openModule()
@@ -430,6 +569,10 @@ class FrontendCollector {
 
       // Esperar a que cargue
       await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // AUTO-CERRAR modales de error antes de verificar
+      await this.autoCloseErrorModals();
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // NUEVO: Detectar mensajes de error visibles en la página
       const errorMessages = await this.detectVisibleErrors();

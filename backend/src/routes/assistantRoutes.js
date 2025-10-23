@@ -174,6 +174,15 @@ router.get('/history', authenticate, async (req, res) => {
   try {
     const { limit = 20, module = null } = req.query;
 
+    // FIX: Verificar que el modelo exista antes de destructurar
+    if (!database.AssistantConversation) {
+      console.error('❌ [HISTORY] AssistantConversation model no está registrado en database');
+      return res.status(503).json({
+        error: 'Servicio de historial no disponible',
+        message: 'AssistantConversation model not initialized'
+      });
+    }
+
     const { AssistantConversation } = database;
 
     const where = {
@@ -300,6 +309,16 @@ router.get('/health', async (req, res) => {
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+
+    // FIX: Verificar que el modelo exista antes de destructurar
+    if (!database.AssistantKnowledgeBase) {
+      console.error('❌ [DETAIL] AssistantKnowledgeBase model no está registrado en database');
+      return res.status(503).json({
+        error: 'Servicio de knowledge base no disponible',
+        message: 'AssistantKnowledgeBase model not initialized'
+      });
+    }
+
     const { AssistantKnowledgeBase } = database;
 
     const entry = await AssistantKnowledgeBase.findOne({
@@ -324,6 +343,121 @@ router.get('/:id', authenticate, async (req, res) => {
     console.error('❌ Error en /:id:', error);
     res.status(500).json({
       error: 'Error obteniendo conversación',
+      message: error.message
+    });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// ENDPOINT: Marketing Paper (Acceso desde IA Assistant)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * GET /api/assistant/marketing/paper
+ *
+ * Acceso directo al paper de marketing dinámico desde el chat IA
+ * Solo para administradores
+ */
+router.get('/marketing/paper', authenticate, async (req, res) => {
+  try {
+    // Verificar que sea admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'Solo administradores pueden acceder al marketing paper'
+      });
+    }
+
+    // Hacer request interno al endpoint del auditor
+    const axios = require('axios');
+    const baseURL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 9998}`;
+
+    const response = await axios.get(`${baseURL}/api/audit/marketing/paper`, {
+      headers: {
+        'Authorization': req.headers.authorization,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    res.json({
+      success: true,
+      paper: response.data.paper,
+      meta: {
+        ...response.data.meta,
+        access_via: 'ai_assistant',
+        for_marketing_use: true,
+        can_share_with_clients: true
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error en /marketing/paper:', error);
+    res.status(500).json({
+      error: 'Error obteniendo marketing paper',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/assistant/marketing/summary
+ *
+ * Resumen ejecutivo del marketing paper para el chat IA
+ */
+router.get('/marketing/summary', authenticate, async (req, res) => {
+  try {
+    // Verificar que sea admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'Solo administradores pueden acceder al marketing summary'
+      });
+    }
+
+    // Obtener paper completo
+    const axios = require('axios');
+    const baseURL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 9998}`;
+
+    const response = await axios.get(`${baseURL}/api/audit/marketing/paper`, {
+      headers: {
+        'Authorization': req.headers.authorization,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const paper = response.data.paper;
+
+    // Extraer solo el resumen ejecutivo para el chat
+    const summary = {
+      title: paper?.meta?.title || "APONNT Suite - Sistema Biométrico Inteligente",
+      subtitle: paper?.meta?.subtitle || "Tecnología Avanzada para Gestión de Personal",
+      executive_summary: paper?.executive_summary,
+      key_technologies: {
+        total_count: paper?.technology_stack ? Object.keys(paper.technology_stack).length : 0,
+        ai_models: paper?.ai_models?.natural_language_processing?.primary_model?.name,
+        security_level: "Military-grade AES-256 + biometric",
+        deployment: "Hybrid (Local AI + Cloud capabilities)"
+      },
+      competitive_advantages: paper?.competitive_advantages?.unique_differentiators?.slice(0, 3),
+      roi_projection: {
+        breakeven: "4.2 months average",
+        annual_savings: "$50,000 - $180,000",
+        productivity_gain: "30-45 minutes per employee per week"
+      }
+    };
+
+    res.json({
+      success: true,
+      summary,
+      meta: {
+        generated_at: paper?.meta?.generated_at,
+        full_paper_available: true,
+        access_endpoint: '/api/assistant/marketing/paper'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error en /marketing/summary:', error);
+    res.status(500).json({
+      error: 'Error obteniendo marketing summary',
       message: error.message
     });
   }

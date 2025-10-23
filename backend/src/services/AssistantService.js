@@ -459,6 +459,12 @@ class AssistantService {
    */
   async saveToKnowledgeBase(data) {
     try {
+      // FIX: Verificar que el modelo exista antes de destructurar
+      if (!database.AssistantKnowledgeBase) {
+        console.warn('⚠️  [SAVE-KB] AssistantKnowledgeBase model no está registrado - saltando guardado');
+        return { id: null }; // Retornar objeto mock para no romper flujo
+      }
+
       const { AssistantKnowledgeBase } = database;
 
       const normalizedQuestion = data.question
@@ -501,6 +507,12 @@ class AssistantService {
    */
   async saveConversation(data) {
     try {
+      // FIX: Verificar que el modelo exista antes de destructurar
+      if (!database.AssistantConversation) {
+        console.warn('⚠️  [SAVE-CONV] AssistantConversation model no está registrado - saltando guardado');
+        return { id: null }; // Retornar objeto mock para no romper flujo
+      }
+
       const { AssistantConversation } = database;
 
       if (!data.companyId) {
@@ -537,6 +549,12 @@ class AssistantService {
    */
   async submitFeedback(entryId, helpful, comment = null) {
     try {
+      // FIX: Verificar que los modelos existan antes de destructurar
+      if (!database.AssistantConversation || !database.AssistantKnowledgeBase) {
+        console.warn('⚠️  [FEEDBACK] Modelos de Assistant no están registrados - saltando feedback');
+        return { success: false, error: 'Models not initialized' };
+      }
+
       const { AssistantConversation, AssistantKnowledgeBase } = database;
 
       // 1. Actualizar conversación (multi-tenant)
