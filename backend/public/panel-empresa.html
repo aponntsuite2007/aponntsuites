@@ -420,13 +420,6 @@
                                                         alert('Módulo users: función no encontrada');
                                                     }
                                                     break;
-                                                case 'biometric':
-                                                    if (typeof showBiometricContent === 'function') {
-                                                        showBiometricContent();
-                                                    } else {
-                                                        alert('Módulo biometric: función no encontrada');
-                                                    }
-                                                    break;
                                                 case 'departments':
                                                     if (typeof showDepartmentsContent === 'function') {
                                                         showDepartmentsContent();
@@ -500,18 +493,6 @@
                                                         ResourceCenter.init();
                                                     } else {
                                                         alert('Módulo Resource Center: no disponible');
-                                                    }
-                                                    break;
-                                                case 'proactive-notifications':
-                                                case 'proactive_notifications':
-                                                    if (typeof ProactiveNotifications !== 'undefined' && ProactiveNotifications.init) {
-                                                        const moduleGrid = document.querySelector('.module-grid');
-                                                        if (moduleGrid) moduleGrid.style.display = 'none';
-                                                        const mainContent = document.getElementById('mainContent');
-                                                        if (mainContent) mainContent.style.display = 'block';
-                                                        ProactiveNotifications.init();
-                                                    } else {
-                                                        alert('Módulo Proactive Notifications: no disponible');
                                                     }
                                                     break;
                                                 case 'audit-reports':
@@ -1644,8 +1625,7 @@
                         const response = await fetch(apiUrl, {
                             method: 'GET',
                             headers: {
-                                'Content-Type': 'application/json',
-                            }
+                                'Content-Type': 'application/json'}
                         });
 
                         if (!response.ok) {
@@ -2073,12 +2053,8 @@
     <script src="js/real-landmarks-overlay.js"></script>
 
     <script src="js/services/device-detection-service.js"></script>
-    <script src="js/modules/biometric.js"></script>
-    <script src="js/modules/biometric-simple.js"></script>
     <script src="js/modules/evaluacion-biometrica.js"></script>
     <!-- <script src="js/modules/emotional-analysis.js"></script> --> <!-- CARGA DINÁMICA -->
-    <!-- biometric-verification.js y facial-biometric.js unificados en biometric.js -->
-    <!-- biometric-simple.js: Sistema profesional con captura automática y feedback Azure -->
 
     <!-- Medical & Health Modules -->
     <!-- <script src="js/modules/medical-dashboard.js"></script> --> <!-- CARGA DINÁMICA -->
@@ -2101,11 +2077,11 @@
     <!-- <script src="js/modules/art-management.js"></script> --> <!-- CARGA DINÁMICA -->
     <!-- <script src="js/modules/terms-conditions.js"></script> --> <!-- CARGA DINÁMICA -->
     <script src="js/modules/biometric-consent.js"></script>
+    <script src="js/modules/biometric-dashboard.js"></script> <!-- 🎭 HUB BIOMÉTRICO -->
 
     <!-- Sistema de Notificaciones Avanzado V2.0 - CARGA DINÁMICA AUTOMÁTICA (scripts eliminados para evitar doble carga) -->
 
     <!-- Geolocation & Mapping -->
-    <script src="js/modules/google-maps-integration.js"></script>
     <!-- <script src="js/modules/employee-map.js"></script> --> <!-- CARGA DINÁMICA -->
 
     <!-- Testing & Permissions -->
@@ -3618,7 +3594,6 @@
     function getModuleSubtitle(moduleKey) {
         const subtitles = {
             'attendance': 'RRHH',
-            'biometric': 'SEGURIDAD',
             'facial-biometric': 'SEGURIDAD',
             'users': 'PERSONAL',
             'departments': 'ORGANIZACIÓN',
@@ -3629,7 +3604,6 @@
             'legal-dashboard': 'LEGAL',
             'training-management': 'FORMACIÓN',
             'documents': 'ARCHIVOS',
-            'notifications': 'COMUNICACIÓN',
             'job-postings': 'BÚSQUEDAS',
             'payroll-liquidation': 'FINANZAS',
             'art-management': 'RIESGOS',
@@ -3779,9 +3753,7 @@
     function createBasicModuleCards(company) {
         const basicModules = [
             { id: 'users', name: 'Usuarios', icon: '👥' },
-            { id: 'attendance', name: 'Asistencia', icon: '📋' },
-            { id: 'biometric', name: 'Dashboard Biométrico', icon: '🎭' },
-            { id: 'settings', name: 'Configuración', icon: '⚙️' }
+            { id: 'attendance', name: 'Asistencia', icon: '📋' },{ id: 'settings', name: 'Configuración', icon: '⚙️' }
         ];
 
         return basicModules.map(module => `
@@ -3950,13 +3922,22 @@
                         }
                         break;
                     case 'notifications':
-                    case 'notifications-complete':
                     case 'absence-notifications':
                     case 'fehaciente-consent':
                         if (typeof showNotificationsContent === 'function') {
                             showNotificationsContent();
                         } else {
-                            showModuleFallback(moduleId, moduleName, 'notifications-complete.js no cargado');
+                            showModuleFallback(moduleId, moduleName, 'notifications.js no cargado');
+                        }
+                        break;
+
+                    // 🎭 DASHBOARD BIOMÉTRICO - HUB CENTRAL
+                    case 'biometric':
+                    case 'facial-biometric':
+                        if (typeof showBiometricContent === 'function') {
+                            showBiometricContent();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'biometric-dashboard.js no cargado');
                         }
                         break;
 
@@ -3985,27 +3966,11 @@
                         }
                         break;
 
-                    case 'proactive-notifications':
-                        if (typeof ProactiveNotifications !== 'undefined' && ProactiveNotifications.init) {
-                            ProactiveNotifications.init();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'proactive-notifications.js no cargado');
-                        }
-                        break;
-
                     case 'resource-center':
                         if (typeof ResourceCenter !== 'undefined' && ResourceCenter.init) {
                             ResourceCenter.init();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'resource-center.js no cargado');
-                        }
-                        break;
-
-                    case 'notifications-inbox':
-                        if (typeof NotificationsInbox !== 'undefined' && NotificationsInbox.init) {
-                            NotificationsInbox.init();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'notifications-inbox.js no cargado');
                         }
                         break;
 
@@ -4022,13 +3987,6 @@
                      * 🏷️ Versión: v2.1.2-BIOMETRIC-HUB
                      * 📋 Funcionalidad: Centro de Comando Biométrico - Harvard + Stanford + MIT
                      */
-                    case 'biometric':
-                        if (typeof showBiometricContent === 'function') {
-                            showBiometricContent();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'biometric.js no cargado');
-                        }
-                        break;
 
                     case 'departments':
                         if (typeof showDepartmentsContent === 'function') {
@@ -4266,16 +4224,13 @@
             { id: 'inbox', name: 'Bandeja Notificaciones', icon: '📬' },
             { id: 'shifts', name: 'Turnos', icon: '🕐' },
             { id: 'attendance', name: 'Asistencia', icon: '📋' },
-            { id: 'facial-biometric', name: 'Biometría Analítica', icon: '🎭' },
-            { id: 'biometric', name: 'Dashboard Biométrico', icon: '🎭' },
-            { id: 'medical-dashboard', name: 'Médico', icon: '👩‍⚕️' },
+            { id: 'facial-biometric', name: 'Biometría Analítica', icon: '🎭' },{ id: 'medical-dashboard', name: 'Médico', icon: '👩‍⚕️' },
             { id: 'art-management', name: 'ART', icon: '🏥' },
             { id: 'document-management', name: 'Documentos', icon: '📄' },
             { id: 'legal-dashboard', name: 'Legal', icon: '⚖️' },
             { id: 'compliance-dashboard', name: 'Compliance Legal', icon: '⚖️' },
             { id: 'sla-tracking', name: 'SLA Tracking', icon: '⏱️' },
             { id: 'resource-center', name: 'Centro Recursos', icon: '📊' },
-            { id: 'proactive-notifications', name: 'Alertas Proactivas', icon: '🔔' },
             { id: 'audit-reports', name: 'Reportes Auditoría', icon: '📄' },
             { id: 'payroll-liquidation', name: 'Liquidación', icon: '💰' },
             { id: 'employee-map', name: 'Mapa Empleados', icon: '🗺️' },
@@ -4586,26 +4541,21 @@
                     { id: 'departments', name: 'Departamentos', icon: '🏢' },
                     { id: 'kiosks', name: 'Kioscos', icon: '📟' },
                     { id: 'visitors', name: 'Visitantes', icon: '👥' },
-                    { id: 'notifications-inbox', name: 'Bandeja Notificaciones', icon: '📬' },
                     { id: 'notifications-enterprise', name: 'Notificaciones Enterprise V3.0', icon: '🔔' },
                     { id: 'shifts', name: 'Turnos', icon: '🕐' },
                     { id: 'attendance', name: 'Asistencia', icon: '📋' },
-                    { id: 'facial-biometric', name: 'Biometría Analítica', icon: '🎭' },
-                    { id: 'biometric', name: 'Dashboard Biométrico', icon: '🎭' },
-                    { id: 'medical-dashboard', name: 'Médico', icon: '👩‍⚕️' },
+                    { id: 'facial-biometric', name: 'Biometría Analítica', icon: '🎭' },{ id: 'medical-dashboard', name: 'Médico', icon: '👩‍⚕️' },
                     { id: 'art-management', name: 'ART', icon: '🏥' },
                     { id: 'document-management', name: 'Documentos', icon: '📄' },
                     { id: 'legal-dashboard', name: 'Legal', icon: '⚖️' },
                     { id: 'compliance-dashboard', name: 'Compliance Legal', icon: '⚖️' },
                     { id: 'sla-tracking', name: 'SLA Tracking', icon: '⏱️' },
                     { id: 'resource-center', name: 'Centro Recursos', icon: '📊' },
-                    { id: 'proactive-notifications', name: 'Alertas Proactivas', icon: '🔔' },
                     { id: 'audit-reports', name: 'Reportes Auditoría', icon: '📄' },
                     { id: 'settings', name: 'Configuración', icon: '⚙️' },
                     { id: 'terms-conditions', name: 'Términos y Condiciones', icon: '📜' },
                     { id: 'employee-map', name: 'Mapa Empleados', icon: '🗺️' },
                     { id: 'training-management', name: 'Gestión Capacitaciones', icon: '📚' },
-                    { id: 'notifications-complete', name: 'Notificaciones', icon: '🔔' },
                     { id: 'job-postings', name: 'Avisos de Empleo', icon: '💼' },
                     { id: 'payroll-liquidation', name: 'Liquidación Sueldos', icon: '💰' },
                     { id: 'vacation-management', name: 'Gestión de Vacaciones', icon: '🏖️' },
@@ -4613,9 +4563,7 @@
                     { id: 'access-control', name: 'Control de Acceso', icon: '🔐' },
                     { id: 'clientes', name: 'Clientes SIAC', icon: '👥' },
                     { id: 'facturacion', name: 'Facturación SIAC', icon: '💵' },
-                    { id: 'plantillas-fiscales', name: 'Plantillas Fiscales', icon: '📋' },
-                    { id: 'google-maps-integration', name: 'Google Maps', icon: '🗺️' },
-                    { id: 'licensing-management', name: 'Licencias', icon: '📜' }
+                    { id: 'plantillas-fiscales', name: 'Plantillas Fiscales', icon: '📋' },{ id: 'licensing-management', name: 'Licencias', icon: '📜' }
                 ];
 
                 const iconMap = {};
@@ -4870,8 +4818,8 @@
                 { url: 'http://127.0.0.1:9997/api/v1/health', host: '127.0.0.1', port: '9999', environment: 'local', priority: 2 },
 
                 // Red local común
-                { url: 'http://192.168.1.100:9997/api/v1/health', host: '192.168.1.100', port: '9999', environment: 'network', priority: 3 },
-                { url: 'http://192.168.0.100:9997/api/v1/health', host: '192.168.0.100', port: '9999', environment: 'network', priority: 3 },
+                { url: 'http://192.168.1.100:9997/api/v1/health', host: '192.168.1.100', port: '9999', environment: 'local', priority: 3 },
+                { url: 'http://192.168.0.100:9997/api/v1/health', host: '192.168.0.100', port: '9999', environment: 'local', priority: 3 },
 
                 // Puertos alternativos
                 { url: `http://${currentHost}:3000/api/v1/health`, host: currentHost, port: '3000', environment: 'actual-alt', priority: 4 },
@@ -5069,18 +5017,6 @@
                 } else if (tabName === 'notifications-enterprise') {
                     script.src = `js/modules/notifications-enterprise.js?v=${cacheBuster}`;
                     console.log(`📦 [PROGRESSIVE] Cargando NOTIFICATIONS ENTERPRISE V3.0`);
-                } else if (tabName === 'auditor-dashboard' || tabName === 'auditor') {
-                    // Cargar primero el REAL test runner (dependencia)
-                    const testRunnerScript = document.createElement('script');
-                    testRunnerScript.src = `js/modules/real-browser-test-runner.js?v=${cacheBuster}`;
-                    testRunnerScript.onload = () => {
-                        console.log(`✅ [PROGRESSIVE] Real Browser Test Runner cargado`);
-                    };
-                    document.body.appendChild(testRunnerScript);
-
-                    // Luego cargar el dashboard
-                    script.src = `js/modules/auditor-dashboard-unified.js?v=${cacheBuster}`;
-                    console.log(`📦 [PROGRESSIVE] Cargando AUDITOR DASHBOARD V3.0 - Testing Real en Navegador Actual`);
                 } else {
                     script.src = `js/modules/${tabName}.js?v=${cacheBuster}`;
                 }
@@ -5154,11 +5090,10 @@
 
     // Load remaining modules progressively
     async function loadRemainingModules() {
-        const modules = [
-            'network', 'users', 'departments', 'kiosks', 'visitors', 'shifts', 'attendance', 'settings',
+        const modules = ['users', 'departments', 'kiosks', 'visitors', 'shifts', 'attendance', 'settings',
             'medical-config', 'medical-dashboard', 'fehaciente-consent',
             'terms-conditions', 'absence-notifications', 'document-management',
-            'facial-biometric', 'employee-map', 'training-management', 'notifications', 'job-postings',
+            'facial-biometric', 'employee-map', 'training-management','job-postings',
             'legal-dashboard', 'art-management', 'payroll-liquidation', 'emotional-analysis'
         ];
         
@@ -5347,9 +5282,9 @@
             // Convert kebab-case to camelCase properly
             const camelCaseName = tabName.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
 
-            // Special case for notifications-complete
+            // Special case for notifications
             let functionName;
-            if (tabName === 'notifications-complete' || tabName === 'notifications') {
+            if (tabName === 'notifications') {
                 functionName = 'showNotificationsContent';
             } else {
                 functionName = `show${camelCaseName.charAt(0).toUpperCase() + camelCaseName.slice(1)}Content`;
