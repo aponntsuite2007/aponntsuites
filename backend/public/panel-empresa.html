@@ -2076,8 +2076,12 @@
     <script src="js/modules/licensing-management.js"></script>
     <!-- <script src="js/modules/art-management.js"></script> --> <!-- CARGA DINÁMICA -->
     <!-- <script src="js/modules/terms-conditions.js"></script> --> <!-- CARGA DINÁMICA -->
+    <script src="js/modules/biometric.js"></script>
+    <script src="js/modules/biometric-simple.js"></script>
+    <script src="js/modules/evaluacion-biometrica.js"></script>
     <script src="js/modules/biometric-consent.js"></script>
-    <script src="js/modules/biometric-dashboard.js"></script> <!-- 🎭 HUB BIOMÉTRICO -->
+    <!-- biometric-verification.js y facial-biometric.js unificados en biometric.js -->
+    <!-- biometric-simple.js: Sistema profesional con captura automática y feedback Azure -->
 
     <!-- Sistema de Notificaciones Avanzado V2.0 - CARGA DINÁMICA AUTOMÁTICA (scripts eliminados para evitar doble carga) -->
 
@@ -3931,13 +3935,16 @@
                         }
                         break;
 
-                    // 🎭 DASHBOARD BIOMÉTRICO - HUB CENTRAL
+                    /* ✅ CÓDIGO FUNCIONAL PROTEGIDO - NO MODIFICAR SIN ANÁLISIS
+                     * 📅 Fecha: 23/SEP/2025 04:07:00
+                     * 🏷️ Versión: v2.1.2-BIOMETRIC-HUB
+                     * 📋 Funcionalidad: Centro de Comando Biométrico - Harvard + Stanford + MIT
+                     */
                     case 'biometric':
-                    case 'facial-biometric':
                         if (typeof showBiometricContent === 'function') {
                             showBiometricContent();
                         } else {
-                            showModuleFallback(moduleId, moduleName, 'biometric-dashboard.js no cargado');
+                            showModuleFallback(moduleId, moduleName, 'biometric.js no cargado');
                         }
                         break;
 
