@@ -28,6 +28,9 @@ class FrontendCollector {
     // Módulos que NO tienen CRUD separado (son páginas principales/dashboards)
     this.nonCrudModules = ['dashboard', 'settings']; // Dashboard principal y Settings no tienen CRUD separado
 
+    // ⭐ PREFIJO PARA DATOS DE TESTING - Facilita limpieza posterior
+    this.TEST_PREFIX = '[TEST-AUDIT]';
+
     console.log(`  🔧 [FRONTEND] Base URL: ${this.baseUrl}`);
   }
 
@@ -1580,14 +1583,19 @@ class FrontendCollector {
       for (const field of fields) {
         const fieldType = await field.evaluate(el => el.tagName.toLowerCase());
         const inputType = await field.evaluate(el => el.type);
+        const fieldName = await field.evaluate(el => el.name || el.id || '');
 
         // Generar datos de prueba según el tipo de campo
+        // ⭐ TODOS los campos de texto llevan prefijo TEST_PREFIX
         if (fieldType === 'input' && inputType === 'text') {
-          await field.type(`Test ${mode} ${Date.now()}`, { delay: 50 });
+          await field.type(`${this.TEST_PREFIX} ${mode} ${Date.now()}`, { delay: 50 });
         } else if (fieldType === 'input' && inputType === 'email') {
-          await field.type(`test${Date.now()}@example.com`, { delay: 50 });
+          await field.type(`test-audit-${Date.now()}@example.com`, { delay: 50 });
         } else if (fieldType === 'input' && inputType === 'number') {
           await field.type('123', { delay: 50 });
+        } else if (fieldType === 'input' && inputType === 'date') {
+          // Fecha de prueba
+          await field.type('2025-01-01', { delay: 50 });
         } else if (fieldType === 'select') {
           // Seleccionar primera opción disponible
           await this.page.evaluate((el) => {
@@ -1596,7 +1604,9 @@ class FrontendCollector {
             }
           }, field);
         } else if (fieldType === 'textarea') {
-          await field.type(`Descripción de prueba para ${mode}`, { delay: 50 });
+          await field.type(`${this.TEST_PREFIX} Descripción de prueba para ${mode}`, { delay: 50 });
+        } else if (fieldType === 'input' && inputType === 'tel') {
+          await field.type('1234567890', { delay: 50 });
         }
       }
 
