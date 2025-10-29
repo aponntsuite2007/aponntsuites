@@ -75,12 +75,25 @@ class IntelligentTestingOrchestrator {
         const EmployeeProfileCollector = require('../collectors/EmployeeProfileCollector');
         const AttendanceModuleCollector = require('../collectors/AttendanceModuleCollector');
 
+        // Nuevos collectors (2025-10-29)
+        const UsersModuleCollector = require('../collectors/UsersModuleCollector');
+        const ReportsModuleCollector = require('../collectors/ReportsModuleCollector');
+        const DepartmentsModuleCollector = require('../collectors/DepartmentsModuleCollector');
+        const ShiftsModuleCollector = require('../collectors/ShiftsModuleCollector');
+        const BiometricDevicesCollector = require('../collectors/BiometricDevicesCollector');
+
+        // Registrar collectors
         this.registerCollector('employee_profile', EmployeeProfileCollector);
         this.registerCollector('attendance', AttendanceModuleCollector);
+        this.registerCollector('users', UsersModuleCollector);
+        this.registerCollector('reports', ReportsModuleCollector);
+        this.registerCollector('departments', DepartmentsModuleCollector);
+        this.registerCollector('shifts', ShiftsModuleCollector);
+        this.registerCollector('biometric_devices', BiometricDevicesCollector);
 
-        // TODO: Agregar los 33 collectors restantes aquí a medida que se implementen
-        // this.registerCollector('users', UsersModuleCollector);
-        // this.registerCollector('reports', ReportsModuleCollector);
+        // TODO: Agregar los 28 collectors restantes aquí a medida que se implementen
+        // this.registerCollector('kiosks', KiosksModuleCollector);
+        // this.registerCollector('notifications', NotificationsModuleCollector);
         // etc...
 
         console.log(`✅ ${this.collectors.size} collectors registrados\n`);
