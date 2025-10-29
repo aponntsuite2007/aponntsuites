@@ -133,6 +133,17 @@ const SupportTicket = require('../models/SupportTicket')(sequelize);
 const SupportPackageAuction = require('../models/SupportPackageAuction')(sequelize);
 const VendorReferral = require('../models/VendorReferral')(sequelize);
 
+// ✅ MODELOS - Sistema de Soporte V2.0 (SLA, Escalamiento, Asistente Dual)
+const SupportTicketV2 = require('../models/SupportTicketV2')(sequelize);
+const SupportTicketMessage = require('../models/SupportTicketMessage')(sequelize);
+const SupportActivityLog = require('../models/SupportActivityLog')(sequelize);
+const CompanySupportAssignment = require('../models/CompanySupportAssignment')(sequelize);
+const SupportVendorStats = require('../models/SupportVendorStats')(sequelize);
+const SupportSLAPlan = require('../models/SupportSLAPlan')(sequelize);
+const SupportVendorSupervisor = require('../models/SupportVendorSupervisor')(sequelize);
+const SupportEscalation = require('../models/SupportEscalation')(sequelize);
+const SupportAssistantAttempt = require('../models/SupportAssistantAttempt')(sequelize);
+
 // ✅ MODELOS - Sistema de Notificaciones Enterprise V3.0
 const Notification = require('../models/Notification')(sequelize);
 const NotificationWorkflow = require('../models/NotificationWorkflow')(sequelize);
@@ -146,6 +157,24 @@ const AuditLog = require('../models/AuditLog')(sequelize);
 // ✅ MODELO - Sistema de Asistente IA (Ollama + Llama 3.1)
 const AssistantKnowledgeBase = require('../models/AssistantKnowledgeBase')(sequelize);
 const AssistantConversation = require('../models/AssistantConversation')(sequelize);
+
+// ✅ MODELOS - Sistema de Partners Marketplace
+const PartnerRole = require('../models/PartnerRole')(sequelize);
+const Partner = require('../models/Partner')(sequelize);
+const PartnerDocument = require('../models/PartnerDocument')(sequelize);
+const PartnerNotification = require('../models/PartnerNotification')(sequelize);
+const PartnerAvailability = require('../models/PartnerAvailability')(sequelize);
+const PartnerServiceRequest = require('../models/PartnerServiceRequest')(sequelize);
+const PartnerReview = require('../models/PartnerReview')(sequelize);
+const PartnerServiceConversation = require('../models/PartnerServiceConversation')(sequelize);
+const PartnerMediationCase = require('../models/PartnerMediationCase')(sequelize);
+const PartnerLegalConsent = require('../models/PartnerLegalConsent')(sequelize);
+const PartnerCommissionLog = require('../models/PartnerCommissionLog')(sequelize);
+
+// ✅ MODELOS - Sistema de Vendor Invoicing Completo (Presupuestos, Trials, Contratos)
+const Quote = require('../models/Quote')(sequelize);
+const ModuleTrial = require('../models/ModuleTrial')(sequelize);
+const Contract = require('../models/Contract')(sequelize);
 
 // SuperUser eliminado - se unificó con tabla User
 
@@ -365,6 +394,38 @@ VendorCommission.belongsTo(VendorReferral, { foreignKey: 'referralId', as: 'refe
 VendorReferral.hasMany(VendorCommission, { foreignKey: 'referralId', as: 'commissions' });
 
 // =========================================================================
+// ✅ ASOCIACIONES - Sistema de Soporte V2.0 (SLA, Escalamiento, Asistente)
+// =========================================================================
+
+// SupportSLAPlan associations
+Company.belongsTo(SupportSLAPlan, { foreignKey: 'support_sla_plan_id', as: 'supportSLAPlan' });
+SupportSLAPlan.hasMany(Company, { foreignKey: 'support_sla_plan_id', as: 'companies' });
+
+// SupportTicketV2 associations (modelo nuevo principal)
+if (SupportTicketV2.associate) SupportTicketV2.associate({ Company, User, SupportTicketMessage, SupportActivityLog, SupportEscalation, SupportAssistantAttempt });
+
+// SupportTicketMessage associations
+if (SupportTicketMessage.associate) SupportTicketMessage.associate({ SupportTicketV2, User });
+
+// SupportActivityLog associations
+if (SupportActivityLog.associate) SupportActivityLog.associate({ SupportTicketV2, User, Company });
+
+// CompanySupportAssignment associations
+if (CompanySupportAssignment.associate) CompanySupportAssignment.associate({ Company, User });
+
+// SupportVendorStats associations
+if (SupportVendorStats.associate) SupportVendorStats.associate({ User });
+
+// SupportVendorSupervisor associations
+if (SupportVendorSupervisor.associate) SupportVendorSupervisor.associate({ User });
+
+// SupportEscalation associations
+if (SupportEscalation.associate) SupportEscalation.associate({ SupportTicketV2, User });
+
+// SupportAssistantAttempt associations
+if (SupportAssistantAttempt.associate) SupportAssistantAttempt.associate({ SupportTicketV2 });
+
+// =========================================================================
 // ✅ ASOCIACIONES - Sistema de Notificaciones Enterprise V3.0
 // =========================================================================
 
@@ -457,6 +518,114 @@ AssistantConversation.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_
 AssistantConversation.belongsTo(AssistantKnowledgeBase, { foreignKey: 'knowledge_entry_id', targetKey: 'id', as: 'knowledgeEntry' });
 AssistantKnowledgeBase.hasMany(AssistantConversation, { foreignKey: 'knowledge_entry_id', sourceKey: 'id', as: 'conversations' });
 
+// ============================================================================
+// ASOCIACIONES - Sistema de Partners Marketplace
+// ============================================================================
+
+// PartnerRole associations
+PartnerRole.hasMany(Partner, { foreignKey: 'partner_role_id', as: 'partners' });
+Partner.belongsTo(PartnerRole, { foreignKey: 'partner_role_id', as: 'role' });
+
+// Partner - Documents
+Partner.hasMany(PartnerDocument, { foreignKey: 'partner_id', as: 'documents' });
+PartnerDocument.belongsTo(Partner, { foreignKey: 'partner_id', as: 'partner' });
+
+// Partner - Notifications
+Partner.hasMany(PartnerNotification, { foreignKey: 'partner_id', as: 'notifications' });
+PartnerNotification.belongsTo(Partner, { foreignKey: 'partner_id', as: 'partner' });
+
+// Partner - Availability
+Partner.hasMany(PartnerAvailability, { foreignKey: 'partner_id', as: 'availability' });
+PartnerAvailability.belongsTo(Partner, { foreignKey: 'partner_id', as: 'partner' });
+
+// Partner - Service Requests
+Partner.hasMany(PartnerServiceRequest, { foreignKey: 'partner_id', as: 'serviceRequests' });
+PartnerServiceRequest.belongsTo(Partner, { foreignKey: 'partner_id', as: 'partner' });
+
+Company.hasMany(PartnerServiceRequest, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'partnerServiceRequests' });
+PartnerServiceRequest.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(PartnerServiceRequest, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'partnerServiceRequests' });
+PartnerServiceRequest.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'requester' });
+
+// Partner - Reviews
+Partner.hasMany(PartnerReview, { foreignKey: 'partner_id', as: 'reviews' });
+PartnerReview.belongsTo(Partner, { foreignKey: 'partner_id', as: 'partner' });
+
+Company.hasMany(PartnerReview, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'partnerReviews' });
+PartnerReview.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+PartnerServiceRequest.hasMany(PartnerReview, { foreignKey: 'service_request_id', as: 'reviews' });
+PartnerReview.belongsTo(PartnerServiceRequest, { foreignKey: 'service_request_id', as: 'serviceRequest' });
+
+// Partner - Service Conversations
+PartnerServiceRequest.hasMany(PartnerServiceConversation, { foreignKey: 'service_request_id', as: 'conversations' });
+PartnerServiceConversation.belongsTo(PartnerServiceRequest, { foreignKey: 'service_request_id', as: 'serviceRequest' });
+
+// Partner - Mediation Cases
+Partner.hasMany(PartnerMediationCase, { foreignKey: 'partner_id', as: 'mediationCases' });
+PartnerMediationCase.belongsTo(Partner, { foreignKey: 'partner_id', as: 'partner' });
+
+Company.hasMany(PartnerMediationCase, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'partnerMediationCases' });
+PartnerMediationCase.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+PartnerServiceRequest.hasMany(PartnerMediationCase, { foreignKey: 'service_request_id', as: 'mediationCases' });
+PartnerMediationCase.belongsTo(PartnerServiceRequest, { foreignKey: 'service_request_id', as: 'serviceRequest' });
+
+// Partner - Legal Consents
+Partner.hasMany(PartnerLegalConsent, { foreignKey: 'partner_id', as: 'legalConsents' });
+PartnerLegalConsent.belongsTo(Partner, { foreignKey: 'partner_id', as: 'partner' });
+
+// Partner - Commission Logs
+Partner.hasMany(PartnerCommissionLog, { foreignKey: 'partner_id', as: 'commissionLogs' });
+PartnerCommissionLog.belongsTo(Partner, { foreignKey: 'partner_id', as: 'partner' });
+
+Company.hasMany(PartnerCommissionLog, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'partnerCommissions' });
+PartnerCommissionLog.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+PartnerServiceRequest.hasMany(PartnerCommissionLog, { foreignKey: 'service_request_id', as: 'commissions' });
+PartnerCommissionLog.belongsTo(PartnerServiceRequest, { foreignKey: 'service_request_id', as: 'serviceRequest' });
+
+// Notification to ServiceRequest link
+PartnerNotification.belongsTo(PartnerServiceRequest, { foreignKey: 'related_service_request_id', as: 'serviceRequest' });
+PartnerServiceRequest.hasMany(PartnerNotification, { foreignKey: 'related_service_request_id', as: 'notifications' });
+
+// ═══════════════════════════════════════════════════════════
+// ✅ ASOCIACIONES - Sistema de Vendor Invoicing Completo
+// ═══════════════════════════════════════════════════════════
+
+// Quote associations
+Company.hasMany(Quote, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'quotes' });
+Quote.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+Partner.hasMany(Quote, { foreignKey: 'seller_id', as: 'sellerQuotes' });
+Quote.belongsTo(Partner, { foreignKey: 'seller_id', as: 'seller' });
+
+// Quote self-references (previous/replaces/replaced_by)
+Quote.belongsTo(Quote, { foreignKey: 'previous_quote_id', as: 'previousQuote' });
+Quote.belongsTo(Quote, { foreignKey: 'replaces_quote_id', as: 'replacesQuote' });
+Quote.belongsTo(Quote, { foreignKey: 'replaced_by_quote_id', as: 'replacedByQuote' });
+
+// ModuleTrial associations
+Company.hasMany(ModuleTrial, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'moduleTrials' });
+ModuleTrial.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+Quote.hasMany(ModuleTrial, { foreignKey: 'quote_id', as: 'moduleTrials' });
+ModuleTrial.belongsTo(Quote, { foreignKey: 'quote_id', as: 'quote' });
+
+// Contract associations
+Company.hasMany(Contract, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'contracts' });
+Contract.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+Quote.hasOne(Contract, { foreignKey: 'quote_id', as: 'contract' });
+Contract.belongsTo(Quote, { foreignKey: 'quote_id', as: 'quote' });
+
+Partner.hasMany(Contract, { foreignKey: 'seller_id', as: 'sellerContracts' });
+Contract.belongsTo(Partner, { foreignKey: 'seller_id', as: 'seller' });
+
+Partner.hasMany(Contract, { foreignKey: 'support_partner_id', as: 'supportContracts' });
+Contract.belongsTo(Partner, { foreignKey: 'support_partner_id', as: 'supportPartner' });
+
 module.exports = {
   sequelize,
   User,
@@ -504,6 +673,16 @@ module.exports = {
   SupportTicket,
   SupportPackageAuction,
   VendorReferral,
+  // ✅ EXPORTS - Sistema de Soporte V2.0
+  SupportTicketV2,
+  SupportTicketMessage,
+  SupportActivityLog,
+  CompanySupportAssignment,
+  SupportVendorStats,
+  SupportSLAPlan,
+  SupportVendorSupervisor,
+  SupportEscalation,
+  SupportAssistantAttempt,
   // ✅ EXPORTS - Modelos Enterprise V3.0
   Notification,
   NotificationWorkflow,
@@ -515,6 +694,23 @@ module.exports = {
   // ✅ EXPORT - Sistema de Asistente IA
   AssistantKnowledgeBase,
   AssistantConversation,
+  // ✅ EXPORTS - Sistema de Partners Marketplace
+  PartnerRole,
+  Partner,
+  PartnerDocument,
+  PartnerNotification,
+  PartnerAvailability,
+  PartnerServiceRequest,
+  PartnerReview,
+  PartnerServiceConversation,
+  PartnerMediationCase,
+  PartnerLegalConsent,
+  PartnerCommissionLog,
+
+  // Vendor Invoicing System
+  Quote,
+  ModuleTrial,
+  Contract,
 
   connect: async () => {
     try {

@@ -1,0 +1,1375 @@
+{
+  "critical": [
+    {
+      "module": "users",
+      "test": "Usuarios huérfanos (sin empresa)",
+      "error": "column c.id does not exist",
+      "context": null,
+      "logId": "21f64182-e4dc-45f6-943e-2da2e2a71425",
+      "severity": "critical"
+    }
+  ],
+  "high": [],
+  "medium": [
+    {
+      "module": "departments",
+      "test": "Frontend CRUD - Departamentos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo departments",
+            "suggestion": "Verificar que exista función openModule('departments') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Departamentos no carga",
+            "suggestion": "Verificar función loadDepartments() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Departamentos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAdddepartmentsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loaddepartments() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "fde79d7c-dc28-4ca0-9038-fa3c0c625a3b",
+      "severity": "medium"
+    },
+    {
+      "module": "biometric",
+      "test": "Frontend CRUD - Biometría Facial Básica",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo biometric",
+            "suggestion": "Verificar que exista función openModule('biometric') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Biometría Facial Básica no carga",
+            "suggestion": "Verificar función loadBiometric() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Biometría Facial Básica\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddbiometricModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadbiometric() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "f905014a-73a6-4542-adea-5af585aaf79c",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications-inbox",
+      "test": "Frontend CRUD - Bandeja de Notificaciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo notifications-inbox",
+            "suggestion": "Verificar que exista función openModule('notifications-inbox') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Bandeja de Notificaciones no carga",
+            "suggestion": "Verificar función loadNotifications-inbox() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Bandeja de Notificaciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotifications-inboxModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications-inbox() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "f1df1156-bb61-4c3a-922d-0f3d1a8b9768",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications-enterprise",
+      "test": "Frontend CRUD - Notificaciones Enterprise V3.0",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo notifications-enterprise",
+            "suggestion": "Verificar que exista función openModule('notifications-enterprise') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Notificaciones Enterprise V3.0 no carga",
+            "suggestion": "Verificar función loadNotifications-enterprise() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Notificaciones Enterprise V3.0\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotifications-enterpriseModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications-enterprise() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "ebc49ebc-16a1-424d-b8ea-bc43c0af887f",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications-complete",
+      "test": "Frontend CRUD - Notificaciones Completas V2.0",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo notifications-complete",
+            "suggestion": "Verificar que exista función openModule('notifications-complete') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Notificaciones Completas V2.0 no carga",
+            "suggestion": "Verificar función loadNotifications-complete() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Notificaciones Completas V2.0\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotifications-completeModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications-complete() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "ea189724-3472-480d-bd62-ea6512748f84",
+      "severity": "medium"
+    },
+    {
+      "module": "vacation",
+      "test": "Frontend CRUD - Gestión de Vacaciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo vacation",
+            "suggestion": "Verificar que exista función openModule('vacation') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Vacaciones no carga",
+            "suggestion": "Verificar función loadVacation() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Vacaciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddvacationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadvacation() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "e6f4f67d-71cd-4a50-b48e-918254d5838b",
+      "severity": "medium"
+    },
+    {
+      "module": "terms-conditions",
+      "test": "Frontend CRUD - Términos y Condiciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo terms-conditions",
+            "suggestion": "Verificar que exista función openModule('terms-conditions') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Términos y Condiciones no carga",
+            "suggestion": "Verificar función loadTerms-conditions() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Términos y Condiciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddterms-conditionsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadterms-conditions() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "e595b2a2-56e0-47e2-944c-5b6365d0f173",
+      "severity": "medium"
+    },
+    {
+      "module": "art-management",
+      "test": "Frontend CRUD - Gestión de ART",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo art-management",
+            "suggestion": "Verificar que exista función openModule('art-management') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de ART no carga",
+            "suggestion": "Verificar función loadArt-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de ART\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddart-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadart-management() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "d13d6523-ea42-424d-8377-5de2fbd360d2",
+      "severity": "medium"
+    },
+    {
+      "module": "attendance",
+      "test": "Frontend CRUD - Control de Asistencia",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo attendance",
+            "suggestion": "Verificar que exista función openModule('attendance') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Control de Asistencia no carga",
+            "suggestion": "Verificar función loadAttendance() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Control de Asistencia\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddattendanceModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadattendance() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "c708b69f-998e-4142-afb9-893452b116e3",
+      "severity": "medium"
+    },
+    {
+      "module": "visitors",
+      "test": "Frontend CRUD - Control de Visitantes",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo visitors",
+            "suggestion": "Verificar que exista función openModule('visitors') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Control de Visitantes no carga",
+            "suggestion": "Verificar función loadVisitors() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Control de Visitantes\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddvisitorsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadvisitors() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "b4a8471e-40a4-41d1-96b6-01199fa28018",
+      "severity": "medium"
+    },
+    {
+      "module": "auditor-dashboard",
+      "test": "Frontend CRUD - Auditoría y Auto-Diagnóstico",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo auditor-dashboard",
+            "suggestion": "Verificar que exista función openModule('auditor-dashboard') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Auditoría y Auto-Diagnóstico no carga",
+            "suggestion": "Verificar función loadAuditor-dashboard() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Auditoría y Auto-Diagnóstico\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddauditor-dashboardModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadauditor-dashboard() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "b480c682-dfe2-46cf-aaf1-10b8da9c3b9e",
+      "severity": "medium"
+    },
+    {
+      "module": "medical",
+      "test": "Frontend CRUD - Gestión Médica",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo medical",
+            "suggestion": "Verificar que exista función openModule('medical') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión Médica no carga",
+            "suggestion": "Verificar función loadMedical() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión Médica\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddmedicalModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadmedical() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "ac9a73a5-57b3-49cc-ab4a-e61f36e3d8aa",
+      "severity": "medium"
+    },
+    {
+      "module": "kiosks-professional",
+      "test": "Frontend CRUD - Gestión de Kioscos Biométricos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo kiosks-professional",
+            "suggestion": "Verificar que exista función openModule('kiosks-professional') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Kioscos Biométricos no carga",
+            "suggestion": "Verificar función loadKiosks-professional() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Kioscos Biométricos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddkiosks-professionalModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadkiosks-professional() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "abbda770-fce6-480c-ac10-215c23f4d0f4",
+      "severity": "medium"
+    },
+    {
+      "module": "legal",
+      "test": "Frontend CRUD - Gestión Legal",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo legal",
+            "suggestion": "Verificar que exista función openModule('legal') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión Legal no carga",
+            "suggestion": "Verificar función loadLegal() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión Legal\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddlegalModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadlegal() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "a7e9d93e-adb4-4787-997e-d88b4b09dc3f",
+      "severity": "medium"
+    },
+    {
+      "module": "dashboard",
+      "test": "Frontend CRUD - Dashboard Principal",
+      "error": "3 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Dashboard Principal no carga",
+            "suggestion": "Verificar función loadDashboard() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Dashboard Principal\" no funciona",
+            "suggestion": "Verificar onclick=\"openAdddashboardModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loaddashboard() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "9b16e104-bc55-444e-baa6-9490a6df0dab",
+      "severity": "medium"
+    },
+    {
+      "module": "facturacion",
+      "test": "Frontend CRUD - Facturación (SIAC ERP)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo facturacion",
+            "suggestion": "Verificar que exista función openModule('facturacion') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Facturación (SIAC ERP) no carga",
+            "suggestion": "Verificar función loadFacturacion() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Facturación (SIAC ERP)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddfacturacionModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadfacturacion() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "983d1314-90d3-4ccc-80f3-10c32c34b321",
+      "severity": "medium"
+    },
+    {
+      "module": "access-control",
+      "test": "Frontend CRUD - Control de Accesos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo access-control",
+            "suggestion": "Verificar que exista función openModule('access-control') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Control de Accesos no carga",
+            "suggestion": "Verificar función loadAccess-control() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Control de Accesos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddaccess-controlModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadaccess-control() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "9104aeef-a340-4fae-af64-53d604ce1c69",
+      "severity": "medium"
+    },
+    {
+      "module": "plantillas-fiscales",
+      "test": "Frontend CRUD - Plantillas Fiscales",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo plantillas-fiscales",
+            "suggestion": "Verificar que exista función openModule('plantillas-fiscales') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Plantillas Fiscales no carga",
+            "suggestion": "Verificar función loadPlantillas-fiscales() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Plantillas Fiscales\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddplantillas-fiscalesModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadplantillas-fiscales() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "8fa32335-fd89-4d0d-9200-503119828480",
+      "severity": "medium"
+    },
+    {
+      "module": "shifts",
+      "test": "Frontend CRUD - Gestión de Turnos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo shifts",
+            "suggestion": "Verificar que exista función openModule('shifts') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Turnos no carga",
+            "suggestion": "Verificar función loadShifts() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Turnos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddshiftsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadshifts() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "7e53591d-cb91-47a3-b889-85f67d00494b",
+      "severity": "medium"
+    },
+    {
+      "module": "real-biometric-enterprise",
+      "test": "Frontend CRUD - Biometría Enterprise (Real + Verificable)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo real-biometric-enterprise",
+            "suggestion": "Verificar que exista función openModule('real-biometric-enterprise') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Biometría Enterprise (Real + Verificable) no carga",
+            "suggestion": "Verificar función loadReal-biometric-enterprise() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Biometría Enterprise (Real + Verificable)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddreal-biometric-enterpriseModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadreal-biometric-enterprise() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "75199bfc-8bbc-4b89-af1d-27652892bba3",
+      "severity": "medium"
+    },
+    {
+      "module": "compliance-dashboard",
+      "test": "Frontend CRUD - Dashboard de Cumplimiento",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo compliance-dashboard",
+            "suggestion": "Verificar que exista función openModule('compliance-dashboard') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Dashboard de Cumplimiento no carga",
+            "suggestion": "Verificar función loadCompliance-dashboard() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Dashboard de Cumplimiento\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddcompliance-dashboardModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadcompliance-dashboard() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "7214dec6-2241-487b-b55d-07d38c3e28b5",
+      "severity": "medium"
+    },
+    {
+      "module": "sla-tracking",
+      "test": "Frontend CRUD - Seguimiento de SLA",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo sla-tracking",
+            "suggestion": "Verificar que exista función openModule('sla-tracking') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Seguimiento de SLA no carga",
+            "suggestion": "Verificar función loadSla-tracking() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Seguimiento de SLA\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddsla-trackingModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadsla-tracking() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "7170fd90-a4ad-45d5-8a35-bf2dbabb4a85",
+      "severity": "medium"
+    },
+    {
+      "module": "psychological-assessment",
+      "test": "Frontend CRUD - Evaluación Psicológica",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo psychological-assessment",
+            "suggestion": "Verificar que exista función openModule('psychological-assessment') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Evaluación Psicológica no carga",
+            "suggestion": "Verificar función loadPsychological-assessment() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Evaluación Psicológica\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddpsychological-assessmentModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadpsychological-assessment() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "70b150af-e08e-420d-a2e1-f34c9c715c55",
+      "severity": "medium"
+    },
+    {
+      "module": "settings",
+      "test": "Frontend CRUD - Configuración del Sistema",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo settings",
+            "suggestion": "Verificar que exista función openModule('settings') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Configuración del Sistema no carga",
+            "suggestion": "Verificar función loadSettings() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Configuración del Sistema\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddsettingsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadsettings() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "6c832fb8-fe9d-4b9c-bbac-81daac9a4479",
+      "severity": "medium"
+    },
+    {
+      "module": "training-management",
+      "test": "Frontend CRUD - Gestión de Capacitaciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo training-management",
+            "suggestion": "Verificar que exista función openModule('training-management') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Capacitaciones no carga",
+            "suggestion": "Verificar función loadTraining-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Capacitaciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddtraining-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadtraining-management() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "6a860daf-1f22-4a37-9f76-b5a6f38db54c",
+      "severity": "medium"
+    },
+    {
+      "module": "audit-reports",
+      "test": "Frontend CRUD - Reportes de Auditoría",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo audit-reports",
+            "suggestion": "Verificar que exista función openModule('audit-reports') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Reportes de Auditoría no carga",
+            "suggestion": "Verificar función loadAudit-reports() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Reportes de Auditoría\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddaudit-reportsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadaudit-reports() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "5da6db3a-1c6f-4c8a-921a-f51012d4fd20",
+      "severity": "medium"
+    },
+    {
+      "module": "evaluacion-biometrica",
+      "test": "Frontend CRUD - Evaluación Biométrica",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo evaluacion-biometrica",
+            "suggestion": "Verificar que exista función openModule('evaluacion-biometrica') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Evaluación Biométrica no carga",
+            "suggestion": "Verificar función loadEvaluacion-biometrica() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Evaluación Biométrica\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddevaluacion-biometricaModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadevaluacion-biometrica() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "57f3e927-2a16-40b4-a2ec-430e9ed42285",
+      "severity": "medium"
+    },
+    {
+      "module": "job-postings",
+      "test": "Frontend CRUD - Búsquedas Laborales",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo job-postings",
+            "suggestion": "Verificar que exista función openModule('job-postings') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Búsquedas Laborales no carga",
+            "suggestion": "Verificar función loadJob-postings() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Búsquedas Laborales\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddjob-postingsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadjob-postings() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "562e98fe-5f8f-4985-9fbe-c477e24f70fd",
+      "severity": "medium"
+    },
+    {
+      "module": "emotional-analysis",
+      "test": "Frontend CRUD - Análisis Emocional",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo emotional-analysis",
+            "suggestion": "Verificar que exista función openModule('emotional-analysis') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Análisis Emocional no carga",
+            "suggestion": "Verificar función loadEmotional-analysis() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Análisis Emocional\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddemotional-analysisModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loademotional-analysis() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "53fa4ced-0007-4950-bc17-35efb6c1a16f",
+      "severity": "medium"
+    },
+    {
+      "module": "biometric-simple",
+      "test": "Frontend CRUD - Biometría Simple (Captura Automática)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo biometric-simple",
+            "suggestion": "Verificar que exista función openModule('biometric-simple') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Biometría Simple (Captura Automática) no carga",
+            "suggestion": "Verificar función loadBiometric-simple() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Biometría Simple (Captura Automática)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddbiometric-simpleModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadbiometric-simple() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "4b7d09eb-5c91-4ca9-878b-ad0766a7aada",
+      "severity": "medium"
+    },
+    {
+      "module": "professional-biometric-registration",
+      "test": "Frontend CRUD - Registro Biométrico Profesional",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo professional-biometric-registration",
+            "suggestion": "Verificar que exista función openModule('professional-biometric-registration') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Registro Biométrico Profesional no carga",
+            "suggestion": "Verificar función loadProfessional-biometric-registration() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Registro Biométrico Profesional\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddprofessional-biometric-registrationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadprofessional-biometric-registration() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "475208eb-f7cb-435c-8c0c-51b87b001da7",
+      "severity": "medium"
+    },
+    {
+      "module": "biometric-consent",
+      "test": "Frontend CRUD - Consentimientos Biométricos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo biometric-consent",
+            "suggestion": "Verificar que exista función openModule('biometric-consent') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Consentimientos Biométricos no carga",
+            "suggestion": "Verificar función loadBiometric-consent() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Consentimientos Biométricos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddbiometric-consentModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadbiometric-consent() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "43392217-1a4e-4675-bdf1-605fb35b7732",
+      "severity": "medium"
+    },
+    {
+      "module": "users",
+      "test": "Frontend CRUD - Gestión de Usuarios",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo users",
+            "suggestion": "Verificar que exista función openModule('users') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Usuarios no carga",
+            "suggestion": "Verificar función loadUsers() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Usuarios\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddusersModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadusers() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "3c3a7dba-7a0d-49c5-8425-dfba7a1eace9",
+      "severity": "medium"
+    },
+    {
+      "module": "google-maps-integration",
+      "test": "Frontend CRUD - Integración Google Maps",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo google-maps-integration",
+            "suggestion": "Verificar que exista función openModule('google-maps-integration') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Integración Google Maps no carga",
+            "suggestion": "Verificar función loadGoogle-maps-integration() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Integración Google Maps\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddgoogle-maps-integrationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadgoogle-maps-integration() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "395fbc2e-2cde-445d-bed1-4a5a09f4dd23",
+      "severity": "medium"
+    },
+    {
+      "module": "licensing-management",
+      "test": "Frontend CRUD - Gestión de Licencias",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo licensing-management",
+            "suggestion": "Verificar que exista función openModule('licensing-management') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Licencias no carga",
+            "suggestion": "Verificar función loadLicensing-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Licencias\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddlicensing-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadlicensing-management() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "3057819e-baf3-4043-9b91-9abec90adf6b",
+      "severity": "medium"
+    },
+    {
+      "module": "sanctions-management",
+      "test": "Frontend CRUD - Gestión de Sanciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo sanctions-management",
+            "suggestion": "Verificar que exista función openModule('sanctions-management') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Sanciones no carga",
+            "suggestion": "Verificar función loadSanctions-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Sanciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddsanctions-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadsanctions-management() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "2c54d0d4-2cce-423d-9b51-6a0fe8fbd0c7",
+      "severity": "medium"
+    },
+    {
+      "module": "payroll-liquidation",
+      "test": "Frontend CRUD - Liquidación de Sueldos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo payroll-liquidation",
+            "suggestion": "Verificar que exista función openModule('payroll-liquidation') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Liquidación de Sueldos no carga",
+            "suggestion": "Verificar función loadPayroll-liquidation() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Liquidación de Sueldos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddpayroll-liquidationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadpayroll-liquidation() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "2bc297fb-d1de-41f1-9246-d16684338c1f",
+      "severity": "medium"
+    },
+    {
+      "module": "proactive-notifications",
+      "test": "Frontend CRUD - Notificaciones Proactivas",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo proactive-notifications",
+            "suggestion": "Verificar que exista función openModule('proactive-notifications') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Notificaciones Proactivas no carga",
+            "suggestion": "Verificar función loadProactive-notifications() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Notificaciones Proactivas\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddproactive-notificationsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadproactive-notifications() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "28c8b831-d158-469d-8786-1ad44f88fd67",
+      "severity": "medium"
+    },
+    {
+      "module": "employee-map",
+      "test": "Frontend CRUD - Mapa de Empleados",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo employee-map",
+            "suggestion": "Verificar que exista función openModule('employee-map') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Mapa de Empleados no carga",
+            "suggestion": "Verificar función loadEmployee-map() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Mapa de Empleados\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddemployee-mapModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loademployee-map() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "1c380362-0528-4090-8f35-1fa360ff5f4c",
+      "severity": "medium"
+    },
+    {
+      "module": "resource-center",
+      "test": "Frontend CRUD - Centro de Recursos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo resource-center",
+            "suggestion": "Verificar que exista función openModule('resource-center') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Centro de Recursos no carga",
+            "suggestion": "Verificar función loadResource-center() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Centro de Recursos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddresource-centerModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadresource-center() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "19e40558-da0c-4a9c-9769-ceb4ca17419e",
+      "severity": "medium"
+    },
+    {
+      "module": "document-management",
+      "test": "Frontend CRUD - Gestión Documental",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo document-management",
+            "suggestion": "Verificar que exista función openModule('document-management') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión Documental no carga",
+            "suggestion": "Verificar función loadDocument-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión Documental\" no funciona",
+            "suggestion": "Verificar onclick=\"openAdddocument-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loaddocument-management() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "1999e5b6-d01f-45d8-8ec8-337f4228137b",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications",
+      "test": "Frontend CRUD - Notificaciones Básicas",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo notifications",
+            "suggestion": "Verificar que exista función openModule('notifications') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Notificaciones Básicas no carga",
+            "suggestion": "Verificar función loadNotifications() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Notificaciones Básicas\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotificationsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "16ab99f3-2e7b-4f3c-88cc-7e0b43ec3525",
+      "severity": "medium"
+    },
+    {
+      "module": "network",
+      "test": "Frontend CRUD - Gestión de Red",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo network",
+            "suggestion": "Verificar que exista función openModule('network') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Red no carga",
+            "suggestion": "Verificar función loadNetwork() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Red\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnetworkModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnetwork() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "0c54ad6f-3fb5-4164-807e-65c1ec48b8e4",
+      "severity": "medium"
+    },
+    {
+      "module": "clientes",
+      "test": "Frontend CRUD - Gestión de Clientes (SIAC)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Navigation",
+            "error": "No se pudo navegar al módulo clientes",
+            "suggestion": "Verificar que exista función openModule('clientes') o botón en el menú"
+          },
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Clientes (SIAC) no carga",
+            "suggestion": "Verificar función loadClientes() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Clientes (SIAC)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddclientesModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadclientes() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "019acf6b-bacc-4613-8987-59d77c4ee747",
+      "severity": "medium"
+    }
+  ],
+  "low": []
+}

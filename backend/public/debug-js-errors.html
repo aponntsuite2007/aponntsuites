@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - JavaScript Errors in panel-empresa.html</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        #errorLog {
+            background: #252526;
+            border: 2px solid #ff5555;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .error {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #3c1f1f;
+            border-left: 4px solid #ff5555;
+            border-radius: 4px;
+        }
+        .error-type {
+            color: #ff5555;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .error-message {
+            color: #f48771;
+            margin: 10px 0;
+        }
+        .error-stack {
+            color: #808080;
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .error-location {
+            color: #569cd6;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        h1 {
+            color: #4ec9b0;
+            border-bottom: 2px solid #4ec9b0;
+            padding-bottom: 10px;
+        }
+        .stats {
+            background: #264f78;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #1177bb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 JavaScript Error Detector - panel-empresa.html</h1>
+
+    <div class="stats">
+        <strong>Total de errores detectados:</strong> <span id="errorCount">0</span><br>
+        <strong>Página testeada:</strong> panel-empresa.html<br>
+        <strong>Timestamp:</strong> <span id="timestamp"></span>
+    </div>
+
+    <button class="btn" onclick="location.reload()">🔄 Recargar</button>
+    <button class="btn" onclick="clearErrors()">🧹 Limpiar</button>
+    <button class="btn" onclick="copyToClipboard()">📋 Copiar Errores</button>
+
+    <div id="errorLog"></div>
+
+    <script>
+        let errorCount = 0;
+        const errors = [];
+
+        // Update timestamp
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+
+        // Capture all JavaScript errors
+        window.addEventListener('error', function(event) {
+            errorCount++;
+            const error = {
+                type: 'Error',
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                stack: event.error ? event.error.stack : 'No stack trace available'
+            };
+            errors.push(error);
+            displayError(error);
+            event.preventDefault();
+        });
+
+        // Capture promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            errorCount++;
+            const error = {
+                type: 'Unhandled Promise Rejection',
+                message: event.reason ? event.reason.toString() : 'Unknown promise rejection',
+                filename: 'Unknown',
+                lineno: '?',
+                colno: '?',
+                stack: event.reason && event.reason.stack ? event.reason.stack : 'No stack trace available'
+            };
+            errors.push(error);
+            displayError(error);
+        });
+
+        // Capture console errors
+        const originalConsoleError = console.error;
+        console.error = function(...args) {
+            errorCount++;
+            const error = {
+                type: 'Console Error',
+                message: args.join(' '),
+                filename: 'Console',
+                lineno: '?',
+                colno: '?',
+                stack: new Error().stack
+            };
+            errors.push(error);
+            displayError(error);
+            originalConsoleError.apply(console, args);
+        };
+
+        function displayError(error) {
+            const errorLog = document.getElementById('errorLog');
+            const errorEl = document.createElement('div');
+            errorEl.className = 'error';
+
+            errorEl.innerHTML = `
+                <div class="error-type">${error.type}</div>
+                <div class="error-message">${escapeHtml(error.message)}</div>
+                <div class="error-location">📍 ${error.filename}:${error.lineno}:${error.colno}</div>
+                <div class="error-stack">${escapeHtml(error.stack)}</div>
+            `;
+
+            errorLog.appendChild(errorEl);
+            document.getElementById('errorCount').textContent = errorCount;
+
+            // Auto-scroll to latest error
+            errorEl.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearErrors() {
+            document.getElementById('errorLog').innerHTML = '';
+            errorCount = 0;
+            errors.length = 0;
+            document.getElementById('errorCount').textContent = '0';
+        }
+
+        function copyToClipboard() {
+            const text = errors.map(e =>
+                `[${e.type}] ${e.message}\nLocation: ${e.filename}:${e.lineno}:${e.colno}\nStack:\n${e.stack}\n\n`
+            ).join('---\n\n');
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Errores copiados al portapapeles');
+            }, () => {
+                alert('❌ Error al copiar');
+            });
+        }
+
+        // Now load panel-empresa.html in an iframe to capture its errors
+        setTimeout(() => {
+            const iframe = document.createElement('iframe');
+            iframe.src = 'panel-empresa.html';
+            iframe.style.position = 'absolute';
+            iframe.style.width = '1px';
+            iframe.style.height = '1px';
+            iframe.style.opacity = '0';
+            iframe.style.pointerEvents = 'none';
+
+            iframe.onload = function() {
+                console.log('✅ panel-empresa.html cargado - monitoreando errores...');
+
+                // Try to access iframe console errors
+                try {
+                    iframe.contentWindow.addEventListener('error', function(event) {
+                        window.dispatchEvent(new ErrorEvent('error', event));
+                    });
+                } catch (e) {
+                    console.warn('No se pudo acceder a errores del iframe:', e);
+                }
+            };
+
+            document.body.appendChild(iframe);
+        }, 1000);
+
+        console.log('🔍 Debug script cargado - esperando errores de panel-empresa.html...');
+    </script>
+</body>
+</html>

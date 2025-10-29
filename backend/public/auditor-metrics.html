@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditor - Métricas de Precisión</title>
+
+  <!-- Chart.js para gráficas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="/css/auditor-metrics-dashboard.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+
+    .page-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .page-header h1 {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+
+    .page-header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .back-link:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .loading-spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #667eea;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error-banner {
+      background-color: #f8d7da;
+      border-left: 4px solid #dc3545;
+      color: #721c24;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="page-header">
+    <div class="container">
+      <h1>📊 Auditor - Dashboard de Métricas</h1>
+      <p>Sistema Híbrido de Diagnóstico: Ollama vs OpenAI vs Pattern Analysis</p>
+      <a href="/panel-administrativo.html" class="back-link">← Volver al Panel Administrativo</a>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Dashboard Container -->
+  <div id="auditor-metrics-container">
+    <!-- El contenido se genera dinámicamente con JavaScript -->
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/modules/auditor-metrics-dashboard.js"></script>
+  <script>
+    // Verificar autenticación
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Debes iniciar sesión para ver este dashboard');
+      window.location.href = '/login.html';
+    }
+
+    // Verificar permisos de admin
+    const userRole = localStorage.getItem('userRole');
+    if (userRole !== 'admin') {
+      alert('Solo administradores pueden acceder al dashboard de métricas');
+      window.location.href = '/panel-administrativo.html';
+    }
+
+    // Inicializar dashboard
+    document.addEventListener('DOMContentLoaded', async () => {
+      const loadingOverlay = document.getElementById('loading-overlay');
+
+      try {
+        loadingOverlay.style.display = 'flex';
+
+        // Inicializar dashboard
+        await auditorMetricsDashboard.init();
+
+      } catch (error) {
+        console.error('❌ Error inicializando dashboard:', error);
+
+        const container = document.getElementById('auditor-metrics-container');
+        container.innerHTML = `
+          <div class="container">
+            <div class="error-banner">
+              <h3>Error al cargar el dashboard</h3>
+              <p>${error.message}</p>
+              <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Reintentar
+              </button>
+            </div>
+          </div>
+        `;
+      } finally {
+        loadingOverlay.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

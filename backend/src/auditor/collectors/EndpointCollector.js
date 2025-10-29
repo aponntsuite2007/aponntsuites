@@ -15,7 +15,7 @@ const axios = require('axios');
 class EndpointCollector {
   constructor(database, systemRegistry) {
     this.database = database;
-    this.registry = systemRegistry;
+    this.systemRegistry = systemRegistry;
     this.baseUrl = process.env.BASE_URL || 'http://localhost:9998';
   }
 
@@ -24,8 +24,8 @@ class EndpointCollector {
 
     const results = [];
     const modules = config.moduleFilter ?
-      [this.registry.getModule(config.moduleFilter)] :
-      this.registry.getAllModules();
+      [this.systemRegistry.getModule(config.moduleFilter)] :
+      this.systemRegistry.getAllModules();
 
     // Generar token de prueba
     const testToken = await this._generateTestToken(config.company_id);

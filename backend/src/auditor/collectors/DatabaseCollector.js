@@ -13,7 +13,7 @@
 class DatabaseCollector {
   constructor(database, systemRegistry) {
     this.database = database;
-    this.registry = systemRegistry;
+    this.systemRegistry = systemRegistry;
     this.sequelize = database.sequelize;
   }
 
@@ -76,8 +76,8 @@ class DatabaseCollector {
     const { AuditLog } = this.database;
     const results = [];
     const modules = config.moduleFilter ?
-      [this.registry.getModule(config.moduleFilter)] :
-      this.registry.getAllModules();
+      [this.systemRegistry.getModule(config.moduleFilter)] :
+      this.systemRegistry.getAllModules();
 
     for (const module of modules) {
       if (!module || !module.database_tables) continue;
@@ -125,8 +125,8 @@ class DatabaseCollector {
     const { AuditLog } = this.database;
     const results = [];
     const modules = config.moduleFilter ?
-      [this.registry.getModule(config.moduleFilter)] :
-      this.registry.getAllModules();
+      [this.systemRegistry.getModule(config.moduleFilter)] :
+      this.systemRegistry.getAllModules();
 
     for (const module of modules) {
       if (!module || !module.relationships) continue;

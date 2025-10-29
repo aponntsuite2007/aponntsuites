@@ -1,0 +1,31 @@
+{
+  "critical": [],
+  "high": [],
+  "medium": [],
+  "low": [
+    {
+      "module": "kiosk-android",
+      "test": "Estructura proyecto Flutter",
+      "error": "Faltan archivos: pubspec.yaml, lib/main.dart, android/app/build.gradle, android/app/src/main/AndroidManifest.xml",
+      "context": null,
+      "logId": "8c0bc4f2-1ce2-4f30-920e-531a3aeabe5d",
+      "severity": "low"
+    },
+    {
+      "module": "kiosk-android",
+      "test": "Endpoint móvil: GET /api/v1/users/profile",
+      "error": "Server error: 500",
+      "context": null,
+      "logId": "7f7a395d-fd99-411a-b407-03bad46fabc8",
+      "severity": "low"
+    },
+    {
+      "module": "kiosk-android",
+      "test": "APK Release existe",
+      "error": "APK no encontrado en build/app/outputs/flutter-apk/",
+      "context": null,
+      "logId": "66914563-3072-44bc-b1f1-5644da2fdde3",
+      "severity": "low"
+    }
+  ]
+}

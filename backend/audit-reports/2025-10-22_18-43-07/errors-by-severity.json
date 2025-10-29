@@ -1,0 +1,15 @@
+{
+  "critical": [],
+  "high": [],
+  "medium": [],
+  "low": [
+    {
+      "module": "kiosk-android",
+      "test": "Estructura proyecto Flutter",
+      "error": "Faltan archivos: pubspec.yaml, lib/main.dart, android/app/build.gradle, android/app/src/main/AndroidManifest.xml",
+      "context": null,
+      "logId": "d5e9de0a-89bd-4ffe-980b-4245dd043886",
+      "severity": "low"
+    }
+  ]
+}

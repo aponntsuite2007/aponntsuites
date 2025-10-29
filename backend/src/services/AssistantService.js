@@ -22,7 +22,10 @@ const SystemRegistry = require('../auditor/registry/SystemRegistry');
 const AuditorEngine = require('../auditor/core/AuditorEngine');
 
 class AssistantService {
-  constructor() {
+  constructor(database) {
+    // ✅ FIX 3: Guardar database para acceso a modelos
+    this.database = database;
+
     // Configuración de Ollama desde environment variables
     this.ollamaBaseURL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     this.model = process.env.OLLAMA_MODEL || 'llama3.1:8b';
@@ -188,9 +191,9 @@ class AssistantService {
       `;
 
       // Pasar NULL como company_id para búsqueda GLOBAL
-      const result = await database.sequelize.query(query, {
+      const result = await this.database.sequelize.query(query, {
         bind: [question, moduleName],
-        type: database.sequelize.QueryTypes.SELECT
+        type: this.database.sequelize.QueryTypes.SELECT
       });
 
       console.log(`🌐 Knowledge base GLOBAL: ${result.length} respuestas similares encontradas`);
@@ -460,12 +463,12 @@ class AssistantService {
   async saveToKnowledgeBase(data) {
     try {
       // FIX: Verificar que el modelo exista antes de destructurar
-      if (!database.AssistantKnowledgeBase) {
+      if (!this.database.AssistantKnowledgeBase) {
         console.warn('⚠️  [SAVE-KB] AssistantKnowledgeBase model no está registrado - saltando guardado');
         return { id: null }; // Retornar objeto mock para no romper flujo
       }
 
-      const { AssistantKnowledgeBase } = database;
+      const { AssistantKnowledgeBase } = this.database;
 
       const normalizedQuestion = data.question
         .toLowerCase()
@@ -508,12 +511,12 @@ class AssistantService {
   async saveConversation(data) {
     try {
       // FIX: Verificar que el modelo exista antes de destructurar
-      if (!database.AssistantConversation) {
+      if (!this.database.AssistantConversation) {
         console.warn('⚠️  [SAVE-CONV] AssistantConversation model no está registrado - saltando guardado');
         return { id: null }; // Retornar objeto mock para no romper flujo
       }
 
-      const { AssistantConversation } = database;
+      const { AssistantConversation } = this.database;
 
       if (!data.companyId) {
         throw new Error('company_id es obligatorio para conversaciones');
@@ -658,9 +661,9 @@ class AssistantService {
         SELECT * FROM get_company_conversation_stats($1, $2)
       `;
 
-      const result = await database.sequelize.query(query, {
+      const result = await this.database.sequelize.query(query, {
         bind: [companyId, daysBack],
-        type: database.sequelize.QueryTypes.SELECT
+        type: this.database.sequelize.QueryTypes.SELECT
       });
 
       // También obtener stats globales del knowledge base
@@ -668,8 +671,8 @@ class AssistantService {
         SELECT * FROM get_global_knowledge_stats()
       `;
 
-      const globalResult = await database.sequelize.query(globalQuery, {
-        type: database.sequelize.QueryTypes.SELECT
+      const globalResult = await this.database.sequelize.query(globalQuery, {
+        type: this.database.sequelize.QueryTypes.SELECT
       });
 
       return {

@@ -152,9 +152,18 @@ async function loadUsers() {
             // Handle different response formats
             users = data.users || data || [];
 
+            // Validate users is an array before mapping
+            if (!Array.isArray(users)) {
+                console.warn('⚠️ Response does not contain users array:', data);
+                users = [];
+            }
+
             // Transform PostgreSQL users to expected format
-            users = users.map(user => ({
-                id: user.user_id,
+            console.log('🔍 [DEBUG] Sample raw user from API:', users[0]);
+            users = users.map(user => {
+                console.log(`🔍 [DEBUG] Mapping user - id: ${user.id}, user_id fallback: ${user.user_id}`);
+                return {
+                id: user.id || user.user_id,  // ✅ FIX: Backend returns 'id', not 'user_id'
                 name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0],
                 email: user.email,
                 role: user.role === 'admin' ? 'Administrador' :
@@ -176,8 +185,10 @@ async function loadUsers() {
                 emergencyContact: user.emergencyContact,
                 emergencyPhone: user.emergencyPhone,
                 departmentId: user.departmentId
-            }));
-            
+            };
+            });
+            console.log('🔍 [DEBUG] Sample mapped user:', users[0]);
+
         } else if (response.status === 401) {
             console.log('🔑 Token expirado o inválido');
             // Clear invalid tokens
@@ -249,6 +260,7 @@ async function loadUsers() {
 
 // Display users in table format - WITH PAGINATION
 function displayUsersTable(users) {
+    console.log('🔍 [DEBUG displayUsersTable] Received users:', users.length, 'First user:', users[0]);
     const usersList = document.getElementById('users-list');
     if (!usersList) return;
 
@@ -280,10 +292,6 @@ function displayUsersTable(users) {
                         <th style="text-align: center; padding: 8px;">
                             <div>🏷️</div>
                             <div style="font-size: 0.85em;">Legajo</div>
-                        </th>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>📧</div>
-                            <div style="font-size: 0.85em;">Email</div>
                         </th>
                         <th style="text-align: center; padding: 8px;">
                             <div>🏢</div>
@@ -338,8 +346,6 @@ function displayUsersTable(users) {
             <tr>
                 <td><strong>${user.name}</strong></td>
                 <td>${user.legajo}</td>
-                <td style="font-size: 0.9em;">${user.email}</td>
-                <td>${user.department}</td>
                 <td>${user.role}</td>
                 <td><span style="font-size: 0.8em; color: #666;">${user.convenioColectivo || 'No especificado'}</span></td>
                 <td><span class="status-badge ${statusClass}">${user.status}</span></td>
@@ -348,15 +354,15 @@ function displayUsersTable(users) {
                 <td>
                     <span class="status-badge ${biometricClass}">${user.biometric}</span>
                     ${user.biometricDetails && (user.biometricDetails.face || user.biometricDetails.fingerprint) ?
-                        `<button class="btn-mini btn-primary" onclick="verifyUserBiometric('${user.user_id}', '${user.name}')"
+                        `<button class="btn-mini btn-primary" onclick="verifyUserBiometric('${user.id}', '${user.name}')"
                          title="Verificar biometría" style="margin-left: 5px;" data-module="biometric-enterprise">🔍</button>` : ''}
                 </td>
                 <td style="white-space: nowrap; min-width: 90px;">
                     <div style="display: flex; flex-direction: column; gap: 2px; align-items: center;">
-                        <button class="btn-mini btn-success" onclick="assignUserShifts('${user.user_id}', '${user.name}')" title="Asignar Turnos" data-module="shifts-enterprise">🕐</button>
-                        <button class="btn-mini btn-warning" onclick="resetPassword('${user.user_id}', '${user.name}')" title="Reset">🔑</button>
-                        <button class="btn-mini btn-info" onclick="viewUser('${user.user_id}')" title="Ver">👁️</button>
-                        <button class="btn-mini btn-danger" onclick="deleteUser('${user.user_id}')" title="Eliminar">🗑️</button>
+                        <button class="btn-mini btn-success" onclick="assignUserShifts('${user.id}', '${user.name}')" title="Asignar Turnos" data-module="shifts-enterprise">🕐</button>
+                        <button class="btn-mini btn-warning" onclick="resetPassword('${user.id}', '${user.name}')" title="Reset">🔑</button>
+                        <button class="btn-mini btn-info" onclick="viewUser('${user.id}')" title="Ver">👁️</button>
+                        <button class="btn-mini btn-danger" onclick="deleteUser('${user.id}')" title="Eliminar">🗑️</button>
                     </div>
                 </td>
             </tr>
@@ -535,7 +541,7 @@ function displayUsers(users) {
     }
     
     usersList.innerHTML = users.map(user => `
-        <div class="user-item" data-id="${user.user_id}">
+        <div class="user-item" data-id="${user.id}">
             <div class="user-avatar">
                 <div class="avatar-placeholder">${user.name.charAt(0)}</div>
             </div>
@@ -549,8 +555,8 @@ function displayUsers(users) {
                 <div class="last-access">Último: ${user.lastAccess}</div>
             </div>
             <div class="user-actions">
-                <button class="btn-icon" onclick="viewUser('${user.user_id}')" title="Ver">👁️</button>
-                <button class="btn-icon" onclick="deleteUser('${user.user_id}')" title="Eliminar">🗑️</button>
+                <button class="btn-icon" onclick="viewUser('${user.id}')" title="Ver">👁️</button>
+                <button class="btn-icon" onclick="deleteUser('${user.id}')" title="Eliminar">🗑️</button>
             </div>
         </div>
     `).join('');
@@ -599,7 +605,7 @@ async function fetchBiometricStatusForUsers(users) {
     // ✅ OPTIMIZACIÓN: Fetch EN PARALELO con Promise.all() (100x más rápido!)
     const promises = users.map(async (user) => {
         try {
-            const apiUrl = window.progressiveAdmin.getApiUrl(`/api/v1/facial-biometric/user/${user.user_id}`);
+            const apiUrl = window.progressiveAdmin.getApiUrl(`/api/v1/facial-biometric/user/${user.id}`);
             const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
@@ -638,7 +644,7 @@ async function fetchBiometricStatusForUsers(users) {
                 user.biometricDetails = { face: false, fingerprint: false };
             }
         } catch (error) {
-            console.error(`Error obteniendo biometría para usuario ${user.user_id}:`, error);
+            console.error(`Error obteniendo biometría para usuario ${user.id}:`, error);
             user.biometric = '⚠️ Error';
             user.biometricDetails = { face: false, fingerprint: false };
         }
@@ -945,7 +951,7 @@ async function editUser(userId) {
         `;
         
         modal.innerHTML = `
-            <div style="background: white; padding: 30px; border-radius: 10px; max-width: 800px; width: 95%; max-height: 90vh; overflow-y: auto;">
+            <div style="background: white; padding: 30px; border-radius: 10px; max-width: 95vw; width: 95%; max-height: 90vh; overflow-y: auto;">
                 <h3 style="text-align: center; margin-bottom: 25px;">✏️ Editar Usuario Completo</h3>
                 
                 <!-- Información Personal -->
@@ -1452,7 +1458,8 @@ async function viewUser(userId) {
             background: rgba(0,0,0,0.8);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
+            padding-top: 20px;
             z-index: 10000;
         `;
         
@@ -3548,11 +3555,43 @@ function addWorkHistory(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('workHistoryForm').onsubmit = (e) => {
+    document.getElementById('workHistoryForm').onsubmit = async (e) => {
         e.preventDefault();
-        // Aquí se guardaría en la base de datos
-        closeModal('workHistoryModal');
-        showUserMessage('✅ Antecedente laboral agregado', 'success');
+
+        try {
+            const formData = {
+                company_name: document.getElementById('company').value,
+                position: document.getElementById('position').value,
+                start_date: document.getElementById('startDate').value,
+                end_date: document.getElementById('endDate').value || null,
+                responsibilities: document.getElementById('description').value
+            };
+
+            const response = await fetch(`/api/v1/user-profile/${userId}/work-history`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Error al agregar antecedente laboral');
+            }
+
+            closeModal('workHistoryModal');
+            showUserMessage('✅ Antecedente laboral agregado exitosamente', 'success');
+
+            // Recargar datos si existe función
+            if (typeof loadWorkHistory === 'function') {
+                loadWorkHistory(userId);
+            }
+        } catch (error) {
+            console.error('❌ Error al agregar antecedente laboral:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
     };
 }
 
@@ -3619,11 +3658,46 @@ function addFamilyMember(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('familyMemberForm').onsubmit = (e) => {
+    document.getElementById('familyMemberForm').onsubmit = async (e) => {
         e.preventDefault();
-        // Aquí se guardaría en la base de datos
-        closeModal('familyMemberModal');
-        showUserMessage('✅ Familiar agregado al grupo familiar', 'success');
+
+        try {
+            const familyName = document.getElementById('familyName').value;
+            const familySurname = document.getElementById('familySurname').value;
+
+            const formData = {
+                full_name: `${familyName} ${familySurname}`.trim(),
+                relationship: document.getElementById('relationship').value,
+                birth_date: document.getElementById('familyBirthDate').value || null,
+                dni: document.getElementById('familyDni').value || null,
+                is_dependent: document.getElementById('isDependent')?.checked || false
+            };
+
+            const response = await fetch(`/api/v1/user-profile/${userId}/family-members`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Error al agregar familiar');
+            }
+
+            closeModal('familyMemberModal');
+            showUserMessage('✅ Familiar agregado al grupo familiar exitosamente', 'success');
+
+            // Recargar datos si existe función
+            if (typeof loadFamilyMembers === 'function') {
+                loadFamilyMembers(userId);
+            }
+        } catch (error) {
+            console.error('❌ Error al agregar familiar:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
     };
 }
 
@@ -3773,10 +3847,41 @@ function addDisciplinaryAction(userId) {
         daysField.style.display = e.target.value === 'suspension' ? 'block' : 'none';
     };
     
-    document.getElementById('disciplinaryForm').onsubmit = (e) => {
+    document.getElementById('disciplinaryForm').onsubmit = async (e) => {
         e.preventDefault();
-        closeModal('disciplinaryModal');
-        showUserMessage('✅ Acción disciplinaria registrada', 'success');
+
+        try {
+            const formData = {
+            action_type: document.getElementById('actionType').value || null,
+            severity: document.getElementById('actionSeverity').value || null,
+            description: document.getElementById('actionDescription').value || null,
+            date_occurred: document.getElementById('dateOccurred').value || null,
+            action_taken: document.getElementById('actionTaken').value || null,
+            follow_up_required: document.getElementById('followUpRequired')?.checked || false,
+        };
+
+            const response = await fetch(`/api/v1/user-admin/${userId}/disciplinary`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Acción disciplinaria registrada Error al procesar solicitud');
+            }
+
+            closeModal('disciplinaryModal');
+            showUserMessage('✅ Acción disciplinaria registrada exitosamente', 'success');
+
+            if (typeof loadDisciplinaryActions === 'function') { loadDisciplinaryActions(userId); }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
     };
 }
 
@@ -3866,10 +3971,51 @@ function addEducation(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('educationForm').onsubmit = (e) => {
+    document.getElementById('educationForm').onsubmit = async (e) => {
         e.preventDefault();
-        closeModal('educationModal');
-        showUserMessage('✅ Formación académica agregada', 'success');
+
+        try {
+            const educationType = document.getElementById('educationType').value;
+            const institution = document.getElementById('institution').value;
+            const degree = document.getElementById('degree').value;
+            const status = document.getElementById('status').value;
+            const graduationYear = document.getElementById('graduationYear').value;
+            const description = document.getElementById('description').value;
+
+            const formData = {
+                education_level: educationType,
+                institution_name: institution,
+                degree_title: degree,
+                field_of_study: description || null,
+                start_date: null,  // No está en el formulario
+                end_date: graduationYear ? `${graduationYear}-12-31` : null,
+                graduated: status === 'completed'
+            };
+
+            const response = await fetch(`/api/v1/user-profile/${userId}/education`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Error al agregar educación');
+            }
+
+            closeModal('educationModal');
+            showUserMessage('✅ Formación académica agregada exitosamente', 'success');
+
+            if (typeof loadEducation === 'function') {
+                loadEducation(userId);
+            }
+        } catch (error) {
+            console.error('❌ Error al agregar educación:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
     };
 }
 
@@ -4579,53 +4725,41 @@ function editMaritalStatus(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('maritalStatusForm').onsubmit = (e) => {
+    document.getElementById('maritalStatusForm').onsubmit = async (e) => {
         e.preventDefault();
-        const status = document.getElementById('maritalStatus').value;
-        const marriageDate = document.getElementById('marriageDate').value;
-        const spouseName = document.getElementById('spouseName').value;
-        const spouseSurname = document.getElementById('spouseSurname').value;
-        const spouseDni = document.getElementById('spouseDni').value;
-        const spouseBirthdate = document.getElementById('spouseBirthdate').value;
-        const spouseDependent = document.getElementById('spouseDependent').value;
-        const spouseCoverage = document.getElementById('spouseCoverage').value;
-        
-        // Update UI
-        const statusText = {
-            'single': 'Soltero/a',
-            'married': 'Casado/a',
-            'divorced': 'Divorciado/a',
-            'widowed': 'Viudo/a',
-            'common_law': 'Unión Civil',
-            'separated': 'Separado/a'
+
+        try {
+            const formData = {
+            marital_status: document.getElementById('maritalStatus').value || null,
+            spouse_name: document.getElementById('spouseName').value || null,
+            spouse_dni: document.getElementById('spouseDni').value || null,
+            spouse_phone: document.getElementById('spousePhone').value || null,
+            spouse_occupation: document.getElementById('spouseOccupation').value || null,
+            marriage_date: document.getElementById('marriageDate').value || null,
         };
-        
-        document.getElementById('marital-status').textContent = statusText[status] || 'No especificado';
-        document.getElementById('marriage-date').textContent = marriageDate ? new Date(marriageDate).toLocaleDateString() : '-';
-        
-        const dependentText = spouseDependent === 'yes' ? 'Sí' : spouseDependent === 'partial' ? 'Parcialmente' : 'No';
-        document.getElementById('spouse-dependent').textContent = dependentText;
-        
-        if (['married', 'common_law'].includes(status) && spouseName) {
-            document.getElementById('spouse-details').style.setProperty('display', 'block', 'important');
-            document.getElementById('spouse-name').textContent = spouseName;
-            document.getElementById('spouse-surname').textContent = spouseSurname;
-            document.getElementById('spouse-dni').textContent = spouseDni;
-            document.getElementById('spouse-birthdate').textContent = spouseBirthdate ? new Date(spouseBirthdate).toLocaleDateString() : '-';
-            
-            const coverageText = {
-                'no': 'Sin cobertura',
-                'included': 'Plan familiar',
-                'own': 'Cobertura propia',
-                'other': 'Otra cobertura'
-            };
-            document.getElementById('spouse-coverage').textContent = coverageText[spouseCoverage] || '-';
-        } else {
-            document.getElementById('spouse-details').style.setProperty('display', 'none', 'important');
+
+            const response = await fetch(`/api/v1/user-profile/${userId}/marital-status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Estado civil actualizado Error al procesar solicitud');
+            }
+
+            closeModal('maritalStatusModal');
+            showUserMessage('✅ Estado civil actualizado exitosamente', 'success');
+
+            if (typeof loadMaritalStatus === 'function') { loadMaritalStatus(userId); }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
-        
-        closeModal('maritalStatusModal');
-        showUserMessage('✅ Estado civil actualizado', 'success');
     };
 }
 
@@ -4719,54 +4853,42 @@ function addChild(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('childForm').onsubmit = (e) => {
+    document.getElementById('childForm').onsubmit = async (e) => {
         e.preventDefault();
-        const name = document.getElementById('childName').value;
-        const surname = document.getElementById('childSurname').value;
-        const birthdate = document.getElementById('childBirthdate').value;
-        const dni = document.getElementById('childDni').value;
-        const gender = document.getElementById('childGender').value;
-        const livesWith = document.getElementById('childLivesWith').value;
-        const dependent = document.getElementById('childDependent').value;
-        const coverage = document.getElementById('childCoverage').value;
-        
-        // Calculate age
-        const age = new Date().getFullYear() - new Date(birthdate).getFullYear();
-        
-        // Create child card
-        const childCard = document.createElement('div');
-        childCard.style.cssText = 'background: rgba(255,255,255,0.8); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #0d47a1;';
-        
-        const livesText = livesWith === 'yes' ? '🏠 Vive con empleado' : livesWith === 'partial' ? '🏠 Vive parcialmente' : '🏠 No vive con empleado';
-        const dependentText = dependent === 'yes' ? '💰 A cargo' : dependent === 'partial' ? '💰 Parcialmente a cargo' : '💰 No a cargo';
-        const coverageText = coverage === 'included' ? '🏥 Plan familiar' : coverage === 'other' ? '🏥 Otra cobertura' : '🏥 Sin cobertura';
-        
-        childCard.innerHTML = `
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; font-size: 13px;">
-                <div>
-                    <strong>${name} ${surname}</strong><br>
-                    <span style="color: #666;">${gender === 'M' ? '👦' : '👧'} ${age} años • ${dni ? 'DNI: ' + dni : 'Sin DNI'}</span>
-                </div>
-                <div style="font-size: 11px;">
-                    <div>${livesText}</div>
-                    <div>${dependentText}</div>
-                </div>
-                <div style="font-size: 11px;">
-                    <div>${coverageText}</div>
-                    <div>📅 ${new Date(birthdate).toLocaleDateString()}</div>
-                </div>
-            </div>
-        `;
-        
-        // Add to children list
-        const childrenList = document.getElementById('children-list');
-        if (childrenList.querySelector('p')) {
-            childrenList.innerHTML = '';
+
+        try {
+            const formData = {
+            full_name: document.getElementById('childFullName').value || null,
+            birth_date: document.getElementById('childBirthDate').value || null,
+            dni: document.getElementById('childDni').value || null,
+            gender: document.getElementById('childGender').value || null,
+            lives_with_employee: document.getElementById('livesWithEmployee')?.checked || false,
+            is_student: document.getElementById('isStudent')?.checked || false,
+            school_name: document.getElementById('schoolName').value || null,
+        };
+
+            const response = await fetch(`/api/v1/user-profile/${userId}/children`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Hijo/a agregado/a Error al procesar solicitud');
+            }
+
+            closeModal('childModal');
+            showUserMessage('✅ Hijo/a agregado/a exitosamente', 'success');
+
+            if (typeof loadChildren === 'function') { loadChildren(userId); }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
-        childrenList.appendChild(childCard);
-        
-        closeModal('childModal');
-        showUserMessage(`✅ Hijo ${name} agregado al grupo familiar`, 'success');
     };
 }
 
@@ -4996,60 +5118,41 @@ function addChronicCondition(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('chronicConditionForm').onsubmit = (e) => {
+    document.getElementById('chronicConditionForm').onsubmit = async (e) => {
         e.preventDefault();
-        const type = document.getElementById('conditionType').value;
-        const customName = document.getElementById('customConditionName').value;
-        const severity = document.getElementById('conditionSeverity').value;
-        const diagnosisDate = document.getElementById('diagnosisDate').value;
-        const description = document.getElementById('conditionDescription').value;
-        const requiresMonitoring = document.getElementById('requiresMonitoring').checked;
-        
-        const conditionNames = {
-            'diabetes': 'Diabetes',
-            'hypertension': 'Hipertensión',
-            'asthma': 'Asma',
-            'epilepsy': 'Epilepsia',
-            'heart_disease': 'Enfermedad Cardíaca',
-            'arthritis': 'Artritis',
-            'depression': 'Depresión',
-            'anxiety': 'Ansiedad',
-            'visual_impairment': 'Discapacidad Visual',
-            'hearing_impairment': 'Discapacidad Auditiva',
-            'mobility_impairment': 'Discapacidad Motriz',
-            'custom': customName
+
+        try {
+            const formData = {
+            condition_name: document.getElementById('conditionName').value || null,
+            diagnosis_date: document.getElementById('diagnosisDate').value || null,
+            severity: document.getElementById('severity').value || null,
+            requires_treatment: document.getElementById('requiresTreatment')?.checked || false,
+            requires_monitoring: document.getElementById('requiresMonitoring')?.checked || false,
+            notes: document.getElementById('conditionNotes').value || null,
         };
-        
-        const severityText = {
-            'mild': 'Leve',
-            'moderate': 'Moderada',
-            'severe': 'Severa'
-        };
-        
-        // Create condition card
-        const conditionCard = document.createElement('div');
-        conditionCard.style.cssText = 'background: rgba(255,193,7,0.1); border-left: 4px solid #ffc107; padding: 10px; border-radius: 4px; margin-bottom: 8px;';
-        
-        conditionCard.innerHTML = `
-            <div style="font-size: 13px;">
-                <div style="font-weight: bold; color: #856404;">${conditionNames[type]} - ${severityText[severity]}</div>
-                <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                    ${diagnosisDate ? 'Diagnóstico: ' + new Date(diagnosisDate).toLocaleDateString() + ' • ' : ''}
-                    ${requiresMonitoring ? '⚠️ Requiere monitoreo' : '✅ Sin monitoreo especial'}
-                </div>
-                ${description ? `<div style="font-size: 11px; margin-top: 4px;">${description}</div>` : ''}
-            </div>
-        `;
-        
-        // Add to conditions list
-        const conditionsList = document.getElementById('chronic-conditions-list');
-        if (conditionsList.querySelector('p')) {
-            conditionsList.innerHTML = '';
+
+            const response = await fetch(`/api/v1/user-medical/${userId}/chronic-conditions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Condición crónica agregada Error al procesar solicitud');
+            }
+
+            closeModal('chronicConditionModal');
+            showUserMessage('✅ Condición crónica agregada exitosamente', 'success');
+
+            if (typeof loadChronicConditions === 'function') { loadChronicConditions(userId); }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
-        conditionsList.appendChild(conditionCard);
-        
-        closeModal('chronicConditionModal');
-        showUserMessage(`✅ Condición crónica ${conditionNames[type]} agregada`, 'success');
     };
 }
 
@@ -5126,50 +5229,44 @@ function addMedication(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('medicationForm').onsubmit = (e) => {
+    document.getElementById('medicationForm').onsubmit = async (e) => {
         e.preventDefault();
-        const name = document.getElementById('medicationName').value;
-        const dose = document.getElementById('medicationDose').value;
-        const frequency = document.getElementById('medicationFrequency').value;
-        const time = document.getElementById('medicationTime').value;
-        const condition = document.getElementById('medicationCondition').value;
-        const doctor = document.getElementById('prescribingDoctor').value;
-        const notes = document.getElementById('medicationNotes').value;
-        
-        const frequencyText = {
-            'daily': 'Diario',
-            'twice_daily': '2 veces/día',
-            'three_times_daily': '3 veces/día',
-            'weekly': 'Semanal',
-            'as_needed': 'Según necesidad',
-            'other': 'Otra frecuencia'
+
+        try {
+            const formData = {
+            medication_name: document.getElementById('medicationName').value || null,
+            dosage: document.getElementById('dosage').value || null,
+            frequency: document.getElementById('frequency').value || null,
+            route: document.getElementById('route').value || null,
+            start_date: document.getElementById('medStartDate').value || null,
+            end_date: document.getElementById('medEndDate').value || null,
+            is_continuous: document.getElementById('isContinuous')?.checked || false,
+            prescribing_doctor: document.getElementById('prescribingDoctor').value || null,
+            purpose: document.getElementById('medPurpose').value || null,
         };
-        
-        // Create medication card
-        const medicationCard = document.createElement('div');
-        medicationCard.style.cssText = 'background: rgba(0,123,255,0.1); border-left: 4px solid #007bff; padding: 10px; border-radius: 4px; margin-bottom: 8px;';
-        
-        medicationCard.innerHTML = `
-            <div style="font-size: 13px;">
-                <div style="font-weight: bold; color: #004085;">${name} ${dose}</div>
-                <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                    📅 ${frequencyText[frequency]}${time ? ' • 🕐 ' + time : ''}
-                    ${condition ? ' • 🏥 ' + condition : ''}
-                </div>
-                ${doctor ? `<div style="font-size: 11px; color: #666;">👨‍⚕️ ${doctor}</div>` : ''}
-                ${notes ? `<div style="font-size: 11px; margin-top: 4px; color: #856404;">⚠️ ${notes}</div>` : ''}
-            </div>
-        `;
-        
-        // Add to medications list
-        const medicationsList = document.getElementById('medications-list');
-        if (medicationsList.querySelector('p')) {
-            medicationsList.innerHTML = '';
+
+            const response = await fetch(`/api/v1/user-medical/${userId}/medications`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Medicamento agregado Error al procesar solicitud');
+            }
+
+            closeModal('medicationModal');
+            showUserMessage('✅ Medicamento agregado exitosamente', 'success');
+
+            if (typeof loadMedications === 'function') { loadMedications(userId); }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
-        medicationsList.appendChild(medicationCard);
-        
-        closeModal('medicationModal');
-        showUserMessage(`✅ Medicación ${name} agregada`, 'success');
     };
 }
 
@@ -5243,60 +5340,42 @@ function addAllergy(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('allergyForm').onsubmit = (e) => {
+    document.getElementById('allergyForm').onsubmit = async (e) => {
         e.preventDefault();
-        const type = document.getElementById('allergyType').value;
-        const allergen = document.getElementById('allergen').value;
-        const severity = document.getElementById('allergySeverity').value;
-        const carriesEpipen = document.getElementById('carriesEpipen').value;
-        const symptoms = document.getElementById('allergySymptoms').value;
-        const lastReaction = document.getElementById('lastReaction').value;
-        
-        const typeText = {
-            'food': 'Alimentaria',
-            'medication': 'Medicamentos',
-            'environmental': 'Ambiental',
-            'chemical': 'Química',
-            'latex': 'Látex',
-            'insect': 'Insectos',
-            'custom': 'Otra'
+
+        try {
+            const formData = {
+            allergen: document.getElementById('allergen').value || null,
+            allergy_type: document.getElementById('allergyType').value || null,
+            severity: document.getElementById('allergySeverity').value || null,
+            symptoms: document.getElementById('symptoms').value || null,
+            diagnosed_date: document.getElementById('allergyDiagnosedDate').value || null,
+            requires_epipen: document.getElementById('requiresEpipen')?.checked || false,
+            notes: document.getElementById('allergyNotes').value || null,
         };
-        
-        const severityText = {
-            'mild': 'Leve',
-            'moderate': 'Moderada',
-            'severe': 'Severa',
-            'anaphylactic': 'Anafiláctica'
-        };
-        
-        // Create allergy card
-        const allergyCard = document.createElement('div');
-        const severityColor = severity === 'anaphylactic' ? '#dc3545' : 
-                             severity === 'severe' ? '#fd7e14' : 
-                             severity === 'moderate' ? '#ffc107' : '#28a745';
-        
-        allergyCard.style.cssText = `background: rgba(220,53,69,0.1); border-left: 4px solid ${severityColor}; padding: 10px; border-radius: 4px; margin-bottom: 8px;`;
-        
-        allergyCard.innerHTML = `
-            <div style="font-size: 13px;">
-                <div style="font-weight: bold; color: #721c24;">${allergen} (${typeText[type]}) - ${severityText[severity]}</div>
-                <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                    ${carriesEpipen === 'yes' ? '💉 Porta Epinefrina • ' : ''}
-                    ${lastReaction ? '📅 Último episodio: ' + new Date(lastReaction).toLocaleDateString() : 'Sin episodios recientes'}
-                </div>
-                ${symptoms ? `<div style="font-size: 11px; margin-top: 4px; color: #856404;">Síntomas: ${symptoms}</div>` : ''}
-            </div>
-        `;
-        
-        // Add to allergies list
-        const allergiesList = document.getElementById('allergies-list');
-        if (allergiesList.querySelector('p')) {
-            allergiesList.innerHTML = '';
+
+            const response = await fetch(`/api/v1/user-medical/${userId}/allergies`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Alergia agregada Error al procesar solicitud');
+            }
+
+            closeModal('allergyModal');
+            showUserMessage('✅ Alergia agregada exitosamente', 'success');
+
+            if (typeof loadAllergies === 'function') { loadAllergies(userId); }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
-        allergiesList.appendChild(allergyCard);
-        
-        closeModal('allergyModal');
-        showUserMessage(`✅ Alergia a ${allergen} agregada`, 'success');
     };
 }
 
@@ -5369,56 +5448,41 @@ function addActivityRestriction(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('activityRestrictionForm').onsubmit = (e) => {
+    document.getElementById('activityRestrictionForm').onsubmit = async (e) => {
         e.preventDefault();
-        const type = document.getElementById('restrictionType').value;
-        const activity = document.getElementById('restrictedActivity').value;
-        const duration = document.getElementById('restrictionDuration').value;
-        const expiry = document.getElementById('restrictionExpiry').value;
-        const reason = document.getElementById('restrictionReason').value;
-        const alternatives = document.getElementById('alternatives').value;
-        
-        const typeText = {
-            'physical': 'Física',
-            'visual': 'Visual',
-            'auditory': 'Auditiva',
-            'cognitive': 'Cognitiva',
-            'respiratory': 'Respiratoria',
-            'cardiac': 'Cardíaca',
-            'postural': 'Postural',
-            'environmental': 'Ambiental'
+
+        try {
+            const formData = {
+            restriction_type: document.getElementById('activityRestrictionType').value || null,
+            description: document.getElementById('activityDescription').value || null,
+            start_date: document.getElementById('activityStartDate').value || null,
+            end_date: document.getElementById('activityEndDate').value || null,
+            is_permanent: document.getElementById('isPermanentActivity')?.checked || false,
+            prescribed_by: document.getElementById('prescribedByActivity').value || null,
         };
-        
-        const durationText = {
-            'temporary': 'Temporal',
-            'permanent': 'Permanente',
-            'conditional': 'Condicional'
-        };
-        
-        // Create restriction card
-        const restrictionCard = document.createElement('div');
-        restrictionCard.style.cssText = 'background: rgba(0,123,255,0.1); border-left: 4px solid #0277bd; padding: 10px; border-radius: 4px; margin-bottom: 8px;';
-        
-        restrictionCard.innerHTML = `
-            <div style="font-size: 13px;">
-                <div style="font-weight: bold; color: #0277bd;">${activity} (${typeText[type]})</div>
-                <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                    🕐 ${durationText[duration]}${expiry ? ' hasta ' + new Date(expiry).toLocaleDateString() : ''}
-                </div>
-                ${reason ? `<div style="font-size: 11px; margin-top: 4px; color: #856404;">Motivo: ${reason}</div>` : ''}
-                ${alternatives ? `<div style="font-size: 11px; margin-top: 4px; color: #28a745;">Alternativas: ${alternatives}</div>` : ''}
-            </div>
-        `;
-        
-        // Add to restrictions list
-        const restrictionsList = document.getElementById('activity-restrictions-list');
-        if (restrictionsList.querySelector('p')) {
-            restrictionsList.innerHTML = '';
+
+            const response = await fetch(`/api/v1/user-medical/${userId}/activity-restrictions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Restricción de actividad agregada Error al procesar solicitud');
+            }
+
+            closeModal('activityRestrictionModal');
+            showUserMessage('✅ Restricción de actividad agregada exitosamente', 'success');
+
+            if (typeof loadActivityRestrictions === 'function') { loadActivityRestrictions(userId); }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
-        restrictionsList.appendChild(restrictionCard);
-        
-        closeModal('activityRestrictionModal');
-        showUserMessage(`✅ Restricción de actividad agregada`, 'success');
     };
 }
 
@@ -5508,46 +5572,42 @@ function addWorkRestriction(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('workRestrictionForm').onsubmit = (e) => {
+    document.getElementById('workRestrictionForm').onsubmit = async (e) => {
         e.preventDefault();
-        const allowedTasks = document.getElementById('allowedTasks').value;
-        const restrictedTasks = document.getElementById('restrictedTasks').value;
-        const treatingDoctor = document.getElementById('treatingDoctor').value;
-        const companyDoctor = document.getElementById('companyDoctor').value;
-        const approvalStatus = document.getElementById('approvalStatus').value;
-        const evaluationDate = document.getElementById('evaluationDate').value;
-        const nextReview = document.getElementById('nextReviewDate').value;
-        const clinicalHistoryUploaded = document.getElementById('clinicalHistoryUploaded').checked;
-        const observations = document.getElementById('medicalObservations').value;
-        
-        const statusText = {
-            'pending': 'Pendiente de evaluación',
-            'approved': 'Aprobado por médico empresa',
-            'rejected': 'Rechazado - requiere nueva evaluación',
-            'under_review': 'En revisión médica'
+
+        try {
+            const formData = {
+            restriction_type: document.getElementById('workRestrictionType').value || null,
+            description: document.getElementById('workRestrictionDescription').value || null,
+            start_date: document.getElementById('workRestrictionStartDate').value || null,
+            end_date: document.getElementById('workRestrictionEndDate').value || null,
+            is_permanent: document.getElementById('isPermanentWork')?.checked || false,
+            affects_current_position: document.getElementById('affectsCurrentPosition')?.checked || false,
+            prescribed_by: document.getElementById('prescribedByWork').value || null,
         };
-        
-        // Update UI
-        document.getElementById('allowed-tasks').textContent = allowedTasks || 'Todas las tareas estándar';
-        document.getElementById('restricted-tasks').textContent = restrictedTasks || 'Sin restricciones';
-        
-        let approvalText = statusText[approvalStatus];
-        if (treatingDoctor && companyDoctor) {
-            approvalText += `\n👨‍⚕️ Tratante: ${treatingDoctor}\n🏥 Empresa: ${companyDoctor}`;
+
+            const response = await fetch(`/api/v1/user-medical/${userId}/work-restrictions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Restricción laboral agregada Error al procesar solicitud');
+            }
+
+            closeModal('workRestrictionModal');
+            showUserMessage('✅ Restricción laboral agregada exitosamente', 'success');
+
+            if (typeof loadWorkRestrictions === 'function') { loadWorkRestrictions(userId); }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
-        if (evaluationDate) {
-            approvalText += `\n📅 Evaluación: ${new Date(evaluationDate).toLocaleDateString()}`;
-        }
-        if (nextReview) {
-            approvalText += `\n🔄 Próxima revisión: ${new Date(nextReview).toLocaleDateString()}`;
-        }
-        
-        document.getElementById('medical-approval-status').textContent = approvalText;
-        document.getElementById('clinical-history-audited').textContent = clinicalHistoryUploaded ? 'Sí' : 'No';
-        document.getElementById('company-doctor-approval').textContent = companyDoctor || 'Pendiente';
-        
-        closeModal('workRestrictionModal');
-        showUserMessage('✅ Restricciones laborales actualizadas', 'success');
     };
 }
 
@@ -5748,67 +5808,43 @@ function addVaccination(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('vaccinationForm').onsubmit = (e) => {
+    document.getElementById('vaccinationForm').onsubmit = async (e) => {
         e.preventDefault();
-        const type = document.getElementById('vaccineType').value;
-        const customName = document.getElementById('customVaccineName').value;
-        const date = document.getElementById('vaccineDate').value;
-        const dose = document.getElementById('vaccinedose').value;
-        const lot = document.getElementById('vaccineLot').value;
-        const nextDose = document.getElementById('nextDose').value;
-        const center = document.getElementById('vaccinationCenter').value;
-        const administeredBy = document.getElementById('administeredBy').value;
-        const reactions = document.getElementById('vaccineReactions').value;
-        
-        const vaccineNames = {
-            'covid19': 'COVID-19',
-            'influenza': 'Influenza',
-            'hepatitis_b': 'Hepatitis B',
-            'tetanus': 'Tétanos',
-            'pneumonia': 'Neumonía',
-            'meningitis': 'Meningitis',
-            'yellow_fever': 'Fiebre Amarilla',
-            'mmr': 'Triple Viral',
-            'hpv': 'HPV',
-            'chickenpox': 'Varicela',
-            'custom': customName
+
+        try {
+            const formData = {
+            vaccine_name: document.getElementById('vaccineName').value || null,
+            vaccine_type: document.getElementById('vaccineType').value || null,
+            dose_number: parseInt(document.getElementById('doseNumber').value) || 1,
+            administration_date: document.getElementById('administrationDate').value || null,
+            next_dose_date: document.getElementById('nextDoseDate').value || null,
+            administered_by: document.getElementById('administeredBy').value || null,
+            batch_number: document.getElementById('batchNumber').value || null,
+            location: document.getElementById('vaccinationLocation').value || null,
         };
-        
-        const doseText = {
-            '1': '1ra dosis',
-            '2': '2da dosis',
-            '3': '3ra dosis',
-            '4': '4ta dosis',
-            'booster': 'Refuerzo',
-            'annual': 'Anual',
-            'single': 'Única'
-        };
-        
-        // Create vaccination card
-        const vaccineCard = document.createElement('div');
-        vaccineCard.style.cssText = 'background: rgba(40,167,69,0.1); border-left: 4px solid #28a745; padding: 10px; border-radius: 4px; margin-bottom: 8px;';
-        
-        vaccineCard.innerHTML = `
-            <div style="font-size: 13px;">
-                <div style="font-weight: bold; color: #155724;">${vaccineNames[type]} - ${doseText[dose]}</div>
-                <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                    📅 ${new Date(date).toLocaleDateString()}${lot ? ' • Lote: ' + lot : ''}
-                    ${nextDose ? ' • Próxima: ' + new Date(nextDose).toLocaleDateString() : ''}
-                </div>
-                ${center ? `<div style="font-size: 11px; color: #666;">🏥 ${center}${administeredBy ? ' - ' + administeredBy : ''}</div>` : ''}
-                ${reactions ? `<div style="font-size: 11px; margin-top: 4px; color: #856404;">⚠️ Reacciones: ${reactions}</div>` : ''}
-            </div>
-        `;
-        
-        // Add to vaccination calendar
-        const vaccinationCalendar = document.getElementById('vaccination-calendar');
-        if (vaccinationCalendar.querySelector('p')) {
-            vaccinationCalendar.innerHTML = '';
+
+            const response = await fetch(`/api/v1/user-medical/${userId}/vaccinations`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Vacunación agregada Error al procesar solicitud');
+            }
+
+            closeModal('vaccinationModal');
+            showUserMessage('✅ Vacunación agregada exitosamente', 'success');
+
+            if (typeof loadVaccinations === 'function') { loadVaccinations(userId); }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
-        vaccinationCalendar.appendChild(vaccineCard);
-        
-        closeModal('vaccinationModal');
-        showUserMessage(`✅ Vacuna ${vaccineNames[type]} agregada al calendario`, 'success');
     };
 }
 
@@ -5905,70 +5941,43 @@ function addMedicalExam(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('medicalExamForm').onsubmit = (e) => {
+    document.getElementById('medicalExamForm').onsubmit = async (e) => {
         e.preventDefault();
-        const type = document.getElementById('examType').value;
-        const customName = document.getElementById('customExamName').value;
-        const date = document.getElementById('examDate').value;
-        const result = document.getElementById('examResult').value;
-        const nextControl = document.getElementById('nextControl').value;
-        const center = document.getElementById('medicalCenter').value;
-        const doctor = document.getElementById('examDoctor').value;
-        const notes = document.getElementById('examNotes').value;
-        
-        const examNames = {
-            'preoccupational': 'Preocupacional',
-            'annual': 'Chequeo Anual',
-            'blood_test': 'Análisis de Sangre',
-            'urine_test': 'Análisis de Orina',
-            'chest_xray': 'Rx Tórax',
-            'ecg': 'Electrocardiograma',
-            'audiometry': 'Audiometría',
-            'vision_test': 'Examen Visual',
-            'stress_test': 'Test de Esfuerzo',
-            'spirometry': 'Espirometría',
-            'custom': customName
+
+        try {
+            const formData = {
+            exam_type: document.getElementById('examType').value || null,
+            exam_date: document.getElementById('examDate').value || null,
+            result: document.getElementById('examResult').value || null,
+            performed_by: document.getElementById('performedBy').value || null,
+            facility_name: document.getElementById('facilityName').value || null,
+            next_exam_date: document.getElementById('nextExamDate').value || null,
+            is_fit_for_work: document.getElementById('isFitForWork')?.checked || true,
+            notes: document.getElementById('examNotes').value || null,
         };
-        
-        const resultText = {
-            'normal': 'Normal',
-            'abnormal': 'Alterado',
-            'pending': 'Pendiente',
-            'follow_up': 'Requiere seguimiento'
-        };
-        
-        const resultColor = {
-            'normal': '#28a745',
-            'abnormal': '#dc3545',
-            'pending': '#ffc107',
-            'follow_up': '#fd7e14'
-        };
-        
-        // Create exam card
-        const examCard = document.createElement('div');
-        examCard.style.cssText = `background: rgba(40,167,69,0.1); border-left: 4px solid ${resultColor[result]}; padding: 10px; border-radius: 4px; margin-bottom: 8px;`;
-        
-        examCard.innerHTML = `
-            <div style="font-size: 13px;">
-                <div style="font-weight: bold; color: #155724;">${examNames[type]} - ${resultText[result]}</div>
-                <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                    📅 ${new Date(date).toLocaleDateString()}
-                    ${nextControl ? ' • Próximo control: ' + new Date(nextControl).toLocaleDateString() : ''}
-                </div>
-                ${center ? `<div style="font-size: 11px; color: #666;">🏥 ${center}${doctor ? ' - ' + doctor : ''}</div>` : ''}
-                ${notes ? `<div style="font-size: 11px; margin-top: 4px; color: #495057;">${notes}</div>` : ''}
-            </div>
-        `;
-        
-        // Add to exams list
-        const examsList = document.getElementById('medical-exams-list');
-        if (examsList.querySelector('p')) {
-            examsList.innerHTML = '';
+
+            const response = await fetch(`/api/v1/user-medical/${userId}/medical-exams`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Examen médico agregado Error al procesar solicitud');
+            }
+
+            closeModal('medicalExamModal');
+            showUserMessage('✅ Examen médico agregado exitosamente', 'success');
+
+            if (typeof loadMedicalExams === 'function') { loadMedicalExams(userId); }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
-        examsList.appendChild(examCard);
-        
-        closeModal('medicalExamModal');
-        showUserMessage(`✅ Examen ${examNames[type]} agregado`, 'success');
     };
 }
 
@@ -7468,3 +7477,13 @@ console.log('✅ [USERS] Módulo de usuarios con traducción registrado');
 
 // ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE
 window.showUsersContent = showUsersContent;
+// ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE
+window.showUsersContent = showUsersContent;
+
+// Exponer funciones globalmente para onclick handlers
+window.viewUser = viewUser;
+window.deleteUser = deleteUser;
+window.resetPassword = resetPassword;
+window.assignUserShifts = assignUserShifts;
+// window.uploadUserPhoto = uploadUserPhoto; // COMMENTED: Function not defined, causing errors
+// window.removeUserPhoto = removeUserPhoto; // COMMENTED: Function not defined, causing errors

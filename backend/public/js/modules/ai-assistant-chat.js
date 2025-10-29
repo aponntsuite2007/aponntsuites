@@ -517,6 +517,12 @@
   // ═══════════════════════════════════════════════════════════
 
   function init() {
+    // Prevenir inicializaciones múltiples
+    if (document.getElementById('ai-assistant-widget')) {
+      console.log('⚠️  AI Assistant Chat ya fue inicializado - skipping');
+      return;
+    }
+
     console.log('🤖 Inicializando AI Assistant Chat...');
 
     // Inyectar estilos

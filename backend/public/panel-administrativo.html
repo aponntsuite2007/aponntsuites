@@ -129,6 +129,11 @@
             font-weight: 600;
             transition: all 0.3s ease;
             border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .nav-tab:last-child {
@@ -290,7 +295,7 @@
         }
 
         .section-title {
-            font-size: 1.5em;
+            font-size: 1.1em;
             font-weight: 600;
         }
 
@@ -2429,6 +2434,320 @@
             }
         }
 
+        /* ===============================
+           NUEVOS ESTILOS PARA SISTEMA DE VENDEDORES Y ASOCIADOS
+           =============================== */
+
+        /* Secondary Tabs (Tabs internos de Vendedores y Partners) */
+        .nav-tabs-secondary {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 5px;
+            gap: 5px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab-secondary {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.75rem 1rem;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            color: #495057;
+        }
+
+        .nav-tab-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .nav-tab-secondary.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Subtab Content */
+        .vendor-subtab-content,
+        .partner-subtab-content {
+            display: none;
+        }
+
+        .vendor-subtab-content.active,
+        .partner-subtab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Data Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .data-table thead {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .data-table thead th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid #e9ecef;
+            transition: background 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .data-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .data-table tbody td {
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.overdue {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.cancelled {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .status-badge.active {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-badge.draft {
+            background: #e7e7e7;
+            color: #6c757d;
+        }
+
+        .status-badge.sent {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-badge.accepted {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Star Rating */
+        .star-rating {
+            color: #ffc107;
+            font-size: 1.2rem;
+        }
+
+        .score-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .score-badge.excellent {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .score-badge.good {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .score-badge.medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .score-badge.low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .score-badge.critical {
+            background: #721c24;
+            color: white;
+        }
+
+        /* Action Buttons */
+        .btn-action {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin: 0 0.2rem;
+        }
+
+        .btn-action.btn-view {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .btn-action.btn-edit {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-action.btn-delete {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-action.btn-download {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Partner Stats Dashboard */
+        .partner-stats-dashboard {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        /* Vendor Stats */
+        .vendor-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Commission Type Badges */
+        .commission-type {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .commission-type.sale {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .commission-type.support {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .commission-type.leader {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* Auction Timer */
+        .auction-timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0.4rem 0.8rem;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .auction-timer.ending-soon {
+            background: #f8d7da;
+            color: #721c24;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Modal styles for new modals */
+        .modal-lg {
+            max-width: 900px;
+        }
+
+        .modal-xl {
+            max-width: 1200px;
+        }
+
     </style>
 
     <!-- Google Maps API (para módulo de Departamentos) -->
@@ -2483,13 +2802,15 @@
         <div class="main-content">
             <div class="section-card">
                 <div class="nav-tabs">
-                    <button class="nav-tab active" onclick="switchTab('companies')">🏢 Empresas</button>
-                    <button class="nav-tab" onclick="switchTab('taxTemplates')">🏛️ Plantillas Fiscales</button>
-                    <button class="nav-tab" onclick="switchTab('vendors')">👥 Vendedores</button>
-                    <button class="nav-tab" onclick="switchTab('pricing')">💰 Precios</button>
-                    <button class="nav-tab" onclick="switchTab('billing')">🧾 Facturación</button>
-                    <button class="nav-tab" onclick="switchTab('payments')">💳 Pagos</button>
-                    <button class="nav-tab" onclick="switchTab('notifications')">🔔 Notificaciones</button>
+                    <button class="nav-tab active" onclick="switchTab('companies')"><span>🏢</span><br>Empresas</button>
+                    <button class="nav-tab" onclick="switchTab('partners')"><span>🤝</span><br>Asociados</button>
+                    <button class="nav-tab" onclick="switchTab('taxTemplates')"><span>🏛️</span><br>Plantillas Fiscales</button>
+                    <button class="nav-tab" onclick="switchTab('vendors')"><span>👥</span><br>Vendedores</button>
+                    <button class="nav-tab" onclick="switchTab('pricing')"><span>💰</span><br>Precios</button>
+                    <button class="nav-tab" onclick="switchTab('billing')"><span>🧾</span><br>Facturación</button>
+                    <button class="nav-tab" onclick="switchTab('payments')"><span>💳</span><br>Pagos</button>
+                    <button class="nav-tab" onclick="switchTab('notifications')"><span>🔔</span><br>Notificaciones</button>
+                    <button class="nav-tab" onclick="switchTab('supportTools')"><span>🔧</span><br>Herramientas</button>
                 </div>
 
                 <!-- Pestaña Empresas -->
@@ -2584,12 +2905,18 @@
                 <!-- Pestaña Vendedores -->
                 <div id="vendors" class="tab-content">
                     <div class="section-header">
-                        <h2 class="section-title">👥 Gestión de Vendedores</h2>
-                        <div style="display: flex; gap: 10px;">
+                        <h2 class="section-title">👥 Gestión de Vendedores & Facturación</h2>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="openPaymentRegisterModal()">
+                                💳 Registrar Pago
+                            </button>
+                            <button class="btn btn-primary" onclick="generateMonthlyInvoices()">
+                                📄 Generar Facturas Mensuales
+                            </button>
                             <button class="export-btn" onclick="exportVendorsToExcel()">
                                 📊 Exportar Excel
                             </button>
-                            <button class="btn btn-success" onclick="openNewVendorModal()">
+                            <button class="btn btn-info" onclick="openNewVendorModal()">
                                 ➕ Nuevo Vendedor
                             </button>
                         </div>
@@ -2610,39 +2937,281 @@
                                     <div class="stat-value">$-</div>
                                     <div class="stat-label">Comisiones del Mes</div>
                                 </div>
-                            </div>
-                            
-                            <!-- Generador de Preliquidaciones -->
-                            <div class="preliquidation-generator">
-                                <h3>💰 Generar Preliquidaciones</h3>
-                                <div class="preliq-controls">
-                                    <select id="preliqMonth" class="filter-input">
-                                        <option value="">Mes</option>
-                                        <option value="1">Enero</option>
-                                        <option value="2">Febrero</option>
-                                        <option value="3">Marzo</option>
-                                        <option value="4">Abril</option>
-                                        <option value="5">Mayo</option>
-                                        <option value="6">Junio</option>
-                                        <option value="7">Julio</option>
-                                        <option value="8">Agosto</option>
-                                        <option value="9">Septiembre</option>
-                                        <option value="10">Octubre</option>
-                                        <option value="11">Noviembre</option>
-                                        <option value="12">Diciembre</option>
-                                    </select>
-                                    <input type="number" id="preliqYear" class="filter-input" placeholder="Año" min="2020" max="2030">
-                                    <button class="btn btn-primary" onclick="generateAllPreliquidations()">
-                                        📊 Generar Todas
-                                    </button>
+                                <div class="stat-card">
+                                    <div class="stat-value">-</div>
+                                    <div class="stat-label">Facturas Pendientes</div>
                                 </div>
-                                <div id="preliquidationResults" class="preliq-results"></div>
+                                <div class="stat-card">
+                                    <div class="stat-value">$-</div>
+                                    <div class="stat-label">Pagos del Mes</div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Lista de Vendedores -->
-                        <div id="vendorsContainer" class="vendors-grid">
-                            <!-- Los vendedores se cargarán aquí dinámicamente -->
+                        <!-- Tabs Internos de Vendedores -->
+                        <div class="vendor-tabs-container" style="margin-top: 20px;">
+                            <div class="nav-tabs-secondary">
+                                <button class="nav-tab-secondary active" onclick="switchVendorSubTab('vendors-list')">
+                                    👥 Vendedores
+                                </button>
+                                <button class="nav-tab-secondary" onclick="switchVendorSubTab('quotes-list')">
+                                    📋 Presupuestos
+                                </button>
+                                <button class="nav-tab-secondary" onclick="switchVendorSubTab('contracts-list')">
+                                    📜 Contratos
+                                </button>
+                                <button class="nav-tab-secondary" onclick="switchVendorSubTab('invoices-list')">
+                                    📄 Facturas
+                                </button>
+                                <button class="nav-tab-secondary" onclick="switchVendorSubTab('payments-list')">
+                                    💳 Pagos
+                                </button>
+                                <button class="nav-tab-secondary" onclick="switchVendorSubTab('commissions-list')">
+                                    💰 Comisiones
+                                </button>
+                            </div>
+
+                            <!-- Sub-Tab: Lista de Vendedores -->
+                            <div id="vendors-list" class="vendor-subtab-content active">
+                                <div style="margin: 20px 0;">
+                                    <h3 style="margin-bottom: 15px; font-size: 1rem;">📋 Lista de Vendedores</h3>
+                                    <div id="vendorsContainer" class="vendors-grid">
+                                        <!-- Los vendedores se cargarán aquí dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-Tab: Presupuestos/Cotizaciones -->
+                            <div id="quotes-list" class="vendor-subtab-content">
+                                <div style="margin: 20px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h3>📋 Presupuestos & Cotizaciones</h3>
+                                        <div style="display: flex; gap: 10px;">
+                                            <select id="quoteFilterStatus" class="filter-input" style="width: 150px;" onchange="loadQuotes()">
+                                                <option value="">Todos los estados</option>
+                                                <option value="draft">Borrador</option>
+                                                <option value="sent">Enviado</option>
+                                                <option value="accepted">Aceptado</option>
+                                                <option value="rejected">Rechazado</option>
+                                                <option value="expired">Vencido</option>
+                                            </select>
+                                            <input type="month" id="quoteFilterMonth" class="filter-input" style="width: 150px;" onchange="loadQuotes()">
+                                            <button class="btn btn-success btn-sm" onclick="openQuoteGenerator()">
+                                                ➕ Generar Presupuesto
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="quotesTableContainer">
+                                        <table class="data-table" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nº</th>
+                                                    <th>Empresa</th>
+                                                    <th>Vendedor</th>
+                                                    <th>Fecha Emisión</th>
+                                                    <th>Válido Hasta</th>
+                                                    <th>Total</th>
+                                                    <th>Estado</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="quotesTableBody">
+                                                <tr>
+                                                    <td colspan="8" style="text-align: center; padding: 40px;">
+                                                        Cargando presupuestos...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-Tab: Contratos -->
+                            <div id="contracts-list" class="vendor-subtab-content">
+                                <div style="margin: 20px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h3>📜 Gestión de Contratos</h3>
+                                        <div style="display: flex; gap: 10px;">
+                                            <select id="contractFilterStatus" class="filter-input" style="width: 150px;" onchange="loadContracts()">
+                                                <option value="">Todos los estados</option>
+                                                <option value="pending_signature">Pendiente Firma</option>
+                                                <option value="active">Activo</option>
+                                                <option value="expired">Vencido</option>
+                                                <option value="cancelled">Cancelado</option>
+                                            </select>
+                                            <select id="contractFilterCountry" class="filter-input" style="width: 150px;" onchange="loadContracts()">
+                                                <option value="">Todos los países</option>
+                                                <option value="Argentina">Argentina</option>
+                                                <option value="Bolivia">Bolivia</option>
+                                                <option value="Chile">Chile</option>
+                                                <option value="Colombia">Colombia</option>
+                                                <option value="México">México</option>
+                                                <option value="Perú">Perú</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="contractsTableContainer">
+                                        <table class="data-table" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nº Contrato</th>
+                                                    <th>Empresa</th>
+                                                    <th>País</th>
+                                                    <th>Fecha Inicio</th>
+                                                    <th>Fecha Fin</th>
+                                                    <th>Monto Mensual</th>
+                                                    <th>Estado</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="contractsTableBody">
+                                                <tr>
+                                                    <td colspan="8" style="text-align: center; padding: 40px;">
+                                                        Cargando contratos...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-Tab: Facturas -->
+                            <div id="invoices-list" class="vendor-subtab-content">
+                                <div style="margin: 20px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h3>📄 Gestión de Facturas</h3>
+                                        <div style="display: flex; gap: 10px;">
+                                            <select id="invoiceFilterStatus" class="filter-input" style="width: 150px;" onchange="loadInvoices()">
+                                                <option value="">Todos los estados</option>
+                                                <option value="pending">Pendiente</option>
+                                                <option value="paid">Pagada</option>
+                                                <option value="overdue">Vencida</option>
+                                                <option value="cancelled">Cancelada</option>
+                                            </select>
+                                            <input type="month" id="invoiceFilterMonth" class="filter-input" style="width: 150px;" onchange="loadInvoices()">
+                                        </div>
+                                    </div>
+                                    <div id="invoicesTableContainer">
+                                        <table class="data-table" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nº Factura</th>
+                                                    <th>Empresa</th>
+                                                    <th>Fecha Emisión</th>
+                                                    <th>Vencimiento</th>
+                                                    <th>Total</th>
+                                                    <th>Pagado</th>
+                                                    <th>Saldo</th>
+                                                    <th>Estado</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="invoicesTableBody">
+                                                <tr>
+                                                    <td colspan="9" style="text-align: center; padding: 40px;">
+                                                        Cargando facturas...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-Tab: Pagos -->
+                            <div id="payments-list" class="vendor-subtab-content">
+                                <div style="margin: 20px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h3>💳 Registro de Pagos</h3>
+                                        <div style="display: flex; gap: 10px;">
+                                            <select id="paymentFilterMethod" class="filter-input" style="width: 150px;" onchange="loadPayments()">
+                                                <option value="">Todos los métodos</option>
+                                                <option value="transferencia">Transferencia</option>
+                                                <option value="efectivo">Efectivo</option>
+                                                <option value="cheque">Cheque</option>
+                                                <option value="tarjeta">Tarjeta</option>
+                                            </select>
+                                            <input type="month" id="paymentFilterMonth" class="filter-input" style="width: 150px;" onchange="loadPayments()">
+                                        </div>
+                                    </div>
+                                    <div id="paymentsTableContainer">
+                                        <table class="data-table" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Fecha</th>
+                                                    <th>Empresa</th>
+                                                    <th>Factura</th>
+                                                    <th>Monto</th>
+                                                    <th>Método</th>
+                                                    <th>Referencia</th>
+                                                    <th>Comprobante</th>
+                                                    <th>Estado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="paymentsTableBody">
+                                                <tr>
+                                                    <td colspan="9" style="text-align: center; padding: 40px;">
+                                                        Cargando pagos...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-Tab: Comisiones -->
+                            <div id="commissions-list" class="vendor-subtab-content">
+                                <div style="margin: 20px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h3>💰 Gestión de Comisiones</h3>
+                                        <div style="display: flex; gap: 10px;">
+                                            <select id="commissionFilterType" class="filter-input" style="width: 150px;" onchange="loadCommissions()">
+                                                <option value="">Todos los tipos</option>
+                                                <option value="sale">Venta</option>
+                                                <option value="support">Soporte</option>
+                                                <option value="leader">Líder</option>
+                                            </select>
+                                            <select id="commissionFilterStatus" class="filter-input" style="width: 150px;" onchange="loadCommissions()">
+                                                <option value="">Todos los estados</option>
+                                                <option value="pending">Pendiente</option>
+                                                <option value="approved">Aprobada</option>
+                                                <option value="paid">Pagada</option>
+                                            </select>
+                                            <button class="btn btn-success btn-sm" onclick="markSelectedCommissionsAsPaid()">
+                                                ✓ Marcar como Pagadas
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="commissionsTableContainer">
+                                        <table class="data-table" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th><input type="checkbox" id="selectAllCommissions" onchange="toggleAllCommissions()"></th>
+                                                    <th>ID</th>
+                                                    <th>Fecha</th>
+                                                    <th>Partner</th>
+                                                    <th>Tipo</th>
+                                                    <th>Empresa</th>
+                                                    <th>Monto</th>
+                                                    <th>Estado</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="commissionsTableBody">
+                                                <tr>
+                                                    <td colspan="9" style="text-align: center; padding: 40px;">
+                                                        Cargando comisiones...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2830,6 +3399,296 @@
                     <div class="section-content">
                         <div id="notificationsContainer">
                             <!-- Sistema de notificaciones se carga aquí -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pestaña Herramientas de Soporte -->
+                <div id="supportTools" class="tab-content">
+                    <div class="section-header">
+                        <h2 class="section-title">🔧 Sistema de Auditoría y Testing</h2>
+                    </div>
+                    <div class="section-content">
+                        <!-- Dashboard del Auditor se carga aquí dinámicamente -->
+                        <div id="auditorDashboardContainer"></div>
+                    </div>
+                </div>
+
+                <!-- Pestaña Asociados (Partners) -->
+                <div id="partners" class="tab-content">
+                    <div class="section-header">
+                        <h2 class="section-title">🤝 Asociados Profesionales & Scoring</h2>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="window.open('/partner-register.html', '_blank')">
+                                ➕ Nuevo Asociado
+                            </button>
+                            <button class="btn btn-warning" onclick="calculateAllScoring()">
+                                ⭐ Calcular Scoring
+                            </button>
+                            <button class="btn btn-info" onclick="viewLowScorePartners()">
+                                ⚠️ Partners Bajo Scoring
+                            </button>
+                            <button class="btn btn-primary" onclick="partnersAdmin.loadPartners()">
+                                🔄 Actualizar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="section-content">
+                        <!-- Stats Dashboard de Partners -->
+                        <div class="partner-stats-dashboard" style="margin-bottom: 20px;">
+                            <div class="vendor-stats">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="totalPartners">-</div>
+                                    <div class="stat-label">Total Partners</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="activePartners">-</div>
+                                    <div class="stat-label">Activos</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="avgScoring">-</div>
+                                    <div class="stat-label">Scoring Promedio</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="activeSupportPackages">-</div>
+                                    <div class="stat-label">Paquetes Soporte</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="activeAuctions">-</div>
+                                    <div class="stat-label">Subastas Activas</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabs Internos de Partners -->
+                        <div class="partner-tabs-container">
+                            <div class="nav-tabs-secondary">
+                                <button class="nav-tab-secondary active" onclick="switchPartnerSubTab('partners-list')">
+                                    👥 Asociados
+                                </button>
+                                <button class="nav-tab-secondary" onclick="switchPartnerSubTab('scoring-dashboard')">
+                                    ⭐ Scoring
+                                </button>
+                                <button class="nav-tab-secondary" onclick="switchPartnerSubTab('support-packages')">
+                                    📦 Paquetes de Soporte
+                                </button>
+                                <button class="nav-tab-secondary" onclick="switchPartnerSubTab('auctions-list')">
+                                    🔨 Subastas
+                                </button>
+                                <button class="nav-tab-secondary" onclick="switchPartnerSubTab('ratings-list')">
+                                    ⭐ Valoraciones
+                                </button>
+                            </div>
+
+                            <!-- Sub-Tab: Lista de Partners -->
+                            <div id="partners-list" class="partner-subtab-content active">
+                                <div style="margin: 20px 0;">
+                                    <!-- Filters Container -->
+                                    <div id="partners-filters-container" style="margin-bottom: 15px;"></div>
+
+                                    <!-- Partners List Container -->
+                                    <div id="partners-list-container">
+                                        <div style="text-align: center; padding: 40px; color: #999;">
+                                            <div style="font-size: 48px; margin-bottom: 20px;">🔄</div>
+                                            <p>Cargando asociados...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-Tab: Dashboard de Scoring -->
+                            <div id="scoring-dashboard" class="partner-subtab-content">
+                                <div style="margin: 20px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h3>⭐ Dashboard de Scoring de Partners</h3>
+                                        <div style="display: flex; gap: 10px;">
+                                            <select id="scoringFilterRange" class="filter-input" style="width: 180px;" onchange="loadScoringDashboard()">
+                                                <option value="">Todos los rankings</option>
+                                                <option value="excellent">Excelente (≥ 4.5)</option>
+                                                <option value="good">Bueno (3.5 - 4.5)</option>
+                                                <option value="medium">Medio (2.5 - 3.5)</option>
+                                                <option value="low">Bajo (2.0 - 2.5)</option>
+                                                <option value="critical">Crítico (< 2.0)</option>
+                                            </select>
+                                            <button class="btn btn-sm btn-primary" onclick="exportScoringReport()">
+                                                📊 Exportar Reporte
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="scoringDashboardContainer">
+                                        <table class="data-table" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th>Partner</th>
+                                                    <th>Score Total</th>
+                                                    <th>⭐ Rating Clientes (40%)</th>
+                                                    <th>⏱️ Tiempo Respuesta (20%)</th>
+                                                    <th>✅ Resolución (20%)</th>
+                                                    <th>💼 Ventas (10%)</th>
+                                                    <th>📅 Antigüedad (10%)</th>
+                                                    <th>Estado</th>
+                                                    <th>Última Actualización</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="scoringDashboardBody">
+                                                <tr>
+                                                    <td colspan="9" style="text-align: center; padding: 40px;">
+                                                        Cargando scoring de partners...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-Tab: Paquetes de Soporte -->
+                            <div id="support-packages" class="partner-subtab-content">
+                                <div style="margin: 20px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h3>📦 Gestión de Paquetes de Soporte</h3>
+                                        <div style="display: flex; gap: 10px;">
+                                            <select id="packageFilterStatus" class="filter-input" style="width: 150px;" onchange="loadSupportPackages()">
+                                                <option value="">Todos los estados</option>
+                                                <option value="active">Activos</option>
+                                                <option value="lost">Perdidos</option>
+                                                <option value="in_auction">En Subasta</option>
+                                            </select>
+                                            <select id="packageFilterRating" class="filter-input" style="width: 150px;" onchange="loadSupportPackages()">
+                                                <option value="">Todos los ratings</option>
+                                                <option value="low">Bajo (< 2.0)</option>
+                                                <option value="medium">Medio (2.0 - 3.5)</option>
+                                                <option value="high">Alto (> 3.5)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="supportPackagesContainer">
+                                        <table class="data-table" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Empresa</th>
+                                                    <th>Partner Actual</th>
+                                                    <th>Partner Original</th>
+                                                    <th>Vendedor</th>
+                                                    <th>Rating Actual</th>
+                                                    <th>Comisión Mensual</th>
+                                                    <th>Monto Estimado</th>
+                                                    <th>Estado</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="supportPackagesBody">
+                                                <tr>
+                                                    <td colspan="10" style="text-align: center; padding: 40px;">
+                                                        Cargando paquetes de soporte...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-Tab: Subastas -->
+                            <div id="auctions-list" class="partner-subtab-content">
+                                <div style="margin: 20px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h3>🔨 Subastas Automáticas de Paquetes de Soporte</h3>
+                                        <div style="display: flex; gap: 10px;">
+                                            <select id="auctionFilterStatus" class="filter-input" style="width: 150px;" onchange="loadAuctions()">
+                                                <option value="">Todos los estados</option>
+                                                <option value="active">Activas</option>
+                                                <option value="completed">Completadas</option>
+                                                <option value="cancelled">Canceladas</option>
+                                            </select>
+                                            <button class="btn btn-sm btn-info" onclick="showAuctionHelp()">
+                                                ❓ Cómo Funcionan
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Info Box -->
+                                    <div style="background: #e7f3ff; border-left: 4px solid #3498db; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                                        <strong>ℹ️ Generación Automática:</strong> Las subastas se crean automáticamente cuando un partner alcanza <strong>&lt; 2.0 ⭐</strong> de valoración.
+                                        Todos los partners con <em>"Acepta Subastas"</em> activado reciben notificación instantánea.
+                                    </div>
+
+                                    <div id="auctionsContainer">
+                                        <table class="data-table" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th style="min-width: 200px;">Información del Paquete</th>
+                                                    <th>Empresa</th>
+                                                    <th>Empleados</th>
+                                                    <th>Módulos Contratados</th>
+                                                    <th>Partner Actual</th>
+                                                    <th>Rating Actual</th>
+                                                    <th>Razón</th>
+                                                    <th>Comisión Inicial</th>
+                                                    <th>Mejor Oferta</th>
+                                                    <th>Ofertas</th>
+                                                    <th>Tiempo Restante</th>
+                                                    <th>Estado</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="auctionsBody">
+                                                <tr>
+                                                    <td colspan="14" style="text-align: center; padding: 40px;">
+                                                        Cargando subastas...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-Tab: Valoraciones -->
+                            <div id="ratings-list" class="partner-subtab-content">
+                                <div style="margin: 20px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h3>⭐ Valoraciones de Clientes</h3>
+                                        <div style="display: flex; gap: 10px;">
+                                            <select id="ratingFilterStars" class="filter-input" style="width: 150px;" onchange="loadRatings()">
+                                                <option value="">Todas las estrellas</option>
+                                                <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                                                <option value="4">⭐⭐⭐⭐ (4)</option>
+                                                <option value="3">⭐⭐⭐ (3)</option>
+                                                <option value="2">⭐⭐ (2)</option>
+                                                <option value="1">⭐ (1)</option>
+                                            </select>
+                                            <input type="month" id="ratingFilterMonth" class="filter-input" style="width: 150px;" onchange="loadRatings()">
+                                        </div>
+                                    </div>
+                                    <div id="ratingsContainer">
+                                        <table class="data-table" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Fecha</th>
+                                                    <th>Partner</th>
+                                                    <th>Empresa</th>
+                                                    <th>Rating</th>
+                                                    <th>Categoría</th>
+                                                    <th>Comentarios</th>
+                                                    <th>Valorado por</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="ratingsBody">
+                                                <tr>
+                                                    <td colspan="8" style="text-align: center; padding: 40px;">
+                                                        Cargando valoraciones...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3684,6 +4543,10 @@
 
             loadAllSystems();
             loadVendors(); // Cargar vendedores
+
+            // ✅ NUEVO: Cargar módulos de Vendor Invoicing y Partner Scoring
+            loadVendorInvoicingModule();
+            loadPartnerScoringModule();
         });
 
         async function loadAllSystems() {
@@ -3898,8 +4761,13 @@
         }
 
         // =============================
-        // Función para cargar módulos reales desde la BD
+        // Función para cargar módulos reales desde la BD (TEMPORALMENTE DESHABILITADA)
         async function loadRealModulesForAllCompanies() {
+            console.log("📦 Función de carga de módulos deshabilitada temporalmente");
+            // TODO: Implementar endpoint /api/aponnt/dashboard/companies/:id/modules si es necesario
+            return;
+
+            /* CODIGO COMENTADO TEMPORALMENTE PARA EVITAR ERROR 500
             console.log("📦 Cargando módulos reales para todas las empresas...");
             if (!companies || companies.length === 0) {
                 console.warn("⚠️ No hay empresas para cargar módulos");
@@ -3909,7 +4777,14 @@
             // Cargar los datos reales de módulos para cada empresa
             for (const company of companies) {
                 try {
-                    const response = await fetch(`${API_BASE}/api/aponnt/dashboard/companies/${company.company_id}/modules`);
+                    // Validar que company_id existe
+                    if (!company.company_id && !company.id) {
+                        console.warn(`⚠️ Empresa ${company.name} no tiene company_id válido`);
+                        continue;
+                    }
+
+                    const companyId = company.company_id || company.id;
+                    const response = await fetch(`${API_BASE}/api/aponnt/dashboard/companies/${companyId}/modules`);
                     if (response.ok) {
                         const data = await response.json();
                         if (data.success) {
@@ -3944,6 +4819,7 @@
             console.log("✅ Todos los módulos cargados, re-renderizando tabla...");
             // Volver a renderizar la tabla con los datos actualizados
             renderCompaniesTable();
+            */ // FIN DEL CODIGO COMENTADO
         }
         // SISTEMA DE FILTROS AVANZADOS
         // =============================
@@ -4277,8 +5153,12 @@
         }
 
         function editCompany(companyId) {
-            const company = companies.find(c => c.id === companyId);
-            if (!company) return;
+            const company = companies.find(c => c.id === companyId || c.company_id === companyId);
+            if (!company) {
+                console.error('❌ Empresa no encontrada con ID:', companyId);
+                console.log('📋 Empresas disponibles:', companies.map(c => ({id: c.id, company_id: c.company_id, name: c.name})));
+                return;
+            }
 
             console.log(`📝 EDITANDO EMPRESA ${companyId}:`, company);
             console.log('📝 Datos disponibles en company object:', Object.keys(company));
@@ -10287,7 +11167,7 @@
             const tableHTML = `
                 <div class="vendors-table-container">
                     <div class="table-header">
-                        <h3>👥 Vendedores (${vendors.length})</h3>
+                        <h3 style="font-size: 1rem;">👥 Vendedores (${vendors.length})</h3>
                         <div class="table-actions">
                             <button class="btn btn-success" onclick="openNewVendorModal()">
                                 ➕ Nuevo Vendedor
@@ -10395,6 +11275,50 @@
             `;
 
             container.innerHTML = tableHTML;
+        }
+
+        /**
+         * ═══════════════════════════════════════════════════════════
+         * ✅ NUEVO: MÓDULOS DE VENDOR INVOICING Y PARTNER SCORING
+         * ═══════════════════════════════════════════════════════════
+         */
+
+        // Cargar módulo de Vendor Invoicing System
+        async function loadVendorInvoicingModule() {
+            try {
+                const response = await fetch('/js/modules/vendor-invoicing-system.js');
+                const moduleCode = await response.text();
+                const script = document.createElement('script');
+                script.textContent = moduleCode;
+                document.head.appendChild(script);
+                console.log('✅ [ADMIN] Vendor Invoicing System módulo cargado');
+
+                // Inicializar módulo cuando se active la tab de vendors
+                if (typeof VendorInvoicingSystem !== 'undefined' && window.location.hash === '#vendors') {
+                    VendorInvoicingSystem.init();
+                }
+            } catch (error) {
+                console.error('❌ Error cargando Vendor Invoicing System:', error);
+            }
+        }
+
+        // Cargar módulo de Partner Scoring System
+        async function loadPartnerScoringModule() {
+            try {
+                const response = await fetch('/js/modules/partner-scoring-system.js');
+                const moduleCode = await response.text();
+                const script = document.createElement('script');
+                script.textContent = moduleCode;
+                document.head.appendChild(script);
+                console.log('✅ [ADMIN] Partner Scoring System módulo cargado');
+
+                // Inicializar módulo cuando se active la tab de partners
+                if (typeof PartnerScoringSystem !== 'undefined' && window.location.hash === '#partners') {
+                    PartnerScoringSystem.init();
+                }
+            } catch (error) {
+                console.error('❌ Error cargando Partner Scoring System:', error);
+            }
         }
 
         // Ver detalles del vendedor
@@ -11562,6 +12486,74 @@ ${vendor.notes || 'Sin notas adicionales'}
             }
         }
 
+        // ==========================================
+        // HERRAMIENTAS DE SOPORTE (AUDITOR MODULE)
+        // ==========================================
+
+        let currentOperation = null;
+        /**
+         * ═══════════════════════════════════════════════════════════════
+         * CARGAR MÓDULO DEL AUDITOR EN PANEL ADMINISTRATIVO
+         * ═══════════════════════════════════════════════════════════════
+         */
+        let auditorScriptLoaded = false; // Flag para evitar carga duplicada
+
+        async function loadAuditorDashboard() {
+            const container = document.getElementById('auditorDashboardContainer');
+
+            if (!container) {
+                console.error('No se encontró el contenedor del auditor');
+                return;
+            }
+
+            // Si ya se cargó el script, solo inicializar
+            if (auditorScriptLoaded) {
+                console.log('ℹ️ Script del auditor ya cargado, solo inicializando...');
+                if (typeof window.showAuditorContent === 'function') {
+                    window.showAuditorContent();
+                }
+                return;
+            }
+
+            try {
+                // Cargar el módulo del auditor dinámicamente
+                const script = document.createElement('script');
+                script.id = 'auditor-dashboard-script'; // ID para identificar el script
+                script.src = `js/modules/auditor-dashboard-unified.js?v=${Date.now()}`;
+                script.onload = () => {
+                    console.log('✅ Módulo auditor cargado en panel administrativo');
+                    auditorScriptLoaded = true;
+                    // Inicializar el dashboard
+                    if (typeof window.showAuditorContent === 'function') {
+                        window.showAuditorContent();
+                    }
+                };
+                script.onerror = () => {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #e74c3c;">❌ Error al cargar el módulo del auditor</div>';
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                console.error('Error cargando auditor:', error);
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #e74c3c;">❌ Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Cargar auditor cuando se cambie a la tab de Herramientas
+        const originalSwitchTab = window.switchTab;
+        window.switchTab = function(tabName) {
+            originalSwitchTab(tabName);
+
+            if (tabName === 'supportTools') {
+                // Esperar un momento para que el DOM esté listo
+                setTimeout(() => {
+                    loadAuditorDashboard();
+                }, 100);
+            }
+        };
+
         </script>
+
+    <!-- Partners Admin Panel Module -->
+    <script src="js/modules/partners-admin-panel.js"></script>
 </body>
 </html>

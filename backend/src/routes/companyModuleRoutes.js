@@ -379,6 +379,8 @@ router.get('/my-modules', simpleAuth, async (req, res) => {
  * @route GET /api/v1/company-modules/:companyId
  * @desc Obtener módulos contratados por una empresa específica (SIMPLIFICADO)
  * IMPORTANTE: Esta ruta debe estar DESPUÉS de /my-modules para evitar conflictos
+ *
+ * NUEVO: También incluye módulos temporales de active_modules (para auditor-dashboard)
  */
 router.get('/:companyId', async (req, res) => {
   try {
@@ -411,7 +413,32 @@ router.get('/:companyId', async (req, res) => {
 
     console.log(`✅ [COMPANY-MODULES] Empresa ${companyId} tiene ${contractedModules.length} módulos contratados`);
 
-    // Transformar a formato esperado por el frontend
+    // NUEVO: Obtener módulos temporales desde active_modules (campo JSONB)
+    const companyData = await database.sequelize.query(`
+      SELECT active_modules FROM companies WHERE company_id = ?
+    `, {
+      replacements: [companyId],
+      type: database.sequelize.QueryTypes.SELECT
+    });
+
+    let temporaryModules = [];
+    if (companyData.length > 0 && companyData[0].active_modules) {
+      const activeModules = companyData[0].active_modules;
+      console.log(`🔍 [ACTIVE-MODULES] Raw active_modules:`, activeModules);
+
+      // Si es array de strings (formato correcto)
+      if (Array.isArray(activeModules)) {
+        temporaryModules = activeModules.filter(moduleId =>
+          typeof moduleId === 'string' &&
+          moduleId.trim() !== '' &&
+          // Solo incluir módulos que NO están en company_modules (evitar duplicados)
+          !contractedModules.find(cm => cm.module_key === moduleId)
+        );
+        console.log(`📦 [TEMPORARY-MODULES] ${temporaryModules.length} módulos temporales encontrados:`, temporaryModules);
+      }
+    }
+
+    // Transformar módulos contratados a formato esperado por el frontend
     const modules = contractedModules.map(module => ({
       id: module.module_key,
       name: module.name || 'Módulo Sin Nombre',
@@ -424,14 +451,40 @@ router.get('/:companyId', async (req, res) => {
       isActive: module.is_active,
       isOperational: module.is_active, // Si está contratado y activo, es operacional
       contractedAt: module.contracted_at,
-      companyId: module.company_id
+      companyId: module.company_id,
+      isTemporary: false
     }));
+
+    // Agregar módulos temporales (ej: auditor-dashboard)
+    const temporaryModuleObjects = temporaryModules.map(moduleId => ({
+      id: moduleId,
+      name: moduleId === 'auditor-dashboard' ? 'Auditoría y Auto-Diagnóstico' : moduleId,
+      description: moduleId === 'auditor-dashboard' ?
+        'Sistema de auditoría y auto-reparación (asignación temporal)' :
+        'Módulo temporal',
+      icon: moduleId === 'auditor-dashboard' ? 'chart-line' : 'wrench',
+      color: moduleId === 'auditor-dashboard' ? '#667eea' : '#666666',
+      category: 'support',
+      price: 0,
+      isContracted: true,
+      isActive: true,
+      isOperational: true,
+      contractedAt: new Date().toISOString(),
+      companyId: parseInt(companyId),
+      isTemporary: true // Marca especial para identificar módulos temporales
+    }));
+
+    // Combinar módulos contratados + temporales
+    const allModules = [...modules, ...temporaryModuleObjects];
+
+    console.log(`🎯 [FINAL] Total módulos: ${allModules.length} (${modules.length} contratados + ${temporaryModuleObjects.length} temporales)`);
 
     res.json({
       success: true,
-      modules,
+      modules: allModules,
       company_id: companyId,
-      total_modules: modules.length
+      total_modules: allModules.length,
+      temporary_modules: temporaryModuleObjects.length
     });
 
   } catch (error) {

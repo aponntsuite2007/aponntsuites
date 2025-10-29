@@ -1,4 +1,5 @@
-// Biometric Consent Module - Professional Legal Compliance
+// Biometric Consent Module - Professional Legal Compliance (Encapsulado en IIFE)
+(function() {
 console.log('🔐 [BIOMETRIC-CONSENT] Módulo de consentimiento biométrico cargado');
 
 // ========================================
@@ -21,7 +22,7 @@ const BIOMETRIC_CONSENT_CONFIG = {
     }
 };
 
-// Variables globales
+// Variables locales del módulo (scope privado)
 let currentUser = null;
 let userConsentStatus = {};
 let pendingBiometricValidation = null;
@@ -898,3 +899,5 @@ window.biometricConsent = {
 };
 
 console.log('✅ [BIOMETRIC-CONSENT] Módulo cargado completamente');
+
+})(); // Cierre del IIFE

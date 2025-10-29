@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "generated_at": "2025-01-20",
   "description": "Registry COMPLETO del sistema APONNT Suite - 45 módulos multi-tenant",
-  "total_modules": 45,
+  "total_modules": 35,
   "modules": [
     {
       "id": "users",
@@ -11,10 +11,28 @@
       "version": "6.0.0",
       "description": "Módulo CORE para crear, editar y gestionar usuarios con biometría, paginación profesional",
       "dependencies": {
-        "required": ["database", "companies"],
-        "optional": ["biometric-enterprise", "departments", "shifts"],
-        "integrates_with": ["attendance", "notifications-enterprise", "medical", "vacation"],
-        "provides_to": ["attendance", "medical", "vacation", "legal", "reports"]
+        "required": [
+          "database",
+          "companies"
+        ],
+        "optional": [
+          "real-biometric-enterprise",
+          "departments",
+          "shifts"
+        ],
+        "integrates_with": [
+          "attendance",
+          "notifications-enterprise",
+          "medical",
+          "vacation"
+        ],
+        "provides_to": [
+          "attendance",
+          "medical",
+          "vacation",
+          "legal",
+          "reports"
+        ]
       },
       "commercial": {
         "is_core": true,
@@ -41,10 +59,26 @@
       "version": "5.0.0",
       "description": "Registro y control de asistencia biométrica con GPS, notificaciones automáticas por llegadas tarde",
       "dependencies": {
-        "required": ["users", "companies", "database"],
-        "optional": ["kiosks", "biometric-enterprise", "shifts", "notifications-enterprise"],
-        "integrates_with": ["medical", "vacation", "dashboard", "legal"],
-        "provides_to": ["reports-advanced", "payroll"]
+        "required": [
+          "users",
+          "companies",
+          "database"
+        ],
+        "optional": [
+          "kiosks-professional",
+          "real-biometric-enterprise",
+          "shifts",
+          "notifications-enterprise"
+        ],
+        "integrates_with": [
+          "medical",
+          "vacation",
+          "dashboard",
+          "legal"
+        ],
+        "provides_to": [
+          "payroll-liquidation"
+        ]
       },
       "commercial": {
         "is_core": true,
@@ -67,9 +101,18 @@
       "version": "3.0.0",
       "description": "Dashboard principal con métricas en tiempo real, cards dinámicos según módulos activos",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["attendance", "medical", "vacation"],
-        "integrates_with": ["ALL"],
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "attendance",
+          "medical",
+          "vacation"
+        ],
+        "integrates_with": [
+          "ALL"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -84,10 +127,19 @@
       "version": "2.0.0",
       "description": "Configuración de empresa, horarios, permisos, parámetros generales",
       "dependencies": {
-        "required": ["companies"],
-        "optional": ["departments", "shifts"],
-        "integrates_with": ["ALL"],
-        "provides_to": ["ALL"]
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "departments",
+          "shifts"
+        ],
+        "integrates_with": [
+          "ALL"
+        ],
+        "provides_to": [
+          "ALL"
+        ]
       },
       "commercial": {
         "is_core": true,
@@ -101,10 +153,17 @@
       "version": "1.0.0",
       "description": "Organización en departamentos/áreas con ubicación GPS y radio de cobertura",
       "dependencies": {
-        "required": ["companies"],
+        "required": [
+          "companies"
+        ],
         "optional": [],
-        "integrates_with": ["users", "attendance"],
-        "provides_to": ["users"]
+        "integrates_with": [
+          "users",
+          "attendance"
+        ],
+        "provides_to": [
+          "users"
+        ]
       },
       "commercial": {
         "is_core": true,
@@ -118,44 +177,20 @@
       "version": "2.0.0",
       "description": "Turnos rotativos, horarios flexibles, asignación por usuario o departamento",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["attendance"],
-        "integrates_with": ["attendance", "users"],
-        "provides_to": ["attendance"]
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
-    },
-    {
-      "id": "biometric",
-      "name": "Biometría Facial Básica",
-      "category": "security",
-      "version": "4.0.0",
-      "description": "Reconocimiento facial básico con Face-API.js y TensorFlow",
-      "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["kiosks"],
-        "integrates_with": ["attendance", "access-control"],
-        "provides_to": ["attendance"]
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
-    },
-    {
-      "id": "biometric-simple",
-      "name": "Biometría Simple (Captura Automática)",
-      "category": "security",
-      "version": "2.0.0",
-      "description": "Sistema profesional con captura automática y feedback visual (Azure compatible)",
-      "dependencies": {
-        "required": ["users", "companies"],
-        "optional": [],
-        "integrates_with": ["attendance", "users"],
-        "provides_to": ["attendance"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "attendance"
+        ],
+        "integrates_with": [
+          "attendance",
+          "users"
+        ],
+        "provides_to": [
+          "attendance"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -169,10 +204,20 @@
       "version": "5.0.0",
       "description": "Tecnologías REALES: Face-API.js, MediaPipe, OpenCV.js, Azure Face API, encriptación AES-256",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["kiosks"],
-        "integrates_with": ["attendance", "access-control"],
-        "provides_to": ["attendance"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "kiosks"
+        ],
+        "integrates_with": [
+          "attendance",
+          "access-control"
+        ],
+        "provides_to": [
+          "attendance"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -186,10 +231,18 @@
       "version": "3.0.0",
       "description": "Módulo dedicado al registro de biometría con validaciones profesionales",
       "dependencies": {
-        "required": ["users"],
-        "optional": ["biometric-enterprise"],
-        "integrates_with": ["users"],
-        "provides_to": ["attendance"]
+        "required": [
+          "users"
+        ],
+        "optional": [
+          "biometric-enterprise"
+        ],
+        "integrates_with": [
+          "users"
+        ],
+        "provides_to": [
+          "attendance"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -203,9 +256,17 @@
       "version": "1.0.0",
       "description": "Sistema legal de consentimientos para uso de datos biométricos (Ley 25.326 Argentina)",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["legal"],
-        "integrates_with": ["biometric-enterprise", "legal"],
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "legal"
+        ],
+        "integrates_with": [
+          "real-biometric-enterprise",
+          "legal"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -220,9 +281,16 @@
       "version": "1.0.0",
       "description": "Sistema de evaluación y auditoría de calidad biométrica",
       "dependencies": {
-        "required": ["users"],
-        "optional": ["biometric-enterprise"],
-        "integrates_with": ["users", "biometric"],
+        "required": [
+          "users"
+        ],
+        "optional": [
+          "biometric-enterprise"
+        ],
+        "integrates_with": [
+          "users",
+          "biometric"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -237,9 +305,17 @@
       "version": "2.0.0",
       "description": "Administración de kioscos con perfiles de hardware (36 perfiles: tablets, phones, enterprise)",
       "dependencies": {
-        "required": ["companies"],
-        "optional": ["biometric-enterprise", "attendance"],
-        "integrates_with": ["attendance", "biometric-enterprise"],
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "real-biometric-enterprise",
+          "attendance"
+        ],
+        "integrates_with": [
+          "attendance",
+          "biometric-enterprise"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -254,10 +330,24 @@
       "version": "5.8.0",
       "description": "Certificados médicos, prescripciones, ausentismos, historial clínico completo",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["notifications-enterprise", "document-management", "art-management"],
-        "integrates_with": ["attendance", "vacation", "dashboard", "legal"],
-        "provides_to": ["reports-advanced", "legal"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "notifications-enterprise",
+          "document-management",
+          "art-management"
+        ],
+        "integrates_with": [
+          "attendance",
+          "vacation",
+          "dashboard",
+          "legal"
+        ],
+        "provides_to": [
+          "legal"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -271,10 +361,20 @@
       "version": "2.0.0",
       "description": "Solicitudes, aprobaciones, balance de vacaciones, tipos regular y extraordinario",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["notifications-enterprise", "dashboard"],
-        "integrates_with": ["attendance", "medical", "payroll"],
-        "provides_to": ["reports-advanced"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "notifications-enterprise",
+          "dashboard"
+        ],
+        "integrates_with": [
+          "attendance",
+          "medical",
+          "payroll-liquidation"
+        ],
+        "provides_to": []
       },
       "commercial": {
         "is_core": false,
@@ -288,10 +388,19 @@
       "version": "2.0.0",
       "description": "Comunicaciones fehacientes, sanciones, compliance, avisos legales",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["notifications-enterprise", "document-management"],
-        "integrates_with": ["medical", "attendance"],
-        "provides_to": ["reports-advanced"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "notifications-enterprise",
+          "document-management"
+        ],
+        "integrates_with": [
+          "medical",
+          "attendance"
+        ],
+        "provides_to": []
       },
       "commercial": {
         "is_core": false,
@@ -305,44 +414,21 @@
       "version": "1.0.0",
       "description": "Registro y seguimiento de sanciones disciplinarias",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["legal", "notifications-enterprise"],
-        "integrates_with": ["legal", "attendance"],
-        "provides_to": ["legal"]
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
-    },
-    {
-      "id": "notifications",
-      "name": "Notificaciones Básicas",
-      "category": "communication",
-      "version": "1.0.0",
-      "description": "Sistema básico de notificaciones push",
-      "dependencies": {
-        "required": ["users", "companies"],
-        "optional": [],
-        "integrates_with": ["ALL"],
-        "provides_to": ["ALL"]
-      },
-      "commercial": {
-        "is_core": true,
-        "standalone": false
-      }
-    },
-    {
-      "id": "notifications-complete",
-      "name": "Notificaciones Completas V2.0",
-      "category": "communication",
-      "version": "2.0.0",
-      "description": "Sistema avanzado: Compliance, SLA, Recursos, Proactivas, Inbox",
-      "dependencies": {
-        "required": ["users", "companies"],
-        "optional": [],
-        "integrates_with": ["ALL"],
-        "provides_to": ["ALL"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "legal",
+          "notifications-enterprise"
+        ],
+        "integrates_with": [
+          "legal",
+          "attendance"
+        ],
+        "provides_to": [
+          "legal"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -356,10 +442,22 @@
       "version": "3.0.0",
       "description": "Workflows multi-nivel, escalamiento automático, templates reutilizables, multi-canal",
       "dependencies": {
-        "required": ["users", "companies"],
+        "required": [
+          "users",
+          "companies"
+        ],
         "optional": [],
-        "integrates_with": ["attendance", "medical", "vacation", "legal", "kiosks", "ALL"],
-        "provides_to": ["ALL"]
+        "integrates_with": [
+          "attendance",
+          "medical",
+          "vacation",
+          "legal",
+          "kiosks-professional",
+          "ALL"
+        ],
+        "provides_to": [
+          "ALL"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -373,9 +471,18 @@
       "version": "1.0.0",
       "description": "Monitoreo de cumplimiento normativo y reglas LCT (Ley de Contrato de Trabajo)",
       "dependencies": {
-        "required": ["companies"],
-        "optional": ["legal", "attendance"],
-        "integrates_with": ["legal", "attendance", "notifications-complete"],
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "legal",
+          "attendance"
+        ],
+        "integrates_with": [
+          "legal",
+          "attendance",
+          "notifications-enterprise"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -390,9 +497,13 @@
       "version": "1.0.0",
       "description": "Tracking de SLAs y métricas de performance",
       "dependencies": {
-        "required": ["companies"],
+        "required": [
+          "companies"
+        ],
         "optional": [],
-        "integrates_with": ["notifications-complete"],
+        "integrates_with": [
+          "notifications-enterprise"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -407,9 +518,15 @@
       "version": "1.0.0",
       "description": "Biblioteca de recursos, documentación y tutoriales",
       "dependencies": {
-        "required": ["companies"],
-        "optional": ["document-management"],
-        "integrates_with": ["notifications-complete"],
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "document-management"
+        ],
+        "integrates_with": [
+          "notifications-enterprise"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -424,48 +541,22 @@
       "version": "1.0.0",
       "description": "Generación de reportes con validez legal para auditorías",
       "dependencies": {
-        "required": ["companies"],
-        "optional": ["legal", "attendance"],
-        "integrates_with": ["legal", "compliance-dashboard"],
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "legal",
+          "attendance"
+        ],
+        "integrates_with": [
+          "legal",
+          "compliance-dashboard"
+        ],
         "provides_to": []
       },
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
-    },
-    {
-      "id": "proactive-notifications",
-      "name": "Notificaciones Proactivas",
-      "category": "communication",
-      "version": "1.0.0",
-      "description": "Sistema de notificaciones preventivas y alertas automáticas",
-      "dependencies": {
-        "required": ["users", "companies"],
-        "optional": [],
-        "integrates_with": ["notifications-complete", "ALL"],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": false
-      }
-    },
-    {
-      "id": "notifications-inbox",
-      "name": "Bandeja de Notificaciones",
-      "category": "communication",
-      "version": "1.0.0",
-      "description": "Inbox centralizado de todas las notificaciones del usuario",
-      "dependencies": {
-        "required": ["users"],
-        "optional": [],
-        "integrates_with": ["notifications-complete", "notifications-enterprise"],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": false
       }
     },
     {
@@ -475,9 +566,19 @@
       "version": "1.0.0",
       "description": "Cálculo y generación de liquidaciones de sueldos basado en asistencias",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["attendance", "vacation", "medical"],
-        "integrates_with": ["attendance", "vacation"],
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "attendance",
+          "vacation",
+          "medical"
+        ],
+        "integrates_with": [
+          "attendance",
+          "vacation"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -492,9 +593,16 @@
       "version": "1.0.0",
       "description": "Cursos, certificaciones, seguimiento de formación del personal",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["document-management"],
-        "integrates_with": ["users"],
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "document-management"
+        ],
+        "integrates_with": [
+          "users"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -509,9 +617,14 @@
       "version": "1.0.0",
       "description": "Tests psicométricos y evaluaciones de personal",
       "dependencies": {
-        "required": ["users", "companies"],
+        "required": [
+          "users",
+          "companies"
+        ],
         "optional": [],
-        "integrates_with": ["users"],
+        "integrates_with": [
+          "users"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -526,9 +639,16 @@
       "version": "1.0.0",
       "description": "Detección de emociones y bienestar del personal",
       "dependencies": {
-        "required": ["users"],
-        "optional": ["biometric-enterprise"],
-        "integrates_with": ["biometric", "users"],
+        "required": [
+          "users"
+        ],
+        "optional": [
+          "biometric-enterprise"
+        ],
+        "integrates_with": [
+          "real-biometric-enterprise",
+          "users"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -543,9 +663,16 @@
       "version": "1.0.0",
       "description": "Registro y control de ingreso de visitantes",
       "dependencies": {
-        "required": ["companies"],
-        "optional": ["biometric", "access-control"],
-        "integrates_with": ["access-control"],
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "real-biometric-enterprise",
+          "access-control"
+        ],
+        "integrates_with": [
+          "access-control"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -560,9 +687,18 @@
       "version": "1.0.0",
       "description": "Gestión de accesos a edificios y áreas restringidas",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["biometric-enterprise", "departments"],
-        "integrates_with": ["biometric", "visitors"],
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "real-biometric-enterprise",
+          "departments"
+        ],
+        "integrates_with": [
+          "real-biometric-enterprise",
+          "visitors"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -577,10 +713,20 @@
       "version": "1.0.0",
       "description": "Almacenamiento y gestión de documentos digitales",
       "dependencies": {
-        "required": ["companies"],
+        "required": [
+          "companies"
+        ],
         "optional": [],
-        "integrates_with": ["medical", "legal", "users"],
-        "provides_to": ["medical", "legal", "resource-center"]
+        "integrates_with": [
+          "medical",
+          "legal",
+          "users"
+        ],
+        "provides_to": [
+          "medical",
+          "legal",
+          "resource-center"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -594,9 +740,16 @@
       "version": "1.0.0",
       "description": "Administración de Aseguradora de Riesgos del Trabajo",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["medical"],
-        "integrates_with": ["medical"],
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "medical"
+        ],
+        "integrates_with": [
+          "medical"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -611,7 +764,9 @@
       "version": "1.0.0",
       "description": "Publicación y gestión de búsquedas de empleo",
       "dependencies": {
-        "required": ["companies"],
+        "required": [
+          "companies"
+        ],
         "optional": [],
         "integrates_with": [],
         "provides_to": []
@@ -628,9 +783,13 @@
       "version": "1.0.0",
       "description": "Administración de licencias y subscripciones del sistema",
       "dependencies": {
-        "required": ["companies"],
+        "required": [
+          "companies"
+        ],
         "optional": [],
-        "integrates_with": ["ALL"],
+        "integrates_with": [
+          "ALL"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -645,31 +804,20 @@
       "version": "1.0.0",
       "description": "Visualización geográfica de empleados en tiempo real",
       "dependencies": {
-        "required": ["users"],
-        "optional": ["attendance", "google-maps-integration"],
-        "integrates_with": ["attendance"],
+        "required": [
+          "users"
+        ],
+        "optional": [
+          "attendance"
+        ],
+        "integrates_with": [
+          "attendance"
+        ],
         "provides_to": []
       },
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
-    },
-    {
-      "id": "google-maps-integration",
-      "name": "Integración Google Maps",
-      "category": "integration",
-      "version": "1.0.0",
-      "description": "Servicios de geolocalización y mapas",
-      "dependencies": {
-        "required": [],
-        "optional": [],
-        "integrates_with": ["employee-map", "attendance", "departments"],
-        "provides_to": ["employee-map", "attendance"]
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": false
       }
     },
     {
@@ -679,9 +827,16 @@
       "version": "1.0.0",
       "description": "Módulo de facturación del ERP SIAC con triple aislación multi-tenant",
       "dependencies": {
-        "required": ["companies", "clientes"],
-        "optional": ["plantillas-fiscales"],
-        "integrates_with": ["clientes"],
+        "required": [
+          "companies",
+          "clientes"
+        ],
+        "optional": [
+          "plantillas-fiscales"
+        ],
+        "integrates_with": [
+          "clientes"
+        ],
         "provides_to": []
       },
       "commercial": {
@@ -696,10 +851,16 @@
       "version": "1.0.0",
       "description": "Módulo de gestión de clientes del ERP SIAC",
       "dependencies": {
-        "required": ["companies"],
+        "required": [
+          "companies"
+        ],
         "optional": [],
-        "integrates_with": ["facturacion"],
-        "provides_to": ["facturacion"]
+        "integrates_with": [
+          "facturacion"
+        ],
+        "provides_to": [
+          "facturacion"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -713,27 +874,16 @@
       "version": "1.0.0",
       "description": "Plantillas fiscales por país para facturación",
       "dependencies": {
-        "required": ["companies"],
+        "required": [
+          "companies"
+        ],
         "optional": [],
-        "integrates_with": ["facturacion"],
-        "provides_to": ["facturacion"]
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
-    },
-    {
-      "id": "network",
-      "name": "Gestión de Red",
-      "category": "infrastructure",
-      "version": "1.0.0",
-      "description": "Administración de red y conectividad",
-      "dependencies": {
-        "required": [],
-        "optional": [],
-        "integrates_with": [],
-        "provides_to": []
+        "integrates_with": [
+          "facturacion"
+        ],
+        "provides_to": [
+          "facturacion"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -747,40 +897,21 @@
       "version": "1.0.0",
       "description": "Gestión de términos, condiciones y políticas",
       "dependencies": {
-        "required": ["companies"],
-        "optional": ["legal"],
-        "integrates_with": ["legal", "biometric-consent"],
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "legal"
+        ],
+        "integrates_with": [
+          "legal",
+          "biometric-consent"
+        ],
         "provides_to": []
       },
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
-    },
-    {
-      "id": "auditor-dashboard",
-      "name": "Auditoría y Auto-Diagnóstico",
-      "category": "system",
-      "version": "1.0.0",
-      "description": "Sistema de auditoría automática, testing, auto-reparación híbrida y análisis de dependencias",
-      "dependencies": {
-        "required": ["database"],
-        "optional": [],
-        "integrates_with": ["ALL"],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": true,
-        "standalone": false
-      },
-      "help": {
-        "quickStart": "1. Click en 'Ejecutar Auditoría'\n2. Espera resultados (1-3 min)\n3. Revisa errores encontrados\n4. Aprueba fixes sugeridos",
-        "commonIssues": [
-          {
-            "problem": "Auditoría no termina nunca",
-            "solution": "Verifica conexión a base de datos y endpoints activos"
-          }
-        ]
       }
     }
   ],

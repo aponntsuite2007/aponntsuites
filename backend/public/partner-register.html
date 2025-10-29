@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Partners - Sistema de Asistencia Biométrico</title>
+
+    <!-- Configuración dinámica de puertos -->
+    <script src="js/port-config.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .register-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .register-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .register-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .register-header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .register-body {
+            padding: 40px 30px;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .step-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #999;
+            transition: all 0.3s;
+        }
+
+        .step-dot.active {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .step-dot.completed {
+            background: #28a745;
+            color: white;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-group label .required {
+            color: #dc3545;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-control.error {
+            border-color: #dc3545;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .success-message {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-message .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .success-message h2 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .success-message p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #721c24;
+        }
+
+        .help-text {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .register-header h1 {
+                font-size: 24px;
+            }
+
+            .register-body {
+                padding: 30px 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <h1>🤝 Registro de Partners Profesionales</h1>
+            <p>Únete a nuestra red de profesionales y ofrece tus servicios a empresas</p>
+        </div>
+
+        <div class="register-body">
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step-dot active" data-step="1">1</div>
+                <div class="step-dot" data-step="2">2</div>
+                <div class="step-dot" data-step="3">3</div>
+            </div>
+
+            <form id="partner-register-form">
+                <!-- Step 1: Información Personal -->
+                <div class="form-step active" data-step="1">
+                    <div class="form-section">
+                        <h3>📋 Información Personal</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nombre <span class="required">*</span></label>
+                                <input type="text" name="firstName" class="form-control" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Apellido <span class="required">*</span></label>
+                                <input type="text" name="lastName" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email <span class="required">*</span></label>
+                                <input type="email" name="email" class="form-control" required />
+                                <div class="help-text">Usarás este email para iniciar sesión</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono <span class="required">*</span></label>
+                                <div class="form-row" style="gap: 8px;">
+                                    <input type="text" id="partner-areaCode" class="form-control" readonly style="width: 80px;" placeholder="+54" />
+                                    <input type="tel" name="phone" id="partner-phone" class="form-control" placeholder="9 11 1234-5678" required style="flex: 1;" />
+                                </div>
+                                <div class="help-text">El código de área se completa automáticamente según el país</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Contraseña <span class="required">*</span></label>
+                            <input type="password" name="password" class="form-control" minlength="6" required />
+                            <div class="help-text">Mínimo 6 caracteres</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Confirmar Contraseña <span class="required">*</span></label>
+                            <input type="password" name="passwordConfirm" class="form-control" required />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Información Profesional -->
+                <div class="form-step" data-step="2">
+                    <div class="form-section">
+                        <h3>💼 Información Profesional</h3>
+
+                        <div class="form-group">
+                            <label>Rol Profesional <span class="required">*</span></label>
+                            <select name="partnerRoleId" class="form-control" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="1">Abogado Laboralista</option>
+                                <option value="2">Médico Laboral</option>
+                                <option value="3">Responsable de Seguridad e Higiene</option>
+                                <option value="4">Coach Empresarial</option>
+                                <option value="5">Auditor Externo</option>
+                                <option value="6">Contador Público</option>
+                                <option value="7">Especialista en RRHH</option>
+                                <option value="8">Técnico en Sistemas Biométricos</option>
+                                <option value="9">Consultor de Compliance</option>
+                                <option value="10">Psicólogo Organizacional</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Empresa (opcional)</label>
+                                <input type="text" name="companyName" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>CUIT/CUIL (opcional)</label>
+                                <input type="text" name="taxId" class="form-control" placeholder="20-12345678-9" />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Años de experiencia <span class="required">*</span></label>
+                                <input type="number" name="yearsExperience" class="form-control" min="0" max="50" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Modalidad de Cobro <span class="required">*</span></label>
+                                <select name="paymentModel" class="form-control" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="per_module_user">Por módulo/usuario</option>
+                                    <option value="per_employee">Por empleado</option>
+                                    <option value="per_company">Por empresa</option>
+                                    <option value="per_service">Por servicio prestado</option>
+                                    <option value="hourly">Por hora</option>
+                                    <option value="monthly">Mensual (retainer)</option>
+                                    <option value="fixed_project">Precio fijo por proyecto</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Bio / Descripción profesional <span class="required">*</span></label>
+                            <textarea name="bio" class="form-control" placeholder="Cuéntanos sobre tu experiencia, especialidades y qué servicios ofreces..." required></textarea>
+                            <div class="help-text">Esta descripción será visible en tu perfil público</div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>País <span class="required">*</span></label>
+                                <select name="country" id="partner-country" class="form-control" onchange="loadPartnerProvinces()" required>
+                                    <option value="">Seleccionar país...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Provincia <span class="required">*</span></label>
+                                <select name="province" id="partner-province" class="form-control" onchange="loadPartnerCities()" required>
+                                    <option value="">Seleccionar provincia...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Ciudad <span class="required">*</span></label>
+                                <select name="city" id="partner-city" class="form-control" onchange="loadPartnerPostalCode()" required>
+                                    <option value="">Seleccionar ciudad...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Código Postal</label>
+                                <input type="text" name="postalCode" id="partner-postalCode" class="form-control" readonly />
+                                <div class="help-text">Se completa automáticamente según la ciudad</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Dirección</label>
+                            <input type="text" name="address" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <button type="button" class="btn btn-secondary" onclick="getGeolocation()">
+                                📍 Obtener mi ubicación precisa
+                            </button>
+                            <div class="help-text">Esto ayudará a las empresas a encontrarte según tu ubicación real</div>
+                            <input type="hidden" name="latitude" id="partner-latitude" />
+                            <input type="hidden" name="longitude" id="partner-longitude" />
+                            <div id="geolocation-status" class="help-text" style="margin-top: 10px; color: #28a745;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Consentimiento y Envío -->
+                <div class="form-step" data-step="3">
+                    <div class="form-section">
+                        <h3>✅ Consentimiento y Términos</h3>
+
+                        <div class="info-box">
+                            <p><strong>Proceso de Aprobación:</strong></p>
+                            <p>Tu solicitud será revisada por nuestro equipo administrativo. Recibirás una notificación por email cuando tu perfil sea aprobado y puedas comenzar a ofrecer tus servicios.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" name="termsAccepted" id="termsAccepted" required />
+                                <label for="termsAccepted">
+                                    Acepto los <a href="/terminos" target="_blank">términos y condiciones</a> y la <a href="/privacidad" target="_blank">política de privacidad</a> <span class="required">*</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" name="dataConsent" id="dataConsent" required />
+                                <label for="dataConsent">
+                                    Autorizo el tratamiento de mis datos personales según la Ley 25.326 de Protección de Datos Personales <span class="required">*</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" name="marketingConsent" id="marketingConsent" />
+                                <label for="marketingConsent">
+                                    Deseo recibir novedades y oportunidades de negocio por email
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Message (hidden initially) -->
+                <div class="form-step" data-step="success" style="display: none;">
+                    <div class="success-message">
+                        <div class="icon">✅</div>
+                        <h2>¡Registro Exitoso!</h2>
+                        <p>Tu solicitud ha sido enviada correctamente. Nuestro equipo revisará tu perfil y te notificaremos por email cuando sea aprobado.</p>
+                        <p>Por favor, revisa tu bandeja de entrada y carpeta de spam.</p>
+                        <a href="/" class="btn btn-primary">Volver al inicio</a>
+                    </div>
+                </div>
+
+                <!-- Error Message Container -->
+                <div id="error-container"></div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="btn-prev" style="display: none;">
+                        ← Anterior
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btn-next">
+                        Siguiente →
+                    </button>
+                    <button type="submit" class="btn btn-success" id="btn-submit" style="display: none;">
+                        ✓ Enviar Solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            let currentStep = 1;
+            const totalSteps = 3;
+            const form = document.getElementById('partner-register-form');
+            const formSteps = document.querySelectorAll('.form-step');
+            const stepDots = document.querySelectorAll('.step-dot');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const btnSubmit = document.getElementById('btn-submit');
+            const errorContainer = document.getElementById('error-container');
+
+            // Geographical data - Reused from panel-administrativo.html
+            const geographicalData = {
+                Argentina: {'Buenos Aires': {'Ciudad Autónoma de Buenos Aires': '1000', 'La Plata': '1900', 'Mar del Plata': '7600'}, 'Córdoba': {'Córdoba': '5000', 'Villa Carlos Paz': '5152'}, 'Santa Fe': {'Santa Fe': '3000', 'Rosario': '2000'}},
+                Bolivia: {'La Paz': {'La Paz': '0001', 'El Alto': '0002'}, 'Santa Cruz': {'Santa Cruz de la Sierra': '1001'}},
+                Brasil: {'São Paulo': {'São Paulo': '01000-000', 'Campinas': '13000-000'}, 'Rio de Janeiro': {'Rio de Janeiro': '20000-000'}},
+                Chile: {'Región Metropolitana': {'Santiago': '8320000', 'Puente Alto': '8150000'}, 'Valparaíso': {'Valparaíso': '2340000', 'Viña del Mar': '2520000'}},
+                Colombia: {'Cundinamarca': {'Bogotá': '110111', 'Soacha': '250002'}, 'Antioquia': {'Medellín': '050001', 'Bello': '051051'}},
+                Ecuador: {'Pichincha': {'Quito': '170101', 'Cayambe': '170102'}, 'Guayas': {'Guayaquil': '090101', 'Durán': '090201'}},
+                México: {'Ciudad de México': {'Cuauhtémoc': '06000', 'Benito Juárez': '03100'}, 'Jalisco': {'Guadalajara': '44100', 'Zapopan': '45010'}},
+                Paraguay: {'Central': {'Asunción': '1101', 'San Lorenzo': '2160'}, 'Alto Paraná': {'Ciudad del Este': '7000'}},
+                Perú: {'Lima': {'Lima': '15001', 'Callao': '07001'}, 'Arequipa': {'Arequipa': '04001'}},
+                Uruguay: {'Montevideo': {'Montevideo': '11000', 'Ciudad de la Costa': '15000'}, 'Canelones': {'Canelones': '90100'}},
+                Venezuela: {'Distrito Capital': {'Caracas': '1010'}, 'Miranda': {'Los Teques': '1201'}}
+            };
+
+            // Area codes by country
+            const areaCodes = {
+                'Argentina': '+54', 'Bolivia': '+591', 'Brasil': '+55', 'Chile': '+56',
+                'Colombia': '+57', 'Ecuador': '+593', 'México': '+52', 'Paraguay': '+595',
+                'Perú': '+51', 'Uruguay': '+598', 'Venezuela': '+58'
+            };
+
+            // Load countries on page load
+            window.addEventListener('DOMContentLoaded', () => {
+                const countrySelect = document.getElementById('partner-country');
+                Object.keys(geographicalData).forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country;
+                    option.textContent = country;
+                    countrySelect.appendChild(option);
+                });
+            });
+
+            // Load provinces when country changes
+            window.loadPartnerProvinces = function() {
+                const countrySelect = document.getElementById('partner-country');
+                const provinceSelect = document.getElementById('partner-province');
+                const citySelect = document.getElementById('partner-city');
+                const postalCodeInput = document.getElementById('partner-postalCode');
+                const areaCodeInput = document.getElementById('partner-areaCode');
+
+                const selectedCountry = countrySelect.value;
+
+                // Clear dependent selects
+                provinceSelect.innerHTML = '<option value="">Seleccionar provincia...</option>';
+                citySelect.innerHTML = '<option value="">Seleccionar ciudad...</option>';
+                postalCodeInput.value = '';
+
+                // Update area code
+                if (selectedCountry && areaCodes[selectedCountry]) {
+                    areaCodeInput.value = areaCodes[selectedCountry];
+                } else {
+                    areaCodeInput.value = '';
+                }
+
+                // Load provinces
+                if (selectedCountry && geographicalData[selectedCountry]) {
+                    Object.keys(geographicalData[selectedCountry]).forEach(province => {
+                        const option = document.createElement('option');
+                        option.value = province;
+                        option.textContent = province;
+                        provinceSelect.appendChild(option);
+                    });
+                }
+            };
+
+            // Load cities when province changes
+            window.loadPartnerCities = function() {
+                const countrySelect = document.getElementById('partner-country');
+                const provinceSelect = document.getElementById('partner-province');
+                const citySelect = document.getElementById('partner-city');
+                const postalCodeInput = document.getElementById('partner-postalCode');
+
+                const selectedCountry = countrySelect.value;
+                const selectedProvince = provinceSelect.value;
+
+                // Clear city select
+                citySelect.innerHTML = '<option value="">Seleccionar ciudad...</option>';
+                postalCodeInput.value = '';
+
+                if (selectedCountry && selectedProvince &&
+                    geographicalData[selectedCountry] &&
+                    geographicalData[selectedCountry][selectedProvince]) {
+
+                    Object.keys(geographicalData[selectedCountry][selectedProvince]).forEach(cityName => {
+                        const option = document.createElement('option');
+                        option.value = cityName;
+                        option.textContent = cityName;
+                        citySelect.appendChild(option);
+                    });
+                }
+            };
+
+            // Load postal code when city changes
+            window.loadPartnerPostalCode = function() {
+                const countrySelect = document.getElementById('partner-country');
+                const provinceSelect = document.getElementById('partner-province');
+                const citySelect = document.getElementById('partner-city');
+                const postalCodeInput = document.getElementById('partner-postalCode');
+
+                const selectedCountry = countrySelect.value;
+                const selectedProvince = provinceSelect.value;
+                const selectedCity = citySelect.value;
+
+                if (selectedCountry && selectedProvince && selectedCity &&
+                    geographicalData[selectedCountry] &&
+                    geographicalData[selectedCountry][selectedProvince] &&
+                    geographicalData[selectedCountry][selectedProvince][selectedCity]) {
+
+                    postalCodeInput.value = geographicalData[selectedCountry][selectedProvince][selectedCity];
+                } else {
+                    postalCodeInput.value = '';
+                }
+            };
+
+            // Geolocation function
+            window.getGeolocation = function() {
+                const statusDiv = document.getElementById('geolocation-status');
+                const latInput = document.getElementById('partner-latitude');
+                const lonInput = document.getElementById('partner-longitude');
+
+                if (!navigator.geolocation) {
+                    statusDiv.textContent = '❌ Tu navegador no soporta geolocalización';
+                    statusDiv.style.color = '#dc3545';
+                    return;
+                }
+
+                statusDiv.textContent = '🔄 Obteniendo ubicación...';
+                statusDiv.style.color = '#667eea';
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        latInput.value = position.coords.latitude;
+                        lonInput.value = position.coords.longitude;
+                        statusDiv.textContent = `✅ Ubicación obtenida: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                        statusDiv.style.color = '#28a745';
+                    },
+                    (error) => {
+                        let errorMsg = '❌ Error al obtener ubicación';
+                        if (error.code === error.PERMISSION_DENIED) {
+                            errorMsg = '❌ Permiso denegado. Habilita la geolocalización en tu navegador.';
+                        }
+                        statusDiv.textContent = errorMsg;
+                        statusDiv.style.color = '#dc3545';
+                    }
+                );
+            };
+
+            // Navigation
+            function showStep(step) {
+                formSteps.forEach(s => s.classList.remove('active'));
+                stepDots.forEach(d => d.classList.remove('active'));
+
+                const currentStepEl = document.querySelector(`.form-step[data-step="${step}"]`);
+                if (currentStepEl) currentStepEl.classList.add('active');
+
+                const currentDot = document.querySelector(`.step-dot[data-step="${step}"]`);
+                if (currentDot) currentDot.classList.add('active');
+
+                // Mark previous steps as completed
+                stepDots.forEach(d => {
+                    if (parseInt(d.dataset.step) < step) {
+                        d.classList.add('completed');
+                    } else {
+                        d.classList.remove('completed');
+                    }
+                });
+
+                // Update buttons
+                btnPrev.style.display = step > 1 ? 'block' : 'none';
+                btnNext.style.display = step < totalSteps ? 'block' : 'none';
+                btnSubmit.style.display = step === totalSteps ? 'block' : 'none';
+
+                currentStep = step;
+            }
+
+            function validateStep(step) {
+                const stepElement = document.querySelector(`.form-step[data-step="${step}"]`);
+                const requiredFields = stepElement.querySelectorAll('[required]');
+                let isValid = true;
+                let firstInvalidField = null;
+
+                requiredFields.forEach(field => {
+                    field.classList.remove('error');
+
+                    if (!field.value.trim()) {
+                        field.classList.add('error');
+                        isValid = false;
+                        if (!firstInvalidField) firstInvalidField = field;
+                    }
+
+                    // Special validation for password confirmation
+                    if (field.name === 'passwordConfirm' && step === 1) {
+                        const password = form.querySelector('[name="password"]').value;
+                        if (field.value !== password) {
+                            field.classList.add('error');
+                            showError('Las contraseñas no coinciden');
+                            isValid = false;
+                            if (!firstInvalidField) firstInvalidField = field;
+                        }
+                    }
+
+                    // Email validation
+                    if (field.type === 'email' && field.value) {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(field.value)) {
+                            field.classList.add('error');
+                            showError('Email inválido');
+                            isValid = false;
+                            if (!firstInvalidField) firstInvalidField = field;
+                        }
+                    }
+                });
+
+                if (!isValid && firstInvalidField) {
+                    firstInvalidField.focus();
+                    if (!errorContainer.textContent) {
+                        showError('Por favor, completa todos los campos requeridos');
+                    }
+                }
+
+                return isValid;
+            }
+
+            function showError(message) {
+                errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+                setTimeout(() => {
+                    errorContainer.innerHTML = '';
+                }, 5000);
+            }
+
+            btnNext.addEventListener('click', () => {
+                if (validateStep(currentStep)) {
+                    if (currentStep < totalSteps) {
+                        showStep(currentStep + 1);
+                    }
+                }
+            });
+
+            btnPrev.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    showStep(currentStep - 1);
+                }
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                if (!validateStep(currentStep)) {
+                    return;
+                }
+
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = 'Enviando...';
+
+                try {
+                    const formData = new FormData(form);
+                    const areaCode = document.getElementById('partner-areaCode').value;
+                    const phone = formData.get('phone');
+                    const fullPhone = areaCode ? `${areaCode} ${phone}` : phone;
+
+                    const data = {
+                        email: formData.get('email'),
+                        password: formData.get('password'),
+                        firstName: formData.get('firstName'),
+                        lastName: formData.get('lastName'),
+                        phone: fullPhone,
+                        partnerRoleId: parseInt(formData.get('partnerRoleId')),
+                        companyName: formData.get('companyName') || null,
+                        taxId: formData.get('taxId') || null,
+                        yearsExperience: parseInt(formData.get('yearsExperience')),
+                        paymentModel: formData.get('paymentModel'),
+                        bio: formData.get('bio'),
+                        country: formData.get('country'),
+                        city: formData.get('city'),
+                        province: formData.get('province'),
+                        postalCode: formData.get('postalCode') || null,
+                        address: formData.get('address') || null,
+                        latitude: formData.get('latitude') || null,
+                        longitude: formData.get('longitude') || null,
+                        consentText: 'Acepto términos y condiciones, política de privacidad, y autorizo el tratamiento de datos personales',
+                        consentVersion: '1.0'
+                    };
+
+                    const response = await fetch(`${window.API_BASE_URL || ''}/api/partners/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Error al registrar');
+                    }
+
+                    // Show success message
+                    formSteps.forEach(s => s.style.display = 'none');
+                    document.querySelector('.form-step[data-step="success"]').style.display = 'block';
+                    document.querySelector('.form-actions').style.display = 'none';
+                    document.querySelector('.step-indicator').style.display = 'none';
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError(error.message || 'Error al enviar el registro. Por favor, intenta nuevamente.');
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = '✓ Enviar Solicitud';
+                }
+            });
+
+            // Initialize
+            showStep(1);
+        })();
+    </script>
+</body>
+</html>

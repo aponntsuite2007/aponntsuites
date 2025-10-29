@@ -26,8 +26,8 @@ function formatUserForFrontend(user) {
   const userData = user.toJSON ? user.toJSON() : user;
 
   const formatted = {
-    id: userData.id,
-    user_id: userData.user_id || userData.id, // Agregar user_id explícitamente
+    id: userData.user_id, // FIX: User model's primary key is user_id (UUID), not id
+    user_id: userData.user_id, // Keep user_id explicitly for consistency
     employeeId: userData.employeeId,  // camelCase real del modelo
     firstName: userData.firstName,   // camelCase real del modelo
     lastName: userData.lastName,     // camelCase real del modelo
@@ -210,7 +210,7 @@ router.get('/:id', auth, async (req, res) => {
   try {
     const user = await User.findOne({
       where: {
-        id: req.params.id
+        user_id: req.params.id  // ✅ FIX: Primary key is user_id (UUID), not id (integer)
       },
       attributes: { exclude: ['password'] }
     });

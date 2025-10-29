@@ -58,6 +58,7 @@ module.exports = (database) => {
       const E2ECollector = require('../auditor/collectors/E2ECollector');
       const RealUserExperienceCollector = require('../auditor/collectors/RealUserExperienceCollector');
       const AdvancedUserSimulationCollector = require('../auditor/collectors/AdvancedUserSimulationCollector');
+      const EmployeeProfileCollector = require('../auditor/collectors/EmployeeProfileCollector');
       const HybridHealer = require('../auditor/healers/HybridHealer');
       const AdvancedHealer = require('../auditor/healers/AdvancedHealer');
 
@@ -88,6 +89,9 @@ module.exports = (database) => {
       auditorEngine.registerCollector('integration', new IntegrationCollector(database, systemRegistry));
       // ✅ HABILITADO: AndroidKioskCollector para auditar APK
       auditorEngine.registerCollector('android-kiosk', new AndroidKioskCollector(database, systemRegistry));
+
+      // ✅ HABILITADO: EmployeeProfileCollector - Tests de perfil de empleado desde frontend
+      auditorEngine.registerCollector('employee-profile', new EmployeeProfileCollector(database, systemRegistry));
 
       // ⚠️ DESHABILITADOS: Los siguientes collectors abren navegadores adicionales (múltiples Chrome)
       // Descomentar solo si se necesitan tests E2E/UX avanzados

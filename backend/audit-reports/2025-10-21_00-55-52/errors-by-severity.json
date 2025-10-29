@@ -1,0 +1,33 @@
+{
+  "critical": [],
+  "high": [],
+  "medium": [
+    {
+      "module": "dashboard",
+      "test": "Frontend CRUD - Dashboard Principal",
+      "error": "3 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Dashboard Principal no carga",
+            "suggestion": "Verificar función loadDashboard() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Dashboard Principal\" no funciona",
+            "suggestion": "Verificar onclick=\"openAdddashboardModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loaddashboard() esté poblando la tabla correctamente"
+          }
+        ]
+      },
+      "logId": "bfa3ba86-2b01-4a25-bcd5-2a6c14136add",
+      "severity": "medium"
+    }
+  ],
+  "low": []
+}

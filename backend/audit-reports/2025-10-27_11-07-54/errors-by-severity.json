@@ -1,0 +1,585 @@
+{
+  "critical": [],
+  "high": [],
+  "medium": [
+    {
+      "module": "payroll-liquidation",
+      "test": "Frontend CRUD - Liquidación de Sueldos",
+      "error": "9 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Liquidación de Sueldos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddpayroll-liquidationModal()\" en el HTML"
+          },
+          {
+            "test": "CRUD - Create",
+            "error": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button:contains(\"Agregar\"), button[onclick*=\"Add\"], button[onclick*=\"add\"]' is not a valid selector.",
+            "suggestion": "Revisar consola del navegador para ver errores JavaScript"
+          },
+          {
+            "test": "CRUD - Read",
+            "error": "Registro con ID undefined no encontrado en la lista",
+            "suggestion": "Verificar que la función loadpayroll-liquidation() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "CRUD - Update",
+            "error": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button:contains(\"Guardar\"), button[onclick*=\"save\"]' is not a valid selector.",
+            "suggestion": "Revisar consola del navegador"
+          },
+          {
+            "test": "CRUD - Delete",
+            "error": "No se encontró botón de eliminar",
+            "suggestion": "Agregar botón con onclick=\"deletepayroll-liquidation(id)\""
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadpayroll-liquidation() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "HTTP Errors",
+            "error": "500 Internal Server Error - http://localhost:9998/api/v1/users/undefined",
+            "suggestion": "Verificar autenticación y permisos para: http://localhost:9998/api/v1/users/undefined"
+          },
+          {
+            "test": "HTTP Errors",
+            "error": "500 Internal Server Error - http://localhost:9998/api/resources/dashboard",
+            "suggestion": "Verificar autenticación y permisos para: http://localhost:9998/api/resources/dashboard"
+          },
+          {
+            "test": "HTTP Errors",
+            "error": "500 Internal Server Error - http://localhost:9998/api/audit-reports/history?limit=50",
+            "suggestion": "Verificar autenticación y permisos para: http://localhost:9998/api/audit-reports/history?limit=50"
+          },
+          {
+            "test": "Console Errors",
+            "error": "410 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Liquidación de Sueldos"
+          },
+          {
+            "test": "Network Errors",
+            "error": "5 requests fallaron",
+            "suggestion": "Verificar conectividad y endpoints del módulo Liquidación de Sueldos"
+          }
+        ],
+        "http_errors": [
+          {
+            "url": "http://localhost:9998/api/v1/users/undefined",
+            "status": 500,
+            "statusText": "Internal Server Error"
+          },
+          {
+            "url": "http://localhost:9998/api/resources/dashboard",
+            "status": 500,
+            "statusText": "Internal Server Error"
+          },
+          {
+            "url": "http://localhost:9998/api/audit-reports/history?limit=50",
+            "status": 500,
+            "statusText": "Internal Server Error"
+          }
+        ],
+        "page_errors": [
+          {
+            "file": "unknown",
+            "line": null,
+            "stack": "SyntaxError: Unexpected token ')'",
+            "column": null,
+            "message": "Unexpected token ')'",
+            "parsedStack": []
+          },
+          {
+            "file": "unknown",
+            "line": null,
+            "stack": "SyntaxError: Unexpected token 'export'",
+            "column": null,
+            "message": "Unexpected token 'export'",
+            "parsedStack": []
+          },
+          {
+            "file": "unknown",
+            "line": null,
+            "stack": "SyntaxError: Unexpected token ')'",
+            "column": null,
+            "message": "Unexpected token ')'",
+            "parsedStack": []
+          },
+          {
+            "file": "unknown",
+            "line": null,
+            "stack": "SyntaxError: Unexpected token 'export'",
+            "column": null,
+            "message": "Unexpected token 'export'",
+            "parsedStack": []
+          },
+          {
+            "file": "unknown",
+            "line": null,
+            "stack": "SyntaxError: Unexpected token ')'",
+            "column": null,
+            "message": "Unexpected token ')'",
+            "parsedStack": []
+          }
+        ],
+        "console_errors": [
+          {
+            "url": "http://localhost:9998/favicon.ico",
+            "file": "favicon.ico",
+            "line": null,
+            "column": null,
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          },
+          {
+            "url": "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/tiny_face_detector_model-weights_manifest.json",
+            "file": "tiny_face_detector_model-weights_manifest.json",
+            "line": null,
+            "column": null,
+            "message": "Failed to load resource: the server responded with a status of 404 ()"
+          },
+          {
+            "url": "http://localhost:9998/js/modules/biometric.js",
+            "file": "modules/biometric.js",
+            "line": 53,
+            "column": 20,
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error"
+          },
+          {
+            "url": "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/face_landmark_68_model-weights_manifest.json",
+            "file": "face_landmark_68_model-weights_manifest.json",
+            "line": null,
+            "column": null,
+            "message": "Failed to load resource: the server responded with a status of 404 ()"
+          },
+          {
+            "url": "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/tiny_face_detector_model-weights_manifest.json",
+            "file": "tiny_face_detector_model-weights_manifest.json",
+            "line": null,
+            "column": null,
+            "message": "Failed to load resource: the server responded with a status of 404 ()"
+          }
+        ],
+        "network_errors": [
+          {
+            "url": "http://localhost:9998/js/modules/real-biometric-enterprise.js?v=1761573702234",
+            "type": "network",
+            "error": "net::ERR_ABORTED",
+            "category": "network-unknown",
+            "severity": "medium",
+            "timestamp": "2025-10-27T14:01:42.272Z"
+          },
+          {
+            "url": "http://localhost:9998/js/modules/professional-biometric-registration.js?v=1761573714279",
+            "type": "network",
+            "error": "net::ERR_ABORTED",
+            "category": "network-unknown",
+            "severity": "medium",
+            "timestamp": "2025-10-27T14:01:54.547Z"
+          },
+          {
+            "url": "http://localhost:9998/js/modules/medical.js?v=1761573759895",
+            "type": "network",
+            "error": "net::ERR_ABORTED",
+            "category": "network-unknown",
+            "severity": "medium",
+            "timestamp": "2025-10-27T14:02:40.167Z"
+          },
+          {
+            "url": "http://localhost:9998/js/modules/vacation.js?v=1761573770875",
+            "type": "network",
+            "error": "net::ERR_ABORTED",
+            "category": "network-unknown",
+            "severity": "medium",
+            "timestamp": "2025-10-27T14:02:51.149Z"
+          },
+          {
+            "url": "http://localhost:9998/js/modules/legal.js?v=1761573783262",
+            "type": "network",
+            "error": "net::ERR_ABORTED",
+            "category": "network-unknown",
+            "severity": "medium",
+            "timestamp": "2025-10-27T14:03:03.281Z"
+          }
+        ]
+      },
+      "logId": "9c3f91e4-616c-4aff-91a0-e67c75080cf3",
+      "severity": "medium"
+    },
+    {
+      "module": "users",
+      "test": "Frontend CRUD - Gestión de Usuarios",
+      "error": "7 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Usuarios\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddusersModal()\" en el HTML"
+          },
+          {
+            "test": "CRUD - Create",
+            "error": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button:contains(\"Agregar\"), button[onclick*=\"Add\"], button[onclick*=\"add\"]' is not a valid selector.",
+            "suggestion": "Revisar consola del navegador para ver errores JavaScript"
+          },
+          {
+            "test": "CRUD - Read",
+            "error": "Registro con ID undefined no encontrado en la lista",
+            "suggestion": "Verificar que la función loadusers() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "CRUD - Update",
+            "error": "No se encontró botón de editar",
+            "suggestion": "Agregar botón con onclick=\"editusers(id)\""
+          },
+          {
+            "test": "Row Buttons",
+            "error": "Node is either not clickable or not an Element",
+            "suggestion": "Revisar errores JavaScript en consola del navegador"
+          },
+          {
+            "test": "HTTP Errors",
+            "error": "500 Internal Server Error - http://localhost:9998/api/v1/users/undefined",
+            "suggestion": "Verificar autenticación y permisos para: http://localhost:9998/api/v1/users/undefined"
+          },
+          {
+            "test": "Console Errors",
+            "error": "145 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Usuarios"
+          }
+        ],
+        "http_errors": [
+          {
+            "url": "http://localhost:9998/api/v1/users/undefined",
+            "status": 500,
+            "statusText": "Internal Server Error"
+          }
+        ],
+        "page_errors": [
+          {
+            "file": "unknown",
+            "line": null,
+            "stack": "SyntaxError: Unexpected token ')'",
+            "column": null,
+            "message": "Unexpected token ')'",
+            "parsedStack": []
+          },
+          {
+            "file": "unknown",
+            "line": null,
+            "stack": "SyntaxError: Unexpected token 'export'",
+            "column": null,
+            "message": "Unexpected token 'export'",
+            "parsedStack": []
+          },
+          {
+            "file": "unknown",
+            "line": null,
+            "stack": "SyntaxError: Unexpected token ')'",
+            "column": null,
+            "message": "Unexpected token ')'",
+            "parsedStack": []
+          },
+          {
+            "file": "unknown",
+            "line": null,
+            "stack": "SyntaxError: Unexpected token 'export'",
+            "column": null,
+            "message": "Unexpected token 'export'",
+            "parsedStack": []
+          }
+        ],
+        "console_errors": [
+          {
+            "url": "http://localhost:9998/favicon.ico",
+            "file": "favicon.ico",
+            "line": null,
+            "column": null,
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          },
+          {
+            "url": "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/tiny_face_detector_model-weights_manifest.json",
+            "file": "tiny_face_detector_model-weights_manifest.json",
+            "line": null,
+            "column": null,
+            "message": "Failed to load resource: the server responded with a status of 404 ()"
+          },
+          {
+            "url": "http://localhost:9998/js/modules/biometric.js",
+            "file": "modules/biometric.js",
+            "line": 53,
+            "column": 20,
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error"
+          },
+          {
+            "url": "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/face_landmark_68_model-weights_manifest.json",
+            "file": "face_landmark_68_model-weights_manifest.json",
+            "line": null,
+            "column": null,
+            "message": "Failed to load resource: the server responded with a status of 404 ()"
+          },
+          {
+            "url": "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/tiny_face_detector_model-weights_manifest.json",
+            "file": "tiny_face_detector_model-weights_manifest.json",
+            "line": null,
+            "column": null,
+            "message": "Failed to load resource: the server responded with a status of 404 ()"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "03138712-8c7e-4bf0-be5c-d0d97ce821ff",
+      "severity": "medium"
+    }
+  ],
+  "low": [
+    {
+      "module": "professional-biometric-registration",
+      "test": "Frontend CRUD - Registro Biométrico Profesional",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "feef59aa-c99c-4811-8d0a-78c8b15a8036",
+      "severity": "low"
+    },
+    {
+      "module": "job-postings",
+      "test": "Frontend CRUD - Búsquedas Laborales",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "fb1cc325-f1b6-42d9-9331-e51697ffcd52",
+      "severity": "low"
+    },
+    {
+      "module": "real-biometric-enterprise",
+      "test": "Frontend CRUD - Biometría Enterprise (Real + Verificable)",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "efff8156-4ae4-46f7-aa11-f9f08ec719ab",
+      "severity": "low"
+    },
+    {
+      "module": "art-management",
+      "test": "Frontend CRUD - Gestión de ART",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "e09042e8-18fc-483a-9010-f5dfa30aa3da",
+      "severity": "low"
+    },
+    {
+      "module": "licensing-management",
+      "test": "Frontend CRUD - Gestión de Licencias",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "dc719267-a999-4c09-bd2a-b771a5b5fef4",
+      "severity": "low"
+    },
+    {
+      "module": "compliance-dashboard",
+      "test": "Frontend CRUD - Dashboard de Cumplimiento",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "d4a175a7-40a2-4135-b92d-efc7b489e2e0",
+      "severity": "low"
+    },
+    {
+      "module": "psychological-assessment",
+      "test": "Frontend CRUD - Evaluación Psicológica",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "d35b1a36-5129-4f46-b49f-d227839518ac",
+      "severity": "low"
+    },
+    {
+      "module": "biometric-consent",
+      "test": "Frontend CRUD - Consentimientos Biométricos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "d0d23a65-a9b1-477f-b331-a434a5356e59",
+      "severity": "low"
+    },
+    {
+      "module": "sla-tracking",
+      "test": "Frontend CRUD - Seguimiento de SLA",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "b43858d2-6f14-480f-97fc-3bba1c4ef33a",
+      "severity": "low"
+    },
+    {
+      "module": "kiosks-professional",
+      "test": "Frontend CRUD - Gestión de Kioscos Biométricos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "b193f14b-d97c-4168-a22b-651f3029f42e",
+      "severity": "low"
+    },
+    {
+      "module": "attendance",
+      "test": "Frontend CRUD - Control de Asistencia",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "9478605f-cca6-48c5-a181-78a4df4aefe9",
+      "severity": "low"
+    },
+    {
+      "module": "document-management",
+      "test": "Frontend CRUD - Gestión Documental",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "93190800-4ce5-4ad7-9984-57185921e3e7",
+      "severity": "low"
+    },
+    {
+      "module": "training-management",
+      "test": "Frontend CRUD - Gestión de Capacitaciones",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "916d4e96-ec08-4a97-b42a-3fcc89ad9349",
+      "severity": "low"
+    },
+    {
+      "module": "departments",
+      "test": "Frontend CRUD - Departamentos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "89e38e3c-2861-40c0-82a2-5d04e30ea13d",
+      "severity": "low"
+    },
+    {
+      "module": "medical",
+      "test": "Frontend CRUD - Gestión Médica",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "7cae214c-dafe-4625-aac6-c2c79dcbb66a",
+      "severity": "low"
+    },
+    {
+      "module": "vacation",
+      "test": "Frontend CRUD - Gestión de Vacaciones",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "6a653a3d-d035-4314-a26c-4c55c53dfeac",
+      "severity": "low"
+    },
+    {
+      "module": "emotional-analysis",
+      "test": "Frontend CRUD - Análisis Emocional",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "679d1bf0-6487-4dc5-927e-837fed5378c8",
+      "severity": "low"
+    },
+    {
+      "module": "evaluacion-biometrica",
+      "test": "Frontend CRUD - Evaluación Biométrica",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "62aab868-b89f-4d07-a511-b1b30ee9cdc8",
+      "severity": "low"
+    },
+    {
+      "module": "plantillas-fiscales",
+      "test": "Frontend CRUD - Plantillas Fiscales",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "5fcfab28-d532-4416-b1f3-99cea12fe250",
+      "severity": "low"
+    },
+    {
+      "module": "employee-map",
+      "test": "Frontend CRUD - Mapa de Empleados",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "56b91836-a7be-4046-924e-1172ed78aed3",
+      "severity": "low"
+    },
+    {
+      "module": "shifts",
+      "test": "Frontend CRUD - Gestión de Turnos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "4ff779d0-60f1-498b-94c6-c0aa97c4c2a5",
+      "severity": "low"
+    },
+    {
+      "module": "legal",
+      "test": "Frontend CRUD - Gestión Legal",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "4c59f38d-9e6c-4837-bb32-2b4665499c1c",
+      "severity": "low"
+    },
+    {
+      "module": "access-control",
+      "test": "Frontend CRUD - Control de Accesos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "4bb4d6d9-5845-43ea-bb32-3c829ff18db9",
+      "severity": "low"
+    },
+    {
+      "module": "clientes",
+      "test": "Frontend CRUD - Gestión de Clientes (SIAC)",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "4a8a5748-a4f3-45b5-8216-b1861a8f02b1",
+      "severity": "low"
+    },
+    {
+      "module": "resource-center",
+      "test": "Frontend CRUD - Centro de Recursos",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "3fa0e8a8-45cf-4468-939b-ba08b72572f7",
+      "severity": "low"
+    },
+    {
+      "module": "audit-reports",
+      "test": "Frontend CRUD - Reportes de Auditoría",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "38f50fff-855c-490a-a8b1-4d28716f30ff",
+      "severity": "low"
+    },
+    {
+      "module": "sanctions-management",
+      "test": "Frontend CRUD - Gestión de Sanciones",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "2b92c611-6f1d-408f-928f-c61a2ec25c58",
+      "severity": "low"
+    },
+    {
+      "module": "facturacion",
+      "test": "Frontend CRUD - Facturación (SIAC ERP)",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "22700c34-e008-4585-93f5-f2e14ae7dea1",
+      "severity": "low"
+    },
+    {
+      "module": "terms-conditions",
+      "test": "Frontend CRUD - Términos y Condiciones",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "1c454944-9a12-4b39-8c16-eeeafdf8db09",
+      "severity": "low"
+    },
+    {
+      "module": "notifications-enterprise",
+      "test": "Frontend CRUD - Notificaciones Enterprise V3.0",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "17bdfe2b-d33c-41ef-83ad-6686ee4ce4b6",
+      "severity": "low"
+    },
+    {
+      "module": "visitors",
+      "test": "Frontend CRUD - Control de Visitantes",
+      "error": "Módulo no está implementado o no carga correctamente",
+      "context": null,
+      "logId": "0402372f-611a-45a2-9aa0-fa00f6a333a3",
+      "severity": "low"
+    }
+  ]
+}

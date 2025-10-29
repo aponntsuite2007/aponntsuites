@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-10-27T14:07:58.601Z",
+  "reportPath": "C:\\Bio\\sistema_asistencia_biometrico\\backend\\audit-reports\\2025-10-27_11-07-54\\AUDIT-REPORT.md",
+  "executionId": "3b55d044-63b1-4978-bd1a-a695259e9842",
+  "summary": {
+    "total": 37,
+    "passed": 2,
+    "failed": 33,
+    "successRate": 5.405405405405405,
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "low": 31
+  },
+  "status": "pending_review",
+  "message": "🔔 Nuevo reporte de auditoría disponible. Claude Code puede leer el reporte y aplicar fixes.",
+  "actions": {
+    "readReport": "Read C:\\Bio\\sistema_asistencia_biometrico\\backend\\audit-reports\\2025-10-27_11-07-54\\AUDIT-REPORT.md",
+    "markAsReviewed": "POST http://localhost:9998/api/audit/reports/mark-reviewed",
+    "startNextCycle": "POST http://localhost:9998/api/audit/iterative/start"
+  }
+}

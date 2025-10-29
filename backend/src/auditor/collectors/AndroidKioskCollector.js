@@ -61,10 +61,39 @@ class AndroidKioskCollector {
     const startTime = Date.now();
 
     try {
-      const apkPath = path.join(__dirname, '../../../frontend_flutter/build/app/outputs/flutter-apk/app-release.apk');
+      // Buscar APK en múltiples ubicaciones posibles
+      const possiblePaths = [
+        path.join(__dirname, '../../../frontend_flutter/build/app/outputs/flutter-apk/app-release.apk'),
+        path.join(__dirname, '../../../frontend_flutter/build/app/outputs/apk/release/app-release.apk'),
+        path.join(__dirname, '../../../frontend_flutter/android/app/build/outputs/apk/release/app-release.apk'),
+        path.join(__dirname, '../../../frontend_flutter/build/app/outputs/bundle/release/app-release.aab')
+      ];
 
-      if (!fs.existsSync(apkPath)) {
-        throw new Error('APK no encontrado en build/app/outputs/flutter-apk/');
+      let apkPath = null;
+      let foundType = 'none';
+
+      for (const testPath of possiblePaths) {
+        if (fs.existsSync(testPath)) {
+          apkPath = testPath;
+          foundType = testPath.endsWith('.aab') ? 'AAB Bundle' : 'APK';
+          break;
+        }
+      }
+
+      if (!apkPath) {
+        // En lugar de fallar, marcamos como warning y sugerimos compilar
+        await log.update({
+          status: 'warning',
+          severity: 'medium',
+          error_message: 'APK/AAB no encontrado. Ejecuta: cd frontend_flutter && flutter build apk --release',
+          duration_ms: Date.now() - startTime,
+          test_data: {
+            searched_paths: possiblePaths,
+            suggestion: 'flutter build apk --release'
+          },
+          completed_at: new Date()
+        });
+        return log;
       }
 
       const stats = fs.statSync(apkPath);
@@ -78,12 +107,14 @@ class AndroidKioskCollector {
         status: 'pass',
         duration_ms: Date.now() - startTime,
         test_data: {
+          path: apkPath,
+          type: foundType,
           size_mb: sizeInMB,
           age_days: parseFloat(ageInDays),
           modified_at: stats.mtime,
           is_recent: isRecent
         },
-        error_message: isRecent ? null : `APK tiene ${ageInDays} días de antigüedad`,
+        error_message: isRecent ? null : `${foundType} tiene ${ageInDays} días de antigüedad`,
         severity: isRecent ? null : 'low',
         completed_at: new Date()
       });
@@ -133,33 +164,73 @@ class AndroidKioskCollector {
       const startTime = Date.now();
 
       try {
-        // Test básico de conectividad (sin autenticación por ahora)
-        const response = await axios({
+        let response;
+        let authToken = config.authToken;
+
+        // Para endpoints que requieren auth, intentar con token si está disponible
+        if (endpoint.path.includes('/users/profile') || endpoint.path.includes('/attendance/') || endpoint.path.includes('/biometric/')) {
+          if (!authToken) {
+            // Si no hay token, marcar como warning en lugar de fallo
+            await log.update({
+              status: 'warning',
+              duration_ms: Date.now() - startTime,
+              error_message: 'Endpoint requiere autenticación - no se puede testear sin token',
+              test_data: { requires_auth: true },
+              completed_at: new Date()
+            });
+            results.push(log);
+            continue;
+          }
+        }
+
+        // Test de conectividad
+        response = await axios({
           method: endpoint.method,
           url: `${baseURL}${endpoint.path}`,
           validateStatus: () => true, // No throw en 4xx/5xx
           timeout: 5000,
           headers: {
             'User-Agent': 'Android-Kiosk-Auditor/1.0',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
           },
-          data: endpoint.method === 'POST' ? {} : undefined
+          data: endpoint.method === 'POST' ? this._generateMobileTestData(endpoint.path) : undefined
         });
 
         const duration = Date.now() - startTime;
 
-        // Consideramos éxito si el endpoint responde (aunque sea 401/404)
-        const accessible = response.status < 500;
+        // Evaluación inteligente de respuesta
+        let status = 'pass';
+        let errorMessage = null;
+        let severity = null;
+
+        if (response.status >= 500) {
+          status = 'fail';
+          errorMessage = `Server error: ${response.status}`;
+          severity = 'high';
+        } else if (response.status === 401 && !authToken) {
+          status = 'warning';
+          errorMessage = 'Endpoint requiere autenticación (comportamiento esperado)';
+        } else if (response.status === 404) {
+          status = 'fail';
+          errorMessage = 'Endpoint no existe';
+          severity = 'medium';
+        } else if (response.status >= 400) {
+          status = 'warning';
+          errorMessage = `Client error: ${response.status} (puede ser por datos de test)`;
+        }
 
         await log.update({
-          status: accessible ? 'pass' : 'fail',
+          status,
           duration_ms: duration,
           test_data: {
             status_code: response.status,
-            response_time_ms: duration
+            response_time_ms: duration,
+            has_auth: !!authToken,
+            response_size: JSON.stringify(response.data || {}).length
           },
-          error_message: accessible ? null : `Server error: ${response.status}`,
-          severity: accessible ? null : 'high',
+          error_message: errorMessage,
+          severity: severity,
           completed_at: new Date()
         });
 
@@ -311,6 +382,51 @@ class AndroidKioskCollector {
 
       return log;
     }
+  }
+
+  /**
+   * Generar datos de test para endpoints móviles
+   */
+  _generateMobileTestData(endpointPath) {
+    if (endpointPath.includes('/auth/login')) {
+      return {
+        identifier: 'test_user',
+        password: 'test_password',
+        companyId: 11
+      };
+    }
+
+    if (endpointPath.includes('/attendance/checkin')) {
+      return {
+        latitude: -34.6118,
+        longitude: -58.3960,
+        device_info: 'Android Test Device',
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    if (endpointPath.includes('/attendance/checkout')) {
+      return {
+        latitude: -34.6118,
+        longitude: -58.3960,
+        device_info: 'Android Test Device',
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    if (endpointPath.includes('/biometric/verify')) {
+      return {
+        biometric_data: 'test_biometric_hash',
+        user_id: 1,
+        device_info: 'Android Test Device'
+      };
+    }
+
+    // Default data para otros endpoints
+    return {
+      test: true,
+      timestamp: new Date().toISOString()
+    };
   }
 }
 

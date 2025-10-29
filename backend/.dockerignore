@@ -1,0 +1,67 @@
+# ═══════════════════════════════════════════════════════════════
+# .dockerignore - Archivos a excluir del Docker build
+# ═══════════════════════════════════════════════════════════════
+
+# Node modules (se instalan en el Dockerfile)
+node_modules
+npm-debug.log
+
+# Git
+.git
+.gitignore
+
+# Documentación
+*.md
+!README.md
+docs/
+HYBRID-OLLAMA-SYSTEM-V2.md
+AUTO-REPAIR-README.md
+CICLO-VIRTUOSO-README.md
+*.txt
+
+# Claude Code
+.claude/
+.claude-repairs/
+.claude-notifications/
+
+# Tests y desarrollo
+test/
+tests/
+__tests__/
+*.test.js
+*.spec.js
+coverage/
+
+# Scripts de desarrollo
+scripts/
+run-*.js
+check-*.js
+demo-*.js
+test-*.js
+show-*.js
+manual-*.js
+autonomous-*.js
+temp-*.js
+
+# Archivos temporales
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment (se pasan por variables de Render)
+.env.local
+.env.development
+.env.test
+
+# Migrations (ya ejecutadas en BD de producción)
+migrations/
+
+# Audit reports
+audit-reports/

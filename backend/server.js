@@ -1311,21 +1311,20 @@ app.get(`${API_PREFIX}/users/:id`, async (req, res) => {
         u."hireDate" AS "hireDate",
         u."birthDate" AS "birthDate",
         u.address AS address,
-        u."emergencyContact" AS "emergencyContact",
-        u."emergencyPhone" AS "emergencyPhone",
+        u.emergency_contact AS "emergencyContact",
         u.salary AS salary,
         u.position AS position,
         u.is_active AS "isActive",
         u.permissions AS permissions,
         u.settings AS settings,
-        u."createdAt" AS "createdAt",
-        u."updatedAt" AS "updatedAt",
+        u.created_at AS "createdAt",
+        u.updated_at AS "updatedAt",
         d.name AS department_name,
         d.gps_lat AS gps_lat,
         d.gps_lng AS gps_lng,
         d.coverage_radius AS coverage_radius
       FROM users u
-      LEFT JOIN departments d ON u."departmentId" = d.id::text
+      LEFT JOIN departments d ON u."departmentId"::integer = d.id
       WHERE u.user_id = ? AND u.is_active = true
     `;
 
@@ -1841,6 +1840,11 @@ const authorizationRoutes = require('./src/routes/authorizationRoutes');
 const diagnosticRoutes = require('./src/routes/diagnostic');
 const adminMigrationsRoutes = require('./src/routes/admin-migrations');
 
+// 👤 IMPORTAR RUTAS DE PERFIL DE EMPLEADO COMPLETO (Enero 2025)
+const userProfileRoutes = require('./src/routes/userProfileRoutes');
+const userMedicalRoutes = require('./src/routes/userMedicalRoutes');
+const userAdminRoutes = require('./src/routes/userAdminRoutes');
+
 // Importar rutas del sistema APONNT
 const aponntDashboardRoutes = require('./src/routes/aponntDashboard');
 const companyModuleRoutes = require('./src/routes/companyModuleRoutes');
@@ -1880,6 +1884,11 @@ app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exit
 app.use('/api/v1/authorization', authorizationRoutes); // Sistema de autorizaciones de llegadas tardías
 app.use('/api/v1/diagnostic', diagnosticRoutes); // Endpoint de diagnóstico para verificar schema
 app.use('/api/v1/admin/migrations', adminMigrationsRoutes); // Endpoints administrativos de migraciones
+
+// 👤 Configurar rutas de perfil de empleado (Enero 2025)
+app.use('/api/v1/user-profile', userProfileRoutes); // Historial laboral, educación, familia
+app.use('/api/v1/user-medical', userMedicalRoutes); // Antecedentes médicos completos
+app.use('/api/v1/user-admin', userAdminRoutes); // Documentos, permisos, disciplinarios
 // app.use('/api/v1/users', usersSimpleRoutes); // Versión simplificada - ya no necesaria
 
 // Configurar rutas del sistema APONNT
@@ -2030,6 +2039,25 @@ console.log('   🧠 Technology: Ollama + Llama 3.1 (8B) + RAG + PostgreSQL');
 console.log('   🔧 /api/audit/bundles - Sugerencias comerciales');
 console.log('   🌱 /api/audit/seed/:module - Generar datos de prueba');
 console.log('   🔥 Auto-diagnóstico, Auto-reparación híbrida, Análisis de dependencias');
+
+// ✅ CONFIGURAR SISTEMA DE EMAILS MULTICAPA
+const emailRoutes = require('./src/routes/emailRoutes');
+const emailWorker = require('./src/workers/EmailWorker');
+
+app.use('/api/email', emailRoutes);
+
+// Iniciar worker de emails
+emailWorker.start();
+
+console.log('📧 [EMAIL-SYSTEM] Sistema de Emails Multicapa ACTIVO:');
+console.log('   🔐 /api/email/config/validate - Validar configuración SMTP');
+console.log('   🏢 /api/email/config/company - Configurar email empresa');
+console.log('   📤 /api/email/queue - Encolar email para envío');
+console.log('   📜 /api/email/logs - Historial de emails');
+console.log('   📊 /api/email/stats - Estadísticas de envío');
+console.log('   ⚙️  /api/email/worker/status - Estado del worker');
+console.log('   📨 Technology: Nodemailer + PostgreSQL + Async Queue');
+console.log('   🔄 Worker procesando cola cada 5 segundos');
 
 // 🔒 CONFIGURAR API BIOMÉTRICA
 // COMENTADO: Conflicto con biometricConsentRoutes en la misma ruta /api/v1/biometric

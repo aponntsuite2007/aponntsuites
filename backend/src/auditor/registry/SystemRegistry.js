@@ -384,13 +384,14 @@ class SystemRegistry {
       where: { company_id: companyId },
       include: [{
         model: SystemModule,
+        as: 'systemModule',
         where: { is_active: true }
       }]
     });
 
     return activeModules
       .filter(cm => cm.isOperational())
-      .map(cm => cm.SystemModule.module_key);
+      .map(cm => cm.systemModule.module_key);
   }
 
   _findBundle(moduleIds) {

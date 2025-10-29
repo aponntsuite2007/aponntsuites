@@ -1,0 +1,1737 @@
+{
+  "critical": [],
+  "high": [],
+  "medium": [
+    {
+      "module": "notifications-complete",
+      "test": "Frontend CRUD - Notificaciones Completas V2.0",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Notificaciones Completas V2.0 no carga",
+            "suggestion": "Verificar función loadNotifications-complete() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Notificaciones Completas V2.0\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotifications-completeModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications-complete() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Notificaciones Completas V2.0"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "f4725af2-cfaf-4c4c-a991-dba8eee7bdfc",
+      "severity": "medium"
+    },
+    {
+      "module": "training-management",
+      "test": "Frontend CRUD - Gestión de Capacitaciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Capacitaciones no carga",
+            "suggestion": "Verificar función loadTraining-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Capacitaciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddtraining-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadtraining-management() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Capacitaciones"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "e447cee1-acf4-4e2a-9788-28b54a1376d3",
+      "severity": "medium"
+    },
+    {
+      "module": "medical",
+      "test": "Frontend CRUD - Gestión Médica",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión Médica no carga",
+            "suggestion": "Verificar función loadMedical() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión Médica\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddmedicalModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadmedical() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión Médica"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "e2d89d9c-858a-451b-920b-cc7c876ed49d",
+      "severity": "medium"
+    },
+    {
+      "module": "visitors",
+      "test": "Frontend CRUD - Control de Visitantes",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Control de Visitantes no carga",
+            "suggestion": "Verificar función loadVisitors() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Control de Visitantes\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddvisitorsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadvisitors() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Control de Visitantes"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "db42b269-64ea-4c94-b609-73d892e3976c",
+      "severity": "medium"
+    },
+    {
+      "module": "employee-map",
+      "test": "Frontend CRUD - Mapa de Empleados",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Mapa de Empleados no carga",
+            "suggestion": "Verificar función loadEmployee-map() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Mapa de Empleados\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddemployee-mapModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loademployee-map() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "10 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Mapa de Empleados"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "cc5d015a-9ed2-4b1c-b862-bbd86389fe34",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications-inbox",
+      "test": "Frontend CRUD - Bandeja de Notificaciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Bandeja de Notificaciones no carga",
+            "suggestion": "Verificar función loadNotifications-inbox() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Bandeja de Notificaciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotifications-inboxModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications-inbox() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Bandeja de Notificaciones"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "c15f9baf-4377-44ea-9a7b-4539dcd32aa6",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications-enterprise",
+      "test": "Frontend CRUD - Notificaciones Enterprise V3.0",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Notificaciones Enterprise V3.0 no carga",
+            "suggestion": "Verificar función loadNotifications-enterprise() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Notificaciones Enterprise V3.0\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotifications-enterpriseModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications-enterprise() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Notificaciones Enterprise V3.0"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "bd7094a7-383f-4b1d-be55-e1f73d0a5996",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications",
+      "test": "Frontend CRUD - Notificaciones Básicas",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Notificaciones Básicas no carga",
+            "suggestion": "Verificar función loadNotifications() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Notificaciones Básicas\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotificationsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Notificaciones Básicas"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "bcc646c3-201b-4ffd-94b1-6c309c4b61af",
+      "severity": "medium"
+    },
+    {
+      "module": "biometric-simple",
+      "test": "Frontend CRUD - Biometría Simple (Captura Automática)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Biometría Simple (Captura Automática) no carga",
+            "suggestion": "Verificar función loadBiometric-simple() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Biometría Simple (Captura Automática)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddbiometric-simpleModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadbiometric-simple() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Biometría Simple (Captura Automática)"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "bc85cca0-60dc-41ec-85ca-1bfeaad61591",
+      "severity": "medium"
+    },
+    {
+      "module": "google-maps-integration",
+      "test": "Frontend CRUD - Integración Google Maps",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Integración Google Maps no carga",
+            "suggestion": "Verificar función loadGoogle-maps-integration() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Integración Google Maps\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddgoogle-maps-integrationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadgoogle-maps-integration() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "10 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Integración Google Maps"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "baf38366-1976-4193-a977-63d9c0506f46",
+      "severity": "medium"
+    },
+    {
+      "module": "facturacion",
+      "test": "Frontend CRUD - Facturación (SIAC ERP)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Facturación (SIAC ERP) no carga",
+            "suggestion": "Verificar función loadFacturacion() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Facturación (SIAC ERP)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddfacturacionModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadfacturacion() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "10 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Facturación (SIAC ERP)"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "9789d71d-d000-458b-bd2f-dbce1ccda765",
+      "severity": "medium"
+    },
+    {
+      "module": "professional-biometric-registration",
+      "test": "Frontend CRUD - Registro Biométrico Profesional",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Registro Biométrico Profesional no carga",
+            "suggestion": "Verificar función loadProfessional-biometric-registration() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Registro Biométrico Profesional\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddprofessional-biometric-registrationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadprofessional-biometric-registration() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Registro Biométrico Profesional"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "95012dc1-28ad-496f-a26a-54cbe45453ef",
+      "severity": "medium"
+    },
+    {
+      "module": "shifts",
+      "test": "Frontend CRUD - Gestión de Turnos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Turnos no carga",
+            "suggestion": "Verificar función loadShifts() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Turnos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddshiftsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadshifts() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Turnos"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "946674b5-27b4-43f9-8079-1eb4cef23866",
+      "severity": "medium"
+    },
+    {
+      "module": "network",
+      "test": "Frontend CRUD - Gestión de Red",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Red no carga",
+            "suggestion": "Verificar función loadNetwork() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Red\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnetworkModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnetwork() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "12 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Red"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "92040a22-840c-4aad-b658-bc225126e7c6",
+      "severity": "medium"
+    },
+    {
+      "module": "plantillas-fiscales",
+      "test": "Frontend CRUD - Plantillas Fiscales",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Plantillas Fiscales no carga",
+            "suggestion": "Verificar función loadPlantillas-fiscales() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Plantillas Fiscales\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddplantillas-fiscalesModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadplantillas-fiscales() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "12 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Plantillas Fiscales"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "8bf02244-375a-4830-b647-5f3a8ce5043a",
+      "severity": "medium"
+    },
+    {
+      "module": "evaluacion-biometrica",
+      "test": "Frontend CRUD - Evaluación Biométrica",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Evaluación Biométrica no carga",
+            "suggestion": "Verificar función loadEvaluacion-biometrica() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Evaluación Biométrica\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddevaluacion-biometricaModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadevaluacion-biometrica() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Evaluación Biométrica"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "88a29c58-7c2f-4484-89f7-902e67c25b74",
+      "severity": "medium"
+    },
+    {
+      "module": "kiosks-professional",
+      "test": "Frontend CRUD - Gestión de Kioscos Biométricos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Kioscos Biométricos no carga",
+            "suggestion": "Verificar función loadKiosks-professional() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Kioscos Biométricos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddkiosks-professionalModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadkiosks-professional() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Kioscos Biométricos"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "8426ed7b-9f81-4bea-b442-7790374564b8",
+      "severity": "medium"
+    },
+    {
+      "module": "biometric-consent",
+      "test": "Frontend CRUD - Consentimientos Biométricos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Consentimientos Biométricos no carga",
+            "suggestion": "Verificar función loadBiometric-consent() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Consentimientos Biométricos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddbiometric-consentModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadbiometric-consent() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Consentimientos Biométricos"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "837871fd-a673-41d4-91ef-2a9c74c1beec",
+      "severity": "medium"
+    },
+    {
+      "module": "clientes",
+      "test": "Frontend CRUD - Gestión de Clientes (SIAC)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Clientes (SIAC) no carga",
+            "suggestion": "Verificar función loadClientes() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Clientes (SIAC)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddclientesModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadclientes() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "11 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Clientes (SIAC)"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "80fc6e6b-ba23-4b0d-9e56-df983390ebee",
+      "severity": "medium"
+    },
+    {
+      "module": "vacation",
+      "test": "Frontend CRUD - Gestión de Vacaciones",
+      "error": "3 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Vacaciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddvacationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadvacation() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Vacaciones"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "7c39395f-553d-484c-b321-33294baeccf9",
+      "severity": "medium"
+    },
+    {
+      "module": "terms-conditions",
+      "test": "Frontend CRUD - Términos y Condiciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Términos y Condiciones no carga",
+            "suggestion": "Verificar función loadTerms-conditions() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Términos y Condiciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddterms-conditionsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadterms-conditions() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "12 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Términos y Condiciones"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "76e2bd9f-dac2-4ca9-ada7-db59b84a62b9",
+      "severity": "medium"
+    },
+    {
+      "module": "attendance",
+      "test": "Frontend CRUD - Control de Asistencia",
+      "error": "3 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Control de Asistencia\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddattendanceModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron botones de acción (Editar/Eliminar)",
+            "suggestion": "Agregar botones en la columna de acciones con onclick=\"editattendance(id)\" y onclick=\"deleteattendance(id)\""
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Control de Asistencia"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "53f4ce25-d40d-471c-b53d-bf8396d5b7b4",
+      "severity": "medium"
+    },
+    {
+      "module": "real-biometric-enterprise",
+      "test": "Frontend CRUD - Biometría Enterprise (Real + Verificable)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Biometría Enterprise (Real + Verificable) no carga",
+            "suggestion": "Verificar función loadReal-biometric-enterprise() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Biometría Enterprise (Real + Verificable)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddreal-biometric-enterpriseModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadreal-biometric-enterprise() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Biometría Enterprise (Real + Verificable)"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "4e59f67c-46cf-446d-92b4-264602bab8a4",
+      "severity": "medium"
+    },
+    {
+      "module": "biometric",
+      "test": "Frontend CRUD - Biometría Facial Básica",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Biometría Facial Básica no carga",
+            "suggestion": "Verificar función loadBiometric() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Biometría Facial Básica\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddbiometricModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadbiometric() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Biometría Facial Básica"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "2dc20895-dd04-4f59-a9f4-6589cf694301",
+      "severity": "medium"
+    },
+    {
+      "module": "payroll-liquidation",
+      "test": "Frontend CRUD - Liquidación de Sueldos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Liquidación de Sueldos no carga",
+            "suggestion": "Verificar función loadPayroll-liquidation() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Liquidación de Sueldos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddpayroll-liquidationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadpayroll-liquidation() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Liquidación de Sueldos"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "28e5bc93-24e5-4223-872f-e81a8b651364",
+      "severity": "medium"
+    },
+    {
+      "module": "legal",
+      "test": "Frontend CRUD - Gestión Legal",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión Legal no carga",
+            "suggestion": "Verificar función loadLegal() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión Legal\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddlegalModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadlegal() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión Legal"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "1d62e154-dd91-4dc8-8812-692ef94ca584",
+      "severity": "medium"
+    },
+    {
+      "module": "job-postings",
+      "test": "Frontend CRUD - Búsquedas Laborales",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Búsquedas Laborales no carga",
+            "suggestion": "Verificar función loadJob-postings() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Búsquedas Laborales\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddjob-postingsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadjob-postings() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Búsquedas Laborales"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "16809efa-d323-4520-b1b6-536a6145ddb4",
+      "severity": "medium"
+    },
+    {
+      "module": "document-management",
+      "test": "Frontend CRUD - Gestión Documental",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión Documental no carga",
+            "suggestion": "Verificar función loadDocument-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión Documental\" no funciona",
+            "suggestion": "Verificar onclick=\"openAdddocument-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loaddocument-management() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión Documental"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "0ed6ce08-fd2d-4a67-ade1-d63df36f2080",
+      "severity": "medium"
+    },
+    {
+      "module": "art-management",
+      "test": "Frontend CRUD - Gestión de ART",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de ART no carga",
+            "suggestion": "Verificar función loadArt-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de ART\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddart-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadart-management() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "7 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de ART"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.867Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [FACE-API] Error cargando modelos: JSHandle@error",
+            "timestamp": "2025-10-23T05:19:02.868Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:02.870Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T05:19:03.787Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 ()",
+            "timestamp": "2025-10-23T05:19:03.824Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "054dadb3-4579-495f-b73c-5a99f207fccd",
+      "severity": "medium"
+    }
+  ],
+  "low": []
+}

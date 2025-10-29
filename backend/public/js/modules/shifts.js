@@ -608,6 +608,14 @@ function showAdvancedShiftCreator() {
     `;
     
     document.body.appendChild(modal);
+
+    // Add click outside modal to close
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeAdvancedShiftModal();
+        }
+    });
+
     updateShiftForm(); // Inicializar form
 }
 

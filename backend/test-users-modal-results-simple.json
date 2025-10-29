@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-10-28T13:36:33.109Z",
+  "testUserId": "d2ace38c-d79a-4c9d-833d-ed549fc948f1",
+  "summary": {
+    "total": 1,
+    "passed": 1,
+    "partial": 0,
+    "failed": 0,
+    "successRate": 100
+  },
+  "results": [
+    {
+      "category": "READ Operations",
+      "testName": "Ver Ficha Completa (READ)",
+      "iterations": 10,
+      "status": "PASS",
+      "details": "10/10 exitosas",
+      "endpoint": "/api/v1/users/d2ace38c-d79a-4c9d-833d-ed549fc948f1",
+      "timestamp": "2025-10-28T13:36:33.108Z"
+    }
+  ]
+}

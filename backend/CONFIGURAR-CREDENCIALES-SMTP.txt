@@ -1,0 +1,239 @@
+═══════════════════════════════════════════════════════════════════════════
+   CONFIGURACIÓN DE CREDENCIALES SMTP - SISTEMA DE EMAILS
+═══════════════════════════════════════════════════════════════════════════
+
+📧 TODAS LAS INSTANCIAS QUE NECESITAN CONFIGURACIÓN
+
+═══════════════════════════════════════════════════════════════════════════
+INSTANCIA 1: EMAILS DE LA PLATAFORMA APONNT (4 tipos)
+═══════════════════════════════════════════════════════════════════════════
+
+📍 UBICACIÓN: Tabla "aponnt_email_config" en PostgreSQL
+
+🔧 COMANDO PARA ACTUALIZAR (ejecutar en node):
+-----------------------------------------------------------------
+
+cd C:\Bio\sistema_asistencia_biometrico\backend
+
+node -e "
+const { sequelize } = require('./src/config/database');
+(async () => {
+  await sequelize.authenticate();
+
+  // 1. TRANSACCIONAL (noreply@aponnt.com)
+  await sequelize.query(\`
+    UPDATE aponnt_email_config
+    SET smtp_password = 'TU_APP_PASSWORD_AQUI'
+    WHERE config_type = 'transactional'
+  \`);
+
+  // 2. SOPORTE (soporte@aponnt.com)
+  await sequelize.query(\`
+    UPDATE aponnt_email_config
+    SET smtp_password = 'TU_APP_PASSWORD_AQUI'
+    WHERE config_type = 'support'
+  \`);
+
+  // 3. FACTURACIÓN (facturacion@aponnt.com)
+  await sequelize.query(\`
+    UPDATE aponnt_email_config
+    SET smtp_password = 'TU_APP_PASSWORD_AQUI'
+    WHERE config_type = 'billing'
+  \`);
+
+  // 4. MARKETING (marketing@aponnt.com)
+  await sequelize.query(\`
+    UPDATE aponnt_email_config
+    SET smtp_password = 'TU_APP_PASSWORD_AQUI'
+    WHERE config_type = 'marketing'
+  \`);
+
+  console.log('✅ Passwords actualizados');
+  await sequelize.close();
+})();
+"
+
+-----------------------------------------------------------------
+
+📝 ALTERNATIVA SQL DIRECTA (si tenés psql):
+-----------------------------------------------------------------
+
+psql postgresql://postgres:Aedr15150302@localhost:5432/attendance_system
+
+-- Luego ejecutar:
+
+UPDATE aponnt_email_config
+SET smtp_password = 'TU_APP_PASSWORD'
+WHERE config_type = 'transactional';
+
+UPDATE aponnt_email_config
+SET smtp_password = 'TU_APP_PASSWORD'
+WHERE config_type = 'support';
+
+UPDATE aponnt_email_config
+SET smtp_password = 'TU_APP_PASSWORD'
+WHERE config_type = 'billing';
+
+UPDATE aponnt_email_config
+SET smtp_password = 'TU_APP_PASSWORD'
+WHERE config_type = 'marketing';
+
+-----------------------------------------------------------------
+
+
+═══════════════════════════════════════════════════════════════════════════
+INSTANCIA 2: EMAIL DE CADA EMPRESA (ISI, Cliente A, B, C...)
+═══════════════════════════════════════════════════════════════════════════
+
+📍 UBICACIÓN: Tabla "email_configurations" en PostgreSQL
+
+🔧 OPCIÓN A - VIA API REST (Recomendado):
+-----------------------------------------------------------------
+
+curl -X POST http://localhost:9998/api/email/config/company \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TU_ADMIN_TOKEN>" \
+  -d '{
+    "company_id": 1,
+    "institutional_email": "noreply@isi.com.ar",
+    "display_name": "ISI - Sistema de Asistencia",
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 587,
+    "smtp_user": "noreply@isi.com.ar",
+    "smtp_password": "app-password-de-isi",
+    "daily_limit": 500,
+    "monthly_limit": 10000
+  }'
+
+-----------------------------------------------------------------
+
+🔧 OPCIÓN B - VIA NODE SCRIPT:
+-----------------------------------------------------------------
+
+cd C:\Bio\sistema_asistencia_biometrico\backend
+
+node -e "
+const { sequelize } = require('./src/config/database');
+(async () => {
+  await sequelize.authenticate();
+
+  await sequelize.query(\`
+    INSERT INTO email_configurations (
+        company_id, institutional_email, display_name,
+        smtp_host, smtp_port, smtp_user, smtp_password,
+        is_verified, is_active, verified_at,
+        daily_limit, monthly_limit, created_at
+    ) VALUES (
+        1,
+        'noreply@isi.com.ar',
+        'ISI - Sistema de Asistencia',
+        'smtp.gmail.com',
+        587,
+        'noreply@isi.com.ar',
+        'PASSWORD_DE_ISI_AQUI',
+        true, true, NOW(),
+        500, 10000, NOW()
+    ) ON CONFLICT (company_id) DO UPDATE SET
+        smtp_password = EXCLUDED.smtp_password,
+        updated_at = NOW()
+  \`);
+
+  console.log('✅ Email de empresa configurado');
+  await sequelize.close();
+})();
+"
+
+-----------------------------------------------------------------
+
+
+═══════════════════════════════════════════════════════════════════════════
+CÓMO OBTENER APP PASSWORD DE GMAIL
+═══════════════════════════════════════════════════════════════════════════
+
+1. IR A: https://myaccount.google.com/apppasswords
+
+2. LOGIN con tu cuenta de Gmail
+
+3. SELECCIONAR:
+   - App: "Mail"
+   - Device: "Other (Custom name)" → escribir "Aponnt Backend"
+
+4. CLICK en "Generate"
+
+5. COPIAR el password de 16 caracteres
+   Ejemplo: "abcd efgh ijkl mnop"
+
+6. USAR ese password en los comandos de arriba (sin espacios)
+
+⚠️ IMPORTANTE: NO usar tu password normal de Gmail, solo el App Password
+
+
+═══════════════════════════════════════════════════════════════════════════
+OTROS PROVEEDORES SMTP
+═══════════════════════════════════════════════════════════════════════════
+
+📧 OUTLOOK/HOTMAIL:
+   smtp_host: smtp-mail.outlook.com
+   smtp_port: 587
+   smtp_user: tu-email@outlook.com
+   smtp_password: App password de Outlook
+
+📧 SENDGRID:
+   smtp_host: smtp.sendgrid.net
+   smtp_port: 587
+   smtp_user: apikey
+   smtp_password: TU_API_KEY_DE_SENDGRID
+
+📧 AWS SES:
+   smtp_host: email-smtp.us-east-1.amazonaws.com
+   smtp_port: 587
+   smtp_user: TU_SMTP_USERNAME_DE_AWS
+   smtp_password: TU_SMTP_PASSWORD_DE_AWS
+
+
+═══════════════════════════════════════════════════════════════════════════
+VALIDAR CONFIGURACIÓN
+═══════════════════════════════════════════════════════════════════════════
+
+Una vez configuradas las credenciales, probar con:
+
+curl -X POST http://localhost:9998/api/email/config/validate \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 587,
+    "smtp_user": "noreply@aponnt.com",
+    "smtp_password": "tu-app-password",
+    "from_email": "noreply@aponnt.com",
+    "display_name": "Aponnt Sistema",
+    "test_recipient_email": "tu-email-personal@gmail.com"
+  }'
+
+✅ SI FUNCIONA verás:
+{
+  "success": true,
+  "message": "Configuración SMTP válida",
+  "testEmailSent": true
+}
+
+
+═══════════════════════════════════════════════════════════════════════════
+RESUMEN
+═══════════════════════════════════════════════════════════════════════════
+
+INSTANCIA 1: Tabla aponnt_email_config
+         ├── transactional (noreply@aponnt.com)
+         ├── support (soporte@aponnt.com)
+         ├── billing (facturacion@aponnt.com)
+         └── marketing (marketing@aponnt.com)
+
+INSTANCIA 2: Tabla email_configurations
+         └── 1 configuración por cada empresa (ISI, Cliente A, B, C...)
+
+TOTAL: 4 configs de Aponnt + N configs de empresas
+
+
+═══════════════════════════════════════════════════════════════════════════
+FIN DEL DOCUMENTO
+═══════════════════════════════════════════════════════════════════════════

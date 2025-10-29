@@ -1,0 +1,1282 @@
+{
+  "critical": [],
+  "high": [],
+  "medium": [
+    {
+      "module": "clientes",
+      "test": "Frontend CRUD - Gestión de Clientes (SIAC)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Clientes (SIAC) no carga",
+            "suggestion": "Verificar función loadClientes() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Clientes (SIAC)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddclientesModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadclientes() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "5 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Clientes (SIAC)"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.153Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [LICENSING] Error: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ Error cargando módulo clientes: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:44.942Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "f197f82e-0bb7-4c28-bdc8-6e9ce9da1dd3",
+      "severity": "medium"
+    },
+    {
+      "module": "visitors",
+      "test": "Frontend CRUD - Control de Visitantes",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Control de Visitantes no carga",
+            "suggestion": "Verificar función loadVisitors() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Control de Visitantes\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddvisitorsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadvisitors() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Control de Visitantes"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "d6a377b9-cd39-4a63-90ae-84118477b02c",
+      "severity": "medium"
+    },
+    {
+      "module": "biometric",
+      "test": "Frontend CRUD - Biometría Facial Básica",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Biometría Facial Básica no carga",
+            "suggestion": "Verificar función loadBiometric() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Biometría Facial Básica\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddbiometricModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadbiometric() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Biometría Facial Básica"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "c687a7b8-d0ac-48db-9fe7-c7cb57fdfb21",
+      "severity": "medium"
+    },
+    {
+      "module": "document-management",
+      "test": "Frontend CRUD - Gestión Documental",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión Documental no carga",
+            "suggestion": "Verificar función loadDocument-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión Documental\" no funciona",
+            "suggestion": "Verificar onclick=\"openAdddocument-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loaddocument-management() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión Documental"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "a843a56c-86fb-40b2-beae-fd08971e5dd8",
+      "severity": "medium"
+    },
+    {
+      "module": "training-management",
+      "test": "Frontend CRUD - Gestión de Capacitaciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Capacitaciones no carga",
+            "suggestion": "Verificar función loadTraining-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Capacitaciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddtraining-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadtraining-management() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Capacitaciones"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "9f8ad3ba-7f11-4147-963c-6f4564614744",
+      "severity": "medium"
+    },
+    {
+      "module": "payroll-liquidation",
+      "test": "Frontend CRUD - Liquidación de Sueldos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Liquidación de Sueldos no carga",
+            "suggestion": "Verificar función loadPayroll-liquidation() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Liquidación de Sueldos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddpayroll-liquidationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadpayroll-liquidation() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Liquidación de Sueldos"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "9cc35cdc-e435-4c3e-866c-352d0a07b079",
+      "severity": "medium"
+    },
+    {
+      "module": "biometric-consent",
+      "test": "Frontend CRUD - Consentimientos Biométricos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Consentimientos Biométricos no carga",
+            "suggestion": "Verificar función loadBiometric-consent() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Consentimientos Biométricos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddbiometric-consentModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadbiometric-consent() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Consentimientos Biométricos"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "916c1728-7b3a-4e11-bb81-47691a985b53",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications-enterprise",
+      "test": "Frontend CRUD - Notificaciones Enterprise V3.0",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Notificaciones Enterprise V3.0 no carga",
+            "suggestion": "Verificar función loadNotifications-enterprise() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Notificaciones Enterprise V3.0\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotifications-enterpriseModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications-enterprise() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Notificaciones Enterprise V3.0"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "87051156-69ea-4edb-af33-a39a6f24fc8a",
+      "severity": "medium"
+    },
+    {
+      "module": "art-management",
+      "test": "Frontend CRUD - Gestión de ART",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de ART no carga",
+            "suggestion": "Verificar función loadArt-management() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de ART\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddart-managementModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadart-management() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de ART"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "86a36df2-f069-4116-bc92-46cc29a69f5f",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications",
+      "test": "Frontend CRUD - Notificaciones Básicas",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Notificaciones Básicas no carga",
+            "suggestion": "Verificar función loadNotifications() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Notificaciones Básicas\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotificationsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Notificaciones Básicas"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "7de69976-30ce-4920-b4ae-91435c239179",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications-complete",
+      "test": "Frontend CRUD - Notificaciones Completas V2.0",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Notificaciones Completas V2.0 no carga",
+            "suggestion": "Verificar función loadNotifications-complete() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Notificaciones Completas V2.0\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotifications-completeModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications-complete() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Notificaciones Completas V2.0"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "7c60c135-a476-4c29-bdcb-662fa3fc6746",
+      "severity": "medium"
+    },
+    {
+      "module": "job-postings",
+      "test": "Frontend CRUD - Búsquedas Laborales",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Búsquedas Laborales no carga",
+            "suggestion": "Verificar función loadJob-postings() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Búsquedas Laborales\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddjob-postingsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadjob-postings() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Búsquedas Laborales"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "7ae035f7-6840-4faa-8664-b3134506355c",
+      "severity": "medium"
+    },
+    {
+      "module": "google-maps-integration",
+      "test": "Frontend CRUD - Integración Google Maps",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Integración Google Maps no carga",
+            "suggestion": "Verificar función loadGoogle-maps-integration() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Integración Google Maps\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddgoogle-maps-integrationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadgoogle-maps-integration() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "4 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Integración Google Maps"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.153Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [LICENSING] Error: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "771f4f15-3e44-40d2-866c-be7dc5b6ff33",
+      "severity": "medium"
+    },
+    {
+      "module": "employee-map",
+      "test": "Frontend CRUD - Mapa de Empleados",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Mapa de Empleados no carga",
+            "suggestion": "Verificar función loadEmployee-map() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Mapa de Empleados\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddemployee-mapModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loademployee-map() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "4 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Mapa de Empleados"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.153Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [LICENSING] Error: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "72ca7ad4-5bf6-4023-9753-8fd69574e10d",
+      "severity": "medium"
+    },
+    {
+      "module": "biometric-simple",
+      "test": "Frontend CRUD - Biometría Simple (Captura Automática)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Biometría Simple (Captura Automática) no carga",
+            "suggestion": "Verificar función loadBiometric-simple() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Biometría Simple (Captura Automática)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddbiometric-simpleModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadbiometric-simple() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Biometría Simple (Captura Automática)"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "70be4946-6c01-41ad-b289-9f59828ec448",
+      "severity": "medium"
+    },
+    {
+      "module": "vacation",
+      "test": "Frontend CRUD - Gestión de Vacaciones",
+      "error": "3 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Vacaciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddvacationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadvacation() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Vacaciones"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "7089ecf5-1a16-4305-b0ba-4dd0856a470e",
+      "severity": "medium"
+    },
+    {
+      "module": "medical",
+      "test": "Frontend CRUD - Gestión Médica",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión Médica no carga",
+            "suggestion": "Verificar función loadMedical() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión Médica\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddmedicalModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadmedical() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión Médica"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "611e3600-aef1-441e-9963-91d9a256b36d",
+      "severity": "medium"
+    },
+    {
+      "module": "real-biometric-enterprise",
+      "test": "Frontend CRUD - Biometría Enterprise (Real + Verificable)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Biometría Enterprise (Real + Verificable) no carga",
+            "suggestion": "Verificar función loadReal-biometric-enterprise() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Biometría Enterprise (Real + Verificable)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddreal-biometric-enterpriseModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadreal-biometric-enterprise() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Biometría Enterprise (Real + Verificable)"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "5e8ecb44-3789-45a1-95c2-febfc5da63d2",
+      "severity": "medium"
+    },
+    {
+      "module": "terms-conditions",
+      "test": "Frontend CRUD - Términos y Condiciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Términos y Condiciones no carga",
+            "suggestion": "Verificar función loadTerms-conditions() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Términos y Condiciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddterms-conditionsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadterms-conditions() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "6 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Términos y Condiciones"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.153Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [LICENSING] Error: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ Error cargando módulo clientes: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:44.942Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "5e78ca0e-8042-4320-ad8a-b17af7ed661e",
+      "severity": "medium"
+    },
+    {
+      "module": "kiosks-professional",
+      "test": "Frontend CRUD - Gestión de Kioscos Biométricos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Kioscos Biométricos no carga",
+            "suggestion": "Verificar función loadKiosks-professional() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Kioscos Biométricos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddkiosks-professionalModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadkiosks-professional() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Kioscos Biométricos"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "5ab930d5-b1c2-4ebf-992b-47d9b869598c",
+      "severity": "medium"
+    },
+    {
+      "module": "network",
+      "test": "Frontend CRUD - Gestión de Red",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Red no carga",
+            "suggestion": "Verificar función loadNetwork() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Red\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnetworkModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnetwork() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "6 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Red"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.153Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [LICENSING] Error: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ Error cargando módulo clientes: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:44.942Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "5154672a-4ea3-457f-b65b-ef86288b508e",
+      "severity": "medium"
+    },
+    {
+      "module": "attendance",
+      "test": "Frontend CRUD - Control de Asistencia",
+      "error": "3 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Control de Asistencia\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddattendanceModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron botones de acción (Editar/Eliminar)",
+            "suggestion": "Agregar botones en la columna de acciones con onclick=\"editattendance(id)\" y onclick=\"deleteattendance(id)\""
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Control de Asistencia"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "48615882-d99c-4c4c-8e02-89c08465778f",
+      "severity": "medium"
+    },
+    {
+      "module": "professional-biometric-registration",
+      "test": "Frontend CRUD - Registro Biométrico Profesional",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Registro Biométrico Profesional no carga",
+            "suggestion": "Verificar función loadProfessional-biometric-registration() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Registro Biométrico Profesional\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddprofessional-biometric-registrationModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadprofessional-biometric-registration() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Registro Biométrico Profesional"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "471c0872-3a85-4adf-b088-729831273ff7",
+      "severity": "medium"
+    },
+    {
+      "module": "facturacion",
+      "test": "Frontend CRUD - Facturación (SIAC ERP)",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Facturación (SIAC ERP) no carga",
+            "suggestion": "Verificar función loadFacturacion() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Facturación (SIAC ERP)\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddfacturacionModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadfacturacion() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "4 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Facturación (SIAC ERP)"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.153Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [LICENSING] Error: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "465a0a64-ae5a-446e-bc68-e4a71c3567ad",
+      "severity": "medium"
+    },
+    {
+      "module": "shifts",
+      "test": "Frontend CRUD - Gestión de Turnos",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión de Turnos no carga",
+            "suggestion": "Verificar función loadShifts() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión de Turnos\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddshiftsModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadshifts() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión de Turnos"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "44063c91-07d7-4af9-813b-df776f3e161c",
+      "severity": "medium"
+    },
+    {
+      "module": "plantillas-fiscales",
+      "test": "Frontend CRUD - Plantillas Fiscales",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Plantillas Fiscales no carga",
+            "suggestion": "Verificar función loadPlantillas-fiscales() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Plantillas Fiscales\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddplantillas-fiscalesModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadplantillas-fiscales() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "6 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Plantillas Fiscales"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.153Z"
+          },
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ [LICENSING] Error: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:25.163Z"
+          },
+          {
+            "type": "console",
+            "message": "❌ Error cargando módulo clientes: JSHandle@error",
+            "timestamp": "2025-10-23T21:43:44.942Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "4324db23-8031-42e4-869d-3fe2e14b72dc",
+      "severity": "medium"
+    },
+    {
+      "module": "notifications-inbox",
+      "test": "Frontend CRUD - Bandeja de Notificaciones",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Bandeja de Notificaciones no carga",
+            "suggestion": "Verificar función loadNotifications-inbox() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Bandeja de Notificaciones\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddnotifications-inboxModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadnotifications-inbox() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Bandeja de Notificaciones"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "2b781166-c56d-4bcd-bcb1-421776c33f24",
+      "severity": "medium"
+    },
+    {
+      "module": "legal",
+      "test": "Frontend CRUD - Gestión Legal",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Gestión Legal no carga",
+            "suggestion": "Verificar función loadLegal() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Gestión Legal\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddlegalModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadlegal() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Gestión Legal"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "2778efb6-855f-4e11-8dc5-80bba412a0ba",
+      "severity": "medium"
+    },
+    {
+      "module": "evaluacion-biometrica",
+      "test": "Frontend CRUD - Evaluación Biométrica",
+      "error": "4 tests fallaron",
+      "context": {
+        "errors": [
+          {
+            "test": "List Loading",
+            "error": "Lista de Evaluación Biométrica no carga",
+            "suggestion": "Verificar función loadEvaluacion-biometrica() en módulo JS"
+          },
+          {
+            "test": "Add Button",
+            "error": "Botón \"Agregar Evaluación Biométrica\" no funciona",
+            "suggestion": "Verificar onclick=\"openAddevaluacion-biometricaModal()\" en el HTML"
+          },
+          {
+            "test": "Row Buttons",
+            "error": "No se encontraron filas en la tabla",
+            "suggestion": "Verificar que la función loadevaluacion-biometrica() esté poblando la tabla correctamente"
+          },
+          {
+            "test": "Console Errors",
+            "error": "1 errores críticos de consola detectados",
+            "suggestion": "Revisar errores en consola del navegador al cargar Evaluación Biométrica"
+          }
+        ],
+        "http_errors": [],
+        "console_errors": [
+          {
+            "type": "console",
+            "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "timestamp": "2025-10-23T21:40:29.526Z"
+          }
+        ],
+        "network_errors": []
+      },
+      "logId": "012471e8-fae3-4eca-9829-81755112a1ad",
+      "severity": "medium"
+    }
+  ],
+  "low": []
+}
