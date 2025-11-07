@@ -103,6 +103,11 @@ async function showUsersContent() {
 
     // Auto load user stats on tab show
     setTimeout(showUserStats, 300);
+
+    // 🔥 AUTO-LOAD users table when tab opens
+    setTimeout(async () => {
+        await loadUsers();
+    }, 500);
 }
 
 // Load users list - Original functionality with biometric status
@@ -1402,46 +1407,58 @@ async function viewUser(userId) {
         const user = await response.json();
         
         // Fetch biometric photo if available
+        // Build biometric photo with expiration info from user fields
         let biometricPhotoHTML = '';
-        try {
-            const bioApiUrl = window.progressiveAdmin.getApiUrl(`/api/v1/facial-biometric/user/${userId}`);
-            const bioResponse = await fetch(bioApiUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+        let photoInfoHTML = '';
+
+        if (user.biometric_photo_url) {
+            // User has biometric photo
+            biometricPhotoHTML = `
+                <img src="${user.biometric_photo_url}" alt="Foto biométrica"
+                     style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #28a745;">
+            `;
+
+            // Calculate days until renewal
+            if (user.biometric_photo_expiration) {
+                const expirationDate = new Date(user.biometric_photo_expiration);
+                const now = new Date();
+                const daysUntilRenewal = Math.ceil((expirationDate - now) / (1000 * 60 * 60 * 24));
+                const captureDate = user.biometric_photo_date ? new Date(user.biometric_photo_date).toLocaleDateString('es-AR') : 'N/A';
+
+                let renewalColor = '#28a745'; // green
+                let renewalIcon = '✅';
+                if (daysUntilRenewal <= 7) {
+                    renewalColor = '#dc3545'; // red
+                    renewalIcon = '🚨';
+                } else if (daysUntilRenewal <= 30) {
+                    renewalColor = '#ffc107'; // yellow
+                    renewalIcon = '⚠️';
                 }
-            });
-            
-            if (bioResponse.ok) {
-                const bioData = await bioResponse.json();
-                if (bioData && bioData.length > 0 && bioData[0].capturedPhoto) {
-                    // User has a biometric photo
-                    biometricPhotoHTML = `
-                        <img src="${bioData[0].capturedPhoto}" alt="Foto biométrica" 
-                             style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #28a745;">
-                    `;
-                } else {
-                    // No photo, use default avatar
-                    biometricPhotoHTML = `
-                        <div style="width: 120px; height: 120px; background: #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px;">
-                            👤
+
+                photoInfoHTML = `
+                    <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                        <div style="margin-bottom: 5px;">
+                            <strong>📅 Capturada:</strong> ${captureDate}
                         </div>
-                    `;
-                }
-            } else {
-                // Error or no biometric data, use default avatar
-                biometricPhotoHTML = `
-                    <div style="width: 120px; height: 120px; background: #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px;">
-                        👤
+                        <div style="background: ${renewalColor}; color: white; padding: 6px; border-radius: 4px; font-weight: bold;">
+                            ${renewalIcon} ${daysUntilRenewal > 0 ? `${daysUntilRenewal} días para renovar` : 'RENOVACIÓN VENCIDA'}
+                        </div>
+                        <div style="margin-top: 8px; font-size: 11px; font-style: italic; color: #999;">
+                            La única forma de cambiar la foto es tomando un nuevo registro biométrico
+                        </div>
                     </div>
                 `;
             }
-        } catch (error) {
-            console.error('Error obteniendo foto biométrica:', error);
+        } else {
+            // No photo, use default avatar
             biometricPhotoHTML = `
                 <div style="width: 120px; height: 120px; background: #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px;">
                     👤
+                </div>
+            `;
+            photoInfoHTML = `
+                <div style="margin-top: 10px; font-size: 12px; color: #999;">
+                    <em>Sin foto biométrica</em>
                 </div>
             `;
         }
@@ -1458,9 +1475,10 @@ async function viewUser(userId) {
             background: rgba(0,0,0,0.8);
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            padding-top: 20px;
+            align-items: center;
+            padding: 10px;
             z-index: 10000;
+            overflow-y: auto;
         `;
         
         const roleText = user.role === 'admin' ? 'Administrador' : 
@@ -1468,20 +1486,20 @@ async function viewUser(userId) {
                         user.role === 'medical' ? 'Médico' : 'Empleado';
         
         modal.innerHTML = `
-            <div style="background: white; border-radius: 12px; width: 95%; max-width: 1400px; height: 90vh; display: flex; flex-direction: column;">
+            <div style="background: white; border-radius: 12px; width: 98%; max-width: none; height: 96vh; display: flex; flex-direction: column; overflow: hidden;">
                 <!-- Header del Expediente -->
-                <div style="background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <div style="position: sticky; top: 0; background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; z-index: 100;">
                     <div>
                         <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
                             📋 Expediente Digital: ${user.firstName} ${user.lastName}
                         </h2>
                         <p style="margin: 5px 0 0 0; opacity: 0.9;">ID: ${user.employeeId} | ${roleText} | ${user.department?.name || 'Sin departamento'}</p>
                     </div>
-                    <button onclick="closeEmployeeFile()" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 18px;">✕</button>
+                    <button onclick="closeEmployeeFile()" style="position: fixed; top: 20px; right: 20px; background: #dc3545; border: none; color: white; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; font-size: 20px; z-index: 10001; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: all 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">✕</button>
                 </div>
-                
+
                 <!-- Tabs del Expediente -->
-                <div style="background: #ecf0f1; padding: 10px 20px; display: flex; gap: 5px; flex-wrap: wrap;">
+                <div style="position: sticky; top: 80px; background: #ecf0f1; padding: 10px 20px; display: flex; gap: 5px; flex-wrap: wrap; z-index: 99; border-bottom: 2px solid #ddd;">
                     <button class="file-tab active" onclick="showFileTab('admin', this)">⚙️ Administración</button>
                     <button class="file-tab" onclick="showFileTab('personal', this)">👤 Datos Personales</button>
                     <button class="file-tab" onclick="showFileTab('work', this)">💼 Antecedentes Laborales</button>
@@ -1490,8 +1508,9 @@ async function viewUser(userId) {
                     <button class="file-tab" onclick="showFileTab('attendance', this)">📅 Asistencias/Permisos</button>
                     <button class="file-tab" onclick="showFileTab('disciplinary', this)">⚖️ Disciplinarios</button>
                     <button class="file-tab" onclick="showFileTab('tasks', this)">🎯 Config. Tareas</button>
+                    <button class="file-tab" onclick="showFileTab('biometric', this)">📸 Registro Biométrico</button>
                 </div>
-                
+
                 <!-- Contenido del Expediente -->
                 <div style="flex: 1; padding: 20px; overflow-y: auto;">
                     
@@ -1746,11 +1765,8 @@ async function viewUser(userId) {
                                 <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
                                     <div style="margin: 0 auto 15px; position: relative;">
                                         ${biometricPhotoHTML}
-                                        <!-- Botón para cambiar foto -->
-                                        <div style="margin-top: 10px;">
-                                            <button class="btn btn-sm btn-success" onclick="changeUserPhoto('${userId}')" style="margin: 5px;">📷 Cambiar Foto</button>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="removeUserPhoto('${userId}')" style="margin: 5px;">🗑️ Eliminar</button>
-                                        </div>
+                                        <!-- Info de renovación de foto biométrica -->
+                                        ${photoInfoHTML}
                                     </div>
                                     <h4>${user.firstName} ${user.lastName}</h4>
                                     <p><strong>${roleText}</strong></p>
@@ -2241,8 +2257,59 @@ async function viewUser(userId) {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Tab: Registro Biométrico -->
+                    <div id="biometric-tab" class="file-tab-content" style="display: none;">
+                        <h3>📸 Registro Biométrico de Empleado</h3>
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 15px 0;">
+                            <h4 style="margin: 0 0 15px 0; color: #333;">🔐 Captura de Template Biométrico</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                                <div>
+                                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                        <h5 style="margin: 0 0 10px 0; color: #1976d2;">📋 Información</h5>
+                                        <p style="margin: 0; font-size: 14px; line-height: 1.6;">
+                                            El registro biométrico captura el template facial del empleado para permitir el reconocimiento automático en el sistema de asistencia.
+                                        </p>
+                                        <ul style="font-size: 14px; margin: 10px 0 0 20px; line-height: 1.8;">
+                                            <li>Captura automática con guía visual</li>
+                                            <li>Validación con Azure Face API</li>
+                                            <li>Almacenamiento seguro encriptado (AES-256)</li>
+                                            <li>Cumple Ley 25.326 y GDPR</li>
+                                        </ul>
+                                    </div>
+                                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                                        <h5 style="margin: 0 0 10px 0; color: #856404;">⚠️ Importante</h5>
+                                        <p style="margin: 0; font-size: 13px;">
+                                            • Requiere buena iluminación<br>
+                                            • Mirar directamente a la cámara<br>
+                                            • Rostro descubierto (sin lentes/gorra)<br>
+                                            • La captura es automática
+                                        </p>
+                                    </div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div id="biometric-photo-display" style="margin-bottom: 20px;">
+                                        ${biometricPhotoHTML}
+                                    </div>
+                                    <button class="btn btn-primary btn-lg" onclick="startBiometricCapture('${userId}', '${user.employeeId}')" style="width: 100%; padding: 15px; font-size: 16px;">
+                                        📷 Capturar Foto Biométrica
+                                    </button>
+                                    <p style="margin-top: 15px; font-size: 12px; color: #666;">
+                                        Al hacer clic se abrirá la interfaz de captura automática con feedback en tiempo real
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 15px 0;">
+                            <h4 style="margin: 0 0 15px 0; color: #333;">📊 Estado del Registro Biométrico</h4>
+                            <div id="biometric-status-container" style="padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                                <p style="text-align: center; color: #666;">Cargando estado...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
+
                 <!-- Footer con Acciones -->
                 <div style="background: #f8f9fa; padding: 15px 20px; border-radius: 0 0 12px 12px; display: flex; justify-content: space-between; align-items: center;">
                     <div style="font-size: 12px; color: #666;">
@@ -3322,22 +3389,84 @@ function closeEmployeeFile() {
     }
 }
 
+// Iniciar captura biométrica del empleado
+async function startBiometricCapture(userId, employeeId) {
+    console.log('📸 [BIOMETRIC] Iniciando captura biométrica para:', { userId, employeeId });
+
+    try {
+        // Importar dinámicamente el módulo biometric-simple
+        const { startProfessionalFaceCapture } = await import('./biometric-simple.js');
+
+        // Iniciar la captura profesional con feedback en tiempo real
+        await startProfessionalFaceCapture({
+            userId: userId,
+            employeeId: employeeId,
+            onSuccess: async (capturedData) => {
+                console.log('✅ [BIOMETRIC] Captura exitosa:', capturedData);
+
+                // Actualizar la foto en el modal
+                const photoDisplay = document.getElementById('biometric-photo-display');
+                if (photoDisplay && capturedData.photo) {
+                    photoDisplay.innerHTML = `
+                        <img src="${capturedData.photo}" alt="Foto biométrica"
+                             style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #28a745;">
+                    `;
+                }
+
+                // Mostrar mensaje de éxito
+                showUserMessage('✅ Template biométrico capturado exitosamente', 'success');
+
+                // Recargar el expediente para actualizar la información
+                setTimeout(() => {
+                    closeEmployeeFile();
+                    viewUser(userId);
+                }, 1500);
+            },
+            onError: (error) => {
+                console.error('❌ [BIOMETRIC] Error en captura:', error);
+                showUserMessage(`❌ Error en captura biométrica: ${error.message}`, 'error');
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ [BIOMETRIC] Error importando módulo:', error);
+        showUserMessage('❌ Error al iniciar captura biométrica. Verifique que el módulo esté disponible.', 'error');
+    }
+}
+
 // Cambiar entre tabs del expediente
-function showFileTab(tabName, button) {
-    // Ocultar todos los tabs
-    document.querySelectorAll('.file-tab-content').forEach(tab => {
+window.showFileTab = function(tabName, button) {
+    console.log(`🔄 [TABS] Cambiando a tab: ${tabName}`);
+
+    // Obtener el modal
+    const modal = document.getElementById('employeeFileModal');
+    if (!modal) {
+        console.error('❌ [TABS] Modal employeeFileModal no encontrado');
+        return;
+    }
+
+    // Ocultar todos los tabs DENTRO del modal
+    modal.querySelectorAll('.file-tab-content').forEach(tab => {
         tab.style.setProperty('display', 'none', 'important');
+        tab.classList.remove('active');
     });
-    
-    // Remover clase active de todos los botones
-    document.querySelectorAll('.file-tab').forEach(btn => {
+
+    // Remover clase active de todos los botones DENTRO del modal
+    modal.querySelectorAll('.file-tab').forEach(btn => {
         btn.classList.remove('active');
     });
-    
+
     // Mostrar tab seleccionado
-    document.getElementById(`${tabName}-tab`).style.setProperty('display', 'block', 'important');
-    button.classList.add('active');
-}
+    const targetTab = document.getElementById(`${tabName}-tab`);
+    if (targetTab) {
+        targetTab.style.setProperty('display', 'block', 'important');
+        targetTab.classList.add('active');
+        button.classList.add('active');
+        console.log(`✅ [TABS] Tab "${tabName}" mostrado correctamente`);
+    } else {
+        console.error(`❌ [TABS] No se encontró el tab con ID: ${tabName}-tab`);
+    }
+};
 
 // Cargar datos iniciales del expediente
 async function loadEmployeeFileData(userId) {
@@ -7475,10 +7604,15 @@ window.currentModuleTranslationUpdate = async function() {
 
 console.log('✅ [USERS] Módulo de usuarios con traducción registrado');
 
-// ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE
+// ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE (Legacy)
 window.showUsersContent = showUsersContent;
-// ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE
-window.showUsersContent = showUsersContent;
+
+// ✅ EXPORTACIÓN UNIFICADA (Sistema de Auto-Conocimiento v3.0)
+if (!window.Modules) window.Modules = {};
+window.Modules.users = {
+    init: showUsersContent
+};
+console.log('🧠 [USERS] Exportación unificada registrada: window.Modules.users');
 
 // Exponer funciones globalmente para onclick handlers
 window.viewUser = viewUser;
