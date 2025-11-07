@@ -3688,6 +3688,166 @@
                                 </div>
                             </div>
 
+                            <!-- DASHBOARD DE MÉTRICAS HISTÓRICAS -->
+                            <div id="testingMetricsDashboard" style="margin-top: 50px; border-top: 3px solid #3498db; padding-top: 30px;">
+                                <div class="section-header" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); padding: 20px; border-radius: 10px; color: white; margin-bottom: 20px;">
+                                    <h3 style="margin: 0;">📊 DASHBOARD DE MÉTRICAS HISTÓRICAS</h3>
+                                    <p style="margin: 10px 0 0 0; opacity: 0.9;">Análisis de Performance del Sistema de Testing</p>
+                                </div>
+
+                                <!-- Filtros -->
+                                <div class="card">
+                                    <div class="card-header bg-info text-white">
+                                        <strong>🔍 Filtros de Métricas</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label>Empresa</label>
+                                                <select id="metricsCompanyFilter" class="form-control">
+                                                    <option value="">Todas las empresas</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label>Entorno</label>
+                                                <select id="metricsEnvironmentFilter" class="form-control">
+                                                    <option value="">Todos</option>
+                                                    <option value="local">LOCAL</option>
+                                                    <option value="staging">STAGING</option>
+                                                    <option value="production">PRODUCTION</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label>Módulo</label>
+                                                <select id="metricsModuleFilter" class="form-control">
+                                                    <option value="">Todos</option>
+                                                    <option value="users">👥 Usuarios</option>
+                                                    <option value="attendance">📅 Asistencia</option>
+                                                    <option value="departments">🏢 Deptos</option>
+                                                    <option value="shifts">⏰ Turnos</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label>Últimos días</label>
+                                                <select id="metricsDaysFilter" class="form-control">
+                                                    <option value="7">7 días</option>
+                                                    <option value="30" selected>30 días</option>
+                                                    <option value="90">90 días</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3">
+                                            <div class="col-md-12">
+                                                <button id="btnLoadMetrics" class="btn btn-primary btn-block">
+                                                    📊 Cargar Métricas
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Cards de Resumen -->
+                                <div class="row mt-4">
+                                    <div class="col-md-3">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h3 id="metricTotalExecutions" class="text-primary">-</h3>
+                                                <p class="text-muted">Total Ejecuciones</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h3 id="metricSuccessRate" class="text-success">-</h3>
+                                                <p class="text-muted">Success Rate Promedio</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h3 id="metricAvgDuration" class="text-info">-</h3>
+                                                <p class="text-muted">Duración Promedio</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h3 id="metricTotalTickets" class="text-warning">-</h3>
+                                                <p class="text-muted">Tickets Generados</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Gráficos -->
+                                <div class="row mt-4">
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header bg-success text-white">
+                                                <strong>📈 Success Rate Over Time</strong>
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="chartSuccessRate" height="200"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header bg-primary text-white">
+                                                <strong>⏱️ Duración de Tests</strong>
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="chartDuration" height="200"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-4">
+                                    <div class="col-md-12">
+                                        <div class="card">
+                                            <div class="card-header bg-info text-white">
+                                                <strong>🎯 Tests por Módulo</strong>
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="chartByModule" height="100"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tabla de Historial -->
+                                <div class="card mt-4">
+                                    <div class="card-header bg-dark text-white">
+                                        <strong>📜 Historial de Ejecuciones</strong>
+                                    </div>
+                                    <div class="card-body" style="padding: 0;">
+                                        <div id="historyTableContainer">
+                                            <table class="table table-hover" style="margin: 0;">
+                                                <thead style="background: #34495e; color: white;">
+                                                    <tr>
+                                                        <th>Fecha</th>
+                                                        <th>Entorno</th>
+                                                        <th>Módulo</th>
+                                                        <th>Empresa</th>
+                                                        <th>Tests</th>
+                                                        <th>Success Rate</th>
+                                                        <th>Duración</th>
+                                                        <th>Estado</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="historyTableBody">
+                                                    <tr><td colspan="8" class="text-center">Haz click en "Cargar Métricas" para ver el historial</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- CONFIGURADOR DE MÓDULOS -->
                             <div id="modulesConfiguratorContainer" style="margin-top: 50px; border-top: 3px solid #f39c12; padding-top: 30px;">
                                 <div class="section-header" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 20px; border-radius: 10px; color: white; margin-bottom: 20px;">
@@ -13019,6 +13179,7 @@ ${vendor.notes || 'Sin notas adicionales'}
 
     <!-- Phase 4 Integrated Manager Module (ÚNICO SISTEMA DE TESTING) -->
     <script src="js/modules/phase4-integrated-manager.js"></script>
+    <script src="js/modules/testing-metrics-dashboard.js"></script>
 
     <!-- Configurador de Módulos Module -->
     <script src="js/modules/configurador-modulos.js"></script>
