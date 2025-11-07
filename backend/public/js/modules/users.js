@@ -1486,7 +1486,7 @@ async function viewUser(userId) {
                         user.role === 'medical' ? 'Médico' : 'Empleado';
         
         modal.innerHTML = `
-            <div style="background: white; border-radius: 12px; width: 98%; max-width: none; height: 96vh; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="background: white; border-radius: 12px; width: 95%; max-width: 1400px; height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
                 <!-- Header del Expediente -->
                 <div style="position: sticky; top: 0; background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; z-index: 100;">
                     <div>
