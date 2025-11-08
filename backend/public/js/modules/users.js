@@ -1482,11 +1482,39 @@ async function viewUser(userId) {
         `;
         
         const roleText = user.role === 'admin' ? 'Administrador' : 
-                        user.role === 'supervisor' ? 'Supervisor' : 
+                        user.role === 'supervisor' ? 'Supervisor' :
                         user.role === 'medical' ? 'Médico' : 'Empleado';
-        
+
+        // Detectar tamaño de pantalla y ajustar modal dinámicamente
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+
+        let modalWidth, modalMaxWidth, modalHeight;
+
+        if (screenWidth <= 768) {
+            // Móvil
+            modalWidth = '95%';
+            modalMaxWidth = '100%';
+            modalHeight = '90vh';
+        } else if (screenWidth <= 1366) {
+            // Tablets y pantallas pequeñas
+            modalWidth = '85%';
+            modalMaxWidth = '900px';
+            modalHeight = '85vh';
+        } else if (screenWidth <= 1920) {
+            // Pantallas medianas (Full HD)
+            modalWidth = '75%';
+            modalMaxWidth = '1200px';
+            modalHeight = '80vh';
+        } else {
+            // Pantallas grandes (4K+)
+            modalWidth = '65%';
+            modalMaxWidth = '1600px';
+            modalHeight = '85vh';
+        }
+
         modal.innerHTML = `
-            <div style="background: white; border-radius: 12px; width: 92%; max-width: 1600px; height: 94vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+            <div style="background: white; border-radius: 12px; width: ${modalWidth}; max-width: ${modalMaxWidth}; height: ${modalHeight}; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
                 <!-- Header del Expediente -->
                 <div style="position: sticky; top: 0; background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; z-index: 100;">
                     <div>
@@ -3696,19 +3724,36 @@ function addWorkHistory(userId) {
                 responsibilities: document.getElementById('description').value
             };
 
-            const response = await fetch(`/api/v1/user-profile/${userId}/work-history`, {
+            console.log('💼 [WORK-HISTORY] Enviando datos:', formData);
+            console.log('💼 [WORK-HISTORY] URL:', `/api/v1/users/${userId}/work-history`);
+            console.log('💼 [WORK-HISTORY] Token:', localStorage.getItem('authToken') ? 'Presente' : 'FALTA');
+
+            const response = await fetch(`/api/v1/users/${userId}/work-history`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
                 body: JSON.stringify(formData)
             });
 
+            console.log('💼 [WORK-HISTORY] Response status:', response.status);
+            console.log('💼 [WORK-HISTORY] Response OK:', response.ok);
+
             if (!response.ok) {
-                const error = await response.json();
+                const errorText = await response.text();
+                console.error('💼 [WORK-HISTORY] Error response:', errorText);
+                let error;
+                try {
+                    error = JSON.parse(errorText);
+                } catch {
+                    error = { error: errorText };
+                }
                 throw new Error(error.error || 'Error al agregar antecedente laboral');
             }
+
+            const result = await response.json();
+            console.log('💼 [WORK-HISTORY] Guardado exitosamente:', result);
 
             closeModal('workHistoryModal');
             showUserMessage('✅ Antecedente laboral agregado exitosamente', 'success');
@@ -3718,7 +3763,7 @@ function addWorkHistory(userId) {
                 loadWorkHistory(userId);
             }
         } catch (error) {
-            console.error('❌ Error al agregar antecedente laboral:', error);
+            console.error('❌ [WORK-HISTORY] Error completo:', error);
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
@@ -3802,19 +3847,36 @@ function addFamilyMember(userId) {
                 is_dependent: document.getElementById('isDependent')?.checked || false
             };
 
+            console.log('👨‍👩‍👧‍👦 [FAMILY] Enviando datos:', formData);
+            console.log('👨‍👩‍👧‍👦 [FAMILY] URL:', `/api/v1/user-profile/${userId}/family-members`);
+            console.log('👨‍👩‍👧‍👦 [FAMILY] Token:', localStorage.getItem('authToken') ? 'Presente' : 'FALTA');
+
             const response = await fetch(`/api/v1/user-profile/${userId}/family-members`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
                 body: JSON.stringify(formData)
             });
 
+            console.log('👨‍👩‍👧‍👦 [FAMILY] Response status:', response.status);
+            console.log('👨‍👩‍👧‍👦 [FAMILY] Response OK:', response.ok);
+
             if (!response.ok) {
-                const error = await response.json();
+                const errorText = await response.text();
+                console.error('👨‍👩‍👧‍👦 [FAMILY] Error response:', errorText);
+                let error;
+                try {
+                    error = JSON.parse(errorText);
+                } catch {
+                    error = { error: errorText };
+                }
                 throw new Error(error.error || 'Error al agregar familiar');
             }
+
+            const result = await response.json();
+            console.log('👨‍👩‍👧‍👦 [FAMILY] Guardado exitosamente:', result);
 
             closeModal('familyMemberModal');
             showUserMessage('✅ Familiar agregado al grupo familiar exitosamente', 'success');
@@ -3982,18 +4044,18 @@ function addDisciplinaryAction(userId) {
         try {
             const formData = {
             action_type: document.getElementById('actionType').value || null,
-            severity: document.getElementById('actionSeverity').value || null,
-            description: document.getElementById('actionDescription').value || null,
-            date_occurred: document.getElementById('dateOccurred').value || null,
-            action_taken: document.getElementById('actionTaken').value || null,
-            follow_up_required: document.getElementById('followUpRequired')?.checked || false,
+            severity: 'moderada', // Default severity
+            description: document.getElementById('description').value || null,
+            date_occurred: document.getElementById('actionDate').value || null,
+            action_taken: document.getElementById('reason').value || null,
+            follow_up_required: false,
         };
 
             const response = await fetch(`/api/v1/user-admin/${userId}/disciplinary`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -4571,7 +4633,14 @@ function viewTaskHistory(userId) {
 
 function editContactInfo(userId) {
     console.log('📞 [CONTACT] Editando información de contacto:', userId);
-    
+
+    // CRITICAL FIX: Eliminar modal anterior si existe para evitar conflictos
+    const existingModal = document.getElementById('contactInfoModal');
+    if (existingModal) {
+        console.log('⚠️  [CONTACT] Modal anterior encontrado, eliminando...');
+        existingModal.remove();
+    }
+
     const modal = document.createElement('div');
     modal.id = 'contactInfoModal';
     modal.style.cssText = `
@@ -4579,7 +4648,7 @@ function editContactInfo(userId) {
         background: rgba(0,0,0,0.5); display: flex; justify-content: center;
         align-items: center; z-index: 10001;
     `;
-    
+
     modal.innerHTML = `
         <div style="background: white; padding: 20px; border-radius: 8px; width: 600px;">
             <h4>📞 Editar Información de Contacto</h4>
@@ -4630,17 +4699,55 @@ function editContactInfo(userId) {
     
     document.body.appendChild(modal);
     
-    document.getElementById('contactInfoForm').onsubmit = (e) => {
+    document.getElementById('contactInfoForm').onsubmit = async (e) => {
         e.preventDefault();
-        const additionalName = document.getElementById('additionalContactName').value;
-        const additionalPhone = document.getElementById('additionalContactPhone').value;
-        
-        // Update UI immediately
-        document.getElementById('additional-contact').textContent = additionalName || 'No especificado';
-        document.getElementById('additional-phone').textContent = additionalPhone || 'No especificado';
-        
-        closeModal('contactInfoModal');
-        showUserMessage('✅ Información de contacto actualizada', 'success');
+
+        const emergencyContactName = document.getElementById('emergencyContactName').value;
+        const emergencyContactPhone = document.getElementById('emergencyContactPhone').value;
+        const additionalContactName = document.getElementById('additionalContactName').value;
+        const additionalContactPhone = document.getElementById('additionalContactPhone').value;
+        const additionalContactRelation = document.getElementById('additionalContactRelation').value;
+
+        try {
+            // Guardar en base de datos via API
+            const response = await fetch(`/api/v1/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    emergencyContact: emergencyContactName,
+                    emergencyPhone: emergencyContactPhone,
+                    phone: additionalContactPhone  // Teléfono adicional va a phone
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Error al actualizar contactos');
+            }
+
+            // Update UI immediately
+            if (document.getElementById('emergency-contact')) {
+                document.getElementById('emergency-contact').textContent = emergencyContactName || 'No especificado';
+            }
+            if (document.getElementById('emergency-phone')) {
+                document.getElementById('emergency-phone').textContent = emergencyContactPhone || 'No especificado';
+            }
+            if (document.getElementById('additional-contact')) {
+                document.getElementById('additional-contact').textContent = additionalContactName || 'No especificado';
+            }
+            if (document.getElementById('additional-phone')) {
+                document.getElementById('additional-phone').textContent = additionalContactPhone || 'No especificado';
+            }
+
+            closeModal('contactInfoModal');
+            showUserMessage('✅ Información de contacto actualizada y guardada en BD', 'success');
+        } catch (error) {
+            console.error('Error guardando contactos:', error);
+            showUserMessage('❌ Error al guardar información de contacto', 'danger');
+        }
     };
 }
 
@@ -6089,7 +6196,7 @@ function addMedicalExam(userId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
                 body: JSON.stringify(formData)
             });
