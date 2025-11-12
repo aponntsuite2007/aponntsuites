@@ -7861,10 +7861,8 @@ async function changeDepartment(userId, currentDeptId) {
                 showUserMessage('✅ Departamento actualizado correctamente', 'success');
                 closeDepartmentModal();
 
-                // Refresh view if modal is open
-                if (document.getElementById('employeeFileModal')) {
-                    viewUser(userId);
-                }
+                // Refresh TAB 1 data
+                await refreshTab1Data(userId);
             } catch (error) {
                 console.error('Error:', error);
                 showUserMessage('❌ Error al cambiar departamento: ' + error.message, 'error');
@@ -8011,10 +8009,8 @@ async function manageBranches(userId) {
                 showUserMessage('✅ Sucursales actualizadas correctamente', 'success');
                 closeBranchesModal();
 
-                // Refresh view if modal is open
-                if (document.getElementById('employeeFileModal')) {
-                    viewUser(userId);
-                }
+                // Refresh TAB 1 data
+                await refreshTab1Data(userId);
             } catch (error) {
                 console.error('Error:', error);
                 showUserMessage('❌ Error al guardar: ' + error.message, 'error');
@@ -8181,6 +8177,139 @@ async function generateUserReport(userId) {
     } catch (error) {
         console.error('Error:', error);
         showUserMessage('❌ Error al generar reporte: ' + error.message, 'error');
+    }
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════
+ * FUNCIÓN AUXILIAR: Refresh TAB 1 Data
+ * ═══════════════════════════════════════════════════════════
+ * Actualiza SOLO los campos del TAB 1 sin recargar el modal completo
+ * MEJORA LA UX - No cierra y reabre el modal
+ */
+async function refreshTab1Data(userId) {
+    console.log('🔄 [USERS] Actualizando datos del TAB 1...');
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            console.error('No hay token de autenticación');
+            return;
+        }
+
+        // GET updated user data
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            console.error('Error obteniendo datos actualizados');
+            return;
+        }
+
+        const userData = await response.json();
+        const user = userData.user || userData;
+
+        // Update TAB 1 fields
+
+        // 1. ROL
+        const roleEl = document.getElementById('admin-role');
+        if (roleEl) {
+            const roleIcons = {
+                'admin': '👑 Administrador',
+                'supervisor': '🔧 Supervisor',
+                'medical': '🏥 Médico',
+                'employee': '👤 Empleado'
+            };
+            roleEl.textContent = roleIcons[user.role] || '👤 Empleado';
+        }
+
+        // 2. STATUS
+        const statusEl = document.getElementById('admin-status');
+        if (statusEl) {
+            statusEl.innerHTML = `
+                <span class="status-badge ${user.isActive ? 'active' : 'inactive'}">
+                    ${user.isActive ? '✅ Activo' : '❌ Inactivo'}
+                </span>
+            `;
+        }
+
+        // 3. GPS
+        const gpsEl = document.getElementById('admin-gps');
+        if (gpsEl) {
+            gpsEl.innerHTML = `
+                <span class="status-badge ${user.allowOutsideRadius ? 'warning' : 'success'}">
+                    ${user.allowOutsideRadius ? '🌍 Sin restricción GPS' : '📍 Solo área autorizada'}
+                </span>
+            `;
+        }
+
+        // 4. BRANCH
+        const branchEl = document.getElementById('admin-branch');
+        if (branchEl) {
+            if (user.defaultBranchId) {
+                // Get branch name if possible
+                try {
+                    const branchResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/departments/${user.defaultBranchId}`), {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (branchResponse.ok) {
+                        const branchData = await branchResponse.json();
+                        const branch = branchData.data || branchData;
+                        branchEl.innerHTML = `<strong style="color: #28a745;">${branch.name || 'Sucursal ' + user.defaultBranchId}</strong>`;
+                    } else {
+                        branchEl.innerHTML = `<strong style="color: #28a745;">Sucursal ${user.defaultBranchId}</strong>`;
+                    }
+                } catch (e) {
+                    branchEl.innerHTML = `<strong style="color: #28a745;">Asignada</strong>`;
+                }
+            } else {
+                branchEl.innerHTML = '<span style="color: #999;">Sin asignar</span>';
+            }
+        }
+
+        // 5. DEPARTMENT
+        const deptEl = document.getElementById('admin-department');
+        if (deptEl) {
+            if (user.departmentId) {
+                // Get department name
+                try {
+                    const deptResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/departments/${user.departmentId}`), {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (deptResponse.ok) {
+                        const deptData = await deptResponse.json();
+                        const dept = deptData.data || deptData;
+                        deptEl.innerHTML = `<strong style="color: #007bff;">${dept.name || 'Departamento ' + user.departmentId}</strong>`;
+                    } else {
+                        deptEl.innerHTML = `<strong style="color: #007bff;">Departamento ${user.departmentId}</strong>`;
+                    }
+                } catch (e) {
+                    deptEl.innerHTML = '<strong style="color: #007bff;">Asignado</strong>';
+                }
+            } else {
+                deptEl.innerHTML = '<span style="color: #999;">Sin departamento</span>';
+            }
+        }
+
+        // 6. POSITION
+        const positionEl = document.getElementById('admin-position');
+        if (positionEl) {
+            positionEl.innerHTML = user.position ?
+                `<strong style="color: #6c757d;">${user.position}</strong>` :
+                '<span style="color: #999;">No especificada</span>';
+        }
+
+        console.log('✅ [USERS] TAB 1 actualizado correctamente');
+
+        // Visual feedback
+        const tab1 = document.getElementById('admin-tab');
+        if (tab1) {
+            tab1.style.animation = 'fadeIn 0.5s';
+        }
+
+    } catch (error) {
+        console.error('❌ [USERS] Error actualizando TAB 1:', error);
     }
 }
 
