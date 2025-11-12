@@ -1,6 +1,76 @@
 // Users Module - v5.0 PROGRESSIVE + PLUG & PLAY
 console.log('👥 [USERS] Módulo users v6.0 - PLUG & PLAY SYSTEM INTEGRADO');
 
+// ═══════════════════════════════════════════════════════════════════
+// 🎨 INYECTAR CSS RESPONSIVE GLOBAL PARA TODOS LOS MODALES
+// ═══════════════════════════════════════════════════════════════════
+(function injectResponsiveModalCSS() {
+    if (document.getElementById('responsive-modals-css')) return; // Ya existe
+
+    const style = document.createElement('style');
+    style.id = 'responsive-modals-css';
+    style.textContent = `
+        /* ✅ FIX RESPONSIVE: Todos los modales creados dinámicamente */
+        [id*="Modal"], [id*="modal"] {
+            /* Overlay del modal */
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0,0,0,0.5) !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+            z-index: 10000 !important;
+            overflow-y: auto !important;
+            padding: 20px 10px !important;
+        }
+
+        /* Contenido interno del modal */
+        [id*="Modal"] > div:first-child,
+        [id*="modal"] > div:first-child {
+            background: white !important;
+            border-radius: 10px !important;
+            width: 100% !important;
+            max-width: 1400px !important;
+            max-height: calc(100vh - 80px) !important;
+            overflow-y: auto !important;
+            margin: 40px auto !important;
+            padding: 30px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3) !important;
+        }
+
+        /* Responsive para tablets */
+        @media (max-width: 1200px) {
+            [id*="Modal"] > div:first-child,
+            [id*="modal"] > div:first-child {
+                max-width: 95% !important;
+                padding: 20px !important;
+            }
+        }
+
+        /* Responsive para móviles */
+        @media (max-width: 768px) {
+            [id*="Modal"] > div:first-child,
+            [id*="modal"] > div:first-child {
+                max-width: 98% !important;
+                padding: 15px !important;
+                margin: 20px auto !important;
+            }
+        }
+
+        /* Botones siempre visibles en el footer */
+        [id*="Modal"] button,
+        [id*="modal"] button {
+            position: relative !important;
+            z-index: 1 !important;
+        }
+    `;
+    document.head.appendChild(style);
+    console.log('✅ [USERS] CSS responsive global inyectado para todos los modales');
+})();
+
 // Global variables for users
 let allUsers = [];
 let filteredUsers = [];
@@ -21,6 +91,23 @@ const USER_MODULE_FEATURES = {
 
 // Users functions
 async function showUsersContent() {
+    // FIX: Eliminar modales fantasma si existen (triple seguridad)
+    const modalFantasma1 = document.getElementById('addCompanyModal');
+    if (modalFantasma1) {
+        console.log('🗑️ [USERS] Eliminando modal fantasma addCompanyModal');
+        modalFantasma1.remove();
+    }
+
+    const modalFantasma2 = document.getElementById('initCompanyModal');
+    if (modalFantasma2) {
+        console.log('🗑️ [USERS] Eliminando modal fantasma initCompanyModal (Inicializar Nueva Empresa)');
+        modalFantasma2.style.display = 'none !important';
+        modalFantasma2.style.visibility = 'hidden';
+        modalFantasma2.style.opacity = '0';
+        modalFantasma2.style.pointerEvents = 'none';
+        modalFantasma2.remove();
+    }
+
     const content = document.getElementById('mainContent');
     if (!content) return;
     
@@ -861,14 +948,15 @@ async function saveNewUser() {
             
             // Show modal with credentials
             const credModal = document.createElement('div');
+            credModal.id = 'userCredentialsModal';
             credModal.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8); display: flex; justify-content: center;
-                align-items: center; z-index: 10001;
+                background: rgba(0,0,0,0.9); display: flex; justify-content: center;
+                align-items: center; z-index: 99999;
             `;
             credModal.innerHTML = `
-                <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; text-align: center;">
-                    <h3 style="color: #4CAF50;">✅ Usuario Creado</h3>
+                <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; text-align: center; box-shadow: 0 10px 50px rgba(0,0,0,0.5);">
+                    <h3 style="color: #4CAF50; margin-bottom: 20px;">✅ Usuario Creado Exitosamente</h3>
                     <div style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; text-align: left;">
                         <div style="margin: 8px 0;"><strong>👤 Nombre:</strong> ${name}</div>
                         <div style="margin: 8px 0;"><strong>📧 Email:</strong> ${email}</div>
@@ -876,16 +964,38 @@ async function saveNewUser() {
                         <div style="margin: 8px 0;"><strong>🏷️ ID:</strong> ${legajo}</div>
                         <div style="margin: 8px 0;"><strong>👑 Rol:</strong> ${role}</div>
                     </div>
-                    <div style="padding: 10px; background: #e3f2fd; border-radius: 5px; font-size: 0.9em;">
+                    <div style="padding: 10px; background: #e3f2fd; border-radius: 5px; font-size: 0.9em; margin-bottom: 15px;">
                         📱 <strong>Estas credenciales son para login en la APK móvil</strong>
                     </div>
-                    <button onclick="this.parentElement.parentElement.remove(); setTimeout(loadUsers, 500);" 
-                            style="margin-top: 15px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    <button id="closeCredentialsBtn" onclick="document.getElementById('userCredentialsModal').remove(); setTimeout(loadUsers, 500);"
+                            style="margin-top: 10px; padding: 12px 30px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: all 0.3s ease;">
                         🆗 Entendido
                     </button>
                 </div>
             `;
+
+            // Remover cualquier modal de credenciales existente
+            const existingModal = document.getElementById('userCredentialsModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
             document.body.appendChild(credModal);
+
+            // Agregar efecto hover al botón
+            setTimeout(() => {
+                const btn = document.getElementById('closeCredentialsBtn');
+                if (btn) {
+                    btn.addEventListener('mouseover', function() {
+                        this.style.background = '#45a049';
+                        this.style.transform = 'scale(1.05)';
+                    });
+                    btn.addEventListener('mouseout', function() {
+                        this.style.background = '#4CAF50';
+                        this.style.transform = 'scale(1)';
+                    });
+                }
+            }, 100);
             
             console.log('✅ Usuario creado:', result);
             closeUserModal();
@@ -951,12 +1061,13 @@ async function editUser(userId) {
             background: rgba(0,0,0,0.5);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             z-index: 10000;
+            overflow-y: auto;
         `;
         
         modal.innerHTML = `
-            <div style="background: white; padding: 30px; border-radius: 10px; max-width: 95vw; width: 95%; max-height: 90vh; overflow-y: auto;">
+            <div style="background: white; padding: 30px; border-radius: 10px; width: 98%; max-width: 1800px; height: 95vh; overflow-y: auto; margin-top: 2vh;">
                 <h3 style="text-align: center; margin-bottom: 25px;">✏️ Editar Usuario Completo</h3>
                 
                 <!-- Información Personal -->
@@ -1475,8 +1586,8 @@ async function viewUser(userId) {
             background: rgba(0,0,0,0.8);
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 10px;
+            align-items: flex-start;
+            padding: 20px 10px 10px 10px;
             z-index: 10000;
             overflow-y: auto;
         `;
@@ -1499,17 +1610,17 @@ async function viewUser(userId) {
         } else if (screenWidth <= 1366) {
             // Tablets y pantallas pequeñas
             modalWidth = '85%';
-            modalMaxWidth = '900px';
+            modalMaxWidth = '1100px';
             modalHeight = '85vh';
         } else if (screenWidth <= 1920) {
             // Pantallas medianas (Full HD)
             modalWidth = '75%';
-            modalMaxWidth = '1200px';
+            modalMaxWidth = '1400px';
             modalHeight = '80vh';
         } else {
             // Pantallas grandes (4K+)
             modalWidth = '65%';
-            modalMaxWidth = '1600px';
+            modalMaxWidth = '1800px';
             modalHeight = '85vh';
         }
 
@@ -3974,8 +4085,119 @@ function loadAttendanceHistory(userId) {
 
 function addPermissionRequest(userId) {
     console.log('📅 [PERMISSIONS] Agregando solicitud de permiso:', userId);
-    // Sistema de permisos
-    showUserMessage('🔧 Función en desarrollo: Solicitud de Permiso', 'info');
+
+    const modal = document.createElement('div');
+    modal.id = 'permissionRequestModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 8px; width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h4>📅 Agregar Solicitud de Permiso</h4>
+            <form id="permissionRequestForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="margin: 10px 0;">
+                        <label>Tipo de Permiso:</label>
+                        <select id="requestType" class="form-control" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="vacaciones">Vacaciones</option>
+                            <option value="licencia_medica">Licencia Médica</option>
+                            <option value="permiso_personal">Permiso Personal</option>
+                            <option value="estudio">Estudio</option>
+                            <option value="duelo">Duelo</option>
+                            <option value="maternidad">Maternidad</option>
+                            <option value="paternidad">Paternidad</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label>Días Totales:</label>
+                        <input type="number" id="totalDays" class="form-control" min="1" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="margin: 10px 0;">
+                        <label>Fecha Inicio:</label>
+                        <input type="date" id="startDate" class="form-control" required>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label>Fecha Fin:</label>
+                        <input type="date" id="endDate" class="form-control" required>
+                    </div>
+                </div>
+                <div style="margin: 10px 0;">
+                    <label>Motivo:</label>
+                    <textarea id="permissionReason" class="form-control" rows="4" required></textarea>
+                </div>
+                <div style="text-align: right; margin-top: 15px;">
+                    <button type="button" onclick="closeModal('permissionRequestModal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Solicitar</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Auto-calculate days
+    const startInput = document.getElementById('startDate');
+    const endInput = document.getElementById('endDate');
+    const daysInput = document.getElementById('totalDays');
+
+    const calculateDays = () => {
+        if (startInput.value && endInput.value) {
+            const start = new Date(startInput.value);
+            const end = new Date(endInput.value);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            daysInput.value = diffDays;
+        }
+    };
+
+    startInput.onchange = calculateDays;
+    endInput.onchange = calculateDays;
+
+    document.getElementById('permissionRequestForm').onsubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const formData = {
+                request_type: document.getElementById('requestType').value,
+                start_date: document.getElementById('startDate').value,
+                end_date: document.getElementById('endDate').value,
+                total_days: parseInt(document.getElementById('totalDays').value),
+                reason: document.getElementById('permissionReason').value
+            };
+
+            const response = await fetch(`/api/v1/user-admin/${userId}/permissions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Error al procesar solicitud');
+            }
+
+            closeModal('permissionRequestModal');
+            showUserMessage('✅ Solicitud de permiso registrada exitosamente', 'success');
+
+            // Reload permissions if function exists
+            if (typeof loadPermissionRequests === 'function') {
+                loadPermissionRequests(userId);
+            }
+        } catch (error) {
+            console.error('❌ [PERMISSIONS] Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
+    };
 }
 
 // =================== FUNCIONES DISCIPLINARIAS ===================
@@ -7523,23 +7745,549 @@ async function editPosition(userId, currentPosition) {
 }
 
 // Change department
-function changeDepartment(userId, currentDeptId) {
-    showUserMessage('🚧 Función en desarrollo - Cambiar Departamento', 'info');
+async function changeDepartment(userId, currentDeptId) {
+    console.log('🏢 [USERS] Cambiando departamento para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Get all departments
+        const deptResponse = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/departments'), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!deptResponse.ok) throw new Error('Error al obtener departamentos');
+        const deptData = await deptResponse.json();
+        const departments = deptData.departments || deptData || [];
+
+        // Get user data
+        const userResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!userResponse.ok) throw new Error('Error al obtener usuario');
+        const userData = await userResponse.json();
+        const user = userData.user || userData;
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'changeDepartmentModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
+
+        const departmentOptions = departments.map(dept => `
+            <option value="${dept.id}" ${dept.id === currentDeptId ? 'selected' : ''}>
+                ${dept.name || dept.department_name || 'Sin nombre'}
+            </option>
+        `).join('');
+
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 12px; max-width: 500px; width: 90%;">
+                <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        🔄 Cambiar Departamento
+                        <button onclick="closeDepartmentModal()" style="margin-left: auto; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">✕</button>
+                    </h3>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Usuario: ${user.firstName} ${user.lastName}</p>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">🏢 Nuevo Departamento:</label>
+                        <select id="newDepartmentSelect" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            <option value="">Sin departamento</option>
+                            ${departmentOptions}
+                        </select>
+                    </div>
+
+                    <div style="background: #e7f3ff; border-left: 4px solid #2196F3; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
+                        <p style="margin: 0; font-size: 13px; color: #1976D2;">
+                            💡 <strong>Nota:</strong> Cambiar el departamento puede afectar permisos, turnos y asignaciones del usuario.
+                        </p>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button onclick="closeDepartmentModal()" class="btn btn-secondary">
+                            ❌ Cancelar
+                        </button>
+                        <button onclick="saveDepartmentChange('${userId}')" class="btn btn-success">
+                            💾 Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Close function
+        window.closeDepartmentModal = () => {
+            modal.remove();
+            delete window.closeDepartmentModal;
+            delete window.saveDepartmentChange;
+        };
+
+        // Save function
+        window.saveDepartmentChange = async (userId) => {
+            try {
+                const newDeptId = document.getElementById('newDepartmentSelect').value;
+
+                const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        departmentId: newDeptId || null
+                    })
+                });
+
+                if (!response.ok) throw new Error('Error al cambiar departamento');
+
+                showUserMessage('✅ Departamento actualizado correctamente', 'success');
+                closeDepartmentModal();
+
+                // Refresh view if modal is open
+                if (document.getElementById('employeeFileModal')) {
+                    viewUser(userId);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showUserMessage('❌ Error al cambiar departamento: ' + error.message, 'error');
+            }
+        };
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al cargar departamentos: ' + error.message, 'error');
+    }
 }
 
-// Manage branches
-function manageBranches(userId) {
-    showUserMessage('🚧 Función en desarrollo - Gestionar Sucursales', 'info');
+// Manage branches - CRUD completo
+async function manageBranches(userId) {
+    console.log('🏢 [USERS] Gestionando sucursales para usuario:', userId);
+
+    try {
+        // Get user data
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Get current user data
+        const userResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!userResponse.ok) throw new Error('Error al obtener usuario');
+        const userData = await userResponse.json();
+        const user = userData.user || userData;
+
+        // Get all available branches for the company
+        const branchesResponse = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/departments'), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!branchesResponse.ok) throw new Error('Error al obtener sucursales');
+        const branchesData = await branchesResponse.json();
+        const branches = branchesData.departments || branchesData || [];
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'manageBranchesModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
+
+        const branchesOptions = branches.map(branch => `
+            <option value="${branch.id}" ${user.defaultBranchId === branch.id ? 'selected' : ''}>
+                ${branch.name || branch.department_name || 'Sin nombre'}
+            </option>
+        `).join('');
+
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                <div style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        🏢 Gestionar Sucursales
+                        <button onclick="closeBranchesModal()" style="margin-left: auto; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">✕</button>
+                    </h3>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Usuario: ${user.firstName} ${user.lastName}</p>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">🏢 Sucursal por Defecto:</label>
+                        <select id="defaultBranchSelect" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            <option value="">Sin sucursal asignada</option>
+                            ${branchesOptions}
+                        </select>
+                        <p style="font-size: 12px; color: #666; margin-top: 8px;">
+                            💡 La sucursal por defecto se usa para asignaciones automáticas
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">📍 Sucursales Autorizadas:</label>
+                        <div id="authorizedBranches" style="max-height: 200px; overflow-y: auto; border: 2px solid #ddd; border-radius: 6px; padding: 10px; background: #f8f9fa;">
+                            ${branches.map(branch => `
+                                <label style="display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-bottom: 1px solid #dee2e6;">
+                                    <input type="checkbox" value="${branch.id}" ${user.authorizedBranches && user.authorizedBranches.includes(branch.id) ? 'checked' : ''} style="transform: scale(1.2);">
+                                    <span style="flex: 1;">${branch.name || branch.department_name || 'Sin nombre'}</span>
+                                    <span style="font-size: 12px; color: #666;">${branch.address || 'Sin dirección'}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                        <p style="font-size: 12px; color: #666; margin-top: 8px;">
+                            💡 El usuario podrá registrar asistencia en las sucursales autorizadas
+                        </p>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button onclick="closeBranchesModal()" class="btn btn-secondary">
+                            ❌ Cancelar
+                        </button>
+                        <button onclick="saveBranchesAssignment('${userId}')" class="btn btn-success">
+                            💾 Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Close function
+        window.closeBranchesModal = () => {
+            modal.remove();
+            delete window.closeBranchesModal;
+            delete window.saveBranchesAssignment;
+        };
+
+        // Save function
+        window.saveBranchesAssignment = async (userId) => {
+            try {
+                const defaultBranch = document.getElementById('defaultBranchSelect').value;
+                const checkboxes = document.querySelectorAll('#authorizedBranches input[type="checkbox"]:checked');
+                const authorizedBranches = Array.from(checkboxes).map(cb => cb.value);
+
+                const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        defaultBranchId: defaultBranch || null,
+                        authorizedBranches: authorizedBranches
+                    })
+                });
+
+                if (!response.ok) throw new Error('Error al guardar sucursales');
+
+                showUserMessage('✅ Sucursales actualizadas correctamente', 'success');
+                closeBranchesModal();
+
+                // Refresh view if modal is open
+                if (document.getElementById('employeeFileModal')) {
+                    viewUser(userId);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showUserMessage('❌ Error al guardar: ' + error.message, 'error');
+            }
+        };
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al cargar sucursales: ' + error.message, 'error');
+    }
 }
 
 // Generate user report
-function generateUserReport(userId) {
-    showUserMessage('🚧 Función en desarrollo - Generar Reporte', 'info');
+async function generateUserReport(userId) {
+    console.log('📊 [USERS] Generando reporte para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Get user data
+        const userResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!userResponse.ok) throw new Error('Error al obtener usuario');
+        const userData = await userResponse.json();
+        const user = userData.user || userData;
+
+        // Create modal with report options
+        const modal = document.createElement('div');
+        modal.id = 'generateReportModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
+
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%;">
+                <div style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        📊 Generar Reporte
+                        <button onclick="closeReportModal()" style="margin-left: auto; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">✕</button>
+                    </h3>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Usuario: ${user.firstName} ${user.lastName}</p>
+                </div>
+                <div style="padding: 20px;">
+                    <h4 style="margin-top: 0;">📋 Tipo de Reporte:</h4>
+
+                    <div style="display: grid; gap: 10px; margin-bottom: 20px;">
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="reportType" value="complete" checked style="transform: scale(1.3);">
+                            <div>
+                                <strong>📄 Reporte Completo</strong>
+                                <br><small style="color: #666;">Incluye todos los datos del empleado</small>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="reportType" value="attendance" style="transform: scale(1.3);">
+                            <div>
+                                <strong>📅 Reporte de Asistencias</strong>
+                                <br><small style="color: #666;">Historial de asistencias y ausencias</small>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="reportType" value="medical" style="transform: scale(1.3);">
+                            <div>
+                                <strong>🏥 Reporte Médico</strong>
+                                <br><small style="color: #666;">Exámenes, vacunas y condiciones médicas</small>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="reportType" value="performance" style="transform: scale(1.3);">
+                            <div>
+                                <strong>📈 Reporte de Desempeño</strong>
+                                <br><small style="color: #666;">Evaluaciones y métricas de desempeño</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style="background: #e7f3ff; border-left: 4px solid #2196F3; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
+                        <p style="margin: 0; font-size: 13px; color: #1976D2;">
+                            💡 El reporte se descargará en formato PDF
+                        </p>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button onclick="closeReportModal()" class="btn btn-secondary">
+                            ❌ Cancelar
+                        </button>
+                        <button onclick="downloadUserReport('${userId}')" class="btn btn-success">
+                            📥 Descargar Reporte
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Add hover effect
+        const labels = modal.querySelectorAll('label');
+        labels.forEach(label => {
+            label.addEventListener('mouseenter', () => {
+                label.style.borderColor = '#17a2b8';
+                label.style.background = '#f0f9ff';
+            });
+            label.addEventListener('mouseleave', () => {
+                label.style.borderColor = '#e9ecef';
+                label.style.background = 'white';
+            });
+        });
+
+        // Close function
+        window.closeReportModal = () => {
+            modal.remove();
+            delete window.closeReportModal;
+            delete window.downloadUserReport;
+        };
+
+        // Download function
+        window.downloadUserReport = async (userId) => {
+            try {
+                const reportType = document.querySelector('input[name="reportType"]:checked').value;
+
+                showUserMessage('📥 Generando reporte...', 'info');
+
+                // Create download URL
+                const downloadUrl = window.progressiveAdmin.getApiUrl(
+                    `/api/v1/users/${userId}/report?type=${reportType}`
+                );
+
+                // Download the file
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `reporte_${user.firstName}_${user.lastName}_${reportType}_${new Date().toISOString().split('T')[0]}.pdf`;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showUserMessage('✅ Reporte generado correctamente', 'success');
+                closeReportModal();
+            } catch (error) {
+                console.error('Error:', error);
+                showUserMessage('❌ Error al generar reporte: ' + error.message, 'error');
+            }
+        };
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al generar reporte: ' + error.message, 'error');
+    }
 }
 
 // Audit user history
-function auditUserHistory(userId) {
-    showUserMessage('🚧 Función en desarrollo - Historial de Cambios', 'info');
+async function auditUserHistory(userId) {
+    console.log('📋 [USERS] Mostrando historial de cambios para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Get user data
+        const userResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!userResponse.ok) throw new Error('Error al obtener usuario');
+        const userData = await userResponse.json();
+        const user = userData.user || userData;
+
+        // Get audit logs (if endpoint exists)
+        let auditLogs = [];
+        try {
+            const logsResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}/audit-logs`), {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (logsResponse.ok) {
+                const logsData = await logsResponse.json();
+                auditLogs = logsData.logs || logsData || [];
+            }
+        } catch (e) {
+            console.log('No audit logs endpoint available');
+        }
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'auditHistoryModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
+
+        const logsHTML = auditLogs.length > 0 ? auditLogs.map(log => `
+            <div style="border-left: 4px solid #17a2b8; padding: 12px; margin-bottom: 10px; background: #f8f9fa; border-radius: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <strong>${log.action || 'Cambio'}</strong>
+                    <small style="color: #666;">${new Date(log.timestamp || log.createdAt).toLocaleString('es-AR')}</small>
+                </div>
+                <div style="font-size: 13px; color: #666;">
+                    ${log.description || log.changes || 'Sin descripción'}
+                </div>
+                ${log.user ? `<div style="font-size: 12px; color: #999; margin-top: 5px;">Por: ${log.user.firstName} ${log.user.lastName}</div>` : ''}
+            </div>
+        `).join('') : '<p style="text-align: center; color: #666; padding: 20px;">No hay historial de cambios disponible</p>';
+
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 12px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                <div style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 1;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        📋 Historial de Cambios
+                        <button onclick="closeAuditModal()" style="margin-left: auto; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">✕</button>
+                    </h3>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Usuario: ${user.firstName} ${user.lastName}</p>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
+                        <p style="margin: 0; font-size: 13px; color: #856404;">
+                            ℹ️ Este historial muestra todos los cambios realizados en el expediente del usuario.
+                        </p>
+                    </div>
+
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        ${logsHTML}
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button onclick="closeAuditModal()" class="btn btn-secondary">
+                            ❌ Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Close function
+        window.closeAuditModal = () => {
+            modal.remove();
+            delete window.closeAuditModal;
+        };
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al cargar historial: ' + error.message, 'error');
+    }
 }
 
 // Verify user biometric
