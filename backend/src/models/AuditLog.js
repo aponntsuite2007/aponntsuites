@@ -213,10 +213,11 @@ module.exports = (sequelize) => {
       allowNull: true
     },
 
-    fix_rollback_available: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    },
+    // NOTA: fix_rollback_available removido - no existe en tabla audit_test_logs
+    // fix_rollback_available: {
+    //   type: DataTypes.BOOLEAN,
+    //   defaultValue: false
+    // },
 
     // ═══════════════════════════════════════════════════════════
     // SUGGESTIONS (para fixes manuales)
@@ -272,8 +273,9 @@ module.exports = (sequelize) => {
     }
 
   }, {
-    tableName: 'audit_logs',
+    tableName: 'audit_test_logs',
     timestamps: true, // createdAt, updatedAt automáticos
+    underscored: true, // Usar snake_case (created_at, updated_at) en vez de camelCase
     indexes: [
       { fields: ['execution_id'] },
       { fields: ['company_id'] },

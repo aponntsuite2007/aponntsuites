@@ -41,7 +41,7 @@ class ReportsModuleCollector extends BaseModuleCollector {
     async navigateToReportsModule() {
         console.log('\n📂 Navegando al módulo de Reportes...\n');
         await this.page.waitForSelector('.module-item', { timeout: 10000 });
-        await this.clickElement('button[onclick*="loadModule(\\'reports\\')"]', 'módulo Reportes');
+        await this.clickElement('button[onclick*="loadModule("]', 'módulo Reportes');
         await this.page.waitForSelector('#reports-content', { timeout: 10000 });
         console.log('✅ Módulo de Reportes cargado\n');
     }

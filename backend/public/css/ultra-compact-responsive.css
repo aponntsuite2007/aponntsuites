@@ -1,0 +1,275 @@
+/**
+ * ULTRA COMPACT RESPONSIVE CSS
+ * Solución agresiva para problemas de tamaño y responsividad
+ */
+
+/* ========== REDUCIR HEADER PRINCIPAL ========== */
+.header,
+.main-header {
+    max-height: 60px !important;
+    padding: 5px 10px !important;
+    overflow: hidden !important;
+}
+
+.header img,
+.logo-container img {
+    max-height: 40px !important;
+}
+
+/* ========== GRID DE MÓDULOS ULTRA COMPACTO ========== */
+.module-grid {
+    padding: 5px !important;
+    gap: 5px !important;
+    max-height: 150px !important; /* Máximo 150px de altura */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important;
+}
+
+.module-card {
+    min-height: 50px !important;
+    max-height: 60px !important;
+    padding: 4px !important;
+    font-size: 10px !important;
+}
+
+.module-card i {
+    font-size: 18px !important;
+    margin: 0 !important;
+}
+
+.module-card h3,
+.module-card .module-title {
+    font-size: 10px !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.module-card p,
+.module-card .module-description {
+    display: none !important;
+}
+
+/* ========== MODALES RESPONSIVE ========== */
+.modal-dialog {
+    margin: 5px !important;
+    width: calc(100% - 10px) !important;
+    max-width: calc(100% - 10px) !important;
+    height: calc(100vh - 10px) !important;
+    max-height: calc(100vh - 10px) !important;
+}
+
+.modal-content {
+    height: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.modal-header {
+    padding: 5px 10px !important;
+    min-height: auto !important;
+    flex-shrink: 0 !important;
+}
+
+.modal-title {
+    font-size: 14px !important;
+    margin: 0 !important;
+}
+
+.modal-body {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 10px !important;
+    max-height: calc(100vh - 120px) !important;
+}
+
+.modal-footer {
+    padding: 5px 10px !important;
+    flex-shrink: 0 !important;
+}
+
+/* ========== TABS COMPACTOS ========== */
+.file-tabs,
+.nav-tabs {
+    min-height: 30px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+}
+
+.file-tab,
+.nav-link {
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+    margin: 2px !important;
+    height: auto !important;
+    line-height: 1.2 !important;
+}
+
+.tab-content {
+    padding: 5px !important;
+    height: calc(100% - 40px) !important;
+    overflow-y: auto !important;
+}
+
+.tab-pane {
+    height: 100% !important;
+}
+
+/* ========== FORMULARIOS COMPACTOS ========== */
+.form-group {
+    margin-bottom: 5px !important;
+}
+
+.form-label {
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
+}
+
+.form-control,
+.form-select {
+    padding: 3px 5px !important;
+    font-size: 12px !important;
+    height: 28px !important;
+}
+
+textarea.form-control {
+    min-height: 50px !important;
+}
+
+/* ========== BOTONES COMPACTOS ========== */
+.btn {
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+    height: auto !important;
+    line-height: 1.3 !important;
+}
+
+.btn-sm {
+    padding: 2px 6px !important;
+    font-size: 11px !important;
+}
+
+/* ========== TABLAS COMPACTAS ========== */
+.table {
+    font-size: 11px !important;
+}
+
+.table td,
+.table th {
+    padding: 3px 5px !important;
+}
+
+/* ========== DASHBOARD CONTENT ========== */
+.dashboard-content,
+#mainContent {
+    margin-top: 5px !important;
+    padding: 5px !important;
+}
+
+/* ========== RESPONSIVE BREAKPOINTS ========== */
+
+/* Pantallas pequeñas (< 768px) */
+@media (max-width: 768px) {
+    .module-grid {
+        max-height: 100px !important;
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)) !important;
+    }
+
+    .module-card {
+        min-height: 40px !important;
+        max-height: 45px !important;
+    }
+
+    .modal-dialog {
+        margin: 0 !important;
+        width: 100% !important;
+        height: 100vh !important;
+        max-width: 100% !important;
+        max-height: 100vh !important;
+    }
+
+    .file-tab,
+    .nav-link {
+        font-size: 10px !important;
+        padding: 2px 5px !important;
+    }
+}
+
+/* Pantallas medianas (768px - 1200px) */
+@media (min-width: 768px) and (max-width: 1200px) {
+    .module-grid {
+        max-height: 120px !important;
+    }
+
+    .modal-dialog {
+        width: 95% !important;
+        max-width: 95% !important;
+    }
+}
+
+/* Pantallas grandes (> 1200px) */
+@media (min-width: 1200px) {
+    .modal-dialog {
+        width: 90% !important;
+        max-width: 1400px !important;
+    }
+}
+
+/* ========== FIXES ESPECÍFICOS ========== */
+
+/* Asegurar que el contenido sea scrollable */
+* {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Prevenir overflow horizontal */
+body {
+    overflow-x: hidden !important;
+}
+
+/* Z-index para modales */
+.modal {
+    z-index: 9999 !important;
+}
+
+.modal-backdrop {
+    z-index: 9998 !important;
+}
+
+/* Hacer todo más clickeable en móvil */
+@media (max-width: 768px) {
+    button,
+    .btn,
+    .module-card,
+    .file-tab,
+    .nav-link {
+        min-height: 35px !important;
+        min-width: 35px !important;
+    }
+}
+
+/* ========== SCROLLBARS DELGADAS ========== */
+::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888 !important;
+    border-radius: 3px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555 !important;
+}

@@ -2017,10 +2017,14 @@ function showShiftMessage(message, type) {
     }, 3000);
 }
 
-// ✅ EXPOSICIÓN GLOBAL (requerido para panel-empresa.html)
-// Fix para error: "showShiftsContent NO es función"
-// La función existe pero debe estar en window para ser accesible desde HTML
+// ✅ EXPOSICIÓN GLOBAL (requerido para panel-empresa.html) (Legacy)
 window.showShiftsContent = showShiftsContent;
 
+// ✅ EXPORTACIÓN UNIFICADA (Sistema de Auto-Conocimiento v3.0)
+if (!window.Modules) window.Modules = {};
+window.Modules.shifts = {
+    init: showShiftsContent
+};
+
 console.log('✅ [SHIFTS] Módulo turnos avanzado v7.0 configurado - Sistema flexible completo');
-console.log('✅ [SHIFTS] showShiftsContent expuesta en window.showShiftsContent');
+console.log('🧠 [SHIFTS] Exportación unificada registrada: window.Modules.shifts');

@@ -129,8 +129,7 @@ router.get('/employees', authenticateCompany, async (req, res) => {
       SELECT
         u.id, u.first_name, u.last_name, u.email, u.employee_id,
         u.phone, u.hire_date, u.is_active, u.role, u.position,
-        d.name as department_name,
-        u.created_at, u.updated_at
+        d.name as department_name
       FROM users u
       LEFT JOIN departments d ON u.department_id = d.id
       WHERE ${whereConditions.join(' AND ')}

@@ -107,12 +107,10 @@ class AzureFaceService {
           'exposure',
           'noise',
           'occlusion',
-          // ⬇️ ANÁLISIS EMOCIONAL Y BIENESTAR (PROFESIONAL)
-          'emotion',      // 8 emociones con scores 0-1
-          'smile',        // Intensidad de sonrisa (0-1)
-          'facialHair',   // Indicador de autocuidado
-          'glasses',      // Detección de lentes (fatiga visual)
-          'age'           // Estimación de edad
+          // ⬇️ DETECCIÓN DE ACCESORIOS Y OBSTRUCCIONES (AZURE REAL)
+          'accessories',  // Gorra, anteojos, pañuelo, mascarilla (con confidence)
+          'glasses',      // NoGlasses, ReadingGlasses, Sunglasses, SwimmingGoggles
+          'mask'          // Detección de mascarilla facial
         ].join(','),
         returnRecognitionModel: true
       };
@@ -195,12 +193,10 @@ class AzureFaceService {
           noise: face.faceAttributes?.noise,
           occlusion: face.faceAttributes?.occlusion,
           headPose: face.faceAttributes?.headPose,
-          // ⬇️ DATOS EMOCIONALES Y BIENESTAR (PROFESIONAL)
-          emotion: face.faceAttributes?.emotion,           // 8 emociones REALES de Azure
-          smile: face.faceAttributes?.smile,               // Intensidad sonrisa
-          facialHair: face.faceAttributes?.facialHair,     // Autocuidado
-          glasses: face.faceAttributes?.glasses,           // Fatiga visual
-          age: face.faceAttributes?.age                    // Edad estimada
+          // ⬇️ DETECCIÓN DE ACCESORIOS Y OBSTRUCCIONES (AZURE REAL)
+          accessories: face.faceAttributes?.accessories,   // Array: headwear, glasses, mask (con confidence)
+          glasses: face.faceAttributes?.glasses,           // NoGlasses, ReadingGlasses, Sunglasses, SwimmingGoggles
+          mask: face.faceAttributes?.mask                  // Detección de mascarilla facial
         },
         recognitionModel: face.recognitionModel,
         detectionModel: this.detectionModel,

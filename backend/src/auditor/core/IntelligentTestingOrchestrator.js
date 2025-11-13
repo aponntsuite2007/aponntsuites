@@ -82,6 +82,12 @@ class IntelligentTestingOrchestrator {
         const ShiftsModuleCollector = require('../collectors/ShiftsModuleCollector');
         const BiometricDevicesCollector = require('../collectors/BiometricDevicesCollector');
 
+        // Nuevo collector con integración de notificaciones (2025-11-08)
+        const MedicalDashboardModuleCollector = require('../collectors/MedicalDashboardModuleCollector');
+
+        // Nuevo collector de Kiosks (2025-11-08)
+        const KiosksModuleCollector = require('../collectors/KiosksModuleCollector');
+
         // Registrar collectors
         this.registerCollector('employee_profile', EmployeeProfileCollector);
         this.registerCollector('attendance', AttendanceModuleCollector);
@@ -90,9 +96,10 @@ class IntelligentTestingOrchestrator {
         this.registerCollector('departments', DepartmentsModuleCollector);
         this.registerCollector('shifts', ShiftsModuleCollector);
         this.registerCollector('biometric_devices', BiometricDevicesCollector);
+        this.registerCollector('medical-dashboard', MedicalDashboardModuleCollector);
+        this.registerCollector('kiosks', KiosksModuleCollector);
 
-        // TODO: Agregar los 28 collectors restantes aquí a medida que se implementen
-        // this.registerCollector('kiosks', KiosksModuleCollector);
+        // TODO: Agregar los 27 collectors restantes aquí a medida que se implementen
         // this.registerCollector('notifications', NotificationsModuleCollector);
         // etc...
 
@@ -309,7 +316,7 @@ class IntelligentTestingOrchestrator {
     /**
      * Ejecutar test de un solo módulo (con reintentos)
      */
-    async runSingleModule(execution_id, companyId, moduleName, maxRetries = 0) {
+    async runSingleModule(execution_id, companyId, moduleName, maxRetries = 0, externalPage = null) {
         const CollectorClass = this.collectors.get(moduleName);
 
         if (!CollectorClass) {
@@ -326,7 +333,14 @@ class IntelligentTestingOrchestrator {
                 }
 
                 const collector = new CollectorClass(this.database, this.systemRegistry);
-                const results = await collector.collect(execution_id, { company_id: companyId });
+                const config = { company_id: companyId };
+
+                // Si hay un navegador externo, usarlo (skip login)
+                if (externalPage) {
+                    config.page = externalPage;
+                }
+
+                const results = await collector.collect(execution_id, config);
 
                 return results;
 

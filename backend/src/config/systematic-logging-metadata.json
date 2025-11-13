@@ -1,0 +1,510 @@
+{
+  "module_key": "systematic-logging",
+  "metadata_level": "DIOS",
+  "version": "1.0.0",
+  "created_at": "2025-11-01",
+  "description": "Sistema de logging sistemático profesional con niveles jerárquicos, categorías por componente, tracking de fases del ciclo virtuoso, y captura automática para Knowledge Base",
+
+  "architecture": {
+    "type": "infrastructure",
+    "pattern": "singleton",
+    "location": "backend/src/logging/",
+    "files": {
+      "core": {
+        "SystemLogger.js": {
+          "lines": 387,
+          "description": "Logger centralizado con todas las funcionalidades",
+          "exports": ["SystemLogger class", "getInstance()", "createLogger()"]
+        },
+        "LogLevels.js": {
+          "lines": 75,
+          "description": "Niveles jerárquicos DEBUG → INFO → WARN → ERROR → FATAL",
+          "exports": ["LogLevels object", "shouldLog()", "getLevel()"]
+        },
+        "LogCategories.js": {
+          "lines": 116,
+          "description": "Categorías por componente [DB], [WS], [ORCH], [TEST], etc.",
+          "exports": ["LogCategories object", "getCategory()", "listAll()"]
+        },
+        "PhaseTracker.js": {
+          "lines": 201,
+          "description": "Tracking de fases del ciclo virtuoso con EventEmitter",
+          "exports": ["PhaseTracker class", "Phases object"]
+        },
+        "index.js": {
+          "lines": 30,
+          "description": "Exports limpios del módulo",
+          "exports": ["getLogger", "createLogger", "SystemLogger", "LogLevels", "LogCategories", "PhaseTracker"]
+        }
+      }
+    }
+  },
+
+  "how_it_works": {
+    "overview": "El SystemLogger provee logging estructurado con formato ISO 8601, niveles jerárquicos, categorías por componente, tracking de fases del ciclo virtuoso, y captura automática de eventos importantes para la Knowledge Base",
+
+    "log_levels": {
+      "DEBUG": {
+        "priority": 0,
+        "color": "cyan",
+        "icon": "🔍",
+        "when_to_use": "Información detallada para debugging durante desarrollo",
+        "example": "logger.debug('DB', 'Ejecutando query', { query: 'SELECT...' })"
+      },
+      "INFO": {
+        "priority": 1,
+        "color": "green",
+        "icon": "✅",
+        "when_to_use": "Información general del sistema, operaciones exitosas",
+        "example": "logger.info('SYSTEM', 'Sistema iniciado correctamente')"
+      },
+      "WARN": {
+        "priority": 2,
+        "color": "yellow",
+        "icon": "⚠️",
+        "when_to_use": "Advertencias que no detienen el sistema pero requieren atención",
+        "example": "logger.warn('DB', 'Alto uso de conexiones', { usage: '85%' })",
+        "auto_capture": true,
+        "auto_notify": true
+      },
+      "ERROR": {
+        "priority": 3,
+        "color": "red",
+        "icon": "❌",
+        "when_to_use": "Errores recuperables que afectan funcionalidad pero el sistema continúa",
+        "example": "logger.error('API', 'Falló llamada externa', { error: err.message })",
+        "auto_capture": true,
+        "auto_notify": true
+      },
+      "FATAL": {
+        "priority": 4,
+        "color": "magenta",
+        "icon": "💀",
+        "when_to_use": "Errores críticos que detienen el sistema o componentes principales",
+        "example": "logger.fatal('DB', 'Conexión a BD perdida', { error: err.message })",
+        "auto_capture": true,
+        "auto_notify": true,
+        "urgency": "critical"
+      }
+    },
+
+    "categories": {
+      "SYSTEM": { "shortName": "SYS", "color": "white", "use_for": "Sistema general, inicialización, configuración" },
+      "DB": { "shortName": "DB", "color": "blue", "use_for": "PostgreSQL, queries, conexiones, migraciones" },
+      "WS": { "shortName": "WS", "color": "cyan", "use_for": "WebSocket, comunicación en tiempo real" },
+      "ORCHESTRATOR": { "shortName": "ORCH", "color": "magenta", "use_for": "Orquestador de tests, coordinación de flujos" },
+      "TEST": { "shortName": "TEST", "color": "yellow", "use_for": "Ejecución de tests E2E, validaciones" },
+      "OLLAMA": { "shortName": "AI", "color": "bright_magenta", "use_for": "Análisis con Ollama, generación de respuestas IA" },
+      "REPAIR": { "shortName": "FIX", "color": "green", "use_for": "Sistema de auto-reparación, aplicación de fixes" },
+      "BROWSER": { "shortName": "BROW", "color": "bright_cyan", "use_for": "Puppeteer, navegación web, E2E tests" },
+      "KNOWLEDGE": { "shortName": "KB", "color": "bright_blue", "use_for": "Knowledge Base, captura de eventos, aprendizaje" },
+      "TICKET": { "shortName": "TIK", "color": "bright_yellow", "use_for": "Generación de tickets, comunicación con Claude Code" }
+    },
+
+    "phases": {
+      "description": "Fases del ciclo virtuoso de testing y auto-reparación",
+      "flow": "INIT → TEST → ANALYZE → REPAIR → VALIDATE → COMPLETE",
+      "INIT": {
+        "order": 1,
+        "icon": "🚀",
+        "description": "Inicialización del sistema, arranque de componentes",
+        "next_phases": ["TEST"],
+        "typical_duration": "2-5 segundos"
+      },
+      "TEST": {
+        "order": 2,
+        "icon": "🧪",
+        "description": "Ejecución de tests E2E con Puppeteer + validación PostgreSQL",
+        "next_phases": ["ANALYZE", "COMPLETE"],
+        "typical_duration": "20-120 segundos por módulo"
+      },
+      "ANALYZE": {
+        "order": 3,
+        "icon": "🧠",
+        "description": "Análisis de errores con Ollama AI",
+        "next_phases": ["REPAIR"],
+        "typical_duration": "10-60 segundos"
+      },
+      "REPAIR": {
+        "order": 4,
+        "icon": "🔧",
+        "description": "Aplicación de fixes automáticos o envío a Claude Code",
+        "next_phases": ["VALIDATE"],
+        "typical_duration": "5-30 segundos"
+      },
+      "VALIDATE": {
+        "order": 5,
+        "icon": "✓",
+        "description": "Validación del fix aplicado, re-test",
+        "next_phases": ["TEST", "COMPLETE"],
+        "typical_duration": "10-60 segundos"
+      },
+      "COMPLETE": {
+        "order": 6,
+        "icon": "🎉",
+        "description": "Ciclo completado, exportación de logs",
+        "next_phases": [],
+        "typical_duration": "< 1 segundo"
+      }
+    }
+  },
+
+  "usage_examples": {
+    "basic_logging": {
+      "description": "Logging básico con niveles y categorías",
+      "code": [
+        "const { getLogger } = require('./logging');",
+        "const logger = getLogger({ minLevel: 'INFO' });",
+        "",
+        "logger.info('SYSTEM', 'Sistema iniciado');",
+        "logger.debug('DB', 'Conectando a PostgreSQL', { host: 'localhost' });",
+        "logger.warn('SYSTEM', 'Alto uso de memoria', { usage: '85%' });",
+        "logger.error('API', 'Error en llamada externa', { error: err.message });",
+        "logger.fatal('DB', 'Conexión perdida', { error: err.message });"
+      ]
+    },
+
+    "with_phase_tracking": {
+      "description": "Logging con tracking completo de fases",
+      "code": [
+        "const { getLogger } = require('./logging');",
+        "const logger = getLogger();",
+        "",
+        "// Iniciar ciclo",
+        "logger.startCycle('test-users-123');",
+        "",
+        "// Fase INIT",
+        "logger.enterPhase('INIT');",
+        "logger.info('SYSTEM', 'Inicializando componentes');",
+        "logger.exitPhase();",
+        "",
+        "// Fase TEST",
+        "logger.enterPhase('TEST');",
+        "logger.info('TEST', 'Ejecutando test de usuarios');",
+        "logger.exitPhase();",
+        "",
+        "// Completar ciclo",
+        "const summary = logger.completeCycle();",
+        "console.log('Duración total:', summary.durations);"
+      ]
+    },
+
+    "filtering_logs": {
+      "description": "Filtrado de logs por diferentes criterios",
+      "code": [
+        "// Solo errores",
+        "const errors = logger.getLogs({ level: 'ERROR' });",
+        "",
+        "// Solo logs de base de datos",
+        "const dbLogs = logger.getLogs({ category: 'DB' });",
+        "",
+        "// Solo logs de fase TEST",
+        "const testLogs = logger.getLogs({ phase: 'TEST' });",
+        "",
+        "// Logs desde un timestamp",
+        "const recent = logger.getLogs({ since: '2025-11-01T12:00:00.000Z' });",
+        "",
+        "// Eventos capturados para Knowledge Base",
+        "const knowledge = logger.getKnowledgeEvents(); // Solo WARN/ERROR/FATAL"
+      ]
+    }
+  },
+
+  "integration_points": {
+    "phase4_orchestrator": {
+      "file": "src/auditor/core/Phase4TestOrchestrator.js",
+      "how": "Usa logger para tracking completo del ciclo virtuoso",
+      "phases_used": ["INIT", "TEST", "ANALYZE", "REPAIR", "VALIDATE", "COMPLETE"],
+      "categories_used": ["ORCHESTRATOR", "TEST", "DB", "BROWSER", "OLLAMA", "REPAIR", "WS", "TICKET"]
+    },
+
+    "knowledge_base": {
+      "file": "src/services/UnifiedKnowledgeService.js",
+      "how": "Consume knowledgeEvents para aprendizaje automático",
+      "events_captured": ["WARN", "ERROR", "FATAL"],
+      "purpose": "Alimentar Ollama con eventos importantes del sistema"
+    },
+
+    "notifications_proactive": {
+      "file": "src/services/ProactiveNotificationService.js",
+      "how": "Recibe eventos automáticos desde logger cuando hay WARN/ERROR/FATAL",
+      "rules": "Routing automático según nivel y categoría",
+      "urgency_levels": ["medium", "high", "critical"]
+    }
+  },
+
+  "auto_notifications": {
+    "description": "Sistema de notificaciones automáticas basado en eventos de logging",
+    "enabled_by_default": true,
+    "configuration": {
+      "enable_auto_notifications": true,
+      "notification_service": "ProactiveNotificationService"
+    },
+
+    "routing_rules": {
+      "by_level": {
+        "WARN": {
+          "recipients": ["tech-lead"],
+          "urgency": "medium",
+          "channels": ["email"],
+          "message_template": "⚠️ Advertencia en {category}: {message}"
+        },
+        "ERROR": {
+          "recipients": ["admin", "tech-lead"],
+          "urgency": "high",
+          "channels": ["email", "slack"],
+          "message_template": "❌ Error en {category}: {message}"
+        },
+        "FATAL": {
+          "recipients": ["admin", "tech-lead", "on-call"],
+          "urgency": "critical",
+          "channels": ["email", "sms", "slack", "push"],
+          "message_template": "💀 ERROR CRÍTICO en {category}: {message}",
+          "escalation": "immediate"
+        }
+      },
+
+      "by_category": {
+        "DB": {
+          "additional_recipients": ["db-admin", "backend-team"],
+          "priority": "high",
+          "reason": "Problemas de BD afectan todo el sistema"
+        },
+        "OLLAMA": {
+          "additional_recipients": ["ai-team", "backend-team"],
+          "priority": "medium",
+          "reason": "Análisis IA crítico para auto-reparación"
+        },
+        "BROWSER": {
+          "additional_recipients": ["qa-team", "frontend-team"],
+          "priority": "medium",
+          "reason": "Tests E2E requieren atención de QA"
+        },
+        "WS": {
+          "additional_recipients": ["backend-team", "devops"],
+          "priority": "high",
+          "reason": "WebSocket crítico para comunicación en tiempo real"
+        },
+        "ORCHESTRATOR": {
+          "additional_recipients": ["qa-team", "tech-lead"],
+          "priority": "high",
+          "reason": "Orquestador controla flujo completo de testing"
+        },
+        "REPAIR": {
+          "additional_recipients": ["tech-lead", "on-call"],
+          "priority": "critical",
+          "reason": "Auto-reparación fallida requiere intervención inmediata"
+        },
+        "SYSTEM": {
+          "additional_recipients": ["admin", "devops"],
+          "priority": "high",
+          "reason": "Problemas de sistema afectan disponibilidad general"
+        }
+      },
+
+      "combined_routing": {
+        "description": "Combinación de routing por nivel + categoría",
+        "example": {
+          "event": {
+            "level": "ERROR",
+            "category": "DB",
+            "message": "Conexión a PostgreSQL perdida"
+          },
+          "final_recipients": ["admin", "tech-lead", "db-admin", "backend-team"],
+          "urgency": "high",
+          "channels": ["email", "slack"],
+          "deduplication": true
+        }
+      }
+    },
+
+    "throttling": {
+      "description": "Evitar spam de notificaciones",
+      "same_event": {
+        "window": "5 minutes",
+        "max_notifications": 1,
+        "reason": "No enviar notificación del mismo error más de 1 vez cada 5 minutos"
+      },
+      "category_limits": {
+        "per_category": {
+          "window": "15 minutes",
+          "max_notifications": 5,
+          "reason": "Máximo 5 notificaciones por categoría cada 15 minutos"
+        }
+      },
+      "global_limits": {
+        "window": "1 hour",
+        "max_notifications": 20,
+        "reason": "Máximo 20 notificaciones totales por hora"
+      }
+    }
+  },
+
+  "knowledge_capture": {
+    "description": "Captura automática de eventos importantes para alimentar la Knowledge Base",
+    "trigger_levels": ["WARN", "ERROR", "FATAL"],
+    "ignored_levels": ["DEBUG", "INFO"],
+
+    "captured_data": {
+      "type": "LOG_EVENT",
+      "level": "string (WARN|ERROR|FATAL)",
+      "category": "string",
+      "phase": "string (fase actual del ciclo)",
+      "message": "string",
+      "metadata": "object (datos adicionales)",
+      "timestamp": "ISO 8601"
+    },
+
+    "purpose": [
+      "Alimentar Ollama con contexto histórico de errores",
+      "Mejorar análisis de root cause",
+      "Detectar patrones de fallos recurrentes",
+      "Generar sugerencias de auto-reparación más precisas"
+    ]
+  },
+
+  "configuration": {
+    "constructor_options": {
+      "minLevel": {
+        "type": "string",
+        "default": "INFO",
+        "values": ["DEBUG", "INFO", "WARN", "ERROR", "FATAL"],
+        "description": "Nivel mínimo de logging - filtra automáticamente",
+        "env_var": "LOG_LEVEL"
+      },
+      "enableColors": {
+        "type": "boolean",
+        "default": true,
+        "description": "Habilitar colores ANSI en consola"
+      },
+      "enableFile": {
+        "type": "boolean",
+        "default": false,
+        "description": "Escribir logs a archivo en backend/logs/"
+      },
+      "enableKnowledgeCapture": {
+        "type": "boolean",
+        "default": true,
+        "description": "Capturar eventos WARN/ERROR/FATAL para Knowledge Base"
+      },
+      "enableAutoNotifications": {
+        "type": "boolean",
+        "default": true,
+        "description": "Enviar notificaciones automáticas al equipo"
+      },
+      "includeTimestamp": {
+        "type": "boolean",
+        "default": true,
+        "description": "Incluir timestamp ISO 8601 en cada log"
+      },
+      "includePhase": {
+        "type": "boolean",
+        "default": true,
+        "description": "Incluir fase actual del ciclo en cada log"
+      },
+      "timestampFormat": {
+        "type": "string",
+        "default": "ISO",
+        "values": ["ISO", "UNIX", "HUMAN"],
+        "description": "Formato del timestamp"
+      }
+    }
+  },
+
+  "exported_files": {
+    "location": "backend/logs/",
+    "format": "JSON",
+    "naming": "phase4-{executionId}.json",
+    "trigger": "Al completar ciclo (completeCycle())",
+
+    "structure": {
+      "exportedAt": "ISO 8601 timestamp",
+      "cycleSummary": {
+        "executionId": "string",
+        "currentPhase": "string",
+        "phaseCount": "number",
+        "history": ["array de fases visitadas"],
+        "durations": ["array de duraciones por fase"]
+      },
+      "logs": ["array de todos los logs del ciclo"],
+      "knowledgeEvents": ["array de eventos WARN/ERROR/FATAL para KB"]
+    }
+  },
+
+  "dependencies": {
+    "required": [],
+    "optional": ["notifications-proactive"],
+    "integrates_with": ["phase4-orchestrator", "ollama-analyzer", "unified-knowledge", "claude-code-websocket"],
+    "provides_to": ["all-modules"]
+  },
+
+  "api": {
+    "logging_methods": {
+      "debug(category, message, metadata)": "Log nivel DEBUG",
+      "info(category, message, metadata)": "Log nivel INFO",
+      "warn(category, message, metadata)": "Log nivel WARN (auto-captura + notificación)",
+      "error(category, message, metadata)": "Log nivel ERROR (auto-captura + notificación)",
+      "fatal(category, message, metadata)": "Log nivel FATAL (auto-captura + notificación urgente)"
+    },
+
+    "phase_tracking": {
+      "startCycle(executionId)": "Iniciar nuevo ciclo de testing/repair",
+      "enterPhase(phaseName)": "Entrar a una fase (INIT|TEST|ANALYZE|REPAIR|VALIDATE|COMPLETE)",
+      "exitPhase()": "Salir de la fase actual",
+      "completeCycle()": "Completar ciclo y exportar logs"
+    },
+
+    "utilities": {
+      "separator(char='=', length=80)": "Imprimir separador visual",
+      "header(title, icon='🚀')": "Imprimir header de sección",
+      "getLogs(filter={})": "Obtener logs filtrados",
+      "getKnowledgeEvents()": "Obtener eventos para Knowledge Base",
+      "exportLogs(filename)": "Exportar logs a archivo JSON"
+    }
+  },
+
+  "common_issues": [
+    {
+      "issue": "Logs no aparecen en consola",
+      "cause": "minLevel muy alto (ej: minLevel='ERROR' no muestra DEBUG/INFO/WARN)",
+      "solution": "Ajustar minLevel='DEBUG' o cambiar LOG_LEVEL en .env"
+    },
+    {
+      "issue": "Error 'Fase inválida' al usar enterPhase()",
+      "cause": "Intentar transición inválida (ej: INIT → REPAIR sin pasar por TEST)",
+      "solution": "Respetar flujo: INIT → TEST → ANALYZE → REPAIR → VALIDATE → COMPLETE"
+    },
+    {
+      "issue": "knowledgeEvents está vacío",
+      "cause": "Solo captura WARN/ERROR/FATAL, no DEBUG/INFO",
+      "solution": "Verificar que haya eventos de nivel WARN o superior"
+    },
+    {
+      "issue": "Notificaciones no se envían",
+      "cause": "enableAutoNotifications=false o ProactiveNotificationService no configurado",
+      "solution": "Habilitar notificaciones en config y verificar servicio"
+    }
+  ],
+
+  "performance": {
+    "overhead": "< 1ms por log statement",
+    "memory": "~5KB por 100 logs en buffer",
+    "file_io": "Asíncrono, no bloquea event loop",
+    "recommendations": [
+      "Usar minLevel='INFO' en producción para reducir volumen",
+      "Usar minLevel='DEBUG' solo en desarrollo",
+      "enableFile=true solo si necesitas persistencia",
+      "Limpiar logs antiguos periódicamente (>7 días)"
+    ]
+  },
+
+  "security": {
+    "sensitive_data": "NO loggear passwords, tokens, PII sin sanitizar",
+    "recommendations": [
+      "Sanitizar metadata antes de loggear",
+      "Usar [REDACTED] para datos sensibles",
+      "Revisar logs exportados antes de compartir"
+    ],
+    "example": "logger.info('AUTH', 'Login exitoso', { user: user.id, email: '[REDACTED]' })"
+  }
+}

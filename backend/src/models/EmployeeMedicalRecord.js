@@ -90,6 +90,27 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('none', 'rare', 'weekly', 'daily'),
       allowNull: true
     },
+    // Uso de anteojos (para validación biométrica)
+    usesGlasses: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: 'Si el empleado usa anteojos'
+    },
+    glassesType: {
+      type: DataTypes.ENUM('reading', 'distance', 'bifocals', 'progressive', 'other'),
+      allowNull: true,
+      comment: 'Tipo de anteojos que usa'
+    },
+    glassesPermanent: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: 'Si usa anteojos permanentemente o solo ocasionalmente'
+    },
+    glassesNotes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Notas adicionales sobre uso de anteojos (prescripción, razón médica, etc.)'
+    },
     // Vacunas
     vaccinations: {
       type: DataTypes.JSON,

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Email - Aponnt</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 30px auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .result-message {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-left: 10px;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #004085;
+            text-align: left;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .btn {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+
+            .btn-secondary {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🔐</div>
+        <h1>Verificación de Email</h1>
+        <p class="subtitle">Sistema de Asistencia Biométrico Aponnt</p>
+
+        <!-- Loading state -->
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Verificando su email...</p>
+        </div>
+
+        <!-- Success state -->
+        <div id="success" class="result success">
+            <div class="result-icon">✅</div>
+            <div class="result-title">¡Email Verificado Exitosamente!</div>
+            <div class="result-message">
+                Su cuenta ha sido <strong>ACTIVADA</strong>.<br>
+                Ya puede iniciar sesión en el sistema.
+            </div>
+            <div class="info-box">
+                <strong>Próximos pasos:</strong>
+                • Inicie sesión con sus credenciales<br>
+                • Explore las funcionalidades del sistema<br>
+                • Configure su perfil biométrico (si aplica)
+            </div>
+            <a href="/" class="btn">Ir a Login</a>
+        </div>
+
+        <!-- Error state -->
+        <div id="error" class="result error">
+            <div class="result-icon">❌</div>
+            <div class="result-title">Error en Verificación</div>
+            <div class="result-message" id="errorMessage">
+                No se pudo verificar su email. Por favor, verifique el enlace o solicite un nuevo email de verificación.
+            </div>
+            <div class="info-box">
+                <strong>Posibles causas:</strong>
+                • El enlace ha expirado (válido por 48 horas)<br>
+                • El enlace ya fue utilizado<br>
+                • El token es inválido
+            </div>
+            <a href="/" class="btn">Volver a Login</a>
+            <button class="btn btn-secondary" onclick="resendEmail()">Reenviar Email</button>
+        </div>
+    </div>
+
+    <script>
+        // Obtener token de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        const loadingEl = document.getElementById('loading');
+        const successEl = document.getElementById('success');
+        const errorEl = document.getElementById('error');
+        const errorMessageEl = document.getElementById('errorMessage');
+
+        // Función para mostrar error
+        function showError(message) {
+            loadingEl.style.display = 'none';
+            errorEl.style.display = 'block';
+            errorMessageEl.textContent = message;
+        }
+
+        // Función para mostrar éxito
+        function showSuccess() {
+            loadingEl.style.display = 'none';
+            successEl.style.display = 'block';
+        }
+
+        // Función para reenviar email
+        async function resendEmail() {
+            alert('⚠️ Funcionalidad de reenvío próximamente. Por favor, contacte al administrador.');
+        }
+
+        // Verificar token al cargar la página
+        if (!token) {
+            showError('❌ Token inválido. No se proporcionó un token de verificación.');
+        } else {
+            // Llamar a la API de verificación
+            fetch('/api/email-verification/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ token })
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Error desconocido');
+                    });
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Verificación exitosa:', data);
+                    showSuccess();
+                    // Ya no redirige automáticamente - el usuario decide cuándo ir a login
+                } else {
+                    showError(data.error || 'Error al verificar email');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error verificando email:', error);
+                let errorMessage = error.message;
+
+                // Mensajes de error específicos
+                if (errorMessage.includes('expirado')) {
+                    errorMessage = '⏰ El enlace ha expirado. Los enlaces de verificación son válidos por 48 horas. Por favor, solicite un nuevo enlace.';
+                } else if (errorMessage.includes('usado') || errorMessage.includes('inválido')) {
+                    errorMessage = '🔒 El enlace ya fue utilizado o es inválido. Si ya verificó su email, puede iniciar sesión directamente.';
+                } else {
+                    errorMessage = `❌ ${errorMessage}`;
+                }
+
+                showError(errorMessage);
+            });
+        }
+    </script>
+</body>
+</html>

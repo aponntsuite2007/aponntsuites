@@ -1,0 +1,311 @@
+/**
+ * RESPONSIVE MODALS - Sistema Global
+ *
+ * Hace que TODOS los modales sean responsive automáticamente:
+ * - Max height adaptativo según viewport
+ * - Scroll interno en el body del modal
+ * - Botones siempre visibles (footer fijo)
+ * - Funciona en móviles, tablets y desktop
+ */
+
+/* ============================================
+   MODALES BOOTSTRAP - Responsive Global
+   ============================================ */
+
+/* Modal wrapper - centrado vertical y horizontal */
+.modal {
+    display: none; /* Oculto por defecto */
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Solo mostrar cuando tiene clase .show */
+.modal.show {
+    display: flex !important;
+}
+
+/* Modal dialog - tamaño máximo responsivo */
+.modal-dialog {
+    max-width: 95vw !important;
+    width: 100%;
+    margin: 1rem auto;
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tamaños específicos que no excedan el viewport */
+.modal-dialog.modal-sm {
+    max-width: min(400px, 90vw) !important;
+}
+
+.modal-dialog.modal-lg {
+    max-width: min(800px, 95vw) !important;
+}
+
+.modal-dialog.modal-xl {
+    max-width: min(1140px, 95vw) !important;
+}
+
+/* Modal content - altura máxima y scroll */
+.modal-content {
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Modal header - siempre visible arriba */
+.modal-header {
+    flex-shrink: 0;
+    border-bottom: 1px solid #dee2e6;
+    background: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 1055;
+}
+
+/* Modal body - scroll interno */
+.modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(90vh - 120px); /* Espacio para header y footer */
+    padding: 1rem;
+}
+
+/* Scroll suave en el body */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Modal footer - siempre visible abajo */
+.modal-footer {
+    flex-shrink: 0;
+    border-top: 1px solid #dee2e6;
+    background: #f8f9fa;
+    position: sticky;
+    bottom: 0;
+    z-index: 1055;
+    padding: 0.75rem;
+}
+
+/* Botones del footer - siempre accesibles */
+.modal-footer .btn {
+    margin: 0 0.25rem;
+}
+
+/* ============================================
+   RESPONSIVE - Mobile First
+   ============================================ */
+
+/* Móviles pequeños (<576px) */
+@media (max-width: 575.98px) {
+    .modal-dialog {
+        max-width: 100vw !important;
+        margin: 0;
+        min-height: 100vh;
+    }
+
+    .modal-content {
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+    }
+
+    .modal-body {
+        max-height: calc(100vh - 120px);
+        padding: 0.75rem;
+    }
+
+    .modal-header,
+    .modal-footer {
+        padding: 0.75rem;
+    }
+
+    /* Botones en columna en móvil */
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        margin: 0.25rem 0;
+    }
+}
+
+/* Tablets (576px - 768px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .modal-dialog {
+        max-width: 90vw !important;
+        margin: 1rem auto;
+    }
+
+    .modal-content {
+        max-height: 85vh;
+    }
+
+    .modal-body {
+        max-height: calc(85vh - 120px);
+    }
+}
+
+/* Desktop pequeño (768px - 992px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .modal-dialog {
+        max-width: 80vw !important;
+    }
+
+    .modal-content {
+        max-height: 80vh;
+    }
+
+    .modal-body {
+        max-height: calc(80vh - 120px);
+    }
+}
+
+/* ============================================
+   FORMULARIOS DENTRO DE MODALES
+   ============================================ */
+
+/* Forms responsive */
+.modal-body .form-group,
+.modal-body .mb-3 {
+    margin-bottom: 1rem;
+}
+
+.modal-body .form-control {
+    width: 100%;
+}
+
+.modal-body .row {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
+
+.modal-body .col,
+.modal-body [class*="col-"] {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* ============================================
+   TABLAS DENTRO DE MODALES
+   ============================================ */
+
+.modal-body .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-body table {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+/* ============================================
+   FIX PARA MODALES ANIDADOS
+   ============================================ */
+
+.modal.show ~ .modal.show {
+    z-index: 1065 !important;
+}
+
+.modal-backdrop.show ~ .modal-backdrop.show {
+    z-index: 1060 !important;
+}
+
+/* ============================================
+   ANIMACIONES SUAVES
+   ============================================ */
+
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+    transform: none;
+}
+
+/* ============================================
+   ACCESIBILIDAD
+   ============================================ */
+
+/* Focus visible en botones */
+.modal-footer .btn:focus,
+.modal-header .close:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Botón cerrar siempre visible y accesible */
+.modal-header .close {
+    padding: 0.5rem;
+    margin: -0.5rem -0.5rem -0.5rem auto;
+    opacity: 0.8;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.modal-header .close:hover {
+    opacity: 1;
+}
+
+/* ============================================
+   LOADING STATES
+   ============================================ */
+
+.modal-body.loading {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body.loading::after {
+    content: "Cargando...";
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    .modal {
+        position: static;
+    }
+
+    .modal-dialog {
+        max-width: 100%;
+        max-height: none;
+    }
+
+    .modal-content {
+        max-height: none;
+        border: 1px solid #000;
+    }
+
+    .modal-footer .btn {
+        display: none;
+    }
+}

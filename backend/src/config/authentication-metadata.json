@@ -1,0 +1,223 @@
+{
+  "module_key": "authentication",
+  "metadata_level": "DIOS",
+  "version": "1.0.0",
+  "created_at": "2025-11-01",
+  "description": "Sistema de autenticación multi-tenant con usuarios, roles, permisos y credenciales especiales de soporte",
+
+  "architecture": {
+    "type": "core",
+    "pattern": "multi-tenant",
+    "database_table": "users",
+    "model_file": "src/models/User-postgresql.js",
+    "auth_route": "src/routes/auth.js"
+  },
+
+  "critical_users": {
+    "support_user": {
+      "usuario": "soporte",
+      "password": "admin123",
+      "role": "admin",
+      "access_level": "TOTAL",
+      "must_exist_in": "TODAS LAS EMPRESAS",
+
+      "description": "Usuario especial para soporte técnico que DEBE existir en todas las empresas del sistema",
+
+      "required_attributes": {
+        "usuario": "soporte",
+        "password": "admin123",
+        "firstName": "Soporte",
+        "lastName": "Técnico",
+        "email": "soporte@{company-slug}.com",
+        "role": "admin",
+        "isActive": true,
+        "company_id": "{cada-empresa}"
+      },
+
+      "why_exists": [
+        "Acceso de emergencia: Permite al equipo técnico acceder a cualquier empresa para resolver problemas críticos",
+        "Testing: Usado para pruebas automatizadas de Phase4 Testing System",
+        "Soporte: Permite asistencia técnica directa sin necesidad de resetear passwords de clientes",
+        "Auditoría: Acceso controlado que queda registrado en audit_logs",
+        "Migración/Deploy: Verificación de sistemas después de deployments"
+      ],
+
+      "permissions": {
+        "level": "FULL_ADMIN",
+        "can_access": "ALL_MODULES",
+        "can_modify": "ALL_DATA",
+        "restrictions": "NONE",
+        "note": "Este usuario tiene permisos totales equivalentes al owner de la empresa"
+      },
+
+      "security_notes": {
+        "password_change": "NO CAMBIAR - El password 'admin123' es estándar y debe mantenerse",
+        "deletion": "NUNCA ELIMINAR - Este usuario es crítico para el sistema",
+        "deactivation": "NO DESACTIVAR - Debe estar activo en todas las empresas",
+        "why_simple_password": "Password conocido facilita soporte de emergencia. Empresa no puede cambiar este password."
+      },
+
+      "creation_rules": {
+        "when_to_create": [
+          "Al crear una nueva empresa en el sistema",
+          "Durante migraciones de base de datos",
+          "Si se detecta que falta en alguna empresa activa",
+          "En seed de datos iniciales"
+        ],
+
+        "verification_script": "backend/check-soporte-user-raw.js",
+
+        "sql_creation_template": `
+INSERT INTO users (usuario, password, "firstName", "lastName", email, role, "isActive", company_id)
+VALUES (
+  'soporte',
+  $hashedPassword,  -- bcrypt hash de 'admin123'
+  'Soporte',
+  'Técnico',
+  $email,           -- soporte@{company-slug}.com
+  'admin',
+  true,
+  $companyId
+);`,
+
+        "validation_query": `
+SELECT user_id, usuario, "firstName", "lastName", email, role, "isActive", company_id
+FROM users
+WHERE usuario = 'soporte' AND company_id = $companyId;`
+      },
+
+      "troubleshooting": {
+        "if_missing": {
+          "symptom": "Tests automáticos fallan con error de autenticación",
+          "fix": "Ejecutar: node backend/check-soporte-user-raw.js",
+          "expected_output": "✅ Usuario soporte CREADO exitosamente en todas las empresas"
+        },
+
+        "if_wrong_role": {
+          "symptom": "Usuario soporte existe pero no tiene acceso a módulos",
+          "cause": "role no es 'admin' o isActive es false",
+          "fix": "UPDATE users SET role='admin', \"isActive\"=true WHERE usuario='soporte'"
+        },
+
+        "if_wrong_password": {
+          "symptom": "Login con soporte/admin123 falla",
+          "cause": "Password fue cambiado manualmente",
+          "fix": "Ejecutar script check-soporte-user-raw.js para resetear password"
+        }
+      }
+    }
+  },
+
+  "authentication_flow": {
+    "panel_empresa": {
+      "steps": [
+        "1. Usuario selecciona EMPRESA del dropdown",
+        "2. Usuario ingresa NOMBRE DE USUARIO",
+        "3. Usuario ingresa PASSWORD",
+        "4. Sistema valida credenciales contra tabla users WHERE company_id = empresa_seleccionada",
+        "5. Si válido → generar JWT token con user + company info",
+        "6. Redirigir a dashboard con módulos según permisos"
+      ],
+
+      "dropdown_company": {
+        "source": "GET /api/v1/auth/companies",
+        "filters": "WHERE is_active = true ORDER BY name ASC",
+        "required": true,
+        "note": "Usuario DEBE seleccionar empresa antes de ingresar credenciales"
+      },
+
+      "support_user_usage": {
+        "scenario": "Testing automatizado o soporte técnico",
+        "steps": [
+          "1. Seleccionar cualquier empresa del dropdown",
+          "2. Usuario: soporte",
+          "3. Password: admin123",
+          "4. Login exitoso con permisos de admin"
+        ]
+      }
+    },
+
+    "panel_administrativo": {
+      "auth_system": "APONNT LOGIN (staff + partners)",
+      "file": "public/js/modules/aponnt-login.js",
+      "note": "Sistema diferente para staff de Aponnt y partners, NO usa usuario soporte"
+    }
+  },
+
+  "roles_and_permissions": {
+    "admin": {
+      "description": "Administrador total",
+      "access": "ALL_MODULES",
+      "can_create_users": true,
+      "can_modify_company": true,
+      "can_access_sensitive_data": true,
+      "users_with_this_role": ["soporte", "administrador de cada empresa"]
+    },
+
+    "operator": {
+      "description": "Operador de empresa",
+      "access": "SELECTED_MODULES",
+      "can_create_users": false,
+      "can_modify_company": false
+    },
+
+    "employee": {
+      "description": "Empleado estándar",
+      "access": "LIMITED_MODULES",
+      "can_create_users": false,
+      "can_modify_company": false
+    }
+  },
+
+  "integration_points": {
+    "phase4_testing": {
+      "uses_soporte_user": true,
+      "file": "backend/test-phase4-integrated.js",
+      "reason": "Tests necesitan autenticarse en cualquier empresa sin conocer credenciales específicas"
+    },
+
+    "auditor_engine": {
+      "uses_soporte_user": true,
+      "file": "backend/src/auditor/core/AuditorEngine.js",
+      "reason": "Auditoría necesita acceso completo para ejecutar tests de endpoints"
+    },
+
+    "visible_testing_manager": {
+      "uses_soporte_user": true,
+      "file": "backend/public/js/modules/visible-testing-manager.js",
+      "reason": "Testing visible desde UI necesita login automático"
+    }
+  },
+
+  "knowledge_for_ollama": {
+    "when_user_asks": [
+      "¿Cómo hago login en panel-empresa?",
+      "¿Qué credenciales uso para testing?",
+      "¿Por qué no puedo entrar como soporte?",
+      "¿Cómo accedo a todas las empresas?"
+    ],
+
+    "answer_with": {
+      "for_testing": "Usa el usuario 'soporte' con password 'admin123'. Este usuario existe en TODAS las empresas con role='admin' y acceso total.",
+      "for_production": "Cada empresa tiene sus propios usuarios. El usuario 'soporte' es solo para equipo técnico y testing.",
+      "if_not_working": "Ejecuta el script: node backend/check-soporte-user-raw.js para verificar/crear el usuario en todas las empresas."
+    }
+  },
+
+  "maintenance": {
+    "verification_frequency": "Antes de cada deploy",
+    "verification_command": "node backend/check-soporte-user-raw.js",
+
+    "during_migrations": {
+      "step": "Después de ejecutar migraciones de base de datos",
+      "action": "Verificar que usuario soporte sigue existiendo en todas las empresas",
+      "why": "Algunas migraciones pueden afectar tabla users"
+    },
+
+    "during_new_company_creation": {
+      "automatic": true,
+      "implementation": "src/routes/companies.js debe crear usuario soporte al crear empresa",
+      "status": "PENDING - Needs implementation"
+    }
+  }
+}

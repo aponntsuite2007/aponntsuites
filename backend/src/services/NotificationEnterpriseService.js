@@ -213,7 +213,8 @@ class NotificationEnterpriseService extends EventEmitter {
             }
             
             // Iniciar workers de procesamiento
-            this.startBackgroundWorkers();
+            // DESHABILITADO: tabla notification_queue no existe
+            // this.startBackgroundWorkers();
             this.isInitialized = true;
             
         } catch (error) {
@@ -480,8 +481,11 @@ class NotificationEnterpriseService extends EventEmitter {
     }
     
     async processQueueBatch(workerId) {
+        // DESHABILITADO: tabla notification_queue no existe
+        return;
+
         const batchSize = 50;
-        
+
         // Obtener batch de items pendientes
         const queueItems = await this.database.NotificationQueue.findAll({
             where: {

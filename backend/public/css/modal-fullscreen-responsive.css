@@ -1,0 +1,375 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════
+ * CSS RESPONSIVE MÁXIMO - MODALES FULLSCREEN
+ * ═══════════════════════════════════════════════════════════════════
+ *
+ * Objetivo: Aprovechar AL MÁXIMO el espacio de pantalla
+ * - Modales ocupan 98% de pantalla (ancho y alto)
+ * - Título MUY pequeño (0.75rem)
+ * - Tabs compactos (0.7rem, padding mínimo)
+ * - Botón footer oculto o muy chico
+ * - Scroll visible
+ */
+
+/* ✅ OVERLAY - Solo cuando modal VISIBLE */
+[id*="Modal"][style*="display: block"],
+[id*="modal"][style*="display: block"],
+[id*="Modal"].show,
+[id*="modal"].show {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0,0,0,0.7) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    z-index: 10000 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 10px !important;
+    padding-top: 10px !important;
+}
+
+/* ✅ CONTENEDOR PRINCIPAL - 98% PANTALLA */
+[id*="Modal"][style*="display: block"] > div:first-child,
+[id*="modal"][style*="display: block"] > div:first-child,
+[id*="Modal"].show > div:first-child,
+[id*="modal"].show > div:first-child {
+    background: white !important;
+    border-radius: 8px !important;
+    width: 98vw !important;
+    height: 96vh !important;
+    max-width: 98vw !important;
+    max-height: 96vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* ✅ HEADER/TÍTULO - MUY CHICO (0.75rem, padding mínimo) */
+[id*="Modal"][style*="display: block"] h2,
+[id*="modal"][style*="display: block"] h2,
+[id*="Modal"].show h2,
+[id*="modal"].show h2,
+[id*="Modal"][style*="display: block"] h3,
+[id*="modal"][style*="display: block"] h3,
+[id*="Modal"].show h3,
+[id*="modal"].show h3,
+[id*="Modal"][style*="display: block"] .modal-header,
+[id*="modal"][style*="display: block"] .modal-header,
+[id*="Modal"].show .modal-header,
+[id*="modal"].show .modal-header {
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+    padding: 4px 10px !important;
+    background: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    flex-shrink: 0 !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+}
+
+/* ✅ ÁREA DE CONTENIDO - Scroll visible */
+[id*="Modal"][style*="display: block"] .modal-body,
+[id*="modal"][style*="display: block"] .modal-body,
+[id*="Modal"].show .modal-body,
+[id*="modal"].show .modal-body {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 10px 15px !important;
+    font-size: 0.85rem !important;
+    line-height: 1.4 !important;
+}
+
+/* ✅ SCROLL VISIBLE - 14px */
+[id*="Modal"][style*="display: block"] *::-webkit-scrollbar,
+[id*="modal"][style*="display: block"] *::-webkit-scrollbar,
+[id*="Modal"].show *::-webkit-scrollbar,
+[id*="modal"].show *::-webkit-scrollbar {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+[id*="Modal"][style*="display: block"] *::-webkit-scrollbar-track,
+[id*="modal"][style*="display: block"] *::-webkit-scrollbar-track,
+[id*="Modal"].show *::-webkit-scrollbar-track,
+[id*="modal"].show *::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 10px !important;
+}
+
+[id*="Modal"][style*="display: block"] *::-webkit-scrollbar-thumb,
+[id*="modal"][style*="display: block"] *::-webkit-scrollbar-thumb,
+[id*="Modal"].show *::-webkit-scrollbar-thumb,
+[id*="modal"].show *::-webkit-scrollbar-thumb {
+    background: #888 !important;
+    border-radius: 10px !important;
+    border: 2px solid #f1f1f1 !important;
+}
+
+[id*="Modal"][style*="display: block"] *::-webkit-scrollbar-thumb:hover,
+[id*="modal"][style*="display: block"] *::-webkit-scrollbar-thumb:hover,
+[id*="Modal"].show *::-webkit-scrollbar-thumb:hover,
+[id*="modal"].show *::-webkit-scrollbar-thumb:hover {
+    background: #555 !important;
+}
+
+/* ✅ TABS - MUY COMPACTOS (0.7rem, padding mínimo) */
+[id*="Modal"][style*="display: block"] .nav-tabs,
+[id*="modal"][style*="display: block"] .nav-tabs,
+[id*="Modal"].show .nav-tabs,
+[id*="modal"].show .nav-tabs {
+    flex-shrink: 0 !important;
+    margin-bottom: 5px !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+[id*="Modal"][style*="display: block"] .nav-tabs button,
+[id*="modal"][style*="display: block"] .nav-tabs button,
+[id*="Modal"].show .nav-tabs button,
+[id*="modal"].show .nav-tabs button,
+[id*="Modal"][style*="display: block"] .nav-tabs .nav-link,
+[id*="modal"][style*="display: block"] .nav-tabs .nav-link,
+[id*="Modal"].show .nav-tabs .nav-link,
+[id*="modal"].show .nav-tabs .nav-link {
+    font-size: 0.7rem !important;
+    padding: 4px 8px !important;
+    margin: 0 2px !important;
+    line-height: 1.2 !important;
+    border-radius: 4px 4px 0 0 !important;
+}
+
+/* ✅ CARDS - Compactas */
+[id*="Modal"][style*="display: block"] .card,
+[id*="modal"][style*="display: block"] .card,
+[id*="Modal"].show .card,
+[id*="modal"].show .card {
+    margin-bottom: 10px !important;
+    font-size: 0.85rem !important;
+}
+
+[id*="Modal"][style*="display: block"] .card-header,
+[id*="modal"][style*="display: block"] .card-header,
+[id*="Modal"].show .card-header,
+[id*="modal"].show .card-header {
+    padding: 6px 10px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+}
+
+[id*="Modal"][style*="display: block"] .card-body,
+[id*="modal"][style*="display: block"] .card-body,
+[id*="Modal"].show .card-body,
+[id*="modal"].show .card-body {
+    padding: 8px 10px !important;
+}
+
+/* ✅ LABELS Y TEXTOS - Compactos */
+[id*="Modal"][style*="display: block"] label,
+[id*="modal"][style*="display: block"] label,
+[id*="Modal"].show label,
+[id*="modal"].show label {
+    font-size: 0.75rem !important;
+    margin-bottom: 2px !important;
+}
+
+[id*="Modal"][style*="display: block"] p,
+[id*="modal"][style*="display: block"] p,
+[id*="Modal"].show p,
+[id*="modal"].show p {
+    font-size: 0.8rem !important;
+    margin-bottom: 6px !important;
+}
+
+/* ✅ INPUTS Y SELECTS */
+[id*="Modal"][style*="display: block"] input,
+[id*="Modal"][style*="display: block"] select,
+[id*="Modal"][style*="display: block"] textarea,
+[id*="modal"][style*="display: block"] input,
+[id*="modal"][style*="display: block"] select,
+[id*="modal"][style*="display: block"] textarea,
+[id*="Modal"].show input,
+[id*="Modal"].show select,
+[id*="Modal"].show textarea,
+[id*="modal"].show input,
+[id*="modal"].show select,
+[id*="modal"].show textarea {
+    font-size: 0.8rem !important;
+    padding: 5px 8px !important;
+}
+
+/* ✅ BOTONES - Compactos */
+[id*="Modal"][style*="display: block"] button,
+[id*="modal"][style*="display: block"] button,
+[id*="Modal"].show button,
+[id*="modal"].show button {
+    font-size: 0.75rem !important;
+    padding: 5px 10px !important;
+    margin: 2px !important;
+}
+
+/* ✅ FOOTER - MUY CHICO Y COMPACTO (oculta botón si es muy grande) */
+[id*="Modal"][style*="display: block"] .modal-footer,
+[id*="modal"][style*="display: block"] .modal-footer,
+[id*="Modal"].show .modal-footer,
+[id*="modal"].show .modal-footer {
+    flex-shrink: 0 !important;
+    padding: 5px 10px !important;
+    background: #f8f9fa !important;
+    border-top: 1px solid #dee2e6 !important;
+    display: flex !important;
+    gap: 5px !important;
+    justify-content: flex-end !important;
+    min-height: 30px !important;
+}
+
+/* ✅ OCULTAR BOTONES FOOTER MUY GRANDES (como "Cerrar Expediente") */
+[id*="Modal"][style*="display: block"] .modal-footer button.btn-lg,
+[id*="modal"][style*="display: block"] .modal-footer button.btn-lg,
+[id*="Modal"].show .modal-footer button.btn-lg,
+[id*="modal"].show .modal-footer button.btn-lg,
+[id*="Modal"][style*="display: block"] .modal-footer button[style*="font-size: 1.2"],
+[id*="modal"][style*="display: block"] .modal-footer button[style*="font-size: 1.2"],
+[id*="Modal"].show .modal-footer button[style*="font-size: 1.2"],
+[id*="modal"].show .modal-footer button[style*="font-size: 1.2"] {
+    display: none !important;
+}
+
+/* ✅ TABLAS */
+[id*="Modal"][style*="display: block"] table,
+[id*="modal"][style*="display: block"] table,
+[id*="Modal"].show table,
+[id*="modal"].show table {
+    font-size: 0.75rem !important;
+}
+
+[id*="Modal"][style*="display: block"] th,
+[id*="Modal"][style*="display: block"] td,
+[id*="modal"][style*="display: block"] th,
+[id*="modal"][style*="display: block"] td,
+[id*="Modal"].show th,
+[id*="Modal"].show td,
+[id*="modal"].show th,
+[id*="modal"].show td {
+    padding: 4px 6px !important;
+}
+
+/* ✅ LISTAS */
+[id*="Modal"][style*="display: block"] ul,
+[id*="Modal"][style*="display: block"] ol,
+[id*="modal"][style*="display: block"] ul,
+[id*="modal"][style*="display: block"] ol,
+[id*="Modal"].show ul,
+[id*="Modal"].show ol,
+[id*="modal"].show ul,
+[id*="modal"].show ol {
+    padding-left: 15px !important;
+    margin-bottom: 8px !important;
+}
+
+[id*="Modal"][style*="display: block"] li,
+[id*="modal"][style*="display: block"] li,
+[id*="Modal"].show li,
+[id*="modal"].show li {
+    font-size: 0.8rem !important;
+    margin-bottom: 3px !important;
+}
+
+/* ✅ BADGES */
+[id*="Modal"][style*="display: block"] .badge,
+[id*="modal"][style*="display: block"] .badge,
+[id*="Modal"].show .badge,
+[id*="modal"].show .badge {
+    font-size: 0.7rem !important;
+    padding: 2px 6px !important;
+}
+
+/* ✅ ICONOS */
+[id*="Modal"][style*="display: block"] i,
+[id*="Modal"][style*="display: block"] svg,
+[id*="modal"][style*="display: block"] i,
+[id*="modal"][style*="display: block"] svg,
+[id*="Modal"].show i,
+[id*="Modal"].show svg,
+[id*="modal"].show i,
+[id*="modal"].show svg {
+    font-size: 0.9rem !important;
+}
+
+/* ✅ ESPACIADO FORMULARIOS */
+[id*="Modal"][style*="display: block"] .form-group,
+[id*="Modal"][style*="display: block"] .mb-3,
+[id*="modal"][style*="display: block"] .form-group,
+[id*="modal"][style*="display: block"] .mb-3,
+[id*="Modal"].show .form-group,
+[id*="Modal"].show .mb-3,
+[id*="modal"].show .form-group,
+[id*="modal"].show .mb-3 {
+    margin-bottom: 8px !important;
+}
+
+/* ✅ ROWS Y COLUMNAS */
+[id*="Modal"][style*="display: block"] .row,
+[id*="modal"][style*="display: block"] .row,
+[id*="Modal"].show .row,
+[id*="modal"].show .row {
+    margin-left: -6px !important;
+    margin-right: -6px !important;
+}
+
+[id*="Modal"][style*="display: block"] [class*="col-"],
+[id*="modal"][style*="display: block"] [class*="col-"],
+[id*="Modal"].show [class*="col-"],
+[id*="modal"].show [class*="col-"] {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+}
+
+/* ✅ TAB-CONTENT con scroll */
+[id*="Modal"][style*="display: block"] .tab-content,
+[id*="modal"][style*="display: block"] .tab-content,
+[id*="Modal"].show .tab-content,
+[id*="modal"].show .tab-content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 10px !important;
+}
+
+/* ✅ TAB-PANE con altura */
+[id*="Modal"][style*="display: block"] .tab-pane,
+[id*="modal"][style*="display: block"] .tab-pane,
+[id*="Modal"].show .tab-pane,
+[id*="modal"].show .tab-pane {
+    height: 100% !important;
+    overflow-y: auto !important;
+}
+
+/* ✅ RESPONSIVE - Pantallas pequeñas */
+@media (max-width: 1200px) {
+    [id*="Modal"][style*="display: block"] > div:first-child,
+    [id*="modal"][style*="display: block"] > div:first-child,
+    [id*="Modal"].show > div:first-child,
+    [id*="modal"].show > div:first-child {
+        width: 99vw !important;
+        height: 98vh !important;
+    }
+}
+
+/* ✅ MÓVILES */
+@media (max-width: 768px) {
+    [id*="Modal"][style*="display: block"] > div:first-child,
+    [id*="modal"][style*="display: block"] > div:first-child,
+    [id*="Modal"].show > div:first-child,
+    [id*="modal"].show > div:first-child {
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+    }
+}

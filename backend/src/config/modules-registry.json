@@ -1,0 +1,811 @@
+{
+  "version": "4.0.0",
+  "description": "Registry MAESTRO con CONCIENCIA - Sistema sabe qué módulos tiene cada empresa",
+  "generated_at": "2025-11-01",
+  "total_modules": 46,
+  "changelog": "v4.0.0: Agregado is_core, dependencies, base_price para implementar sistema consciente",
+
+  "modules": [
+    {
+      "id": "authentication",
+      "key": "authentication",
+      "name": "Autenticación",
+      "name_alt": "Sistema de Autenticación Multi-Tenant",
+      "icon": "🔑",
+      "category": "core",
+      "is_core": true,
+      "base_price": 0,
+      "description": "Sistema de autenticación multi-tenant con usuario soporte admin123",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "provides_to": ["users", "dashboard", "settings"]
+      },
+      "critical_note": "Usuario soporte/admin123 DEBE existir en todas las empresas con role=admin"
+    },
+    {
+      "id": "dashboard",
+      "key": "dashboard",
+      "name": "Dashboard",
+      "name_alt": "Dashboard Principal",
+      "icon": "📊",
+      "category": "core",
+      "is_core": true,
+      "base_price": 0,
+      "description": "Vista principal del sistema - Muestra módulos contratados",
+      "dependencies": {
+        "required": ["authentication"],
+        "optional": [],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "users",
+      "key": "users",
+      "name": "Usuarios",
+      "name_alt": "Gestión de Usuarios",
+      "icon": "👥",
+      "category": "core",
+      "is_core": true,
+      "base_price": 5000,
+      "description": "Gestión de usuarios, roles y permisos",
+      "dependencies": {
+        "required": ["authentication"],
+        "optional": ["departments"],
+        "provides_to": ["attendance", "shifts", "medical-dashboard", "payroll-liquidation"]
+      }
+    },
+    {
+      "id": "settings",
+      "key": "settings",
+      "name": "Configuración",
+      "name_alt": "Configuración del Sistema",
+      "icon": "⚙️",
+      "category": "admin",
+      "is_core": true,
+      "base_price": 0,
+      "description": "Configuración de empresa - Logo, datos de contacto, etc",
+      "dependencies": {
+        "required": ["authentication"],
+        "optional": [],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "attendance",
+      "key": "attendance",
+      "name": "Asistencia",
+      "name_alt": "Control de Asistencia",
+      "icon": "📋",
+      "category": "core",
+      "is_core": true,
+      "base_price": 8000,
+      "description": "Control básico de asistencia y reportes",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["shifts", "kiosks", "biometric"],
+        "provides_to": ["payroll-liquidation", "audit-reports"]
+      }
+    },
+    {
+      "id": "departments",
+      "key": "departments",
+      "name": "Departamentos",
+      "icon": "🏢",
+      "category": "core",
+      "is_core": false,
+      "base_price": 3000,
+      "description": "Organización por departamentos/áreas",
+      "dependencies": {
+        "required": ["users"],
+        "optional": [],
+        "provides_to": ["shifts", "employee-map"]
+      }
+    },
+    {
+      "id": "shifts",
+      "key": "shifts",
+      "name": "Turnos",
+      "name_alt": "Gestión de Turnos",
+      "icon": "🕐",
+      "category": "scheduling",
+      "is_core": false,
+      "base_price": 6000,
+      "description": "Gestión avanzada de turnos rotativos",
+      "dependencies": {
+        "required": ["users", "departments"],
+        "optional": ["attendance"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "kiosks",
+      "key": "kiosks",
+      "name": "Kioscos",
+      "name_alt": "Gestión de Kioscos",
+      "icon": "📟",
+      "category": "hardware",
+      "is_core": false,
+      "base_price": 12000,
+      "description": "Control de kioscos biométricos físicos",
+      "dependencies": {
+        "required": ["users", "attendance"],
+        "optional": ["biometric"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "visitors",
+      "key": "visitors",
+      "name": "Visitantes",
+      "name_alt": "Control de Visitantes",
+      "icon": "👥",
+      "category": "security",
+      "is_core": false,
+      "base_price": 7000,
+      "description": "Registro y control de visitantes",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["access-control", "biometric"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "biometric",
+      "key": "biometric",
+      "name": "Control Biométrico",
+      "icon": "🔐",
+      "category": "security",
+      "is_core": false,
+      "base_price": 15000,
+      "description": "Control biométrico básico",
+      "dependencies": {
+        "required": ["users", "biometric-consent"],
+        "optional": ["kiosks"],
+        "provides_to": ["facial-biometric", "real-biometric-enterprise"]
+      }
+    },
+    {
+      "id": "facial-biometric",
+      "key": "facial-biometric",
+      "name": "Biometría Analítica",
+      "icon": "🎭",
+      "category": "security",
+      "is_core": false,
+      "base_price": 25000,
+      "description": "Biometría facial con análisis avanzado",
+      "dependencies": {
+        "required": ["biometric", "biometric-consent"],
+        "optional": ["emotional-analysis"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "real-biometric-enterprise",
+      "key": "real-biometric-enterprise",
+      "name": "Biometría Enterprise (Real)",
+      "icon": "🔐",
+      "category": "security",
+      "is_core": false,
+      "base_price": 35000,
+      "description": "Biometría enterprise con IA",
+      "dependencies": {
+        "required": ["biometric", "biometric-consent"],
+        "optional": ["professional-biometric-registration"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "professional-biometric-registration",
+      "key": "professional-biometric-registration",
+      "name": "Registro Biométrico Profesional",
+      "icon": "🔐",
+      "category": "security",
+      "is_core": false,
+      "base_price": 18000,
+      "description": "Registro biométrico profesional avanzado",
+      "dependencies": {
+        "required": ["biometric", "biometric-consent"],
+        "optional": [],
+        "provides_to": ["real-biometric-enterprise"]
+      }
+    },
+    {
+      "id": "biometric-consent",
+      "key": "biometric-consent",
+      "name": "Consentimientos Biométricos",
+      "icon": "📋",
+      "category": "compliance",
+      "is_core": false,
+      "base_price": 5000,
+      "description": "Gestión de consentimientos biométricos (REQUERIDO para biometría)",
+      "dependencies": {
+        "required": ["users"],
+        "optional": [],
+        "provides_to": ["biometric", "facial-biometric", "real-biometric-enterprise"]
+      }
+    },
+    {
+      "id": "evaluacion-biometrica",
+      "key": "evaluacion-biometrica",
+      "name": "Evaluación Biométrica",
+      "icon": "📊",
+      "category": "security",
+      "is_core": false,
+      "base_price": 12000,
+      "description": "Evaluación y reportes biométricos",
+      "dependencies": {
+        "required": ["biometric"],
+        "optional": ["facial-biometric"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "access-control",
+      "key": "access-control",
+      "name": "Control de Acceso",
+      "name_alt": "Control de Accesos",
+      "icon": "🔐",
+      "category": "security",
+      "is_core": false,
+      "base_price": 10000,
+      "description": "Control de acceso a áreas restringidas",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["biometric", "visitors"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "medical-dashboard",
+      "key": "medical-dashboard",
+      "name": "Médico",
+      "name_alt": "Dashboard Médico",
+      "icon": "👩‍⚕️",
+      "category": "medical",
+      "is_core": false,
+      "base_price": 20000,
+      "description": "Dashboard médico con fichas de salud",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["medical", "art-management"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "medical",
+      "key": "medical",
+      "name": "Gestión Médica",
+      "icon": "⚕️",
+      "category": "rrhh",
+      "is_core": false,
+      "base_price": 18000,
+      "description": "Gestión médica completa - Exámenes, historiales",
+      "dependencies": {
+        "required": ["users", "medical-dashboard"],
+        "optional": ["document-management"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "art-management",
+      "key": "art-management",
+      "name": "ART",
+      "name_alt": "Gestión ART",
+      "icon": "🏥",
+      "category": "medical",
+      "is_core": false,
+      "base_price": 15000,
+      "description": "Gestión de ART (Aseguradoras de Riesgos del Trabajo)",
+      "dependencies": {
+        "required": ["users", "medical-dashboard"],
+        "optional": ["document-management"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "document-management",
+      "key": "document-management",
+      "name": "Documentos",
+      "name_alt": "Gestión Documental",
+      "icon": "📄",
+      "category": "documents",
+      "is_core": false,
+      "base_price": 12000,
+      "description": "Gestión documental - Upload, categorías, versionado",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["legal-dashboard", "compliance-dashboard"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "legal-dashboard",
+      "key": "legal-dashboard",
+      "name": "Legal",
+      "name_alt": "Dashboard Legal",
+      "icon": "⚖️",
+      "category": "compliance",
+      "is_core": false,
+      "base_price": 18000,
+      "description": "Dashboard legal con contratos y normativas",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["legal", "document-management"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "legal",
+      "key": "legal",
+      "name": "Gestión Legal",
+      "icon": "⚖️",
+      "category": "compliance",
+      "is_core": false,
+      "base_price": 16000,
+      "description": "Gestión legal completa",
+      "dependencies": {
+        "required": ["users", "legal-dashboard"],
+        "optional": ["document-management"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "compliance-dashboard",
+      "key": "compliance-dashboard",
+      "name": "Compliance Legal",
+      "name_alt": "Dashboard de Cumplimiento",
+      "icon": "⚖️",
+      "category": "compliance",
+      "is_core": false,
+      "base_price": 22000,
+      "description": "Dashboard de cumplimiento normativo",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["legal-dashboard", "document-management"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "terms-conditions",
+      "key": "terms-conditions",
+      "name": "Términos y Condiciones",
+      "icon": "📜",
+      "category": "legal",
+      "is_core": false,
+      "base_price": 3000,
+      "description": "Gestión de términos y condiciones",
+      "dependencies": {
+        "required": [],
+        "optional": ["legal-dashboard"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "notifications-enterprise",
+      "key": "notifications-enterprise",
+      "name": "Notificaciones Enterprise V3.0",
+      "icon": "🔔",
+      "category": "communication",
+      "is_core": false,
+      "base_price": 8000,
+      "description": "Sistema de notificaciones enterprise con integración Aponnt",
+      "dependencies": {
+        "required": ["users"],
+        "optional": [],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "inbox",
+      "key": "inbox",
+      "name": "Bandeja de Notificaciones",
+      "icon": "📬",
+      "category": "communication",
+      "is_core": false,
+      "base_price": 7.00,
+      "description": "Sistema de notificaciones por hilos conversacionales. Agrupa notificaciones relacionadas en threads con mensajes secuenciales.",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["notifications-enterprise"],
+        "provides_to": ["notifications-enterprise"]
+      }
+    },
+    {
+      "id": "sla-tracking",
+      "key": "sla-tracking",
+      "name": "SLA Tracking",
+      "name_alt": "Seguimiento de SLA",
+      "icon": "⏱️",
+      "category": "monitoring",
+      "is_core": false,
+      "base_price": 15000,
+      "description": "Seguimiento de SLA y acuerdos de servicio",
+      "dependencies": {
+        "required": ["users"],
+        "optional": [],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "resource-center",
+      "key": "resource-center",
+      "name": "Centro Recursos",
+      "name_alt": "Centro de Recursos",
+      "icon": "📊",
+      "category": "support",
+      "is_core": false,
+      "base_price": 7000,
+      "description": "Centro de recursos y documentación",
+      "dependencies": {
+        "required": [],
+        "optional": ["document-management"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "audit-reports",
+      "key": "audit-reports",
+      "name": "Reportes Auditoría",
+      "name_alt": "Reportes de Auditoría",
+      "icon": "📄",
+      "category": "reports",
+      "is_core": false,
+      "base_price": 12000,
+      "description": "Reportes de auditoría del sistema",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["attendance"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "payroll-liquidation",
+      "key": "payroll-liquidation",
+      "name": "Liquidación Sueldos",
+      "name_alt": "Liquidación de Sueldos",
+      "icon": "💰",
+      "category": "payroll",
+      "is_core": false,
+      "base_price": 25000,
+      "description": "Liquidación de sueldos y jornales",
+      "dependencies": {
+        "required": ["users", "attendance"],
+        "optional": ["shifts"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "employee-map",
+      "key": "employee-map",
+      "name": "Mapa Empleados",
+      "name_alt": "Mapa de Empleados",
+      "icon": "🗺️",
+      "category": "analytics",
+      "is_core": false,
+      "base_price": 8000,
+      "description": "Mapa geográfico de empleados",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["departments", "google-maps-integration"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "training-management",
+      "key": "training-management",
+      "name": "Gestión Capacitaciones",
+      "name_alt": "Gestión de Capacitaciones",
+      "icon": "📚",
+      "category": "rrhh",
+      "is_core": false,
+      "base_price": 14000,
+      "description": "Gestión de capacitaciones y cursos",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["document-management"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "job-postings",
+      "key": "job-postings",
+      "name": "Avisos de Empleo",
+      "name_alt": "Postulaciones Laborales",
+      "icon": "💼",
+      "category": "rrhh",
+      "is_core": false,
+      "base_price": 10000,
+      "description": "Publicación de avisos y gestión de postulantes",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["document-management"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "vacation-management",
+      "key": "vacation-management",
+      "name": "Gestión de Vacaciones",
+      "icon": "🏖️",
+      "category": "rrhh",
+      "is_core": false,
+      "base_price": 9000,
+      "description": "Gestión de vacaciones y licencias",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["attendance"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "vacation",
+      "key": "vacation",
+      "name": "Vacaciones",
+      "name_alt": "Gestión de Vacaciones",
+      "icon": "🏖️",
+      "category": "rrhh",
+      "is_core": false,
+      "base_price": 9000,
+      "description": "Módulo de vacaciones (legacy)",
+      "dependencies": {
+        "required": ["users"],
+        "optional": [],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "sanctions-management",
+      "key": "sanctions-management",
+      "name": "Gestión de Sanciones",
+      "icon": "⚖️",
+      "category": "rrhh",
+      "is_core": false,
+      "base_price": 11000,
+      "description": "Gestión de sanciones disciplinarias",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["legal-dashboard"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "psychological-assessment",
+      "key": "psychological-assessment",
+      "name": "Evaluación Psicológica",
+      "icon": "🧠",
+      "category": "rrhh",
+      "is_core": false,
+      "base_price": 16000,
+      "description": "Evaluación psicológica de empleados",
+      "dependencies": {
+        "required": ["users"],
+        "optional": ["medical-dashboard"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "emotional-analysis",
+      "key": "emotional-analysis",
+      "name": "Análisis Emocional",
+      "icon": "😊",
+      "category": "ai",
+      "is_core": false,
+      "base_price": 20000,
+      "description": "Análisis emocional con IA",
+      "dependencies": {
+        "required": ["facial-biometric"],
+        "optional": ["psychological-assessment"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "clientes",
+      "key": "clientes",
+      "name": "Clientes SIAC",
+      "name_alt": "Gestión de Clientes SIAC",
+      "icon": "👥",
+      "category": "siac",
+      "is_core": false,
+      "base_price": 18000,
+      "description": "Gestión de clientes para ERP SIAC",
+      "dependencies": {
+        "required": ["users"],
+        "optional": [],
+        "provides_to": ["facturacion"]
+      }
+    },
+    {
+      "id": "facturacion",
+      "key": "facturacion",
+      "name": "Facturación SIAC",
+      "icon": "💵",
+      "category": "siac",
+      "is_core": false,
+      "base_price": 22000,
+      "description": "Sistema de facturación SIAC",
+      "dependencies": {
+        "required": ["users", "clientes"],
+        "optional": ["plantillas-fiscales"],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "plantillas-fiscales",
+      "key": "plantillas-fiscales",
+      "name": "Plantillas Fiscales",
+      "name_alt": "Plantillas Fiscales SIAC",
+      "icon": "📋",
+      "category": "siac",
+      "is_core": false,
+      "base_price": 15000,
+      "description": "Plantillas fiscales para facturación",
+      "dependencies": {
+        "required": ["facturacion"],
+        "optional": [],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "google-maps-integration",
+      "key": "google-maps-integration",
+      "name": "Integración Google Maps",
+      "icon": "🗺️",
+      "category": "integration",
+      "is_core": false,
+      "base_price": 6000,
+      "description": "Integración con Google Maps API",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "provides_to": ["employee-map", "visitors"]
+      }
+    },
+    {
+      "id": "licensing-management",
+      "key": "licensing-management",
+      "name": "Licencias",
+      "name_alt": "Gestión de Licencias",
+      "icon": "📜",
+      "category": "admin",
+      "is_core": false,
+      "base_price": 0,
+      "description": "Gestión de licencias del sistema (SOLO APONNT)",
+      "admin_only": true,
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "systematic-logging",
+      "key": "systematic-logging",
+      "name": "Logging Sistemático",
+      "name_alt": "Sistema de Logging Profesional",
+      "icon": "📝",
+      "category": "infrastructure",
+      "is_core": false,
+      "base_price": 0,
+      "description": "Sistema de logging profesional (INFRAESTRUCTURA)",
+      "admin_only": true,
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "network",
+      "key": "network",
+      "name": "Red y Conectividad",
+      "icon": "🌐",
+      "category": "system",
+      "is_core": false,
+      "base_price": 0,
+      "description": "Monitoreo de red y conectividad (INFRAESTRUCTURA)",
+      "admin_only": true,
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "provides_to": []
+      }
+    },
+    {
+      "id": "permissions-test",
+      "key": "permissions-test",
+      "name": "Test de Permisos",
+      "icon": "🧪",
+      "category": "testing",
+      "is_core": false,
+      "base_price": 0,
+      "description": "Testing de permisos (DEVELOPMENT ONLY)",
+      "admin_only": true,
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "provides_to": []
+      }
+    }
+  ],
+
+  "categories": {
+    "core": { "name": "Sistema Core", "color": "#2196f3" },
+    "rrhh": { "name": "Recursos Humanos", "color": "#4caf50" },
+    "security": { "name": "Seguridad y Biometría", "color": "#f44336" },
+    "compliance": { "name": "Cumplimiento Legal", "color": "#ff9800" },
+    "communication": { "name": "Comunicaciones", "color": "#9c27b0" },
+    "analytics": { "name": "Análisis y Reportes", "color": "#00bcd4" },
+    "payroll": { "name": "Finanzas", "color": "#8bc34a" },
+    "siac": { "name": "ERP SIAC", "color": "#673ab7" },
+    "ai": { "name": "Inteligencia Artificial", "color": "#e91e63" },
+    "admin": { "name": "Administración", "color": "#607d8b" },
+    "medical": { "name": "Medicina Laboral", "color": "#f44336" },
+    "documents": { "name": "Gestión Documental", "color": "#795548" },
+    "hardware": { "name": "Hardware", "color": "#3f51b5" },
+    "scheduling": { "name": "Planificación", "color": "#ff5722" },
+    "monitoring": { "name": "Monitoreo", "color": "#00bcd4" },
+    "support": { "name": "Soporte", "color": "#607d8b" },
+    "reports": { "name": "Reportes", "color": "#4caf50" },
+    "legal": { "name": "Legal", "color": "#ff9800" },
+    "system": { "name": "Sistema", "color": "#9e9e9e" },
+    "integration": { "name": "Integraciones", "color": "#00bcd4" },
+    "testing": { "name": "Testing", "color": "#ffc107" },
+    "infrastructure": { "name": "Infraestructura", "color": "#455a64" }
+  },
+
+  "license_tiers": {
+    "basic": {
+      "name": "Básico",
+      "max_employees": 50,
+      "max_storage_mb": 1024,
+      "max_modules": 5,
+      "included_modules": ["authentication", "dashboard", "users", "settings", "attendance"]
+    },
+    "professional": {
+      "name": "Profesional",
+      "max_employees": 150,
+      "max_storage_mb": 5120,
+      "max_modules": 15,
+      "included_modules": ["authentication", "dashboard", "users", "settings", "attendance", "departments"]
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "max_employees": null,
+      "max_storage_mb": 51200,
+      "max_modules": null,
+      "included_modules": ["authentication", "dashboard", "users", "settings", "attendance", "departments"]
+    }
+  },
+
+  "bundles": {
+    "biometric-complete": {
+      "name": "Paquete Biométrico Completo",
+      "modules": ["biometric", "biometric-consent", "facial-biometric", "professional-biometric-registration", "kiosks"],
+      "regular_price": 85000,
+      "bundle_price": 65000,
+      "discount_percentage": 23.5
+    },
+    "rrhh-complete": {
+      "name": "Paquete RRHH Completo",
+      "modules": ["users", "departments", "shifts", "attendance", "vacation-management", "training-management", "sanctions-management"],
+      "regular_price": 62000,
+      "bundle_price": 45000,
+      "discount_percentage": 27.4
+    },
+    "medical-complete": {
+      "name": "Paquete Médico Completo",
+      "modules": ["medical-dashboard", "medical", "art-management", "psychological-assessment"],
+      "regular_price": 69000,
+      "bundle_price": 52000,
+      "discount_percentage": 24.6
+    },
+    "legal-compliance": {
+      "name": "Paquete Legal y Compliance",
+      "modules": ["legal-dashboard", "legal", "compliance-dashboard", "document-management", "terms-conditions"],
+      "regular_price": 71000,
+      "bundle_price": 55000,
+      "discount_percentage": 22.5
+    }
+  }
+}

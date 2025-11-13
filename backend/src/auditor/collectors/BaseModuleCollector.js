@@ -39,7 +39,7 @@
  * ============================================================================
  */
 
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
 const LearningEngine = require('../learning/LearningEngine');
 
 class BaseModuleCollector {
@@ -91,14 +91,23 @@ class BaseModuleCollector {
         const moduleConfig = this.getModuleConfig();
         console.log(`\n🧪 [${this.getModuleName()}] Iniciando tests de módulo...\n`);
 
+        // Guardar company_id para uso posterior en createTestLog
+        this.company_id = config.company_id;
+
         const results = [];
+        const externalPage = config.page || null; // Usar navegador externo si se proporciona
 
         try {
-            // 1. Iniciar navegador
-            await this.initBrowser();
-
-            // 2. Login como operador
-            await this.login(config.company_id);
+            // 1. Iniciar navegador (solo si no se proporcionó uno externo)
+            if (externalPage) {
+                console.log('  ✅ Usando navegador externo ya abierto (skip login)');
+                this.page = externalPage;
+                this.browser = null; // No controlamos el navegador externo
+            } else {
+                await this.initBrowser();
+                // 2. Login como operador (solo si abrimos nuestro propio navegador)
+                await this.login(config.company_id);
+            }
 
             // 3. Navegación específica del módulo (si es necesario)
             if (moduleConfig.navigateBeforeTests) {
@@ -119,6 +128,7 @@ class BaseModuleCollector {
 
                     results.push(await this.database.AuditLog.create({
                         execution_id,
+                        company_id: this.company_id, // Incluir company_id
                         test_type: 'e2e',
                         module_name: moduleConfig.moduleName,
                         test_name: `frontend_${category.name}`,
@@ -162,7 +172,10 @@ class BaseModuleCollector {
             }));
 
         } finally {
-            await this.closeBrowser();
+            // Solo cerrar navegador si lo abrimos nosotros (no es externo)
+            if (!externalPage) {
+                await this.closeBrowser();
+            }
         }
 
         // 6. Resumen final
@@ -177,22 +190,25 @@ class BaseModuleCollector {
      * ========================================================================
      */
     async initBrowser() {
-        console.log('🌐 Iniciando navegador VISIBLE (slowMo: 30ms)...');
+        console.log('🌐 Iniciando navegador VISIBLE con Playwright...');
 
-        this.browser = await puppeteer.launch({
+        this.browser = await chromium.launch({
             headless: false,
-            slowMo: 30, // 5x más rápido (patrón exitoso)
+            slowMo: 30, // Misma velocidad optimizada
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
                 '--start-maximized'
-            ],
-            defaultViewport: null,
-            protocolTimeout: 180000
+            ]
         });
 
-        this.page = await this.browser.newPage();
+        const context = await this.browser.newContext({
+            viewport: null,
+            ignoreHTTPSErrors: true
+        });
+
+        this.page = await context.newPage();
 
         // Interceptar errores de consola
         this.page.on('console', msg => {
@@ -263,33 +279,33 @@ class BaseModuleCollector {
 
         // Navegar a página de login
         await this.page.goto(`${this.baseURL}/panel-empresa.html`, {
-            waitUntil: 'networkidle2',
+            waitUntil: 'networkidle',
             timeout: 60000
         });
 
         // PASO 1: Empresa
-        await this.page.waitForSelector('#company-identifier', { visible: true, timeout: 10000 });
-        await this.page.type('#company-identifier', companySlug);
+        await this.page.waitForSelector('#company-identifier', { state: 'visible', timeout: 10000 });
+        await this.page.fill('#company-identifier', companySlug);
         await this.page.click('button[onclick="checkCompany()"]');
 
         // Esperar transición
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await this.page.waitForTimeout(500);
 
         // PASO 2: Usuario
-        await this.page.waitForSelector('#user-identifier', { visible: true, timeout: 10000 });
-        await this.page.type('#user-identifier', username);
+        await this.page.waitForSelector('#user-identifier', { state: 'visible', timeout: 10000 });
+        await this.page.fill('#user-identifier', username);
         await this.page.click('button[onclick="checkUsername()"]');
 
         // Esperar transición
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await this.page.waitForTimeout(500);
 
         // PASO 3: Password
-        await this.page.waitForSelector('#password-field', { visible: true, timeout: 10000 });
-        await this.page.type('#password-field', password);
+        await this.page.waitForSelector('#password-field', { state: 'visible', timeout: 10000 });
+        await this.page.fill('#password-field', password);
         await this.page.click('button[onclick="performLogin()"]');
 
         // Esperar que cargue el dashboard
-        await this.page.waitForSelector('#module-content', { visible: true, timeout: 30000 });
+        await this.page.waitForSelector('#module-content', { state: 'visible', timeout: 30000 });
 
         console.log('✅ Login exitoso\n');
     }
@@ -305,6 +321,9 @@ class BaseModuleCollector {
      */
     async clickElement(selector, description = 'elemento') {
         try {
+            // Hacer scroll al elemento antes de hacer click
+            await this.scrollIntoViewIfNeeded(selector);
+
             await this.page.evaluate((sel) => {
                 const element = document.querySelector(sel);
                 if (!element) {
@@ -322,12 +341,41 @@ class BaseModuleCollector {
     }
 
     /**
+     * Scroll dentro de un modal si el elemento está dentro de uno
+     */
+    async scrollIntoViewIfNeeded(selector) {
+        try {
+            await this.page.evaluate((sel) => {
+                const element = document.querySelector(sel);
+                if (!element) return;
+
+                // Buscar si está dentro de un modal
+                const modal = element.closest('.modal-body, .modal-content');
+                if (modal) {
+                    // Hacer scroll dentro del modal
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    // Hacer scroll en la página principal
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, selector);
+
+            await new Promise(resolve => setTimeout(resolve, 300)); // Esperar animación
+        } catch (error) {
+            // Ignorar errores de scroll, no es crítico
+        }
+    }
+
+    /**
      * Esperar y escribir en input
      */
     async typeInInput(selector, value, description = 'campo') {
         try {
-            await this.page.waitForSelector(selector, { visible: true, timeout: 5000 });
-            await this.page.type(selector, value, { delay: 10 }); // Delay muy reducido
+            // Primero hacer scroll al elemento (dentro del modal si aplica)
+            await this.scrollIntoViewIfNeeded(selector);
+
+            await this.page.waitForSelector(selector, { state: 'visible', timeout: 5000 });
+            await this.page.fill(selector, value);
             console.log(`   ✅ Escrito "${value}" en ${description}`);
         } catch (error) {
             console.error(`   ❌ Error escribiendo en ${description}:`, error.message);
@@ -340,8 +388,11 @@ class BaseModuleCollector {
      */
     async selectOption(selector, value, description = 'dropdown') {
         try {
-            await this.page.waitForSelector(selector, { visible: true, timeout: 5000 });
-            await this.page.select(selector, value);
+            // Hacer scroll al elemento
+            await this.scrollIntoViewIfNeeded(selector);
+
+            await this.page.waitForSelector(selector, { state: 'visible', timeout: 5000 });
+            await this.page.selectOption(selector, value);
             console.log(`   ✅ Seleccionado "${value}" en ${description}`);
         } catch (error) {
             console.error(`   ❌ Error seleccionando en ${description}:`, error.message);
@@ -372,6 +423,7 @@ class BaseModuleCollector {
 
         return await this.database.AuditLog.create({
             execution_id,
+            company_id: this.company_id, // Incluir company_id
             test_type: 'e2e',
             module_name: moduleConfig.moduleName,
             test_name: testName,
@@ -437,7 +489,7 @@ class BaseModuleCollector {
     async getElementText(selector) {
         try {
             await this.page.waitForSelector(selector, { timeout: 5000 });
-            return await this.page.$eval(selector, el => el.textContent.trim());
+            return await this.page.textContent(selector);
         } catch (error) {
             console.error(`❌ Error obteniendo texto de ${selector}:`, error.message);
             return null;
@@ -449,17 +501,8 @@ class BaseModuleCollector {
      */
     async isModalVisible(modalSelector = '.modal') {
         try {
-            const modal = await this.page.$(modalSelector);
-            if (!modal) return false;
-
-            const isVisible = await this.page.evaluate((sel) => {
-                const element = document.querySelector(sel);
-                if (!element) return false;
-                const style = window.getComputedStyle(element);
-                return style.display !== 'none' && style.visibility !== 'hidden';
-            }, modalSelector);
-
-            return isVisible;
+            const modal = await this.page.locator(modalSelector);
+            return await modal.isVisible();
         } catch {
             return false;
         }

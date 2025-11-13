@@ -236,6 +236,52 @@ router.post('/enroll-face',
 
       const savedTemplate = { id: results[0]?.id || 'generated-id' };
 
+      // 5. SAVE VISIBLE PHOTO and UPDATE USER RECORD with biometric photo fields
+      let photoUrl = null;
+      try {
+        const fs = require('fs');
+        const path = require('path');
+
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = path.join(__dirname, '../../public/uploads/biometric-photos');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        // Generate unique filename: companyId_employeeId_timestamp.jpg
+        const timestamp = Date.now();
+        const filename = `${companyId}_${employeeId}_${timestamp}.jpg`;
+        const filepath = path.join(uploadsDir, filename);
+
+        // Save the image file
+        fs.writeFileSync(filepath, req.file.buffer);
+
+        // Photo URL for database (relative path from public/)
+        photoUrl = `/uploads/biometric-photos/${filename}`;
+
+        console.log(`📸 [BIOMETRIC-PHOTO] Visible photo saved: ${photoUrl}`);
+
+        // Update user record with biometric photo fields using SQL function
+        const captureDate = new Date();
+        await database.sequelize.query(
+          `SELECT update_biometric_photo(:userId, :photoUrl, :captureDate)`,
+          {
+            replacements: {
+              userId: employeeId, // UUID from users table
+              photoUrl: photoUrl,
+              captureDate: captureDate
+            },
+            type: database.sequelize.QueryTypes.SELECT
+          }
+        );
+
+        console.log(`✅ [BIOMETRIC-PHOTO] User record updated with photo URL and expiration date`);
+
+      } catch (photoError) {
+        console.error(`⚠️ [BIOMETRIC-PHOTO] Failed to save photo, but template saved successfully:`, photoError.message);
+        // Don't fail the whole enrollment if photo save fails, just log it
+      }
+
       const processingTime = Date.now() - startTime;
 
       console.log(`✅ [BIOMETRIC-ENTERPRISE] Face template encrypted and saved: ${savedTemplate.id} in ${processingTime}ms`);
@@ -255,7 +301,9 @@ router.post('/enroll-face',
           gdprCompliant: true,
           sessionId: sessionId,
           provider: embeddingResult.provider || 'face-api-js',
-          accuracy: embeddingResult.provider === 'azure-face-api' ? '99.8%' : '95-97%'
+          accuracy: embeddingResult.provider === 'azure-face-api' ? '99.8%' : '95-97%',
+          biometricPhotoUrl: photoUrl, // Visible photo URL for employee profile
+          photoSaved: photoUrl !== null // Indicates if photo was successfully saved
         },
         security: {
           encryption: 'AES-256-CBC',
@@ -429,55 +477,49 @@ router.post('/analyze-face',
         });
       }
 
-      // Verificar si Azure está habilitado
-      if (!azureFaceService.isEnabled()) {
-        console.warn('⚠️ [ANALYZE-FACE] Azure no está habilitado - usando análisis básico');
-        return res.json({
-          success: true,
-          faceCount: 1,
-          quality: 'medium',
-          isOptimal: false,
-          message: 'Azure no configurado - análisis básico',
-          processingTime: Date.now() - startTime
-        });
-      }
-
-      console.log('🧠 [ANALYZE-FACE] Usando Face-API.js para análisis en tiempo real...');
+      // ✅ USAR AZURE FACE SERVICE REAL
+      console.log('🧠 [ANALYZE-FACE] Usando Azure Face API...');
       console.log(`   Image size: ${req.file.buffer.length} bytes`);
 
-      // Usar Face-API.js local (no necesita aprobación)
-      const faceResult = await extractFaceEmbedding(req.file, 0.5);
+      // Llamar a Azure Face Service
+      const azureResult = await azureFaceService.detectAndExtractFace(req.file.buffer, {
+        returnFaceAttributes: 'qualityForRecognition,headPose,blur,exposure,noise,occlusion,accessories,glasses,mask'
+      });
 
       const processingTime = Date.now() - startTime;
 
-      console.log(`📊 [ANALYZE-FACE] Face-API resultado:`, {
-        success: faceResult.success,
-        error: faceResult.error
+      console.log(`📊 [ANALYZE-FACE] Azure resultado:`, {
+        success: azureResult.success,
+        error: azureResult.error
       });
 
-      if (!faceResult.success) {
+      // Si Azure no está configurado o falla, retornar fallback
+      if (!azureResult.success) {
         // No se detectó rostro
-        console.log(`❌ [ANALYZE-FACE] Error: ${faceResult.error}`);
+        console.log(`❌ [ANALYZE-FACE] Error: ${azureResult.error}`);
+
+        const faceCount = azureResult.error === 'MULTIPLE_FACES' ? azureResult.faces : 0;
 
         return res.json({
           success: true,
-          faceCount: 0,
+          faceCount,
           quality: 'no_face',
           isOptimal: false,
-          message: faceResult.error,
-          processingTime
+          message: azureResult.message || azureResult.error,
+          processingTime,
+          azureEnabled: azureFaceService.isEnabled()
         });
       }
 
-      // Rostro detectado exitosamente
-      const qualityScore = faceResult.qualityScore || 0.7;
+      // ✅ Rostro detectado exitosamente por Azure
+      const qualityScore = azureResult.qualityScore || 0.7;
       const isHighQuality = qualityScore >= 0.8;
       const isMediumQuality = qualityScore >= 0.6 && qualityScore < 0.8;
       const isOptimal = isHighQuality;
 
       const quality = isHighQuality ? 'high' : (isMediumQuality ? 'medium' : 'low');
 
-      console.log(`✅ [ANALYZE-FACE] Rostro analizado - Calidad: ${quality}, Score: ${qualityScore}, Óptimo: ${isOptimal}`);
+      console.log(`✅ [ANALYZE-FACE] Rostro analizado por Azure - Calidad: ${quality}, Score: ${qualityScore}, Óptimo: ${isOptimal}`);
 
       return res.json({
         success: true,
@@ -486,10 +528,19 @@ router.post('/analyze-face',
         isOptimal,
         details: {
           qualityScore,
-          confidenceScore: faceResult.confidenceScore,
-          faceBox: faceResult.faceBox
+          confidenceScore: azureResult.confidenceScore,
+          faceRectangle: azureResult.faceRectangle,
+          // ⬇️ LANDMARKS REALES DE AZURE (27 puntos)
+          faceLandmarks: azureResult.faceLandmarks,
+          // ⬇️ ACCESSORIES REALES DE AZURE
+          accessories: azureResult.faceAttributes?.accessories,
+          glasses: azureResult.faceAttributes?.glasses,
+          mask: azureResult.faceAttributes?.mask,
+          occlusion: azureResult.faceAttributes?.occlusion
         },
-        processingTime
+        processingTime,
+        azureEnabled: true,
+        provider: 'azure-face-api'
       });
 
     } catch (error) {

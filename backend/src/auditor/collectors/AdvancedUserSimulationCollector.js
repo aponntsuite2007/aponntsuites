@@ -27,7 +27,7 @@
  * @date 2025-10-22
  */
 
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
 const faker = require('faker');
 
 // Configurar faker en español
@@ -93,13 +93,14 @@ class AdvancedUserSimulationCollector {
   }
 
   async initBrowser() {
-    this.browser = await puppeteer.launch({
+    this.browser = await chromium.launch({
       headless: false, // VISIBLE para ver la simulación
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       defaultViewport: { width: 1920, height: 1080 }
     });
 
-    this.page = await this.browser.newPage();
+    const context = await this.browser.newContext({ viewport: null });
+        this.page = await context.newPage();
     await this.page.setCacheEnabled(false);
   }
 
@@ -111,7 +112,7 @@ class AdvancedUserSimulationCollector {
 
     // PASO 1: Seleccionar empresa (con pausa humana)
     await this.humanDelay('action');
-    await this.page.select('#companySelect', 'aponnt-empresa-demo');
+    await this.page.selectOption('#companySelect', 'aponnt-empresa-demo');
     console.log('    🏢 [ADVANCED-SIM] Empresa seleccionada');
 
     // PASO 2: Escribir usuario (con velocidad humana)
@@ -320,7 +321,7 @@ class AdvancedUserSimulationCollector {
 
         for (const selector of selectors) {
           try {
-            const field = await this.page.$(selector);
+            const field = await this.page.locator(selector);
             if (field) {
               await this.humanDelay('action');
               await field.click({ clickCount: 3 }); // Seleccionar todo
@@ -348,7 +349,7 @@ class AdvancedUserSimulationCollector {
 
       for (const selector of saveSelectors) {
         try {
-          const saveButton = await this.page.$(selector);
+          const saveButton = await this.page.locator(selector);
           if (saveButton) {
             await this.humanDelay('thought');
             await saveButton.click();
@@ -1138,7 +1139,7 @@ class AdvancedUserSimulationCollector {
 
     // Escribir caracter por caracter con velocidad humana
     for (const char of text) {
-      await element.type(char);
+      await element.fill(char);
       await this.humanDelay('typing');
     }
   }
@@ -1198,7 +1199,7 @@ class AdvancedUserSimulationCollector {
 
     for (const selector of selectors) {
       try {
-        const field = await this.page.$(selector);
+        const field = await this.page.locator(selector);
         if (field) {
           await this.humanDelay('action');
           await field.click({ clickCount: 3 }); // Seleccionar todo
@@ -1233,7 +1234,7 @@ class AdvancedUserSimulationCollector {
 
     for (const selector of saveSelectors) {
       try {
-        const saveButton = await this.page.$(selector);
+        const saveButton = await this.page.locator(selector);
         if (saveButton) {
           await this.humanDelay('thought');
           await saveButton.click();

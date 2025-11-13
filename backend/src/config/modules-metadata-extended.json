@@ -1,0 +1,4089 @@
+{
+  "metadata_version": "2.0.0",
+  "generated_at": "2025-11-02T21:24:57.934Z",
+  "generated_by": "Unified Knowledge Service - Auto-Update",
+  "total_modules": 59,
+  "modules": {
+    "document-expiration": {
+      "module_key": "document-expiration",
+      "name": "Documentos Vencibles",
+      "name_alt": "Sistema de Gestión de Documentos con Notificaciones Automáticas",
+      "icon": "📄",
+      "color": "#795548",
+      "category": "rrhh",
+      "version": "1.0.0",
+      "changelog": [
+        {
+          "version": "1.0.0",
+          "date": "2025-10-31",
+          "author": "Claude Code",
+          "type": "feature",
+          "summary": "Implementación inicial completa",
+          "changes": [
+            "Sistema de notificaciones automáticas 30 días antes del vencimiento",
+            "CRUD completo de documentos personales",
+            "Integración con NotificationEnterpriseService",
+            "Scheduler diario a las 10:00 AM timezone Argentina",
+            "Frontend con badges de estado (Vigente, Por vencer, Vencido)",
+            "Soporte para 6 tipos de documentos",
+            "Verificación de documentos por RRHH",
+            "URLs para documentos escaneados"
+          ],
+          "files_created": [
+            "src/routes/userDocumentsRoutes.js",
+            "public/js/modules/document-expiration-manager.js",
+            "src/services/DocumentExpirationScheduler.js"
+          ],
+          "files_modified": [
+            "server.js",
+            "src/models/UserDocuments.js"
+          ],
+          "migrations": [],
+          "database_impact": {
+            "tables_used": [
+              "user_documents",
+              "users"
+            ],
+            "new_fields": [],
+            "modified_fields": []
+          }
+        }
+      ],
+      "description": {
+        "short": "Gestión de documentos personales con fechas de vencimiento y notificaciones automáticas",
+        "long": "Sistema completo para gestionar documentos personales de empleados (DNI, pasaportes, licencias, visas, certificados) con notificaciones automáticas 30 días antes del vencimiento. Incluye validación de documentos requeridos según función del empleado y verificación por RRHH.",
+        "business_value": "Previene problemas legales por documentación vencida, asegura cumplimiento normativo, reduce riesgos laborales y mejora gestión de RRHH.",
+        "use_cases": [
+          "Empleados que viajan al exterior → pasaporte obligatorio y vigente",
+          "Conductores de vehículos → licencia vigente obligatoria",
+          "Extranjeros → visa de trabajo vigente",
+          "Certificados de antecedentes según regulación local"
+        ]
+      },
+      "submódulos": [
+        {
+          "key": "documentos-vencibles",
+          "name": "Gestión de Documentos",
+          "description": "CRUD completo de documentos personales con validaciones",
+          "icon": "📋",
+          "campos": [
+            {
+              "key": "document_type",
+              "label": "Tipo de Documento",
+              "type": "ENUM",
+              "required": true,
+              "values": [
+                "dni",
+                "pasaporte",
+                "licencia_conducir",
+                "visa",
+                "certificado_antecedentes",
+                "otro"
+              ],
+              "labels": {
+                "dni": "DNI / Documento Nacional de Identidad",
+                "pasaporte": "Pasaporte",
+                "licencia_conducir": "Licencia de Conducir",
+                "visa": "Visa de Trabajo",
+                "certificado_antecedentes": "Certificado de Antecedentes",
+                "otro": "Otro Documento"
+              },
+              "help_text": "Seleccione el tipo de documento personal. Algunos documentos son obligatorios según la función del empleado.",
+              "tooltip": "Tipos de documentos: DNI (obligatorio para todos), Pasaporte (obligatorio si viaja), Licencia (obligatorio si conduce), Visa (obligatorio para extranjeros)",
+              "business_rules": [
+                {
+                  "id": "BR-DOC-001",
+                  "condition": "user.job_function.requires_international_travel === true",
+                  "action": "REQUIRE_VALUE",
+                  "value": "pasaporte",
+                  "message": "❗ Pasaporte obligatorio: Su función requiere viajes al exterior",
+                  "severity": "error",
+                  "auto_notify": true,
+                  "notification_template": "passport_required"
+                },
+                {
+                  "id": "BR-DOC-002",
+                  "condition": "user.job_function.drives_company_vehicle === true",
+                  "action": "REQUIRE_VALUE",
+                  "value": "licencia_conducir",
+                  "message": "❗ Licencia de conducir obligatoria: Su función requiere conducir vehículos de la empresa",
+                  "severity": "error",
+                  "auto_notify": true,
+                  "notification_template": "license_required"
+                },
+                {
+                  "id": "BR-DOC-003",
+                  "condition": "user.nationality !== 'AR' && user.employment_status === 'active'",
+                  "action": "REQUIRE_VALUE",
+                  "value": "visa",
+                  "message": "❗ Visa de trabajo obligatoria: Empleados extranjeros deben tener visa vigente",
+                  "severity": "error",
+                  "auto_notify": true,
+                  "notification_template": "visa_required"
+                }
+              ],
+              "validations": [
+                {
+                  "type": "required",
+                  "message": "Debe seleccionar un tipo de documento"
+                },
+                {
+                  "type": "enum",
+                  "allowed_values": [
+                    "dni",
+                    "pasaporte",
+                    "licencia_conducir",
+                    "visa",
+                    "certificado_antecedentes",
+                    "otro"
+                  ],
+                  "message": "Tipo de documento no válido"
+                }
+              ]
+            },
+            {
+              "key": "document_number",
+              "label": "Número de Documento",
+              "type": "STRING",
+              "required": false,
+              "max_length": 50,
+              "help_text": "Número o código del documento (ej: 12345678, ABC123456)",
+              "tooltip": "Ingrese el número del documento tal como aparece en el mismo",
+              "validations": [
+                {
+                  "type": "alphanumeric",
+                  "message": "Solo se permiten números y letras"
+                }
+              ]
+            },
+            {
+              "key": "issue_date",
+              "label": "Fecha de Emisión",
+              "type": "DATE",
+              "required": false,
+              "help_text": "Fecha en que se emitió el documento",
+              "tooltip": "Fecha de emisión del documento",
+              "validations": [
+                {
+                  "type": "past_date",
+                  "message": "La fecha de emisión no puede ser futura"
+                },
+                {
+                  "type": "logical_sequence",
+                  "before": "expiration_date",
+                  "message": "La fecha de emisión debe ser anterior a la fecha de vencimiento"
+                }
+              ]
+            },
+            {
+              "key": "expiration_date",
+              "label": "Fecha de Vencimiento",
+              "type": "DATE",
+              "required": false,
+              "help_text": "Fecha de vencimiento del documento (dejar vacío si no vence)",
+              "tooltip": "⚠️ Importante: Recibirá notificación 30 días antes del vencimiento. Algunos documentos nunca vencen (ej: DNI argentino)",
+              "alert_thresholds": {
+                "urgent": 7,
+                "high": 15,
+                "medium": 30
+              },
+              "validations": [
+                {
+                  "type": "future_or_null",
+                  "message": "La fecha de vencimiento debe ser futura o vacía"
+                }
+              ]
+            },
+            {
+              "key": "is_verified",
+              "label": "Verificado por RRHH",
+              "type": "BOOLEAN",
+              "default": false,
+              "help_text": "Indica si el documento fue verificado físicamente por RRHH",
+              "tooltip": "✓ Verificado: RRHH confirmó la autenticidad del documento original",
+              "requires_permission": "rrhh_admin"
+            }
+          ],
+          "ui_config": {
+            "table": {
+              "default_sort": "expiration_date ASC NULLS LAST",
+              "columns": [
+                "document_type",
+                "document_number",
+                "issue_date",
+                "expiration_date",
+                "status",
+                "actions"
+              ],
+              "badges": {
+                "vigente": {
+                  "color": "success",
+                  "icon": "✓",
+                  "days_min": 31
+                },
+                "por_vencer": {
+                  "color": "warning",
+                  "icon": "⚠️",
+                  "days_min": 8,
+                  "days_max": 30
+                },
+                "vence_pronto": {
+                  "color": "danger",
+                  "icon": "❗",
+                  "days_min": 1,
+                  "days_max": 7
+                },
+                "vencido": {
+                  "color": "danger",
+                  "icon": "✖",
+                  "days_max": 0
+                }
+              }
+            },
+            "modal": {
+              "size": "lg",
+              "sections": [
+                {
+                  "title": "Información del Documento",
+                  "fields": [
+                    "document_type",
+                    "document_number"
+                  ]
+                },
+                {
+                  "title": "Fechas",
+                  "fields": [
+                    "issue_date",
+                    "expiration_date"
+                  ]
+                },
+                {
+                  "title": "Detalles Adicionales",
+                  "fields": [
+                    "issuing_authority",
+                    "file_url",
+                    "notes"
+                  ]
+                },
+                {
+                  "title": "Verificación",
+                  "fields": [
+                    "is_verified"
+                  ],
+                  "visible_for_roles": [
+                    "admin",
+                    "rrhh"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "endpoints": {
+        "base_path": "/api/v1",
+        "routes": [
+          {
+            "method": "GET",
+            "path": "/users/:userId/documents",
+            "description": "Obtener todos los documentos de un usuario",
+            "auth": "required",
+            "permissions": [
+              "read_own_documents",
+              "read_all_documents"
+            ],
+            "response_type": "array",
+            "response_example": "[{id: 1, document_type: 'pasaporte', ...}]"
+          },
+          {
+            "method": "GET",
+            "path": "/users/:userId/documents/:documentId",
+            "description": "Obtener un documento específico",
+            "auth": "required",
+            "permissions": [
+              "read_own_documents",
+              "read_all_documents"
+            ]
+          },
+          {
+            "method": "POST",
+            "path": "/users/:userId/documents",
+            "description": "Crear nuevo documento",
+            "auth": "required",
+            "permissions": [
+              "create_own_documents",
+              "create_all_documents"
+            ],
+            "triggers_notification": true,
+            "notification_condition": "if expiration_date within 30 days"
+          },
+          {
+            "method": "PUT",
+            "path": "/users/:userId/documents/:documentId",
+            "description": "Actualizar documento existente",
+            "auth": "required",
+            "permissions": [
+              "update_own_documents",
+              "update_all_documents"
+            ],
+            "triggers_notification": true,
+            "notification_condition": "if expiration_date changed"
+          },
+          {
+            "method": "DELETE",
+            "path": "/users/:userId/documents/:documentId",
+            "description": "Eliminar documento",
+            "auth": "required",
+            "permissions": [
+              "delete_own_documents",
+              "delete_all_documents"
+            ]
+          },
+          {
+            "method": "GET",
+            "path": "/documents/expiring",
+            "description": "Obtener documentos que vencen pronto (dashboard)",
+            "auth": "required",
+            "permissions": [
+              "view_dashboard"
+            ],
+            "query_params": {
+              "days": "número de días (default: 30)"
+            }
+          }
+        ]
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "user_documents",
+            "model": "UserDocuments",
+            "primary_key": "id",
+            "fields_used": [
+              "id",
+              "user_id",
+              "company_id",
+              "document_type",
+              "document_number",
+              "issue_date",
+              "expiration_date",
+              "issuing_authority",
+              "file_url",
+              "notes",
+              "is_verified",
+              "created_at",
+              "updated_at"
+            ],
+            "indexes": [
+              "idx_user_documents_user_id",
+              "idx_user_documents_company_id",
+              "idx_user_documents_expiration_date"
+            ],
+            "relations": [
+              {
+                "type": "belongsTo",
+                "model": "User",
+                "foreign_key": "user_id"
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "backend": [
+          {
+            "path": "src/routes/userDocumentsRoutes.js",
+            "type": "route",
+            "lines": 300,
+            "description": "API REST completa para documentos vencibles",
+            "exports": "router"
+          },
+          {
+            "path": "src/services/DocumentExpirationScheduler.js",
+            "type": "service",
+            "lines": 230,
+            "description": "Scheduler para notificaciones automáticas",
+            "cron": "0 10 * * *",
+            "timezone": "America/Argentina/Buenos_Aires"
+          }
+        ],
+        "frontend": [
+          {
+            "path": "public/js/modules/document-expiration-manager.js",
+            "type": "manager",
+            "lines": 400,
+            "description": "Manager frontend con CRUD completo",
+            "class": "DocumentExpirationManager",
+            "methods": [
+              "init",
+              "loadDocuments",
+              "showAddModal",
+              "editDocument",
+              "deleteDocument"
+            ]
+          }
+        ],
+        "models": [
+          {
+            "path": "src/models/UserDocuments.js",
+            "type": "model",
+            "sequelize": true,
+            "table": "user_documents"
+          }
+        ]
+      },
+      "integrations": [
+        {
+          "module": "notifications-enterprise",
+          "type": "OPTIONAL",
+          "auto_detect": true,
+          "detection_method": "Check SystemModule.isActive for 'notifications-enterprise'",
+          "adapts_behavior": {
+            "if_active": {
+              "description": "Envía notificaciones proactivas vía email/SMS/push",
+              "features": [
+                "Notificación 30 días antes del vencimiento",
+                "Escalamiento automático (30 días, 15 días, 7 días, vencido)",
+                "Copia a supervisor y RRHH",
+                "Requiere confirmación de recepción",
+                "Trackeo de lectura y respuesta"
+              ],
+              "notification_templates": [
+                "document_expiring_30days",
+                "document_expiring_15days",
+                "document_expiring_7days",
+                "document_expired",
+                "document_required_missing"
+              ]
+            },
+            "if_inactive": {
+              "description": "Solo muestra alertas visuales en UI",
+              "features": [
+                "Badges de estado en tabla",
+                "Alertas en modal de edición",
+                "Dashboard con documentos próximos a vencer"
+              ]
+            }
+          }
+        },
+        {
+          "module": "users",
+          "type": "REQUIRED",
+          "provides": "Agrega submódulo de documentos en perfil de usuario",
+          "extends_ui": "panel-empresa.html → sección Empleados → Tab Documentos"
+        },
+        {
+          "module": "medical-exams",
+          "type": "RELATED",
+          "relationship": "Complementario - ambos gestionan documentación personal"
+        }
+      ],
+      "notifications": {
+        "enabled": true,
+        "requires_module": "notifications-enterprise",
+        "templates": [
+          {
+            "key": "document_expiring_30days",
+            "title": "⚠️ Documento próximo a vencer - 30 días",
+            "priority": "medium",
+            "requires_response": false,
+            "copy_to": [
+              "supervisor",
+              "rrhh"
+            ],
+            "channels": [
+              "email",
+              "push"
+            ],
+            "message_template": "Su {{document_type}} vence el {{expiration_date}}. Por favor renueve el documento a la brevedad."
+          },
+          {
+            "key": "document_expiring_7days",
+            "title": "❗ URGENTE: Documento vence en 7 días",
+            "priority": "high",
+            "requires_response": true,
+            "copy_to": [
+              "supervisor",
+              "rrhh",
+              "legal"
+            ],
+            "channels": [
+              "email",
+              "sms",
+              "push"
+            ],
+            "message_template": "URGENTE: Su {{document_type}} vence el {{expiration_date}}. Debe renovarlo INMEDIATAMENTE para evitar problemas legales."
+          },
+          {
+            "key": "document_expired",
+            "title": "🚨 CRÍTICO: Documento VENCIDO",
+            "priority": "urgent",
+            "requires_response": true,
+            "copy_to": [
+              "supervisor",
+              "rrhh",
+              "legal",
+              "admin"
+            ],
+            "channels": [
+              "email",
+              "sms",
+              "push",
+              "in_app"
+            ],
+            "message_template": "CRÍTICO: Su {{document_type}} VENCIÓ el {{expiration_date}}. Su situación laboral puede verse afectada. Contacte a RRHH INMEDIATAMENTE."
+          }
+        ]
+      },
+      "metrics": {
+        "tracked": [
+          "documents_total",
+          "documents_expiring_30days",
+          "documents_expiring_7days",
+          "documents_expired",
+          "documents_verified_percentage",
+          "avg_time_to_renewal"
+        ],
+        "dashboards": [
+          {
+            "name": "Documentación Vencible",
+            "charts": [
+              {
+                "type": "gauge",
+                "metric": "documents_verified_percentage",
+                "title": "% Documentos Verificados",
+                "thresholds": {
+                  "red": 60,
+                  "yellow": 80,
+                  "green": 90
+                }
+              },
+              {
+                "type": "bar",
+                "metric": "documents_by_type",
+                "title": "Documentos por Tipo"
+              },
+              {
+                "type": "timeline",
+                "metric": "expiration_timeline",
+                "title": "Línea de tiempo de vencimientos"
+              }
+            ]
+          }
+        ]
+      },
+      "health_indicators": {
+        "critical": [
+          {
+            "id": "HI-DOC-001",
+            "metric": "documents_expired_count",
+            "threshold": 0,
+            "operator": ">",
+            "severity": "critical",
+            "message": "Hay documentos vencidos - riesgo legal ALTO"
+          }
+        ],
+        "warnings": [
+          {
+            "id": "HI-DOC-002",
+            "metric": "documents_expiring_7days_count",
+            "threshold": 5,
+            "operator": ">",
+            "severity": "warning",
+            "message": "Más de 5 documentos vencen en 7 días"
+          }
+        ]
+      },
+      "testing": {
+        "test_coverage": 0,
+        "test_files": [],
+        "test_scenarios": [
+          "Crear documento con fecha de vencimiento",
+          "Crear documento sin fecha de vencimiento",
+          "Actualizar fecha de vencimiento → debe disparar notificación",
+          "Verificar scheduler ejecuta a las 10:00 AM",
+          "Validar business rules (pasaporte si viaja)",
+          "Verificar consolidación de notificaciones por usuario"
+        ]
+      },
+      "known_issues": [],
+      "todo": [
+        "Agregar upload de archivos directo (no solo URL)",
+        "OCR para extraer datos del documento escaneado",
+        "Integración con RENAPER para validación de DNI argentino",
+        "Recordatorios automáticos para renovación",
+        "Workflow de aprobación para documentos críticos"
+      ],
+      "_source": "extended_json",
+      "_loaded_at": "2025-11-02T21:24:57.131Z"
+    },
+    "medical-exams": {
+      "module_key": "medical-exams",
+      "name": "Exámenes Médicos",
+      "name_alt": "Sistema de Gestión de Exámenes Médicos Ocupacionales con Periodicidad Automática",
+      "icon": "🏥",
+      "color": "#4CAF50",
+      "category": "rrhh",
+      "version": "1.0.0",
+      "changelog": [
+        {
+          "version": "1.0.0",
+          "date": "2025-01-31",
+          "author": "Claude Code",
+          "type": "feature",
+          "summary": "Implementación inicial completa de sistema médico ocupacional",
+          "changes": [
+            "5 tipos de exámenes médicos (preocupacional, periódico, reingreso, retiro, especial)",
+            "Cálculo automático de próximo examen vía trigger SQL",
+            "Periodicidad configurable (mensual, trimestral, semestral, anual, bienal, personalizado)",
+            "Notificaciones automáticas 30 días antes del próximo examen",
+            "Scheduler diario a las 11:00 AM timezone Argentina",
+            "Frontend con secciones condicionales según tipo de examen",
+            "Integración con NotificationEnterpriseService",
+            "Tracking de aptitud laboral (apto, apto con observaciones, no apto, pendiente)",
+            "Soporte para certificados médicos digitales",
+            "Validación de centros médicos y doctores"
+          ],
+          "files_created": [
+            "src/routes/userMedicalExamsRoutes.js",
+            "public/js/modules/medical-exams-manager.js",
+            "src/services/MedicalExamExpirationScheduler.js",
+            "migrations/20251031_add_medical_exam_frequency_fields.sql"
+          ],
+          "files_modified": [
+            "server.js",
+            "src/models/UserMedicalExams.js"
+          ],
+          "migrations": [
+            "20251031_add_medical_exam_frequency_fields"
+          ],
+          "database_impact": {
+            "tables_used": [
+              "user_medical_exams",
+              "users"
+            ],
+            "new_fields": [
+              "exam_frequency",
+              "frequency_months",
+              "auto_calculate_next_exam"
+            ],
+            "modified_fields": [],
+            "triggers_created": [
+              "calculate_next_medical_exam"
+            ]
+          }
+        }
+      ],
+      "description": {
+        "short": "Gestión completa de exámenes médicos ocupacionales con periodicidad automática y notificaciones proactivas",
+        "long": "Sistema profesional para gestión de exámenes médicos laborales según Ley de Riesgos del Trabajo. Incluye 5 tipos de exámenes (preocupacional, periódico, reingreso, retiro, especial), cálculo automático de próximo examen basado en periodicidad configurable, notificaciones 30 días antes, tracking de aptitud laboral y certificados médicos digitales.",
+        "business_value": "Asegura cumplimiento legal de la Ley 24.557 de Riesgos del Trabajo, previene sanciones por incumplimiento, protege la salud de empleados, reduce riesgos laborales y automatiza procesos de RRHH.",
+        "use_cases": [
+          "Examen preocupacional antes de contratar → asegura aptitud para el puesto",
+          "Exámenes periódicos según exposición a riesgos → anual para oficina, semestral para riesgos medios, mensual para alto riesgo",
+          "Examen de reingreso después de licencias prolongadas → valida condición actual",
+          "Examen de retiro → documenta estado de salud al finalizar relación laboral",
+          "Exámenes especiales → cambio de puesto, incidente laboral, exposición accidental"
+        ]
+      },
+      "submódulos": [
+        {
+          "key": "examenes-medicos",
+          "name": "Gestión de Exámenes Médicos",
+          "description": "CRUD completo de exámenes médicos ocupacionales con validaciones legales",
+          "icon": "🩺",
+          "campos": [
+            {
+              "key": "exam_type",
+              "label": "Tipo de Examen",
+              "type": "ENUM",
+              "required": true,
+              "values": [
+                "preocupacional",
+                "periodico",
+                "reingreso",
+                "retiro",
+                "especial"
+              ],
+              "labels": {
+                "preocupacional": "Preocupacional (Ingreso)",
+                "periodico": "Periódico (Rutina)",
+                "reingreso": "Reingreso (Post-Licencia)",
+                "retiro": "Retiro (Egreso)",
+                "especial": "Especial (Incidente/Cambio)"
+              },
+              "help_text": "Tipo de examen según Ley 24.557 de Riesgos del Trabajo. Preocupacional es obligatorio antes de contratar, periódico se repite según riesgo del puesto.",
+              "tooltip": "📋 Tipos legales: Preocupacional (antes de contratar), Periódico (según riesgo: bajo=anual, medio=semestral, alto=mensual), Reingreso (licencias >60 días), Retiro (fin de relación laboral), Especial (cambio de puesto, incidente)",
+              "business_rules": [
+                {
+                  "id": "BR-MED-001",
+                  "condition": "user.employment_status === 'applicant'",
+                  "action": "REQUIRE_VALUE",
+                  "value": "preocupacional",
+                  "message": "❗ Examen preocupacional obligatorio: No se puede contratar sin examen médico de ingreso",
+                  "severity": "error",
+                  "auto_notify": true,
+                  "notification_template": "preoccupational_exam_required",
+                  "blocks_action": "No permite cambiar status a 'active' sin examen aprobado"
+                },
+                {
+                  "id": "BR-MED-002",
+                  "condition": "user.job_risk_level === 'high' && exam_type === 'periodico'",
+                  "action": "SET_VALUE",
+                  "target_field": "exam_frequency",
+                  "value": "mensual",
+                  "message": "⚠️ Alto riesgo detectado: Frecuencia mensual recomendada",
+                  "severity": "warning",
+                  "auto_notify": false
+                },
+                {
+                  "id": "BR-MED-003",
+                  "condition": "user.leave_days > 60 && leave_type === 'medical'",
+                  "action": "REQUIRE_VALUE",
+                  "value": "reingreso",
+                  "message": "❗ Examen de reingreso obligatorio: Licencias médicas >60 días requieren examen de reincorporación",
+                  "severity": "error",
+                  "auto_notify": true,
+                  "notification_template": "reentry_exam_required"
+                },
+                {
+                  "id": "BR-MED-004",
+                  "condition": "result === 'no_apto'",
+                  "action": "TRIGGER_WORKFLOW",
+                  "workflow": "medical_inaptitude_process",
+                  "message": "🚨 CRÍTICO: Empleado NO APTO para el puesto. Se debe iniciar proceso de ART y reubicación",
+                  "severity": "critical",
+                  "auto_notify": true,
+                  "notification_template": "employee_not_fit_for_duty",
+                  "copy_to": [
+                    "rrhh",
+                    "legal",
+                    "art_manager",
+                    "supervisor"
+                  ],
+                  "requires_immediate_action": true
+                }
+              ],
+              "validations": [
+                {
+                  "type": "required",
+                  "message": "Debe seleccionar un tipo de examen médico"
+                },
+                {
+                  "type": "enum",
+                  "allowed_values": [
+                    "preocupacional",
+                    "periodico",
+                    "reingreso",
+                    "retiro",
+                    "especial"
+                  ],
+                  "message": "Tipo de examen no válido según Ley 24.557"
+                }
+              ],
+              "ui_adaptations": {
+                "if_exam_type": {
+                  "periodico": {
+                    "show_fields": [
+                      "exam_frequency",
+                      "frequency_months",
+                      "auto_calculate_next_exam"
+                    ],
+                    "help_text": "💡 Examen periódico: Configure la frecuencia según el nivel de riesgo del puesto"
+                  },
+                  "preocupacional": {
+                    "show_fields": [
+                      "result"
+                    ],
+                    "help_text": "⚠️ Preocupacional: El resultado APTO es obligatorio para contratar",
+                    "result_required": true
+                  },
+                  "retiro": {
+                    "show_fields": [
+                      "observations"
+                    ],
+                    "help_text": "📝 Retiro: Documente el estado de salud al finalizar la relación laboral",
+                    "auto_set_next_exam": false
+                  },
+                  "especial": {
+                    "show_fields": [
+                      "observations"
+                    ],
+                    "help_text": "🔍 Especial: Indique el motivo en Observaciones (cambio de puesto, incidente, etc.)",
+                    "observations_required": true
+                  }
+                }
+              }
+            },
+            {
+              "key": "exam_date",
+              "label": "Fecha del Examen",
+              "type": "DATE",
+              "required": true,
+              "help_text": "Fecha en que se realizó el examen médico",
+              "tooltip": "📅 Fecha real del examen. A partir de esta fecha se calculará el próximo examen si es periódico",
+              "validations": [
+                {
+                  "type": "past_or_today",
+                  "message": "La fecha del examen no puede ser futura"
+                },
+                {
+                  "type": "not_too_old",
+                  "max_days_ago": 180,
+                  "message": "⚠️ Examen con más de 6 meses de antigüedad. Verifique si sigue siendo válido",
+                  "severity": "warning"
+                }
+              ]
+            },
+            {
+              "key": "result",
+              "label": "Resultado",
+              "type": "ENUM",
+              "required": false,
+              "values": [
+                "apto",
+                "apto_con_observaciones",
+                "no_apto",
+                "pendiente"
+              ],
+              "labels": {
+                "apto": "✅ Apto para el puesto",
+                "apto_con_observaciones": "⚠️ Apto con observaciones",
+                "no_apto": "❌ No apto para el puesto",
+                "pendiente": "🕐 Pendiente de resultado"
+              },
+              "help_text": "Resultado del examen médico emitido por el profesional. El resultado 'No apto' requiere acción inmediata de RRHH.",
+              "tooltip": "🩺 Resultados: APTO (sin restricciones), APTO CON OBSERVACIONES (restricciones parciales), NO APTO (no puede realizar tareas del puesto), PENDIENTE (esperando dictamen)",
+              "badge_config": {
+                "apto": {
+                  "color": "success",
+                  "icon": "✅"
+                },
+                "apto_con_observaciones": {
+                  "color": "warning",
+                  "icon": "⚠️"
+                },
+                "no_apto": {
+                  "color": "danger",
+                  "icon": "❌",
+                  "requires_action": true
+                },
+                "pendiente": {
+                  "color": "secondary",
+                  "icon": "🕐"
+                }
+              },
+              "triggers_action": {
+                "no_apto": {
+                  "notification": "employee_not_fit_for_duty",
+                  "workflow": "medical_inaptitude_process",
+                  "escalate_to": [
+                    "rrhh_manager",
+                    "legal",
+                    "art_manager"
+                  ]
+                },
+                "apto_con_observaciones": {
+                  "notification": "medical_restrictions_alert",
+                  "requires_field": "observations",
+                  "message": "Debe documentar las restricciones en Observaciones"
+                }
+              },
+              "validations": [
+                {
+                  "type": "required_if",
+                  "condition": "exam_type === 'preocupacional'",
+                  "message": "El resultado es obligatorio para exámenes preocupacionales"
+                },
+                {
+                  "type": "enum",
+                  "allowed_values": [
+                    "apto",
+                    "apto_con_observaciones",
+                    "no_apto",
+                    "pendiente"
+                  ],
+                  "message": "Resultado no válido"
+                }
+              ]
+            },
+            {
+              "key": "observations",
+              "label": "Observaciones",
+              "type": "TEXT",
+              "required": false,
+              "help_text": "Observaciones médicas, restricciones, recomendaciones. OBLIGATORIO si el resultado es 'Apto con observaciones' o 'No apto'.",
+              "tooltip": "📝 Detalle restricciones médicas (ej: 'No levantar más de 10kg', 'Evitar alturas', 'Trabajo sedentario únicamente'). Información confidencial protegida por secreto médico.",
+              "placeholder": "Ej: No levantar cargas mayores a 10kg. Evitar exposición a ruidos superiores a 85dB.",
+              "validations": [
+                {
+                  "type": "required_if",
+                  "condition": "result === 'apto_con_observaciones' || result === 'no_apto' || exam_type === 'especial'",
+                  "message": "Las observaciones son obligatorias para este tipo de resultado/examen"
+                },
+                {
+                  "type": "min_length",
+                  "value": 10,
+                  "if": "result === 'no_apto'",
+                  "message": "Debe documentar detalladamente las razones de inaptitud (mínimo 10 caracteres)"
+                }
+              ]
+            },
+            {
+              "key": "exam_frequency",
+              "label": "Frecuencia del Examen",
+              "type": "ENUM",
+              "required": false,
+              "values": [
+                "mensual",
+                "trimestral",
+                "semestral",
+                "anual",
+                "bienal",
+                "personalizado"
+              ],
+              "labels": {
+                "mensual": "Mensual (alto riesgo)",
+                "trimestral": "Trimestral (cada 3 meses)",
+                "semestral": "Semestral (cada 6 meses)",
+                "anual": "Anual (bajo riesgo)",
+                "bienal": "Bienal (cada 2 años)",
+                "personalizado": "Personalizado (indicar meses)"
+              },
+              "help_text": "Frecuencia con la que debe repetirse el examen periódico. Según Ley 24.557, la frecuencia depende del nivel de riesgo del puesto.",
+              "tooltip": "🔄 Frecuencia recomendada por nivel de riesgo: ALTO=Mensual, MEDIO=Semestral, BAJO=Anual. Si selecciona 'Personalizado', indique cantidad de meses en el campo siguiente.",
+              "visible_if": "exam_type === 'periodico'",
+              "auto_suggestions": {
+                "if_job_risk_level": {
+                  "high": "mensual",
+                  "medium": "semestral",
+                  "low": "anual",
+                  "very_low": "bienal"
+                }
+              },
+              "validations": [
+                {
+                  "type": "required_if",
+                  "condition": "exam_type === 'periodico' && auto_calculate_next_exam === true",
+                  "message": "Debe seleccionar una frecuencia para cálculo automático del próximo examen"
+                }
+              ]
+            },
+            {
+              "key": "frequency_months",
+              "label": "Frecuencia Personalizada (Meses)",
+              "type": "INTEGER",
+              "required": false,
+              "min": 1,
+              "max": 120,
+              "help_text": "Si seleccionó 'Personalizado', indique cada cuántos meses debe repetirse el examen (1 a 120 meses = 10 años).",
+              "tooltip": "📊 Cantidad de meses entre exámenes. Ej: 3 meses, 6 meses, 12 meses. Máximo 120 meses (10 años).",
+              "visible_if": "exam_frequency === 'personalizado'",
+              "validations": [
+                {
+                  "type": "required_if",
+                  "condition": "exam_frequency === 'personalizado'",
+                  "message": "Debe especificar la cantidad de meses para frecuencia personalizada"
+                },
+                {
+                  "type": "range",
+                  "min": 1,
+                  "max": 120,
+                  "message": "La frecuencia debe estar entre 1 y 120 meses"
+                }
+              ]
+            },
+            {
+              "key": "auto_calculate_next_exam",
+              "label": "Calcular Próximo Examen Automáticamente",
+              "type": "BOOLEAN",
+              "default": true,
+              "help_text": "Si está activado, el sistema calculará automáticamente la fecha del próximo examen basándose en la frecuencia configurada.",
+              "tooltip": "✨ Cálculo automático: El trigger SQL calculará next_exam_date = exam_date + frecuencia. Recibirá notificación 30 días antes.",
+              "visible_if": "exam_type === 'periodico'"
+            },
+            {
+              "key": "next_exam_date",
+              "label": "Próximo Examen",
+              "type": "DATE",
+              "required": false,
+              "read_only": true,
+              "calculated_by": "SQL trigger: calculate_next_medical_exam",
+              "help_text": "Fecha del próximo examen médico (calculada automáticamente si activó el cálculo automático).",
+              "tooltip": "🔮 Campo calculado automáticamente. El sistema enviará notificación 30 días antes. Si necesita modificarlo, desactive el cálculo automático.",
+              "alert_thresholds": {
+                "urgent": 7,
+                "high": 15,
+                "medium": 30
+              }
+            },
+            {
+              "key": "medical_center",
+              "label": "Centro Médico",
+              "type": "STRING",
+              "required": false,
+              "max_length": 255,
+              "help_text": "Nombre del centro médico donde se realizó el examen",
+              "tooltip": "🏥 Institución médica que realizó el examen (debe estar habilitada por la ART si corresponde)",
+              "placeholder": "Ej: Clínica San Juan, Centro Médico Galeno, ART Provincia"
+            },
+            {
+              "key": "examining_doctor",
+              "label": "Médico Examinador",
+              "type": "STRING",
+              "required": false,
+              "max_length": 255,
+              "help_text": "Nombre del médico que realizó el examen",
+              "tooltip": "👨‍⚕️ Profesional médico que emitió el certificado (nombre completo y matrícula si es posible)",
+              "placeholder": "Ej: Dr. Juan Pérez - Mat. 12345"
+            },
+            {
+              "key": "certificate_url",
+              "label": "Certificado Médico (URL)",
+              "type": "TEXT",
+              "required": false,
+              "help_text": "URL al certificado médico escaneado o digitalizado",
+              "tooltip": "🔗 Enlace al documento PDF/imagen del certificado médico. Información confidencial protegida.",
+              "placeholder": "https://...",
+              "validations": [
+                {
+                  "type": "url",
+                  "message": "Debe ser una URL válida"
+                }
+              ]
+            }
+          ],
+          "ui_config": {
+            "table": {
+              "default_sort": "exam_date DESC",
+              "columns": [
+                "exam_type",
+                "exam_date",
+                "result",
+                "next_exam_date",
+                "medical_center",
+                "status",
+                "actions"
+              ],
+              "badges": {
+                "apto": {
+                  "color": "success",
+                  "icon": "✅"
+                },
+                "apto_con_observaciones": {
+                  "color": "warning",
+                  "icon": "⚠️"
+                },
+                "no_apto": {
+                  "color": "danger",
+                  "icon": "❌"
+                },
+                "pendiente": {
+                  "color": "secondary",
+                  "icon": "🕐"
+                },
+                "proximo_examen_urgente": {
+                  "color": "danger",
+                  "icon": "❗",
+                  "days_max": 7
+                },
+                "proximo_examen_pronto": {
+                  "color": "warning",
+                  "icon": "⚠️",
+                  "days_min": 8,
+                  "days_max": 30
+                },
+                "vigente": {
+                  "color": "success",
+                  "icon": "✓",
+                  "days_min": 31
+                }
+              }
+            },
+            "modal": {
+              "size": "lg",
+              "sections": [
+                {
+                  "title": "Información del Examen",
+                  "fields": [
+                    "exam_type",
+                    "exam_date",
+                    "result"
+                  ]
+                },
+                {
+                  "title": "Periodicidad (Solo Exámenes Periódicos)",
+                  "fields": [
+                    "exam_frequency",
+                    "frequency_months",
+                    "auto_calculate_next_exam",
+                    "next_exam_date"
+                  ],
+                  "visible_if": "exam_type === 'periodico'",
+                  "collapsible": true
+                },
+                {
+                  "title": "Datos del Centro Médico",
+                  "fields": [
+                    "medical_center",
+                    "examining_doctor"
+                  ]
+                },
+                {
+                  "title": "Observaciones y Restricciones",
+                  "fields": [
+                    "observations"
+                  ],
+                  "highlight_if": "result === 'apto_con_observaciones' || result === 'no_apto'"
+                },
+                {
+                  "title": "Certificado Médico",
+                  "fields": [
+                    "certificate_url"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "endpoints": {
+        "base_path": "/api/v1",
+        "routes": [
+          {
+            "method": "GET",
+            "path": "/users/:userId/medical-exams",
+            "description": "Obtener todos los exámenes médicos de un usuario",
+            "auth": "required",
+            "permissions": [
+              "read_own_medical_exams",
+              "read_all_medical_exams"
+            ],
+            "response_type": "array",
+            "response_example": "[{id: 1, exam_type: 'periodico', result: 'apto', ...}]"
+          },
+          {
+            "method": "GET",
+            "path": "/users/:userId/medical-exams/latest",
+            "description": "Obtener el examen médico más reciente de un usuario",
+            "auth": "required",
+            "permissions": [
+              "read_own_medical_exams",
+              "read_all_medical_exams"
+            ],
+            "business_use": "Verificar aptitud actual antes de asignar tareas o cambiar puesto"
+          },
+          {
+            "method": "GET",
+            "path": "/users/:userId/medical-exams/:examId",
+            "description": "Obtener un examen médico específico",
+            "auth": "required",
+            "permissions": [
+              "read_own_medical_exams",
+              "read_all_medical_exams"
+            ]
+          },
+          {
+            "method": "POST",
+            "path": "/users/:userId/medical-exams",
+            "description": "Crear nuevo examen médico",
+            "auth": "required",
+            "permissions": [
+              "create_medical_exams"
+            ],
+            "triggers_sql": "calculate_next_medical_exam trigger",
+            "triggers_notification": true,
+            "notification_condition": "if next_exam_date within 30 days",
+            "auto_reload": true,
+            "auto_reload_reason": "El trigger SQL calcula next_exam_date, necesitamos recargar para obtenerlo"
+          },
+          {
+            "method": "PUT",
+            "path": "/users/:userId/medical-exams/:examId",
+            "description": "Actualizar examen médico existente",
+            "auth": "required",
+            "permissions": [
+              "update_medical_exams"
+            ],
+            "triggers_sql": "calculate_next_medical_exam trigger",
+            "triggers_notification": true,
+            "notification_condition": "if result changed to 'no_apto'",
+            "auto_reload": true
+          },
+          {
+            "method": "DELETE",
+            "path": "/users/:userId/medical-exams/:examId",
+            "description": "Eliminar examen médico",
+            "auth": "required",
+            "permissions": [
+              "delete_medical_exams"
+            ]
+          },
+          {
+            "method": "GET",
+            "path": "/medical-exams/expiring",
+            "description": "Obtener exámenes próximos a vencer (dashboard)",
+            "auth": "required",
+            "permissions": [
+              "view_dashboard"
+            ],
+            "query_params": {
+              "days": "número de días (default: 30)"
+            }
+          }
+        ]
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "user_medical_exams",
+            "model": "UserMedicalExams",
+            "primary_key": "id",
+            "fields_used": [
+              "id",
+              "user_id",
+              "company_id",
+              "exam_type",
+              "exam_date",
+              "result",
+              "observations",
+              "next_exam_date",
+              "medical_center",
+              "examining_doctor",
+              "certificate_url",
+              "exam_frequency",
+              "frequency_months",
+              "auto_calculate_next_exam",
+              "created_at",
+              "updated_at"
+            ],
+            "indexes": [
+              "idx_user_medical_exams_user_id",
+              "idx_user_medical_exams_company_id",
+              "idx_user_medical_exams_next_exam_date",
+              "idx_user_medical_exams_exam_type"
+            ],
+            "relations": [
+              {
+                "type": "belongsTo",
+                "model": "User",
+                "foreign_key": "user_id"
+              }
+            ],
+            "triggers": [
+              {
+                "name": "calculate_next_medical_exam",
+                "type": "BEFORE INSERT OR UPDATE",
+                "description": "Calcula automáticamente next_exam_date basándose en exam_date + frecuencia",
+                "logic": "Si exam_type='periodico' AND auto_calculate_next_exam=true: next_exam_date = exam_date + frecuencia (en meses)",
+                "migration": "migrations/20251031_add_medical_exam_frequency_fields.sql"
+              }
+            ]
+          }
+        ]
+      },
+      "files": {
+        "backend": [
+          {
+            "path": "src/routes/userMedicalExamsRoutes.js",
+            "type": "route",
+            "lines": 340,
+            "description": "API REST completa para exámenes médicos con auto-reload después de save",
+            "exports": "router",
+            "special_features": [
+              "auto_reload after save para obtener next_exam_date calculado por trigger"
+            ]
+          },
+          {
+            "path": "src/services/MedicalExamExpirationScheduler.js",
+            "type": "service",
+            "lines": 240,
+            "description": "Scheduler para notificaciones automáticas de próximos exámenes",
+            "cron": "0 11 * * *",
+            "timezone": "America/Argentina/Buenos_Aires"
+          }
+        ],
+        "frontend": [
+          {
+            "path": "public/js/modules/medical-exams-manager.js",
+            "type": "manager",
+            "lines": 650,
+            "description": "Manager frontend con secciones condicionales según tipo de examen",
+            "class": "MedicalExamsManager",
+            "methods": [
+              "init",
+              "loadExams",
+              "showAddModal",
+              "editExam",
+              "deleteExam",
+              "onExamTypeChange"
+            ],
+            "special_features": [
+              "Conditional UI sections",
+              "Auto-hide frequency config if not periodic"
+            ]
+          }
+        ],
+        "models": [
+          {
+            "path": "src/models/UserMedicalExams.js",
+            "type": "model",
+            "sequelize": true,
+            "table": "user_medical_exams"
+          }
+        ],
+        "migrations": [
+          {
+            "path": "migrations/20251031_add_medical_exam_frequency_fields.sql",
+            "description": "Agrega campos de frecuencia y trigger para cálculo automático de próximo examen",
+            "adds_fields": [
+              "exam_frequency",
+              "frequency_months",
+              "auto_calculate_next_exam"
+            ],
+            "creates_trigger": "calculate_next_medical_exam"
+          }
+        ]
+      },
+      "integrations": [
+        {
+          "module": "notifications-enterprise",
+          "type": "OPTIONAL",
+          "auto_detect": true,
+          "detection_method": "Check SystemModule.isActive for 'notifications-enterprise'",
+          "adapts_behavior": {
+            "if_active": {
+              "description": "Envía notificaciones proactivas de próximos exámenes y resultados críticos",
+              "features": [
+                "Notificación 30 días antes del próximo examen",
+                "Escalamiento automático (30 días, 15 días, 7 días, vencido)",
+                "Alerta CRÍTICA si resultado = 'no_apto' → copia a RRHH, Legal, ART",
+                "Alerta ALTA si resultado = 'apto_con_observaciones' → copia a supervisor",
+                "Trackeo de lectura y confirmación",
+                "Requiere confirmación en casos críticos"
+              ],
+              "notification_templates": [
+                "medical_exam_expiring_30days",
+                "medical_exam_expiring_7days",
+                "medical_exam_overdue",
+                "employee_not_fit_for_duty",
+                "medical_restrictions_alert",
+                "preoccupational_exam_required"
+              ]
+            },
+            "if_inactive": {
+              "description": "Solo muestra alertas visuales en UI",
+              "features": [
+                "Badges de estado en tabla",
+                "Alertas en modal de edición",
+                "Dashboard con próximos exámenes"
+              ]
+            }
+          }
+        },
+        {
+          "module": "users",
+          "type": "REQUIRED",
+          "provides": "Agrega submódulo de exámenes médicos en perfil de usuario",
+          "extends_ui": "panel-empresa.html → sección Empleados → Tab Exámenes Médicos",
+          "business_logic": "El resultado del último examen define la aptitud laboral actual del empleado"
+        },
+        {
+          "module": "document-expiration",
+          "type": "RELATED",
+          "relationship": "Complementario - ambos gestionan documentación personal y vencimientos"
+        },
+        {
+          "module": "attendance",
+          "type": "INTEGRATION",
+          "relationship": "Si empleado = 'no_apto', no debería registrar asistencia hasta resolución médica",
+          "business_rule": "Validar aptitud antes de permitir check-in si el sistema detecta inaptitud médica"
+        }
+      ],
+      "notifications": {
+        "enabled": true,
+        "requires_module": "notifications-enterprise",
+        "templates": [
+          {
+            "key": "medical_exam_expiring_30days",
+            "title": "⚠️ Próximo examen médico en 30 días",
+            "priority": "medium",
+            "requires_response": false,
+            "copy_to": [
+              "supervisor",
+              "rrhh"
+            ],
+            "channels": [
+              "email",
+              "push"
+            ],
+            "message_template": "Su próximo examen médico está programado para el {{next_exam_date}}. Por favor coordine con RRHH para agendar turno en {{medical_center}}."
+          },
+          {
+            "key": "medical_exam_expiring_7days",
+            "title": "❗ URGENTE: Examen médico en 7 días",
+            "priority": "high",
+            "requires_response": true,
+            "copy_to": [
+              "supervisor",
+              "rrhh"
+            ],
+            "channels": [
+              "email",
+              "sms",
+              "push"
+            ],
+            "message_template": "URGENTE: Su examen médico vence el {{next_exam_date}}. Debe agendar turno INMEDIATAMENTE. Contacte a RRHH."
+          },
+          {
+            "key": "medical_exam_overdue",
+            "title": "🚨 CRÍTICO: Examen médico VENCIDO",
+            "priority": "urgent",
+            "requires_response": true,
+            "copy_to": [
+              "supervisor",
+              "rrhh",
+              "legal"
+            ],
+            "channels": [
+              "email",
+              "sms",
+              "push",
+              "in_app"
+            ],
+            "message_template": "CRÍTICO: Su examen médico VENCIÓ el {{next_exam_date}}. Incumplimiento de Ley 24.557. Contacte a RRHH INMEDIATAMENTE."
+          },
+          {
+            "key": "employee_not_fit_for_duty",
+            "title": "🚨 ALERTA CRÍTICA: Empleado NO APTO",
+            "priority": "urgent",
+            "requires_response": true,
+            "copy_to": [
+              "rrhh_manager",
+              "legal",
+              "art_manager",
+              "supervisor"
+            ],
+            "channels": [
+              "email",
+              "sms",
+              "push",
+              "in_app"
+            ],
+            "message_template": "ALERTA CRÍTICA: {{employee_name}} ({{employee_id}}) fue declarado NO APTO en examen {{exam_type}} del {{exam_date}}. Observaciones: {{observations}}. Requiere acción inmediata de ART y reubicación.",
+            "escalation_required": true,
+            "blocks_attendance": true
+          },
+          {
+            "key": "medical_restrictions_alert",
+            "title": "⚠️ Empleado APTO con restricciones",
+            "priority": "high",
+            "requires_response": true,
+            "copy_to": [
+              "supervisor",
+              "rrhh"
+            ],
+            "channels": [
+              "email",
+              "push"
+            ],
+            "message_template": "{{employee_name}} fue declarado APTO CON OBSERVACIONES. Restricciones: {{observations}}. Debe adaptar tareas según indicación médica."
+          },
+          {
+            "key": "preoccupational_exam_required",
+            "title": "❗ Examen preocupacional obligatorio",
+            "priority": "high",
+            "requires_response": true,
+            "copy_to": [
+              "rrhh"
+            ],
+            "channels": [
+              "email"
+            ],
+            "message_template": "El candidato {{candidate_name}} requiere examen preocupacional antes de la contratación. Coordine turno en centro médico habilitado."
+          }
+        ]
+      },
+      "metrics": {
+        "tracked": [
+          "exams_total",
+          "exams_by_type",
+          "exams_by_result",
+          "exams_expiring_30days",
+          "employees_not_fit",
+          "employees_with_restrictions",
+          "compliance_rate",
+          "avg_days_to_next_exam"
+        ],
+        "dashboards": [
+          {
+            "name": "Estado Médico de la Empresa",
+            "charts": [
+              {
+                "type": "gauge",
+                "metric": "compliance_rate",
+                "title": "% Cumplimiento Exámenes Médicos",
+                "description": "Porcentaje de empleados con examen médico vigente",
+                "thresholds": {
+                  "red": 80,
+                  "yellow": 90,
+                  "green": 95
+                }
+              },
+              {
+                "type": "donut",
+                "metric": "exams_by_result",
+                "title": "Resultados de Exámenes",
+                "legend": true
+              },
+              {
+                "type": "bar",
+                "metric": "exams_by_type",
+                "title": "Exámenes por Tipo"
+              },
+              {
+                "type": "timeline",
+                "metric": "upcoming_exams_timeline",
+                "title": "Próximos Exámenes (30 días)",
+                "alert_on": "critical_count > 5"
+              },
+              {
+                "type": "list",
+                "metric": "employees_not_fit",
+                "title": "🚨 Empleados NO APTOS (Requiere Acción)",
+                "color": "danger",
+                "show_details": [
+                  "name",
+                  "exam_date",
+                  "observations"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "health_indicators": {
+        "critical": [
+          {
+            "id": "HI-MED-001",
+            "metric": "employees_not_fit_count",
+            "threshold": 0,
+            "operator": ">",
+            "severity": "critical",
+            "message": "Hay empleados NO APTOS trabajando - riesgo legal CRÍTICO y seguridad laboral comprometida"
+          },
+          {
+            "id": "HI-MED-002",
+            "metric": "overdue_exams_count",
+            "threshold": 0,
+            "operator": ">",
+            "severity": "critical",
+            "message": "Hay exámenes médicos vencidos - incumplimiento Ley 24.557 - riesgo de sanciones"
+          }
+        ],
+        "warnings": [
+          {
+            "id": "HI-MED-003",
+            "metric": "exams_expiring_7days_count",
+            "threshold": 5,
+            "operator": ">",
+            "severity": "warning",
+            "message": "Más de 5 exámenes médicos vencen en 7 días - coordinar turnos urgente"
+          },
+          {
+            "id": "HI-MED-004",
+            "metric": "compliance_rate",
+            "threshold": 90,
+            "operator": "<",
+            "severity": "warning",
+            "message": "Cumplimiento de exámenes médicos por debajo del 90% - riesgo de auditoría ART"
+          }
+        ]
+      },
+      "legal_compliance": {
+        "laws": [
+          {
+            "name": "Ley 24.557 - Ley de Riesgos del Trabajo",
+            "article": "Art. 9 - Exámenes médicos en salud",
+            "requirement": "Exámenes médicos preocupacionales, periódicos, posteriores a ausencias prolongadas y previos a la terminación de la relación laboral",
+            "penalty_if_not_compliant": "Multas de hasta 30 salarios mínimos según gravedad",
+            "compliance_check": "All active employees must have valid periodic exam"
+          },
+          {
+            "name": "Decreto 658/96",
+            "article": "Art. 1 - Exámenes médicos obligatorios",
+            "requirement": "Los exámenes médicos deben realizarse por profesionales de la salud habilitados",
+            "compliance_check": "medical_center must be ART-approved facility"
+          }
+        ]
+      },
+      "testing": {
+        "test_coverage": 0,
+        "test_files": [],
+        "test_scenarios": [
+          "Crear examen periódico con frecuencia anual → verificar next_exam_date calculado",
+          "Crear examen con resultado 'no_apto' → verificar notificación urgente enviada",
+          "Actualizar exam_date → verificar recalculo de next_exam_date",
+          "Verificar scheduler ejecuta a las 11:00 AM",
+          "Validar business rule: preocupacional obligatorio antes de contratar",
+          "Validar trigger SQL calcula correctamente frecuencias (mensual=1, anual=12, bienal=24)",
+          "Verificar auto_calculate_next_exam=false no calcula next_exam_date"
+        ]
+      },
+      "known_issues": [],
+      "todo": [
+        "Agregar upload de certificados médicos directo (no solo URL)",
+        "Integración con ART para validar centros médicos habilitados",
+        "Workflow completo para empleados no aptos (ART + reubicación)",
+        "Dashboard de cumplimiento legal por área/departamento",
+        "Alertas predictivas ML: predecir qué empleados pueden resultar no aptos",
+        "OCR para extraer datos del certificado médico escaneado",
+        "Integración con calendario para agendar turnos automáticamente"
+      ],
+      "_source": "extended_json",
+      "_loaded_at": "2025-11-02T21:24:57.131Z"
+    },
+    "work-history": {
+      "module_key": "work-history",
+      "name": "Historial Laboral",
+      "name_alt": "Sistema Integral de Historial Laboral con Gestión de Desvinculación, Indemnizaciones y Litigios",
+      "icon": "📋",
+      "color": "#FF9800",
+      "category": "rrhh",
+      "version": "1.0.0",
+      "changelog": [
+        {
+          "version": "1.0.0",
+          "date": "2025-01-31",
+          "author": "Claude Code",
+          "type": "feature",
+          "summary": "Sistema completo de gestión de antecedentes laborales con tracking legal exhaustivo",
+          "changes": [
+            "CRUD completo de historial laboral con validaciones",
+            "9 tipos de desvinculación (renuncia, despido con/sin causa, jubilación, mutual, fin contrato, abandono, fallecimiento, otro)",
+            "Sistema de indemnizaciones con breakdown detallado y recibos",
+            "Acuerdos extrajudiciales (conciliatorio, transaccional, homologación ministerial)",
+            "Tracking completo de litigios con status, montos, sentencias y apelaciones",
+            "Documentación legal completa (carta despido, certificado trabajo, liquidación)",
+            "Elegibilidad para recontratación con razones documentadas",
+            "Endpoints analytics: litigios activos, estadísticas desvinculación, indemnizaciones pagadas",
+            "SQL functions para análisis empresarial",
+            "Frontend con 6 secciones colapsables y validaciones cruzadas"
+          ],
+          "files_created": [
+            "src/routes/userWorkHistoryRoutes.js",
+            "public/js/modules/work-history-manager.js",
+            "migrations/20251031_add_termination_details_to_work_history.sql"
+          ],
+          "files_modified": [
+            "server.js",
+            "src/models/UserWorkHistory.js"
+          ],
+          "migrations": [
+            "20251031_add_termination_details_to_work_history"
+          ],
+          "database_impact": {
+            "tables_used": [
+              "user_work_history",
+              "users"
+            ],
+            "new_fields": [
+              "termination_type",
+              "termination_subcategory",
+              "termination_date",
+              "received_severance",
+              "severance_amount",
+              "severance_currency",
+              "has_settlement_agreement",
+              "settlement_date",
+              "settlement_type",
+              "has_litigation",
+              "litigation_status",
+              "litigation_court",
+              "termination_letter_url",
+              "work_certificate_url",
+              "internal_notes",
+              "eligible_for_rehire",
+              "rehire_ineligibility_reason"
+            ],
+            "modified_fields": [],
+            "sql_functions_created": [
+              "get_termination_stats_by_company(company_id)",
+              "get_active_litigations(company_id)"
+            ]
+          }
+        }
+      ],
+      "description": {
+        "short": "Sistema integral de gestión de historial laboral con tracking exhaustivo de desvinculaciones, indemnizaciones, acuerdos extrajudiciales y litigios",
+        "long": "Sistema profesional de RRHH para gestión completa del ciclo de vida laboral de empleados, incluyendo antecedentes, experiencia, desvinculación con todas sus modalidades legales, cálculo y pago de indemnizaciones, gestión de acuerdos extrajudiciales, tracking de litigios judiciales, documentación legal completa y análisis de elegibilidad para recontratación. Cumple con requerimientos de la Ley de Contrato de Trabajo (LCT 20.744) y normativas laborales argentinas.",
+        "business_value": "Protege legalmente a la empresa en casos de desvinculación, previene litigios mediante documentación exhaustiva, asegura cumplimiento de la LCT, facilita auditorías laborales, reduce riesgos de demandas, centraliza información legal de ex-empleados y permite análisis de rotación y costos de indemnizaciones.",
+        "use_cases": [
+          "Renuncia voluntaria → documentar preaviso, liquidación, certificado trabajo",
+          "Despido con/sin causa → documentar causales, carta despido, pago indemnización legal",
+          "Litigio judicial → tracking completo del caso, audiencias, montos reclamados/otorgados",
+          "Acuerdo extrajudicial → homologación ministerial, términos del acuerdo, montos transaccionales",
+          "Re-contratación → verificar elegibilidad, motivos de inelegibilidad previa",
+          "Auditoría laboral → estadísticas de desvinculación, indemnizaciones pagadas, litigios activos"
+        ]
+      },
+      "submódulos": [],
+      "endpoints": {
+        "base_path": "/api/v1",
+        "routes": [
+          {
+            "method": "GET",
+            "path": "/users/:userId/work-history",
+            "description": "Obtener todo el historial laboral de un usuario",
+            "auth": "required",
+            "permissions": [
+              "read_own_work_history",
+              "read_all_work_history"
+            ]
+          },
+          {
+            "method": "POST",
+            "path": "/users/:userId/work-history",
+            "description": "Crear nuevo registro de historial laboral",
+            "auth": "required",
+            "permissions": [
+              "create_work_history"
+            ]
+          },
+          {
+            "method": "GET",
+            "path": "/work-history/active-litigations",
+            "description": "Obtener litigios activos de la empresa",
+            "auth": "required",
+            "permissions": [
+              "view_dashboard",
+              "legal_manager"
+            ]
+          },
+          {
+            "method": "GET",
+            "path": "/work-history/termination-stats",
+            "description": "Obtener estadísticas de desvinculación de la empresa",
+            "auth": "required",
+            "permissions": [
+              "view_dashboard",
+              "rrhh_manager"
+            ]
+          }
+        ]
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "user_work_history",
+            "model": "UserWorkHistory",
+            "primary_key": "id",
+            "fields_count": 50,
+            "complexity": "very_high"
+          }
+        ]
+      },
+      "files": {
+        "backend": [
+          {
+            "path": "src/routes/userWorkHistoryRoutes.js",
+            "type": "route",
+            "lines": 450,
+            "description": "API REST exhaustiva con endpoints analytics para litigios y estadísticas"
+          }
+        ],
+        "frontend": [
+          {
+            "path": "public/js/modules/work-history-manager.js",
+            "type": "manager",
+            "lines": 1200,
+            "description": "Manager frontend más complejo con 6 secciones colapsables"
+          }
+        ]
+      },
+      "integrations": [
+        {
+          "module": "users",
+          "type": "REQUIRED",
+          "provides": "Agrega submódulo de historial laboral en perfil de usuario"
+        },
+        {
+          "module": "notifications-enterprise",
+          "type": "OPTIONAL",
+          "auto_detect": true,
+          "detection_method": "Check SystemModule.isActive for 'notifications-enterprise'",
+          "adapts_behavior": {
+            "if_active": {
+              "description": "Envía notificaciones críticas de litigios activos, indemnizaciones pendientes y alertas legales",
+              "features": [
+                "Alerta CRÍTICA cuando se crea litigio activo → copia a Legal, Finanzas, Seguros, CEO",
+                "Alerta de indemnización pendiente de pago",
+                "Alerta de falta de certificado Art. 80 (riesgo de multa)",
+                "Alerta de litigio de alto impacto (monto > $1M)"
+              ],
+              "notification_templates": [
+                "active_litigation_alert",
+                "high_impact_litigation_alert",
+                "severance_payment_required",
+                "art_80_certificate_missing"
+              ]
+            },
+            "if_inactive": {
+              "description": "Solo muestra alertas visuales en UI",
+              "features": [
+                "Badges de estado en tabla",
+                "Alertas en modal de edición",
+                "Dashboard con litigios activos"
+              ]
+            }
+          }
+        }
+      ],
+      "notifications": {
+        "enabled": true,
+        "requires_module": "notifications-enterprise",
+        "templates": [
+          {
+            "key": "active_litigation_alert",
+            "title": "🚨 CRÍTICO: Nuevo Litigio Judicial Activo",
+            "priority": "urgent",
+            "requires_response": true,
+            "copy_to": [
+              "legal_manager",
+              "cfo",
+              "insurance_manager",
+              "ceo"
+            ],
+            "channels": [
+              "email",
+              "sms",
+              "push",
+              "in_app"
+            ]
+          },
+          {
+            "key": "high_impact_litigation_alert",
+            "title": "🚨 ALERTA MÁXIMA: Litigio de ALTO IMPACTO",
+            "priority": "critical",
+            "requires_response": true,
+            "copy_to": [
+              "ceo",
+              "board_of_directors",
+              "legal_manager",
+              "cfo"
+            ],
+            "channels": [
+              "email",
+              "sms",
+              "push",
+              "in_app",
+              "whatsapp"
+            ]
+          }
+        ]
+      },
+      "metrics": {
+        "tracked": [
+          "total_work_history_records",
+          "terminations_by_type",
+          "total_severance_paid",
+          "avg_severance_amount",
+          "litigation_count",
+          "active_litigations_count",
+          "litigation_rate"
+        ],
+        "dashboards": [
+          {
+            "name": "Análisis de Rotación y Desvinculación",
+            "charts": [
+              {
+                "type": "bar",
+                "metric": "terminations_by_type",
+                "title": "Desvinculaciones por Tipo"
+              },
+              {
+                "type": "gauge",
+                "metric": "litigation_rate",
+                "title": "% de Litigiosidad",
+                "thresholds": {
+                  "green": 5,
+                  "yellow": 15,
+                  "red": 25
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "health_indicators": {
+        "critical": [
+          {
+            "id": "HI-WH-001",
+            "metric": "active_litigations_count",
+            "threshold": 0,
+            "operator": ">",
+            "severity": "critical",
+            "message": "Hay litigios judiciales activos - requiere seguimiento legal, provisión contable y gestión de riesgo"
+          }
+        ]
+      },
+      "legal_compliance": {
+        "laws": [
+          {
+            "name": "Ley 20.744 - Ley de Contrato de Trabajo (LCT)",
+            "articles": [
+              "Art. 240 - Renuncia del trabajador",
+              "Art. 242 - Despido con justa causa",
+              "Art. 245 - Indemnización por despido sin causa",
+              "Art. 80 - Certificado de trabajo (obligatorio)"
+            ],
+            "requirement": "Documentación exhaustiva de desvinculación, pago de indemnizaciones en plazo, entrega de certificados",
+            "penalty_if_not_compliant": "Multas Art. 80 (3x mejor remuneración), intereses moratorios"
+          }
+        ]
+      },
+      "testing": {
+        "test_coverage": 0,
+        "test_files": [],
+        "test_scenarios": [
+          "Crear desvinculación tipo 'despido_sin_causa' → validar que requiere severance_amount",
+          "Crear litigio activo → verificar notificación crítica a Legal/Finanzas/CEO",
+          "Verificar SQL function get_termination_stats_by_company() retorna stats correctas"
+        ]
+      },
+      "known_issues": [],
+      "todo": [
+        "Integración con sistema de nómina para calcular indemnizaciones automáticamente",
+        "Workflow completo de gestión de litigios con calendario de audiencias",
+        "Dashboard predictivo: ML para predecir probabilidad de litigio según tipo de desvinculación",
+        "Calculadora de indemnización según LCT (Art. 245) con validación automática"
+      ],
+      "_source": "extended_json",
+      "_loaded_at": "2025-11-02T21:24:57.131Z"
+    },
+    "inbox": {
+      "module_key": "inbox",
+      "name": "Bandeja Notificaciones",
+      "name_alt": "Sistema de Notificaciones con Hilos de Conversación Tipo Chat",
+      "icon": "📬",
+      "color": "#2196F3",
+      "category": "communication",
+      "version": "3.0.1",
+      "pricing": 7,
+      "changelog": [
+        {
+          "version": "3.0.1",
+          "date": "2025-11-02",
+          "author": "System Auto-Update",
+          "type": "architecture",
+          "summary": "Refactorización COMPLETA: Sistema de Carga Dinámica Unificado",
+          "changes": [
+            "UnifiedKnowledgeService inicializado en server.js",
+            "Endpoint /api/modules/active creado",
+            "Eliminado SWITCH hardcodeado de 40+ casos",
+            "Implementada carga dinámica en panel-empresa.html",
+            "Añadida carga de activeModules en handleLogin",
+            "Estandarizada exportación de 6 módulos CORE",
+            "Convención unificada window.Modules[moduleKey]"
+          ],
+          "files_modified": [
+            "server.js",
+            "src/routes/modulesRoutes.js",
+            "public/panel-empresa.html",
+            "public/js/modules/users.js",
+            "public/js/modules/departments.js",
+            "public/js/modules/attendance.js",
+            "public/js/modules/notifications-enterprise.js",
+            "public/js/modules/shifts.js",
+            "public/js/modules/inbox.js",
+            "src/config/modules-metadata-extended.json"
+          ],
+          "migrations": [],
+          "database_impact": {}
+        },
+        {
+          "version": "3.0.0",
+          "date": "2025-10-19",
+          "author": "Claude Code",
+          "type": "feature",
+          "summary": "Sistema completo de bandeja de notificaciones con hilos/conversaciones",
+          "changes": [
+            "Notificaciones agrupadas en conversaciones/hilos tipo chat",
+            "Primera notificación crea hilo, respuestas se agregan secuencialmente",
+            "Cierre de conversaciones cuando se resuelven",
+            "Vista cronológica ordenada por último mensaje",
+            "Contador de mensajes no leídos por hilo",
+            "Marcado automático como leído al abrir hilo",
+            "Filtros por status (open, pending, closed) y prioridad",
+            "Estadísticas de inbox (no leídos, pendientes, overdue)"
+          ],
+          "files_created": [
+            "src/routes/inbox.js",
+            "src/services/inboxService.js"
+          ],
+          "files_modified": [
+            "server.js"
+          ],
+          "migrations": [
+            "20251019_create_notifications_enterprise"
+          ],
+          "database_impact": {
+            "tables_used": [
+              "notification_groups",
+              "notification_messages",
+              "notification_audit_log"
+            ],
+            "new_fields": [],
+            "modified_fields": []
+          }
+        }
+      ],
+      "description": {
+        "short": "Sistema de notificaciones con hilos de conversación tipo chat para agrupar mensajes relacionados",
+        "long": "Bandeja de entrada inteligente que agrupa notificaciones en conversaciones/hilos similares a un chat. La primera notificación crea un hilo nuevo, y todas las respuestas y mensajes relacionados se agregan al mismo hilo de forma secuencial. Cada hilo muestra el último mensaje, cantidad de mensajes totales, contador de no leídos y se puede cerrar cuando se resuelve. Vista cronológica que permite seguir la historia completa de cada notificación.",
+        "business_value": "Organiza las notificaciones de forma inteligente evitando la sobrecarga de mensajes sueltos, facilita el seguimiento de conversaciones complejas, mejora la trazabilidad de procesos que requieren múltiples interacciones, y permite cerrar hilos resueltos manteniendo la bandeja ordenada.",
+        "use_cases": [
+          "Solicitud de vacaciones → hilo con: solicitud del empleado + respuesta del manager + notificación a RRHH + cierre",
+          "Documento próximo a vencer → hilo con: alerta 30 días + recordatorio 15 días + alerta 7 días + confirmación renovación",
+          "Aprobación de workflow → hilo con: solicitud + aprobación nivel 1 + aprobación nivel 2 + confirmación final",
+          "Incidente médico → hilo con: reporte inicial + examen médico + resultado + acciones tomadas"
+        ]
+      },
+      "endpoints": {
+        "base_path": "/api",
+        "routes": [
+          {
+            "method": "GET",
+            "path": "/inbox",
+            "description": "Obtener bandeja de entrada con grupos de notificaciones",
+            "auth": "required",
+            "permissions": [
+              "read_inbox"
+            ],
+            "query_params": {
+              "status": "all | open | pending | closed",
+              "priority": "all | low | medium | high | urgent",
+              "limit": "número de grupos a retornar (default: 50)",
+              "offset": "offset para paginación (default: 0)"
+            },
+            "response_type": "object",
+            "response_example": "{groups: [], total: 10, limit: 50, offset: 0, has_more: false}"
+          },
+          {
+            "method": "GET",
+            "path": "/inbox/stats",
+            "description": "Obtener estadísticas del inbox (no leídos, pendientes, overdue)",
+            "auth": "required",
+            "permissions": [
+              "read_inbox"
+            ],
+            "response_example": "{open_groups: 5, pending_groups: 3, unread_messages: 8, pending_responses: 2, overdue_messages: 1}"
+          },
+          {
+            "method": "GET",
+            "path": "/inbox/group/:group_id",
+            "description": "Obtener mensajes de un grupo/hilo específico (vista de conversación)",
+            "auth": "required",
+            "permissions": [
+              "read_inbox"
+            ],
+            "side_effects": "Marca mensajes como leídos automáticamente",
+            "response_example": "{group: {...}, messages: [{sequence_number: 1, ...}, {sequence_number: 2, ...}]}"
+          },
+          {
+            "method": "POST",
+            "path": "/inbox/group",
+            "description": "Crear nuevo grupo/conversación",
+            "auth": "required",
+            "permissions": [
+              "create_notification_group"
+            ],
+            "required_fields": [
+              "group_type",
+              "initiator_type",
+              "initiator_id",
+              "subject"
+            ]
+          },
+          {
+            "method": "POST",
+            "path": "/inbox/group/:group_id/message",
+            "description": "Enviar mensaje a un grupo/hilo (agrega mensaje secuencial)",
+            "auth": "required",
+            "permissions": [
+              "send_notification_message"
+            ],
+            "required_fields": [
+              "sender_type",
+              "sender_id",
+              "recipient_type",
+              "recipient_id",
+              "message_type",
+              "content"
+            ],
+            "auto_increments": "sequence_number",
+            "generates": "message_hash (SHA-256 para integridad)"
+          },
+          {
+            "method": "PUT",
+            "path": "/inbox/group/:group_id/read",
+            "description": "Marcar mensajes como leídos",
+            "auth": "required",
+            "permissions": [
+              "read_inbox"
+            ],
+            "optional_fields": [
+              "message_ids (array)"
+            ]
+          },
+          {
+            "method": "PUT",
+            "path": "/inbox/group/:group_id/close",
+            "description": "Cerrar un grupo/conversación (marca como resuelto)",
+            "auth": "required",
+            "permissions": [
+              "close_notification_group"
+            ]
+          }
+        ]
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "notification_groups",
+            "description": "Cabecera de cada hilo/conversación",
+            "primary_key": "id",
+            "fields_key": [
+              "id",
+              "group_type",
+              "initiator_type",
+              "initiator_id",
+              "subject",
+              "status",
+              "priority",
+              "created_at",
+              "closed_at",
+              "closed_by",
+              "metadata",
+              "company_id"
+            ],
+            "indexes": [
+              "idx_notification_groups_company",
+              "idx_notification_groups_status"
+            ]
+          },
+          {
+            "name": "notification_messages",
+            "description": "Mensajes individuales dentro de cada hilo (secuenciados)",
+            "primary_key": "id",
+            "fields_key": [
+              "id",
+              "group_id",
+              "sequence_number",
+              "sender_type",
+              "sender_id",
+              "recipient_type",
+              "recipient_id",
+              "message_type",
+              "subject",
+              "content",
+              "created_at",
+              "delivered_at",
+              "read_at",
+              "responded_at",
+              "requires_response",
+              "deadline_at",
+              "message_hash",
+              "channels",
+              "attachments",
+              "company_id"
+            ],
+            "indexes": [
+              "idx_notification_messages_group",
+              "idx_notification_messages_recipient_read"
+            ],
+            "special_features": [
+              "sequence_number se auto-incrementa por grupo (1, 2, 3...) para ordenar cronológicamente",
+              "message_hash SHA-256 para verificar integridad del mensaje"
+            ]
+          },
+          {
+            "name": "notification_audit_log",
+            "description": "Log de auditoría de acciones sobre notificaciones",
+            "primary_key": "id",
+            "fields_key": [
+              "id",
+              "group_id",
+              "message_id",
+              "action",
+              "actor_type",
+              "actor_id",
+              "metadata",
+              "created_at"
+            ]
+          }
+        ]
+      },
+      "files": {
+        "backend": [
+          {
+            "path": "src/routes/inbox.js",
+            "type": "route",
+            "lines": 225,
+            "description": "API REST completa para bandeja de notificaciones con hilos"
+          },
+          {
+            "path": "src/services/inboxService.js",
+            "type": "service",
+            "lines": 374,
+            "description": "Servicio con lógica de negocio para gestión de hilos de notificaciones"
+          }
+        ],
+        "frontend": [],
+        "models": []
+      },
+      "integrations": [
+        {
+          "module": "notifications-enterprise",
+          "type": "COMPLEMENTARY",
+          "relationship": "inbox provee vista de hilos, notifications-enterprise provee workflows y envío multi-canal. Comparten tablas de BD."
+        }
+      ],
+      "business_flows": {
+        "create_and_follow_thread": [
+          "1. Sistema/usuario crea grupo (POST /inbox/group)",
+          "2. Sistema envía primer mensaje (POST /inbox/group/:id/message) → sequence_number = 1",
+          "3. Destinatario ve notificación en inbox (GET /inbox)",
+          "4. Destinatario abre hilo (GET /inbox/group/:id) → marca como leído automáticamente",
+          "5. Destinatario responde (POST /inbox/group/:id/message) → sequence_number = 2",
+          "6. Sistema envía mensaje adicional (ej: aprobación) → sequence_number = 3",
+          "7. Cuando se resuelve, se cierra hilo (PUT /inbox/group/:id/close)"
+        ]
+      },
+      "help": {
+        "quickStart": "Vista de bandeja de entrada con hilos agrupados. Click en un hilo para ver la conversación completa en orden cronológico.",
+        "commonIssues": [
+          {
+            "symptom": "No aparecen hilos en la bandeja",
+            "cause": "No hay grupos creados para este usuario",
+            "fix": "Crear primer grupo con POST /inbox/group o esperar que el sistema genere notificaciones automáticas"
+          },
+          {
+            "symptom": "Mensajes aparecen desordenados",
+            "cause": "sequence_number incorrecto",
+            "fix": "El sequence_number se calcula automáticamente en el servicio, no intentar setearlo manualmente"
+          },
+          {
+            "symptom": "No se puede cerrar un hilo",
+            "cause": "Sin permisos o grupo ya cerrado",
+            "fix": "Verificar permissions y status del grupo"
+          }
+        ]
+      },
+      "testing": {
+        "test_coverage": 0,
+        "test_files": [],
+        "test_scenarios": [
+          "Crear grupo → enviar 3 mensajes → verificar sequence_number (1, 2, 3)",
+          "Obtener inbox → verificar contador de no leídos",
+          "Abrir grupo → verificar que marca mensajes como leídos automáticamente",
+          "Cerrar grupo → verificar que status cambia a 'closed'",
+          "Verificar message_hash SHA-256 se genera correctamente"
+        ]
+      },
+      "known_issues": [],
+      "todo": [
+        "Frontend dedicado para vista de inbox (actualmente solo API)",
+        "Notificaciones push en tiempo real cuando llega nuevo mensaje a hilo",
+        "Buscar/filtrar mensajes dentro de un hilo",
+        "Attachments/archivos adjuntos en mensajes",
+        "Reacciones emoji a mensajes específicos"
+      ],
+      "_source": "extended_json",
+      "_loaded_at": "2025-11-02T21:24:57.131Z",
+      "commercial": {
+        "basePrice": 7,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 0,
+        "rubro": "General",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "notifications-enterprise": {
+      "module_key": "notifications-enterprise",
+      "name": "Notificaciones Enterprise",
+      "name_alt": "Sistema Completo de Notificaciones Avanzadas con Workflows y Multi-Canal",
+      "icon": "🔔",
+      "color": "#FF5722",
+      "category": "communication",
+      "version": "3.0.1",
+      "pricing": 12,
+      "changelog": [
+        {
+          "version": "3.0.1",
+          "date": "2025-11-02",
+          "author": "System Auto-Update",
+          "type": "architecture",
+          "summary": "Refactorización COMPLETA: Sistema de Carga Dinámica Unificado",
+          "changes": [
+            "UnifiedKnowledgeService inicializado en server.js",
+            "Endpoint /api/modules/active creado",
+            "Eliminado SWITCH hardcodeado de 40+ casos",
+            "Implementada carga dinámica en panel-empresa.html",
+            "Añadida carga de activeModules en handleLogin",
+            "Estandarizada exportación de 6 módulos CORE",
+            "Convención unificada window.Modules[moduleKey]"
+          ],
+          "files_modified": [
+            "server.js",
+            "src/routes/modulesRoutes.js",
+            "public/panel-empresa.html",
+            "public/js/modules/users.js",
+            "public/js/modules/departments.js",
+            "public/js/modules/attendance.js",
+            "public/js/modules/notifications-enterprise.js",
+            "public/js/modules/shifts.js",
+            "public/js/modules/inbox.js",
+            "src/config/modules-metadata-extended.json"
+          ],
+          "migrations": [],
+          "database_impact": {}
+        },
+        {
+          "version": "3.0.0",
+          "date": "2025-10-19",
+          "author": "Claude Code",
+          "type": "feature",
+          "summary": "Sistema enterprise completo de notificaciones con workflows y multi-canal",
+          "changes": [
+            "Dashboard profesional con estadísticas en tiempo real",
+            "Workflows visuales con aprobaciones multi-nivel",
+            "Countdown de deadlines con alertas progresivas",
+            "Filtros inteligentes (módulo, prioridad, categoría, requires_action)",
+            "Templates reutilizables con placeholders dinámicos",
+            "Escalamiento automático de notificaciones no atendidas",
+            "Multi-canal (app, email, whatsapp, SMS) con tracking",
+            "Recordatorios programados automáticos",
+            "Metadata contextual para integraciones",
+            "Frontend con animaciones suaves y diseño profesional"
+          ],
+          "files_created": [
+            "public/js/modules/notifications-enterprise.js"
+          ],
+          "files_modified": [
+            "server.js",
+            "public/panel-empresa.html"
+          ],
+          "migrations": [
+            "20251019_create_notifications_enterprise"
+          ],
+          "database_impact": {
+            "tables_used": [
+              "notifications",
+              "notification_workflows",
+              "notification_templates",
+              "notification_actions_log"
+            ],
+            "new_fields": [],
+            "modified_fields": []
+          }
+        }
+      ],
+      "description": {
+        "short": "Sistema enterprise de notificaciones avanzadas con workflows de aprobación, multi-canal y dashboard profesional",
+        "long": "Sistema completo y profesional para gestión de notificaciones empresariales con soporte para workflows de aprobación multi-nivel, envío por múltiples canales (app, email, WhatsApp, SMS), templates reutilizables con placeholders, escalamiento automático de notificaciones no atendidas, recordatorios programados, deadlines con countdown, metadata contextual para integraciones con otros módulos, y dashboard profesional con estadísticas en tiempo real. Incluye tracking completo de entrega, lectura y respuesta por cada canal.",
+        "business_value": "Automatiza procesos de aprobación empresariales, asegura que las notificaciones críticas lleguen por el canal correcto, reduce tiempo de respuesta con escalamiento automático, mejora compliance con tracking de confirmación de lectura, facilita auditorías con trazabilidad completa de acciones, y permite workflows personalizados por tipo de notificación.",
+        "use_cases": [
+          "Workflow de aprobación de gastos → Empleado solicita → Manager aprueba → Finanzas confirma → Contabilidad registra",
+          "Alerta crítica de seguridad → Envía por SMS + Email + Push simultáneamente, requiere confirmación en 1 hora, escala a supervisor si no hay respuesta",
+          "Recordatorio de examen médico → 30 días antes: email, 15 días: email+push, 7 días: email+SMS+push, vencido: SMS urgente",
+          "Notificación legal → Requiere confirmación de lectura firmada digitalmente, se archiva para auditoría"
+        ]
+      },
+      "endpoints": {
+        "base_path": "/api",
+        "routes": [
+          {
+            "method": "GET",
+            "path": "/notifications",
+            "description": "Obtener notificaciones con filtros",
+            "auth": "required",
+            "permissions": [
+              "read_notifications"
+            ],
+            "query_params": {
+              "module": "filtrar por módulo origen",
+              "priority": "low | medium | high | urgent",
+              "category": "info | warning | error | success",
+              "requires_action": "true | false",
+              "unread_only": "true | false",
+              "limit": "cantidad (default: 50)",
+              "offset": "offset para paginación"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/notifications/stats",
+            "description": "Obtener estadísticas para dashboard",
+            "auth": "required",
+            "permissions": [
+              "read_notifications"
+            ],
+            "response_example": "{total: 100, unread: 15, high_priority: 5, requires_action: 8, overdue: 2}"
+          },
+          {
+            "method": "POST",
+            "path": "/notifications",
+            "description": "Crear nueva notificación (con workflow si aplica)",
+            "auth": "required",
+            "permissions": [
+              "create_notification"
+            ],
+            "triggers_workflow": "Si notification_type tiene workflow asociado, se ejecuta automáticamente",
+            "sends_multicanal": "Envía por todos los canales configurados (app, email, whatsapp, SMS)"
+          },
+          {
+            "method": "PUT",
+            "path": "/notifications/:id/read",
+            "description": "Marcar notificación como leída",
+            "auth": "required",
+            "permissions": [
+              "read_notifications"
+            ]
+          },
+          {
+            "method": "POST",
+            "path": "/notifications/:id/action",
+            "description": "Ejecutar acción sobre notificación (aprobar, rechazar, responder)",
+            "auth": "required",
+            "permissions": [
+              "action_on_notification"
+            ],
+            "triggers_workflow": "Si es parte de workflow, avanza al siguiente paso",
+            "logs_action": "Registra en notification_actions_log"
+          }
+        ]
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "notifications",
+            "description": "Tabla principal con 50+ campos para notificaciones completas",
+            "primary_key": "id",
+            "fields_count": 50,
+            "complexity": "very_high",
+            "special_features": [
+              "Multi-destinatario (user, role, department, shift, broadcast)",
+              "Multi-canal (app, email, whatsapp, SMS) con timestamps independientes",
+              "Workflow de acciones (requires_action, action_status, action_deadline)",
+              "Escalamiento (escalation_level, escalated_from/to)",
+              "Metadata JSONB para integraciones",
+              "Soft delete",
+              "Índices GIN para búsqueda en metadata"
+            ]
+          },
+          {
+            "name": "notification_workflows",
+            "description": "Definiciones de workflows de aprobación",
+            "primary_key": "id",
+            "fields_key": [
+              "id",
+              "workflow_key",
+              "workflow_name",
+              "module",
+              "steps",
+              "activation_conditions",
+              "on_approval_actions",
+              "on_rejection_actions",
+              "company_id"
+            ],
+            "special_features": [
+              "steps es JSONB con array ordenado de pasos",
+              "activation_conditions define cuándo se activa el workflow",
+              "Acciones automáticas al aprobar/rechazar"
+            ]
+          },
+          {
+            "name": "notification_templates",
+            "description": "Templates reutilizables con placeholders",
+            "primary_key": "id",
+            "fields_key": [
+              "id",
+              "template_key",
+              "template_name",
+              "module",
+              "title_template",
+              "message_template",
+              "email_template",
+              "available_variables",
+              "default_send_email",
+              "default_send_whatsapp",
+              "company_id"
+            ],
+            "special_features": [
+              "Placeholders dinámicos {{variable_name}}",
+              "Templates globales (company_id NULL) y por empresa"
+            ]
+          },
+          {
+            "name": "notification_actions_log",
+            "description": "Historial completo de acciones sobre notificaciones",
+            "primary_key": "id",
+            "fields_key": [
+              "id",
+              "notification_id",
+              "company_id",
+              "action",
+              "action_by",
+              "action_at",
+              "previous_status",
+              "new_status",
+              "notes",
+              "metadata",
+              "ip_address",
+              "user_agent"
+            ]
+          }
+        ]
+      },
+      "files": {
+        "backend": [],
+        "frontend": [
+          {
+            "path": "public/js/modules/notifications-enterprise.js",
+            "type": "module",
+            "lines": 1500,
+            "description": "Frontend completo con dashboard profesional, workflows visuales, filtros inteligentes y animaciones suaves",
+            "object": "NotificationsEnterprise",
+            "methods": [
+              "init",
+              "renderDashboard",
+              "loadDashboardData",
+              "showNotificationDetail",
+              "handleAction",
+              "renderWorkflowSteps"
+            ],
+            "special_features": [
+              "Dashboard con cards animados y estadísticas",
+              "Countdown visual de deadlines",
+              "Workflow steps con progress bar",
+              "Filtros inteligentes múltiples",
+              "Responsive design"
+            ]
+          }
+        ],
+        "models": []
+      },
+      "integrations": [
+        {
+          "module": "inbox",
+          "type": "COMPLEMENTARY",
+          "relationship": "notifications-enterprise provee workflows y multi-canal, inbox provee vista de hilos. Comparten tablas de BD."
+        },
+        {
+          "module": "document-expiration",
+          "type": "PROVIDES_NOTIFICATIONS",
+          "description": "document-expiration usa notifications-enterprise para enviar alertas de vencimiento"
+        },
+        {
+          "module": "medical-exams",
+          "type": "PROVIDES_NOTIFICATIONS",
+          "description": "medical-exams usa notifications-enterprise para alertas de próximos exámenes y resultados críticos"
+        },
+        {
+          "module": "work-history",
+          "type": "PROVIDES_NOTIFICATIONS",
+          "description": "work-history usa notifications-enterprise para alertas de litigios activos"
+        }
+      ],
+      "business_flows": {
+        "workflow_approval": [
+          "1. Sistema crea notificación con requires_action=true",
+          "2. Busca workflow asociado al notification_type",
+          "3. Ejecuta primer paso del workflow (ej: envía a Manager)",
+          "4. Manager recibe notificación multi-canal según urgencia",
+          "5. Manager aprueba (POST /notifications/:id/action {action: 'approve'})",
+          "6. Sistema registra acción en notification_actions_log",
+          "7. Sistema ejecuta on_approval_actions del workflow",
+          "8. Sistema avanza al siguiente paso del workflow (ej: envía a Finanzas)",
+          "9. Repite hasta completar todos los pasos",
+          "10. Al finalizar, marca notificación como completed"
+        ],
+        "escalation": [
+          "1. Sistema crea notificación con action_deadline",
+          "2. Si no hay respuesta antes del deadline, escalation_level++",
+          "3. Sistema crea nueva notificación escalada (escalated_to_notification_id)",
+          "4. Nueva notificación se envía a nivel superior (ej: supervisor del supervisor)",
+          "5. Prioridad aumenta automáticamente (medium → high → urgent)",
+          "6. Canales adicionales se activan (ej: agrega SMS en escalation_level >= 2)"
+        ]
+      },
+      "help": {
+        "quickStart": "Dashboard con estadísticas y lista de notificaciones. Usa filtros para encontrar notificaciones específicas. Click en una notificación para ver detalle y ejecutar acciones.",
+        "commonIssues": [
+          {
+            "symptom": "Workflow no avanza al siguiente paso",
+            "cause": "Falta configurar on_approval_actions en el workflow",
+            "fix": "Revisar notification_workflows y configurar acciones automáticas"
+          },
+          {
+            "symptom": "Email no llega aunque sent_via_email=true",
+            "cause": "EmailWorker no está corriendo o SMTP mal configurado",
+            "fix": "Verificar logs del EmailWorker y configuración SMTP en .env"
+          },
+          {
+            "symptom": "Notificaciones no escalan automáticamente",
+            "cause": "action_deadline no está configurado o ya pasó",
+            "fix": "Configurar action_deadline al crear la notificación"
+          }
+        ]
+      },
+      "testing": {
+        "test_coverage": 0,
+        "test_files": [],
+        "test_scenarios": [
+          "Crear notificación → verificar aparece en dashboard",
+          "Crear notificación con workflow → verificar ejecuta primer paso automáticamente",
+          "Aprobar notificación → verificar avanza al siguiente paso del workflow",
+          "Verificar escalamiento automático cuando pasa deadline",
+          "Verificar multi-canal: crear con sent_via_email=true → verificar email en email_queue",
+          "Aplicar filtros → verificar resultados correctos"
+        ]
+      },
+      "known_issues": [],
+      "todo": [
+        "Integración con WhatsApp Business API",
+        "Envío de SMS vía Twilio",
+        "Push notifications con Firebase",
+        "Builder visual de workflows (drag & drop)",
+        "Editor de templates con preview en tiempo real",
+        "Dashboard predictivo: ML para predecir qué notificaciones tendrán mayor engagement"
+      ],
+      "_source": "extended_json",
+      "_loaded_at": "2025-11-02T21:24:57.131Z",
+      "commercial": {
+        "basePrice": 1,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 55,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "attendance",
+        "medical",
+        "vacation",
+        "legal"
+      ],
+      "providesTo": [
+        "ALL"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "biometric-consent": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 0,
+        "rubro": "General",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "professional-biometric-registration": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 0,
+        "rubro": "General",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "real-biometric-enterprise": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 0,
+        "rubro": "General",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "facial-biometric": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 0,
+        "rubro": "General",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "users": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 1,
+        "rubro": "Sistema Base",
+        "availableIn": "both"
+      },
+      "features": [
+        "Registro y gestión de empleados",
+        "Perfiles de usuario personalizables",
+        "Control de roles y permisos",
+        "Información de contacto",
+        "Historial de empleados"
+      ],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [
+        "departments",
+        "shifts",
+        "biometric-enterprise"
+      ],
+      "providesTo": [
+        "attendance",
+        "medical",
+        "vacation",
+        "legal",
+        "reports"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z",
+      "changelog": [
+        {
+          "version": "1.0.1",
+          "date": "2025-11-02",
+          "author": "System Auto-Update",
+          "type": "architecture",
+          "summary": "Refactorización COMPLETA: Sistema de Carga Dinámica Unificado",
+          "changes": [
+            "UnifiedKnowledgeService inicializado en server.js",
+            "Endpoint /api/modules/active creado",
+            "Eliminado SWITCH hardcodeado de 40+ casos",
+            "Implementada carga dinámica en panel-empresa.html",
+            "Añadida carga de activeModules en handleLogin",
+            "Estandarizada exportación de 6 módulos CORE",
+            "Convención unificada window.Modules[moduleKey]"
+          ],
+          "files_modified": [
+            "server.js",
+            "src/routes/modulesRoutes.js",
+            "public/panel-empresa.html",
+            "public/js/modules/users.js",
+            "public/js/modules/departments.js",
+            "public/js/modules/attendance.js",
+            "public/js/modules/notifications-enterprise.js",
+            "public/js/modules/shifts.js",
+            "public/js/modules/inbox.js",
+            "src/config/modules-metadata-extended.json"
+          ],
+          "migrations": [],
+          "database_impact": {}
+        }
+      ],
+      "version": "1.0.1"
+    },
+    "companies": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 2,
+        "rubro": "General",
+        "availableIn": "admin"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "ALL"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "settings": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 3,
+        "rubro": "Sistema Base",
+        "availableIn": "both"
+      },
+      "features": [
+        "Configuraciones generales",
+        "Personalización de interfaz",
+        "Parámetros del sistema",
+        "Backup y restauración",
+        "Logs del sistema"
+      ],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "ALL"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "dashboard": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 4,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "attendance",
+        "medical",
+        "vacation"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "support-base": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 5,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [
+        "knowledge-base"
+      ],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "legal-dashboard": {
+      "commercial": {
+        "basePrice": 15,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 10,
+        "rubro": "Legal y Normativo",
+        "availableIn": "both"
+      },
+      "features": [
+        "Cumplimiento normativo",
+        "Gestión de contratos",
+        "Documentación legal",
+        "Auditorías de cumplimiento",
+        "Reportes legales"
+      ],
+      "requirements": [
+        "users",
+        "document-management"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "attendance": {
+      "commercial": {
+        "basePrice": 5,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 10,
+        "rubro": "Sistema Base",
+        "availableIn": "company"
+      },
+      "features": [
+        "Registro de entrada y salida",
+        "Cálculo de horas trabajadas",
+        "Control de tardanzas",
+        "Reportes de asistencia",
+        "Integración con turnos"
+      ],
+      "requirements": [
+        "users",
+        "shifts"
+      ],
+      "bundledModules": [
+        "kiosks",
+        "kiosks-apk"
+      ],
+      "integratesWith": [
+        "medical",
+        "vacation",
+        "legal"
+      ],
+      "providesTo": [
+        "payroll-liquidation",
+        "reports"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z",
+      "changelog": [
+        {
+          "version": "1.0.1",
+          "date": "2025-11-02",
+          "author": "System Auto-Update",
+          "type": "architecture",
+          "summary": "Refactorización COMPLETA: Sistema de Carga Dinámica Unificado",
+          "changes": [
+            "UnifiedKnowledgeService inicializado en server.js",
+            "Endpoint /api/modules/active creado",
+            "Eliminado SWITCH hardcodeado de 40+ casos",
+            "Implementada carga dinámica en panel-empresa.html",
+            "Añadida carga de activeModules en handleLogin",
+            "Estandarizada exportación de 6 módulos CORE",
+            "Convención unificada window.Modules[moduleKey]"
+          ],
+          "files_modified": [
+            "server.js",
+            "src/routes/modulesRoutes.js",
+            "public/panel-empresa.html",
+            "public/js/modules/users.js",
+            "public/js/modules/departments.js",
+            "public/js/modules/attendance.js",
+            "public/js/modules/notifications-enterprise.js",
+            "public/js/modules/shifts.js",
+            "public/js/modules/inbox.js",
+            "src/config/modules-metadata-extended.json"
+          ],
+          "migrations": [],
+          "database_impact": {}
+        }
+      ],
+      "version": "1.0.1"
+    },
+    "kiosks": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 11,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [
+        "Múltiples kioscos por empresa",
+        "Validación GPS automática",
+        "Autorización por empleado",
+        "Configuración remota"
+      ],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [
+        "biometric-enterprise"
+      ],
+      "providesTo": [
+        "attendance"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "kiosks-apk": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 12,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "attendance"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "biometric-dashboard": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 20,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "medical-dashboard": {
+      "commercial": {
+        "basePrice": 3,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 20,
+        "rubro": "Salud Ocupacional",
+        "availableIn": "company"
+      },
+      "features": [
+        "Historiales médicos",
+        "Certificados médicos",
+        "Seguimiento de salud",
+        "Reportes médicos",
+        "Integración con ART"
+      ],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [
+        "medical"
+      ],
+      "integratesWith": [
+        "art-management"
+      ],
+      "providesTo": [
+        "legal",
+        "attendance"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "medical": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 21,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "art-management",
+        "notifications-enterprise"
+      ],
+      "providesTo": [
+        "legal",
+        "attendance"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.337Z"
+    },
+    "support-ai": {
+      "commercial": {
+        "basePrice": 2,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 30,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "support-base"
+      ],
+      "bundledModules": [
+        "ai-assistant"
+      ],
+      "integratesWith": [
+        "support-base"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "vacation-management": {
+      "commercial": {
+        "basePrice": 90,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 30,
+        "rubro": "Sistema Base",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "ai-assistant": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 31,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "support-ai"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "google-maps-integration": {
+      "commercial": {
+        "basePrice": 120,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 35,
+        "rubro": "Sistema Base",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "notifications-complete": {
+      "commercial": {
+        "basePrice": 75,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 40,
+        "rubro": "Sistema Base",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "partners-medical": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 40,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "medical"
+      ],
+      "bundledModules": [
+        "temporary-access"
+      ],
+      "integratesWith": [
+        "notifications-enterprise"
+      ],
+      "providesTo": [
+        "medical-dashboard"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "temporary-access": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 41,
+        "rubro": "General",
+        "availableIn": "admin"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "partners-medical"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "permissions-test": {
+      "commercial": {
+        "basePrice": 70,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 44,
+        "rubro": "Sistema Base",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "network": {
+      "commercial": {
+        "basePrice": 110,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 45,
+        "rubro": "Sistema Base",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "departments": {
+      "commercial": {
+        "basePrice": 1,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 50,
+        "rubro": "Sistema Base",
+        "availableIn": "company"
+      },
+      "features": [
+        "Creación de departamentos",
+        "Jerarquía organizacional",
+        "Asignación de empleados",
+        "Configuración por ubicación"
+      ],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "users",
+        "attendance"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z",
+      "changelog": [
+        {
+          "version": "1.0.1",
+          "date": "2025-11-02",
+          "author": "System Auto-Update",
+          "type": "architecture",
+          "summary": "Refactorización COMPLETA: Sistema de Carga Dinámica Unificado",
+          "changes": [
+            "UnifiedKnowledgeService inicializado en server.js",
+            "Endpoint /api/modules/active creado",
+            "Eliminado SWITCH hardcodeado de 40+ casos",
+            "Implementada carga dinámica en panel-empresa.html",
+            "Añadida carga de activeModules en handleLogin",
+            "Estandarizada exportación de 6 módulos CORE",
+            "Convención unificada window.Modules[moduleKey]"
+          ],
+          "files_modified": [
+            "server.js",
+            "src/routes/modulesRoutes.js",
+            "public/panel-empresa.html",
+            "public/js/modules/users.js",
+            "public/js/modules/departments.js",
+            "public/js/modules/attendance.js",
+            "public/js/modules/notifications-enterprise.js",
+            "public/js/modules/shifts.js",
+            "public/js/modules/inbox.js",
+            "src/config/modules-metadata-extended.json"
+          ],
+          "migrations": [],
+          "database_impact": {}
+        }
+      ],
+      "version": "1.0.1"
+    },
+    "shifts": {
+      "commercial": {
+        "basePrice": 2,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 51,
+        "rubro": "Sistema Base",
+        "availableIn": "company"
+      },
+      "features": [
+        "Configuración de turnos flexibles",
+        "Horarios rotativos",
+        "Excepciones y feriados",
+        "Turnos por departamento"
+      ],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "attendance"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z",
+      "changelog": [
+        {
+          "version": "1.0.1",
+          "date": "2025-11-02",
+          "author": "System Auto-Update",
+          "type": "architecture",
+          "summary": "Refactorización COMPLETA: Sistema de Carga Dinámica Unificado",
+          "changes": [
+            "UnifiedKnowledgeService inicializado en server.js",
+            "Endpoint /api/modules/active creado",
+            "Eliminado SWITCH hardcodeado de 40+ casos",
+            "Implementada carga dinámica en panel-empresa.html",
+            "Añadida carga de activeModules en handleLogin",
+            "Estandarizada exportación de 6 módulos CORE",
+            "Convención unificada window.Modules[moduleKey]"
+          ],
+          "files_modified": [
+            "server.js",
+            "src/routes/modulesRoutes.js",
+            "public/panel-empresa.html",
+            "public/js/modules/users.js",
+            "public/js/modules/departments.js",
+            "public/js/modules/attendance.js",
+            "public/js/modules/notifications-enterprise.js",
+            "public/js/modules/shifts.js",
+            "public/js/modules/inbox.js",
+            "src/config/modules-metadata-extended.json"
+          ],
+          "migrations": [],
+          "database_impact": {}
+        }
+      ],
+      "version": "1.0.1"
+    },
+    "biometric-enterprise": {
+      "commercial": {
+        "basePrice": 4,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 52,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "kiosks"
+      ],
+      "providesTo": [
+        "attendance",
+        "access-control"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "vacation": {
+      "commercial": {
+        "basePrice": 1.5,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 53,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "attendance",
+        "medical"
+      ],
+      "providesTo": [
+        "payroll-liquidation"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "legal": {
+      "commercial": {
+        "basePrice": 2.5,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 54,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "medical",
+        "attendance"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "payroll-liquidation": {
+      "commercial": {
+        "basePrice": 3,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 56,
+        "rubro": "Recursos Humanos",
+        "availableIn": "company"
+      },
+      "features": [
+        "Cálculo automático de sueldos",
+        "Gestión de conceptos",
+        "Liquidaciones finales",
+        "Integración con asistencia",
+        "Reportes de nómina"
+      ],
+      "requirements": [
+        "users",
+        "attendance"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "vacation"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "art-management": {
+      "commercial": {
+        "basePrice": 2,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 60,
+        "rubro": "Salud Ocupacional",
+        "availableIn": "company"
+      },
+      "features": [
+        "Gestión de ART múltiples",
+        "Reportes de accidentes",
+        "Seguimiento de casos",
+        "Documentación legal",
+        "Integración con medicina laboral"
+      ],
+      "requirements": [
+        "users",
+        "medical"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "medical-dashboard"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "document-management": {
+      "commercial": {
+        "basePrice": 1.5,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 61,
+        "rubro": "Legal y Normativo",
+        "availableIn": "company"
+      },
+      "features": [
+        "Almacenamiento de documentos",
+        "Versionado de archivos",
+        "Categorización",
+        "Búsqueda avanzada",
+        "Control de acceso por documento"
+      ],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "medical",
+        "legal"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "training-management": {
+      "commercial": {
+        "basePrice": 1.5,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 62,
+        "rubro": "Funcionalidades Extra",
+        "availableIn": "company"
+      },
+      "features": [
+        "Catálogo de cursos",
+        "Seguimiento de progreso",
+        "Certificaciones",
+        "Evaluaciones",
+        "Reportes de capacitación"
+      ],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "compliance-dashboard": {
+      "commercial": {
+        "basePrice": 2,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 63,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "legal",
+        "attendance"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "visitors": {
+      "commercial": {
+        "basePrice": 1,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 64,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "access-control",
+        "biometric-enterprise"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "access-control": {
+      "commercial": {
+        "basePrice": 2.5,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 65,
+        "rubro": "Sistema Base",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "biometric-enterprise",
+        "visitors"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "clientes": {
+      "commercial": {
+        "basePrice": 2,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": 5,
+        "maxEmployees": null,
+        "displayOrder": 70,
+        "rubro": "Funcionalidades Extra",
+        "availableIn": "company"
+      },
+      "features": [
+        "Gestión de clientes",
+        "Categorías comerciales",
+        "Condiciones IVA",
+        "Historial comercial",
+        "Sesiones concurrentes"
+      ],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "facturacion"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "facturacion": {
+      "commercial": {
+        "basePrice": 3,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": 5,
+        "maxEmployees": null,
+        "displayOrder": 71,
+        "rubro": "Funcionalidades Extra",
+        "availableIn": "company"
+      },
+      "features": [
+        "Facturación completa",
+        "Sesiones temporales",
+        "Aislamiento de datos",
+        "20+ usuarios concurrentes",
+        "Confirmación de facturas"
+      ],
+      "requirements": [
+        "users",
+        "clientes"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "plantillas-fiscales"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "plantillas-fiscales": {
+      "commercial": {
+        "basePrice": 1,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": 3,
+        "maxEmployees": null,
+        "displayOrder": 72,
+        "rubro": "Funcionalidades Extra",
+        "availableIn": "company"
+      },
+      "features": [
+        "Plantillas por país",
+        "Condiciones IVA",
+        "Conceptos impositivos",
+        "Alícuotas",
+        "Configuración fiscal"
+      ],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "facturacion"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "vendors": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 80,
+        "rubro": "General",
+        "availableIn": "admin"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "partners": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 81,
+        "rubro": "General",
+        "availableIn": "admin"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "auditor": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 82,
+        "rubro": "General",
+        "availableIn": "admin"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "knowledge-base": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 90,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "support-base"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "emotional-analysis": {
+      "commercial": {
+        "basePrice": 2,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 91,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users",
+        "biometric-enterprise"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "psychological-assessment": {
+      "commercial": {
+        "basePrice": 2,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 92,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "employee-map": {
+      "commercial": {
+        "basePrice": 1.5,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 93,
+        "rubro": "Funcionalidades Extra",
+        "availableIn": "company"
+      },
+      "features": [
+        "Seguimiento GPS en tiempo real",
+        "Historial de ubicaciones",
+        "Geofencing",
+        "Rutas de trabajo",
+        "Reportes de movilidad"
+      ],
+      "requirements": [
+        "users",
+        "attendance"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "job-postings": {
+      "commercial": {
+        "basePrice": 1,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 94,
+        "rubro": "Funcionalidades Extra",
+        "availableIn": "company"
+      },
+      "features": [
+        "Publicación de ofertas",
+        "Gestión de candidatos",
+        "Proceso de selección",
+        "Evaluaciones",
+        "Reportes de reclutamiento"
+      ],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "sanctions-management": {
+      "commercial": {
+        "basePrice": 1,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 95,
+        "rubro": "Sistema Base",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "legal",
+        "attendance"
+      ],
+      "providesTo": [
+        "legal"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "licensing-management": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 96,
+        "rubro": "Sistema Base",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [
+        "ALL"
+      ],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "sla-tracking": {
+      "commercial": {
+        "basePrice": 1.5,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 97,
+        "rubro": "General",
+        "availableIn": "both"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "notifications-enterprise"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "resource-center": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 98,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "audit-reports": {
+      "commercial": {
+        "basePrice": 2,
+        "isCore": false,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 99,
+        "rubro": "General",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "legal",
+        "compliance-dashboard"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "terms-conditions": {
+      "commercial": {
+        "basePrice": 0,
+        "isCore": true,
+        "isActive": true,
+        "minEmployees": null,
+        "maxEmployees": null,
+        "displayOrder": 100,
+        "rubro": "Sistema Base",
+        "availableIn": "company"
+      },
+      "features": [],
+      "requirements": [],
+      "bundledModules": [],
+      "integratesWith": [
+        "legal"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    }
+  }
+}

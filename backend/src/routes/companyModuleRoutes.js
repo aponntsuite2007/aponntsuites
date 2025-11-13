@@ -210,16 +210,11 @@ router.get('/active', simpleAuth, async (req, res) => {
         sm.name as "moduleName",
         sm.category,
         sm.icon,
-        sm.color,
-        cm.configuration,
-        cm.contracted_at as "contractedAt",
-        cm.expires_at as "expiresAt"
+        sm.color
       FROM company_modules cm
       INNER JOIN system_modules sm ON cm.system_module_id = sm.id
       WHERE cm.company_id = ?
-        AND cm.is_active = true
-        AND (cm.expires_at IS NULL OR cm.expires_at > NOW())
-        AND cm.suspended_at IS NULL
+        AND cm.activo = true
       ORDER BY sm.category, sm.name ASC
     `, {
       replacements: [companyId],
@@ -290,7 +285,7 @@ router.get('/my-modules', simpleAuth, async (req, res) => {
       SELECT
         cm.id,
         sm.module_key,
-        cm.is_active,
+        cm.activo as is_active,
         cm.created_at as contracted_at,
         null as expires_at,
         sm.name as module_name,
@@ -393,7 +388,7 @@ router.get('/:companyId', async (req, res) => {
         cm.id,
         cm.company_id,
         cm.system_module_id,
-        sm.is_active,
+        cm.activo as is_active,
         cm.created_at as contracted_at,
         sm.module_key,
         sm.name,
@@ -413,7 +408,10 @@ router.get('/:companyId', async (req, res) => {
 
     console.log(`✅ [COMPANY-MODULES] Empresa ${companyId} tiene ${contractedModules.length} módulos contratados`);
 
-    // NUEVO: Obtener módulos temporales desde active_modules (campo JSONB)
+    // TEMPORAL: Módulos temporales desactivados (active_modules no existe en Render)
+    let temporaryModules = [];
+    // TODO: Descomentar cuando active_modules exista en producción
+    /*
     const companyData = await database.sequelize.query(`
       SELECT active_modules FROM companies WHERE company_id = ?
     `, {
@@ -421,22 +419,20 @@ router.get('/:companyId', async (req, res) => {
       type: database.sequelize.QueryTypes.SELECT
     });
 
-    let temporaryModules = [];
     if (companyData.length > 0 && companyData[0].active_modules) {
       const activeModules = companyData[0].active_modules;
       console.log(`🔍 [ACTIVE-MODULES] Raw active_modules:`, activeModules);
 
-      // Si es array de strings (formato correcto)
       if (Array.isArray(activeModules)) {
         temporaryModules = activeModules.filter(moduleId =>
           typeof moduleId === 'string' &&
           moduleId.trim() !== '' &&
-          // Solo incluir módulos que NO están en company_modules (evitar duplicados)
           !contractedModules.find(cm => cm.module_key === moduleId)
         );
         console.log(`📦 [TEMPORARY-MODULES] ${temporaryModules.length} módulos temporales encontrados:`, temporaryModules);
       }
     }
+    */
 
     // Transformar módulos contratados a formato esperado por el frontend
     const modules = contractedModules.map(module => ({
@@ -523,7 +519,7 @@ router.get('/debug-isi', async (req, res) => {
         cm.system_module_id,
         sm.module_key,
         sm.name,
-        cm.is_active,
+        cm.activo as is_active,
         cm.created_at as fecha_asignacion
       FROM company_modules cm
       INNER JOIN system_modules sm ON cm.system_module_id = sm.id

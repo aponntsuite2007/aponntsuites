@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Biometric Dashboard</title>
+</head>
+<body>
+    <h1>Test Biometric Dashboard Script Loading</h1>
+    <div id="contentArea" style="border: 2px solid #ccc; padding: 20px; margin: 20px;">
+        <p>Content area will be replaced by dashboard...</p>
+    </div>
+
+    <button onclick="testDashboard()">Load Dashboard</button>
+
+    <div id="console-output" style="margin-top: 20px; padding: 10px; background: #f0f0f0; font-family: monospace;">
+        <strong>Console Output:</strong><br>
+    </div>
+
+    <script>
+        // Intercept console.log
+        const originalLog = console.log;
+        const consoleDiv = document.getElementById('console-output');
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            consoleDiv.innerHTML += args.join(' ') + '<br>';
+        };
+
+        console.log('1. Page loaded');
+    </script>
+
+    <!-- Load only the biometric dashboard script -->
+    <script src="js/modules/biometric-dashboard.js"></script>
+
+    <script>
+        console.log('2. After biometric-dashboard.js script tag');
+        console.log('3. typeof showBiometricDashboardContent:', typeof showBiometricDashboardContent);
+        console.log('4. typeof window.showBiometricDashboardContent:', typeof window.showBiometricDashboardContent);
+
+        function testDashboard() {
+            console.log('5. Test button clicked');
+            if (typeof showBiometricDashboardContent === 'function') {
+                console.log('6. Calling showBiometricDashboardContent()');
+                showBiometricDashboardContent();
+            } else {
+                console.log('❌ Function not found!');
+            }
+        }
+    </script>
+</body>
+</html>

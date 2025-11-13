@@ -172,7 +172,7 @@ router.post('/', auth, async (req, res) => {
       userFromAuth: req.user ? {
         id: req.user.user_id || req.user.id,
         email: req.user.email,
-        company_id: req.user.company_id
+        company_id: req.user.companyId
       } : 'NO USER'
     });
 

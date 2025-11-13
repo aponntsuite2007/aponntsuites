@@ -184,7 +184,7 @@ router.post('/face/authenticate', async (req, res) => {
         model: User,
         attributes: ['id', 'employeeId', 'dni', 'firstName', 'lastName', 'email', 'role']
       }],
-      order: [['isPrimary', 'DESC'], ['qualityScore', 'DESC']]
+      order: [['is_primary', 'DESC'], ['quality_score', 'DESC']] // ✅ Fixed snake_case
     });
 
     if (facialTemplates.length === 0) {
@@ -309,7 +309,7 @@ router.get('/face/status/:userId', auth, async (req, res) => {
         'isValidated', 'successfulMatches', 'failedAttempts', 
         'lastUsed', 'createdAt'
       ],
-      order: [['isPrimary', 'DESC'], ['createdAt', 'DESC']]
+      order: [['is_primary', 'DESC'], ['created_at', 'DESC']] // ✅ Fixed snake_case
     });
 
     const primaryTemplate = facialTemplates.find(t => t.isPrimary && t.isActive);
@@ -621,7 +621,7 @@ router.get('/status/:employeeId', async (req, res) => {
         userId: employee.user_id,
         isActive: true
       },
-      order: [['isPrimary', 'DESC'], ['createdAt', 'DESC']]
+      order: [['is_primary', 'DESC'], ['created_at', 'DESC']] // ✅ Fixed snake_case
     });
 
     // Obtener otros tipos biométricos
@@ -630,7 +630,7 @@ router.get('/status/:employeeId', async (req, res) => {
         userId: employee.user_id,
         isActive: true
       },
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']] // ✅ Fixed snake_case
     });
 
     const fingerprintTemplates = otherBiometrics.filter(b => b.biometricType === 'fingerprint');

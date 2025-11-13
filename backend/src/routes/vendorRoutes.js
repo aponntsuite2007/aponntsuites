@@ -29,7 +29,7 @@ router.get('/vendors-metrics', async (req, res) => {
                 }
             ],
             attributes: [
-                'id', 'firstName', 'lastName',
+                'user_id', 'firstName', 'lastName',
                 'email', 'phone', 'role', 'isActive',
                 'accepts_support_packages', 'accepts_auctions',
                 'whatsapp_number', 'global_rating', 'cbu', 'bank_name'
@@ -39,7 +39,7 @@ router.get('/vendors-metrics', async (req, res) => {
         // Procesar métricas para cada vendedor usando datos reales de la base de datos
         const vendorsWithMetrics = await Promise.all(vendors.map(async vendor => {
             const vendorData = vendor.toJSON();
-            const vendorId = vendorData.id;
+            const vendorId = vendorData.user_id;
 
             console.log(`📊 Calculando métricas reales para vendedor ID: ${vendorId}`);
 
@@ -66,9 +66,9 @@ router.get('/vendors-metrics', async (req, res) => {
             let totalUsers = 0;
             try {
                 const [totalUsersResult] = await sequelize.query(`
-                    SELECT COUNT(DISTINCT u.id) as total_users
+                    SELECT COUNT(DISTINCT u.user_id) as total_users
                     FROM users u
-                    INNER JOIN companies c ON u.company_id = c.id
+                    INNER JOIN companies c ON u.company_id = c.company_id
                     WHERE c.created_by = :vendorId
                 `, {
                     replacements: { vendorId },

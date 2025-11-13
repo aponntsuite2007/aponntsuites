@@ -23,7 +23,7 @@ const biometricConsentService = require('../services/biometricConsentService');
 router.get('/consents', auth, authorize('admin', 'rrhh'), async (req, res) => {
     try {
         // Obtener company_id de varias formas posibles (Sequelize)
-        const company_id = req.user.companyId || req.user.company_id || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
+        const company_id = req.user.companyId || req.user.companyId || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
         const { status, role: roleFilter, method } = req.query;
 
         // Construir WHERE clause dinámico
@@ -988,7 +988,7 @@ router.get('/consents/roles', auth, async (req, res) => {
         console.log('🔍 [ROLES] req.user.dataValues:', JSON.stringify(req.user?.dataValues, null, 2));
 
         // Intentar obtener company_id de varias formas posibles
-        const company_id = req.user.companyId || req.user.company_id || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
+        const company_id = req.user.companyId || req.user.companyId || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
 
         console.log('🔍 [ROLES] company_id extraído:', company_id);
 
@@ -1047,7 +1047,7 @@ router.get('/consents/roles', auth, async (req, res) => {
 router.get('/consents/legal-document', auth, async (req, res) => {
     try {
         // Intentar obtener company_id de varias formas posibles
-        const company_id = req.user.companyId || req.user.company_id || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
+        const company_id = req.user.companyId || req.user.companyId || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
 
         // Intentar obtener de tabla si existe, sino usar documento por defecto
         let document = null;

@@ -1266,5 +1266,13 @@ async function loadKiosksForSelector() {
 }
 
 console.log('🏢 [DEPARTMENTS] Todas las funciones de departamentos cargadas');
-// ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE
+
+// ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE (Legacy)
 window.showDepartmentsContent = showDepartmentsContent;
+
+// ✅ EXPORTACIÓN UNIFICADA (Sistema de Auto-Conocimiento v3.0)
+if (!window.Modules) window.Modules = {};
+window.Modules.departments = {
+    init: showDepartmentsContent
+};
+console.log('🧠 [DEPARTMENTS] Exportación unificada registrada: window.Modules.departments');

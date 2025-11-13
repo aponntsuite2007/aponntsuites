@@ -1,0 +1,16 @@
+FEAT: Sistema de Testing Consolidado + Persistencia PostgreSQL
+
+- Consolidar visible-testing-manager.js y phase4-integrated-manager.js
+- Eliminar archivo redundante visible-testing-manager.js
+- Actualizar documentación Puppeteer → Playwright en HTML
+- Implementar persistencia PostgreSQL (tabla test_executions)
+- Crear modelo TestExecution con métodos helper
+- Agregar endpoints /metrics y /history
+- Migración SQL completa con triggers y funciones
+- Sistema ahora persiste: resultados, logs, errors, tickets
+- Auto-cálculo de success_rate y duration_seconds
+- Cleanup automático de ejecuciones antiguas (30 días)
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>

@@ -16,7 +16,7 @@
  * @date 2025-10-22
  */
 
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
 
 class RealUserExperienceCollector {
   constructor(database, systemRegistry) {
@@ -66,13 +66,14 @@ class RealUserExperienceCollector {
   }
 
   async initBrowser() {
-    this.browser = await puppeteer.launch({
+    this.browser = await chromium.launch({
       headless: false, // VISIBLE para depuración
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       defaultViewport: { width: 1920, height: 1080 }
     });
 
-    this.page = await this.browser.newPage();
+    const context = await this.browser.newContext({ viewport: null });
+        this.page = await context.newPage();
     await this.page.setCacheEnabled(false);
 
     // Capturar errores de red (401, 403, 500)
@@ -90,11 +91,10 @@ class RealUserExperienceCollector {
 
     // Capturar errores de consola
     this.page.on('console', msg => {
-      if (msg.type() === 'error') {
+      if (msg.fill() === 'error') {
         const error = msg.text();
         this.consoleErrors.push({
-          message: error,
-          timestamp: new Date()
+          message: error, timestamp: new Date()
         });
         console.log(`      ❌ [CONSOLE] ${error}`);
       }
@@ -122,17 +122,17 @@ class RealUserExperienceCollector {
 
     // PASO 1: Seleccionar empresa
     await this.page.waitForSelector('#companySelect', { timeout: 5000 });
-    await this.page.select('#companySelect', 'aponnt-empresa-demo');
+    await this.page.selectOption('#companySelect', 'aponnt-empresa-demo');
     console.log('    🏢 [REAL-UX] Empresa seleccionada');
 
     // PASO 2: Esperar que se habilite el campo usuario y escribir
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar que se habilite
-    await this.page.type('#userInput', 'administrador');
+    await this.page.waitForTimeout(1000); // Esperar que se habilite
+    await this.page.fill('#userInput', 'administrador');
     console.log('    👤 [REAL-UX] Usuario ingresado');
 
     // PASO 3: Esperar que se habilite la contraseña y escribir
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar que se habilite
-    await this.page.type('#passwordInput', 'admin123');
+    await this.page.waitForTimeout(1000); // Esperar que se habilite
+    await this.page.fill('#passwordInput', 'admin123');
     console.log('    🔑 [REAL-UX] Contraseña ingresada');
 
     // PASO 4: Hacer click en el botón de login
@@ -175,18 +175,18 @@ class RealUserExperienceCollector {
       }, module.hash);
 
       // Esperar que cargue el módulo
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       // Buscar si hay botones del módulo y hacer click (simular interacción real)
       const moduleButtons = await this.page.$$(`[data-module="${module.hash}"], [href="#${module.hash}"], .module-${module.hash}`);
       if (moduleButtons.length > 0) {
         console.log(`      🔘 [REAL-UX] Click en botón del módulo ${module.name}`);
         await moduleButtons[0].click();
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await this.page.waitForTimeout(1000);
       }
 
       // Esperar que se hagan las llamadas API (tiempo real de usuario)
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await this.page.waitForTimeout(5000);
 
       // Evaluar errores encontrados
       const criticalErrors = this.evaluateErrors(module);

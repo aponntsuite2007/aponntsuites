@@ -55,7 +55,7 @@ router.post('/tickets', authenticate, async (req, res) => {
       user_question // Para intento del asistente
     } = req.body;
 
-    const company_id = req.user.company_id;
+    const company_id = req.user.companyId;
     const created_by_user_id = req.user.user_id;
 
     // 1. Intentar resolver con asistente IA
@@ -74,14 +74,85 @@ router.post('/tickets', authenticate, async (req, res) => {
 
       if (company?.supportSLAPlan?.has_ai_assistant) {
         assistant_type = 'ai_powered';
-        // TODO: Integrar con AssistantService.chat() aquí
-        // const aiResult = await AssistantService.chat(user_question, company_id);
-        // assistant_response = aiResult.response;
-        // if (aiResult.confidence > 0.7) assistant_resolved = true;
+
+        // Integrar con AssistantService
+        const AssistantService = require('../services/AssistantService');
+        try {
+          const aiResult = await AssistantService.chat({
+            companyId: company_id,
+            userId: created_by_user_id,
+            userRole: req.user.role || 'employee',
+            question: user_question,
+            context: {
+              module: module_name,
+              submodule: module_display_name,
+              screen: 'support_ticket',
+              action: 'create_ticket'
+            }
+          });
+
+          assistant_response = aiResult.answer;
+          const confidence = aiResult.confidence || 0;
+
+          // Auto-resolve si confidence > 0.7
+          if (confidence > 0.7) {
+            assistant_resolved = true;
+
+            // No crear ticket, solo guardar en knowledge base (ya se guardó en AssistantService)
+            return res.json({
+              success: true,
+              resolved_by_ai: true,
+              response: assistant_response,
+              confidence: confidence,
+              source: aiResult.source || 'ai_generation',
+              suggestions: aiResult.suggestions || []
+            });
+          } else {
+            // Confidence baja - crear ticket y escalar a humanos
+            assistant_resolved = false;
+            // Continuar con creación del ticket...
+          }
+        } catch (aiError) {
+          console.error('❌ [SUPPORT-AI] Error en AssistantService:', aiError.message);
+          // Fallback: continuar con creación normal del ticket
+          assistant_type = 'fallback';
+          assistant_response = 'El asistente IA no está disponible temporalmente. Se ha creado un ticket de soporte.';
+        }
       } else {
-        // Fallback: búsqueda en knowledge base
-        // TODO: Buscar en AssistantKnowledgeBase
-        assistant_response = 'Respuesta automática del sistema...';
+        // Fallback: búsqueda en knowledge base simple
+        assistant_type = 'knowledge_base';
+        try {
+          const { sequelize } = require('../config/database');
+          const [similarAnswers] = await sequelize.query(`
+            SELECT answer, confidence_score
+            FROM assistant_knowledge_base
+            WHERE question ILIKE '%' || :question || '%'
+            AND is_verified = true
+            ORDER BY confidence_score DESC
+            LIMIT 1
+          `, {
+            replacements: { question: user_question },
+            type: sequelize.QueryTypes.SELECT
+          });
+
+          if (similarAnswers && similarAnswers.confidence_score > 0.7) {
+            assistant_response = similarAnswers.answer;
+            assistant_resolved = true;
+
+            return res.json({
+              success: true,
+              resolved_by_knowledge_base: true,
+              response: assistant_response,
+              confidence: similarAnswers.confidence_score,
+              source: 'knowledge_base'
+            });
+          } else {
+            assistant_response = 'No se encontró una respuesta automática. Se ha creado un ticket de soporte.';
+          }
+        } catch (kbError) {
+          console.error('❌ [SUPPORT-KB] Error buscando en knowledge base:', kbError.message);
+          assistant_response = 'Se ha creado un ticket de soporte para atender tu consulta.';
+        }
       }
     }
 
@@ -226,7 +297,7 @@ router.get('/tickets', authenticate, async (req, res) => {
   try {
     const { status, limit = 50, offset = 0 } = req.query;
     const user_id = req.user.user_id;
-    const company_id = req.user.company_id;
+    const company_id = req.user.companyId;
     const role = req.user.role;
 
     const where = {};
@@ -766,7 +837,7 @@ router.post('/vendors/:vendor_id/assign-supervisor', authenticate, async (req, r
 router.get('/tickets/:ticket_id/activity', authenticate, async (req, res) => {
   try {
     const { ticket_id } = req.params;
-    const company_id = req.user.company_id;
+    const company_id = req.user.companyId;
 
     const ticket = await SupportTicketV2.findByPk(ticket_id);
 

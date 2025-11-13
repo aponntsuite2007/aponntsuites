@@ -23,7 +23,7 @@
  * @date 2025-01-28
  */
 
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
 const LearningEngine = require('../learning/LearningEngine');
 
 class EmployeeProfileCollector {
@@ -137,7 +137,7 @@ class EmployeeProfileCollector {
     async initBrowser() {
         console.log('🌐 Iniciando navegador VISIBLE...');
 
-        this.browser = await puppeteer.launch({
+        this.browser = await chromium.launch({
             headless: false,
             slowMo: 30, // 30ms de delay (5x más rápido que 150ms)
             args: [
@@ -146,25 +146,26 @@ class EmployeeProfileCollector {
                 '--disable-dev-shm-usage',
                 '--start-maximized'
             ],
-            defaultViewport: null,
-            protocolTimeout: 180000
+            
+            
         });
 
-        this.page = await this.browser.newPage();
-        await this.page.setViewport({ width: 1366, height: 768 });
+        const context = await this.browser.newContext({ viewport: null });
+        this.page = await context.newPage();
+        // Playwright viewport set in newContext
+        // await this.page.setViewport({ width: 1366, height: 768 });
 
         // Auto-aceptar dialogs
         this.page.on('dialog', async dialog => {
-            console.log(`🔔 [AUTO-DIALOG] ${dialog.type()}: ${dialog.message().substring(0, 100)}`);
+            console.log(`🔔 [AUTO-DIALOG] ${dialog.fill()}: ${dialog.message().substring(0, 100)}`);
             await dialog.accept();
         });
 
         // Capturar errores de consola
         this.page.on('console', msg => {
-            if (msg.type() === 'error') {
+            if (msg.fill() === 'error') {
                 this.consoleErrors.push({
-                    type: 'console',
-                    message: msg.text(),
+                    type: 'console', message: msg.text(),
                     timestamp: new Date()
                 });
                 console.log(`❌ [CONSOLE] ${msg.text()}`);
@@ -194,10 +195,10 @@ class EmployeeProfileCollector {
         try {
             // Ir a panel-empresa.html
             await this.page.goto(`${this.baseURL}/panel-empresa.html`, {
-                waitUntil: 'networkidle2',
+                waitUntil: 'networkidle',
                 timeout: 60000
             });
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             // Obtener slug de la empresa
             const { Client } = require('pg');
@@ -222,25 +223,25 @@ class EmployeeProfileCollector {
                 () => document.getElementById('companySelect').options.length > 1,
                 { timeout: 10000 }
             );
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            await this.page.select('#companySelect', companySlug);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await this.page.waitForTimeout(1000);
+            await this.page.selectOption('#companySelect', companySlug);
+            await this.page.waitForTimeout(5000);
 
             // PASO 2: Ingresar usuario
             await this.page.waitForSelector('#userInput:not([disabled])', { timeout: 15000 });
             await this.page.click('#userInput', { clickCount: 3 });
             await this.page.keyboard.press('Backspace');
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await this.page.type('#userInput', 'soporte', { delay: 100 });
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await this.page.waitForTimeout(500);
+            await this.page.fill('#userInput', 'soporte');
+            await this.page.waitForTimeout(2000);
 
             // PASO 3: Ingresar contraseña
             await this.page.waitForSelector('#passwordInput:not([disabled])', { timeout: 15000 });
             await this.page.click('#passwordInput', { clickCount: 3 });
             await this.page.keyboard.press('Backspace');
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await this.page.type('#passwordInput', 'admin123', { delay: 100 });
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await this.page.waitForTimeout(500);
+            await this.page.fill('#passwordInput', 'admin123');
+            await this.page.waitForTimeout(1000);
 
             // PASO 4: Click en Ingresar
             await this.page.waitForSelector('#loginButton:not([disabled])', { timeout: 15000 });
@@ -255,7 +256,7 @@ class EmployeeProfileCollector {
             // PASO 6: Esperar a que cargue el dashboard con las tarjetas de módulos
             console.log('  ⏳ Esperando dashboard...');
             await this.page.waitForSelector('#modulesContainer, .modules-grid, .module-card', { timeout: 30000 });
-            await new Promise(resolve => setTimeout(resolve, 3000)); // Esperar a que terminen las animaciones
+            await this.page.waitForTimeout(3000); // Esperar a que terminen las animaciones
 
             console.log('✅ Login exitoso\n');
 
@@ -287,7 +288,7 @@ class EmployeeProfileCollector {
             );
 
             // Esperar un poco más para asegurar que todos los módulos terminaron de renderizar
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await this.page.waitForTimeout(2000);
 
             // DEBUG: Ver cuántas tarjetas hay
             const cardCount = await this.page.evaluate(() => document.querySelectorAll('div[onclick*="showTab"]').length);
@@ -310,7 +311,7 @@ class EmployeeProfileCollector {
             });
 
             console.log('  ✅ Click en módulo users');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             // PASO 2: Esperar a que cargue el contenido del módulo con la tabla de usuarios
             console.log('  📌 Esperando tabla de usuarios...');
@@ -330,7 +331,7 @@ class EmployeeProfileCollector {
                 );
 
                 console.log('  ✅ Tabla de usuarios cargada');
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await this.page.waitForTimeout(1000);
             } catch (timeoutError) {
                 // Si hace timeout, intentar abrir el modal del primer usuario manualmente
                 console.warn('  ⚠️ Timeout cargando tabla. Intentando abrir modal directamente...');
@@ -452,7 +453,7 @@ class EmployeeProfileCollector {
         try {
             // Click en tab "work" (Antecedentes Laborales)
             await this.page.click(`button.file-tab[onclick*="showFileTab('work'"]`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que el tab se active
+            await this.page.waitForTimeout(500); // Esperar a que el tab se active
 
             // Click en botón "Agregar" usando JS nativo
             await this.page.evaluate(() => {
@@ -460,18 +461,18 @@ class EmployeeProfileCollector {
                 if (btn) btn.click();
                 else throw new Error('Botón addWorkHistory no encontrado');
             });
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await this.page.waitForTimeout(200);
 
             // Llenar formulario
-            await this.page.type('#company', `${this.TEST_PREFIX} Empresa Puppeteer ${Date.now()}`);
-            await this.page.type('#position', 'Desarrollador Senior');
-            await this.page.type('#startDate', '2020-01-01');
-            await this.page.type('#endDate', '2023-12-31');
-            await this.page.type('#description', 'Desarrollo de aplicaciones web con Node.js y PostgreSQL');
+            await this.page.fill('#company', `${this.TEST_PREFIX} Empresa Puppeteer ${Date.now()}`);
+            await this.page.fill('#position', 'Desarrollador Senior');
+            await this.page.fill('#startDate', '2020-01-01');
+            await this.page.fill('#endDate', '2023-12-31');
+            await this.page.fill('#description', 'Desarrollo de aplicaciones web con Node.js y PostgreSQL');
 
             // Submit formulario
             await this.page.click('#workHistoryForm button[type="submit"]');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             console.log('✅ Work History agregado exitosamente');
             await log.update({ status: 'pass', duration_ms: Date.now() - startTime, completed_at: new Date() });
@@ -510,7 +511,7 @@ class EmployeeProfileCollector {
         try {
             // Click en tab "family" (Grupo Familiar)
             await this.page.click(`button.file-tab[onclick*="showFileTab('family'"]`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que el tab se active
+            await this.page.waitForTimeout(500); // Esperar a que el tab se active
 
             // Click en botón "Agregar" usando JS nativo
             await this.page.evaluate(() => {
@@ -518,16 +519,16 @@ class EmployeeProfileCollector {
                 if (btn) btn.click();
                 else throw new Error('Botón addFamilyMember no encontrado');
             });
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await this.page.waitForTimeout(1000);
 
-            await this.page.type('#familyName', `${this.TEST_PREFIX} María`);
-            await this.page.type('#familySurname', 'Pérez');
-            await this.page.select('#relationship', 'spouse');
-            await this.page.type('#familyBirthDate', '1990-05-15');
-            await this.page.type('#familyDni', '35123456');
+            await this.page.fill('#familyName', `${this.TEST_PREFIX} María`);
+            await this.page.fill('#familySurname', 'Pérez');
+            await this.page.selectOption('#relationship', 'spouse');
+            await this.page.fill('#familyBirthDate', '1990-05-15');
+            await this.page.fill('#familyDni', '35123456');
 
             await this.page.click('#familyMemberForm button[type="submit"]');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             console.log('✅ Family Member agregado exitosamente');
             await log.update({ status: 'pass', duration_ms: Date.now() - startTime, completed_at: new Date() });
@@ -556,7 +557,7 @@ class EmployeeProfileCollector {
         try {
             // Click en tab "personal" (donde está Education)
             await this.page.click(`button.file-tab[onclick*="showFileTab('personal'"]`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que el tab se active
+            await this.page.waitForTimeout(500); // Esperar a que el tab se active
 
             // Click en botón "Agregar" usando JS nativo
             await this.page.evaluate(() => {
@@ -564,16 +565,16 @@ class EmployeeProfileCollector {
                 if (btn) btn.click();
                 else throw new Error('Botón addEducation no encontrado');
             });
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await this.page.waitForTimeout(1000);
 
-            await this.page.select('#educationType', 'university');
-            await this.page.type('#institution', `${this.TEST_PREFIX} Universidad Nacional`);
-            await this.page.type('#degree', 'Ingeniería en Sistemas');
-            await this.page.select('#status', 'completed');
-            await this.page.type('#graduationYear', '2019');
+            await this.page.selectOption('#educationType', 'university');
+            await this.page.fill('#institution', `${this.TEST_PREFIX} Universidad Nacional`);
+            await this.page.fill('#degree', 'Ingeniería en Sistemas');
+            await this.page.selectOption('#status', 'completed');
+            await this.page.fill('#graduationYear', '2019');
 
             await this.page.click('#educationForm button[type="submit"]');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             console.log('✅ Education agregada exitosamente');
             await log.update({ status: 'pass', duration_ms: Date.now() - startTime, completed_at: new Date() });
@@ -602,7 +603,7 @@ class EmployeeProfileCollector {
         try {
             // Click en tab "medical" (Antecedentes Médicos)
             await this.page.click(`button.file-tab[onclick*="showFileTab('medical'"]`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que el tab se active
+            await this.page.waitForTimeout(500); // Esperar a que el tab se active
 
             // Click en botón "Agregar" usando JS nativo
             await this.page.evaluate(() => {
@@ -610,14 +611,14 @@ class EmployeeProfileCollector {
                 if (btn) btn.click();
                 else throw new Error('Botón addChronicCondition no encontrado');
             });
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await this.page.waitForTimeout(200);
 
-            await this.page.select('#conditionType', 'hypertension');
-            await this.page.select('#conditionSeverity', 'moderate');
-            await this.page.type('#diagnosisDate', '2018-03-20');
+            await this.page.selectOption('#conditionType', 'hypertension');
+            await this.page.selectOption('#conditionSeverity', 'moderate');
+            await this.page.fill('#diagnosisDate', '2018-03-20');
 
             await this.page.click('#chronicConditionForm button[type="submit"]');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             console.log('✅ Chronic Condition agregada exitosamente');
             await log.update({ status: 'pass', duration_ms: Date.now() - startTime, completed_at: new Date() });
@@ -646,7 +647,7 @@ class EmployeeProfileCollector {
         try {
             // Click en tab "medical"
             await this.page.click(`button.file-tab[onclick*="showFileTab('medical'"]`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que el tab se active
+            await this.page.waitForTimeout(500); // Esperar a que el tab se active
 
             // Click en botón "Agregar" usando JS nativo
             await this.page.evaluate(() => {
@@ -654,14 +655,14 @@ class EmployeeProfileCollector {
                 if (btn) btn.click();
                 else throw new Error('Botón addMedication no encontrado');
             });
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await this.page.waitForTimeout(1000);
 
-            await this.page.type('#medicationName', `${this.TEST_PREFIX} Paracetamol`);
-            await this.page.type('#medicationDose', '500mg');
-            await this.page.select('#medicationFrequency', 'three_times_daily');
+            await this.page.fill('#medicationName', `${this.TEST_PREFIX} Paracetamol`);
+            await this.page.fill('#medicationDose', '500mg');
+            await this.page.selectOption('#medicationFrequency', 'three_times_daily');
 
             await this.page.click('#medicationForm button[type="submit"]');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             console.log('✅ Medication agregado exitosamente');
             await log.update({ status: 'pass', duration_ms: Date.now() - startTime, completed_at: new Date() });
@@ -690,7 +691,7 @@ class EmployeeProfileCollector {
         try {
             // Click en tab "medical"
             await this.page.click(`button.file-tab[onclick*="showFileTab('medical'"]`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que el tab se active
+            await this.page.waitForTimeout(500); // Esperar a que el tab se active
 
             // Click en botón "Agregar" usando JS nativo
             await this.page.evaluate(() => {
@@ -698,13 +699,13 @@ class EmployeeProfileCollector {
                 if (btn) btn.click();
                 else throw new Error('Botón addAllergy no encontrado');
             });
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await this.page.waitForTimeout(200);
 
-            await this.page.select('#allergyType', 'environmental');
-            await this.page.type('#allergen', `${this.TEST_PREFIX} Polen`);
+            await this.page.selectOption('#allergyType', 'environmental');
+            await this.page.fill('#allergen', `${this.TEST_PREFIX} Polen`);
 
             await this.page.click('#allergyForm button[type="submit"]');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             console.log('✅ Allergy agregada exitosamente');
             await log.update({ status: 'pass', duration_ms: Date.now() - startTime, completed_at: new Date() });
@@ -733,7 +734,7 @@ class EmployeeProfileCollector {
         try {
             // Click en tab "medical"
             await this.page.click(`button.file-tab[onclick*="showFileTab('medical'"]`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que el tab se active
+            await this.page.waitForTimeout(500); // Esperar a que el tab se active
 
             // Click en botón "Agregar" usando JS nativo
             await this.page.evaluate(() => {
@@ -741,14 +742,14 @@ class EmployeeProfileCollector {
                 if (btn) btn.click();
                 else throw new Error('Botón addActivityRestriction no encontrado');
             });
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await this.page.waitForTimeout(200);
 
-            await this.page.select('#restrictionType', 'physical');
-            await this.page.type('#restrictedActivity', `${this.TEST_PREFIX} No levantar objetos pesados`);
-            await this.page.select('#restrictionDuration', 'temporary');
+            await this.page.selectOption('#restrictionType', 'physical');
+            await this.page.fill('#restrictedActivity', `${this.TEST_PREFIX} No levantar objetos pesados`);
+            await this.page.selectOption('#restrictionDuration', 'temporary');
 
             await this.page.click('#activityRestrictionForm button[type="submit"]');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             console.log('✅ Activity Restriction agregada exitosamente');
             await log.update({ status: 'pass', duration_ms: Date.now() - startTime, completed_at: new Date() });
@@ -777,7 +778,7 @@ class EmployeeProfileCollector {
         try {
             // Click en tab "medical"
             await this.page.click(`button.file-tab[onclick*="showFileTab('medical'"]`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que el tab se active
+            await this.page.waitForTimeout(500); // Esperar a que el tab se active
 
             // Click en botón "Agregar" usando JS nativo
             await this.page.evaluate(() => {
@@ -785,13 +786,13 @@ class EmployeeProfileCollector {
                 if (btn) btn.click();
                 else throw new Error('Botón addWorkRestriction no encontrado');
             });
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await this.page.waitForTimeout(200);
 
-            await this.page.type('#allowedTasks', `${this.TEST_PREFIX} Trabajo administrativo, tareas livianas`);
-            await this.page.type('#restrictedTasks', 'Levantar objetos pesados, trabajos en altura');
+            await this.page.fill('#allowedTasks', `${this.TEST_PREFIX} Trabajo administrativo, tareas livianas`);
+            await this.page.fill('#restrictedTasks', 'Levantar objetos pesados, trabajos en altura');
 
             await this.page.click('#workRestrictionForm button[type="submit"]');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             console.log('✅ Work Restriction agregada exitosamente');
             await log.update({ status: 'pass', duration_ms: Date.now() - startTime, completed_at: new Date() });
@@ -820,7 +821,7 @@ class EmployeeProfileCollector {
         try {
             // Click en tab "medical"
             await this.page.click(`button.file-tab[onclick*="showFileTab('medical'"]`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que el tab se active
+            await this.page.waitForTimeout(500); // Esperar a que el tab se active
 
             // Click en botón "Agregar" usando JS nativo
             await this.page.evaluate(() => {
@@ -828,14 +829,14 @@ class EmployeeProfileCollector {
                 if (btn) btn.click();
                 else throw new Error('Botón addVaccination no encontrado');
             });
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await this.page.waitForTimeout(200);
 
-            await this.page.select('#vaccineType', 'covid19');
-            await this.page.type('#vaccineDate', '2023-06-15');
-            await this.page.select('#vaccinedose', '1');
+            await this.page.selectOption('#vaccineType', 'covid19');
+            await this.page.fill('#vaccineDate', '2023-06-15');
+            await this.page.selectOption('#vaccinedose', '1');
 
             await this.page.click('#vaccinationForm button[type="submit"]');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             console.log('✅ Vaccination agregada exitosamente');
             await log.update({ status: 'pass', duration_ms: Date.now() - startTime, completed_at: new Date() });
@@ -864,7 +865,7 @@ class EmployeeProfileCollector {
         try {
             // Click en tab "medical"
             await this.page.click(`button.file-tab[onclick*="showFileTab('medical'"]`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que el tab se active
+            await this.page.waitForTimeout(500); // Esperar a que el tab se active
 
             // Click en botón "Agregar" usando JS nativo
             await this.page.evaluate(() => {
@@ -872,14 +873,14 @@ class EmployeeProfileCollector {
                 if (btn) btn.click();
                 else throw new Error('Botón addMedicalExam no encontrado');
             });
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await this.page.waitForTimeout(200);
 
-            await this.page.select('#examType', 'preocupacional');
-            await this.page.type('#examDate', '2023-01-15');
-            await this.page.select('#examResult', 'apto');
+            await this.page.selectOption('#examType', 'preocupacional');
+            await this.page.fill('#examDate', '2023-01-15');
+            await this.page.selectOption('#examResult', 'apto');
 
             await this.page.click('#medicalExamForm button[type="submit"]');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await this.page.waitForTimeout(3000);
 
             console.log('✅ Medical Exam agregado exitosamente');
             await log.update({ status: 'pass', duration_ms: Date.now() - startTime, completed_at: new Date() });

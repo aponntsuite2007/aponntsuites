@@ -434,7 +434,7 @@ router.put('/config/:companyId', async (req, res) => {
     } = req.body;
 
     // Validar permisos de empresa
-    if (req.user.company_id && req.user.company_id != companyId) {
+    if (req.user.companyId && req.user.companyId != companyId) {
       return res.status(403).json({
         success: false,
         error: 'No tiene permisos para modificar la configuración de esta empresa'

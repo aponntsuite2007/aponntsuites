@@ -83,9 +83,10 @@ function renderLicensingInterface() {
                     <h2 style="color: #0066CC; margin: 0; font-size: 2em;">🏢 Administración de Licencias</h2>
                     <p style="color: #666; margin: 5px 0 0 0;">Gestionar empresas licenciadas y sus módulos contratados</p>
                 </div>
-                <button onclick="showAddCompanyModal()" 
-                        style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
-                    ➕ Nueva Empresa
+                <!-- Botón Nueva Empresa ELIMINADO - Funcionalidad deprecada -->
+                <button disabled
+                        style="background: #ccc; color: #666; padding: 12px 20px; border: none; border-radius: 8px; cursor: not-allowed; font-weight: 600;">
+                    ➕ Nueva Empresa (Deprecado)
                 </button>
             </div>
 
@@ -112,96 +113,7 @@ function renderLicensingInterface() {
             </div>
         </div>
 
-        <!-- Modal para agregar empresa -->
-        <div id="addCompanyModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-            <div class="modal-content" style="position: relative; margin: 5% auto; width: 90%; max-width: 800px; background: white; border-radius: 12px; max-height: 85vh; overflow-y: auto;">
-                <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0; color: #0066CC;">➕ Agregar Nueva Empresa</h3>
-                    <button onclick="closeAddCompanyModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
-                </div>
-                <div class="modal-body" style="padding: 30px;">
-                    <form id="addCompanyForm">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Nombre de la Empresa *</label>
-                                <input type="text" id="companyName" required style="width: 100%; padding: 12px; border: 2px solid #e0e7ff; border-radius: 6px;">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Slug (Identificador) *</label>
-                                <input type="text" id="companySlug" required style="width: 100%; padding: 12px; border: 2px solid #e0e7ff; border-radius: 6px;">
-                            </div>
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email de Contacto *</label>
-                                <input type="email" id="contactEmail" required style="width: 100%; padding: 12px; border: 2px solid #e0e7ff; border-radius: 6px;">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Teléfono</label>
-                                <input type="text" id="contactPhone" style="width: 100%; padding: 12px; border: 2px solid #e0e7ff; border-radius: 6px;">
-                            </div>
-                        </div>
-
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Dirección de Facturación</label>
-                            <textarea id="billingAddress" rows="3" style="width: 100%; padding: 12px; border: 2px solid #e0e7ff; border-radius: 6px; resize: vertical;"></textarea>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tipo de Licencia</label>
-                                <select id="licenseType" style="width: 100%; padding: 12px; border: 2px solid #e0e7ff; border-radius: 6px;">
-                                    <option value="standard">Estándar</option>
-                                    <option value="premium">Premium</option>
-                                    <option value="enterprise">Enterprise</option>
-                                    <option value="custom">Personalizada</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Moneda de Facturación</label>
-                                <select id="billingCurrency" style="width: 100%; padding: 12px; border: 2px solid #e0e7ff; border-radius: 6px;">
-                                    <option value="ARS">Peso Argentino (ARS)</option>
-                                    <option value="USD">Dólar Americano (USD)</option>
-                                    <option value="EUR">Euro (EUR)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div style="margin-bottom: 30px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #0066CC;">🌍 Idioma Predeterminado de la Licencia</label>
-                            <select id="defaultLanguage" style="width: 100%; padding: 12px; border: 2px solid #e0e7ff; border-radius: 6px; background: #f8faff;">
-                                <option value="es">🇪🇸 Español</option>
-                                <option value="en">🇺🇸 English</option>
-                                <option value="pt">🇧🇷 Português</option>
-                                <option value="de">🇩🇪 Deutsch</option>
-                                <option value="it">🇮🇹 Italiano</option>
-                                <option value="fr">🇫🇷 Français</option>
-                            </select>
-                            <div style="font-size: 0.8em; color: #666; margin-top: 5px;">Este será el idioma por defecto para todos los usuarios de esta empresa. Los usuarios podrán cambiarlo individualmente.</div>
-                        </div>
-
-                        <div style="margin-bottom: 30px;">
-                            <h4 style="margin-bottom: 15px; color: #0066CC;">📦 Módulos Contratados</h4>
-                            <div id="moduleSelection" style="max-height: 300px; overflow-y: auto; border: 2px solid #e0e7ff; border-radius: 6px; padding: 15px;">
-                                ${renderModuleSelection()}
-                            </div>
-                        </div>
-
-                        <div style="display: flex; gap: 15px; justify-content: flex-end;">
-                            <button type="button" onclick="closeAddCompanyModal()" 
-                                    style="padding: 12px 25px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                                Cancelar
-                            </button>
-                            <button type="submit" 
-                                    style="padding: 12px 25px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                                💾 Crear Empresa
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        <!-- Modal de agregar empresa ELIMINADO - Ya no se usa -->
 
         <style>
         .company-card {
@@ -274,9 +186,10 @@ function renderCompaniesView() {
                 <div style="font-size: 4em; margin-bottom: 20px;">🏢</div>
                 <h3 style="color: #0066CC; margin-bottom: 15px;">No hay empresas registradas</h3>
                 <p style="color: #666; margin-bottom: 25px;">Comience agregando la primera empresa licenciada al sistema</p>
-                <button onclick="showAddCompanyModal()" 
-                        style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 15px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1.1em;">
-                    ➕ Agregar Primera Empresa
+                <!-- Botón Agregar Primera Empresa ELIMINADO - Funcionalidad deprecada -->
+                <button disabled
+                        style="background: #ccc; color: #666; padding: 15px 25px; border: none; border-radius: 8px; cursor: not-allowed; font-weight: 600; font-size: 1.1em;">
+                    ➕ Agregar Primera Empresa (Deprecado)
                 </button>
             </div>
         `;
@@ -506,21 +419,17 @@ function switchLicensingView(view) {
     });
 }
 
+// FUNCIÓN DEPRECADA - Modal eliminado
 function showAddCompanyModal() {
-    const modal = document.getElementById('addCompanyModal');
-    if (modal) {
-        modal.style.setProperty('display', 'block', 'important');
-        document.body.style.overflow = 'hidden';
-    }
+    console.warn('⚠️ showAddCompanyModal() deprecada - Modal eliminado');
+    alert('Esta funcionalidad ha sido deprecada. Por favor, use el panel administrativo para gestionar empresas.');
+    return false;
 }
 
+// FUNCIÓN DEPRECADA - Modal eliminado
 function closeAddCompanyModal() {
-    const modal = document.getElementById('addCompanyModal');
-    if (modal) {
-        modal.style.setProperty('display', 'none', 'important');
-        document.body.style.overflow = 'auto';
-        document.getElementById('addCompanyForm').reset();
-    }
+    console.warn('⚠️ closeAddCompanyModal() deprecada - Modal eliminado');
+    return false;
 }
 
 function setupCompanySlugGeneration() {

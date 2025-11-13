@@ -1,0 +1,386 @@
+🔍 [DEBUG] DATABASE_URL exists? false
+🔍 [DEBUG] DATABASE_URL value: NOT SET
+🔍 [DEBUG] NODE_ENV: development
+💻 Conectando a PostgreSQL local
+🐘 Configuración PostgreSQL - Sistema Optimizado
+
+
+================================================================================
+🧪 TEST COMPLETO - FLUJO PHASE 4
+================================================================================
+
+
+📋 Paso 1/6: Inicializando Phase4TestOrchestrator (CON database)...
+   ✅ Orchestrator creado
+
+📋 Paso 2/6: Iniciando sistema completo...
+================================================================================
+🔄 CICLO INICIADO - PHASE4-1762983709859
+================================================================================
+--------------------------------------------------------------------------------
+
+🚀 [WEBSOCKET SERVER] Iniciando servidor...
+📁 [WEBSOCKET] Directorio de tickets: C:\Bio\sistema_asistencia_biometrico\backend\.claude-repairs
+👀 [WEBSOCKET] Watcher activo para: C:\Bio\sistema_asistencia_biometrico\backend\.claude-repairs/*.response.md
+✅ [WEBSOCKET SERVER] Escuchando en ws://localhost:8765
+📁 [WEBSOCKET SERVER] Monitoreando tickets en: C:\Bio\sistema_asistencia_biometrico\backend\.claude-repairs
+
+
+🔌 [WEBSOCKET] Conectando a ws://localhost:8765...
+✅ [WEBSOCKET] Cliente conectado desde ::1
+✅ [WEBSOCKET] Conectado a Claude Code (real)
+📨 [WEBSOCKET] Mensaje recibido: connection_success
+✅ [OLLAMA] Local disponible
+🧠 [REGISTRY] Inicializando Sistema de Auto-Conocimiento...
+📊 [REGISTRY] Cargando 56 módulos desde BD...
+✅ [REGISTRY] 56 módulos cargados desde BD
+✅ [REGISTRY] 56 módulos registrados
+🧠 [UNIFIED-KB] Servicio de Conocimiento Unificado inicializando...
+🚀 [UNIFIED-KB] Iniciando carga de conocimiento...
+
+📄 [UNIFIED-KB] Cargando metadata extendida...
+🤖 [REPAIR AGENT] Autonomous Repair Agent inicializado con UnifiedKnowledge
+   ✅ Sistema iniciado
+
+📋 Paso 3/6: Parámetros del test:
+   • Módulo: users
+   • Empresa: isi (ID: 11)
+   • Usuario: soporte
+   • Ciclos: 1
+   • Navegador: VISIBLE (slowMo: 100ms)
+
+📋 Paso 4/6: Ejecutando runModuleTest() con CRUD completo...
+   (Observa el navegador Chromium que debería abrirse)
+
+--------------------------------------------------------------------------------
+================================================================================
+================================================================================
+
+
+🔥🔥🔥 ===== MÉTODO LOGIN() EJECUTÁNDOSE (USUARIO SOPORTE) ===== 🔥🔥🔥
+🔥 Empresa: isi
+🔥 Usuario: soporte (usuario soporte del sistema - oculto en UI)
+🔥 Password: admin123
+
+   Versión metadata: 2.0.0
+   Generado: 2025-11-02T21:24:57.934Z
+   Total módulos en archivo: 59
+   ✓ document-expiration v1.0.0
+   ✓ medical-exams v1.0.0
+   ✓ work-history v1.0.0
+   ✓ inbox v3.0.1
+   ✓ notifications-enterprise v3.0.1
+   ✓ biometric-consent vundefined
+   ✓ professional-biometric-registration vundefined
+   ✓ real-biometric-enterprise vundefined
+   ✓ facial-biometric vundefined
+   ✓ users v1.0.1
+   ✓ companies vundefined
+   ✓ settings vundefined
+   ✓ dashboard vundefined
+   ✓ support-base vundefined
+   ✓ legal-dashboard vundefined
+   ✓ attendance v1.0.1
+   ✓ kiosks vundefined
+   ✓ kiosks-apk vundefined
+   ✓ biometric-dashboard vundefined
+   ✓ medical-dashboard vundefined
+   ✓ medical vundefined
+   ✓ support-ai vundefined
+   ✓ vacation-management vundefined
+   ✓ ai-assistant vundefined
+   ✓ google-maps-integration vundefined
+   ✓ notifications-complete vundefined
+   ✓ partners-medical vundefined
+   ✓ temporary-access vundefined
+   ✓ permissions-test vundefined
+   ✓ network vundefined
+   ✓ departments v1.0.1
+   ✓ shifts v1.0.1
+   ✓ biometric-enterprise vundefined
+   ✓ vacation vundefined
+   ✓ legal vundefined
+   ✓ payroll-liquidation vundefined
+   ✓ art-management vundefined
+   ✓ document-management vundefined
+   ✓ training-management vundefined
+   ✓ compliance-dashboard vundefined
+   ✓ visitors vundefined
+   ✓ access-control vundefined
+   ✓ clientes vundefined
+   ✓ facturacion vundefined
+   ✓ plantillas-fiscales vundefined
+   ✓ vendors vundefined
+   ✓ partners vundefined
+   ✓ auditor vundefined
+   ✓ knowledge-base vundefined
+   ✓ emotional-analysis vundefined
+   ✓ psychological-assessment vundefined
+   ✓ employee-map vundefined
+   ✓ job-postings vundefined
+   ✓ sanctions-management vundefined
+   ✓ licensing-management vundefined
+   ✓ sla-tracking vundefined
+   ✓ resource-center vundefined
+   ✓ audit-reports vundefined
+   ✓ terms-conditions vundefined
+
+💰 [UNIFIED-KB] Cargando datos comerciales...
+   Módulos comerciales en BD: 56
+
+🤖 [UNIFIED-KB] Sincronizando con Assistant KB...
+
+📊 [UNIFIED-KB] Cargando health status...
+   Health status cargado para 2 módulos
+
+📋 [UNIFIED-KB] Construyendo índice de business rules...
+   ✓ 7 business rules indexadas
+
+🔗 [UNIFIED-KB] Construyendo mapa de integraciones...
+   ✓ 5 módulos con integraciones
+
+✅ [UNIFIED-KB] Inicialización completada
+   📦 Módulos cargados: 59
+   📋 Business Rules: 7
+   🔗 Integraciones: 5
+   📊 Health Indicators: 2
+
+🔄 [UNIFIED-KB] Auto-sync habilitado (cada 60s)
+📚 [REPAIR AGENT] UnifiedKnowledge inicializado correctamente
+
+📍 PASO 1: Seleccionando empresa "isi" del dropdown
+   🔍 Esperando dropdown #companySelect...
+   ⏱️ Esperando 1 segundo a que se carguen las empresas...
+   ✅ Dropdown encontrado, seleccionando "isi"...
+   ⏱️ Esperando 5 segundos a que aparezca el campo de usuario...
+   ✅ Paso 1 completado
+
+📍 PASO 2: Ingresando usuario "soporte"
+   🔍 Buscando campo de usuario visible...
+   ⏱️ Esperando que el campo sea visible...
+   ✅ Campo encontrado, escribiendo usuario...
+   ⌨️ Presionando Enter...
+   ⏱️ Esperando 3 segundos...
+   ✅ Paso 2 completado
+
+📍 PASO 3: Ingresando password "admin123"
+   🔍 Buscando campo de password...
+   ⏱️ Esperando que el campo sea visible...
+   ✅ Campo encontrado, escribiendo password...
+   ⌨️ Presionando Enter...
+   ✅ Paso 3 completado
+
+⏱️ Esperando 3 segundos a que cargue el dashboard...
+✅✅✅ LOGIN COMPLETADO EXITOSAMENTE ✅✅✅
+
+🎯 [ORCHESTRATOR] Intelligent Testing Orchestrator inicializado
+
+🔄 [ORCHESTRATOR] Auto-registrando collectors...
+
+📝 [ORCHESTRATOR] Registrando collector: employee_profile
+📝 [ORCHESTRATOR] Registrando collector: attendance
+📝 [ORCHESTRATOR] Registrando collector: users
+📝 [ORCHESTRATOR] Registrando collector: reports
+📝 [ORCHESTRATOR] Registrando collector: departments
+📝 [ORCHESTRATOR] Registrando collector: shifts
+📝 [ORCHESTRATOR] Registrando collector: biometric_devices
+📝 [ORCHESTRATOR] Registrando collector: medical-dashboard
+📝 [ORCHESTRATOR] Registrando collector: kiosks
+✅ 9 collectors registrados
+
+  🔧 [USERS] Base URL: http://localhost:9999
+
+🧪 [USERS] Iniciando tests de módulo...
+
+  ✅ Usando navegador externo ya abierto (skip login)
+
+📂 Navegando al módulo de Usuarios...
+
+✅ Módulo de Usuarios cargado
+
+
+📋 Testeando categoría: user_crud...
+
+🧪 TEST 1: User CRUD (CREATE con modal de Agregar Usuario)...
+
+   📋 Paso 1: Abriendo modal de Agregar Usuario...
+   ✅ Click en botón Agregar Usuario
+   ✅ Modal de agregar usuario abierto correctamente
+   📋 Paso 2: Llenando formulario con datos de prueba...
+   ✅ Escrito "[TEST-USERS] Usuario 1762983730358" en campo Nombre
+   ✅ Escrito "test1762983730358@test.com" en campo Email
+   ✅ Escrito "EMP1762983730358" en campo Legajo
+   ✅ Escrito "test123456" en campo Password
+   ✅ Departamento seleccionado: 6
+   ✅ Formulario completado
+   📋 Paso 3: Guardando usuario...
+   ✅ Click en botón Guardar
+   ✅ Usuario guardado
+   ✅ Modal cerrado automáticamente (guardado exitoso)
+   📋 Paso 4: Verificando que el usuario aparece en la lista...
+   ✅ Click en botón Recargar Lista
+   ⚠️ Usuario test1762983730358@test.com NO encontrado en la lista (puede estar en otra página)
+✅ TEST 1 PASSED - Usuario creado exitosamente
+
+
+📋 Testeando categoría: user_list_filters...
+
+🧪 TEST 2: User List & Filters...
+
+   ✅ Click en botón Lista de Usuarios
+   📊 Total usuarios antes de filtrar: 25
+✅ TEST 2 PASSED - Listado y filtros funcionan
+
+
+📋 Testeando categoría: user_permissions...
+
+🧪 TEST 3: User Permissions...
+
+   ✅ Click en botón Agregar Usuario
+   📊 Roles disponibles: employee, supervisor, admin
+   ✅ Click en botón Cerrar
+✅ TEST 3 PASSED - Permisos y roles validados
+
+
+📋 Testeando categoría: user_search...
+
+🧪 TEST 4: User Search...
+
+   ✅ Click en botón Lista de Usuarios
+   ✅ Escrito "test" en búsqueda por nombre
+   📊 Resultados de búsqueda: 
+   ✅ Paginación detectada
+   ✅ Click en botón Limpiar Filtros
+✅ TEST 4 PASSED - Búsqueda funcionando
+
+
+📋 Testeando categoría: user_stats...
+
+🧪 TEST 5: User Stats...
+
+   ✅ Click en botón Lista de Usuarios
+   📊 Total usuarios: 129
+   📊 Usuarios activos: 129
+   📊 Administradores: 19
+✅ TEST 5 PASSED - Estadísticas correctas
+
+
+📋 Testeando categoría: user_view_modal_tabs...
+
+🧪 TEST 6: User View Modal Tabs Navigation...
+
+   ✅ Click en botón Lista de Usuarios
+   📋 Usuario seleccionado para test: 7aaf3e72-512c-44a8-9385-b6d1da946fde
+   ✅ Click en botón Ver Usuario
+   ✅ Modal abierto correctamente
+
+   📂 Navegando a tab: Administración...
+   ✅ Tab "Administración" visible correctamente
+
+   📂 Navegando a tab: Datos Personales...
+   ✅ Tab "Datos Personales" visible correctamente
+
+   📂 Navegando a tab: Antecedentes Laborales...
+   ✅ Tab "Antecedentes Laborales" visible correctamente
+
+   📂 Navegando a tab: Grupo Familiar...
+   ✅ Tab "Grupo Familiar" visible correctamente
+
+   📂 Navegando a tab: Antecedentes Médicos...
+   ✅ Tab "Antecedentes Médicos" visible correctamente
+
+   📂 Navegando a tab: Asistencias/Permisos...
+   ✅ Tab "Asistencias/Permisos" visible correctamente
+
+   📂 Navegando a tab: Disciplinarios...
+   ✅ Tab "Disciplinarios" visible correctamente
+
+   📂 Navegando a tab: Config. Tareas...
+   ✅ Tab "Config. Tareas" visible correctamente
+
+   📂 Navegando a tab: Registro Biométrico...
+   ✅ Tab "Registro Biométrico" visible correctamente
+
+   📊 Resumen de navegación:
+      - Tabs navegadas exitosamente: 9/9
+      - Tabs fallidas: 0
+      - Modal cerrado: Sí
+
+✅ TEST 6 PASSED - Navegación de tabs funcional
+
+
+🧠 [LEARNING] Analizando resultados para aprendizaje...
+
+🧠 [LEARNING] Analizando resultados de ejecución: b75e155a-2059-4333-92a1-96917fb7ac73
+  📊 [LEARNING] Errores a analizar:
+     - Console errors: 0
+     - Page errors: 0
+     - Network errors: 0
+     - TOTAL: 0
+  📊 [LEARNING] Módulos con métricas: 6
+  📊 [LEARNING] Midiendo performance...
+  ✨ [LEARNING] 0 performance insights generados
+  🌱 [LEARNING] Enriqueciendo componentes con conocimiento...
+❌ [KB] Error obteniendo patrones: this.db.query is not a function
+❌ [KB] Error obteniendo estrategias: this.db.query is not a function
+  📚 [LEARNING] Conocimiento de alta confianza:
+    - 0 patrones de error confirmados
+    - 0 estrategias de reparación validadas
+✅ [LEARNING] Análisis completado: {
+  errors_analyzed: 0,
+  patterns_discovered: 0,
+  edge_cases_found: 0,
+  performance_insights: 0,
+  repair_strategies_evaluated: 0
+}
+✅ [LEARNING] Conocimiento capturado:
+   - Patrones de error: 0
+   - Edge cases: 0
+
+============================================================
+📊 RESUMEN - USERS
+============================================================
+✅ PASSED: 6/6
+❌ FAILED: 0/6
+⚠️  WARNINGS: 0/6
+📈 SUCCESS RATE: 100.0%
+============================================================
+
+
+📋 Paso 5/6: Test completado, generando resumen...
+
+================================================================================
+✅✅✅ FLUJO COMPLETO PHASE 4 EJECUTADO ✅✅✅
+================================================================================
+
+📊 RESULTADOS:
+   • Estado: undefined
+   • Tests totales: 0
+   • Tests UI pasados: 0
+   • Tests DB pasados: 0
+   • Tests UI fallidos: 0
+   • Tests DB fallidos: 0
+   • Tickets generados: 0
+
+🎉 Flujo completo Phase 4 verificado exitosamente!
+
+📋 Paso 6/6: Test completado - NAVEGADOR PERMANECERÁ ABIERTO
+   ℹ️  El navegador se quedará abierto para que puedas ver los resultados
+   ℹ️  Presiona Ctrl+C cuando quieras cerrar el navegador y terminar el test
+   ⏸️  Esperando indefinidamente (Ctrl+C para salir)...
+
+
+📊 [UNIFIED-KB] Cargando health status...
+   Health status cargado para 2 módulos
+
+📊 [UNIFIED-KB] Cargando health status...
+   Health status cargado para 2 módulos
+
+📊 [UNIFIED-KB] Cargando health status...
+   Health status cargado para 2 módulos
+
+📊 [UNIFIED-KB] Cargando health status...
+   Health status cargado para 2 módulos
+
+📊 [UNIFIED-KB] Cargando health status...
+   Health status cargado para 2 módulos

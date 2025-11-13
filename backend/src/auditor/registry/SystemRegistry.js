@@ -32,8 +32,14 @@ class SystemRegistry {
 
     console.log('🧠 [REGISTRY] Inicializando Sistema de Auto-Conocimiento...');
 
-    // Cargar registry desde archivo
-    await this.loadFromFile();
+    // Cargar registry desde base de datos (ahora es la fuente principal)
+    await this.loadFromDatabase();
+
+    // Fallback a archivo JSON si la BD falla
+    if (this.modules.size === 0) {
+      console.warn('⚠️  [REGISTRY] BD vacía, intentando cargar desde archivo JSON...');
+      await this.loadFromFile();
+    }
 
     // Auto-detectar endpoints
     await this.autoDetectEndpoints();
@@ -43,6 +49,84 @@ class SystemRegistry {
 
     this.loaded = true;
     console.log(`✅ [REGISTRY] ${this.modules.size} módulos registrados`);
+  }
+
+  /**
+   * Carga módulos desde la base de datos (system_modules)
+   * Esta es ahora la fuente principal de verdad
+   */
+  async loadFromDatabase() {
+    try {
+      const { SystemModule } = this.database;
+
+      // Obtener todos los módulos activos
+      const modules = await SystemModule.findAll({
+        where: { isActive: true },
+        order: [['displayOrder', 'ASC'], ['name', 'ASC']]
+      });
+
+      console.log(`📊 [REGISTRY] Cargando ${modules.length} módulos desde BD...`);
+
+      // Registrar cada módulo
+      for (const mod of modules) {
+        const moduleData = {
+          id: mod.moduleKey,
+          name: mod.name,
+          category: mod.category,
+          version: mod.version,
+          description: mod.description,
+
+          // Características
+          features: mod.features || [],
+          objectives: [], // No existe en BD aún
+
+          // Datos técnicos (no existen en BD aún, se pueden agregar después)
+          files: [],
+          database_tables: [],
+          api_endpoints: [],
+
+          // DEPENDENCIAS - Mapeadas desde BD
+          dependencies: {
+            required: mod.requirements || [],
+            optional: [], // Se puede inferir de integrates_with
+            bundled: mod.bundledModules || [], // Módulos incluidos gratis
+            integrates_with: mod.integratesWith || [],
+            provides_to: mod.providesTo || []
+          },
+
+          // Relaciones (no existen en BD aún)
+          relationships: [],
+
+          // Health indicators (no existen en BD aún)
+          health_indicators: {
+            critical: [],
+            performance: []
+          },
+
+          // Metadata comercial
+          commercial: {
+            is_core: mod.isCore,
+            standalone: !mod.isCore && (!mod.bundledModules || mod.bundledModules.length === 0),
+            base_price: parseFloat(mod.basePrice),
+            bundled_modules: mod.bundledModules || [],
+            available_in: mod.availableIn,
+            suggested_bundles: [], // Se puede calcular dinámicamente
+            enhances_modules: mod.integratesWith || []
+          },
+
+          // Metadata adicional
+          metadata: mod.metadata || {}
+        };
+
+        this.registerModule(moduleData);
+      }
+
+      console.log(`✅ [REGISTRY] ${this.modules.size} módulos cargados desde BD`);
+
+    } catch (error) {
+      console.error('❌ [REGISTRY] Error cargando desde BD:', error.message);
+      console.warn('   Usando fallback a archivo JSON o defaults');
+    }
   }
 
   async loadFromFile() {

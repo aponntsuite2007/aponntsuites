@@ -41,7 +41,7 @@ class BiometricDevicesCollector extends BaseModuleCollector {
     async navigateToBiometricDevicesModule() {
         console.log('\n📂 Navegando al módulo de Dispositivos Biométricos...\n');
         await this.page.waitForSelector('.module-item', { timeout: 10000 });
-        await this.clickElement('button[onclick*="loadModule(\\'biometric_devices\\')"]', 'módulo Dispositivos');
+        await this.clickElement('button[onclick*="loadModule("]', 'módulo Dispositivos');
         await this.page.waitForSelector('#biometric-devices-content', { timeout: 10000 });
         console.log('✅ Módulo de Dispositivos Biométricos cargado\n');
     }

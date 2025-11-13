@@ -16,6 +16,59 @@
             overflow-x: hidden;
         }
 
+        /* Header con botones de acceso */
+        .header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-access {
+            padding: 12px 30px;
+            border: 2px solid white;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-staff {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn-staff:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-partners {
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            color: white;
+            border-color: #ffa726;
+        }
+
+        .btn-partners:hover {
+            background: white;
+            color: #ffa726;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 167, 38, 0.4);
+        }
+
         /* Hero Section con imagen de fondo */
         .hero-section {
             position: relative;
@@ -27,10 +80,10 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            background-image: url('/images/landing-bg.jpg'); /* Aquí va tu imagen de publicidad */
+            background-image: url('/images/landing-bg.jpg');
         }
 
-        /* Overlay oscuro para mejorar legibilidad */
+        /* Overlay oscuro */
         .hero-section::before {
             content: '';
             position: absolute;
@@ -49,150 +102,101 @@
             text-align: center;
             color: white;
             max-width: 1200px;
-            padding: 40px 20px;
+            padding: 80px 40px 40px 40px; /* Espacio para header fijo */
         }
 
         .logo {
-            font-size: 4rem;
+            font-size: 5rem;
             font-weight: bold;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+            letter-spacing: 5px;
         }
 
         .tagline {
-            font-size: 1.5rem;
-            margin-bottom: 50px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            font-size: 2rem;
+            margin-bottom: 60px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-weight: 300;
         }
 
-        /* Botones de acceso */
-        .access-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            margin-bottom: 40px;
+        /* Sección de características */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 80px;
         }
 
-        .access-card {
-            background: rgba(255, 255, 255, 0.95);
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
             padding: 30px;
-            width: 280px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
+            transition: transform 0.3s ease;
         }
 
-        .access-card:hover {
+        .feature-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.15);
         }
 
-        .access-card-icon {
+        .feature-icon {
             font-size: 3rem;
             margin-bottom: 15px;
         }
 
-        .access-card-title {
+        .feature-title {
             font-size: 1.3rem;
             font-weight: bold;
-            color: #333;
             margin-bottom: 10px;
         }
 
-        .access-card-desc {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 20px;
+        .feature-desc {
+            font-size: 0.95rem;
+            opacity: 0.9;
         }
 
-        .access-card-button {
-            width: 100%;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-admin {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-admin:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-        }
-
-        .btn-vendor {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-        }
-
-        .btn-vendor:hover {
-            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
-        }
-
-        .btn-supervisor {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
-
-        .btn-supervisor:hover {
-            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-        }
-
-        .btn-leader {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-        }
-
-        .btn-leader:hover {
-            background: linear-gradient(135deg, #38f9d7 0%, #43e97b 100%);
-        }
-
-        /* Sección de registro de asociados */
-        .partner-section {
-            background: rgba(255, 255, 255, 0.95);
+        /* Link de registro */
+        .register-link {
+            margin-top: 60px;
+            padding: 30px;
+            background: rgba(255, 167, 38, 0.1);
+            border: 2px solid #ffa726;
             border-radius: 15px;
-            padding: 40px;
-            max-width: 600px;
-            margin: 0 auto;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            display: inline-block;
         }
 
-        .partner-section h2 {
-            color: #333;
+        .register-link h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .register-link p {
+            font-size: 1.1rem;
             margin-bottom: 20px;
-            text-align: center;
+            opacity: 0.9;
         }
 
-        .partner-section p {
-            color: #666;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .register-button {
-            width: 100%;
-            padding: 15px;
+        .btn-register {
+            padding: 15px 40px;
             background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 25px;
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        .register-button:hover {
+        .btn-register:hover {
             background: linear-gradient(135deg, #fb8c00 0%, #ffa726 100%);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(255, 167, 38, 0.4);
+            box-shadow: 0 6px 20px rgba(255, 167, 38, 0.4);
         }
 
         /* Footer */
@@ -201,28 +205,39 @@
             z-index: 2;
             text-align: center;
             color: white;
-            padding: 20px;
+            padding: 30px 20px;
             font-size: 0.9rem;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            margin-top: 80px;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-access {
+                width: 100%;
+                text-align: center;
+            }
+
             .logo {
-                font-size: 2.5rem;
+                font-size: 3rem;
             }
 
             .tagline {
-                font-size: 1.2rem;
+                font-size: 1.3rem;
             }
 
-            .access-card {
-                width: 100%;
-                max-width: 350px;
+            .features {
+                grid-template-columns: 1fr;
             }
 
-            .partner-section {
-                margin: 0 20px;
+            .hero-content {
+                padding: 120px 20px 40px 20px;
             }
         }
 
@@ -233,65 +248,81 @@
     </style>
 </head>
 <body>
+    <!-- Header fijo con botones de acceso -->
+    <div class="header">
+        <button class="btn-access btn-staff" onclick="goToLogin('staff')">
+            🏢 Acceso Staff
+        </button>
+        <button class="btn-access btn-partners" onclick="goToLogin('partner')">
+            🤝 Acceso Asociados
+        </button>
+    </div>
+
     <div class="hero-section" id="heroSection">
         <div class="hero-content">
             <!-- Logo y Tagline -->
             <div class="logo">APONNT</div>
             <div class="tagline">Sistema Integral de Gestión Empresarial</div>
 
-            <!-- Botones de Acceso -->
-            <div class="access-buttons">
-                <!-- Vendedores / Asociados / Administradores / Supervisores -->
-                <div class="access-card">
-                    <div class="access-card-icon">💼</div>
-                    <div class="access-card-title">Vendedores & Equipo</div>
-                    <div class="access-card-desc">Vendedores, Administradores y Supervisores</div>
-                    <button class="access-card-button btn-vendor" onclick="goToLogin('vendor')">
-                        Ingresar
-                    </button>
+            <!-- Características -->
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Gestión Multi-Tenant</div>
+                    <div class="feature-desc">Control completo de múltiples empresas desde una sola plataforma</div>
                 </div>
 
-                <!-- Líderes -->
-                <div class="access-card">
-                    <div class="access-card-icon">⭐</div>
-                    <div class="access-card-title">Líderes</div>
-                    <div class="access-card-desc">Gestión de equipos y métricas</div>
-                    <button class="access-card-button btn-leader" onclick="goToLogin('leader')">
-                        Ingresar
-                    </button>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-title">Seguridad Avanzada</div>
+                    <div class="feature-desc">Autenticación biométrica y control de accesos por roles</div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Tiempo Real</div>
+                    <div class="feature-desc">Dashboards y notificaciones instantáneas para decisiones rápidas</div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-title">Inteligencia Artificial</div>
+                    <div class="feature-desc">Asistente IA integrado para soporte y análisis predictivo</div>
                 </div>
             </div>
 
-            <!-- Sección de Registro de Asociados -->
-            <div class="partner-section">
-                <h2>¿Quieres ser Asociado?</h2>
-                <p>Únete a nuestra red de vendedores asociados y empieza a generar ingresos hoy mismo</p>
-                <button class="register-button" onclick="goToPartnerRegister()">
-                    Registrarme como Asociado
-                </button>
+            <!-- Link de registro de asociados -->
+            <div class="register-link">
+                <h3>¿Eres profesional?</h3>
+                <p>Únete como Asociado (Médico, Abogado, Arquitecto, etc.)</p>
+                <a href="/partner-register.html" class="btn-register">
+                    Registrarme como Asociado Profesional
+                </a>
             </div>
 
             <!-- Footer -->
             <div class="footer">
                 <p>&copy; 2025 Aponnt. Todos los derechos reservados.</p>
+                <p style="margin-top: 10px; font-size: 0.85rem; opacity: 0.7;">
+                    Sistema de Gestión Empresarial | Multi-Tenant | Seguridad Enterprise
+                </p>
             </div>
         </div>
     </div>
 
     <script>
-        // Funciones de navegación
-        function goToLogin(role) {
-            // Todos los roles van a panel-administrativo
-            // Los roles se manejan dentro del panel después del login
-            window.location.href = '/panel-administrativo.html';
+        /**
+         * Redirige a panel-administrativo con parámetro de tipo de usuario
+         */
+        function goToLogin(userType) {
+            // Ambos tipos (staff y partner) van a panel-administrativo
+            // El panel detectará el parámetro y mostrará el login correcto
+            window.location.href = `/panel-administrativo.html?userType=${userType}`;
         }
 
-        function goToPartnerRegister() {
-            // Redirige al formulario de registro de asociados
-            window.location.href = '/partner-register.html';
-        }
-
-        // Verificar si la imagen de fondo existe
+        /**
+         * Verificar si la imagen de fondo existe
+         */
         window.addEventListener('load', function() {
             const heroSection = document.getElementById('heroSection');
             const bgImage = new Image();
@@ -309,12 +340,17 @@
             };
         });
 
-        // Efecto parallax suave (opcional)
+        /**
+         * Efecto parallax suave
+         */
         window.addEventListener('scroll', function() {
             const heroSection = document.getElementById('heroSection');
             const scrolled = window.pageYOffset;
             heroSection.style.backgroundPositionY = scrolled * 0.5 + 'px';
         });
+
+        console.log('🏠 [INDEX] Página institucional cargada');
+        console.log('🔐 [INDEX] Accesos disponibles: Staff | Asociados');
     </script>
 </body>
 </html>

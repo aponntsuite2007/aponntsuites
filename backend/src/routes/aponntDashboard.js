@@ -2812,18 +2812,39 @@ router.put('/users/:id', async (req, res) => {
       }
     }
 
-    // Actualizar usuario
-    await user.update({
-      firstName: firstName || user.firstName,
-      lastName: lastName || user.lastName,
-      email: email || user.email,
-      employeeId: employeeId || user.employeeId,
-      phone: phone || user.phone,
-      position: position || user.position,
-      role: role || user.role,
-      departmentId: departmentId !== undefined ? (departmentId ? parseInt(departmentId) : null) : user.department_id,
-      salary: salary !== undefined ? (salary ? parseFloat(salary) : null) : user.salary,
-      is_active: isActive !== undefined ? isActive : user.is_active
+    // Preparar objeto de actualización solo con campos que vienen en req.body
+    const updateData = {};
+
+    console.log('🔧 [DEBUG PUT] req.body recibido:', JSON.stringify(req.body));
+    console.log('🔧 [DEBUG PUT] isActive de req.body:', req.body.isActive, typeof req.body.isActive);
+    console.log('🔧 [DEBUG PUT] allowOutsideRadius de req.body:', req.body.allowOutsideRadius, typeof req.body.allowOutsideRadius);
+
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (email !== undefined) updateData.email = email;
+    if (employeeId !== undefined) updateData.employeeId = employeeId;
+    if (phone !== undefined) updateData.phone = phone;
+    if (position !== undefined) updateData.position = position;
+    if (role !== undefined) updateData.role = role;
+    if (departmentId !== undefined) updateData.departmentId = departmentId ? parseInt(departmentId) : null;
+    if (salary !== undefined) updateData.salary = salary ? parseFloat(salary) : null;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    // Agregar campos adicionales que puedan venir en req.body
+    // ⚠️ FIX BUG #2: La columna en BD es "gps_enabled", NO "allow_outside_radius"
+    if (req.body.allowOutsideRadius !== undefined) updateData.gpsEnabled = req.body.allowOutsideRadius;
+    if (req.body.defaultBranchId !== undefined) updateData.defaultBranchId = req.body.defaultBranchId;
+    if (req.body.authorizedBranches !== undefined) updateData.authorizedBranches = req.body.authorizedBranches;
+
+    console.log('🔧 [DEBUG PUT] updateData preparado:', JSON.stringify(updateData));
+
+    // Actualizar usuario solo con los campos que vinieron en el request
+    await user.update(updateData);
+
+    console.log('🔧 [DEBUG PUT] Usuario después de update:', {
+      isActive: user.isActive,
+      allowOutsideRadius: user.allowOutsideRadius,
+      role: user.role
     });
 
     console.log(`✅ Usuario "${user.firstName} ${user.lastName}" actualizado exitosamente`);

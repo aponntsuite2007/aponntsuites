@@ -17,7 +17,7 @@ router.get('/companies', async (req, res) => {
       WHERE is_active = true
       ORDER BY name
     `);
-    
+
     res.json({
       success: true,
       companies
@@ -47,7 +47,7 @@ router.post('/login', async (req, res) => {
 
     // Buscar usuario por email o usuario
     const user = await sequelize.query(
-      'SELECT * FROM users WHERE (email = ? OR usuario = ?) AND is_active = true AND company_id = ?',
+      'SELECT * FROM users WHERE (email = ? OR usuario = ?) AND "isActive" = true AND company_id = ?',
       {
         replacements: [identifier, identifier, companyId],
         type: sequelize.QueryTypes.SELECT,
@@ -61,11 +61,25 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Verificación de cuenta bloqueada removida por simplicidad
+    // ⚠️ NUEVO: Verificar email antes de permitir login
+    if (!user.email_verified || user.account_status === 'pending_verification') {
+      return res.status(403).json({
+        error: 'Email no verificado',
+        message: 'Debe verificar su email antes de iniciar sesión. Revise su correo electrónico.',
+        can_resend: true,
+        user_id: user.user_id,
+        email: user.email,
+        verification_status: {
+          email_verified: user.email_verified,
+          account_status: user.account_status,
+          verification_pending: user.verification_pending
+        }
+      });
+    }
 
     // Verificar contraseña
     const isMatch = await bcrypt.compare(password, user.password);
-    
+
     if (!isMatch) {
       return res.status(401).json({
         error: 'Credenciales inválidas'
@@ -74,9 +88,9 @@ router.post('/login', async (req, res) => {
 
     // Login exitoso - (lastLogin field removed for compatibility)
 
-    // Obtener datos completos de la empresa
+    // Obtener datos completos de la empresa (incluyendo active_modules)
     const [company] = await sequelize.query(
-      'SELECT company_id, name, slug, legal_name, address, phone, contact_phone, email FROM companies WHERE company_id = ?',
+      'SELECT company_id, name, slug, legal_name, address, phone, contact_phone, email, active_modules FROM companies WHERE company_id = ?',
       {
         replacements: [user.company_id],
         type: sequelize.QueryTypes.SELECT
@@ -392,7 +406,7 @@ router.get('/companies/:companyId/users', async (req, res) => {
     const [users] = await sequelize.query(`
       SELECT user_id, usuario, "firstName", "lastName", email, role
       FROM users
-      WHERE company_id = ? AND is_active = true
+      WHERE company_id = ? AND "isActive" = true
       ORDER BY "firstName", "lastName"
     `, {
       replacements: [parseInt(companyId)]

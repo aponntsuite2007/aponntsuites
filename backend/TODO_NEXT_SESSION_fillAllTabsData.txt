@@ -1,0 +1,199 @@
+═══════════════════════════════════════════════════════════════════════════════
+CONTEXTO: Sistema de Testing E2E - Modal de Usuario
+═══════════════════════════════════════════════════════════════════════════════
+
+PROBLEMA CRÍTICO DESCUBIERTO:
+----------------------------
+
+El test `test-final-fill-all-tabs.js` usa viewUser() que es un modal de SOLO LECTURA:
+❌ Tabs 1-9 del modal viewUser() NO tienen formularios editables
+❌ Solo tienen info cards con botones que abren otros modales
+❌ El test reportaba "campos llenados" pero eran valores hardcodeados (pantomima)
+❌ Ningún dato se guardaba en la base de datos
+
+SOLUCIÓN REAL:
+--------------
+
+Usar editUser(userId) que SÍ tiene formularios editables:
+✅ Modal editUser() tiene campos INPUT/SELECT/TEXTAREA reales
+✅ Ubicación: backend/public/js/modules/users.js líneas 914-1300
+✅ Formulario completo con ~20 campos editables
+
+CAMPOS REALES DEL MODAL editUser():
+-----------------------------------
+
+Información Personal:
+- #editFirstName (text)
+- #editLastName (text)
+- #editEmail (email)
+- #editDni (text)
+- #editBirthDate (date)
+- #editPhone (text)
+- #editAddress (textarea)
+
+Información Laboral:
+- #editEmployeeId (text)
+- #editRole (select: employee, supervisor, admin, medical)
+- #editDepartment (select - carga dinámicamente)
+- #editPosition (text)
+- #editHireDate (date)
+- #editSalary (number)
+
+Contacto Emergencia:
+- #editEmergencyContact (text)
+- #editEmergencyPhone (text)
+
+Configuraciones:
+- #editIsActive (checkbox)
+- #editAllowOutsideRadius (checkbox)
+- #editCanAuthorizeLateArrivals (checkbox)
+- #editAuthorizedDepartmentsList (div con checkboxes dinámicos)
+- #editCanUseMobileApp (checkbox)
+- #editCanUseKiosk (checkbox)
+- #editCanUseAllKiosks (checkbox)
+
+TAREAS PENDIENTES:
+------------------
+
+1. [ ] Crear test-edit-user-real.js que:
+   - Login en sistema
+   - Navega a módulo users
+   - Llama editUser(userId) en vez de viewUser(userId)
+   - Llena TODOS los campos del formulario con datos reales
+   - Click en botón "Guardar Cambios"
+   - Verifica que se guardó en BD mediante SELECT
+   - Reabre modal y verifica que datos persisten
+
+2. [ ] Implementar método fillEditUserForm() en Phase4TestOrchestrator:
+   - await page.fill('#editFirstName', 'Juan Carlos')
+   - await page.fill('#editLastName', 'Pérez López')
+   - await page.fill('#editEmail', 'jperez@test.com')
+   - await page.fill('#editDni', '12345678')
+   - etc... (todos los campos)
+
+3. [ ] Validar que datos se guardan en BD con columnas reales:
+   - firstName, lastName (camelCase)
+   - employeeId, email
+   - dni (NO dni_number)
+   - phone, birthDate, hireDate
+   - role, position, salary
+   - emergencyContact, emergencyPhone
+   - isActive, allowOutsideRadius
+
+4. [ ] Test debe ser LENTO y VISIBLE:
+   - slowMo: 500-1000ms
+   - headless: false
+   - Wait entre cada campo
+   - Screenshots de cada paso
+
+5. [ ] Eliminar archivos test obsoletos (basura):
+   - TEMP-test-simple.js
+   - test-direct-fill.js
+   - Cualquier test que use viewUser() para "llenar"
+
+COMANDOS RÁPIDOS:
+-----------------
+
+# Verificar columnas reales de users
+cd backend && node list-user-columns.js
+
+# Verificar datos de usuario específico
+cd backend && node check-user-data.js
+
+# Servidor (si no está corriendo)
+cd backend && PORT=9998 npm start
+
+COLUMNAS REALES DE BD (tabla users):
+-------------------------------------
+user_id (uuid)
+employeeId (varchar) ← NO employee_id
+firstName (varchar)  ← NO first_name
+lastName (varchar)   ← NO last_name
+email (varchar)
+dni (varchar)        ← NO dni_number
+phone (varchar)
+password (varchar)
+role (enum)
+departmentId (varchar)
+position (varchar)
+salary (numeric)
+hireDate (date)      ← NO hire_date en este nivel
+birthDate (date)     ← NO birth_date en este nivel
+address (text)
+emergencyContact (varchar)
+emergencyPhone (varchar)
+defaultBranchId (uuid)
+allowOutsideRadius (boolean)
+is_active (boolean)
+isActive (boolean)   ← Ambos existen!
+company_id (integer)
+biometric_enrolled (boolean)
+canAuthorizeLateArrivals (boolean)
+canUseMobileApp (boolean)
+canUseKiosk (boolean)
+canUseAllKiosks (boolean)
+authorizedDepartments (jsonb)
+... (100+ columnas más)
+
+EJEMPLO DE TEST CORRECTO:
+--------------------------
+
+```javascript
+// Login
+await orchestrator.login('isi', 'soporte', 'admin123');
+
+// Navegar a users
+await orchestrator.page.evaluate(() => {
+    if (typeof showUsersContent === 'function') showUsersContent();
+});
+await orchestrator.wait(2000);
+
+// ABRIR MODAL DE EDICIÓN (NO viewUser)
+await orchestrator.page.evaluate((uid) => {
+    if (typeof editUser === 'function') editUser(uid);
+}, userId);
+await orchestrator.wait(2000);
+
+// LLENAR FORMULARIO REAL
+await orchestrator.page.fill('#editFirstName', 'TEST NOMBRE');
+await orchestrator.wait(300);
+await orchestrator.page.fill('#editLastName', 'TEST APELLIDO');
+await orchestrator.wait(300);
+await orchestrator.page.fill('#editEmail', 'test@example.com');
+await orchestrator.wait(300);
+await orchestrator.page.fill('#editDni', '99888777');
+await orchestrator.wait(300);
+await orchestrator.page.fill('#editPhone', '1122334455');
+await orchestrator.wait(300);
+await orchestrator.page.fill('#editPosition', 'QA Tester');
+await orchestrator.wait(300);
+await orchestrator.page.fill('#editSalary', '50000');
+await orchestrator.wait(300);
+
+// GUARDAR (buscar botón "Guardar")
+await orchestrator.page.click('button:has-text("Guardar")');
+await orchestrator.wait(2000);
+
+// VERIFICAR EN BD
+const [updated] = await database.sequelize.query(`
+    SELECT "firstName", "lastName", email, dni, phone, position, salary
+    FROM users WHERE user_id = '${userId}'
+`);
+console.log('✅ Datos guardados:', updated[0]);
+```
+
+PRIORIDAD INMEDIATA:
+--------------------
+
+Usuario pidió:
+1. ✅ Arreglar modal (ancho, posición) - HECHO
+2. ❌ Hacer que realmente llene campos - PENDIENTE (usar editUser)
+3. ❌ Que guarde datos en BD - PENDIENTE (submit form)
+4. ❌ Verificable visualmente - PENDIENTE (slowMo mayor)
+
+La solución es:
+- Cambiar de viewUser() a editUser()
+- Llenar formulario real con page.fill()
+- Submit y verificar persistencia
+
+═══════════════════════════════════════════════════════════════════════════════

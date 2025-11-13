@@ -99,9 +99,38 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       defaultValue: 0
     },
+    // Email verification (MANDATORY since 2025-11-01)
+    email_verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'email_verified'
+    },
+    verification_pending: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      field: 'verification_pending'
+    },
+    account_status: {
+      type: DataTypes.ENUM('pending_verification', 'active', 'suspended', 'inactive'),
+      allowNull: false,
+      defaultValue: 'pending_verification',
+      field: 'account_status'
+    },
+    email_verified_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'email_verified_at'
+    },
     status: {
       type: DataTypes.STRING(20),
       defaultValue: 'pending'
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false  // CHANGED: Default to false - activated only after email verification
     },
     approved_at: {
       type: DataTypes.DATE

@@ -1046,8 +1046,10 @@ async function editUser(userId) {
             showUserMessage(`❌ Error: ${error.error || 'Usuario no encontrado'}`, 'error');
             return;
         }
-        
-        const user = await response.json();
+
+        // FIX CRÍTICO: Backend retorna {success: true, user: {...}}
+        const responseData = await response.json();
+        const user = responseData.user || responseData; // Extraer user del wrapper
         
         // Create edit modal
         const modal = document.createElement('div');
@@ -1515,8 +1517,14 @@ async function viewUser(userId) {
             return;
         }
         
-        const user = await response.json();
-        
+        // FIX CRÍTICO: Backend retorna {success: true, user: {...}}
+        const responseData = await response.json();
+        const user = responseData.user || responseData; // Extraer user del wrapper
+
+        console.log('🔍 [DEBUG viewUser] user.isActive:', user.isActive);
+        console.log('🔍 [DEBUG viewUser] user.allowOutsideRadius:', user.allowOutsideRadius);
+        console.log('🔍 [DEBUG viewUser] user completo:', user);
+
         // Fetch biometric photo if available
         // Build biometric photo with expiration info from user fields
         let biometricPhotoHTML = '';
@@ -1671,7 +1679,7 @@ async function viewUser(userId) {
                                     <div class="info-value" id="admin-status">
                                         <span class="status-badge ${user.isActive ? 'active' : 'inactive'}">${user.isActive ? '✅ Activo' : '❌ Inactivo'}</span>
                                     </div>
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="toggleUserStatus('${userId}', ${user.isActive})">${user.isActive ? '🔒 Desactivar' : '✅ Activar'}</button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="toggleUserStatus('${userId}')">${user.isActive ? '🔒 Desactivar' : '✅ Activar'}</button>
                                 </div>
                             </div>
                         </div>
@@ -1685,7 +1693,7 @@ async function viewUser(userId) {
                                     <div class="info-value" id="admin-gps">
                                         <span class="status-badge ${user.allowOutsideRadius ? 'warning' : 'success'}">${user.allowOutsideRadius ? '🌍 Sin restricción GPS' : '📍 Solo área autorizada'}</span>
                                     </div>
-                                    <button class="btn btn-sm btn-outline-warning" onclick="toggleGPSRadius('${userId}', ${user.allowOutsideRadius})">${user.allowOutsideRadius ? '📍 Restringir GPS' : '🌍 Permitir fuera de área'}</button>
+                                    <button class="btn btn-sm btn-outline-warning" onclick="toggleGPSRadius('${userId}')">${user.allowOutsideRadius ? '📍 Restringir GPS' : '🌍 Permitir fuera de área'}</button>
                                 </div>
                                 <div class="info-card">
                                     <div class="info-label">🏢 Sucursal por Defecto:</div>
@@ -3375,24 +3383,40 @@ function assignUserShifts(userId, userName) {
 // Función para cargar turnos disponibles y actuales del usuario
 async function loadShiftsForUser(userId) {
     try {
-        // Cargar turnos disponibles
-        const shiftsResponse = await fetch('/api/shifts');
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+        // Cargar turnos disponibles usando la ruta correcta con API_PREFIX
+        const shiftsResponse = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/shifts'), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
         if (shiftsResponse.ok) {
-            const allShifts = await shiftsResponse.json();
+            const shiftsData = await shiftsResponse.json();
+            const allShifts = shiftsData.shifts || shiftsData || [];
             renderAvailableShiftsForUser(allShifts);
+        } else {
+            console.error('Error al obtener shifts:', shiftsResponse.status);
+            document.getElementById('availableShiftsForUser').innerHTML = '❌ Error cargando turnos disponibles';
         }
-        
+
         // Cargar turnos actuales del usuario
-        const userResponse = await fetch(`/api/users/${userId}`);
+        const userResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
         if (userResponse.ok) {
-            const user = await userResponse.json();
+            const userData = await userResponse.json();
+            const user = userData.user || userData;
             renderCurrentUserShifts(user.shifts || []);
+        } else {
+            console.error('Error al obtener usuario:', userResponse.status);
+            document.getElementById('currentUserShifts').innerHTML = '❌ Error cargando turnos actuales';
         }
-        
+
     } catch (error) {
         console.error('Error cargando turnos:', error);
-        document.getElementById('availableShiftsForUser').innerHTML = '❌ Error cargando turnos disponibles';
-        document.getElementById('currentUserShifts').innerHTML = '❌ Error cargando turnos actuales';
+        document.getElementById('availableShiftsForUser').innerHTML = `❌ Error: ${error.message}`;
+        document.getElementById('currentUserShifts').innerHTML = `❌ Error: ${error.message}`;
     }
 }
 
@@ -7615,103 +7639,117 @@ function updateDocumentStatusIndicators() {
 
 // ===== FUNCIONES PARA LA SOLAPA DE ADMINISTRACIÓN =====
 
-// Toggle user status (active/inactive)
-async function toggleUserStatus(userId, currentStatus) {
-    const action = currentStatus ? 'desactivar' : 'activar';
-    const confirmed = confirm(`¿Estás seguro de que deseas ${action} este usuario?`);
-    
-    if (!confirmed) return;
-    
-    try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                isActive: !currentStatus
-            })
-        });
-        
-        if (response.ok) {
-            showUserMessage(`✅ Usuario ${action}do exitosamente`, 'success');
-            // Refresh current view
-            setTimeout(() => viewUser(userId), 1000);
-        } else {
-            showUserMessage(`❌ Error al ${action} usuario`, 'error');
+// Activar/Desactivar usuario
+async function toggleUserStatus(userId) {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
         }
-    } catch (error) {
-        showUserMessage(`❌ Error: ${error.message}`, 'error');
-    }
-}
+    });
 
-// Toggle GPS radius restriction
-async function toggleGPSRadius(userId, currentSetting) {
-    const action = currentSetting ? 'restringir GPS al área autorizada' : 'permitir fichaje fuera del área GPS';
-    const confirmed = confirm(`¿Deseas ${action}?`);
-    
-    if (!confirmed) return;
-    
-    try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                allowOutsideRadius: !currentSetting
-            })
-        });
-        
-        if (response.ok) {
-            showUserMessage('✅ Configuración GPS actualizada', 'success');
-            setTimeout(() => viewUser(userId), 1000);
-        } else {
-            showUserMessage('❌ Error actualizando configuración GPS', 'error');
-        }
-    } catch (error) {
-        showUserMessage(`❌ Error: ${error.message}`, 'error');
-    }
-}
+    if (!response.ok) return;
 
-// Edit user role
-async function editUserRole(userId, currentRole) {
-    const newRole = prompt(`Rol actual: ${currentRole}\n\nIngresa el nuevo rol:\n- admin (Administrador)\n- supervisor (Supervisor)\n- employee (Empleado)\n- medical (Médico)`, currentRole);
-    
-    if (!newRole || newRole === currentRole) return;
-    
-    const validRoles = ['admin', 'supervisor', 'employee', 'medical'];
-    if (!validRoles.includes(newRole)) {
-        alert('Rol inválido. Use: admin, supervisor, employee o medical');
+    const userData = await response.json();
+    const user = userData.user || userData;
+    const newStatus = !user.isActive;
+
+    if (!confirm(`¿${newStatus ? 'Activar' : 'Desactivar'} este usuario?`)) return;
+
+    const updateResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isActive: newStatus })
+    });
+
+    if (!updateResponse.ok) {
+        alert('❌ Error actualizando estado');
         return;
     }
-    
-    try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                role: newRole
-            })
-        });
-        
-        if (response.ok) {
-            showUserMessage('✅ Rol actualizado exitosamente', 'success');
-            setTimeout(() => viewUser(userId), 1000);
-        } else {
-            showUserMessage('❌ Error actualizando rol', 'error');
+
+    alert(`✅ Usuario ${newStatus ? 'activado' : 'desactivado'}`);
+    await closeEmployeeFile();
+    await viewUser(userId);
+}
+
+// Toggle GPS Radius
+async function toggleGPSRadius(userId) {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
         }
-    } catch (error) {
-        showUserMessage(`❌ Error: ${error.message}`, 'error');
+    });
+
+    if (!response.ok) return;
+
+    const userData = await response.json();
+    const user = userData.user || userData;
+    const newValue = !user.allowOutsideRadius;
+
+    if (!confirm(`¿${newValue ? 'Permitir asistencias fuera de área GPS' : 'Restringir GPS al área autorizada'}?`)) return;
+
+    const updateResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ allowOutsideRadius: newValue })
+    });
+
+    if (!updateResponse.ok) {
+        alert('❌ Error actualizando configuración GPS');
+        return;
     }
+
+    alert(`✅ GPS ${newValue ? 'sin restricción' : 'restringido a área autorizada'}`);
+    await closeEmployeeFile();
+    await viewUser(userId);
+}
+
+// Cambiar rol del usuario
+async function editUserRole(userId, currentRole) {
+    const roles = {
+        'admin': '👑 Administrador',
+        'supervisor': '🔧 Supervisor',
+        'medical': '🏥 Médico',
+        'employee': '👤 Empleado'
+    };
+
+    const roleOptions = Object.keys(roles).map(key =>
+        `${key === currentRole ? '✓ ' : ''}${roles[key]} (${key})`
+    ).join('\n');
+
+    const newRole = prompt(`Seleccione nuevo rol:\n\n${roleOptions}\n\nIngrese uno de: admin, supervisor, medical, employee`, currentRole);
+
+    if (!newRole || newRole === currentRole || !roles[newRole]) return;
+
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: newRole })
+    });
+
+    if (!response.ok) {
+        alert('❌ Error cambiando rol');
+        return;
+    }
+
+    alert(`✅ Rol actualizado a: ${roles[newRole]}`);
+    await closeEmployeeFile();
+    await viewUser(userId);
 }
 
 // Edit position
@@ -7735,7 +7773,8 @@ async function editPosition(userId, currentPosition) {
         
         if (response.ok) {
             showUserMessage('✅ Posición actualizada exitosamente', 'success');
-            setTimeout(() => viewUser(userId), 1000);
+            // Refresh TAB 1 data
+            await refreshTab1Data(userId);
         } else {
             showUserMessage('❌ Error actualizando posición', 'error');
         }
@@ -7896,14 +7935,17 @@ async function manageBranches(userId) {
         const userData = await userResponse.json();
         const user = userData.user || userData;
 
+        // Get company ID from logged user
+        const companyId = window.progressiveAdmin.currentUser?.company_id || window.progressiveAdmin.currentUser?.companyId || 11;
+
         // Get all available branches for the company
-        const branchesResponse = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/departments'), {
+        const branchesResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/companies/${companyId}/branches`), {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (!branchesResponse.ok) throw new Error('Error al obtener sucursales');
         const branchesData = await branchesResponse.json();
-        const branches = branchesData.departments || branchesData || [];
+        const branches = branchesData.branches || branchesData || [];
 
         // Create modal
         const modal = document.createElement('div');
@@ -8232,6 +8274,12 @@ async function refreshTab1Data(userId) {
                     ${user.isActive ? '✅ Activo' : '❌ Inactivo'}
                 </span>
             `;
+            // UPDATE STATUS BUTTON
+            const statusBtn = statusEl.parentElement.querySelector('button[onclick*="toggleUserStatus"]');
+            if (statusBtn) {
+                statusBtn.setAttribute('onclick', `toggleUserStatus('${userId}', ${user.isActive})`);
+                statusBtn.textContent = user.isActive ? '🔒 Desactivar' : '✅ Activar';
+            }
         }
 
         // 3. GPS
@@ -8242,6 +8290,12 @@ async function refreshTab1Data(userId) {
                     ${user.allowOutsideRadius ? '🌍 Sin restricción GPS' : '📍 Solo área autorizada'}
                 </span>
             `;
+            // UPDATE GPS BUTTON
+            const gpsBtn = gpsEl.parentElement.querySelector('button[onclick*="toggleGPSRadius"]');
+            if (gpsBtn) {
+                gpsBtn.setAttribute('onclick', `toggleGPSRadius('${userId}')`);
+                gpsBtn.textContent = user.allowOutsideRadius ? '📍 Restringir GPS' : '🌍 Permitir fuera de área';
+            }
         }
 
         // 4. BRANCH

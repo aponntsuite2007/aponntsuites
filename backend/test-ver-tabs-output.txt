@@ -1,0 +1,62 @@
+
+╔════════════════════════════════════════════════╗
+║   TEST COMPLETO - MODAL VER - TODOS LOS TABS  ║
+╚════════════════════════════════════════════════╝
+
+🚀 Paso 1/8: Iniciando navegador Chromium...
+   ✅ Navegador iniciado
+
+🌐 Paso 2/8: Abriendo panel-empresa.html...
+   ❌ [BROWSER ERROR]: Failed to load resource: the server responded with a status of 404 (Not Found)
+   ✅ Panel abierto
+
+🔐 Paso 3/8: Realizando login...
+   📍 Seleccionando empresa ISI...
+      ✅ Empresa seleccionada
+   👤 Ingresando usuario soporte...
+      ✅ Usuario ingresado
+   🔑 Ingresando password...
+      ✅ Password ingresado
+
+   ✅ LOGIN COMPLETADO
+
+📊 Paso 4/8: Abriendo módulo Usuarios...
+   ✅ Módulo usuarios abierto
+
+   💾 Screenshot: ver-test-01-users-table.png
+
+🔍 Paso 5/8: Buscando botón VER en primera fila...
+   ✅ Tabla cargada con 25 usuarios
+   ✅ Botón VER encontrado con: table tbody tr:first-child button.btn-info
+   🖱️  Haciendo click en botón VER...
+   ✅ Click en botón VER ejecutado
+
+   💾 Screenshot después de click: ver-test-02-after-click.png
+
+🪟 Paso 6/8: Verificando apertura del modal...
+   🔍 Modals encontrados: 1
+   ⚠️  Modal existe pero no está visible
+   💾 Screenshot: ver-test-02-modal-opened.png
+
+📑 Paso 7/8: Encontrando tabs del modal...
+   ⚠️  No se encontraron tabs en el modal
+   🔍 Debug: Buscando elementos nav...
+      - Elementos nav: 0
+      - Total de links: 0
+   🔍 HTML del modal (primeros 1000 chars):
+
+        <div class="modal-content" style="position: relative; margin: 5% auto; width: 90%; max-width: 600px; background: white; border-radius: 12px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: #212529; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">🏗️ Inicializar Nueva Empresa</h3>
+                <button onclick="closeInitCompanyModal()" style="background: none; border: none; color: #212529; font-size: 24px; cursor: pointer; opacity: 0.8;">×</button>
+            </div>
+            <div class="modal-body" style="padding: 10px;">
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <div style="font-size: 3em; margin-bottom: 10px;">🏢</div>
+                    <p style="color: #666; margin: 0;">Configure una nueva empresa en el sis
+
+❌ ERROR EN EL TEST:
+No se encontraron tabs en el modal
+
+📸 Tomando screenshot final de error...
+   💾 ver-test-ERROR-final.png

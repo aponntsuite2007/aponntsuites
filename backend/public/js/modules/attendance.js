@@ -1043,5 +1043,12 @@ window.refreshDetectionLogs = refreshDetectionLogs;
 
 console.log('✅ [ATTENDANCE] Módulo attendance configurado con integración PostgreSQL y gráficos');
 
-// ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE
+// ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE (Legacy)
 window.showAttendanceContent = showAttendanceContent;
+
+// ✅ EXPORTACIÓN UNIFICADA (Sistema de Auto-Conocimiento v3.0)
+if (!window.Modules) window.Modules = {};
+window.Modules.attendance = {
+    init: showAttendanceContent
+};
+console.log('🧠 [ATTENDANCE] Exportación unificada registrada: window.Modules.attendance');

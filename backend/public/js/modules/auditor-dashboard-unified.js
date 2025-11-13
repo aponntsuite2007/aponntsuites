@@ -87,56 +87,36 @@ function renderUnifiedPanel() {
 
       <!-- OPCIONES DE TESTING -->
       <div class="testing-options-container">
-        <h3>🎯 Opciones de Testing Manual</h3>
-        <p class="testing-subtitle">Ejecuta tests específicos bajo demanda sin ciclos automáticos</p>
+        <h3>🎯 Testing Profundo con Auto-Reparación</h3>
+        <p class="testing-subtitle">Sistema completo de testing + auto-repair + reportes técnicos detallados</p>
         <div class="testing-cards">
-          <!-- TEST GLOBAL -->
-          <div class="testing-card" id="testing-global" onclick="executeTestGlobal()">
-            <div class="testing-icon">🌍</div>
-            <div class="testing-title">TEST GLOBAL</div>
+          <!-- TEST PROFUNDO CON REPORTE (PHASE 4) -->
+          <div class="testing-card testing-card-phase4" id="testing-phase4" onclick="executeTestPhase4()">
+            <div class="testing-icon">🔬</div>
+            <div class="testing-title">TEST PROFUNDO CON REPORTE</div>
             <div class="testing-description">
-              Ejecuta tests completos de TODOS los módulos del sistema con simulación real de usuario.
+              Test completo con auto-reparación inteligente y reporte técnico detallado. Elige TODOS los módulos o uno específico.
             </div>
             <div class="testing-features">
-              <div class="feature">✅ 44 módulos completos</div>
-              <div class="feature">✅ CRUD + Workflows</div>
-              <div class="feature">✅ Datos Faker.js</div>
-              <div class="feature">✅ Incluye sub-módulos</div>
+              <div class="feature">✅ Puppeteer visible (headless: false)</div>
+              <div class="feature">✅ Auto-reparación con Ollama + Patterns</div>
+              <div class="feature">✅ Reporte con 7 secciones + timestamps</div>
+              <div class="feature">✅ Prefijos "test_" fáciles de borrar</div>
+              <div class="feature">✅ Comparación histórica</div>
+              <div class="feature">✅ Aprendizaje en Knowledge Base</div>
             </div>
-            <button class="btn-test-option">▶️ EJECUTAR TEST GLOBAL</button>
+            <button class="btn-test-option btn-test-phase4">🚀 INICIAR TEST PROFUNDO</button>
           </div>
+        </div>
 
-          <!-- TEST APK KIOSK -->
-          <div class="testing-card" id="testing-apk" onclick="executeTestAPK()">
-            <div class="testing-icon">📱</div>
-            <div class="testing-title">TEST APK KIOSK</div>
-            <div class="testing-description">
-              Verifica el APK Android, endpoints móviles y compatibilidad de versiones.
-            </div>
-            <div class="testing-features">
-              <div class="feature">✅ Verificación APK</div>
-              <div class="feature">✅ Endpoints móviles</div>
-              <div class="feature">✅ Compatibilidad versiones</div>
-              <div class="feature">✅ Estructura Flutter</div>
-            </div>
-            <button class="btn-test-option">▶️ EJECUTAR TEST APK</button>
-          </div>
-
-          <!-- TEST MÓDULO ESPECÍFICO -->
-          <div class="testing-card" id="testing-module" onclick="executeTestModule()">
-            <div class="testing-icon">🎯</div>
-            <div class="testing-title">TEST MÓDULO ESPECÍFICO</div>
-            <div class="testing-description">
-              Selecciona un módulo específico para testing profundo y detallado.
-            </div>
-            <div class="testing-features">
-              <div class="feature">✅ Selección de módulo</div>
-              <div class="feature">✅ Testing profundo</div>
-              <div class="feature">✅ Incluye sub-módulos</div>
-              <div class="feature">✅ Reportes detallados</div>
-            </div>
-            <button class="btn-test-option">▶️ SELECCIONAR MÓDULO</button>
-          </div>
+        <div class="phase4-info">
+          <strong>💡 ¿Qué hace este test?</strong>
+          <ol>
+            <li><strong>Test profundo</strong>: Ejecuta tests E2E con Puppeteer (navegador visible)</li>
+            <li><strong>Auto-reparación</strong>: Si detecta fallos, intenta repararlos automáticamente</li>
+            <li><strong>Reporte técnico</strong>: Genera reporte detallado con numeración, timestamps y métricas</li>
+          </ol>
+          <p><strong>Datos de prueba</strong>: Usa prefijo "test_" (ej: "test_John Doe") para fácil limpieza después.</p>
         </div>
       </div>
 
@@ -2575,6 +2555,463 @@ window.requestFix = function(errorId) {
 
   // Simular que el fix está siendo procesado
   showNotification('🔧 Solicitando aplicación de fix...', 'info');
+
+
+// ═══════════════════════════════════════════════════════════
+// PHASE 4: TEST PROFUNDO CON AUTO-REPARACIÓN Y REPORTE
+// ═══════════════════════════════════════════════════════════
+
+async function executeTestPhase4() {
+  console.log('🔬 [PHASE4] Abriendo modal de selección...');
+
+  // Obtener lista de módulos disponibles
+  const token = getAuthToken();
+  if (!token) {
+    showNotification('❌ Error: No se encontró token de autenticación', 'error');
+    return;
+  }
+
+  try {
+    // Fetch lista de módulos
+    const response = await fetch('/api/audit/test/modules', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      showNotification('❌ Error al obtener módulos: ' + data.error, 'error');
+      return;
+    }
+
+    // Mostrar modal de selección
+    showPhase4ModuleSelector(data.all_modules);
+
+  } catch (error) {
+    console.error('❌ [PHASE4] Error:', error);
+    showNotification('❌ Error al cargar módulos', 'error');
+  }
+}
+
+function showPhase4ModuleSelector(modules) {
+  // Crear opciones de módulos
+  const moduleOptions = modules.map(m =>
+    `<option value="${m.key}">${m.name} (${m.category})</option>`
+  ).join('');
+
+  const modalHTML = `
+    <div class="phase4-modal-overlay" id="phase4-modal-overlay" onclick="closePhase4Modal(event)">
+      <div class="phase4-modal" onclick="event.stopPropagation()">
+        <div class="phase4-modal-header">
+          <h3>🔬 Test Profundo con Auto-Reparación</h3>
+          <button class="phase4-modal-close" onclick="closePhase4Modal()">✕</button>
+        </div>
+
+        <div class="phase4-modal-body">
+          <div class="phase4-form-group">
+            <label for="phase4-module-select">
+              <strong>Selecciona el alcance del test:</strong>
+            </label>
+            <select id="phase4-module-select" class="phase4-select">
+              <option value="">🌍 TODOS LOS MÓDULOS (Test Global)</option>
+              <optgroup label="📦 Módulos Específicos">
+                ${moduleOptions}
+              </optgroup>
+            </select>
+            <p class="phase4-help-text">
+              💡 Si seleccionas un módulo específico, se incluirán sus dependencias y submódulos automáticamente.
+            </p>
+          </div>
+
+          <div class="phase4-form-group">
+            <label>
+              <input type="checkbox" id="phase4-auto-repair" checked>
+              <strong>Auto-reparación</strong> - Intentar reparar errores automáticamente
+            </label>
+          </div>
+
+          <div class="phase4-form-group">
+            <label>
+              <input type="checkbox" id="phase4-comparison" checked>
+              <strong>Comparación histórica</strong> - Comparar con ejecuciones anteriores
+            </label>
+          </div>
+
+          <div class="phase4-form-group">
+            <label for="phase4-max-retries">
+              <strong>Reintentos de auto-reparación:</strong>
+            </label>
+            <select id="phase4-max-retries" class="phase4-select">
+              <option value="1">1 reintento</option>
+              <option value="2" selected>2 reintentos (recomendado)</option>
+              <option value="3">3 reintentos</option>
+            </select>
+          </div>
+
+          <div class="phase4-info-box">
+            <strong>📋 Este test incluye:</strong>
+            <ul>
+              <li>✅ Navegador visible (headless: false) - Verás el test en tiempo real</li>
+              <li>✅ CRUD completo con datos de prueba (prefijo "test_")</li>
+              <li>✅ Auto-reparación inteligente (Ollama + Pattern-based)</li>
+              <li>✅ Reporte técnico con 7 secciones + numeración + timestamps</li>
+              <li>✅ Comparación con ejecuciones anteriores</li>
+              <li>✅ Aprendizaje en Knowledge Base</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="phase4-modal-footer">
+          <button class="btn-secondary" onclick="closePhase4Modal()">Cancelar</button>
+          <button class="btn-primary" onclick="confirmPhase4Test()">🚀 Iniciar Test</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Insertar modal en el DOM
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+  // Agregar estilos dinámicamente
+  addPhase4Styles();
+}
+
+function closePhase4Modal(event) {
+  // Si se hizo click en el overlay (fuera del modal), cerrar
+  if (event && event.target.id !== 'phase4-modal-overlay') {
+    return;
+  }
+
+  const modal = document.getElementById('phase4-modal-overlay');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+async function confirmPhase4Test() {
+  const moduleKey = document.getElementById('phase4-module-select').value;
+  const autoRepair = document.getElementById('phase4-auto-repair').checked;
+  const includeComparison = document.getElementById('phase4-comparison').checked;
+  const maxRetries = parseInt(document.getElementById('phase4-max-retries').value);
+
+  console.log('🔬 [PHASE4] Configuración:', {
+    moduleKey: moduleKey || 'TODOS',
+    autoRepair,
+    includeComparison,
+    maxRetries
+  });
+
+  closePhase4Modal();
+
+  // Mostrar panel de ejecución
+  document.querySelector('.mode-selector-container').style.display = 'none';
+  document.querySelector('.testing-options-container').style.display = 'none';
+  document.getElementById('execution-panel').style.display = 'block';
+  document.getElementById('execution-mode-badge').textContent = '🔬 TEST PROFUNDO CON REPORTE';
+  document.getElementById('status-badge').innerHTML = '🟢 <span id="status-text">Ejecutando</span>';
+
+  // Limpiar logs
+  logsBuffer = [];
+  document.getElementById('log-container').innerHTML = '<div class="log-entry log-info">🔬 Iniciando Test Profundo con Auto-Reparación...</div>';
+
+  addLog('🚀 PHASE 4 - Test Profundo con Auto-Reparación', 'info');
+  addLog(`📊 Alcance: ${moduleKey || 'TODOS LOS MÓDULOS'}`, 'info');
+  addLog(`🔧 Auto-reparación: ${autoRepair ? 'ACTIVADA' : 'DESACTIVADA'}`, 'info');
+  addLog(`🔄 Reintentos: ${maxRetries}`, 'info');
+  addLog(`📈 Comparación: ${includeComparison ? 'ACTIVADA' : 'DESACTIVADA'}`, 'info');
+  addLog('👁️ Navegador VISIBLE: Se abrirá Chrome para que veas el testing', 'info');
+  addLog('🏷️ Datos de prueba: Prefijo "test_" para fácil limpieza', 'info');
+
+  const token = getAuthToken();
+
+  try {
+    const response = await fetch('/api/audit/phase4/test/deep-with-report', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        moduleKey: moduleKey || null,
+        maxRetries,
+        autoApprove: autoRepair,
+        includeComparison
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      addLog('✅ Test profundo iniciado correctamente', 'success');
+      addLog(`📊 Execution ID: ${data.execution_id}`, 'info');
+      addLog('🔄 Progreso en tiempo real vía WebSocket', 'info');
+      addLog('🌐 Abriendo navegador visible en 3 segundos...', 'info');
+      addLog(`📄 Reporte disponible en: ${data.endpoints.download_report}`, 'info');
+      showNotification('✅ Test profundo iniciado - Observa el navegador', 'success');
+
+      // Escuchar evento de finalización
+      if (window.socket) {
+        window.socket.on('deep-test-complete', (result) => {
+          addLog('✅ TEST PROFUNDO COMPLETADO', 'success');
+          addLog(`📄 Reporte generado: ${result.report_file}`, 'success');
+          addLog(`📊 Tests: ${result.test_summary.passed} passed, ${result.test_summary.failed} failed`, 'info');
+
+          if (result.repair_summary) {
+            addLog(`🔧 Auto-reparaciones: ${result.repair_summary.repairs_successful}/${result.repair_summary.repairs_attempted}`, 'info');
+          }
+
+          showNotification(`✅ Test completado - Reporte: ${result.report_file}`, 'success');
+
+          // Botón para descargar reporte
+          addLog('📥 Puedes descargar el reporte desde el panel de reportes', 'info');
+        });
+
+        window.socket.on('deep-test-error', (error) => {
+          addLog(`❌ Error en test profundo: ${error.error}`, 'error');
+          showNotification('❌ Error en test profundo', 'error');
+        });
+      }
+
+    } else {
+      addLog(`❌ Error: ${data.error}`, 'error');
+      showNotification('❌ Error: ' + data.error, 'error');
+    }
+
+  } catch (error) {
+    console.error('❌ [PHASE4] Error:', error);
+    addLog(`❌ Error de conexión: ${error.message}`, 'error');
+    showNotification('❌ Error al iniciar test', 'error');
+  }
+}
+
+function addPhase4Styles() {
+  // Evitar agregar estilos múltiples veces
+  if (document.getElementById('phase4-styles')) {
+    return;
+  }
+
+  const styles = document.createElement('style');
+  styles.id = 'phase4-styles';
+  styles.textContent = `
+    .phase4-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .phase4-modal {
+      background: white;
+      border-radius: 16px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+    }
+
+    .phase4-modal-header {
+      padding: 24px 24px 16px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .phase4-modal-header h3 {
+      margin: 0;
+      color: #2d3748;
+      font-size: 1.5rem;
+    }
+
+    .phase4-modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #718096;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .phase4-modal-close:hover {
+      background: #f7fafc;
+      color: #2d3748;
+    }
+
+    .phase4-modal-body {
+      padding: 24px;
+    }
+
+    .phase4-form-group {
+      margin-bottom: 20px;
+    }
+
+    .phase4-form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #2d3748;
+      font-size: 0.95rem;
+    }
+
+    .phase4-select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .phase4-select:hover {
+      border-color: #cbd5e0;
+    }
+
+    .phase4-select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .phase4-help-text {
+      margin-top: 8px;
+      font-size: 0.875rem;
+      color: #718096;
+      font-style: italic;
+    }
+
+    .phase4-info-box {
+      background: linear-gradient(135deg, #f0f4ff, #e6f0ff);
+      border-left: 4px solid #667eea;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    .phase4-info-box strong {
+      color: #2d3748;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .phase4-info-box ul {
+      margin: 8px 0 0 0;
+      padding-left: 20px;
+      color: #4a5568;
+    }
+
+    .phase4-info-box li {
+      margin-bottom: 4px;
+    }
+
+    .phase4-modal-footer {
+      padding: 16px 24px;
+      border-top: 2px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn-primary, .btn-secondary {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f7fafc;
+      color: #2d3748;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #edf2f7;
+    }
+
+    .testing-card-phase4 {
+      border: 3px solid #667eea;
+      background: linear-gradient(135deg, #ffffff, #f0f4ff);
+    }
+
+    .btn-test-phase4 {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-weight: 700;
+    }
+
+    .phase4-info {
+      background: linear-gradient(135deg, #f7fafc, #edf2f7);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      border-left: 4px solid #667eea;
+    }
+
+    .phase4-info strong {
+      color: #2d3748;
+      display: block;
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+    }
+
+    .phase4-info ol {
+      margin: 12px 0 0 20px;
+      color: #4a5568;
+    }
+
+    .phase4-info li {
+      margin-bottom: 8px;
+    }
+
+    .phase4-info p {
+      margin-top: 12px;
+      color: #718096;
+      font-style: italic;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  `;
+
+  document.head.appendChild(styles);
+}
+
+
 };
 
 // ═══════════════════════════════════════════════════════════

@@ -19,7 +19,8 @@ class OllamaAnalyzer {
     this.ollamaLocal = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     this.ollamaExternal = process.env.OLLAMA_EXTERNAL_URL; // Servidor dedicado (Hetzner/Railway)
     this.preferredModel = process.env.OLLAMA_MODEL || 'llama3.1:8b';
-    this.timeout = parseInt(process.env.OLLAMA_TIMEOUT) || 30000;
+    // Timeout largo: 5 minutos para análisis complejo. Solo timeout si Ollama NO responde nada.
+    this.timeout = parseInt(process.env.OLLAMA_TIMEOUT) || 300000; // 5 minutos
 
     // Configuración OpenAI fallback
     this.openaiKey = process.env.OPENAI_API_KEY;
@@ -476,6 +477,160 @@ class OllamaAnalyzer {
         source: 'error'
       };
     }
+  }
+
+  /**
+   * ============================================================================
+   * DIAGNOSE - Analizar test fallido y proporcionar diagnosis para auto-repair
+   * ============================================================================
+   *
+   * @param {Object} failedTest - Test fallido con error y stack trace
+   * @returns {Object} Diagnosis con root_cause, suggested_fix, files_to_modify
+   */
+  async diagnose(failedTest) {
+    console.log(`\n🧠 [OLLAMA DIAGNOSIS] Analizando test fallido: ${failedTest.test_name}...\n`);
+
+    const prompt = `Eres un experto en debugging de tests E2E con Puppeteer.
+
+Test fallido:
+- Módulo: ${failedTest.module_name}
+- Test: ${failedTest.test_name}
+- Error: ${failedTest.error_message}
+- Stack trace: ${failedTest.error_stack || 'N/A'}
+
+Analiza el error y proporciona:
+1. Causa raíz del problema (específica)
+2. Solución sugerida (paso a paso)
+3. Archivos a modificar (paths relativos)
+4. Código de ejemplo del fix (si aplica)
+
+Responde SOLO en formato JSON válido:
+{
+    "root_cause": "descripción específica de la causa raíz",
+    "suggested_fix": "solución paso a paso",
+    "files_to_modify": ["path/to/file1.js", "path/to/file2.html"],
+    "fix_code_example": "código de ejemplo del fix"
+}`;
+
+    try {
+      // Intentar análisis con Ollama
+      const response = await this.query(prompt);
+
+      // Intentar parsear JSON
+      try {
+        // Buscar JSON en la respuesta (puede estar envuelto en markdown)
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const diagnosis = JSON.parse(jsonMatch[0]);
+
+          console.log(`✅ [DIAGNOSIS] Causa raíz: ${diagnosis.root_cause?.substring(0, 100)}...`);
+          console.log(`💡 [DIAGNOSIS] Solución: ${diagnosis.suggested_fix?.substring(0, 100)}...`);
+
+          return {
+            root_cause: diagnosis.root_cause || 'Análisis de error E2E en Puppeteer',
+            suggested_fix: diagnosis.suggested_fix || 'Revisar selector y esperar correctamente',
+            files_to_modify: diagnosis.files_to_modify || [],
+            fix_code_example: diagnosis.fix_code_example || ''
+          };
+        }
+      } catch (parseError) {
+        console.warn('⚠️  [DIAGNOSIS] No se pudo parsear JSON, usando análisis por patrones...');
+      }
+
+      // Fallback: Análisis por patrones
+      return this.diagnoseByPatterns(failedTest, response);
+
+    } catch (error) {
+      console.error('❌ [DIAGNOSIS] Error en análisis Ollama:', error.message);
+
+      // Fallback final: Análisis por patrones sin Ollama
+      return this.diagnoseByPatterns(failedTest, '');
+    }
+  }
+
+  /**
+   * Diagnosis por patrones (fallback cuando Ollama no responde JSON válido)
+   */
+  diagnoseByPatterns(failedTest, ollamaResponse) {
+    const errorMsg = failedTest.error_message || '';
+    const stack = failedTest.error_stack || '';
+
+    let root_cause = 'Error en test E2E';
+    let suggested_fix = 'Revisar el código del test y el frontend';
+    let files_to_modify = [];
+
+    // Patrón 1: Timeout / Selector no encontrado
+    if (errorMsg.includes('timeout') || errorMsg.includes('waiting for selector') || errorMsg.includes('not found')) {
+      root_cause = 'Selector no encontrado o timeout esperando elemento';
+      suggested_fix = 'Verificar que el selector CSS es correcto y que el elemento existe. Aumentar timeout si es necesario. Usar waitForSelector antes de interactuar con el elemento.';
+      files_to_modify = [
+        `src/auditor/collectors/${this.capitalizeFirst(failedTest.module_name)}ModuleCollector.js`
+      ];
+    }
+
+    // Patrón 2: Modal no se cerró
+    else if (errorMsg.includes('modal') || errorMsg.includes('Modal')) {
+      root_cause = 'Modal no se cerró correctamente después de la operación';
+      suggested_fix = 'Verificar que el botón de cerrar/guardar funciona correctamente. Agregar verificación isModalVisible() después de guardar. Usar Escape key como fallback.';
+      files_to_modify = [
+        `src/auditor/collectors/${this.capitalizeFirst(failedTest.module_name)}ModuleCollector.js`,
+        `public/js/modules/${failedTest.module_name}.js`
+      ];
+    }
+
+    // Patrón 3: Click failed / Element not interactable
+    else if (errorMsg.includes('click') || errorMsg.includes('not interactable')) {
+      root_cause = 'Elemento no es clickeable (puede estar oculto, cubierto o no renderizado)';
+      suggested_fix = 'Usar clickElement() helper con JS native click (.evaluate()). Verificar que el elemento está visible antes de hacer click. Esperar que termine cualquier animación.';
+      files_to_modify = [
+        `src/auditor/collectors/${this.capitalizeFirst(failedTest.module_name)}ModuleCollector.js`
+      ];
+    }
+
+    // Patrón 4: Navigation / Page load
+    else if (errorMsg.includes('navigation') || errorMsg.includes('page') || errorMsg.includes('load')) {
+      root_cause = 'Error al navegar a la página o cargar contenido';
+      suggested_fix = 'Verificar que la URL es correcta. Usar waitUntil: "networkidle2". Aumentar timeout de navegación. Verificar que el servidor está corriendo.';
+      files_to_modify = [
+        `src/auditor/collectors/${this.capitalizeFirst(failedTest.module_name)}ModuleCollector.js`
+      ];
+    }
+
+    // Patrón 5: Type / Input
+    else if (errorMsg.includes('type') || errorMsg.includes('input')) {
+      root_cause = 'Error al escribir en input (input no encontrado o no editable)';
+      suggested_fix = 'Verificar selector del input. Usar typeInInput() helper. Esperar que el input esté visible y enabled antes de escribir.';
+      files_to_modify = [
+        `src/auditor/collectors/${this.capitalizeFirst(failedTest.module_name)}ModuleCollector.js`
+      ];
+    }
+
+    // Intentar extraer insights de Ollama response si existe
+    if (ollamaResponse) {
+      // Si Ollama mencionó algo útil, agregarlo
+      if (ollamaResponse.includes('selector')) {
+        root_cause += ' (Ollama sugiere revisar selectores)';
+      }
+      if (ollamaResponse.includes('async') || ollamaResponse.includes('await')) {
+        root_cause += ' (Ollama detectó posible problema de async/await)';
+      }
+    }
+
+    console.log(`🔍 [PATTERN DIAGNOSIS] ${root_cause}`);
+
+    return {
+      root_cause,
+      suggested_fix,
+      files_to_modify,
+      fix_code_example: ''
+    };
+  }
+
+  /**
+   * Capitalizar primera letra
+   */
+  capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 }
 

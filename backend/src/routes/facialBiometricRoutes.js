@@ -128,7 +128,7 @@ router.post('/verify', auth, async (req, res) => {
         userId: userId,
         isActive: true
       },
-      order: [['isPrimary', 'DESC'], ['qualityScore', 'DESC']]
+      order: [['quality_score', 'DESC'], ['created_at', 'DESC']] // ✅ Fixed - removed non-existent is_primary
     });
 
     if (userTemplates.length === 0) {
@@ -217,17 +217,11 @@ router.get('/user/:userId', auth, async (req, res) => {
     const facialData = await FacialBiometricData.findAll({
       where: { userId },
       attributes: [
-        'id', 'qualityScore', 'confidenceThreshold', 'algorithm', 
-        'algorithmVersion', 'isPrimary', 'isActive', 'isValidated',
-        'successfulMatches', 'failedAttempts', 'lastUsed', 'lastMatchScore',
-        'deviceModel', 'capturedPhoto', 'createdAt', 'updatedAt', 'notes'
+        'id', 'userId', 'qualityScore', 'captureTimestamp', 'isActive',
+        'deviceInfo', 'createdAt', 'updatedAt'
       ],
-      order: [['isPrimary', 'DESC'], ['createdAt', 'DESC']],
-      include: [{
-        model: User,
-        as: 'User',
-        attributes: ['id', 'firstName', 'lastName', 'employeeId', 'email']
-      }]
+      order: [['created_at', 'DESC']] // ✅ Fixed - removed non-existent is_primary
+      // Note: User include removed - association not properly configured
     });
 
     res.json({
@@ -250,25 +244,14 @@ router.get('/stats', auth, async (req, res) => {
     const stats = await FacialBiometricData.findAll({
       attributes: [
         [require('sequelize').fn('COUNT', require('sequelize').col('id')), 'totalTemplates'],
-        [require('sequelize').fn('COUNT', require('sequelize').literal('CASE WHEN isPrimary = true THEN 1 END')), 'primaryTemplates'],
-        [require('sequelize').fn('COUNT', require('sequelize').literal('CASE WHEN isActive = true THEN 1 END')), 'activeTemplates'],
-        [require('sequelize').fn('COUNT', require('sequelize').literal('CASE WHEN isValidated = true THEN 1 END')), 'validatedTemplates'],
-        [require('sequelize').fn('AVG', require('sequelize').col('qualityScore')), 'avgQuality'],
-        [require('sequelize').fn('SUM', require('sequelize').col('successfulMatches')), 'totalMatches'],
-        [require('sequelize').fn('SUM', require('sequelize').col('failedAttempts')), 'totalFailures']
+        [require('sequelize').fn('COUNT', require('sequelize').literal('CASE WHEN is_active = true THEN 1 END')), 'activeTemplates'],
+        [require('sequelize').fn('AVG', require('sequelize').col('quality_score')), 'avgQuality']
       ],
       raw: true
     });
 
-    const algorithmStats = await FacialBiometricData.findAll({
-      attributes: [
-        'algorithm',
-        [require('sequelize').fn('COUNT', require('sequelize').col('id')), 'count'],
-        [require('sequelize').fn('AVG', require('sequelize').col('qualityScore')), 'avgQuality']
-      ],
-      group: ['algorithm'],
-      raw: true
-    });
+    // Note: algorithmStats removed as 'algorithm' column doesn't exist in actual schema
+    const algorithmStats = [];
 
     res.json({
       success: true,

@@ -41,6 +41,7 @@ const {
   User
 } = require('../config/database');
 const PartnerNotificationService = require('../services/PartnerNotificationService');
+const EmailVerificationService = require('../services/EmailVerificationService');
 
 // ============================================================================
 // MIDDLEWARE: Autenticación
@@ -160,7 +161,7 @@ router.post('/register', async (req, res) => {
     // Hash de contraseña
     const password_hash = await bcrypt.hash(password, 10);
 
-    // Crear partner
+    // Crear partner (INACTIVO hasta verificar email)
     const partner = await Partner.create({
       email,
       password_hash,
@@ -173,7 +174,12 @@ router.post('/register', async (req, res) => {
       country,
       bio,
       experience_years: experienceYears,
-      status: 'pending' // Requiere aprobación de admin
+      status: 'pending', // Requiere aprobación de admin
+      // EMAIL VERIFICATION OBLIGATORIO
+      email_verified: false,
+      verification_pending: true,
+      account_status: 'pending_verification',
+      is_active: false  // NO ACTIVO hasta verificar email
     });
 
     // Crear firma digital SHA256 para consentimiento legal
@@ -204,10 +210,38 @@ router.post('/register', async (req, res) => {
 
     console.log(`✅ [PARTNERS] Nuevo registro: ${email} (ID: ${partner.id})`);
 
+    // ENVIAR EMAIL DE VERIFICACIÓN INMEDIATAMENTE
+    try {
+      // Determinar tipo de partner basado en partner_role_id
+      const partnerTypeMap = {
+        1: 'vendor',
+        2: 'leader',
+        3: 'supervisor',
+        4: 'partner'
+      };
+      const partnerType = partnerTypeMap[partnerRoleId] || 'partner';
+
+      // Enviar email de verificación
+      await EmailVerificationService.sendVerificationEmail(
+        partner.id,
+        partnerType,
+        partner.email,
+        [] // No hay consentimientos pendientes en registro público
+      );
+
+      console.log(`✅ [PARTNERS] Email de verificación enviado a: ${email}`);
+    } catch (emailError) {
+      console.error(`❌ [PARTNERS] Error enviando email de verificación:`, emailError.message);
+      // NO FALLAR la creación del partner, solo loguear el error
+    }
+
     res.status(201).json({
       success: true,
-      message: 'Registro exitoso. Tu cuenta será revisada por un administrador.',
-      partnerId: partner.id
+      message: 'Registro exitoso. DEBE verificar su email para activar la cuenta.',
+      partnerId: partner.id,
+      verification_sent: true,
+      verification_email: email,
+      status: 'pending_verification'
     });
   } catch (error) {
     console.error('❌ [PARTNERS] Error en registro:', error);

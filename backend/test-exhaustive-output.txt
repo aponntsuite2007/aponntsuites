@@ -1,0 +1,17 @@
+
+╔═══════════════════════════════════════════════════════════════════╗
+║   TEST EXHAUSTIVO 100% - MÓDULO USUARIOS                         ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+
+❌ ERROR CRÍTICO: la autentificaci�n password fall� para el usuario �postgres�
+error: la autentificaci�n password fall� para el usuario �postgres�
+    at Parser.parseErrorMessage (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:285:98)
+    at Parser.handlePacket (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:122:29)
+    at Parser.parse (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\parser.js:35:38)
+    at Socket.<anonymous> (C:\Bio\sistema_asistencia_biometrico\backend\node_modules\pg-protocol\dist\index.js:11:42)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)

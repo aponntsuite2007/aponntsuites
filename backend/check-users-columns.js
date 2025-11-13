@@ -1,50 +1,62 @@
 /**
- * Check what columns exist in the users table
+ * Verificar columnas de companies para encontrar el ID correcto
  */
 
-const { Sequelize } = require('sequelize');
+require('dotenv').config();
+const database = require('./src/config/database');
 
-const DATABASE_URL = process.env.DATABASE_URL ||
-  'postgresql://attendance_system_866u_user:Ihb9jdoOTYzb4c0u7cXxGo8XaIb1Iyvt@dpg-d3i4mqjipnbc73dsnd6g-a.oregon-postgres.render.com/attendance_system_866u';
+async function checkColumns() {
+    try {
+        console.log('\n📊 Verificando estructura de tabla companies...\n');
 
-const sequelize = new Sequelize(DATABASE_URL, {
-  dialect: 'postgres',
-  logging: console.log,
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false
+        const [columns] = await database.sequelize.query(`
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns
+            WHERE table_name = 'companies'
+            ORDER BY ordinal_position
+        `);
+
+        console.log('🏢 COLUMNAS DE COMPANIES:\n');
+        columns.forEach(col => {
+            console.log(`   - ${col.column_name.padEnd(30)} ${col.data_type.padEnd(25)} ${col.is_nullable === 'NO' ? 'NOT NULL' : 'NULL    '} ${col.column_default || ''}`);
+        });
+
+        // Verificar users
+        const [usersColumns] = await database.sequelize.query(`
+            SELECT column_name, data_type
+            FROM information_schema.columns
+            WHERE table_name = 'users' AND column_name IN ('user_id', 'email', 'gps_enabled', 'gpsEnabled', 'is_active', 'isActive', 'role')
+            ORDER BY ordinal_position
+        `);
+
+        console.log('\n\n👥 COLUMNAS CLAVE DE USERS:\n');
+        usersColumns.forEach(col => {
+            console.log(`   - ${col.column_name.padEnd(30)} ${col.data_type}`);
+        });
+
+        // Verificar datos reales del usuario ISI
+        const userId = '766de495-e4f3-4e91-a509-1a495c52e15c';
+        const [userData] = await database.sequelize.query(`
+            SELECT user_id, email, role, gps_enabled, is_active
+            FROM users
+            WHERE user_id = '${userId}'
+        `);
+
+        console.log('\n\n📊 DATOS DEL USUARIO ISI:\n');
+        if (userData.length > 0) {
+            console.log(JSON.stringify(userData[0], null, 2));
+        } else {
+            console.log('   ❌ Usuario no encontrado');
+        }
+
+        console.log('\n✅ Verificación completa\n');
+
+        process.exit(0);
+
+    } catch (error) {
+        console.error('\n❌ ERROR:', error.message);
+        process.exit(1);
     }
-  }
-});
-
-async function checkUsersColumns() {
-  console.log('🔧 Conectando a PostgreSQL...');
-
-  try {
-    await sequelize.authenticate();
-    console.log('✅ Conexión establecida exitosamente\n');
-
-    const [results] = await sequelize.query(`
-      SELECT column_name, data_type, is_nullable
-      FROM information_schema.columns
-      WHERE table_name = 'users'
-      ORDER BY ordinal_position
-    `);
-
-    console.log('📋 Columnas de la tabla users:\n');
-    results.forEach(col => {
-      console.log(`  - ${col.column_name} (${col.data_type}) ${col.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'}`);
-    });
-
-  } catch (error) {
-    console.error('❌ Error:', error.message);
-    console.error(error);
-  } finally {
-    await sequelize.close();
-    console.log('\n🔌 Conexión cerrada');
-  }
 }
 
-// Ejecutar
-checkUsersColumns();
+checkColumns();

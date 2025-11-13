@@ -166,13 +166,13 @@ router.get('/', auth, async (req, res) => {
       absenceType
     } = req.query;
 
-    console.log('🔍 [ATTENDANCE] Filtros recibidos:', { page, limit, startDate, endDate, userId, status, absenceType, companyId: req.user.company_id });
+    console.log('🔍 [ATTENDANCE] Filtros recibidos:', { page, limit, startDate, endDate, userId, status, absenceType, companyId: req.user.companyId });
 
     const where = {};
 
     // OBLIGATORIO: Filtrar por empresa del usuario autenticado
-    if (req.user.company_id) {
-      where.company_id = req.user.company_id;
+    if (req.user.companyId) {
+      where.company_id = req.user.companyId;
     }
 
     // Los empleados solo pueden ver sus propios registros
@@ -208,26 +208,26 @@ router.get('/', auth, async (req, res) => {
     const replacements = { limit: parseInt(limit), offset };
 
     // CRÍTICO: Filtrar por empresa del usuario autenticado
-    if (req.user && req.user.company_id) {
+    if (req.user && req.user.companyId) {
       sqlWhere += ' AND u.company_id = :companyId';
-      replacements.companyId = req.user.company_id;
+      replacements.companyId = req.user.companyId;
     }
 
     // Filtrar por usuario específico (empleados solo ven sus registros)
     if (req.user.role === 'employee') {
-      sqlWhere += ' AND a.user_id = :userId';
+      sqlWhere += ' AND a."UserId" = :userId';
       replacements.userId = req.user.user_id;
     } else if (userId) {
-      sqlWhere += ' AND a.user_id = :userId';
+      sqlWhere += ' AND a."UserId" = :userId';
       replacements.userId = userId;
     }
 
     if (startDate) {
-      sqlWhere += ' AND DATE(a.check_in) >= :startDate';
+      sqlWhere += ' AND DATE(a."checkInTime") >= :startDate';
       replacements.startDate = startDate;
     }
     if (endDate) {
-      sqlWhere += ' AND DATE(a.check_in) <= :endDate';
+      sqlWhere += ' AND DATE(a."checkInTime") <= :endDate';
       replacements.endDate = endDate;
     }
     if (branchId) {
@@ -243,7 +243,7 @@ router.get('/', auth, async (req, res) => {
     const [countResult] = await sequelize.query(`
       SELECT COUNT(a.id) as total
       FROM attendances a
-      INNER JOIN users u ON a.user_id = u.user_id
+      INNER JOIN users u ON a."UserId" = u.user_id
       WHERE 1=1 ${sqlWhere}
     `, { replacements, type: QueryTypes.SELECT });
 
@@ -252,15 +252,15 @@ router.get('/', auth, async (req, res) => {
     // Query de datos
     const attendances = await sequelize.query(`
       SELECT
-        a.id, a.check_in as "checkInTime", a.check_out as "checkOutTime",
+        a.id, a."checkInTime" as "checkInTime", a."checkOutTime" as "checkOutTime",
         a.status, a.kiosk_id as "kioskId",
         u.user_id as "User.id", u."firstName" as "User.firstName",
         u."lastName" as "User.lastName", u."employeeId" as "User.employeeId",
         u.email as "User.email"
       FROM attendances a
-      INNER JOIN users u ON a.user_id = u.user_id
+      INNER JOIN users u ON a."UserId" = u.user_id
       WHERE 1=1 ${sqlWhere}
-      ORDER BY a.check_in DESC NULLS LAST
+      ORDER BY a."checkInTime" DESC NULLS LAST
       LIMIT :limit OFFSET :offset
     `, { replacements, type: QueryTypes.SELECT });
 
@@ -410,16 +410,16 @@ router.get('/stats/summary', auth, async (req, res) => {
     const replacements = {};
 
     // CRÍTICO: Filtrar por empresa del usuario autenticado
-    if (req.user && req.user.company_id) {
-      sqlWhere += ' AND a.company_id = :companyId';
-      replacements.companyId = req.user.company_id;
+    if (req.user && req.user.companyId) {
+      sqlWhere += ' AND u.company_id = :companyId';
+      replacements.companyId = req.user.companyId;
     }
 
     // Filtros de fecha - por defecto hoy
     const start = startDate || today;
     const end = endDate || today;
 
-    sqlWhere += ' AND DATE(a.check_in) >= :startDate AND DATE(a.check_in) <= :endDate';
+    sqlWhere += ' AND DATE(a."checkInTime") >= :startDate AND DATE(a."checkInTime") <= :endDate';
     replacements.startDate = start;
     replacements.endDate = end;
 
@@ -436,6 +436,7 @@ router.get('/stats/summary', auth, async (req, res) => {
         COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as "absentCount",
         0 as "avgWorkingHours"
       FROM attendances a
+      INNER JOIN users u ON a."UserId" = u.user_id
       WHERE 1=1 ${sqlWhere}
     `, { replacements, type: QueryTypes.SELECT });
 
@@ -469,7 +470,7 @@ router.get('/stats/summary', auth, async (req, res) => {
  */
 router.get('/stats/chart', auth, async (req, res) => {
   try {
-    console.log('📊 [ATTENDANCE CHART] Solicitando datos de gráfico para empresa:', req.user.company_id);
+    console.log('📊 [ATTENDANCE CHART] Solicitando datos de gráfico para empresa:', req.user.companyId);
 
     // Calcular rango de fechas (últimos 30 días)
     const endDate = new Date();
@@ -483,20 +484,20 @@ router.get('/stats/chart', auth, async (req, res) => {
     // Query para obtener datos agrupados por fecha y estado
     const chartData = await sequelize.query(`
       SELECT
-        DATE(a.check_in) as date,
+        DATE(a."checkInTime") as date,
         COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count,
         COUNT(CASE WHEN a.status = 'late' THEN 1 END) as late_count,
         COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_count
       FROM attendances a
-      INNER JOIN users u ON a.user_id = u.user_id
+      INNER JOIN users u ON a."UserId" = u.user_id
       WHERE u.company_id = :companyId
-        AND DATE(a.check_in) >= :startDate
-        AND DATE(a.check_in) <= :endDate
-      GROUP BY DATE(a.check_in)
-      ORDER BY DATE(a.check_in) ASC
+        AND DATE(a."checkInTime") >= :startDate
+        AND DATE(a."checkInTime") <= :endDate
+      GROUP BY DATE(a."checkInTime")
+      ORDER BY DATE(a."checkInTime") ASC
     `, {
       replacements: {
-        companyId: req.user.company_id,
+        companyId: req.user.companyId,
         startDate: startDateStr,
         endDate: endDateStr
       },

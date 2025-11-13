@@ -122,7 +122,7 @@ router.post('/', auth, async (req, res) => {
       userFromAuth: req.user ? {
         id: req.user.user_id,
         email: req.user.email,
-        company_id: req.user.company_id,
+        company_id: req.user.companyId,
         isActive: req.user.isActive
       } : 'NO USER'
     });

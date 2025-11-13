@@ -24,8 +24,8 @@ router.get('/', async (req, res) => {
     const { page = 1, limit = 10, search } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    // Build WHERE clause for search
-    let whereClause = "WHERE 1=1";
+    // Build WHERE clause for search (exclude system users)
+    let whereClause = "WHERE notes IS DISTINCT FROM 'SYSTEM_USER_TESTING_ONLY'";
     let replacements = [];
 
     if (search) {
@@ -124,7 +124,10 @@ router.get('/:id', async (req, res) => {
         role,
         is_active,
         created_at,
-        updated_at
+        updated_at,
+        biometric_photo_url,
+        biometric_photo_date,
+        biometric_photo_expiration
       FROM users
       WHERE id = ?
     `;
@@ -155,6 +158,10 @@ router.get('/:id', async (req, res) => {
       updatedAt: user.updated_at,
       name: `${user.first_name} ${user.last_name}`,
       fullName: `${user.first_name} ${user.last_name}`,
+      // Biometric photo fields
+      biometric_photo_url: user.biometric_photo_url,
+      biometric_photo_date: user.biometric_photo_date,
+      biometric_photo_expiration: user.biometric_photo_expiration,
       // Default values for missing fields
       phone: null,
       department: { name: 'Sin departamento' },

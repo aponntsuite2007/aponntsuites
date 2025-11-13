@@ -123,7 +123,7 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     const where = {
-      company_id: req.user.company_id,
+      company_id: req.user.companyId,
       [sequelize.Sequelize.Op.or]: [
         { recipient_user_id: req.user.user_id },
         { recipient_role: req.user.role },
@@ -186,7 +186,7 @@ router.get('/pending', async (req, res) => {
   try {
     const notifications = await Notification.getPendingForUser(
       req.user.user_id,
-      req.user.company_id,
+      req.user.companyId,
       { userRole: req.user.role, limit: 100 }
     );
 
@@ -213,7 +213,7 @@ router.get('/unread', async (req, res) => {
   try {
     const notifications = await Notification.getUnreadForUser(
       req.user.user_id,
-      req.user.company_id,
+      req.user.companyId,
       req.user.role
     );
 
@@ -241,7 +241,7 @@ router.get('/stats', async (req, res) => {
     const { dateFrom, dateTo } = req.query;
 
     const stats = await Notification.getStatsByModule(
-      req.user.company_id,
+      req.user.companyId,
       dateFrom ? new Date(dateFrom) : null,
       dateTo ? new Date(dateTo) : null
     );
@@ -281,7 +281,7 @@ router.get('/:id', async (req, res) => {
     }
 
     // Verificar permisos
-    if (notification.company_id !== req.user.company_id) {
+    if (notification.company_id !== req.user.companyId) {
       return res.status(403).json({
         success: false,
         error: 'No tienes permiso para ver esta notificación'
@@ -310,7 +310,7 @@ router.post('/', async (req, res) => {
   try {
     const notification = await NotificationWorkflowService.createNotification({
       ...req.body,
-      companyId: req.user.company_id,
+      companyId: req.user.companyId,
       createdBy: req.user.user_id
     });
 
@@ -387,7 +387,7 @@ router.put('/:id/read', async (req, res) => {
       });
     }
 
-    if (notification.company_id !== req.user.company_id) {
+    if (notification.company_id !== req.user.companyId) {
       return res.status(403).json({
         success: false,
         error: 'No tienes permiso para modificar esta notificación'
@@ -418,7 +418,7 @@ router.put('/read-all', async (req, res) => {
   try {
     const result = await Notification.markAllAsReadForUser(
       req.user.user_id,
-      req.user.company_id
+      req.user.companyId
     );
 
     res.json({
@@ -474,7 +474,7 @@ router.delete('/:id', requireRRHH, async (req, res) => {
       });
     }
 
-    if (notification.company_id !== req.user.company_id) {
+    if (notification.company_id !== req.user.companyId) {
       return res.status(403).json({
         success: false,
         error: 'No tienes permiso para eliminar esta notificación'
@@ -510,7 +510,7 @@ router.get('/workflows', requireRRHH, async (req, res) => {
     const { module } = req.query;
 
     const workflows = await NotificationWorkflow.getActiveForCompany(
-      req.user.company_id,
+      req.user.companyId,
       module
     );
 
@@ -570,7 +570,7 @@ router.get('/templates', requireRRHH, async (req, res) => {
     const { module } = req.query;
 
     const templates = await NotificationTemplate.getActiveForCompany(
-      req.user.company_id,
+      req.user.companyId,
       module
     );
 
@@ -600,7 +600,7 @@ router.get('/preferences', async (req, res) => {
   try {
     const preferences = await UserNotificationPreference.getAllForUser(
       req.user.user_id,
-      req.user.company_id
+      req.user.companyId
     );
 
     res.json({
@@ -625,7 +625,7 @@ router.put('/preferences/:module', async (req, res) => {
   try {
     const preference = await UserNotificationPreference.updatePreferences(
       req.user.user_id,
-      req.user.company_id,
+      req.user.companyId,
       req.params.module,
       req.body
     );

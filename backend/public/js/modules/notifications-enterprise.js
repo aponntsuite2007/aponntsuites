@@ -1611,4 +1611,12 @@ function showNotificationsEnterpriseContent() {
   NotificationsEnterprise.init();
 }
 
+// ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE (Legacy)
 window.showNotificationsEnterpriseContent = showNotificationsEnterpriseContent;
+
+// ✅ EXPORTACIÓN UNIFICADA (Sistema de Auto-Conocimiento v3.0)
+if (!window.Modules) window.Modules = {};
+window.Modules['notifications-enterprise'] = {
+    init: showNotificationsEnterpriseContent
+};
+console.log('🧠 [NOTIFICATIONS-ENTERPRISE] Exportación unificada registrada: window.Modules[\'notifications-enterprise\']');

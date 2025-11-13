@@ -158,6 +158,20 @@ const AuditLog = require('../models/AuditLog')(sequelize);
 const AssistantKnowledgeBase = require('../models/AssistantKnowledgeBase')(sequelize);
 const AssistantConversation = require('../models/AssistantConversation')(sequelize);
 
+// ✅ MODELO - Sistema de Testing Phase 4 (Audit Test Logs)
+const { defineModel: defineAuditTestLog } = require('../models/AuditTestLog');
+const AuditTestLog = defineAuditTestLog(sequelize);
+
+// ✅ MODELOS - Email Verification & Consent Management System
+const EmailVerificationToken = require('../models/EmailVerificationToken')(sequelize);
+const ConsentDefinition = require('../models/ConsentDefinition')(sequelize);
+const UserConsent = require('../models/UserConsent')(sequelize);
+const ConsentAuditLog = require('../models/ConsentAuditLog')(sequelize);
+
+// ✅ MODELOS - Personal de Aponnt (Staff, Vendedores, Supervisores, etc.)
+const AponntStaff = require('../models/AponntStaff')(sequelize);
+const AponntStaffCompany = require('../models/AponntStaffCompany')(sequelize);
+
 // ✅ MODELOS - Sistema de Partners Marketplace
 const PartnerRole = require('../models/PartnerRole')(sequelize);
 const Partner = require('../models/Partner')(sequelize);
@@ -519,6 +533,118 @@ AssistantConversation.belongsTo(AssistantKnowledgeBase, { foreignKey: 'knowledge
 AssistantKnowledgeBase.hasMany(AssistantConversation, { foreignKey: 'knowledge_entry_id', sourceKey: 'id', as: 'conversations' });
 
 // ============================================================================
+// ASOCIACIONES - Email Verification & Consent Management System
+// ============================================================================
+
+// ConsentDefinition associations
+ConsentDefinition.hasMany(UserConsent, {
+  foreignKey: 'consent_id',
+  as: 'user_consents'
+});
+
+// UserConsent associations
+UserConsent.belongsTo(ConsentDefinition, {
+  foreignKey: 'consent_id',
+  as: 'consent_definition'
+});
+
+UserConsent.belongsTo(User, {
+  foreignKey: 'user_id',
+  targetKey: 'user_id',
+  as: 'user'
+});
+
+User.hasMany(UserConsent, {
+  foreignKey: 'user_id',
+  sourceKey: 'user_id',
+  as: 'consents'
+});
+
+UserConsent.belongsTo(Company, {
+  foreignKey: 'company_id',
+  targetKey: 'company_id',
+  as: 'company'
+});
+
+Company.hasMany(UserConsent, {
+  foreignKey: 'company_id',
+  sourceKey: 'company_id',
+  as: 'user_consents'
+});
+
+UserConsent.hasMany(ConsentAuditLog, {
+  foreignKey: 'user_consent_id',
+  as: 'audit_logs'
+});
+
+// ConsentAuditLog associations
+ConsentAuditLog.belongsTo(UserConsent, {
+  foreignKey: 'user_consent_id',
+  as: 'user_consent'
+});
+
+ConsentAuditLog.belongsTo(User, {
+  foreignKey: 'changed_by',
+  targetKey: 'user_id',
+  as: 'changed_by_user'
+});
+
+// EmailVerificationToken associations
+EmailVerificationToken.belongsTo(Company, {
+  foreignKey: 'company_id',
+  targetKey: 'company_id',
+  as: 'company'
+});
+
+Company.hasMany(EmailVerificationToken, {
+  foreignKey: 'company_id',
+  sourceKey: 'company_id',
+  as: 'email_verification_tokens'
+});
+
+// ============================================================================
+// ASOCIACIONES - Personal de Aponnt (Staff System)
+// ============================================================================
+
+// AponntStaff - Auto-relación (líder)
+AponntStaff.belongsTo(AponntStaff, { foreignKey: 'leader_id', as: 'leader' });
+AponntStaff.hasMany(AponntStaff, { foreignKey: 'leader_id', as: 'team_members' });
+
+// AponntStaff - Auto-relación (supervisor)
+AponntStaff.belongsTo(AponntStaff, { foreignKey: 'supervisor_id', as: 'supervisor' });
+AponntStaff.hasMany(AponntStaff, { foreignKey: 'supervisor_id', as: 'supervised_staff' });
+
+// AponntStaff - Auto-relación (auditoría: quién creó)
+AponntStaff.belongsTo(AponntStaff, { foreignKey: 'created_by', as: 'creator' });
+AponntStaff.hasMany(AponntStaff, { foreignKey: 'created_by', as: 'created_staff' });
+
+// AponntStaff <-> Company (many-to-many via AponntStaffCompany)
+AponntStaff.belongsToMany(Company, {
+  through: AponntStaffCompany,
+  foreignKey: 'staff_id',
+  otherKey: 'company_id',
+  as: 'assigned_companies'
+});
+
+Company.belongsToMany(AponntStaff, {
+  through: AponntStaffCompany,
+  foreignKey: 'company_id',
+  otherKey: 'staff_id',
+  sourceKey: 'company_id',
+  as: 'assigned_staff'
+});
+
+// AponntStaffCompany associations
+AponntStaffCompany.belongsTo(AponntStaff, { foreignKey: 'staff_id', as: 'staff' });
+AponntStaffCompany.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+AponntStaffCompany.belongsTo(AponntStaff, { foreignKey: 'assigned_by', as: 'assigner' });
+AponntStaffCompany.belongsTo(AponntStaff, { foreignKey: 'deactivated_by', as: 'deactivator' });
+
+// Partner - approved_by (FK a AponntStaff)
+Partner.belongsTo(AponntStaff, { foreignKey: 'approved_by', as: 'approver' });
+AponntStaff.hasMany(Partner, { foreignKey: 'approved_by', as: 'approved_partners' });
+
+// ============================================================================
 // ASOCIACIONES - Sistema de Partners Marketplace
 // ============================================================================
 
@@ -691,9 +817,19 @@ module.exports = {
   UserNotificationPreference,
   // ✅ EXPORT - Sistema de Auditoría
   AuditLog,
+  // ✅ EXPORT - Sistema de Testing Phase 4
+  AuditTestLog,
   // ✅ EXPORT - Sistema de Asistente IA
   AssistantKnowledgeBase,
   AssistantConversation,
+  // ✅ EXPORTS - Email Verification & Consent Management
+  EmailVerificationToken,
+  ConsentDefinition,
+  UserConsent,
+  ConsentAuditLog,
+  // ✅ EXPORTS - Personal de Aponnt (Staff System)
+  AponntStaff,
+  AponntStaffCompany,
   // ✅ EXPORTS - Sistema de Partners Marketplace
   PartnerRole,
   Partner,

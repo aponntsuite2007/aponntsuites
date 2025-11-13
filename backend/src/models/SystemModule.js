@@ -83,6 +83,40 @@ module.exports = (sequelize) => {
       defaultValue: [],
       comment: 'Lista de módulos requeridos para funcionar'
     },
+    bundledModules: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+      field: 'bundled_modules',
+      comment: 'Módulos que se activan GRATIS al contratar este'
+    },
+    availableIn: {
+      type: DataTypes.ENUM('admin', 'company', 'both'),
+      allowNull: false,
+      defaultValue: 'both',
+      field: 'available_in',
+      comment: 'Dónde está disponible: admin, company, o both'
+    },
+    providesTo: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+      field: 'provides_to',
+      comment: 'Módulos que se benefician de tener este activo'
+    },
+    integratesWith: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+      field: 'integrates_with',
+      comment: 'Módulos con los que se integra automáticamente'
+    },
+    metadata: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: {},
+      comment: 'Metadata adicional flexible'
+    },
     version: {
       type: DataTypes.STRING(20),
       allowNull: false,
@@ -141,7 +175,7 @@ module.exports = (sequelize) => {
       '51-100': 0.85,
       '101+': 0.70
     };
-    
+
     const multiplier = tierMultipliers[tier] || 1.0;
     return parseFloat(this.basePrice) * multiplier;
   };
@@ -154,6 +188,30 @@ module.exports = (sequelize) => {
       return false;
     }
     return this.isActive;
+  };
+
+  // Nuevos métodos para bundling
+  SystemModule.prototype.hasBundledModules = function() {
+    return this.bundledModules && this.bundledModules.length > 0;
+  };
+
+  SystemModule.prototype.getBundledModules = function() {
+    return this.bundledModules || [];
+  };
+
+  SystemModule.prototype.getRequirements = function() {
+    return this.requirements || [];
+  };
+
+  SystemModule.prototype.isAvailableInPanel = function(panel) {
+    return this.availableIn === 'both' || this.availableIn === panel;
+  };
+
+  SystemModule.prototype.getEffectivePrice = function(isBundled = false) {
+    if (isBundled || this.isCore) {
+      return 0.00;
+    }
+    return parseFloat(this.basePrice);
   };
 
   return SystemModule;

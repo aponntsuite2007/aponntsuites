@@ -55,6 +55,22 @@ const UserMedicalExams = sequelize.define('UserMedicalExams', {
         type: DataTypes.TEXT,
         allowNull: true
     },
+    exam_frequency: {
+        type: DataTypes.ENUM('mensual', 'trimestral', 'semestral', 'anual', 'bienal', 'personalizado'),
+        allowNull: true
+    },
+    frequency_months: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        validate: {
+            min: 1,
+            max: 120
+        }
+    },
+    auto_calculate_next_exam: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW

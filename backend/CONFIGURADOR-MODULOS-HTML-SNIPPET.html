@@ -1,0 +1,150 @@
+<!-- =====================================================================
+     CONFIGURADOR DE MÓDULOS - Sistema de Bundling
+     ===================================================================== -->
+<div id="modulesConfiguratorContainer" style="margin-top: 50px; border-top: 3px solid #f39c12; padding-top: 30px;">
+    <div class="section-header" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 20px; border-radius: 10px; color: white; margin-bottom: 20px;">
+        <h3 style="margin: 0; font-size: 1.5rem;">🧩 CONFIGURADOR DE MÓDULOS - Sistema de Bundling</h3>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Gestión completa de módulos, pricing, dependencias y auto-bundling</p>
+    </div>
+
+    <!-- Estadísticas -->
+    <div id="modulesStatsContainer" style="margin-bottom: 30px;">
+        <div class="text-center" style="padding: 40px;">
+            <div class="spinner-border text-warning" role="status"></div>
+            <p style="margin-top: 10px; color: #666;">Cargando estadísticas...</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header" style="background: #f39c12; color: white;">
+            <strong>🔍 Filtros</strong>
+            <button id="btnRefreshModules" class="btn btn-sm btn-light float-right" style="margin-top: -5px;">
+                🔄 Refrescar
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="filterCategory" class="form-control">
+                            <option value="all">Todas</option>
+                            <option value="core">Core</option>
+                            <option value="security">Seguridad</option>
+                            <option value="medical">Médico</option>
+                            <option value="rrhh">RRHH</option>
+                            <option value="siac">SIAC</option>
+                            <option value="ai">Inteligencia Artificial</option>
+                            <option value="compliance">Cumplimiento</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Panel</label>
+                        <select id="filterPanel" class="form-control">
+                            <option value="all">Todos</option>
+                            <option value="admin">Solo Admin</option>
+                            <option value="company">Solo Company</option>
+                            <option value="both">Ambos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="filterCore" class="form-control">
+                            <option value="all">Todos</option>
+                            <option value="true">Core (Gratis)</option>
+                            <option value="false">Premium (Pagos)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div style="background: #e3f2fd; padding: 10px; border-radius: 4px; text-align: center;">
+                            <small><strong id="filteredCount">56</strong> módulos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Módulos -->
+    <div class="card">
+        <div class="card-header" style="background: #2c3e50; color: white;">
+            <strong>📦 Lista de Módulos</strong>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div style="overflow-x: auto;">
+                <table class="table table-hover table-striped" style="margin: 0;">
+                    <thead style="background: #34495e; color: white;">
+                        <tr>
+                            <th style="width: 50px;"></th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Panel</th>
+                            <th>Bundled</th>
+                            <th>Deps</th>
+                            <th style="width: 120px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modulesTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 40px;">
+                                <div class="spinner-border text-warning" role="status"></div>
+                                <p style="margin-top: 10px; color: #666;">Cargando módulos...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documentación -->
+    <div class="card border-info" style="margin-top: 30px;">
+        <div class="card-header bg-info text-white">
+            <strong>📚 Documentación del Sistema de Bundling</strong>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>🎁 Auto-Bundling</h6>
+                    <p class="small">
+                        Cuando activas un módulo padre, los módulos bundled se activan GRATIS automáticamente.
+                        Ejemplo: "Asistencia" incluye "Kioscos" + "APK Kiosko" sin costo adicional.
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h6>⚠️ Validación de Dependencias</h6>
+                    <p class="small">
+                        El sistema valida automáticamente que todas las dependencias requeridas estén activas
+                        antes de permitir activar un módulo.
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h6>💰 Pricing Inteligente</h6>
+                    <p class="small">
+                        Módulos core: $0/mes. Módulos bundled: $0/mes. Módulos premium: Precio base × empleados contratados.
+                    </p>
+                </div>
+            </div>
+            <hr>
+            <p class="small text-center" style="margin: 0;">
+                <strong>API Endpoints:</strong>
+                <code>GET /api/modules</code> |
+                <code>POST /api/modules/validate</code> |
+                <code>POST /api/modules/analyze-impact</code> |
+                <code>POST /api/modules/company/:id/activate</code>
+                <br>
+                <strong>Docs Completas:</strong> <code>backend/MODULE-BUNDLING-SYSTEM-README.md</code>
+            </p>
+        </div>
+    </div>
+</div>
+<!-- FIN CONFIGURADOR DE MÓDULOS -->

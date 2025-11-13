@@ -1315,10 +1315,9 @@ app.get(`${API_PREFIX}/users/:id`, async (req, res) => {
         u.salary AS salary,
         u.position AS position,
         u.is_active AS "isActive",
+        u.gps_enabled AS "gpsEnabled",
         u.permissions AS permissions,
         u.settings AS settings,
-        u.created_at AS "createdAt",
-        u.updated_at AS "updatedAt",
         d.name AS department_name,
         d.gps_lat AS gps_lat,
         d.gps_lng AS gps_lng,
@@ -1343,6 +1342,13 @@ app.get(`${API_PREFIX}/users/:id`, async (req, res) => {
 
     const user = users[0];
 
+    // GPS settings - Calculate inverse relationship
+    // IMPORTANT: gpsEnabled (DB) = GPS restriction is ACTIVE
+    //            allowOutsideRadius (frontend) = INVERSE of gpsEnabled
+    // gpsEnabled=true → user restricted to area → allowOutsideRadius=false
+    // gpsEnabled=false → user can go outside → allowOutsideRadius=true
+    const gpsValue = user.gpsEnabled !== undefined ? user.gpsEnabled : false;
+
     // Formatear respuesta para compatibilidad con frontend
     const formattedUser = {
       id: user.user_id,
@@ -1363,7 +1369,8 @@ app.get(`${API_PREFIX}/users/:id`, async (req, res) => {
       emergencyPhone: user.emergencyPhone,
       permissions: user.permissions || {},
       settings: user.settings || {},
-      allowOutsideRadius: false,
+      gpsEnabled: gpsValue,
+      allowOutsideRadius: !gpsValue,
       isActive: user.isActive,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -1833,6 +1840,7 @@ app.get('/api/server-config', (req, res) => {
 // Importar rutas del sistema de permisos
 const permissionsRoutes = require('./src/routes/permissionsRoutes');
 const authRoutes = require('./src/routes/authRoutes');
+const aponntAuthRoutes = require('./src/routes/aponntAuthRoutes'); // ✅ Auth para Staff + Partners
 const legalRoutes = require('./src/routes/legalRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const usersSimpleRoutes = require('./src/routes/usersSimple');
@@ -1844,6 +1852,9 @@ const adminMigrationsRoutes = require('./src/routes/admin-migrations');
 const userProfileRoutes = require('./src/routes/userProfileRoutes');
 const userMedicalRoutes = require('./src/routes/userMedicalRoutes');
 const userAdminRoutes = require('./src/routes/userAdminRoutes');
+const userDocumentsRoutes = require('./src/routes/userDocumentsRoutes'); // Documentos vencibles (Octubre 2025)
+const userMedicalExamsRoutes = require('./src/routes/userMedicalExamsRoutes'); // Exámenes médicos con periodicidad (Octubre 2025)
+const userWorkHistoryRoutes = require('./src/routes/userWorkHistoryRoutes'); // Historial laboral completo (Octubre 2025)
 
 // Importar rutas del sistema APONNT
 const aponntDashboardRoutes = require('./src/routes/aponntDashboard');
@@ -1879,6 +1890,7 @@ const siacFacturacionRoutes = require('./src/routes/siac/facturacion');
 // Configurar rutas con sistema de permisos
 app.use('/api/v1/permissions', permissionsRoutes);
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth/aponnt', aponntAuthRoutes); // ✅ Auth Staff + Partners
 app.use('/api/v1/legal', legalRoutes);
 app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exitosa
 app.use('/api/v1/authorization', authorizationRoutes); // Sistema de autorizaciones de llegadas tardías
@@ -1891,8 +1903,18 @@ app.use('/api/v1/user-medical', userMedicalRoutes); // Antecedentes médicos com
 app.use('/api/v1/user-admin', userAdminRoutes); // Documentos, permisos, disciplinarios
 // app.use('/api/v1/users', usersSimpleRoutes); // Versión simplificada - ya no necesaria
 
+// 📄 Configurar rutas de sistemas HR avanzados (Octubre 2025)
+app.use('/api/v1', userDocumentsRoutes); // Documentos vencibles con notificaciones
+app.use('/api/v1', userMedicalExamsRoutes); // Exámenes médicos con periodicidad automática
+app.use('/api/v1', userWorkHistoryRoutes); // Historial laboral + desvinculación + litigios
+
 // Configurar rutas del sistema APONNT
 app.use('/api/aponnt/dashboard', aponntDashboardRoutes);
+// ✅ FIX BUG #1 y #2: Agregar alias de ruta para compatibilidad con frontend
+// Frontend llama a /api/v1/users/:id (PUT) para actualizar usuarios
+// Backend tiene la ruta en /api/aponnt/dashboard/users/:id
+// Solución: Montar aponntDashboardRoutes también en /api/v1 para que funcionen ambas rutas
+app.use('/api/v1', aponntDashboardRoutes);
 app.use('/api/v1/company-modules', companyModuleRoutes);
 app.use('/api/company-panel', companyPanelRoutes);
 app.use('/api/vendor-automation', vendorRoutes);
@@ -2016,14 +2038,50 @@ console.log('   📝 /api/v1/enterprise/notifications/templates - Templates reut
 console.log('   ⚙️ /api/v1/enterprise/notifications/preferences - Preferencias usuario');
 console.log('   🔥 Características: Workflows automáticos, escalamiento, multi-canal');
 
+// ✅ CONFIGURAR SISTEMA DE GESTIÓN DE MÓDULOS (Bundling + Auto-Conocimiento)
+const modulesRoutes = require('./src/routes/modulesRoutes')(database);
+app.use('/api/modules', modulesRoutes);
+
 // ✅ CONFIGURAR SISTEMA DE AUDITORÍA Y AUTO-DIAGNÓSTICO
 const auditorRoutes = require('./src/routes/auditorRoutes')(database);
 app.use('/api/audit', auditorRoutes);
+// ✅ CONFIGURAR PHASE 4: AUTONOMOUS REPAIR + TECHNICAL REPORTS
+const auditorPhase4Routes = require('./src/routes/auditorPhase4Routes')(database);
+app.use('/api/audit/phase4', auditorPhase4Routes);
+
+// ============================================================================
+// DEPLOY MANAGER - Sistema de Migración Segura a Render
+// ============================================================================
+const deployRoutes = require('./src/routes/deployRoutes');
+app.use('/api/deploy', deployRoutes);
+
+console.log('🚀 [DEPLOY-MANAGER] Sistema de Deploy Seguro ACTIVO:');
+console.log('   📊 GET  /api/deploy/pre-deploy-check - Verificar pre-requisitos');
+console.log('   📋 GET  /api/deploy/pending-migrations - Listar migraciones pendientes');
+console.log('   🚀 POST /api/deploy/migrate-to-render - Ejecutar deploy (requiere auth)');
+console.log('   📈 GET  /api/deploy/test-stats - Estadísticas de tests');
+console.log('');
+
+console.log('🧩 [MODULES] Sistema de Gestión de Módulos y Bundling ACTIVO:');
+console.log('   📋 GET    /api/modules - Listar todos los módulos');
+console.log('   🔍 GET    /api/modules/:id - Obtener módulo específico');
+console.log('   ✅ POST   /api/modules/validate - Validar dependencias');
+console.log('   ⚠️ POST   /api/modules/analyze-impact - Analizar impacto de desactivar');
+console.log('   🏢 GET    /api/modules/company/:id - Módulos de empresa con pricing');
+console.log('   ⚡ POST   /api/modules/company/:id/activate - Activar módulo (auto-bundling)');
+console.log('   🎁 Feature: Auto-activación de módulos bundled (gratis)');
+console.log('');
 
 console.log('🔍 [AUDITOR] Sistema de Auditoría y Auto-Diagnóstico ACTIVO:');
 console.log('   🔍 /api/audit/run - Ejecutar auditoría completa');
 console.log('   📊 /api/audit/status - Estado actual');
 console.log('   📋 /api/audit/registry - Ver módulos del sistema');
+console.log('');
+console.log('🚀 [PHASE4] Sistema Autónomo de Reparación + Reportes Técnicos ACTIVO:');
+console.log('   🔬 POST /api/audit/phase4/test/deep-with-report - Test profundo con auto-repair + reporte');
+console.log('   🔧 POST /api/audit/phase4/auto-repair/:execution_id - Trigger manual de auto-reparación');
+console.log('   📄 GET  /api/audit/phase4/reports/:execution_id - Descargar reporte técnico');
+console.log('   📋 GET  /api/audit/phase4/reports - Listar reportes disponibles');
 
 // ✅ CONFIGURAR SISTEMA DE ASISTENTE IA (Ollama + Llama 3.1)
 const assistantRoutes = require('./src/routes/assistantRoutes');
@@ -2040,6 +2098,72 @@ console.log('   🔧 /api/audit/bundles - Sugerencias comerciales');
 console.log('   🌱 /api/audit/seed/:module - Generar datos de prueba');
 console.log('   🔥 Auto-diagnóstico, Auto-reparación híbrida, Análisis de dependencias');
 
+// ✅ CONFIGURAR EMAIL VERIFICATION & CONSENT MANAGEMENT SYSTEM
+const emailVerificationRoutes = require('./src/routes/emailVerificationRoutes');
+const consentManagementRoutes = require('./src/routes/consentManagementRoutes');
+
+app.use('/api/email-verification', emailVerificationRoutes);
+app.use('/api/consents', consentManagementRoutes);
+
+console.log('📧 [EMAIL VERIFICATION] Sistema de Verificación de Email ACTIVO:');
+console.log('   ✉️  POST /api/email-verification/send - Enviar email de verificación');
+console.log('   ✅ GET  /api/email-verification/verify/:token - Verificar token');
+console.log('   🔄 POST /api/email-verification/resend - Reenviar email');
+console.log('   🏥 GET  /api/email-verification/health - Estado del sistema');
+
+console.log('📜 [CONSENTS] Sistema de Gestión de Consentimientos ACTIVO:');
+console.log('   📋 GET  /api/consents/definitions - Listar definiciones de consentimientos');
+console.log('   ➕ POST /api/consents/definitions - Crear nueva definición');
+console.log('   📝 GET  /api/consents/user/:userId - Obtener consentimientos de usuario');
+console.log('   ✅ POST /api/consents/accept - Aceptar consentimiento');
+console.log('   ❌ POST /api/consents/revoke - Revocar consentimiento');
+console.log('   📊 GET  /api/consents/stats - Estadísticas de consentimientos');
+console.log('   🏥 GET  /api/consents/health - Estado del sistema');
+
+// ✅ CONFIGURAR SISTEMA DE TESTING VISIBLE - PHASE 4 (Legacy - usar /api/phase4 en su lugar)
+const visibleTestingRoutes = require('./src/routes/visibleTestingRoutes');
+app.use('/api/testing', visibleTestingRoutes);
+
+// ❌ ELIMINADO - Phase4Routes (obsoleto, funcionalidad integrada en auditorPhase4Routes)
+// const phase4Routes = require('./src/routes/phase4Routes');
+// app.use('/api/phase4', phase4Routes);
+
+// ✅ CONFIGURAR AUTO-REPAIR SERVICE - Sistema Persistente de Auto-Reparación
+const autoRepairRoutes = require('./src/routes/autoRepairRoutes');
+app.use('/api/auto-repair', autoRepairRoutes);
+
+console.log('👁️ [VISIBLE-TESTING] Sistema de Testing Visible Phase 4 ACTIVO:');
+console.log('   📍 POST /api/testing/run-visible - Iniciar test E2E con navegador visible');
+console.log('   📊 GET  /api/testing/execution-status/:executionId - Estado de ejecución en progreso');
+console.log('   📋 GET  /api/testing/active-executions - Listar ejecuciones activas');
+console.log('   🛑 POST /api/testing/kill-execution/:executionId - Detener ejecución');
+console.log('   🌐 Soporta 3 entornos: LOCAL, STAGING, PRODUCTION');
+console.log('');
+console.log('🚀 [PHASE4-INTEGRATED] Sistema COMPLETO de Testing + Auto-Repair ACTIVO:');
+console.log('   ▶️  POST /api/phase4/start - Iniciar test integrado (Puppeteer+PostgreSQL+Ollama+WebSocket)');
+console.log('   📊 GET  /api/phase4/status/:executionId - Estado de ejecución');
+console.log('   📝 GET  /api/phase4/logs/:executionId - Logs en tiempo real');
+console.log('   🛑 POST /api/phase4/stop/:executionId - Detener test');
+console.log('   📋 GET  /api/phase4/active - Listar tests activos');
+console.log('   🏥 GET  /api/phase4/health - Health check (Ollama, WebSocket, PostgreSQL)');
+console.log('   🔧 Auto-Repair: Ollama → Ticket → WebSocket → Claude Code → Fix');
+console.log('   👀 Navegador VISIBLE durante la ejecución (headless:false)');
+console.log('   🎯 Integrado en Panel Administrativo → Tab Herramientas');
+console.log('');
+console.log('🤖 [AUTO-REPAIR] Servicio Persistente de Auto-Reparación ACTIVO:');
+console.log('   🚀 POST /api/auto-repair/start - Iniciar servicio persistente');
+console.log('   🛑 POST /api/auto-repair/stop - Detener servicio');
+console.log('   🔄 POST /api/auto-repair/restart - Reiniciar servicio');
+console.log('   📊 GET  /api/auto-repair/status - Estado del servicio');
+console.log('   🔧 POST /api/auto-repair/mode - Cambiar modo (manual/auto)');
+console.log('   ⚙️  POST /api/auto-repair/config - Configurar API de Claude Code');
+console.log('   📋 GET  /api/auto-repair/queue - Cola de tickets (modo manual)');
+console.log('   📜 GET  /api/auto-repair/history - Historial de procesamiento');
+console.log('   ✅ POST /api/auto-repair/process-ticket - Marcar ticket procesado');
+console.log('   📥 GET  /api/auto-repair/next-ticket - Obtener siguiente ticket');
+console.log('   🔀 Modos: MANUAL (cola humana) | AUTO (Claude Code API)');
+console.log('');
+
 // ✅ CONFIGURAR SISTEMA DE EMAILS MULTICAPA
 const emailRoutes = require('./src/routes/emailRoutes');
 const emailWorker = require('./src/workers/EmailWorker');
@@ -2047,7 +2171,8 @@ const emailWorker = require('./src/workers/EmailWorker');
 app.use('/api/email', emailRoutes);
 
 // Iniciar worker de emails
-emailWorker.start();
+// TEMPORALMENTE DESHABILITADO: falta crear tabla email_queue
+// emailWorker.start();
 
 console.log('📧 [EMAIL-SYSTEM] Sistema de Emails Multicapa ACTIVO:');
 console.log('   🔐 /api/email/config/validate - Validar configuración SMTP');
@@ -2062,7 +2187,11 @@ console.log('   🔄 Worker procesando cola cada 5 segundos');
 // 🔒 CONFIGURAR API BIOMÉTRICA
 // COMENTADO: Conflicto con biometricConsentRoutes en la misma ruta /api/v1/biometric
 // const biometricRoutes = require('./src/routes/biometricRoutes');
-// app.use('/api/v1/biometric', biometricRoutes);
+// app.use('/api/v1/biometric', biometricRoutes');
+
+// 📷 CONFIGURAR API BIOMÉTRICA FACIAL
+const facialBiometricRoutes = require('./src/routes/facialBiometricRoutes');
+app.use('/api/v1/facial-biometric', facialBiometricRoutes);
 
 // 🏥 CONFIGURAR API MÉDICA
 const { medicalRouter, adminRouter } = require('./src/routes/medicalRoutes-simple');
@@ -2236,6 +2365,88 @@ async function startServer() {
     } catch (migrationError) {
       console.warn('⚠️  [MIGRATIONS] Error ejecutando migraciones:', migrationError.message);
       console.warn('⚠️  [MIGRATIONS] El servidor continuará normalmente.\n');
+    }
+
+    // ✅ INICIALIZAR UNIFIED KNOWLEDGE SERVICE (Sistema de Auto-Conocimiento)
+    console.log('\n🧠 [UNIFIED-KB] Inicializando Sistema de Auto-Conocimiento...');
+    try {
+      const UnifiedKnowledgeService = require('./src/services/UnifiedKnowledgeService');
+      const knowledgeService = new UnifiedKnowledgeService(database);
+      await knowledgeService.initialize();
+
+      // Hacer disponible en toda la aplicación
+      app.locals.knowledgeService = knowledgeService;
+      global.knowledgeService = knowledgeService; // También global para scripts
+
+      console.log('✅ [UNIFIED-KB] Sistema de Auto-Conocimiento iniciado correctamente');
+      console.log(`   • Módulos cargados: ${knowledgeService.metadata.size}`);
+      console.log(`   • Business Rules: ${knowledgeService.businessRules.size}`);
+      console.log(`   • Health Indicators: ${knowledgeService.healthIndicators.size}\n`);
+    } catch (kbError) {
+      console.warn('⚠️  [UNIFIED-KB] Error iniciando Knowledge Service:', kbError.message);
+      console.warn('⚠️  [UNIFIED-KB] El servidor continuará sin auto-conocimiento avanzado.\n');
+    }
+
+    // ✅ INICIALIZAR SCHEDULER DE VENCIMIENTO DE FOTOS BIOMÉTRICAS
+    console.log('📸 [SCHEDULER] Inicializando scheduler de fotos biométricas...');
+    try {
+      const NotificationEnterpriseService = require('./src/services/NotificationEnterpriseService');
+      const BiometricPhotoExpirationScheduler = require('./src/services/BiometricPhotoExpirationScheduler');
+
+      const notificationService = new NotificationEnterpriseService(database);
+      const photoScheduler = new BiometricPhotoExpirationScheduler(database, notificationService);
+      photoScheduler.start();
+
+      console.log('✅ [SCHEDULER] Scheduler de fotos biométricas iniciado correctamente');
+      console.log('   • Frecuencia: Diario a las 9:00 AM');
+      console.log('   • Notificaciones: 30 días antes del vencimiento');
+      console.log('   • Zona horaria: America/Argentina/Buenos_Aires\n');
+    } catch (schedulerError) {
+      console.warn('⚠️  [SCHEDULER] Error iniciando scheduler:', schedulerError.message);
+      console.warn('⚠️  [SCHEDULER] El servidor continuará sin scheduler automático.\n');
+    }
+
+    // ✅ INICIALIZAR SCHEDULER DE VENCIMIENTO DE DOCUMENTOS
+    console.log('📄 [SCHEDULER] Inicializando scheduler de documentos...');
+    try {
+      const DocumentExpirationScheduler = require('./src/services/DocumentExpirationScheduler');
+
+      // Reutilizar el notificationService ya creado
+      const NotificationEnterpriseService = require('./src/services/NotificationEnterpriseService');
+      const notificationServiceDocs = new NotificationEnterpriseService(database);
+      const documentScheduler = new DocumentExpirationScheduler(database, notificationServiceDocs);
+      documentScheduler.start();
+
+      console.log('✅ [SCHEDULER] Scheduler de documentos iniciado correctamente');
+      console.log('   • Frecuencia: Diario a las 10:00 AM');
+      console.log('   • Notificaciones: 30 días antes del vencimiento');
+      console.log('   • Documentos monitoreados: Pasaportes, Licencias, Visas, etc.');
+      console.log('   • Zona horaria: America/Argentina/Buenos_Aires\n');
+    } catch (schedulerError) {
+      console.warn('⚠️  [SCHEDULER] Error iniciando scheduler de documentos:', schedulerError.message);
+      console.warn('⚠️  [SCHEDULER] El servidor continuará sin scheduler de documentos.\n');
+    }
+
+    // ✅ INICIALIZAR SCHEDULER DE VENCIMIENTO DE EXÁMENES MÉDICOS
+    console.log('🏥 [SCHEDULER] Inicializando scheduler de exámenes médicos...');
+    try {
+      const MedicalExamExpirationScheduler = require('./src/services/MedicalExamExpirationScheduler');
+
+      // Reutilizar el notificationService ya creado
+      const NotificationEnterpriseService = require('./src/services/NotificationEnterpriseService');
+      const notificationServiceMedical = new NotificationEnterpriseService(database);
+      const medicalScheduler = new MedicalExamExpirationScheduler(database, notificationServiceMedical);
+      medicalScheduler.start();
+
+      console.log('✅ [SCHEDULER] Scheduler de exámenes médicos iniciado correctamente');
+      console.log('   • Frecuencia: Diario a las 11:00 AM');
+      console.log('   • Notificaciones: 30 días antes del vencimiento');
+      console.log('   • Exámenes monitoreados: Preocupacional, Periódico, Reingreso, Retiro, Especial');
+      console.log('   • Periodicidad configurable: Mensual, Trimestral, Semestral, Anual, Bienal');
+      console.log('   • Zona horaria: America/Argentina/Buenos_Aires\n');
+    } catch (schedulerError) {
+      console.warn('⚠️  [SCHEDULER] Error iniciando scheduler de exámenes médicos:', schedulerError.message);
+      console.warn('⚠️  [SCHEDULER] El servidor continuará sin scheduler de exámenes médicos.\n');
     }
 
     // Iniciar servidor HTTP

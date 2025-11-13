@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy Manager - 3 Etapas</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .deploy-container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .stage-card {
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .stage-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .stage-header {
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 15px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .stage-local .stage-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stage-staging .stage-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .stage-production .stage-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .stage-body {
+            padding: 20px;
+            background: white;
+        }
+
+        .btn-deploy {
+            font-weight: bold;
+            padding: 12px 30px;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .btn-deploy:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-deploy:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .auth-card {
+            max-width: 500px;
+            margin: 100px auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .flow-diagram {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: #667eea;
+            margin: 0 20px;
+        }
+
+        .flow-stage {
+            display: inline-block;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+
+        .flow-local {
+            background: #667eea;
+            color: white;
+        }
+
+        .flow-staging {
+            background: #f5576c;
+            color: white;
+        }
+
+        .flow-production {
+            background: #4facfe;
+            color: white;
+        }
+
+        .maintenance-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            font-size: 1rem;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Auth Section -->
+<div id="deploy-auth-section" style="display: block;">
+    <div class="container">
+        <div class="auth-card card">
+            <div class="card-header bg-primary text-white text-center">
+                <h4><i class="fas fa-lock"></i> Deploy Manager - Autenticación</h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-rocket" style="font-size: 4rem; color: #667eea;"></i>
+                    <h5 class="mt-3">Sistema de Deploy de 3 Etapas</h5>
+                    <p class="text-muted">Local → Staging → Production</p>
+                </div>
+
+                <form id="deploy-auth-form">
+                    <div class="form-group">
+                        <label for="deploy-username">Usuario</label>
+                        <input type="text" class="form-control" id="deploy-username"
+                               placeholder="Usuario autorizado" required>
+                        <small class="form-text text-muted">Solo usuario APONNT</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="deploy-password">Contraseña</label>
+                        <input type="password" class="form-control" id="deploy-password"
+                               placeholder="Contraseña" required>
+                    </div>
+
+                    <div id="deploy-auth-error" class="alert alert-danger" style="display: none;"></div>
+
+                    <button type="submit" id="deploy-auth-button" class="btn btn-primary btn-block btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> Autenticar
+                    </button>
+                </form>
+
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6><i class="fas fa-info-circle"></i> Información</h6>
+                    <ul class="mb-0 small">
+                        <li>Requiere credenciales APONNT hardcodeadas</li>
+                        <li>Mínimo 50 tests exitosos por etapa</li>
+                        <li>Backups automáticos antes de migrar</li>
+                        <li>Producción solo en horarios programados</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Section -->
+<div id="deploy-dashboard-section" class="deploy-container" style="display: none;">
+
+    <!-- Header -->
+    <div class="text-center mb-4">
+        <h2><i class="fas fa-rocket"></i> Deploy Manager - 3 Etapas</h2>
+        <p class="text-muted">Sistema de migración segura con validación en cada etapa</p>
+    </div>
+
+    <!-- Maintenance Status Badge -->
+    <div id="maintenance-status" class="maintenance-badge badge badge-success">
+        ✅ Sistema Normal
+    </div>
+
+    <!-- Flow Diagram -->
+    <div class="flow-diagram">
+        <div class="flow-stage flow-local">LOCAL</div>
+        <i class="fas fa-arrow-right flow-arrow"></i>
+        <div class="flow-stage flow-staging">STAGING</div>
+        <i class="fas fa-arrow-right flow-arrow"></i>
+        <div class="flow-stage flow-production">PRODUCTION</div>
+    </div>
+
+    <!-- Status Cards Row -->
+    <div class="row">
+        <!-- LOCAL Status -->
+        <div class="col-md-4">
+            <div class="card stage-card stage-local">
+                <div class="stage-header">
+                    <i class="fas fa-laptop"></i> ETAPA 0: LOCAL
+                </div>
+                <div class="stage-body">
+                    <div id="local-status">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2">Cargando estado...</p>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 8px;">
+                        <div id="progress-local" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGING Status -->
+        <div class="col-md-4">
+            <div class="card stage-card stage-staging">
+                <div class="stage-header">
+                    <i class="fas fa-vial"></i> ETAPA 1+2: STAGING
+                </div>
+                <div class="stage-body">
+                    <div id="staging-status">
+                        <p class="text-muted text-center">
+                            <i class="fas fa-hourglass-half"></i><br>
+                            Pendiente de migración desde Local
+                        </p>
+                    </div>
+                    <div class="progress mt-3" style="height: 8px;">
+                        <div id="progress-staging" class="progress-bar bg-info" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTION Status -->
+        <div class="col-md-4">
+            <div class="card stage-card stage-production">
+                <div class="stage-header">
+                    <i class="fas fa-cloud"></i> ETAPA 3: PRODUCTION
+                </div>
+                <div class="stage-body">
+                    <div id="production-status">
+                        <p class="text-muted text-center">
+                            <i class="fas fa-hourglass-half"></i><br>
+                            Pendiente de validación en Staging
+                        </p>
+                    </div>
+                    <div class="progress mt-3" style="height: 8px;">
+                        <div id="progress-production" class="progress-bar bg-success" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="fas fa-cogs"></i> Acciones de Deploy</h5>
+            <div class="row mt-3">
+                <div class="col-md-4 text-center">
+                    <button id="btn-migrate-staging" class="btn btn-primary btn-deploy btn-block" disabled>
+                        <i class="fas fa-upload"></i> 1. Migrate to Staging
+                    </button>
+                    <small class="text-muted">Aplicar migraciones en Staging</small>
+                </div>
+                <div class="col-md-4 text-center">
+                    <button id="btn-test-staging" class="btn btn-warning btn-deploy btn-block" disabled>
+                        <i class="fas fa-vial"></i> 2. Test Staging
+                    </button>
+                    <small class="text-muted">Ejecutar 50 tests en Staging</small>
+                </div>
+                <div class="col-md-4 text-center">
+                    <button id="btn-migrate-production" class="btn btn-success btn-deploy btn-block" disabled>
+                        <i class="fas fa-rocket"></i> 3. Migrate to Production
+                    </button>
+                    <small class="text-muted">Deploy final a Producción</small>
+                </div>
+            </div>
+
+            <div class="mt-3 text-center">
+                <button id="btn-refresh-status" class="btn btn-outline-secondary">
+                    <i class="fas fa-sync-alt"></i> Refresh Status
+                </button>
+                <span class="ml-3">
+                    <strong>Horario para Producción:</strong>
+                    <span id="maintenance-window" class="badge badge-secondary">Verificando...</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Section -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="fas fa-terminal"></i> Logs de Deploy</h5>
+        </div>
+        <div class="card-body p-0">
+            <div id="deploy-log-output" class="log-container">
+                <div class="log-entry text-success">
+                    [Sistema] Deploy Manager 3 Etapas inicializado
+                </div>
+                <div class="log-entry text-info">
+                    [Info] Esperando comandos de usuario...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="card mt-4 border-info">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-question-circle"></i> Flujo de Deploy</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6><i class="fas fa-circle text-primary"></i> Etapa 1</h6>
+                    <p class="small">Migrar de <strong>Local → Staging</strong></p>
+                    <ul class="small">
+                        <li>Requiere 50 tests OK en Local</li>
+                        <li>Migra a Render Preview</li>
+                        <li>Backup automático</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6><i class="fas fa-circle text-warning"></i> Etapa 2</h6>
+                    <p class="small">Validar <strong>Staging con Tests</strong></p>
+                    <ul class="small">
+                        <li>Ejecuta 50 tests CRUD</li>
+                        <li>Valida migraciones aplicadas</li>
+                        <li>Habilita deploy a Prod</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6><i class="fas fa-circle text-success"></i> Etapa 3</h6>
+                    <p class="small">Migrar a <strong>Production</strong></p>
+                    <ul class="small">
+                        <li>Solo en horarios programados</li>
+                        <li>Backup CRÍTICO obligatorio</li>
+                        <li>Modo mantenimiento auto</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<!-- Deploy Manager Module -->
+<script src="/js/modules/deploy-manager-3stages.js"></script>
+
+</body>
+</html>

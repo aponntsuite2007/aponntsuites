@@ -1,0 +1,113 @@
+/**
+ * MODULE BUTTONS COMPACT CSS
+ * Reducir altura de botones de módulos para evitar problemas de scroll
+ * y hacer que los modales sean completamente visibles
+ */
+
+/* Reducir altura del grid de módulos */
+.module-grid {
+    padding: 10px !important; /* Reducido de 20px */
+    gap: 10px !important; /* Reducido de 15px */
+    max-height: 30vh !important; /* Límite máximo de altura */
+    overflow-y: auto !important; /* Scroll si hay muchos módulos */
+    overflow-x: hidden !important;
+}
+
+/* Hacer los módulos más compactos */
+.module-card {
+    min-height: 80px !important; /* Reducido de 140px */
+    padding: 8px !important; /* Más compacto */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+/* Iconos más pequeños */
+.module-card i {
+    font-size: 24px !important; /* Reducido de tamaño original */
+    margin-bottom: 4px !important;
+}
+
+/* Texto más compacto */
+.module-card h3,
+.module-card .module-title {
+    font-size: 12px !important; /* Más pequeño */
+    margin: 2px 0 !important;
+    line-height: 1.2 !important;
+}
+
+/* Descripción más compacta o oculta */
+.module-card p,
+.module-card .module-description {
+    font-size: 10px !important;
+    margin: 0 !important;
+    display: none !important; /* Ocultar descripción para ahorrar espacio */
+}
+
+/* Grid más eficiente en pantallas pequeñas */
+@media (max-height: 768px) {
+    .module-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)) !important;
+        max-height: 25vh !important;
+    }
+
+    .module-card {
+        min-height: 60px !important;
+    }
+}
+
+/* Asegurar que el dashboard content tenga espacio suficiente */
+.dashboard-content,
+#mainContent {
+    margin-top: 10px !important;
+    height: calc(100vh - 40vh) !important; /* Ajustar según altura del grid */
+    overflow-y: auto !important;
+}
+
+/* Fix para modales - asegurar visibilidad completa */
+.modal-dialog {
+    margin: 10px auto !important; /* Menos margen */
+    max-height: calc(100vh - 20px) !important;
+}
+
+.modal-content {
+    max-height: calc(100vh - 30px) !important;
+    overflow: hidden !important;
+}
+
+.modal-body {
+    max-height: calc(100vh - 150px) !important; /* Ajustado para header y footer del modal */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* Tabs dentro del modal más compactos */
+.file-tabs,
+.nav-tabs {
+    min-height: auto !important;
+    padding: 5px 0 !important;
+}
+
+.file-tab,
+.nav-link {
+    padding: 5px 10px !important; /* Más compacto */
+    font-size: 12px !important;
+}
+
+/* Contenido de tabs con scroll apropiado */
+.tab-content {
+    max-height: calc(100vh - 250px) !important;
+    overflow-y: auto !important;
+    padding: 10px !important;
+}
+
+/* Fix para botones en la parte inferior del modal */
+.modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: white !important;
+    border-top: 1px solid #dee2e6 !important;
+    z-index: 10 !important;
+    padding: 10px !important;
+}

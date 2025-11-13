@@ -52,7 +52,7 @@ const biometricEngine = new RealBiometricAnalysisEngine({
  */
 router.post('/face/detect', auth, companyIsolation.middleware(), CompanyIsolationMiddleware.biometricIsolation(), upload.single('image'), async (req, res) => {
   try {
-    const companyId = req.user.company_id;
+    const companyId = req.user.companyId;
 
     if (!companyId) {
       return res.status(400).json({
@@ -103,7 +103,7 @@ router.post('/face/detect', auth, companyIsolation.middleware(), CompanyIsolatio
  */
 router.post('/face/match', auth, companyIsolation.middleware(), CompanyIsolationMiddleware.biometricIsolation(), async (req, res) => {
   try {
-    const companyId = req.user.company_id;
+    const companyId = req.user.companyId;
     const { candidateTemplate, storedTemplate } = req.body;
 
     if (!companyId) {
@@ -221,7 +221,7 @@ router.get('/capabilities', (req, res) => {
  */
 router.post('/enroll', auth, companyIsolation.middleware(), CompanyIsolationMiddleware.biometricIsolation(), upload.single('image'), async (req, res) => {
   try {
-    const companyId = req.user.company_id;
+    const companyId = req.user.companyId;
     const userId = req.body.userId || req.user.user_id;
 
     if (!companyId) {

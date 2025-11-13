@@ -690,17 +690,131 @@ class UsersCrudCollector {
 
     async testTab6Asistencias() {
         console.log('   📝 TAB 6: ASISTENCIAS/PERMISOS');
-
         await this.closeSecondaryModals();
 
         const tab6 = this.page.locator('.file-tab').nth(5);
         await tab6.click();
         await this.page.waitForTimeout(1500);
+        this.results.navigation.push({ tab: 6, name: 'Asistencias/Permisos', visible: true });
 
-        const buttonsCount = await this.page.locator('#attendance-tab button').count();
-        this.results.navigation.push({ tab: 6, name: 'Asistencias', buttons: buttonsCount });
+        console.log('      🔧 Ejecutando addPermissionRequest() directamente...');
+        await this.page.evaluate((userId) => {
+            if (typeof window.addPermissionRequest === 'function') {
+                window.addPermissionRequest(userId);
+            }
+        }, this.testUserId);
 
-        console.log(`   ✅ TAB 6: ${buttonsCount} botones detectados\n`);
+        await this.page.waitForTimeout(2000);
+        this.results.buttons_clicked.push({ tab: 6, button: '+ Permiso (ejecutado)' });
+
+        const modalVisible = await this.page.locator('#permissionRequestModal').isVisible().catch(() => false);
+
+        if (modalVisible) {
+            console.log('      ✅ Modal de permiso abierto');
+            this.results.modals_opened.push({ tab: 6, modal: 'AddPermissionRequest', opened: true });
+            await this.fillPermissionRequestFields();
+            await this.savePermissionRequestModal();
+            await this.verifyPermissionRequestInDB();
+            await this.closeSecondaryModals();
+        } else {
+            console.log('      ❌ Modal NO abrió');
+            this.results.modals_opened.push({ tab: 6, modal: 'AddPermissionRequest', opened: false });
+        }
+        console.log('   ✅ TAB 6 completado\n');
+    }
+
+    async fillPermissionRequestFields() {
+        const timestamp = Date.now();
+
+        // requestType
+        const requestTypeSelect = this.page.locator('#requestType');
+        if (await requestTypeSelect.isVisible().catch(() => false)) {
+            await requestTypeSelect.selectOption('vacaciones');
+            this.results.fields_updated.push({ field: 'requestType', value: 'vacaciones' });
+            console.log(`      ✓ Tipo: vacaciones`);
+        }
+
+        // startDate
+        const startDateInput = this.page.locator('#startDate');
+        if (await startDateInput.isVisible().catch(() => false)) {
+            await startDateInput.fill('2025-02-01');
+            this.results.fields_updated.push({ field: 'startDate', value: '2025-02-01' });
+            console.log(`      ✓ Fecha Inicio: 2025-02-01`);
+        }
+
+        // endDate
+        const endDateInput = this.page.locator('#endDate');
+        if (await endDateInput.isVisible().catch(() => false)) {
+            await endDateInput.fill('2025-02-10');
+            this.results.fields_updated.push({ field: 'endDate', value: '2025-02-10' });
+            console.log(`      ✓ Fecha Fin: 2025-02-10`);
+        }
+
+        // totalDays (auto-calculated but we can set it)
+        const totalDaysInput = this.page.locator('#totalDays');
+        if (await totalDaysInput.isVisible().catch(() => false)) {
+            await totalDaysInput.fill('10');
+            this.results.fields_updated.push({ field: 'totalDays', value: '10' });
+            console.log(`      ✓ Días Totales: 10`);
+        }
+
+        // reason
+        const reasonTextarea = this.page.locator('#permissionReason');
+        if (await reasonTextarea.isVisible().catch(() => false)) {
+            await reasonTextarea.fill(`Motivo-TEST-${timestamp}`);
+            this.results.fields_updated.push({ field: 'permissionReason', value: `Motivo-TEST-${timestamp}` });
+            console.log(`      ✓ Motivo: Motivo-TEST-${timestamp}`);
+        }
+    }
+
+    async savePermissionRequestModal() {
+        const consoleLogs = [];
+        this.page.on('console', msg => {
+            consoleLogs.push(`${msg.type()}: ${msg.text()}`);
+        });
+
+        const saveBtn = this.page.locator('#permissionRequestModal button[type="submit"]').first();
+        await saveBtn.scrollIntoViewIfNeeded();
+        await this.page.waitForTimeout(500);
+        await saveBtn.click();
+        await this.page.waitForTimeout(5000);
+
+        console.log('      💾 Guardado');
+
+        const relevantLogs = consoleLogs.filter(log =>
+            log.includes('PERMISSIONS') || log.includes('Error') || log.includes('error')
+        );
+        if (relevantLogs.length > 0) {
+            console.log('      📋 Logs del navegador:');
+            relevantLogs.forEach(log => console.log(`         ${log}`));
+        }
+    }
+
+    async verifyPermissionRequestInDB() {
+        const permissions = await this.queryDB(`
+            SELECT request_type, start_date, end_date, total_days, reason
+            FROM user_permission_requests
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            LIMIT 1
+        `, [this.testUserId]);
+
+        if (permissions && permissions.length > 0) {
+            const data = permissions[0];
+            const typeOK = data.request_type === 'vacaciones';
+            const reasonOK = data.reason && data.reason.includes('Motivo-TEST');
+            console.log(`      📊 BD: request_type=${data.request_type}, total_days=${data.total_days}`);
+            if (typeOK) {
+                this.results.persistence_verified.push({ field: 'request_type', persisted: true });
+                console.log('      ✅ request_type persistido en BD');
+            }
+            if (reasonOK) {
+                this.results.persistence_verified.push({ field: 'reason', persisted: true });
+                console.log('      ✅ reason persistido en BD');
+            }
+        } else {
+            console.log('      ⚠️  No se encontró el registro en BD');
+        }
     }
 
     async testTab7Sanciones() {
@@ -840,18 +954,176 @@ class UsersCrudCollector {
     }
 
     async testTab9Biometrico() {
-        console.log('   📝 TAB 9: REGISTRO BIOMÉTRICO');
+        console.log('   📝 TAB 9: REGISTRO BIOMÉTRICO (CAPTURA REAL)');
 
         await this.closeSecondaryModals();
 
         const tab9 = this.page.locator('.file-tab').nth(8);
         await tab9.click();
         await this.page.waitForTimeout(1500);
+        this.results.navigation.push({ tab: 9, name: 'Biométrico', visible: true });
 
-        const buttonsCount = await this.page.locator('#biometric-tab button').count();
-        this.results.navigation.push({ tab: 9, name: 'Biométrico', buttons: buttonsCount });
+        console.log('      🔧 Iniciando captura biométrica con cámara real...');
 
-        console.log(`   ✅ TAB 9: ${buttonsCount} botones detectados\n`);
+        // Capturar logs de consola para monitorear el proceso
+        const consoleLogs = [];
+        this.page.on('console', msg => {
+            const text = msg.text();
+            consoleLogs.push(`[${msg.type()}] ${text}`);
+            // Mostrar logs importantes en tiempo real
+            if (text.includes('BIOMETRIC') || text.includes('AUTO-CAPTURE') || text.includes('Azure')) {
+                console.log(`      📋 ${text}`);
+            }
+        });
+
+        // Ejecutar función de captura
+        await this.page.evaluate((userId, employeeId) => {
+            if (typeof window.startBiometricCapture === 'function') {
+                window.startBiometricCapture(userId, employeeId);
+            }
+        }, this.testUserId, this.testUserId);
+
+        await this.page.waitForTimeout(3000);
+        this.results.buttons_clicked.push({ tab: 9, button: 'Capturar Foto Biométrica (ejecutado)' });
+
+        // Verificar si el modal de captura se abrió
+        const captureModalVisible = await this.page.evaluate(() => {
+            const modal = document.querySelector('#auto-capture-modal, .biometric-capture-modal, [class*="capture"]');
+            return modal ? modal.style.display !== 'none' : false;
+        }).catch(() => false);
+
+        if (captureModalVisible) {
+            console.log('      ✅ Modal de captura biométrica abierto');
+            console.log('\n' + '═'.repeat(80));
+            console.log('      🎥 CÁMARA ACTIVA - Posiciona tu rostro frente a la cámara');
+            console.log('      ⏳ El sistema capturará automáticamente cuando detecte condiciones óptimas');
+            console.log('      📊 Azure Face API está analizando en tiempo real...');
+            console.log('═'.repeat(80) + '\n');
+
+            this.results.modals_opened.push({ tab: 9, modal: 'BiometricCapture', opened: true });
+
+            // Esperar hasta 60 segundos para captura automática
+            console.log('      ⏳ Esperando captura automática (máx 60 segundos)...');
+
+            let captureCompleted = false;
+            let attempts = 0;
+            const maxAttempts = 60; // 60 segundos
+
+            while (!captureCompleted && attempts < maxAttempts) {
+                await this.page.waitForTimeout(1000);
+                attempts++;
+
+                // Verificar si captura se completó (modal se cerró o mensaje de éxito)
+                const stillCapturing = await this.page.evaluate(() => {
+                    const modal = document.querySelector('#auto-capture-modal, .biometric-capture-modal');
+                    return modal && modal.style.display !== 'none';
+                }).catch(() => false);
+
+                if (!stillCapturing) {
+                    captureCompleted = true;
+                    console.log('      ✅ Captura completada (modal cerrado)');
+                    break;
+                }
+
+                // Mostrar progreso cada 5 segundos
+                if (attempts % 5 === 0) {
+                    console.log(`      ⏱️  Transcurridos ${attempts} segundos...`);
+                }
+            }
+
+            if (!captureCompleted) {
+                console.log('      ⚠️  Timeout: No se completó captura automática en 60 segundos');
+                console.log('      ℹ️  Esto es normal si no hay rostro frente a la cámara');
+            }
+
+            // Esperar procesamiento adicional
+            await this.page.waitForTimeout(3000);
+
+            // Verificar persistencia en BD
+            await this.verifyBiometricDataInDB();
+
+        } else {
+            console.log('      ❌ Modal de captura NO abrió');
+            console.log('      ℹ️  Posibles causas: permisos de cámara, módulo biometric-simple.js no cargado');
+            this.results.modals_opened.push({ tab: 9, modal: 'BiometricCapture', opened: false });
+        }
+
+        // Mostrar logs relevantes al final
+        const relevantLogs = consoleLogs.filter(log =>
+            log.includes('Error') || log.includes('error') ||
+            log.includes('Success') || log.includes('exitosa') ||
+            log.includes('captura') || log.includes('Azure')
+        );
+
+        if (relevantLogs.length > 0) {
+            console.log('\n      📋 LOGS IMPORTANTES:');
+            relevantLogs.slice(-10).forEach(log => console.log(`         ${log}`));
+        }
+
+        console.log('   ✅ TAB 9 completado\n');
+    }
+
+    async verifyBiometricDataInDB() {
+        console.log('      🔍 Verificando datos biométricos en BD...');
+
+        // Verificar tabla users (campos biométricos)
+        const userBiometric = await this.queryDB(`
+            SELECT
+                biometric_photo_url,
+                biometric_photo_captured_at,
+                biometric_template_stored,
+                biometric_photo_expiry_date
+            FROM users
+            WHERE id = $1
+        `, [this.testUserId]);
+
+        if (userBiometric && userBiometric.length > 0) {
+            const data = userBiometric[0];
+
+            if (data.biometric_photo_url) {
+                console.log(`      ✅ biometric_photo_url: ${data.biometric_photo_url.substring(0, 50)}...`);
+                this.results.persistence_verified.push({ field: 'biometric_photo_url', persisted: true });
+            }
+
+            if (data.biometric_photo_captured_at) {
+                console.log(`      ✅ biometric_photo_captured_at: ${data.biometric_photo_captured_at}`);
+                this.results.persistence_verified.push({ field: 'biometric_photo_captured_at', persisted: true });
+            }
+
+            if (data.biometric_template_stored !== null) {
+                console.log(`      ✅ biometric_template_stored: ${data.biometric_template_stored}`);
+                this.results.persistence_verified.push({ field: 'biometric_template_stored', persisted: true });
+            }
+
+            if (data.biometric_photo_expiry_date) {
+                console.log(`      ✅ biometric_photo_expiry_date: ${data.biometric_photo_expiry_date}`);
+            }
+        } else {
+            console.log('      ⚠️  No se encontraron datos biométricos en users table');
+        }
+
+        // Verificar tabla facial_biometric_data (template encriptado)
+        const facialData = await this.queryDB(`
+            SELECT
+                id,
+                created_at,
+                template_quality_score,
+                encryption_algorithm
+            FROM facial_biometric_data
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            LIMIT 1
+        `, [this.testUserId]);
+
+        if (facialData && facialData.length > 0) {
+            const data = facialData[0];
+            console.log(`      ✅ Template en facial_biometric_data (ID: ${data.id})`);
+            console.log(`      📊 Quality score: ${data.template_quality_score || 'N/A'}`);
+            console.log(`      🔐 Encryption: ${data.encryption_algorithm || 'AES-256'}`);
+            this.results.persistence_verified.push({ field: 'facial_biometric_template', persisted: true });
+        } else {
+            console.log('      ⚠️  No se encontró template en facial_biometric_data');
+        }
     }
 
     async verifyPersistence() {

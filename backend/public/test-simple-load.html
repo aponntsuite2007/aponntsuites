@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Simple</title>
+</head>
+<body>
+    <h1>Test Carga Simple</h1>
+    <div id="contentArea"></div>
+
+    <script>
+        console.log('1. ANTES de cargar script');
+    </script>
+
+    <script src="js/modules/biometric-dashboard.js"></script>
+
+    <script>
+        console.log('2. DESPUÉS de cargar script');
+        console.log('3. Función existe?', typeof showBiometricDashboardContent);
+
+        if (typeof showBiometricDashboardContent === 'function') {
+            console.log('4. EJECUTANDO FUNCIÓN...');
+            showBiometricDashboardContent();
+        } else {
+            console.error('5. FUNCIÓN NO EXISTE!');
+        }
+    </script>
+</body>
+</html>

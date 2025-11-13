@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
 const axios = require('axios');
 const LearningEngine = require('../learning/LearningEngine');
 
@@ -126,7 +126,7 @@ class FrontendCollector {
   async initBrowser() {
     console.log('    🌐 [BROWSER] Abriendo navegador VISIBLE...');
 
-    this.browser = await puppeteer.launch({
+    this.browser = await chromium.launch({
       headless: false, // ✅ NAVEGADOR VISIBLE: El usuario verá todo el proceso de testing en tiempo real
       args: [
         '--no-sandbox',
@@ -137,21 +137,23 @@ class FrontendCollector {
         '--no-zygote',
         '--start-maximized' // Maximizar ventana para mejor visualización
       ],
-      defaultViewport: null, // Usar viewport completo de la ventana
-      protocolTimeout: 180000 // ✅ 3 MINUTOS de timeout para protocol calls (aumentado por login lento)
+       // Usar viewport completo de la ventana
+       // ✅ 3 MINUTOS de timeout para protocol calls (aumentado por login lento)
     });
 
-    this.page = await this.browser.newPage();
+    const context = await this.browser.newContext({ viewport: null });
+        this.page = await context.newPage();
 
     // ✅ AUTO-ACEPTAR TODOS LOS DIÁLOGOS (alert, confirm, prompt)
     this.page.on('dialog', async dialog => {
-      console.log(`      🔔 [AUTO-DIALOG] Tipo: ${dialog.type()} - Mensaje: "${dialog.message().substring(0, 100)}..."`);
+      console.log(`      🔔 [AUTO-DIALOG] Tipo: ${dialog.fill()} - Mensaje: "${dialog.message().substring(0, 100)}..."`);
       await dialog.accept(); // Aceptar automáticamente
       console.log(`      ✅ [AUTO-DIALOG] Diálogo aceptado automáticamente`);
     });
 
     // ✅ Setear viewport a tamaño de pantalla completo (1920x1080)
-    await this.page.setViewport({ width: 1366, height: 768 });
+    // Playwright viewport set in newContext
+        // await this.page.setViewport({ width: 1366, height: 768 });
     console.log('    📐 [BROWSER] Viewport configurado a 1366x768 (responsive estándar)');
 
     // Deshabilitar cache para obtener siempre la versión más reciente del HTML
@@ -169,7 +171,7 @@ class FrontendCollector {
 
     // 1️⃣ JAVASCRIPT ERRORS (30+ tipos) - CONSOLA
     this.page.on('console', async msg => {
-      if (msg.type() === 'error') {
+      if (msg.fill() === 'error') {
         const errorText = msg.text();
         const location = msg.location();
         const stackTrace = msg.stackTrace ? msg.stackTrace() : [];
@@ -181,8 +183,7 @@ class FrontendCollector {
         const errorCategory = this._classifyJavaScriptError(errorText);
 
         const errorDetails = {
-          type: 'console',
-          category: errorCategory, // ✨ NUEVO: Categoría específica
+          type: 'console', category: errorCategory, // ✨ NUEVO: Categoría específica
           message: errorText,
           file: filePath,
           line: lineNumber,
@@ -200,15 +201,14 @@ class FrontendCollector {
       }
 
       // ✅ CAPTURAR WARNINGS TAMBIÉN (pueden indicar problemas futuros)
-      if (msg.type() === 'warning') {
+      if (msg.fill() === 'warning') {
         const warningText = msg.text();
         const location = msg.location();
 
         // Solo capturar warnings críticos
         if (this._isCriticalWarning(warningText)) {
           this.consoleErrors.push({
-            type: 'warning',
-            category: 'warning-critical',
+            type: 'warning', category: 'warning-critical',
             message: warningText,
             file: location && location.url ? this._extractFileName(location.url) : 'unknown',
             line: location ? location.lineNumber : null,
@@ -334,12 +334,12 @@ class FrontendCollector {
     console.log('    🔐 [LOGIN] Iniciando login automático...');
     console.log(`    📋 [LOGIN] Company ID recibido: ${company_id}`);
 
-    // ✅ waitUntil: 'networkidle2' - Espera a que la red esté casi idle
+    // ✅ waitUntil: 'networkidle' - Espera a que la red esté casi idle
     await this.page.goto(`${this.baseUrl}/panel-empresa.html`, {
-      waitUntil: 'networkidle2',
+      waitUntil: 'networkidle',
       timeout: 60000
     });
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await this.page.waitForTimeout(3000);
 
     try {
       // ✅ Obtener slug de la empresa por company_id
@@ -379,11 +379,11 @@ class FrontendCollector {
       console.log('    ✅ Dropdown con opciones cargadas');
 
       // Esperar 1 segundo adicional para asegurar que el evento onchange está listo
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.page.waitForTimeout(1000);
 
       // PASO 1: Seleccionar empresa
       console.log(`    🏢 Seleccionando empresa: ${companySlug}`);
-      await this.page.select('#companySelect', companySlug);
+      await this.page.selectOption('#companySelect', companySlug);
 
       // Esperar a que JavaScript termine de ejecutarse (networkidle)
       console.log('    ⏳ Esperando que JavaScript termine de ejecutarse...');
@@ -392,7 +392,7 @@ class FrontendCollector {
       });
 
       // Esperar adicional para que event handlers se registren
-      await new Promise(resolve => setTimeout(resolve, 5000)); // 5 segundos para asegurar que todo esté listo
+      await this.page.waitForTimeout(5000); // 5 segundos para asegurar que todo esté listo
 
       // PASO 2: Esperar a que se habilite el campo de usuario e ingresar "soporte"
       console.log('    ⏳ Esperando que se habilite campo de usuario...');
@@ -433,16 +433,16 @@ class FrontendCollector {
       // Limpiar campo de usuario (por si tiene valor previo)
       await this.page.click('#userInput', { clickCount: 3 }); // Triple click para seleccionar todo
       await this.page.keyboard.press('Backspace');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await this.page.waitForTimeout(500);
 
       console.log('    👤 Ingresando usuario: soporte');
-      await this.page.type('#userInput', 'soporte', { delay: 100 });
+      await this.page.fill('#userInput', 'soporte');
       
       // Verificar que se escribió correctamente
       const userValue = await this.page.$eval('#userInput', el => el.value);
       console.log(`    ✅ Usuario ingresado: "${userValue}"`);
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       // PASO 3: Esperar a que se habilite el campo de contraseña e ingresar
       console.log('    ⏳ Esperando que se habilite campo de contraseña...');
@@ -471,11 +471,11 @@ class FrontendCollector {
       // Limpiar campo de contraseña (por si tiene valor previo)
       await this.page.click('#passwordInput', { clickCount: 3 }); // Triple click para seleccionar todo
       await this.page.keyboard.press('Backspace');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await this.page.waitForTimeout(500);
       
       console.log('    🔑 Ingresando contraseña: admin123');
-      await this.page.type('#passwordInput', 'admin123', { delay: 100 });
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.page.fill('#passwordInput', 'admin123');
+      await this.page.waitForTimeout(1000);
 
       // PASO 4: Click en botón Ingresar
       console.log('    🚀 Haciendo click en botón Ingresar...');
@@ -549,7 +549,7 @@ class FrontendCollector {
             console.log('    ℹ️  [AI-ASSISTANT] No se pudo cerrar el modal (puede no estar presente)');
           }
         });
-        await new Promise(resolve => setTimeout(resolve, 500)); // Esperar a que la animación de cierre termine
+        await this.page.waitForTimeout(500); // Esperar a que la animación de cierre termine
 
       } else {
         console.error('    ❌ [LOGIN] Login falló - No se encontró token o empresa');
@@ -941,7 +941,7 @@ class FrontendCollector {
         for (const btn of closeButtons) {
           try {
             await btn.click();
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await this.page.waitForTimeout(500);
           } catch (e) {
             // Ignorar si el botón ya no existe
           }
@@ -1003,7 +1003,7 @@ class FrontendCollector {
       console.log(`      ✅ [DYNAMIC-LOAD] Módulo ${module.id} cargado (${moduleLoaded.reason})`);
 
       // Esperar a que las funciones del módulo estén disponibles (1s adicional)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.page.waitForTimeout(1000);
 
       // Intentar navegar usando openModule()
       await this.page.evaluate((moduleId, moduleName) => {
@@ -1082,7 +1082,7 @@ class FrontendCollector {
 
       // AUTO-CERRAR modales de error antes de verificar
       await this.autoCloseErrorModals();
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.page.waitForTimeout(1000);
 
       // NUEVO: Detectar mensajes de error visibles en la página
       const errorMessages = await this.detectVisibleErrors();
@@ -1175,7 +1175,7 @@ class FrontendCollector {
   async testList(module) {
     try {
       // Buscar tabla o lista de items
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       const hasItems = await this.page.evaluate(() => {
         // Buscar tablas
@@ -1202,7 +1202,7 @@ class FrontendCollector {
 
       // Click en el botón
       await addButton.click();
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       // Verificar que se abrió un modal
       const modalOpened = await this.page.evaluate(() => {
@@ -1219,7 +1219,7 @@ class FrontendCollector {
   async testRowButtons(module) {
     try {
       // Buscar primera fila de la tabla
-      const firstRow = await this.page.$('table tbody tr:first-child');
+      const firstRow = await this.page.locator('table tbody tr:first-child');
 
       if (!firstRow) {
         return {
@@ -1242,7 +1242,7 @@ class FrontendCollector {
 
       // Intentar hacer click en el primer botón (probablemente Editar)
       await buttons[0].click();
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       // Verificar que algo pasó (modal se abrió o función se ejecutó)
       const actionWorked = await this.page.evaluate(() => {
@@ -1317,7 +1317,7 @@ class FrontendCollector {
       }
 
       await addButton.click();
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       // 2. Llenar formulario con datos de prueba
       console.log(`        🔹 Llenando formulario...`);
@@ -1344,7 +1344,7 @@ class FrontendCollector {
       }
 
       await saveButton.click();
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Esperar respuesta del servidor
+      await this.page.waitForTimeout(3000); // Esperar respuesta del servidor
 
       // 4. Verificar que se creó correctamente (modal cerrado, mensaje success)
       const modalClosed = await this.page.evaluate(() => {
@@ -1384,7 +1384,7 @@ class FrontendCollector {
         }
       }, module.id);
 
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       // Buscar el registro en la tabla por ID
       const recordFound = await this.page.evaluate((id) => {
@@ -1419,7 +1419,7 @@ class FrontendCollector {
     try {
       // 1. Buscar botón de editar para el registro
       console.log(`        🔹 Abriendo modal de editar para ID ${recordId}...`);
-      const editButton = await this.page.$('button[onclick*="edit"], i.fa-edit');
+      const editButton = await this.page.locator('button[onclick*="edit"], i.fa-edit');
 
       if (!editButton) {
         return {
@@ -1430,7 +1430,7 @@ class FrontendCollector {
       }
 
       await editButton.click();
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       // 2. Modificar campos del formulario
       console.log(`        🔹 Modificando campos del formulario...`);
@@ -1457,7 +1457,7 @@ class FrontendCollector {
       }
 
       await saveButton.click();
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await this.page.waitForTimeout(3000);
 
       // 4. Verificar que se actualizó correctamente
       const modalClosed = await this.page.evaluate(() => {
@@ -1487,7 +1487,7 @@ class FrontendCollector {
     try {
       // 1. Buscar botón de eliminar
       console.log(`        🔹 Buscando botón de eliminar...`);
-      const deleteButton = await this.page.$('button[onclick*="delete"], i.fa-trash');
+      const deleteButton = await this.page.locator('button[onclick*="delete"], i.fa-trash');
 
       if (!deleteButton) {
         return {
@@ -1499,13 +1499,13 @@ class FrontendCollector {
 
       // 2. Click en eliminar
       await deleteButton.click();
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       // 3. Confirmar eliminación (si hay confirm dialog, se acepta automáticamente)
       // El page.on('dialog') ya está configurado para auto-aceptar
 
       // 4. Esperar a que se complete la eliminación
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await this.page.waitForTimeout(3000);
 
       // 5. Verificar que el registro ya no existe en la lista
       const recordDeleted = await this.page.evaluate((id) => {
@@ -1540,7 +1540,7 @@ class FrontendCollector {
     try {
       console.log(`        🔹 Recargando página completa (F5)...`);
       await this.page.reload({ waitUntil: 'networkidle0', timeout: 10000 });
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await this.page.waitForTimeout(3000);
 
       // Verificar que la lista todavía tiene datos
       const hasData = await this.page.evaluate(() => {
@@ -1588,14 +1588,14 @@ class FrontendCollector {
         // Generar datos de prueba según el tipo de campo
         // ⭐ TODOS los campos de texto llevan prefijo TEST_PREFIX
         if (fieldType === 'input' && inputType === 'text') {
-          await field.type(`${this.TEST_PREFIX} ${mode} ${Date.now()}`, { delay: 50 });
+          await field.fill(`${this.TEST_PREFIX} ${mode} ${Date.now()}`, { delay: 50 });
         } else if (fieldType === 'input' && inputType === 'email') {
-          await field.type(`test-audit-${Date.now()}@example.com`, { delay: 50 });
+          await field.fill(`test-audit-${Date.now()}@example.com`, { delay: 50 });
         } else if (fieldType === 'input' && inputType === 'number') {
-          await field.type('123', { delay: 50 });
+          await field.fill('123', { delay: 50 });
         } else if (fieldType === 'input' && inputType === 'date') {
           // Fecha de prueba
-          await field.type('2025-01-01', { delay: 50 });
+          await field.fill('2025-01-01', { delay: 50 });
         } else if (fieldType === 'select') {
           // Seleccionar primera opción disponible
           await this.page.evaluate((el) => {
@@ -1604,9 +1604,9 @@ class FrontendCollector {
             }
           }, field);
         } else if (fieldType === 'textarea') {
-          await field.type(`${this.TEST_PREFIX} Descripción de prueba para ${mode}`, { delay: 50 });
+          await field.fill(`${this.TEST_PREFIX} Descripción de prueba para ${mode}`, { delay: 50 });
         } else if (fieldType === 'input' && inputType === 'tel') {
-          await field.type('1234567890', { delay: 50 });
+          await field.fill('1234567890', { delay: 50 });
         }
       }
 
@@ -1759,11 +1759,11 @@ class FrontendCollector {
     try {
       // Scroll down para disparar lazy loading
       await this.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       // Scroll up
       await this.page.evaluate(() => window.scrollTo(0, 0));
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await this.page.waitForTimeout(2000);
 
       // Simular clicks en diferentes elementos del DOM
       await this.page.evaluate(() => {
@@ -1779,7 +1779,7 @@ class FrontendCollector {
           }
         }
       });
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await this.page.waitForTimeout(3000);
 
     } catch(e) {
       console.log(`     ⚠️  Error simulando actividad: ${e.message}`);

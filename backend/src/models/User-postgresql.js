@@ -197,12 +197,42 @@ module.exports = (sequelize) => {
       allowNull: true,
       field: 'two_factor_secret'
     },
+    // Email verification (MANDATORY since 2025-11-01)
+    email_verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'email_verified',
+      index: true,
+      comment: 'Email verification is MANDATORY - account cannot be activated until verified'
+    },
+    verification_pending: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      field: 'verification_pending',
+      comment: 'Indicates if email verification is still pending'
+    },
+    account_status: {
+      type: DataTypes.ENUM('pending_verification', 'active', 'suspended', 'inactive'),
+      allowNull: false,
+      defaultValue: 'pending_verification',
+      field: 'account_status',
+      index: true,
+      comment: 'Account status - pending_verification = cannot login until email verified'
+    },
+    email_verified_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'email_verified_at',
+      comment: 'Timestamp when email was verified'
+    },
     // Status and permissions
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: true,
-      field: 'is_active',
+      defaultValue: false,  // CHANGED: Default to false - activated only after email verification
+      field: 'is_active',  // ✅ FIX: Usar is_active (snake_case) que es la columna principal en la BD
       index: true
     },
     permissions: {
@@ -295,6 +325,27 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: true,
       field: 'biometric_last_updated'
+    },
+    // Biometric photo with expiration (annual renewal)
+    biometricPhotoUrl: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'biometric_photo_url',
+      comment: 'URL of visible photo captured during biometric enrollment'
+    },
+    biometricPhotoDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'biometric_photo_date',
+      index: true,
+      comment: 'Date when biometric photo was captured'
+    },
+    biometricPhotoExpiration: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'biometric_photo_expiration',
+      index: true,
+      comment: 'Expiration date for biometric photo (1 year from capture, requires renewal)'
     },
     // Location and GPS settings
     gpsEnabled: {
@@ -401,19 +452,6 @@ module.exports = (sequelize) => {
       allowNull: true,
       comment: 'Additional notes about vendor'
     },
-    // Timestamps (usar los nombres reales de la tabla)
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-      field: 'created_at'
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-      field: 'updated_at'
-    },
     version: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -422,11 +460,10 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'users',
-    // underscored se hereda de la configuración global de Sequelize (database.js)
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-    version: 'version',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    underscored: false,
     
     // Database-level optimizations
     indexes: [

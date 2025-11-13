@@ -18,6 +18,8 @@ const { Op } = require('sequelize');
 const { auth, adminOnly, supervisorOrAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const EmailVerificationService = require('../services/EmailVerificationService');
+const ConsentService = require('../services/ConsentService');
 
 // Helper function to convert database fields to frontend format
 function formatUserForFrontend(user) {
@@ -69,12 +71,24 @@ function formatUserForFrontend(user) {
   if (userData.has_fingerprint !== undefined) formatted.hasFingerprint = userData.has_fingerprint;
   if (userData.has_facial_data !== undefined) formatted.hasFacialData = userData.has_facial_data;
   if (userData.biometric_last_updated !== undefined) formatted.biometricLastUpdated = userData.biometric_last_updated;
-  if (userData.gps_enabled !== undefined) formatted.gpsEnabled = userData.gps_enabled;
+  // GPS settings - FIX CRITICAL: Calculate allowOutsideRadius from gpsEnabled
+  // IMPORTANT: allowOutsideRadius is a VIRTUAL field, NOT stored in DB
+  // DB stores: gps_enabled (boolean)
+  // allowOutsideRadius (frontend) = !gpsEnabled (backend)
+  // Meaning: gpsEnabled=true → user CANNOT go outside → allowOutsideRadius=false
+  //          gpsEnabled=false → user CAN go outside → allowOutsideRadius=true
+
+  // ALWAYS set both fields explicitly to ensure frontend receives them
+  const gpsValue = userData.gpsEnabled !== undefined ? userData.gpsEnabled :
+                   (userData.gps_enabled !== undefined ? userData.gps_enabled : false);
+
+  formatted.gpsEnabled = gpsValue; // ALWAYS include this field
+  formatted.allowOutsideRadius = !gpsValue; // INVERSE calculation
+
+  // Allowed locations (independent from gpsEnabled)
   if (userData.allowed_locations !== undefined) {
     formatted.allowedLocations = userData.allowed_locations;
-    formatted.allowOutsideRadius = userData.allowed_locations?.length > 0;
   }
-  if (userData.allowOutsideRadius !== undefined) formatted.allowOutsideRadius = userData.allowOutsideRadius;
 
   // Configuración de acceso a kioscos y app móvil
   if (userData.canUseMobileApp !== undefined) formatted.canUseMobileApp = userData.canUseMobileApp;
@@ -208,6 +222,8 @@ router.get('/', auth, supervisorOrAdmin, async (req, res) => {
  */
 router.get('/:id', auth, async (req, res) => {
   try {
+    console.log('🚨🚨🚨 [GET /:id] ENDPOINT EJECUTANDOSE - userId:', req.params.id);
+
     const user = await User.findOne({
       where: {
         user_id: req.params.id  // ✅ FIX: Primary key is user_id (UUID), not id (integer)
@@ -221,8 +237,23 @@ router.get('/:id', auth, async (req, res) => {
       });
     }
 
+    // DEBUG: Log raw user values before formatting
+    console.log('🔍 [GET /:id] RAW user from DB:');
+    console.log('   user.isActive:', user.isActive);
+    console.log('   user.gpsEnabled:', user.gpsEnabled);
+    console.log('   user.departmentId:', user.departmentId);
+
     // Format user for frontend
     const formattedUser = formatUserForFrontend(user);
+
+    // DEBUG: Log formatted values before sending
+    console.log('🔍 [GET /:id] FORMATTED user:');
+    console.log('   formattedUser.isActive:', formattedUser.isActive);
+    console.log('   formattedUser.gpsEnabled:', formattedUser.gpsEnabled);
+    console.log('   formattedUser.allowOutsideRadius:', formattedUser.allowOutsideRadius);
+    console.log('   formattedUser.departmentId:', formattedUser.departmentId);
+    console.log('🚨🚨🚨 [GET /:id] RETORNANDO USUARIO FORMATEADO');
+
     res.json(formattedUser);
 
   } catch (error) {
@@ -281,12 +312,13 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
     }
 
     // Hash de la contraseña
-    const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_ROUNDS));
+    const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_ROUNDS || 12));
 
     // Generate usuario from email if not provided
     const usuario = req.body.usuario || email.split('@')[0] || employeeId;
 
     // Convert frontend fields to database fields
+    // IMPORTANTE: Usuario inicia INACTIVO hasta verificar email
     const newUser = await User.create({
       usuario: usuario,
       companyId: req.user.companyId,
@@ -306,15 +338,44 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       emergencyContact: emergencyContact,
       emergencyPhone: emergencyPhone,
       defaultBranchId: defaultBranchId,
-      preferences
+      preferences,
+      // EMAIL VERIFICATION OBLIGATORIO
+      email_verified: false,
+      verification_pending: true,
+      account_status: 'pending_verification',
+      isActive: false  // NO ACTIVO hasta verificar email
     });
+
+    console.log(`📧 [USER-CREATION] Usuario creado: ${newUser.user_id} - Enviando email de verificación...`);
+
+    // ENVIAR EMAIL DE VERIFICACIÓN INMEDIATAMENTE
+    try {
+      // Obtener consentimientos pendientes para el rol
+      const pendingConsents = await ConsentService.getPendingConsents(newUser.user_id, 'employee');
+
+      // Enviar email de verificación
+      const verificationResult = await EmailVerificationService.sendVerificationEmail(
+        newUser.user_id,
+        'employee',
+        newUser.email,
+        pendingConsents.pending_consents || []
+      );
+
+      console.log(`✅ [USER-CREATION] Email de verificación enviado a: ${newUser.email}`);
+    } catch (emailError) {
+      console.error(`❌ [USER-CREATION] Error enviando email de verificación:`, emailError.message);
+      // NO FALLAR la creación del usuario, solo loguear el error
+    }
 
     // Format user for frontend response
     const formattedUser = formatUserForFrontend(newUser);
 
     res.status(201).json({
-      message: 'Usuario creado exitosamente',
-      user: formattedUser
+      message: 'Usuario creado. DEBE verificar su email para activar la cuenta.',
+      user: formattedUser,
+      verification_sent: true,
+      verification_email: newUser.email,
+      status: 'pending_verification'
     });
 
   } catch (error) {
@@ -344,7 +405,16 @@ router.put('/:id', auth, async (req, res) => {
       });
     }
 
-    const updateData = { ...req.body };
+    let updateData = { ...req.body };
+
+    // ⚠️ FIX BUG #2: Mapear allowOutsideRadius → gpsEnabled (columna real en BD)
+    // IMPORTANT: allowOutsideRadius and gpsEnabled have INVERSE meanings
+    // allowOutsideRadius: true  = can go outside = gpsEnabled: false (GPS OFF)
+    // allowOutsideRadius: false = restricted area = gpsEnabled: true (GPS ON)
+    if (updateData.allowOutsideRadius !== undefined) {
+      updateData.gpsEnabled = !updateData.allowOutsideRadius; // INVERSE relationship
+      delete updateData.allowOutsideRadius; // Remover campo inexistente
+    }
 
     // Si es empleado, solo puede actualizar ciertos campos
     if (req.user.role === 'employee') {
@@ -364,10 +434,16 @@ router.put('/:id', auth, async (req, res) => {
 
     await user.update(updateData);
 
+    console.log('🔧 [DEBUG-GPS] Datos guardados en BD:', updateData);
+
     // Obtener usuario actualizado sin password
     const updatedUser = await User.findByPk(req.params.id, {
       attributes: { exclude: ['password'] }
     });
+
+    console.log('🔧 [DEBUG-GPS] Usuario DESPUÉS del update:');
+    console.log('   gpsEnabled (en BD):', updatedUser.gpsEnabled);
+    console.log('   allowOutsideRadius (calculado):', updatedUser.gpsEnabled !== null ? !updatedUser.gpsEnabled : true);
 
     // Format user for frontend response
     const formattedUser = formatUserForFrontend(updatedUser);
