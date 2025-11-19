@@ -126,17 +126,34 @@ class BaseModuleCollector {
                 } catch (error) {
                     console.error(`❌ Error en categoría ${category.name}:`, error.message);
 
-                    results.push(await this.database.AuditLog.create({
-                        execution_id,
-                        company_id: this.company_id, // Incluir company_id
-                        test_type: 'e2e',
-                        module_name: moduleConfig.moduleName,
-                        test_name: `frontend_${category.name}`,
-                        status: 'fail',
-                        error_message: error.message,
-                        error_stack: error.stack,
-                        completed_at: new Date()
-                    }));
+                    // ✅ FIX: Verificar que database y AuditLog estén disponibles antes de crear
+                    if (this.database && this.database.AuditLog) {
+                        results.push(await this.database.AuditLog.create({
+                            execution_id,
+                            company_id: this.company_id, // Incluir company_id
+                            test_type: 'e2e',
+                            module_name: moduleConfig.moduleName,
+                            test_name: `frontend_${category.name}`,
+                            status: 'fail',
+                            error_message: error.message,
+                            error_stack: error.stack,
+                            completed_at: new Date()
+                        }));
+                    } else {
+                        console.warn('⚠️  No se pudo guardar AuditLog: database.AuditLog no disponible');
+                        // Retornar un objeto de resultado sin guardar en BD
+                        results.push({
+                            execution_id,
+                            company_id: this.company_id,
+                            test_type: 'e2e',
+                            module_name: moduleConfig.moduleName,
+                            test_name: `frontend_${category.name}`,
+                            status: 'fail',
+                            error_message: error.message,
+                            error_stack: error.stack,
+                            completed_at: new Date()
+                        });
+                    }
                 }
             }
 
@@ -160,16 +177,32 @@ class BaseModuleCollector {
         } catch (error) {
             console.error(`❌ Error general en ${this.getModuleName()}:`, error);
 
-            results.push(await this.database.AuditLog.create({
-                execution_id,
-                test_type: 'e2e',
-                module_name: moduleConfig.moduleName,
-                test_name: 'frontend_crud_general',
-                status: 'fail',
-                error_message: error.message,
-                error_stack: error.stack,
-                completed_at: new Date()
-            }));
+            // ✅ FIX: Verificar que database y AuditLog estén disponibles antes de crear
+            if (this.database && this.database.AuditLog) {
+                results.push(await this.database.AuditLog.create({
+                    execution_id,
+                    test_type: 'e2e',
+                    module_name: moduleConfig.moduleName,
+                    test_name: 'frontend_crud_general',
+                    status: 'fail',
+                    error_message: error.message,
+                    error_stack: error.stack,
+                    completed_at: new Date()
+                }));
+            } else {
+                console.warn('⚠️  No se pudo guardar AuditLog: database.AuditLog no disponible');
+                // Retornar un objeto de resultado sin guardar en BD
+                results.push({
+                    execution_id,
+                    test_type: 'e2e',
+                    module_name: moduleConfig.moduleName,
+                    test_name: 'frontend_crud_general',
+                    status: 'fail',
+                    error_message: error.message,
+                    error_stack: error.stack,
+                    completed_at: new Date()
+                });
+            }
 
         } finally {
             // Solo cerrar navegador si lo abrimos nosotros (no es externo)
@@ -242,6 +275,7 @@ class BaseModuleCollector {
     /**
      * ========================================================================
      * LOGIN - Sistema de 3 pasos (empresa → usuario → password)
+     * ACTUALIZADO: Usa los selectores CORRECTOS del frontend actual
      * ========================================================================
      */
     async login(company_id = 11) {
@@ -283,28 +317,31 @@ class BaseModuleCollector {
             timeout: 60000
         });
 
-        // PASO 1: Empresa
-        await this.page.waitForSelector('#company-identifier', { state: 'visible', timeout: 10000 });
-        await this.page.fill('#company-identifier', companySlug);
-        await this.page.click('button[onclick="checkCompany()"]');
+        // PASO 1: Seleccionar empresa (dropdown)
+        await this.page.waitForSelector('#companySelect', { state: 'visible', timeout: 15000 });
+        await this.page.selectOption('#companySelect', companySlug);
+        console.log('   ✅ Empresa seleccionada');
 
-        // Esperar transición
+        // Esperar a que se habilite el campo usuario
         await this.page.waitForTimeout(500);
 
-        // PASO 2: Usuario
-        await this.page.waitForSelector('#user-identifier', { state: 'visible', timeout: 10000 });
-        await this.page.fill('#user-identifier', username);
-        await this.page.click('button[onclick="checkUsername()"]');
+        // PASO 2: Usuario (esperar a que esté ENABLED, no solo visible)
+        await this.page.waitForSelector('#userInput:not([disabled])', { state: 'visible', timeout: 10000 });
+        await this.page.fill('#userInput', username);
+        await this.page.press('#userInput', 'Enter');
+        console.log('   ✅ Usuario ingresado');
 
-        // Esperar transición
-        await this.page.waitForTimeout(500);
+        // Esperar a que se habilite el campo password
+        await this.page.waitForTimeout(2000);
 
-        // PASO 3: Password
-        await this.page.waitForSelector('#password-field', { state: 'visible', timeout: 10000 });
-        await this.page.fill('#password-field', password);
-        await this.page.click('button[onclick="performLogin()"]');
+        // PASO 3: Password (esperar a que esté ENABLED, no solo visible)
+        await this.page.waitForSelector('#passwordInput:not([disabled])', { state: 'visible', timeout: 10000 });
+        await this.page.fill('#passwordInput', password);
+        await this.page.press('#passwordInput', 'Enter');
+        console.log('   ✅ Password ingresado');
 
         // Esperar que cargue el dashboard
+        await this.page.waitForTimeout(3000);
         await this.page.waitForSelector('#module-content', { state: 'visible', timeout: 30000 });
 
         console.log('✅ Login exitoso\n');
@@ -506,6 +543,29 @@ class BaseModuleCollector {
         } catch {
             return false;
         }
+    }
+
+    /**
+     * Helper: wait - pausa la ejecución
+     */
+    async wait(ms) {
+        await this.page.waitForTimeout(ms);
+    }
+
+    /**
+     * Helper: clickByText - Click en elemento que contiene texto específico
+     */
+    async clickByText(selector, text) {
+        await this.page.evaluate((sel, txt) => {
+            const elements = document.querySelectorAll(sel);
+            for (const el of elements) {
+                if (el.textContent.includes(txt)) {
+                    el.click();
+                    return;
+                }
+            }
+            throw new Error(`No se encontró elemento con texto "${txt}" en selector "${sel}"`);
+        }, selector, text);
     }
 }
 

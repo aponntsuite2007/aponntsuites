@@ -1392,7 +1392,7 @@ router.get('/detection-logs', auth, async (req, res) => {
 
     // 🔒 MULTI-TENANT SECURITY: Validar que el usuario pertenece a esta empresa
     if (req.user.companyId !== parseInt(companyId)) {
-      console.warn(`⚠️ [SECURITY] Usuario ${req.user.id} intentó acceder a logs de empresa ${companyId} (su empresa: ${req.user.companyId})`);
+      console.warn(`⚠️ [SECURITY] Usuario ${req.user.user_id} intentó acceder a logs de empresa ${companyId} (su empresa: ${req.user.companyId})`);
       return res.status(403).json({
         success: false,
         error: 'No tienes permiso para ver logs de esta empresa'

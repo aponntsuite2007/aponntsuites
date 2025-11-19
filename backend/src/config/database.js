@@ -190,6 +190,15 @@ const Quote = require('../models/Quote')(sequelize);
 const ModuleTrial = require('../models/ModuleTrial')(sequelize);
 const Contract = require('../models/Contract')(sequelize);
 
+// ✅ MODELOS - Sistema de TABs 2-9 Modal Ver Usuario (Persistencia Completa)
+const UserDriverLicense = require('../models/UserDriverLicense')(sequelize);
+const UserProfessionalLicense = require('../models/UserProfessionalLicense')(sequelize);
+const UserLegalIssue = require('../models/UserLegalIssue')(sequelize);
+const UserUnionAffiliation = require('../models/UserUnionAffiliation')(sequelize);
+const CompanyTask = require('../models/CompanyTask')(sequelize);
+const UserAssignedTask = require('../models/UserAssignedTask')(sequelize);
+const UserSalaryConfig = require('../models/UserSalaryConfig')(sequelize);
+
 // SuperUser eliminado - se unificó con tabla User
 
 // Definir asociaciones
@@ -752,6 +761,47 @@ Contract.belongsTo(Partner, { foreignKey: 'seller_id', as: 'seller' });
 Partner.hasMany(Contract, { foreignKey: 'support_partner_id', as: 'supportContracts' });
 Contract.belongsTo(Partner, { foreignKey: 'support_partner_id', as: 'supportPartner' });
 
+// =========================================================================
+// ✅ ASOCIACIONES - Sistema de TABs 2-9 Modal Ver Usuario (Persistencia)
+// =========================================================================
+
+// TAB 2: Datos Personales - Driver Licenses
+User.hasMany(UserDriverLicense, { foreignKey: 'userId', sourceKey: 'user_id', as: 'driverLicenses' });
+UserDriverLicense.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id', as: 'user' });
+
+// TAB 2: Datos Personales - Professional Licenses
+User.hasMany(UserProfessionalLicense, { foreignKey: 'userId', sourceKey: 'user_id', as: 'professionalLicenses' });
+UserProfessionalLicense.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id', as: 'user' });
+
+// TAB 3: Antecedentes Laborales - Legal Issues
+User.hasMany(UserLegalIssue, { foreignKey: 'userId', sourceKey: 'user_id', as: 'legalIssues' });
+UserLegalIssue.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id', as: 'user' });
+
+// TAB 3: Antecedentes Laborales - Union Affiliations
+User.hasMany(UserUnionAffiliation, { foreignKey: 'userId', sourceKey: 'user_id', as: 'unionAffiliations' });
+UserUnionAffiliation.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id', as: 'user' });
+
+// TAB 8: Config. Tareas - Company Tasks (multi-tenant)
+Company.hasMany(CompanyTask, { foreignKey: 'companyId', sourceKey: 'company_id', as: 'companyTasks' });
+CompanyTask.belongsTo(Company, { foreignKey: 'companyId', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(CompanyTask, { foreignKey: 'createdBy', sourceKey: 'user_id', as: 'createdTasks' });
+CompanyTask.belongsTo(User, { foreignKey: 'createdBy', targetKey: 'user_id', as: 'creator' });
+
+// TAB 8: Config. Tareas - User Assigned Tasks
+CompanyTask.hasMany(UserAssignedTask, { foreignKey: 'taskId', as: 'assignments' });
+UserAssignedTask.belongsTo(CompanyTask, { foreignKey: 'taskId', as: 'task' });
+
+User.hasMany(UserAssignedTask, { foreignKey: 'userId', sourceKey: 'user_id', as: 'assignedTasks' });
+UserAssignedTask.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id', as: 'user' });
+
+// TAB 8: Config. Tareas - User Salary Configuration (multi-tenant)
+User.hasOne(UserSalaryConfig, { foreignKey: 'userId', sourceKey: 'user_id', as: 'salaryConfig' });
+UserSalaryConfig.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id', as: 'user' });
+
+Company.hasMany(UserSalaryConfig, { foreignKey: 'companyId', sourceKey: 'company_id', as: 'salaryConfigs' });
+UserSalaryConfig.belongsTo(Company, { foreignKey: 'companyId', targetKey: 'company_id', as: 'company' });
+
 module.exports = {
   sequelize,
   User,
@@ -847,6 +897,15 @@ module.exports = {
   Quote,
   ModuleTrial,
   Contract,
+
+  // ✅ EXPORTS - TABs 2-9 Modal Ver Usuario (Persistencia Completa)
+  UserDriverLicense,
+  UserProfessionalLicense,
+  UserLegalIssue,
+  UserUnionAffiliation,
+  CompanyTask,
+  UserAssignedTask,
+  UserSalaryConfig,
 
   connect: async () => {
     try {

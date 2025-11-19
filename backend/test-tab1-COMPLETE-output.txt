@@ -1,0 +1,50 @@
+
+📝 PASO 1: LOGIN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Empresas cargadas en dropdown
+Opciones disponibles: [
+  { value: '', text: '🏢 Seleccionar Empresa...' },
+  {
+    value: 'aponnt-empresa-demo',
+    text: '🏢 APONNT - Empresa Demo UPDATED'
+  },
+  { value: 'empresa-test', text: '🏢 Empresa Test' },
+  {
+    value: 'empresa-test-vendedores',
+    text: '🏢 Empresa Test Vendedores'
+  },
+  { value: 'ganado-express', text: '🏢 Ganado Express' },
+  { value: 'isi', text: '🏢 ISI' },
+  { value: 'logistica-sur', text: '🏢 Logística del Sur' },
+  { value: 'test-company-1757883701540', text: '🏢 Test Company' },
+  { value: 'test-crud-company', text: '🏢 Test Update API' },
+  { value: 'transportes-norte', text: '🏢 Transportes del Norte S.A.' }
+]
+✓ Empresa seleccionada: 🏢 ISI
+✓ Usuario ingresado: soporte
+✓ Password ingresado
+✓ Click en botón Login
+✅ Login exitoso - Panel cargado
+
+📝 PASO 2: NAVEGAR AL MÓDULO USUARIOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Módulos encontrados (2):
+  1. [STYLE] .module-card:hover {
+                    transform: translateY(-5px);
+          
+  2. [DIV] ⚙️
+                            Configuración del Sistema
+                       
+✓ Click en módulo "Gestión de Usuarios"
+
+❌ ERROR DURANTE EL TEST:
+page.waitForSelector: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('#usersTable, table, .users-table') to be visible[22m
+
+page.waitForSelector: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('#usersTable, table, .users-table') to be visible[22m
+
+    at navigateToUsers (C:\Bio\sistema_asistencia_biometrico\backend\test-tab1-crud-complete.js:169:16)
+    at async main (C:\Bio\sistema_asistencia_biometrico\backend\test-tab1-crud-complete.js:484:9)

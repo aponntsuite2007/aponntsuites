@@ -1,0 +1,50 @@
+🚀 TEST DIRECTO DE CAMBIOS EN TAB 1
+
+🔐 Iniciando sesión...
+✅ Login exitoso
+
+📍 Navegando a módulo de Usuarios...
+👤 Obteniendo primer usuario...
+✓ Usuario: [TEST-USERS] Usuario 1762982736694
+✓ ID: 85fcc4e0-09ee-47bc-af06-85d7867539eb
+✓ Estado inicial: Activo
+✓ GPS inicial: ✅ Permitido
+
+================================================================================
+🧪 TEST 1: CAMBIO DE GPS
+================================================================================
+📊 GPS en BD (inicial): gps_enabled=false
+🔄 Llamando toggleGPSRadius()...
+📊 GPS en BD (después): gps_enabled=false
+❌ GPS NO cambió en BD
+📋 GPS en tabla (después): ✅ Permitido
+👁️  Abriendo modal para verificar valor...
+📸 Screenshot: test-tab1-gps-cambiado.png
+
+================================================================================
+🧪 TEST 2: CAMBIO DE ESTADO
+================================================================================
+📊 Estado en BD (inicial): is_active=true
+🔄 Llamando toggleUserStatus()...
+📊 Estado en BD (después): is_active=true
+❌ Estado NO cambió en BD
+📋 Estado en tabla (después): Activo
+👁️  Abriendo modal para verificar valor...
+📸 Screenshot: test-tab1-estado-cambiado.png
+
+
+================================================================================
+📊 REPORTE FINAL
+================================================================================
+
+✅ Prueba completada.
+
+🔍 Verificaciones realizadas:
+   1. GPS: Cambio en BD + Persistencia en modal
+   2. Estado: Cambio en BD + Persistencia en modal
+
+📸 Screenshots guardados:
+   - test-tab1-gps-cambiado.png
+   - test-tab1-estado-cambiado.png
+
+💡 Navegador permanecerá abierto 10 segundos para inspección...

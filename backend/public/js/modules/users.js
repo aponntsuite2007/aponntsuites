@@ -1585,6 +1585,8 @@ async function viewUser(userId) {
         // Create comprehensive employee file modal
         const modal = document.createElement('div');
         modal.id = 'employeeFileModal';
+        modal.setAttribute('data-version', '12.0-WRAPPER-3CM-MAS');
+        console.log('✅ MODAL VERSIÓN 12.0 - CONTENEDOR PRINCIPAL +3cm MÁS ALTO | MARGIN:0 | PADDING:5px');
         modal.style.cssText = `
             position: fixed;
             top: 0;
@@ -1594,8 +1596,8 @@ async function viewUser(userId) {
             background: rgba(0,0,0,0.8);
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            padding: 20px 10px 10px 10px;
+            align-items: center;
+            padding: 0;
             z-index: 10000;
             overflow-y: auto;
         `;
@@ -1604,38 +1606,21 @@ async function viewUser(userId) {
                         user.role === 'supervisor' ? 'Supervisor' :
                         user.role === 'medical' ? 'Médico' : 'Empleado';
 
-        // Detectar tamaño de pantalla y ajustar modal dinámicamente
+        // Detectar tamaño de pantalla y ajustar modal dinámicamente - FORZAR PANTALLA COMPLETA
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
 
         let modalWidth, modalMaxWidth, modalHeight;
 
-        if (screenWidth <= 768) {
-            // Móvil
-            modalWidth = '95%';
-            modalMaxWidth = '100%';
-            modalHeight = '90vh';
-        } else if (screenWidth <= 1366) {
-            // Tablets y pantallas pequeñas
-            modalWidth = '85%';
-            modalMaxWidth = '1100px';
-            modalHeight = '85vh';
-        } else if (screenWidth <= 1920) {
-            // Pantallas medianas (Full HD)
-            modalWidth = '75%';
-            modalMaxWidth = '1400px';
-            modalHeight = '80vh';
-        } else {
-            // Pantallas grandes (4K+)
-            modalWidth = '65%';
-            modalMaxWidth = '1800px';
-            modalHeight = '85vh';
-        }
+        // MAXIMIZAR MODAL AL 100% - FORZADO CON PÍXELES + AJUSTES PERSONALIZADOS
+        modalWidth = (screenWidth + 50) + 'px';  // +50px más ancho
+        modalMaxWidth = (screenWidth + 50) + 'px';
+        modalHeight = (screenHeight + 836) + 'px';  // Contenedor principal +3cm MÁS (113px adicionales)
 
         modal.innerHTML = `
-            <div style="background: white; border-radius: 12px; width: ${modalWidth}; max-width: ${modalMaxWidth}; height: ${modalHeight}; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+            <div style="background: white; border-radius: 0; width: ${modalWidth}; max-width: ${modalMaxWidth}; height: ${modalHeight}; display: flex; flex-direction: column; overflow: hidden; box-shadow: none; margin: 0 !important; padding: 5px !important;">
                 <!-- Header del Expediente -->
-                <div style="position: sticky; top: 0; background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; z-index: 100;">
+                <div style="position: sticky; top: 0; background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 20px; border-radius: 0; display: flex; justify-content: space-between; align-items: center; z-index: 100;">
                     <div>
                         <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
                             📋 Expediente Digital: ${user.firstName} ${user.lastName}
@@ -1697,8 +1682,13 @@ async function viewUser(userId) {
                                 </div>
                                 <div class="info-card">
                                     <div class="info-label">🏢 Sucursal por Defecto:</div>
-                                    <div class="info-value" id="admin-branch">${user.defaultBranchId ? 'Asignada' : 'Sin asignar'}</div>
+                                    <div class="info-value" id="admin-branch">${user.branchName || (user.defaultBranchId ? 'Asignada' : 'Sin asignar')}</div>
                                     <button class="btn btn-sm btn-outline-info" onclick="manageBranches('${userId}')">🏢 Gestionar Sucursales</button>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-label">🕐 Turnos Asignados:</div>
+                                    <div class="info-value" id="admin-shifts">${user.shiftNames && user.shiftNames.length > 0 ? user.shiftNames.join(', ') : 'Sin turnos'}</div>
+                                    <button class="btn btn-sm btn-outline-info" onclick="assignUserShifts('${userId}', '${user.firstName} ${user.lastName}')">🕐 Asignar Turnos</button>
                                 </div>
                             </div>
                         </div>
@@ -1736,7 +1726,7 @@ async function viewUser(userId) {
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                                 <div class="info-card">
                                     <div class="info-label">🏢 Departamento:</div>
-                                    <div class="info-value" id="admin-department">${user.departmentId ? 'Asignado' : 'Sin departamento'}</div>
+                                    <div class="info-value" id="admin-department">${user.departmentName || user.departmentId || 'Sin departamento'}</div>
                                     <button class="btn btn-sm btn-outline-success" onclick="changeDepartment('${userId}', '${user.departmentId || ''}')">🔄 Cambiar Departamento</button>
                                 </div>
                                 <div class="info-card">
@@ -1752,7 +1742,6 @@ async function viewUser(userId) {
                             <h4 style="margin: 0 0 15px 0; color: #c0392b;">⚡ Acciones Administrativas</h4>
                             <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                                 <button class="btn btn-warning" onclick="resetPassword('${userId}', '${user.firstName} ${user.lastName}')">🔑 Resetear Contraseña</button>
-                                <button class="btn btn-info" onclick="assignUserShifts('${userId}', '${user.firstName} ${user.lastName}')">🕐 Asignar Turnos</button>
                                 <button class="btn btn-success" onclick="generateUserReport('${userId}')">📊 Generar Reporte</button>
                                 <button class="btn btn-secondary" onclick="auditUserHistory('${userId}')">📋 Historial de Cambios</button>
                             </div>
@@ -1932,6 +1921,9 @@ async function viewUser(userId) {
                                         </div>
                                         <div style="margin: 8px 0;">
                                             <strong>Último Login:</strong><br>${user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Nunca'}
+                                        </div>
+                                        <div style="margin: 8px 0;">
+                                            <strong>Turnos Asignados:</strong><br>${user.shiftNames && user.shiftNames.length > 0 ? user.shiftNames.join(', ') : '❌ Sin turnos asignados'}
                                         </div>
                                     </div>
                                 </div>
@@ -2454,16 +2446,6 @@ async function viewUser(userId) {
                                 <p style="text-align: center; color: #666;">Cargando estado...</p>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Footer con Acciones -->
-                <div style="background: #f8f9fa; padding: 15px 20px; border-radius: 0 0 12px 12px; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 12px; color: #666;">
-                        Última actualización: ${new Date().toLocaleString()}
-                    </div>
-                    <div>
-                        <button class="btn btn-secondary" onclick="closeEmployeeFile()">❌ Cerrar Expediente</button>
                     </div>
                 </div>
             </div>
@@ -3385,7 +3367,23 @@ async function loadShiftsForUser(userId) {
     try {
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
 
-        // Cargar turnos disponibles usando la ruta correcta con API_PREFIX
+        // Primero, cargar turnos actuales del usuario
+        const userResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        let currentUserShifts = [];
+        if (userResponse.ok) {
+            const userData = await userResponse.json();
+            const user = userData.user || userData;
+            currentUserShifts = user.shifts || [];
+            renderCurrentUserShifts(currentUserShifts);
+        } else {
+            console.error('Error al obtener usuario:', userResponse.status);
+            document.getElementById('currentUserShifts').innerHTML = '❌ Error cargando turnos actuales';
+        }
+
+        // Luego, cargar turnos disponibles y marcar los ya asignados
         const shiftsResponse = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/shifts'), {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -3393,24 +3391,10 @@ async function loadShiftsForUser(userId) {
         if (shiftsResponse.ok) {
             const shiftsData = await shiftsResponse.json();
             const allShifts = shiftsData.shifts || shiftsData || [];
-            renderAvailableShiftsForUser(allShifts);
+            renderAvailableShiftsForUser(allShifts, currentUserShifts);
         } else {
             console.error('Error al obtener shifts:', shiftsResponse.status);
             document.getElementById('availableShiftsForUser').innerHTML = '❌ Error cargando turnos disponibles';
-        }
-
-        // Cargar turnos actuales del usuario
-        const userResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (userResponse.ok) {
-            const userData = await userResponse.json();
-            const user = userData.user || userData;
-            renderCurrentUserShifts(user.shifts || []);
-        } else {
-            console.error('Error al obtener usuario:', userResponse.status);
-            document.getElementById('currentUserShifts').innerHTML = '❌ Error cargando turnos actuales';
         }
 
     } catch (error) {
@@ -3421,27 +3405,35 @@ async function loadShiftsForUser(userId) {
 }
 
 // Renderizar turnos disponibles para selección
-function renderAvailableShiftsForUser(shifts) {
+function renderAvailableShiftsForUser(shifts, currentUserShifts = []) {
     const container = document.getElementById('availableShiftsForUser');
     if (!container) return;
-    
+
     if (shifts.length === 0) {
         container.innerHTML = '<p style="color: #666; text-align: center;">No hay turnos disponibles</p>';
         return;
     }
-    
-    container.innerHTML = shifts.map(shift => `
-        <div style="border: 1px solid #e9ecef; border-radius: 6px; padding: 10px; margin-bottom: 8px; background: white;">
+
+    // Crear array de IDs de turnos asignados (pueden ser string o number)
+    const assignedShiftIds = currentUserShifts.map(s => String(s.id));
+
+    container.innerHTML = shifts.map(shift => {
+        const isAssigned = assignedShiftIds.includes(String(shift.id));
+        return `
+        <div style="border: 1px solid ${isAssigned ? '#28a745' : '#e9ecef'}; border-radius: 6px; padding: 10px; margin-bottom: 8px; background: ${isAssigned ? '#d4edda' : 'white'};">
             <label style="display: flex; align-items: center; cursor: pointer; margin: 0;">
-                <input type="checkbox" value="${shift.id}" class="shift-checkbox" style="margin-right: 10px;">
+                <input type="checkbox" value="${shift.id}" class="shift-checkbox" style="margin-right: 10px;" ${isAssigned ? 'checked' : ''}>
                 <div style="flex: 1;">
-                    <strong>${shift.name}</strong><br>
+                    <strong>${shift.name}</strong>
+                    ${isAssigned ? '<span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 8px;">✓ ASIGNADO</span>' : ''}
+                    <br>
                     <small style="color: #666;">${shift.start_time} - ${shift.end_time}</small>
                     ${shift.description ? `<br><small style="color: #888;">${shift.description}</small>` : ''}
                 </div>
             </label>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Renderizar turnos actuales del usuario
@@ -3468,33 +3460,39 @@ function renderCurrentUserShifts(shifts) {
 // Realizar asignación de turnos seleccionados
 async function performUserShiftAssignment(userId, userName) {
     const selectedCheckboxes = document.querySelectorAll('#availableShiftsForUser .shift-checkbox:checked');
-    
+
     if (selectedCheckboxes.length === 0) {
         alert('⚠️ Debe seleccionar al menos un turno para asignar');
         return;
     }
-    
-    const shiftIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
-    
+
+    // ✅ FIX: NO convertir a integer - los IDs de shifts son UUIDs
+    const shiftIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
     if (!confirm(`¿Desea asignar ${shiftIds.length} turno(s) a ${userName}?`)) {
         return;
     }
-    
+
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
     try {
-        const response = await fetch('/api/shifts/bulk-assign', {
+        const response = await fetch('/api/v1/shifts/bulk-assign', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({
-                userIds: [parseInt(userId)],
+                userIds: [userId],
                 shiftIds: shiftIds
             })
         });
-        
+
         if (response.ok) {
             const result = await response.json();
             showUserMessage(`✅ Turnos asignados exitosamente a ${userName}. ${result.assigned} asignaciones realizadas.`, 'success');
             closeUserShiftsModal();
-            loadUsers(); // Recargar la lista de usuarios
+
+            // ✅ FIX: Reabrir el modal Ver Usuario para mostrar los cambios
+            setTimeout(() => {
+                viewUser(userId);
+            }, 300);
         } else {
             const error = await response.json();
             showUserMessage(`❌ Error: ${error.message}`, 'error');

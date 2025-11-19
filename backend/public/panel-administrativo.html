@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="css/responsive-modals.css">
 
     <!-- 🏆 TECH STACK BADGES - Marketing Subliminal Profesional -->
-    <link rel="stylesheet" href="css/tech-badges.css">
+    <link rel="stylesheet" href="css/admin-modern.css">
 
     <style>
         :root {
@@ -78,7 +78,7 @@
         }
 
         .dashboard-container {
-            max-width: 1400px;
+            max-width: 1457px;
             margin: 0 auto;
             padding: 2rem;
         }
@@ -303,7 +303,7 @@
         .section-header {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            padding: 1.5rem 2rem;
+            padding: 0.55rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -316,6 +316,7 @@
 
         .section-content {
             padding: 2rem;
+            margin-top: calc(-1cm + 5mm);
         }
 
         /* ==================== ESTILOS MÓDULO DE FACTURACIÓN ==================== */
@@ -783,7 +784,7 @@
             border-radius: 15px;
             padding: 2rem;
             max-width: 800px;
-            width: 95%;
+            width: 98%;
             max-height: 95vh;
             overflow-y: auto;
             position: relative;
@@ -1154,7 +1155,7 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 20px;
-            margin-bottom: 20px;
+            margin-bottom: calc(20px - 1cm);
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
@@ -1191,8 +1192,8 @@
 
         .filters-content {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr auto;
+            gap: 10px;
             align-items: end;
         }
 
@@ -1290,16 +1291,19 @@
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            width: 95%;
-            max-width: 1400px;
-            max-height: 95vh;
+            width: 98%;
+            max-width: 1457px;
+            height: 98vh;
+            max-height: 98vh;
+            display: flex;
+            flex-direction: column;
             overflow-y: auto;
         }
 
         .modal-header {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            padding: 1.5rem 2rem;
+            padding: 0.55rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1325,6 +1329,8 @@
 
         .modal-body {
             padding: 2rem;
+            flex: 1;
+            overflow: auto;
         }
 
         .form-grid {
@@ -1332,12 +1338,12 @@
             grid-template-columns: 2fr 1fr;
             gap: 2rem;
             align-items: start;
-            height: 80vh;
-            overflow: hidden;
+            height: 100%;
+            overflow: visible;
         }
 
         .company-form {
-            max-height: 80vh;
+            max-height: 100%;
             overflow-y: auto;
             padding-right: 1rem;
         }
@@ -1571,7 +1577,7 @@
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
-            max-height: 80vh;
+            max-height: calc(98vh - 8rem);
             overflow-y: auto;
         }
 
@@ -1819,6 +1825,7 @@
 
         .selected-modules {
             max-height: 200px;
+            margin-top: 1cm;
             overflow-y: auto;
             font-size: 0.75rem;
         }
@@ -1993,7 +2000,7 @@
         .siac-section-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 1.5rem 2rem;
+            padding: 0.55rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -2763,6 +2770,22 @@
             max-width: 1200px;
         }
 
+        /* Botón Logout Header */
+        .btn-logout-header {
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout-header:hover {
+            background: rgba(255, 59, 48, 0.8) !important;
+            border-color: rgba(255, 59, 48, 0.9) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+        }
+
+        .btn-logout-header:active {
+            transform: translateY(0);
+        }
+
     </style>
 
     <!-- Google Maps API (para módulo de Departamentos) -->
@@ -2779,12 +2802,44 @@
     </script>
 </head>
 <body>
-    <div class="dashboard-header">
-        <div class="dashboard-container">
-            <h1 class="dashboard-title">
-                🏢 Panel Administrativo
-            </h1>
-            <p class="dashboard-subtitle">Sistema Completo de Gestión, Facturación y Pagos</p>
+    <div class="dashboard-header" style="padding: 0 !important;">
+        <!-- Barra superior con información principal -->
+        <div style="padding: 0.65rem 2rem; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 1rem; align-items: center;">
+
+            <!-- Izquierda: Logo y Sistema -->
+            <div class="brand-section" style="display: flex; align-items: center; gap: 15px;">
+                <div class="logo-container" style="display: flex; flex-direction: column;">
+                    <div style="font-size: 2rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 0.25rem;">
+                        <span style="color: #f39c12; font-weight: 800; font-size: 2.5rem; transform: skewX(-15deg); display: inline-block;">A</span><span style="color: white;">ponnt</span> <span style="color: #f39c12; font-weight: 800; font-size: 2.5rem; transform: skewX(-15deg); display: inline-block;">S</span><span style="color: white;">uite's</span>
+                    </div>
+                    <div style="font-size: 0.5rem; color: rgba(255,255,255,0.9); font-weight: 500; text-transform: uppercase; letter-spacing: 0.2px; line-height: 1.1;">Software Integrado de Planificación de Recursos Empresariales</div>
+                </div>
+            </div>
+
+            <!-- Centro: Dashboard Administrativo -->
+            <div class="admin-info-center" style="display: flex; justify-content: center;">
+                <div style="background: rgba(255,255,255,0.1); padding: 0.75rem 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; gap: 12px; backdrop-filter: blur(10px);">
+                    <span style="color: #f39c12; font-size: 1.75rem;">🏢</span>
+                    <div style="text-align: left;">
+                        <div style="font-weight: 700; color: white; font-size: 1.35rem; letter-spacing: -0.02em;">Dashboard Administrativo</div>
+                        <div id="dashboardSubtitle" style="font-size: 0.7rem; color: rgba(255,255,255,0.85);">Sistema Completo de Gestión y Facturación</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Derecha: Info del usuario logueado -->
+            <div class="system-info" id="userInfoHeader" style="display: flex; align-items: center; justify-content: flex-end; gap: 1rem;">
+                <div style="text-align: right;">
+                    <div id="userFullName" style="font-size: 0.9rem; font-weight: 600; color: white; margin-bottom: 0.25rem;">Cargando...</div>
+                    <div id="userRoleAndId" style="font-size: 0.7rem; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">...</div>
+                </div>
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white;" id="userAvatarIcon">
+                    <span>👤</span>
+                </div>
+                <button onclick="handleLogout()" class="btn-logout-header" style="padding: 0.6rem 1.5rem; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: background 0.3s ease; font-weight: 500;">
+                    🚪 Cerrar Sesión
+                </button>
+            </div>
         </div>
     </div>
 
@@ -2835,7 +2890,7 @@
 
                 <!-- Pestaña Empresas -->
                 <div id="companies" class="tab-content active">
-                    <div class="section-header">
+                    <div class="section-header" style="padding: 0.4rem 2rem !important;">
                         <h2 class="section-title">📊 Empresas Registradas</h2>
                         <div style="display: flex; gap: 10px;">
                             <button class="export-btn" onclick="exportCompaniesToExcel()">
@@ -4320,7 +4375,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">Tipo de Licencia</label>
+                                <label class="form-label">Tipo de Licencia de soporte y asistencia al usuario</label>
                                 <select class="form-input" id="licenseType">
                                     <option value="basic">Básica</option>
                                     <option value="premium">Premium</option>
@@ -4337,17 +4392,32 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Vendedor</label>
-                                <select class="form-input" id="vendor">
-                                    <option value="">Seleccionar vendedor...</option>
-                                </select>
+                                <input type="text" class="form-input" id="vendorDisplay" readonly style="background-color: #f8f9fa; cursor: not-allowed;" placeholder="No asignado">
+                                <input type="hidden" id="vendor">
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">% Comisión</label>
-                                <input type="number" class="form-input" id="commissionPercentage" min="0" max="100" step="0.1" placeholder="10">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">CBU (Cuenta Bancaria)</label>
-                                <input type="text" class="form-input" id="cbu" placeholder="Número de CBU">
+
+                            <!-- Grid de Comisiones -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                <!-- Comisión de Venta - Porcentaje -->
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" style="font-size: 0.85rem;">% Comisión permanente por venta</label>
+                                    <input type="number" class="form-input" id="commissionPercentage" min="0" max="100" step="0.1" placeholder="10" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                                </div>
+                                <!-- Comisión de Venta - Monto USD -->
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" style="font-size: 0.85rem;">💰 Comisión Venta (USD)</label>
+                                    <input type="text" class="form-input" id="salesCommissionUSD" readonly style="background-color: #e8f5e9; cursor: not-allowed; font-weight: 600; color: #2e7d32;" placeholder="$0.00">
+                                </div>
+                                <!-- Comisión de Soporte - Porcentaje -->
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" style="font-size: 0.85rem;">% Comisión Temporal por soporte</label>
+                                    <input type="number" class="form-input" id="supportCommissionPercentage" min="0" max="100" step="0.1" placeholder="0" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                                </div>
+                                <!-- Comisión de Soporte - Monto USD -->
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" style="font-size: 0.85rem;">🛠️ Comisión Soporte (USD)</label>
+                                    <input type="text" class="form-input" id="supportCommissionUSD" readonly style="background-color: #e3f2fd; cursor: not-allowed; font-weight: 600; color: #1565c0;" placeholder="$0.00">
+                                </div>
                             </div>
 
                             <div class="modules-section">
@@ -4464,11 +4534,11 @@
                 </form>
             </div>
             <!-- Footer del modal con botones -->
-            <div class="modal-footer" style="padding: 1rem 2rem; border-top: 1px solid #eee; display: flex; gap: 1rem; justify-content: flex-end; background: #f8f9fa; border-radius: 0 0 20px 20px;">
+            <div class="modal-footer" style="padding: 0.65rem 2rem; border-top: 1px solid #eee; display: flex; gap: 1rem; justify-content: flex-end; background: #f8f9fa; border-radius: 0 0 20px 20px;">
                 <button type="button" class="btn" style="padding: 0.75rem 1.5rem; background: #6c757d; color: white; border: none; border-radius: 8px; font-weight: 600;" onclick="closeCompanyModal()">
                     ❌ Cancelar
                 </button>
-                <button type="button" class="btn btn-success" style="padding: 0.75rem 2rem; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: 600;" id="saveCompanyBtn" onclick="saveCompany()">
+                <button type="button" class="btn btn-success" style="padding: 0.55rem 2rem; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: 600;" id="saveCompanyBtn" onclick="saveCompany()">
                     <span id="saveBtnText">💾 Guardar Cambios</span>
                 </button>
             </div>
@@ -4789,12 +4859,137 @@
         // Verificación de autenticación simplificada (se ejecuta en el segundo DOMContentLoaded)
 
         function checkAuthentication() {
-            // Panel administrativo - acceso directo sin autenticación
-            currentUser = { username: 'admin_panel', firstName: 'Panel Administrativo', role: 'administrador' };
-            console.log('🔓 Acceso directo al panel administrativo');
+            // Intentar cargar usuario desde localStorage (sistema de login staff)
+            const userData = localStorage.getItem('aponnt_user_staff') || localStorage.getItem('aponnt_user_partner');
+            const token = localStorage.getItem('aponnt_token_staff') || localStorage.getItem('aponnt_token_partner');
+
+            if (userData && token) {
+                try {
+                    const user = JSON.parse(userData);
+                    currentUser = {
+                        id: user.id,
+                        username: user.username || user.email,
+                        firstName: user.first_name,
+                        lastName: user.last_name,
+                        fullName: `${user.first_name} ${user.last_name}`,
+                        email: user.email,
+                        role: user.role,
+                        dni: user.dni,
+                        userType: localStorage.getItem('aponnt_user_type') || 'staff'
+                    };
+                    console.log('✅ [AUTH] Usuario cargado desde localStorage:', currentUser);
+                    loadUserInfoToHeader();
+                } catch (error) {
+                    console.error('❌ [AUTH] Error parseando datos de usuario:', error);
+                    currentUser = { username: 'admin_panel', firstName: 'Panel', lastName: 'Administrativo', role: 'administrador' };
+                }
+            } else {
+                // Fallback: Panel administrativo - acceso directo sin autenticación
+                currentUser = { username: 'admin_panel', firstName: 'Panel', lastName: 'Administrativo', role: 'administrador' };
+                console.log('🔓 Acceso directo al panel administrativo (modo fallback)');
+                loadUserInfoToHeader(); // Actualizar header con usuario fallback
+            }
 
             // Mostrar interfaz completa
             setupUIForRole();
+        }
+
+        // Función para cargar info del usuario en el header
+        function loadUserInfoToHeader() {
+            const userFullNameEl = document.getElementById('userFullName');
+            const userRoleAndIdEl = document.getElementById('userRoleAndId');
+            const userAvatarIconEl = document.getElementById('userAvatarIcon');
+
+            if (!currentUser) return;
+
+            // Mostrar nombre completo
+            if (userFullNameEl) {
+                userFullNameEl.textContent = currentUser.fullName || `${currentUser.firstName} ${currentUser.lastName || ''}`;
+            }
+
+            // Mostrar rol e ID con badge de color
+            if (userRoleAndIdEl) {
+                const roleNames = {
+                    'admin': 'Administrador',
+                    'supervisor': 'Supervisor',
+                    'leader': 'Líder de Equipo',
+                    'vendor': 'Vendedor',
+                    'soporte': 'Soporte',
+                    'administrativo': 'Administrativo',
+                    'marketing': 'Marketing',
+                    'administrador': 'Administrador Master'
+                };
+                const roleColors = {
+                    'admin': '#e74c3c',
+                    'supervisor': '#3498db',
+                    'leader': '#9b59b6',
+                    'vendor': '#2ecc71',
+                    'soporte': '#f39c12',
+                    'administrativo': '#34495e',
+                    'marketing': '#e67e22',
+                    'administrador': '#c0392b'
+                };
+                const roleName = roleNames[currentUser.role] || currentUser.role;
+                const roleColor = roleColors[currentUser.role] || '#7f8c8d';
+                const userId = currentUser.id ? `ID: ${currentUser.id.substring(0, 8)}...` : '';
+
+                userRoleAndIdEl.innerHTML = `
+                    <span style="display: inline-block; padding: 2px 8px; background: ${roleColor}; border-radius: 10px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 8px;">
+                        ${roleName}
+                    </span>
+                    ${userId}
+                `;
+            }
+
+            // Actualizar ícono según rol
+            if (userAvatarIconEl) {
+                const roleIcons = {
+                    'admin': '👑',
+                    'supervisor': '👨‍💼',
+                    'leader': '👨‍🏫',
+                    'vendor': '💼',
+                    'soporte': '🛠️',
+                    'administrativo': '📋',
+                    'marketing': '📢',
+                    'administrador': '👑'
+                };
+                const icon = roleIcons[currentUser.role] || '👤';
+                userAvatarIconEl.querySelector('span').textContent = icon;
+            }
+
+            // Actualizar subtítulo del dashboard con nombre del usuario
+            const dashboardSubtitle = document.getElementById('dashboardSubtitle');
+            if (dashboardSubtitle) {
+                const userName = currentUser.fullName || `${currentUser.firstName} ${currentUser.lastName || ''}`;
+                dashboardSubtitle.textContent = `👤 ${userName}`;
+            }
+
+            console.log('✅ [UI] Header actualizado con info del usuario');
+        }
+
+        // Función de logout
+        function handleLogout() {
+            if (!confirm('¿Está seguro que desea cerrar sesión?')) {
+                return;
+            }
+
+            // Limpiar localStorage
+            localStorage.removeItem('aponnt_token_staff');
+            localStorage.removeItem('aponnt_token_partner');
+            localStorage.removeItem('aponnt_refresh_token_staff');
+            localStorage.removeItem('aponnt_refresh_token_partner');
+            localStorage.removeItem('aponnt_user_staff');
+            localStorage.removeItem('aponnt_user_partner');
+            localStorage.removeItem('aponnt_user_type');
+            localStorage.removeItem('aponnt_assigned_companies');
+            localStorage.removeItem('aponnt_permissions');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+
+            console.log('👋 [AUTH] Sesión cerrada');
+
+            // Redirigir a index
+            window.location.href = '/index.html';
         }
 
         async function verifyTokenWithServer(token) {
@@ -5180,15 +5375,38 @@
             // Si viene de index.html o no hay token → Mostrar modal de login
             if (userType || !token) {
                 console.log('🔐 [AUTH] CASO 1: Mostrando modal de login para:', userType || 'staff (default)');
+                console.log('🔐 [AUTH] Verificando si AponntLogin existe:', typeof AponntLogin);
+
+                if (typeof AponntLogin === 'undefined') {
+                    console.error('❌ [AUTH] ERROR CRÍTICO: AponntLogin no está definido');
+                    alert('ERROR: Sistema de login no disponible. Verifica la consola.');
+                    return;
+                }
+
                 const aponntLogin = new AponntLogin(userType || 'staff');
+                console.log('🔐 [AUTH] Instancia de AponntLogin creada:', aponntLogin);
                 aponntLogin.showLoginModal();
                 return; // No continuar hasta que haya login
             }
 
             // Cargar datos del usuario desde localStorage
             try {
-                currentUser = JSON.parse(user);
+                const parsedUser = JSON.parse(user);
+                currentUser = {
+                    id: parsedUser.id,
+                    username: parsedUser.username || parsedUser.email,
+                    firstName: parsedUser.first_name || parsedUser.firstName,
+                    lastName: parsedUser.last_name || parsedUser.lastName,
+                    fullName: `${parsedUser.first_name || parsedUser.firstName} ${parsedUser.last_name || parsedUser.lastName}`,
+                    email: parsedUser.email,
+                    role: parsedUser.role,
+                    dni: parsedUser.dni,
+                    userType: localStorage.getItem('aponnt_user_type') || 'staff'
+                };
                 console.log('✅ [AUTH] CASO 3: Usuario autenticado:', currentUser);
+
+                // Actualizar header con datos del usuario
+                loadUserInfoToHeader();
             } catch (error) {
                 console.error('❌ [AUTH] Error parseando datos de usuario:', error);
                 window.location.href = '/index.html';
@@ -5824,15 +6042,17 @@
             document.getElementById('companyLatitude').value = '';
             document.getElementById('companyLongitude').value = '';
 
-            // Cargar vendedores en el selector
-            loadVendorsSelector();
+            // Limpiar campos de vendedor (display y hidden)
+            document.getElementById('vendorDisplay').value = '';
+            document.getElementById('vendorDisplay').placeholder = 'No asignado';
+            document.getElementById('vendor').value = '';
 
             generateModulesGrid();
             updatePricingSummary();
             document.getElementById('companyModal').classList.add('show');
         }
 
-        function editCompany(companyId) {
+        async function editCompany(companyId) {
             const company = companies.find(c => c.id === companyId || c.company_id === companyId);
             if (!company) {
                 console.error('❌ Empresa no encontrada con ID:', companyId);
@@ -5875,9 +6095,17 @@
             document.getElementById('licenseType').value = company.licenseType || company.license_type || 'basic';
             document.getElementById('contractedEmployees').value = company.contractedEmployees || company.contracted_employees || company.maxEmployees || company.max_employees || 1;
             document.getElementById('maxEmployees').value = company.maxEmployees || company.max_employees || 50;
-            document.getElementById('vendor').value = company.vendor || '';
+
+            // Cargar vendedor asignado con sus datos completos
+            await loadAssignedVendorInfo(company.vendor);
+
             document.getElementById('commissionPercentage').value = company.commissionPercentage || company.commission_percentage || '10';
-            document.getElementById('cbu').value = company.cbu || '';
+            document.getElementById('supportCommissionPercentage').value = company.supportCommissionPercentage || company.support_commission_percentage || '0';
+
+            // Cargar comisiones en USD (si existen)
+            document.getElementById('salesCommissionUSD').value = company.salesCommissionUSD || company.sales_commission_usd ? `$${(company.salesCommissionUSD || company.sales_commission_usd).toFixed(2)}` : '$0.00';
+            document.getElementById('supportCommissionUSD').value = company.supportCommissionUSD || company.support_commission_usd ? `$${(company.supportCommissionUSD || company.support_commission_usd).toFixed(2)}` : '$0.00';
+
             document.getElementById('companyStatus').value = company.status || 'cotizado';
 
             // Cargar coordenadas solo si existen en la empresa
@@ -6003,9 +6231,6 @@
             
             // Cargar usuarios de la empresa automáticamente
             loadCompanyUsers();
-
-            // Cargar vendedores en el selector
-            loadVendorsSelector();
 
             generateModulesGrid();
             updatePricingSummary();
@@ -6301,7 +6526,26 @@
             if (totalElement) totalElement.textContent = total.toFixed(2);
             if (moduleCountElement) moduleCountElement.textContent = selectedModules.size;
             if (selectedModulesListElement) selectedModulesListElement.innerHTML = selectedModulesList;
-            
+
+            // 💰 CALCULAR COMISIONES EN USD AUTOMÁTICAMENTE
+            const commissionPercentage = parseFloat(document.getElementById('commissionPercentage').value) || 10;
+            const supportCommissionPercentage = parseFloat(document.getElementById('supportCommissionPercentage').value) || 0;
+
+            const salesCommissionUSD = (total * commissionPercentage) / 100;
+            const supportCommissionUSD = (total * supportCommissionPercentage) / 100;
+
+            const salesCommissionUSDElement = document.getElementById('salesCommissionUSD');
+            const supportCommissionUSDElement = document.getElementById('supportCommissionUSD');
+
+            if (salesCommissionUSDElement) {
+                salesCommissionUSDElement.value = `$${salesCommissionUSD.toFixed(2)}`;
+            }
+            if (supportCommissionUSDElement) {
+                supportCommissionUSDElement.value = `$${supportCommissionUSD.toFixed(2)}`;
+            }
+
+            console.log('💰 Comisiones calculadas - Venta:', salesCommissionUSD, 'Soporte:', supportCommissionUSD);
+
             // Habilitar botón guardar siempre
             const saveBtn = document.getElementById('saveCompanyBtn');
             if (saveBtn) {
@@ -6427,7 +6671,9 @@
                 status: document.getElementById('companyStatus').value,
                 vendor: document.getElementById('vendor').value || '',
                 commissionPercentage: parseFloat(document.getElementById('commissionPercentage').value) || 10,
-                cbu: document.getElementById('cbu').value || '',
+                supportCommissionPercentage: parseFloat(document.getElementById('supportCommissionPercentage').value) || 0,
+                salesCommissionUSD: parseFloat(document.getElementById('salesCommissionUSD').value.replace('$', '').replace(',', '')) || 0,
+                supportCommissionUSD: parseFloat(document.getElementById('supportCommissionUSD').value.replace('$', '').replace(',', '')) || 0,
                 contractedEmployees: employeeCount,
                 maxEmployees: parseInt(document.getElementById('maxEmployees').value) || 50,
                 modules: Array.from(selectedModules),
@@ -11518,7 +11764,7 @@
             try {
                 const response = await fetch(`${API_BASE}/api/aponnt/dashboard/vendors`);
                 if (!response.ok) throw new Error('Error obteniendo vendedores');
-                
+
                 const vendors = await response.json();
                 const vendorSelect = document.getElementById('vendor');
 
@@ -11545,9 +11791,60 @@
                         option.textContent = `${vendor.name} (${vendor.email})`;
                         vendorSelect.appendChild(option);
                     });
-                
+
             } catch (error) {
                 console.error('Error cargando vendedores:', error);
+            }
+        }
+
+        // Función para cargar datos completos del vendedor asignado (readonly)
+        async function loadAssignedVendorInfo(vendorName) {
+            const vendorDisplayInput = document.getElementById('vendorDisplay');
+            const vendorHiddenInput = document.getElementById('vendor');
+
+            if (!vendorDisplayInput || !vendorHiddenInput) return;
+
+            // Si no hay vendedor asignado
+            if (!vendorName) {
+                vendorDisplayInput.value = '';
+                vendorDisplayInput.placeholder = 'No asignado';
+                vendorHiddenInput.value = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/aponnt/dashboard/vendors`);
+                if (!response.ok) throw new Error('Error obteniendo vendedores');
+
+                const vendors = await response.json();
+
+                // Verificar que vendors sea un array
+                if (!Array.isArray(vendors)) {
+                    vendorDisplayInput.value = vendorName;
+                    vendorHiddenInput.value = vendorName;
+                    return;
+                }
+
+                // Buscar el vendedor por nombre
+                const vendor = vendors.find(v => v && v.name === vendorName);
+
+                if (vendor) {
+                    // Mostrar nombre, email y teléfono si está disponible en el campo visible
+                    const vendorInfo = `${vendor.name} - ${vendor.email}${vendor.phone ? ' - Tel: ' + vendor.phone : ''}`;
+                    vendorDisplayInput.value = vendorInfo;
+                    // Guardar solo el nombre en el campo hidden para enviar al backend
+                    vendorHiddenInput.value = vendor.name;
+                } else {
+                    // Si no se encuentra el vendedor, mostrar solo el nombre
+                    vendorDisplayInput.value = vendorName;
+                    vendorHiddenInput.value = vendorName;
+                }
+
+            } catch (error) {
+                console.error('Error cargando datos del vendedor:', error);
+                // En caso de error, mostrar solo el nombre
+                vendorDisplayInput.value = vendorName || '';
+                vendorHiddenInput.value = vendorName || '';
             }
         }
 
@@ -13185,7 +13482,6 @@ ${vendor.notes || 'Sin notas adicionales'}
     <script src="js/modules/configurador-modulos.js"></script>
 
     <!-- 🏆 TECH STACK BADGES - Marketing Subliminal Profesional -->
-    <script src="js/modules/tech-badges.js"></script>
 
     <!-- ✅ Consent Management Module (Phase 7) -->
     <script src="js/modules/admin-consent-management.js"></script>

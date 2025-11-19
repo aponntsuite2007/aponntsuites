@@ -245,6 +245,128 @@
         .hero-section.no-bg-image {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+
+        /* Tech Stack Section */
+        .tech-stack-section {
+            margin-top: 100px;
+            padding: 50px 0;
+            background: rgba(26, 35, 126, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tech-stack-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .tech-stack-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #1a237e, #3f51b5, #5c6bc0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+        }
+
+        .tech-stack-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .tech-stack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .tech-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-8px) scale(1.03);
+            background: rgba(26, 35, 126, 0.15);
+            border-color: rgba(63, 81, 181, 0.5);
+            box-shadow: 0 10px 30px rgba(26, 35, 126, 0.3);
+        }
+
+        .tech-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+            transition: transform 0.3s ease;
+        }
+
+        .tech-item:hover .tech-icon {
+            transform: scale(1.15) rotate(5deg);
+        }
+
+        .tech-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .tech-tooltip {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            line-height: 1.3;
+            min-height: 32px;
+        }
+
+        /* Categorías de colores */
+        .tech-item[data-category="ai"]:hover {
+            background: linear-gradient(135deg, rgba(123, 31, 162, 0.2), rgba(126, 87, 194, 0.2));
+        }
+
+        .tech-item[data-category="database"]:hover {
+            background: linear-gradient(135deg, rgba(52, 168, 83, 0.2), rgba(66, 133, 244, 0.2));
+        }
+
+        .tech-item[data-category="infrastructure"]:hover {
+            background: linear-gradient(135deg, rgba(26, 35, 126, 0.2), rgba(63, 81, 181, 0.2));
+        }
+
+        .tech-item[data-category="security"]:hover {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(233, 30, 99, 0.2));
+        }
+
+        .tech-item[data-category="realtime"]:hover {
+            background: linear-gradient(135deg, rgba(0, 150, 136, 0.2), rgba(0, 188, 212, 0.2));
+        }
+
+        .tech-item[data-category="testing"]:hover {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(255, 193, 7, 0.2));
+        }
+
+        .tech-item[data-category="standards"]:hover {
+            background: linear-gradient(135deg, rgba(96, 125, 139, 0.2), rgba(120, 144, 156, 0.2));
+        }
+
+        @media (max-width: 768px) {
+            .tech-stack-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .tech-stack-title {
+                font-size: 1.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -291,6 +413,88 @@
                 </div>
             </div>
 
+
+            <!-- Tech Stack Section - Tecnologías Profesionales -->
+            <div class="tech-stack-section">
+                <div class="tech-stack-header">
+                    <h2 class="tech-stack-title">🏆 Tecnologías Profesionales</h2>
+                    <p class="tech-stack-subtitle">Sistema construido con estándares enterprise de clase mundial</p>
+                </div>
+
+                <div class="tech-stack-grid">
+                    <div class="tech-item" data-category="standards">
+                        <div class="tech-icon">📅</div>
+                        <div class="tech-name">ISO 8601</div>
+                        <div class="tech-tooltip">Timestamps internacionales estándar</div>
+                    </div>
+
+                    <div class="tech-item" data-category="database">
+                        <div class="tech-icon">🐘</div>
+                        <div class="tech-name">PostgreSQL 14+</div>
+                        <div class="tech-tooltip">Base de datos empresarial líder</div>
+                    </div>
+
+                    <div class="tech-item" data-category="database">
+                        <div class="tech-icon">🔗</div>
+                        <div class="tech-name">Sequelize ORM</div>
+                        <div class="tech-tooltip">ORM profesional enterprise</div>
+                    </div>
+
+                    <div class="tech-item" data-category="infrastructure">
+                        <div class="tech-icon">⚡</div>
+                        <div class="tech-name">Node.js</div>
+                        <div class="tech-tooltip">Backend de alto rendimiento</div>
+                    </div>
+
+                    <div class="tech-item" data-category="ai">
+                        <div class="tech-icon">🧠</div>
+                        <div class="tech-name">Ollama AI</div>
+                        <div class="tech-tooltip">Inteligencia Artificial local (Llama 3.1)</div>
+                    </div>
+
+                    <div class="tech-item" data-category="ai">
+                        <div class="tech-icon">📚</div>
+                        <div class="tech-name">RAG System</div>
+                        <div class="tech-tooltip">IA contextual con Knowledge Base</div>
+                    </div>
+
+                    <div class="tech-item" data-category="realtime">
+                        <div class="tech-icon">🔌</div>
+                        <div class="tech-name">WebSocket</div>
+                        <div class="tech-tooltip">Comunicación en tiempo real</div>
+                    </div>
+
+                    <div class="tech-item" data-category="testing">
+                        <div class="tech-icon">🎭</div>
+                        <div class="tech-name">Puppeteer</div>
+                        <div class="tech-tooltip">Testing E2E automatizado</div>
+                    </div>
+
+                    <div class="tech-item" data-category="infrastructure">
+                        <div class="tech-icon">📝</div>
+                        <div class="tech-name">Logging Profesional</div>
+                        <div class="tech-tooltip">Trazabilidad completa del sistema</div>
+                    </div>
+
+                    <div class="tech-item" data-category="infrastructure">
+                        <div class="tech-icon">🔧</div>
+                        <div class="tech-name">Auto-Repair</div>
+                        <div class="tech-tooltip">Motor de auto-reparación con IA</div>
+                    </div>
+
+                    <div class="tech-item" data-category="security">
+                        <div class="tech-icon">🔐</div>
+                        <div class="tech-name">Biometría Empresarial</div>
+                        <div class="tech-tooltip">Control biométrico profesional</div>
+                    </div>
+
+                    <div class="tech-item" data-category="infrastructure">
+                        <div class="tech-icon">🏢</div>
+                        <div class="tech-name">Multi-Tenant</div>
+                        <div class="tech-tooltip">Arquitectura multi-empresa</div>
+                    </div>
+                </div>
+            </div>
             <!-- Link de registro de asociados -->
             <div class="register-link">
                 <h3>¿Eres profesional?</h3>
@@ -317,7 +521,9 @@
         function goToLogin(userType) {
             // Ambos tipos (staff y partner) van a panel-administrativo
             // El panel detectará el parámetro y mostrará el login correcto
-            window.location.href = `/panel-administrativo.html?userType=${userType}`;
+            // Agregar timestamp para evitar caché
+            const timestamp = new Date().getTime();
+            window.location.href = `/panel-administrativo.html?userType=${userType}&_t=${timestamp}`;
         }
 
         /**

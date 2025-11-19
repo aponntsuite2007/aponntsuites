@@ -243,8 +243,74 @@ router.get('/:id', auth, async (req, res) => {
     console.log('   user.gpsEnabled:', user.gpsEnabled);
     console.log('   user.departmentId:', user.departmentId);
 
+    // ⚠️ FIX: Obtener turnos asignados desde user_shifts CON datos completos
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      host: process.env.POSTGRES_HOST || 'localhost',
+      port: process.env.POSTGRES_PORT || 5432,
+      database: process.env.POSTGRES_DB || 'attendance_system',
+      user: process.env.POSTGRES_USER || 'postgres',
+      password: process.env.POSTGRES_PASSWORD || 'Aedr15150302'
+    });
+
+    let shifts = [];
+    let shiftIds = [];
+    let shiftNames = [];
+    let departmentName = null;
+    let branchName = null;
+    try {
+      const shiftsResult = await pool.query(`
+        SELECT us.shift_id as id, s.name, s."startTime" as start_time, s."endTime" as end_time
+        FROM user_shifts us
+        JOIN shifts s ON s.id = us.shift_id
+        WHERE us.user_id = $1
+      `, [req.params.id]);
+
+      shifts = shiftsResult.rows;
+      shiftIds = shiftsResult.rows.map(row => row.id);
+      shiftNames = shiftsResult.rows.map(row => row.name);
+      console.log(`✅ [TURNOS] Usuario tiene ${shiftIds.length} turno(s) asignado(s):`, shiftNames.join(', '));
+
+      // ⚠️ FIX: Obtener nombre del departamento
+      if (user.departmentId) {
+        const deptResult = await pool.query(`
+          SELECT name FROM departments WHERE id = $1
+        `, [user.departmentId]);
+
+        if (deptResult.rows.length > 0) {
+          departmentName = deptResult.rows[0].name;
+          console.log(`✅ [DEPARTAMENTO] Usuario asignado a: ${departmentName} (ID: ${user.departmentId})`);
+        } else {
+          console.log(`⚠️ [DEPARTAMENTO] ID ${user.departmentId} no encontrado`);
+        }
+      }
+
+      // ⚠️ FIX: Obtener nombre de la sucursal (USAR camelCase de Sequelize)
+      if (user.defaultBranchId) {
+        const branchResult = await pool.query(`
+          SELECT name FROM branches WHERE id = $1
+        `, [user.defaultBranchId]);
+
+        if (branchResult.rows.length > 0) {
+          branchName = branchResult.rows[0].name;
+          console.log(`✅ [SUCURSAL] Usuario asignado a: ${branchName} (ID: ${user.defaultBranchId})`);
+        }
+      }
+      await pool.end();
+    } catch (shiftError) {
+      console.error('❌ Error obteniendo turnos:', shiftError.message);
+      await pool.end();
+    }
+
     // Format user for frontend
     const formattedUser = formatUserForFrontend(user);
+
+    // Agregar turnos completos, IDs y nombres al usuario formateado
+    formattedUser.shifts = shifts;
+    formattedUser.shiftIds = shiftIds;
+    formattedUser.shiftNames = shiftNames;
+    formattedUser.departmentName = departmentName;
+    formattedUser.branchName = branchName;
 
     // DEBUG: Log formatted values before sending
     console.log('🔍 [GET /:id] FORMATTED user:');
@@ -252,6 +318,7 @@ router.get('/:id', auth, async (req, res) => {
     console.log('   formattedUser.gpsEnabled:', formattedUser.gpsEnabled);
     console.log('   formattedUser.allowOutsideRadius:', formattedUser.allowOutsideRadius);
     console.log('   formattedUser.departmentId:', formattedUser.departmentId);
+    console.log('   formattedUser.shiftIds:', formattedUser.shiftIds);
     console.log('🚨🚨🚨 [GET /:id] RETORNANDO USUARIO FORMATEADO');
 
     res.json(formattedUser);
@@ -397,7 +464,12 @@ router.put('/:id', auth, async (req, res) => {
       });
     }
 
-    const user = await User.findByPk(req.params.id);
+    // ✅ FIX CRÍTICO: Primary key es user_id (UUID), NO id (integer)
+    const user = await User.findOne({
+      where: {
+        user_id: req.params.id
+      }
+    });
 
     if (!user) {
       return res.status(404).json({
@@ -432,12 +504,54 @@ router.put('/:id', auth, async (req, res) => {
       updateData.password = await bcrypt.hash(updateData.password, parseInt(process.env.BCRYPT_ROUNDS));
     }
 
+    // ⚠️ FIX: Manejar turnos (shiftIds) en tabla junction user_shifts
+    let shiftIds = null;
+    if (updateData.shiftIds !== undefined) {
+      shiftIds = updateData.shiftIds; // Guardar para procesar después
+      delete updateData.shiftIds; // NO intentar guardar en tabla users
+    }
+
     await user.update(updateData);
+
+    // Si hay shiftIds para actualizar, manejar en tabla junction
+    if (shiftIds !== null) {
+      const { Pool } = require('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+      });
+
+      try {
+        // 1. Eliminar asignaciones actuales
+        await pool.query('DELETE FROM user_shifts WHERE user_id = $1', [req.params.id]);
+
+        // 2. Insertar nuevas asignaciones (solo si hay turnos seleccionados)
+        if (Array.isArray(shiftIds) && shiftIds.length > 0) {
+          for (const shiftId of shiftIds) {
+            await pool.query(`
+              INSERT INTO user_shifts (user_id, shift_id, "createdAt", "updatedAt")
+              VALUES ($1, $2, NOW(), NOW())
+              ON CONFLICT DO NOTHING
+            `, [req.params.id, shiftId]);
+          }
+          console.log(`✅ [TURNOS] ${shiftIds.length} turno(s) asignado(s) al usuario ${req.params.id}`);
+        } else {
+          console.log(`✅ [TURNOS] Turnos removidos del usuario ${req.params.id}`);
+        }
+
+        await pool.end();
+      } catch (shiftError) {
+        console.error('❌ Error actualizando turnos:', shiftError.message);
+        await pool.end();
+        // No fallar toda la operación por error en turnos
+      }
+    }
 
     console.log('🔧 [DEBUG-GPS] Datos guardados en BD:', updateData);
 
     // Obtener usuario actualizado sin password
-    const updatedUser = await User.findByPk(req.params.id, {
+    // ✅ FIX: Usar user_id como PK
+    const updatedUser = await User.findOne({
+      where: { user_id: req.params.id },
       attributes: { exclude: ['password'] }
     });
 
@@ -465,7 +579,10 @@ router.put('/:id', auth, async (req, res) => {
  */
 router.delete('/:id', auth, adminOnly, async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id);
+    // ✅ FIX: Usar user_id como PK
+    const user = await User.findOne({
+      where: { user_id: req.params.id }
+    });
 
     if (!user) {
       return res.status(404).json({
@@ -505,7 +622,10 @@ router.post('/:id/upload-photo', auth, upload.single('photo'), async (req, res) 
       });
     }
 
-    const user = await User.findByPk(req.params.id);
+    // ✅ FIX: Usar user_id como PK
+    const user = await User.findOne({
+      where: { user_id: req.params.id }
+    });
 
     if (!user) {
       return res.status(404).json({
@@ -547,7 +667,10 @@ router.post('/:id/reset-password', auth, supervisorOrAdmin, async (req, res) => 
     }
 
     console.log('🔑 [RESET-PASSWORD] Buscando usuario con ID:', req.params.id);
-    const user = await User.findByPk(req.params.id);
+    // ✅ FIX: Usar user_id como PK
+    const user = await User.findOne({
+      where: { user_id: req.params.id }
+    });
 
     if (!user) {
       console.log('🔑 [RESET-PASSWORD] ERROR: Usuario no encontrado');
@@ -575,7 +698,10 @@ router.post('/:id/reset-password', auth, supervisorOrAdmin, async (req, res) => 
     console.log('🔑 [RESET-PASSWORD] Update completado, updatedAt:', updateResult.updatedAt);
 
     // Verificar que el cambio se guardó
-    const userAfterUpdate = await User.findByPk(req.params.id);
+    // ✅ FIX: Usar user_id como PK
+    const userAfterUpdate = await User.findOne({
+      where: { user_id: req.params.id }
+    });
     console.log('🔑 [RESET-PASSWORD] Verificación - Hash después del update:', userAfterUpdate.password.substring(0, 30) + '...');
     console.log('🔑 [RESET-PASSWORD] Verificación - updatedAt:', userAfterUpdate.updatedAt);
 

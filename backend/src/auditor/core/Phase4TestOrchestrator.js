@@ -41,6 +41,7 @@
 
 const { chromium } = require('playwright');
 const { Sequelize } = require('sequelize');
+const database = require('../../config/database');  // ✅ Import full database module
 const OllamaAnalyzer = require('./OllamaAnalyzer');
 const TicketGenerator = require('./TicketGenerator');
 const ClaudeCodeWebSocketBridge = require('../../services/ClaudeCodeWebSocketBridge');
@@ -176,7 +177,7 @@ class Phase4TestOrchestrator {
 
             // Construir connection string desde variables de entorno individuales
             const dbUser = process.env.POSTGRES_USER || 'postgres';
-            const dbPassword = process.env.POSTGRES_PASSWORD || '';
+            const dbPassword = process.env.POSTGRES_PASSWORD || 'Aedr15150302';  // ✅ FIXED: usar mismo default que database.js
             const dbHost = process.env.POSTGRES_HOST || 'localhost';
             const dbPort = process.env.POSTGRES_PORT || '5432';
             const dbName = process.env.POSTGRES_DB || 'attendance_system';
@@ -196,6 +197,9 @@ class Phase4TestOrchestrator {
             );
             await this.sequelize.authenticate();
             this.logger.info('DB', 'Conectado a PostgreSQL exitosamente', { dbName });
+
+            // ✅ FIX: Pasar database module completo (con models) a Collectors
+            this.database = database;
 
             // 4. Iniciar Playwright (Chromium)
             this.logger.debug('BROWSER', 'Iniciando Playwright Chromium', {

@@ -254,7 +254,7 @@ router.post('/:id/assign-users', auth, supervisorOrAdmin, async (req, res) => {
 
     // Verificar que todos los usuarios existen
     const users = await User.findAll({
-      where: { id: userIds }
+      where: { user_id: userIds }
     });
 
     if (users.length !== userIds.length) {
@@ -309,6 +309,100 @@ router.get('/:id/users', auth, supervisorOrAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error obteniendo usuarios del turno:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @route POST /api/shifts/bulk-assign
+ * @desc Asignar múltiples turnos a múltiples usuarios (bulk assignment)
+ * @body { userIds: [userId1, userId2], shiftIds: [shiftId1, shiftId2] }
+ */
+router.post('/bulk-assign', auth, supervisorOrAdmin, async (req, res) => {
+  try {
+    const { userIds, shiftIds } = req.body;
+
+    console.log('[USERS] Asignación bulk de turnos:', { userIds, shiftIds });
+
+    // Validaciones
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({
+        error: 'userIds debe ser un array no vacío'
+      });
+    }
+
+    if (!Array.isArray(shiftIds) || shiftIds.length === 0) {
+      return res.status(400).json({
+        error: 'shiftIds debe ser un array no vacío'
+      });
+    }
+
+    // Verificar que usuarios existen
+    const users = await User.findAll({
+      where: { user_id: userIds }
+    });
+
+    if (users.length !== userIds.length) {
+      return res.status(400).json({
+        error: 'Algunos usuarios no fueron encontrados'
+      });
+    }
+
+    // Verificar que turnos existen
+    const shifts = await Shift.findAll({
+      where: { id: shiftIds }
+    });
+
+    if (shifts.length !== shiftIds.length) {
+      return res.status(400).json({
+        error: 'Algunos turnos no fueron encontrados'
+      });
+    }
+
+    // ⚠️ FIX: Usar tabla user_shifts directamente (no hay asociación en modelo)
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      host: process.env.POSTGRES_HOST || 'localhost',
+      port: process.env.POSTGRES_PORT || 5432,
+      database: process.env.POSTGRES_DB || 'attendance_system',
+      user: process.env.POSTGRES_USER || 'postgres',
+      password: process.env.POSTGRES_PASSWORD || 'Aedr15150302'
+    });
+
+    let assignedCount = 0;
+    try {
+      for (const userId of userIds) {
+        // 1. Eliminar asignaciones actuales del usuario
+        await pool.query('DELETE FROM user_shifts WHERE user_id = $1', [userId]);
+
+        // 2. Insertar nuevas asignaciones
+        for (const shiftId of shiftIds) {
+          await pool.query(`
+            INSERT INTO user_shifts (user_id, shift_id, "createdAt", "updatedAt")
+            VALUES ($1, $2, NOW(), NOW())
+            ON CONFLICT DO NOTHING
+          `, [userId, shiftId]);
+          assignedCount++;
+        }
+      }
+
+      await pool.end();
+      console.log(`[USERS] ✅ ${assignedCount} asignaciones completadas`);
+
+    } catch (dbError) {
+      await pool.end();
+      throw dbError; // Re-throw para que lo maneje el catch principal
+    }
+
+    res.json({
+      message: `Asignación exitosa: ${shifts.length} turno(s) asignados a ${users.length} usuario(s)`,
+      assigned: assignedCount,
+      users: users.length,
+      shifts: shifts.length
+    });
+
+  } catch (error) {
+    console.error('[USERS] Error en asignación bulk de turnos:', error);
+    res.status(500).json({ error: 'Error interno del servidor: ' + error.message });
   }
 });
 

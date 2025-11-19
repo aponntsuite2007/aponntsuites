@@ -1,0 +1,15 @@
+🚀 INICIANDO VERIFICACIÓN COMPLETA DE TAB 1
+
+🔐 Iniciando sesión...
+
+❌ ERROR EN TEST: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+[2m  - waiting for locator('#companySelect option') to be visible[22m
+[2m    24 × locator resolved to 10 elements. Proceeding with the first one: <option value="">🏢 Seleccionar Empresa...</option>[22m
+
+page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+[2m  - waiting for locator('#companySelect option') to be visible[22m
+[2m    24 × locator resolved to 10 elements. Proceeding with the first one: <option value="">🏢 Seleccionar Empresa...</option>[22m
+
+    at runTests (C:\Bio\sistema_asistencia_biometrico\backend\test-tab1-verificacion-completa.js:267:20)

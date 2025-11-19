@@ -1122,6 +1122,8 @@ app.post(`${API_PREFIX}/users`, auth, async (req, res) => {
   }
 });
 
+// ❌ DESACTIVADO: Handler viejo que NO maneja isActive, gpsEnabled, departmentId, branchId
+/*
 // Endpoint para actualizar usuarios
 app.put(`${API_PREFIX}/users/:id`, async (req, res) => {
   console.log(`🔄 === ACTUALIZAR USUARIO ===`);
@@ -1275,7 +1277,9 @@ app.put(`${API_PREFIX}/users/:id`, async (req, res) => {
     });
   }
 });
+*/
 
+/* COMENTADO - Endpoint duplicado que interceptaba userRoutes.js
 // Endpoint para obtener usuario individual
 app.get(`${API_PREFIX}/users/:id`, async (req, res) => {
   console.log(`👁️ === OBTENER USUARIO INDIVIDUAL ===`);
@@ -1393,7 +1397,7 @@ app.get(`${API_PREFIX}/users/:id`, async (req, res) => {
       message: error.message
     });
   }
-});
+*/ // FIN endpoint duplicado
 
 // Endpoint para eliminar usuario (soft delete)
 app.delete(`${API_PREFIX}/users/:id`, async (req, res) => {
@@ -1627,42 +1631,37 @@ app.get(`${API_PREFIX}/companies`, async (req, res) => {
 // Endpoint company-login ELIMINADO - usar authRoutes.js para autenticación real
 
 // Endpoint básico para turnos (simulado)
-app.get(`${API_PREFIX}/shifts`, (req, res) => {
-  console.log(`🕐 === SOLICITUD TURNOS ===`);
-  console.log(`👤 Usuario: ${req.headers.authorization}`);
-  console.log(`🌐 IP: ${req.ip}`);
-  console.log(`========================`);
-  
-  // Simular turnos de ejemplo para pruebas
-  const exampleShifts = [
-    {
-      id: 'example-1',
-      name: 'Turno Mañana Estándar',
-      type: 'standard',
-      startTime: '08:00',
-      endTime: '17:00',
-      breakStartTime: '12:00',
-      breakEndTime: '13:00',
-      days: [1,2,3,4,5],
-      isActive: true,
-      employees: 12,
-      hourlyRates: { normal: 1.0, overtime: 1.5, weekend: 1.5, holiday: 2.0 }
-    },
-    {
-      id: 'example-2',
-      name: 'Turno Tarde',
-      type: 'standard',
-      startTime: '14:00',
-      endTime: '22:00',
-      days: [1,2,3,4,5],
-      isActive: true,
-      employees: 8,
-      hourlyRates: { normal: 1.0, overtime: 1.5, weekend: 1.5, holiday: 2.0 }
-    }
-  ];
-  
-  const allShifts = [...exampleShifts, ...createdShifts];
-  res.json({ shifts: allShifts });
+// ✅ FIX: Endpoint GET /shifts con filtrado multi-tenant
+app.get(`${API_PREFIX}/shifts`, auth, async (req, res) => {
+  try {
+    console.log(`🕐 === SOLICITUD TURNOS (MULTI-TENANT) ===`);
+    console.log(`👤 Usuario company_id: ${req.user.company_id}`);
+    console.log(`🌐 IP: ${req.ip}`);
+    console.log(`==========================================`);
+
+    // Obtener turnos de la empresa del usuario autenticado
+    const shifts = await database.Shift.findAll({
+      where: {
+        company_id: req.user.company_id,
+        isActive: true
+      },
+      order: [['name', 'ASC']]
+    });
+
+    console.log(`✅ Turnos encontrados para company ${req.user.company_id}: ${shifts.length}`);
+
+    res.json({
+      success: true,
+      shifts: shifts
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo turnos:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      message: error.message
+    });
+  }
 });
 
 // Endpoint para crear turnos
@@ -1843,6 +1842,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const aponntAuthRoutes = require('./src/routes/aponntAuthRoutes'); // ✅ Auth para Staff + Partners
 const legalRoutes = require('./src/routes/legalRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const shiftRoutes = require('./src/routes/shiftRoutes');
 const usersSimpleRoutes = require('./src/routes/usersSimple');
 const authorizationRoutes = require('./src/routes/authorizationRoutes');
 const diagnosticRoutes = require('./src/routes/diagnostic');
@@ -1855,6 +1855,18 @@ const userAdminRoutes = require('./src/routes/userAdminRoutes');
 const userDocumentsRoutes = require('./src/routes/userDocumentsRoutes'); // Documentos vencibles (Octubre 2025)
 const userMedicalExamsRoutes = require('./src/routes/userMedicalExamsRoutes'); // Exámenes médicos con periodicidad (Octubre 2025)
 const userWorkHistoryRoutes = require('./src/routes/userWorkHistoryRoutes'); // Historial laboral completo (Octubre 2025)
+// 🆕 TAB 2 - Datos Personales (Modal Ver Usuario - Enero 2025)
+const userDriverLicenseRoutes = require('./src/routes/userDriverLicenseRoutes'); // Licencias de conducir
+const userProfessionalLicenseRoutes = require('./src/routes/userProfessionalLicenseRoutes'); // Licencias profesionales
+// 🆕 TAB 3 - Antecedentes Laborales (Modal Ver Usuario - Enero 2025)
+const userLegalIssueRoutes = require('./src/routes/userLegalIssueRoutes'); // Asuntos legales/judiciales
+const userUnionAffiliationRoutes = require('./src/routes/userUnionAffiliationRoutes'); // Afiliación sindical
+// 🆕 TAB 8 - Config. Tareas y Salario (Modal Ver Usuario - Enero 2025)
+const companyTaskRoutes = require('./src/routes/companyTaskRoutes'); // Catálogo de tareas de la empresa
+const userAssignedTaskRoutes = require('./src/routes/userAssignedTaskRoutes'); // Tareas asignadas a usuarios
+const userSalaryConfigRoutes = require('./src/routes/userSalaryConfigRoutes'); // Configuración salarial
+// 🆕 Sistema de Upload de Archivos (Enero 2025)
+const uploadRoutes = require('./src/routes/uploadRoutes'); // Upload de documentos, fotos, licencias, etc.
 
 // Importar rutas del sistema APONNT
 const aponntDashboardRoutes = require('./src/routes/aponntDashboard');
@@ -1893,6 +1905,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/auth/aponnt', aponntAuthRoutes); // ✅ Auth Staff + Partners
 app.use('/api/v1/legal', legalRoutes);
 app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exitosa
+app.use('/api/v1/shifts', shiftRoutes);
 app.use('/api/v1/authorization', authorizationRoutes); // Sistema de autorizaciones de llegadas tardías
 app.use('/api/v1/diagnostic', diagnosticRoutes); // Endpoint de diagnóstico para verificar schema
 app.use('/api/v1/admin/migrations', adminMigrationsRoutes); // Endpoints administrativos de migraciones
@@ -1908,13 +1921,29 @@ app.use('/api/v1', userDocumentsRoutes); // Documentos vencibles con notificacio
 app.use('/api/v1', userMedicalExamsRoutes); // Exámenes médicos con periodicidad automática
 app.use('/api/v1', userWorkHistoryRoutes); // Historial laboral + desvinculación + litigios
 
+// 🆕 TAB 2 - Datos Personales Modal Ver Usuario (Enero 2025)
+app.use('/api/v1/users', userDriverLicenseRoutes); // GET/POST/PUT/DELETE /:userId/driver-licenses
+app.use('/api/v1/users', userProfessionalLicenseRoutes); // GET/POST/PUT/DELETE /:userId/professional-licenses
+
+// 🆕 TAB 3 - Antecedentes Laborales Modal Ver Usuario (Enero 2025)
+app.use('/api/v1/users', userLegalIssueRoutes); // GET/POST/PUT/DELETE /:userId/legal-issues
+app.use('/api/v1/users', userUnionAffiliationRoutes); // GET/POST/PUT/DELETE /:userId/union-affiliation
+
+// 🆕 TAB 8 - Config. Tareas y Salario Modal Ver Usuario (Enero 2025)
+app.use('/api/v1/companies', companyTaskRoutes); // GET/POST/PUT/DELETE /:companyId/tasks
+app.use('/api/v1/users', userAssignedTaskRoutes); // GET/POST/PUT/DELETE /:userId/assigned-tasks
+app.use('/api/v1/users', userSalaryConfigRoutes); // GET/POST/PUT/DELETE /:userId/salary-config
+
+// 🆕 Sistema de Upload de Archivos (Enero 2025)
+app.use('/api/v1/upload', uploadRoutes); // POST /single, POST /multiple, DELETE /:filename, GET /info/:filename
+
 // Configurar rutas del sistema APONNT
 app.use('/api/aponnt/dashboard', aponntDashboardRoutes);
 // ✅ FIX BUG #1 y #2: Agregar alias de ruta para compatibilidad con frontend
 // Frontend llama a /api/v1/users/:id (PUT) para actualizar usuarios
 // Backend tiene la ruta en /api/aponnt/dashboard/users/:id
 // Solución: Montar aponntDashboardRoutes también en /api/v1 para que funcionen ambas rutas
-app.use('/api/v1', aponntDashboardRoutes);
+// app.use('/api/v1', aponntDashboardRoutes); // ❌ DESACTIVADO: intercepta userRoutes
 app.use('/api/v1/company-modules', companyModuleRoutes);
 app.use('/api/company-panel', companyPanelRoutes);
 app.use('/api/vendor-automation', vendorRoutes);
@@ -2163,6 +2192,36 @@ console.log('   ✅ POST /api/auto-repair/process-ticket - Marcar ticket procesa
 console.log('   📥 GET  /api/auto-repair/next-ticket - Obtener siguiente ticket');
 console.log('   🔀 Modos: MANUAL (cola humana) | AUTO (Claude Code API)');
 console.log('');
+
+// 🔥 HOT RELOAD ENDPOINT - Recargar módulos sin reiniciar servidor
+app.get('/api/admin/reload-user-routes', (req, res) => {
+  try {
+    const path = require('path');
+    const userRoutesPath = path.resolve(__dirname, './src/routes/userRoutes.js');
+
+    // Limpiar cache del módulo
+    delete require.cache[require.resolve(userRoutesPath)];
+
+    // Recargar módulo
+    const freshUserRoutes = require(userRoutesPath);
+
+    // Re-montar rutas (esto sobrescribe las viejas)
+    app._router.stack = app._router.stack.filter(r =>
+      !(r.route && r.route.path && r.route.path.startsWith('/api/v1/users'))
+    );
+    app.use('/api/v1/users', freshUserRoutes);
+
+    console.log('🔥 [HOT-RELOAD] userRoutes recargado exitosamente');
+    res.json({
+      success: true,
+      message: 'userRoutes recargado sin reiniciar servidor',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ [HOT-RELOAD] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ✅ CONFIGURAR SISTEMA DE EMAILS MULTICAPA
 const emailRoutes = require('./src/routes/emailRoutes');

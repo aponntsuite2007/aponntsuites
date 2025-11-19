@@ -1,0 +1,150 @@
+
+📝 FASE 1: LOGIN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Empresa seleccionada: 🏢 ISI
+✓ Usuario: soporte
+✓ Password ingresado
+✓ Click en Login
+✅ Login exitoso
+
+📝 FASE 2: NAVEGAR A USUARIOS Y ABRIR PRIMER USUARIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Módulo de Usuarios abierto (showModuleContent)
+⚠️ Tabla no detectada, continuando...
+✓ Click en Ver usuario (ID: 85fcc4e0-09ee-47bc-af06-85d7867539eb)
+✅ Modal Ver Usuario abierto
+
+📝 FASE 3: CAPTURAR VALORES ORIGINALES DEL TAB 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 VALORES ORIGINALES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rol            : 👤 Empleado
+  estado         : ✅ Activo
+  gps            : 🌍 Sin restricción GPS
+  departamento   : Asignado
+  cargo          : Gerente General
+  sucursal       : Sin asignar
+
+📝 FASE 4: MODIFICAR TODOS LOS CAMPOS DEL TAB 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ Modificando ESTADO...
+   ⚠️ Botón Estado no encontrado
+
+2️⃣ Modificando GPS...
+   🔔 Diálogo: "¿Restringir GPS al área autorizada?"
+   ✓ Diálogo aceptado
+   🔔 Diálogo: "✅ GPS restringido a área autorizada"
+   ✓ Diálogo aceptado
+   ⏳ Esperando recarga del modal...
+   ✓ GPS modificado y modal recargado
+
+3️⃣ Modificando CARGO...
+   ⚠️ Botón Editar Cargo no encontrado
+
+✅ Total de cambios realizados: 1
+
+📝 FASE 5: CERRAR SISTEMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ No se encontró botón logout, cerrando navegador directamente
+✅ Sistema cerrado completamente
+⏳ Esperando 3 segundos...
+
+📝 FASE 6: REABRIR SISTEMA Y VERIFICAR PERSISTENCIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 FASE 1: LOGIN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Empresa seleccionada: 🏢 ISI
+✓ Usuario: soporte
+✓ Password ingresado
+✓ Click en Login
+✅ Login exitoso
+
+📝 FASE 2: NAVEGAR A USUARIOS Y ABRIR PRIMER USUARIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Módulo de Usuarios abierto (showModuleContent)
+⚠️ Tabla no detectada, continuando...
+✓ Click en Ver usuario (ID: 85fcc4e0-09ee-47bc-af06-85d7867539eb)
+✅ Modal Ver Usuario abierto
+✓ Usuario reabierto (ID: 85fcc4e0-09ee-47bc-af06-85d7867539eb)
+
+📊 COMPARACIÓN DE VALORES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ROL
+   Original: 👤 Empleado
+   Nuevo:    👤 Empleado
+   Persistió: NO
+
+❌ ESTADO
+   Original: ✅ Activo
+   Nuevo:    ✅ Activo
+   Persistió: NO
+
+❌ GPS
+   Original: 🌍 Sin restricción GPS
+   Nuevo:    🌍 Sin restricción GPS
+   Persistió: NO
+
+❌ DEPARTAMENTO
+   Original: Asignado
+   Nuevo:    Asignado
+   Persistió: NO
+
+❌ CARGO
+   Original: Gerente General
+   Nuevo:    Gerente General
+   Persistió: NO
+
+❌ SUCURSAL
+   Original: Sin asignar
+   Nuevo:    Sin asignar
+   Persistió: NO
+
+
+
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║     📊 REPORTE DE PERSISTENCIA - TAB 1                    ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+
+Total de campos: 6
+✅ Persistieron: 0
+❌ No persistieron: 6
+📊 Tasa de éxito: 0.0%
+
+Detalles:
+─────────────────────────────────────────────────────────────
+❌ NO PERSISTIÓ - ROL
+  Original: 👤 Empleado
+  Nuevo:    👤 Empleado
+❌ NO PERSISTIÓ - ESTADO
+  Original: ✅ Activo
+  Nuevo:    ✅ Activo
+❌ NO PERSISTIÓ - GPS
+  Original: 🌍 Sin restricción GPS
+  Nuevo:    🌍 Sin restricción GPS
+❌ NO PERSISTIÓ - DEPARTAMENTO
+  Original: Asignado
+  Nuevo:    Asignado
+❌ NO PERSISTIÓ - CARGO
+  Original: Gerente General
+  Nuevo:    Gerente General
+❌ NO PERSISTIÓ - SUCURSAL
+  Original: Sin asignar
+  Nuevo:    Sin asignar
+─────────────────────────────────────────────────────────────
+
+⚠️ 6 campo(s) NO persistieron.
+
+Screenshots generados:
+  - test-persistencia-01-after-login.png
+  - test-persistencia-02-panel.png
+  - test-persistencia-03-modulo-usuarios.png
+  - test-persistencia-04-modal-abierto.png
+  - test-persistencia-05-valores-originales.png
+  - test-persistencia-06-despues-modificar.png
+  - test-persistencia-07-valores-nuevos.png
+

@@ -3,9 +3,9 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
   const Shift = sequelize.define('Shift', {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       primaryKey: true,
-      autoIncrement: true
+      defaultValue: DataTypes.UUIDV4
     },
     name: {
       type: DataTypes.STRING,
@@ -14,22 +14,22 @@ module.exports = (sequelize) => {
     startTime: {
       type: DataTypes.TIME,
       allowNull: false,
-      field: 'starttime'
+      field: 'startTime'
     },
     endTime: {
       type: DataTypes.TIME,
       allowNull: false,
-      field: 'endtime'
+      field: 'endTime'
     },
     toleranceMinutes: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       defaultValue: 10,
-      field: 'toleranceminutes'
+      field: 'toleranceMinutes'
     },
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
-      field: 'isactive'
+      field: 'isActive'
     },
     description: {
       type: DataTypes.TEXT,
@@ -41,22 +41,22 @@ module.exports = (sequelize) => {
       comment: 'Array de días: [0=Dom, 1=Lun, ..., 6=Sab]'
     },
     toleranceMinutesEntry: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       defaultValue: 10,
-      field: 'toleranceminutesentry',
+      field: 'toleranceMinutesEntry',
       comment: 'LEGACY: Minutos tolerancia ingreso (tardío) - usar toleranceConfig'
     },
     toleranceMinutesExit: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       defaultValue: 15,
-      field: 'toleranceminutesexit',
+      field: 'toleranceMinutesExit',
       comment: 'LEGACY: Minutos tolerancia egreso (quedarse) - usar toleranceConfig'
     },
     // CONFIGURACIÓN DETALLADA DE TOLERANCIA (Multi-tenant - cada empresa define su política)
     toleranceConfig: {
       type: DataTypes.JSONB,
       allowNull: true,
-      field: 'toleranceconfig',
+      field: 'toleranceConfig',
       defaultValue: {
         entry: {
           before: 15,  // Minutos antes permitidos para marcar ingreso (llegar temprano)
@@ -71,7 +71,7 @@ module.exports = (sequelize) => {
     },
     // CAMPOS PARA SISTEMA MULTI-TENANT
     company_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'companies',
@@ -82,83 +82,83 @@ module.exports = (sequelize) => {
     shiftType: {
       type: DataTypes.ENUM('standard', 'rotative', 'permanent', 'flash'),
       defaultValue: 'standard',
-      field: 'shifttype',
+      field: 'shiftType',
       comment: 'Tipo de turno: estándar, rotativo, permanente o flash'
     },
     breakStartTime: {
       type: DataTypes.TIME,
       allowNull: true,
-      field: 'breakstarttime',
+      field: 'breakStartTime',
       comment: 'Hora inicio descanso'
     },
     breakEndTime: {
       type: DataTypes.TIME,
       allowNull: true,
-      field: 'breakendtime',
+      field: 'breakEndTime',
       comment: 'Hora fin descanso'
     },
     // Para turnos rotativos
     rotationPattern: {
       type: DataTypes.STRING,
       allowNull: true,
-      field: 'rotationpattern',
+      field: 'rotationPattern',
       comment: 'Patrón rotativo: 12x4, 6x2, etc.'
     },
     cycleStartDate: {
       type: DataTypes.DATEONLY,
       allowNull: true,
-      field: 'cyclestartdate',
+      field: 'cycleStartDate',
       comment: 'Fecha inicio ciclo rotativo'
     },
     workDays: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
-      field: 'workdays',
+      field: 'workDays',
       comment: 'Días trabajados en ciclo rotativo'
     },
     restDays: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
-      field: 'restdays',
+      field: 'restDays',
       comment: 'Días descanso en ciclo rotativo'
     },
     // Para turnos flash (temporales)
     flashStartDate: {
       type: DataTypes.DATEONLY,
       allowNull: true,
-      field: 'flashstartdate',
+      field: 'flashStartDate',
       comment: 'Fecha inicio turno flash'
     },
     flashEndDate: {
       type: DataTypes.DATEONLY,
       allowNull: true,
-      field: 'flashenddate',
+      field: 'flashEndDate',
       comment: 'Fecha fin turno flash'
     },
     flashPriority: {
       type: DataTypes.ENUM('low', 'normal', 'high', 'urgent'),
       defaultValue: 'normal',
-      field: 'flashpriority',
+      field: 'flashPriority',
       comment: 'Prioridad del turno flash'
     },
     allowOverride: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
-      field: 'allowoverride',
+      field: 'allowOverride',
       comment: 'Permitir sobreasignación sobre otros turnos'
     },
     // Para turnos permanentes
     permanentPriority: {
       type: DataTypes.ENUM('low', 'normal', 'high', 'critical'),
       defaultValue: 'normal',
-      field: 'permanentpriority',
+      field: 'permanentPriority',
       comment: 'Prioridad del turno permanente'
     },
     // Tarifas horarias (multiplicadores)
     hourlyRates: {
       type: DataTypes.JSONB,
       allowNull: true,
-      field: 'hourlyrates',
+      field: 'hourlyRates',
       defaultValue: {
         normal: 1.0,
         overtime: 1.5,

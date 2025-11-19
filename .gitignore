@@ -81,4 +81,6 @@ C:biobkp*
 
 # Uploads (production will use cloud storage)
 public/uploads/*
-!public/uploads/.gitkeep
+!public/uploads/.gitkeepnul
+backend/nul
+**/nul

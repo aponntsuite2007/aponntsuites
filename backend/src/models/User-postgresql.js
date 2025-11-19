@@ -79,6 +79,7 @@ module.exports = (sequelize) => {
       index: true
     },
     departmentId: {
+      field: 'department_id',  // FIX: Map to snake_case column
       type: DataTypes.BIGINT,
       allowNull: true,
       references: {
@@ -99,9 +100,9 @@ module.exports = (sequelize) => {
       comment: 'Company that this user belongs to'
     },
     defaultBranchId: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.UUID,
       allowNull: true,
-      field: 'defaultBranchId',
+      field: 'default_branch_id',
       references: {
         model: 'branches',
         key: 'id'

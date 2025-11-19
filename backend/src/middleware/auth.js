@@ -120,7 +120,7 @@ const authorize = (...roles) => {
       return res.status(403).json({
         error: 'Usuario sin rol asignado. Contacte al administrador.',
         details: {
-          userId: req.user.user_id || req.user.id,
+          userId: req.user.user_id,
           email: req.user.email
         }
       });
