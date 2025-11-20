@@ -1874,6 +1874,7 @@ const companyModuleRoutes = require('./src/routes/companyModuleRoutes');
 const companyPanelRoutes = require('./src/routes/companyPanel');
 const vendorRoutes = require('./src/routes/vendorRoutes');
 const vendorAutomationRoutes = require('./src/routes/vendorAutomationRoutes');
+const vendorCommissionsRoutes = require('./src/routes/vendorCommissionsRoutes'); // Sistema de Roles y Comisiones (Enero 2025)
 const pricingRoutes = require('./src/routes/pricingRoutes');
 
 // 💼 IMPORTAR RUTAS DE POSTULACIONES LABORALES
@@ -1948,6 +1949,7 @@ app.use('/api/v1/company-modules', companyModuleRoutes);
 app.use('/api/company-panel', companyPanelRoutes);
 app.use('/api/vendor-automation', vendorRoutes);
 app.use('/api/vendor-automation-advanced', vendorAutomationRoutes);
+app.use('/api/vendors', vendorCommissionsRoutes); // Sistema de Roles y Comisiones (Enero 2025)
 app.use('/api', pricingRoutes);
 
 // 💼 CONFIGURAR RUTAS DE POSTULACIONES LABORALES
@@ -2105,6 +2107,23 @@ console.log('🔍 [AUDITOR] Sistema de Auditoría y Auto-Diagnóstico ACTIVO:');
 console.log('   🔍 /api/audit/run - Ejecutar auditoría completa');
 console.log('   📊 /api/audit/status - Estado actual');
 console.log('   📋 /api/audit/registry - Ver módulos del sistema');
+
+// ✅ CONFIGURAR ENGINEERING DASHBOARD - Metadata del sistema
+const engineeringRoutes = require('./src/routes/engineeringRoutes');
+app.use('/api/engineering', engineeringRoutes);
+
+console.log('🏗️ [ENGINEERING] Engineering Dashboard API ACTIVO:');
+console.log('   📊 GET  /api/engineering/metadata - Metadata completo del sistema');
+console.log('   📋 GET  /api/engineering/modules - Solo módulos');
+console.log('   🗺️ GET  /api/engineering/roadmap - Solo roadmap');
+console.log('   🔄 GET  /api/engineering/workflows - Solo workflows');
+console.log('   🗄️ GET  /api/engineering/database - Solo database schema');
+console.log('   📱 GET  /api/engineering/applications - Solo aplicaciones');
+console.log('   📈 GET  /api/engineering/stats - Estadísticas agregadas');
+console.log('   💾 POST /api/engineering/update - Actualizar metadata');
+console.log('   🔄 POST /api/engineering/reload - Recargar metadata');
+console.log('   Feature: Single source of truth - engineering-metadata.js');
+console.log('');
 console.log('');
 console.log('🚀 [PHASE4] Sistema Autónomo de Reparación + Reportes Técnicos ACTIVO:');
 console.log('   🔬 POST /api/audit/phase4/test/deep-with-report - Test profundo con auto-repair + reporte');

@@ -10,7 +10,7 @@ const requireAdmin = (req, res, next) => next();
 console.log('🔄 Cargando aponntDashboard routes...');
 
 // Usar modelos PostgreSQL del sistema
-const { sequelize, Company, User, Branch } = require('../config/database');
+const { sequelize, Company, User, Branch, AponntStaff } = require('../config/database');
 console.log('✅ Modelos PostgreSQL cargados correctamente');
 
 // Servicios
@@ -21,7 +21,7 @@ console.log('🔔 Servicio de notificaciones Aponnt cargado');
 // const BranchMemory = require('../models/BranchMemory');
 // const UserMemory = require('../models/UserMemory');
 // const PaymentMemory = require('../models/PaymentMemory');
-const VendorMemory = require('../models/VendorMemory');
+// const VendorMemory = require('../models/VendorMemory'); // REMOVIDO - Ahora usa AponntStaff (Enero 2025)
 
 // === VALIDACIONES DE SEGURIDAD ===
 // Función para validar y sanitizar IDs numéricos
@@ -3282,8 +3282,11 @@ router.put('/companies/:id/status', async (req, res) => {
 // GET /vendors - Obtener todos los vendedores
 router.get('/vendors', async (req, res) => {
   try {
-    console.log('📋 Obteniendo vendedores');
-    const vendors = await VendorMemory.findAll({ order: [['name', 'ASC']] });
+    console.log('📋 Obteniendo vendedores (AponntStaff)');
+    const vendors = await AponntStaff.findAll({
+      where: { is_active: true },
+      order: [['first_name', 'ASC'], ['last_name', 'ASC']]
+    });
     res.json({ success: true, vendors });
   } catch (error) {
     console.error('❌ Error obteniendo vendedores:', error);
@@ -3294,8 +3297,12 @@ router.get('/vendors', async (req, res) => {
 // GET /vendors/active - Obtener vendedores activos para selectores
 router.get('/vendors/active', async (req, res) => {
   try {
-    console.log('📋 Obteniendo vendedores activos');
-    const vendors = await VendorMemory.VendorMemory.findActive();
+    console.log('📋 Obteniendo vendedores activos (AponntStaff)');
+    const vendors = await AponntStaff.findAll({
+      where: { is_active: true },
+      attributes: ['id', 'first_name', 'last_name', 'email', 'role', 'phone'],
+      order: [['first_name', 'ASC'], ['last_name', 'ASC']]
+    });
     res.json({ success: true, vendors });
   } catch (error) {
     console.error('❌ Error obteniendo vendedores activos:', error);
@@ -3307,8 +3314,8 @@ router.get('/vendors/active', async (req, res) => {
 router.get('/vendors/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`📋 Obteniendo vendedor ${id}`);
-    const vendor = await VendorMemory.findByPk(id);
+    console.log(`📋 Obteniendo vendedor \${id} (AponntStaff)`);
+    const vendor = await AponntStaff.findByPk(id);
     
     if (!vendor) {
       return res.status(404).json({ success: false, error: 'Vendedor no encontrado' });
@@ -3324,8 +3331,8 @@ router.get('/vendors/:id', async (req, res) => {
 // POST /vendors - Crear nuevo vendedor
 router.post('/vendors', async (req, res) => {
   try {
-    console.log('➕ Creando nuevo vendedor:', req.body);
-    const vendor = await VendorMemory.VendorMemory.createVendor(req.body);
+    console.log('➕ Creando nuevo vendedor (AponntStaff):', req.body);
+    const vendor = await AponntStaff.create(req.body);
     res.status(201).json({ success: true, vendor });
   } catch (error) {
     console.error('❌ Error creando vendedor:', error);
@@ -3337,8 +3344,10 @@ router.post('/vendors', async (req, res) => {
 router.put('/vendors/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`✏️ Actualizando vendedor ${id}:`, req.body);
-    const vendor = await VendorMemory.VendorMemory.updateVendor(id, req.body);
+    console.log(`✏️ Actualizando vendedor \${id} (AponntStaff):`, req.body);
+    const [updated] = await AponntStaff.update(req.body, { where: { id } });
+    if (!updated) throw new Error('Vendedor no encontrado');
+    const vendor = await AponntStaff.findByPk(id);
     res.json({ success: true, vendor });
   } catch (error) {
     console.error('❌ Error actualizando vendedor:', error);
@@ -3350,11 +3359,11 @@ router.put('/vendors/:id', async (req, res) => {
 router.delete('/vendors/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`🗑️ Eliminando vendedor ${id}`);
+    console.log(`🗑️ Eliminando vendedor \${id} (AponntStaff)`);
     
     // Verificar si el vendedor tiene empresas asignadas
     const CompanyMemory = require('../models/CompanyMemory');
-    const vendor = await VendorMemory.findByPk(id);
+    const vendor = await AponntStaff.findByPk(id);
     
     if (!vendor) {
       return res.status(404).json({ success: false, error: 'Vendedor no encontrado' });
@@ -3371,7 +3380,7 @@ router.delete('/vendors/:id', async (req, res) => {
       });
     }
     
-    const deleted = await VendorMemory.destroy(id);
+    const deleted = await AponntStaff.destroy({ where: { id } });
     if (!deleted) {
       return res.status(404).json({ success: false, error: 'Vendedor no encontrado' });
     }
