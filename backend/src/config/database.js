@@ -171,6 +171,7 @@ const ConsentAuditLog = require('../models/ConsentAuditLog')(sequelize);
 // ✅ MODELOS - Personal de Aponnt (Staff, Vendedores, Supervisores, etc.)
 const AponntStaff = require('../models/AponntStaff')(sequelize);
 const AponntStaffCompany = require('../models/AponntStaffCompany')(sequelize);
+const VendorStatistics = require('../models/VendorStatistics')(sequelize);
 
 // ✅ MODELOS - Sistema de Partners Marketplace
 const PartnerRole = require('../models/PartnerRole')(sequelize);
@@ -652,6 +653,10 @@ AponntStaffCompany.belongsTo(AponntStaff, { foreignKey: 'deactivated_by', as: 'd
 // Partner - approved_by (FK a AponntStaff)
 Partner.belongsTo(AponntStaff, { foreignKey: 'approved_by', as: 'approver' });
 AponntStaff.hasMany(Partner, { foreignKey: 'approved_by', as: 'approved_partners' });
+
+// VendorStatistics - Estadísticas consolidadas de vendedores
+VendorStatistics.belongsTo(AponntStaff, { foreignKey: 'vendor_id', as: 'vendor' });
+AponntStaff.hasOne(VendorStatistics, { foreignKey: 'vendor_id', as: 'statistics' });
 
 // ============================================================================
 // ASOCIACIONES - Sistema de Partners Marketplace

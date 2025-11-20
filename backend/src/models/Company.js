@@ -368,7 +368,43 @@ module.exports = (sequelize) => {
       field: 'last_config_update',
       comment: 'Last time configuration was updated'
     },
-    
+
+    // Vendor Assignment (Sistema de Roles y Comisiones)
+    createdByStaffId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: 'created_by_staff_id',
+      comment: 'Aponnt staff who created this company'
+    },
+    assignedVendorId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: 'assigned_vendor_id',
+      comment: 'Sales vendor assigned to this company (permanent commission)'
+    },
+    supportVendorId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: 'support_vendor_id',
+      comment: 'Support vendor assigned to this company (temporary commission)'
+    },
+
+    // Commission Tracking (calculated automatically)
+    salesCommissionUsd: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false,
+      defaultValue: 0.00,
+      field: 'sales_commission_usd',
+      comment: 'Total sales commission in USD for assigned vendor'
+    },
+    supportCommissionUsd: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false,
+      defaultValue: 0.00,
+      field: 'support_commission_usd',
+      comment: 'Total support commission in USD for support vendor'
+    },
+
     // Metadata
     metadata: {
       type: DataTypes.JSONB,
@@ -441,12 +477,31 @@ module.exports = (sequelize) => {
   };
 
   Company.findActiveCompanies = function() {
-    return this.findAll({ 
-      where: { 
+    return this.findAll({
+      where: {
         isActive: true,
         status: 'active'
       },
       order: [['name', 'ASC']]
+    });
+  };
+
+  // Associations (Sistema de Roles y Comisiones)
+  Company.associate = function(models) {
+    // Vendor assignments
+    Company.belongsTo(models.AponntStaff, {
+      foreignKey: 'created_by_staff_id',
+      as: 'createdByStaff'
+    });
+
+    Company.belongsTo(models.AponntStaff, {
+      foreignKey: 'assigned_vendor_id',
+      as: 'assignedVendor'
+    });
+
+    Company.belongsTo(models.AponntStaff, {
+      foreignKey: 'support_vendor_id',
+      as: 'supportVendor'
     });
   };
 
