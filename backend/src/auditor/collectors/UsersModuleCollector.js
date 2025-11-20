@@ -215,10 +215,22 @@ class UsersModuleCollector extends BaseModuleCollector {
         try {
             // 1. Cargar lista de usuarios
             await this.clickElement('button[onclick="loadUsers()"]', 'botón Lista de Usuarios');
-            await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // 2. Verificar que cargó la tabla
-            const tableExists = await this.elementExists('#users-list table');
+            // 2. Esperar a que la tabla cargue (con timeout más largo)
+            console.log('   ⏳ Esperando a que cargue la tabla de usuarios...');
+            try {
+                await this.page.waitForSelector('#users-list .data-table', {
+                    state: 'visible',
+                    timeout: 15000 // 15 segundos para dar tiempo al API
+                });
+                console.log('   ✅ Tabla de usuarios cargada');
+            } catch (error) {
+                console.error('   ❌ Timeout esperando tabla de usuarios');
+                throw new Error('Tabla de usuarios no cargó después de 15 segundos');
+            }
+
+            // 3. Verificar que cargó la tabla
+            const tableExists = await this.elementExists('#users-list .data-table');
 
             if (!tableExists) {
                 throw new Error('Tabla de usuarios no cargó');
@@ -449,15 +461,24 @@ class UsersModuleCollector extends BaseModuleCollector {
             console.log('   🔍 Intentando cargar lista de usuarios...');
             await this.clickElement('button[onclick="loadUsers()"]', 'botón Lista de Usuarios');
 
-            // 2. Esperar a que la tabla se cargue (WAIT MÁS LARGO)
-            console.log('   ⏳ Esperando 8 segundos para que la lista cargue...');
-            await this.page.waitForTimeout(8000); // Wait largo para dar tiempo a que cargue
+            // 2. Esperar a que la tabla se cargue (usando waitForSelector en lugar de timeout fijo)
+            console.log('   ⏳ Esperando a que la tabla de usuarios cargue...');
+            try {
+                await this.page.waitForSelector('#users-list .data-table', {
+                    state: 'visible',
+                    timeout: 15000 // 15 segundos para dar tiempo al API
+                });
+                console.log('   ✅ Tabla de usuarios cargada correctamente');
+            } catch (error) {
+                console.error('   ❌ Timeout esperando tabla de usuarios');
+                throw new Error('Tabla de usuarios no cargó después de 15 segundos');
+            }
 
             // 3. Intentar encontrar botones Ver con timeout extendido
             try {
                 console.log('   👀 Buscando botones Ver en la lista...');
-                await this.page.waitForSelector('button[onclick^="viewUser("]', { timeout: 30000, state: 'visible' });
-                await this.page.waitForTimeout(1000);
+                await this.page.waitForSelector('button[onclick^="viewUser("]', { timeout: 10000, state: 'visible' });
+                await this.page.waitForTimeout(500);
 
                 // Obtener el primer usuario de la lista
                 firstUserId = await this.page.evaluate(() => {

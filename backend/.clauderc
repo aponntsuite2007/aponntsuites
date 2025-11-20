@@ -1,0 +1,53 @@
+{
+  "name": "Sistema de Asistencia Biométrico Aponnt",
+  "version": "2.0.0-beta",
+
+  "rules": {
+    "before_coding": [
+      "READ backend/engineering-metadata.js FIRST - This is the single source of truth",
+      "CHECK if what you're about to do already exists (avoid duplication)",
+      "CHECK deprecated section - NEVER use deprecated code",
+      "CHECK knownIssues for the module you're working on"
+    ],
+
+    "after_coding": [
+      "MANDATORY: Update engineering-metadata.js",
+      "Run: node scripts/update-engineering-metadata.js --task <id> --done",
+      "OR manually update progress, status, lastUpdated",
+      "Verify your changes are reflected in metadata"
+    ],
+
+    "when_finding_bugs": [
+      "Add to module.knownIssues in engineering-metadata.js",
+      "Run: node scripts/update-engineering-metadata.js --module <key> --add-issue \"<description>\""
+    ]
+  },
+
+  "critical_files": {
+    "engineering_metadata": "backend/engineering-metadata.js",
+    "update_script": "backend/scripts/update-engineering-metadata.js",
+    "main_guide": "CLAUDE.md"
+  },
+
+  "workflow": {
+    "new_session_start": [
+      "1. Read backend/engineering-metadata.js",
+      "2. Check roadmap for current phase and pending tasks",
+      "3. Check modules for status and knownIssues",
+      "4. Start coding"
+    ],
+
+    "task_completion": [
+      "1. Complete the code changes",
+      "2. Test the changes",
+      "3. Update engineering-metadata.js (MANDATORY)",
+      "4. Commit with descriptive message"
+    ]
+  },
+
+  "reminders": {
+    "every_file_change": "Did you update engineering-metadata.js?",
+    "every_task_done": "Did you mark the task as done in roadmap?",
+    "every_bug_found": "Did you add it to knownIssues?"
+  }
+}

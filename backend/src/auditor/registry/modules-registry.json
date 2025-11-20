@@ -1,12 +1,12 @@
 {
   "version": "2.0.0",
-  "generated_at": "2025-01-20",
+  "generated_at": "2025-11-20",
   "description": "Registry COMPLETO del sistema APONNT Suite - 45 módulos multi-tenant",
-  "total_modules": 35,
+  "total_modules": 48,
   "modules": [
     {
       "id": "users",
-      "name": "Gestión de Usuarios",
+      "name": "Gestión de Usuarios (Empleados de Empresas)",
       "category": "core",
       "version": "6.0.0",
       "description": "Módulo CORE para crear, editar y gestionar usuarios con biometría, paginación profesional",
@@ -54,7 +54,7 @@
     },
     {
       "id": "attendance",
-      "name": "Control de Asistencia",
+      "name": "Módulo de Asistencias",
       "category": "core",
       "version": "5.0.0",
       "description": "Registro y control de asistencia biométrica con GPS, notificaciones automáticas por llegadas tarde",
@@ -325,7 +325,7 @@
     },
     {
       "id": "medical",
-      "name": "Gestión Médica",
+      "name": "Módulo Médico",
       "category": "rrhh",
       "version": "5.8.0",
       "description": "Certificados médicos, prescripciones, ausentismos, historial clínico completo",
@@ -356,7 +356,7 @@
     },
     {
       "id": "vacation",
-      "name": "Gestión de Vacaciones",
+      "name": "Módulo de Vacaciones",
       "category": "rrhh",
       "version": "2.0.0",
       "description": "Solicitudes, aprobaciones, balance de vacaciones, tipos regular y extraordinario",
@@ -383,7 +383,7 @@
     },
     {
       "id": "legal",
-      "name": "Gestión Legal",
+      "name": "Módulo Legal",
       "category": "compliance",
       "version": "2.0.0",
       "description": "Comunicaciones fehacientes, sanciones, compliance, avisos legales",
@@ -912,6 +912,404 @@
       "commercial": {
         "is_core": false,
         "standalone": true
+      }
+    },
+    {
+      "id": "authentication",
+      "name": "Autenticación y Autorización",
+      "category": "core",
+      "version": "1.0.0",
+      "description": "",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": true,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "companies",
+      "name": "Gestión de Empresas (Multi-Tenant Core)",
+      "category": "core",
+      "version": "1.0.0",
+      "description": "",
+      "dependencies": [
+        "aponnt_staff",
+        "vendor_statistics"
+      ],
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": [
+          {
+            "solution": "Contactar a soporte técnico"
+          }
+        ]
+      },
+      "commercial": {
+        "is_core": true,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "kiosks",
+      "name": "Gestión de Kioscos",
+      "category": "core",
+      "version": "1.0.0",
+      "description": "",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": true,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "notifications",
+      "name": "Sistema de Notificaciones Enterprise",
+      "category": "enterprise",
+      "version": "1.0.0",
+      "description": "",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": [
+          {
+            "solution": "Contactar a soporte técnico"
+          }
+        ]
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "partners",
+      "name": "Sistema de Asociados (Partners)",
+      "category": "enterprise",
+      "version": "1.0.0",
+      "description": "Médicos, abogados, ingenieros, etc. que proveen servicios a empresas",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "aiAssistant",
+      "name": "Asistente IA con Ollama + Llama 3.1",
+      "category": "enterprise",
+      "version": "1.0.0",
+      "description": "Chat flotante con RAG, auto-diagnóstico y knowledge base global",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": [
+          {
+            "solution": "Contactar a soporte técnico"
+          }
+        ]
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "auditor",
+      "name": "Sistema de Auditoría y Auto-Diagnóstico",
+      "category": "enterprise",
+      "version": "1.0.0",
+      "description": "Testing automático, auto-healing, data seeding",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "vendorsCommissions",
+      "name": "Vendedores y Sistema de Comisiones",
+      "category": "commercial",
+      "version": "1.0.0",
+      "description": "Jerarquía de staff, comisiones piramidales, stats",
+      "dependencies": [
+        "companies",
+        "notifications"
+      ],
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": [
+          {
+            "solution": "Contactar a soporte técnico"
+          }
+        ]
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "budgets",
+      "name": "Sistema de Presupuestos",
+      "category": "commercial",
+      "version": "1.0.0",
+      "description": "Presupuestos versionados con workflow de aprobación",
+      "dependencies": [
+        "companies",
+        "contracts",
+        "notifications",
+        "vendorsCommissions"
+      ],
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "contracts",
+      "name": "Sistema de Contratos",
+      "category": "commercial",
+      "version": "1.0.0",
+      "description": "Contratos con firma digital tipo EULA",
+      "dependencies": [
+        "budgets",
+        "companies",
+        "notifications"
+      ],
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "invoicing",
+      "name": "Facturación Automática",
+      "category": "commercial",
+      "version": "1.0.0",
+      "description": "Facturación mensual automática (día 1 de cada mes)",
+      "dependencies": [
+        "contracts",
+        "cobranzas",
+        "notifications"
+      ],
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "commissionLiquidation",
+      "name": "Liquidación de Comisiones",
+      "category": "commercial",
+      "version": "1.0.0",
+      "description": "Liquidación mensual de comisiones con trazabilidad completa",
+      "dependencies": [
+        "invoicing",
+        "vendorsCommissions",
+        "notifications"
+      ],
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      }
+    },
+    {
+      "id": "cobranzas",
+      "name": "Gestión de Cobranzas",
+      "category": "commercial",
+      "version": "1.0.0",
+      "description": "Área de cobranzas confirma pagos y ejecuta transferencias",
+      "dependencies": [
+        "invoicing",
+        "commissionLiquidation",
+        "notifications"
+      ],
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
       }
     }
   ],

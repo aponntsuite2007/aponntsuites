@@ -30,6 +30,9 @@
     <!-- 🏆 TECH STACK BADGES - Marketing Subliminal Profesional -->
     <link rel="stylesheet" href="css/admin-modern.css">
 
+    <!-- 🏗️ ENGINEERING DASHBOARD - Visualización 3D del Sistema -->
+    <link rel="stylesheet" href="css/engineering-dashboard.css">
+
     <style>
         :root {
             --primary-color: #667eea;
@@ -126,17 +129,78 @@
             gap: 2rem;
         }
 
+        /* Wrapper para tabs con navegación */
+        .tabs-navigation-wrapper {
+            position: relative;
+            background: white;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
         .nav-tabs {
             display: flex;
             background: white;
-            border-radius: 15px 15px 0 0;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: #007bff #f8f9fa;
             margin-bottom: 0;
         }
 
+        .nav-tabs::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .nav-tabs::-webkit-scrollbar-track {
+            background: #f8f9fa;
+        }
+
+        .nav-tabs::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 3px;
+        }
+
+        .tabs-nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
+            background: rgba(0, 123, 255, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .tabs-nav-button:hover {
+            background: rgba(0, 123, 255, 1);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .tabs-nav-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .tabs-nav-button.left {
+            left: 10px;
+        }
+
+        .tabs-nav-button.right {
+            right: 10px;
+        }
+
         .nav-tab {
-            flex: 1;
+            flex: 0 0 auto;
+            min-width: 140px;
             padding: 1rem 1.5rem;
             background: #f8f9fa;
             border: none;
@@ -169,7 +233,14 @@
         }
 
         .tab-content.active {
-            display: block;
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        #engineering.active {
+            display: block !important;
+            min-height: 600px;
         }
 
         .billing-card {
@@ -2871,21 +2942,30 @@
         <!-- Sistema de Pestañas -->
         <div class="main-content">
             <div class="section-card">
-                <div class="nav-tabs">
-                    <button class="nav-tab active" onclick="switchTab('companies')"><span>🏢</span><br>Empresas</button>
-                    <button class="nav-tab" onclick="switchTab('partners')"><span>🤝</span><br>Asociados</button>
-                    <button class="nav-tab" onclick="switchTab('taxTemplates')"><span>🏛️</span><br>Plantillas Fiscales</button>
-                    <button class="nav-tab" onclick="switchTab('vendors')"><span>👥</span><br>Vendedores</button>
-                    <button class="nav-tab" onclick="switchTab('pricing')"><span>💰</span><br>Precios</button>
-                    <button class="nav-tab" onclick="switchTab('billing')"><span>🧾</span><br>Facturación</button>
-                    <button class="nav-tab" onclick="switchTab('payments')"><span>💳</span><br>Pagos</button>
-                    <button class="nav-tab" onclick="switchTab('notifications')"><span>🔔</span><br>Notificaciones</button>
-                    <button class="nav-tab" onclick="switchTab('supportTools')"><span>🔧</span><br>Herramientas</button>
-                    <button class="nav-tab" onclick="switchTab('consents')"><span>📜</span><br>Consentimientos</button>
-                    <button class="nav-tab" onclick="switchTab('supportTickets')">
-                        <span>🎫</span><br>Tickets Soporte
-                        <span id="tickets-badge" class="badge badge-danger" style="display:none; margin-left: 5px;">0</span>
+                <div class="tabs-navigation-wrapper">
+                    <button class="tabs-nav-button left" id="tabScrollLeft" onclick="scrollTabs('left')">
+                        ◀
                     </button>
+                    <button class="tabs-nav-button right" id="tabScrollRight" onclick="scrollTabs('right')">
+                        ▶
+                    </button>
+                    <div class="nav-tabs" id="mainNavTabs">
+                        <button class="nav-tab active" onclick="switchTab('companies')"><span>🏢</span><br>Empresas</button>
+                        <button class="nav-tab" onclick="switchTab('partners')"><span>🤝</span><br>Asociados</button>
+                        <button class="nav-tab" onclick="switchTab('taxTemplates')"><span>🏛️</span><br>Plantillas Fiscales</button>
+                        <button class="nav-tab" onclick="switchTab('vendors')"><span>👥</span><br>Vendedores</button>
+                        <button class="nav-tab" onclick="switchTab('pricing')"><span>💰</span><br>Precios</button>
+                        <button class="nav-tab" onclick="switchTab('billing')"><span>🧾</span><br>Facturación</button>
+                        <button class="nav-tab" onclick="switchTab('payments')"><span>💳</span><br>Pagos</button>
+                        <button class="nav-tab" onclick="switchTab('notifications')"><span>🔔</span><br>Notificaciones</button>
+                        <button class="nav-tab" onclick="switchTab('supportTools')"><span>🔧</span><br>Herramientas</button>
+                        <button class="nav-tab" onclick="switchTab('consents')"><span>📜</span><br>Consentimientos</button>
+                        <button class="nav-tab" onclick="switchTab('supportTickets')">
+                            <span>🎫</span><br>Tickets Soporte
+                            <span id="tickets-badge" class="badge badge-danger" style="display:none; margin-left: 5px;">0</span>
+                        </button>
+                        <button class="nav-tab" onclick="switchTab('engineering')"><span>🏗️</span><br>Ingeniería</button>
+                    </div>
                 </div>
 
                 <!-- Pestaña Empresas -->
@@ -4785,6 +4865,31 @@
                     </div>
                 </div>
 
+                <!-- ============================================
+                     PESTAÑA: ENGINEERING DASHBOARD
+                     ============================================ -->
+                <div id="engineering" class="tab-content" style="min-height: 600px;">
+                    <div class="section-header">
+                        <h2 class="section-title">🏗️ Engineering Dashboard - Arquitectura del Sistema</h2>
+                        <p style="color: #666; margin-top: 10px;">
+                            Visualización completa del ecosistema, módulos, roadmap, base de datos y workflows.
+                            Single source of truth para todas las sesiones de desarrollo.
+                        </p>
+                    </div>
+
+                    <!-- Container donde se renderizará el dashboard -->
+                    <div id="engineering-dashboard-container" style="min-height: 800px !important; height: auto !important; background: #f9f9f9; padding: 20px; display: block !important; overflow: visible !important;">
+                        <div class="text-center" style="padding: 60px;">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="sr-only">Cargando Engineering Dashboard...</span>
+                            </div>
+                            <p style="margin-top: 20px; color: #666; font-size: 16px;">
+                                Cargando metadata del sistema...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
         </div>
     </div>
 
@@ -5445,6 +5550,9 @@
             // ✅ NUEVO: Cargar módulos de Vendor Invoicing y Partner Scoring
             loadVendorInvoicingModule();
             loadPartnerScoringModule();
+
+            // ✅ Inicializar navegación de tabs
+            initTabsNavigation();
         });
 
         async function loadAllSystems() {
@@ -5453,6 +5561,52 @@
             loadPaymentSystem();
             loadNotificationSystem();
             generatePricingControls(); // Ahora se ejecuta DESPUÉS de cargar los precios
+        }
+
+        // ==================== NAVEGACIÓN DE TABS ====================
+
+        function scrollTabs(direction) {
+            const navTabs = document.getElementById('mainNavTabs');
+            const scrollAmount = 300; // Píxeles a desplazar
+
+            if (direction === 'left') {
+                navTabs.scrollLeft -= scrollAmount;
+            } else {
+                navTabs.scrollLeft += scrollAmount;
+            }
+
+            // Actualizar botones después del scroll
+            setTimeout(updateScrollButtons, 100);
+        }
+
+        function updateScrollButtons() {
+            const navTabs = document.getElementById('mainNavTabs');
+            const leftButton = document.getElementById('tabScrollLeft');
+            const rightButton = document.getElementById('tabScrollRight');
+
+            if (!navTabs || !leftButton || !rightButton) return;
+
+            // Deshabilitar botón izquierdo si está al inicio
+            leftButton.disabled = navTabs.scrollLeft <= 0;
+
+            // Deshabilitar botón derecho si está al final
+            const maxScroll = navTabs.scrollWidth - navTabs.clientWidth;
+            rightButton.disabled = navTabs.scrollLeft >= maxScroll - 5; // -5 para margen de error
+        }
+
+        // Inicializar navegación de tabs al cargar la página
+        function initTabsNavigation() {
+            const navTabs = document.getElementById('mainNavTabs');
+            if (!navTabs) return;
+
+            // Actualizar botones al hacer scroll
+            navTabs.addEventListener('scroll', updateScrollButtons);
+
+            // Actualizar botones inicialmente
+            updateScrollButtons();
+
+            // Actualizar botones al redimensionar ventana
+            window.addEventListener('resize', updateScrollButtons);
         }
 
         function switchTab(tabName) {
@@ -5476,6 +5630,12 @@
             if (tabName === 'payments') loadPaymentSystem();
             if (tabName === 'notifications') loadNotificationSystem();
             if (tabName === 'users') loadOperators();
+            if (tabName === 'engineering') {
+                // Inicializar Engineering Dashboard
+                if (typeof EngineeringDashboard !== 'undefined' && EngineeringDashboard.init) {
+                    EngineeringDashboard.init();
+                }
+            }
         }
 
         async function loadDashboardData() {
@@ -13489,6 +13649,9 @@ ${vendor.notes || 'Sin notas adicionales'}
     <!-- ✅ Support Tickets View Module (Phase 7) -->
     <script src="js/modules/admin-support-tickets-view.js"></script>
 
+    <!-- 🏗️ Engineering Dashboard Module -->
+    <script src="js/modules/engineering-dashboard.js"></script>
+
     <script>
         // Inicializar módulos cuando se cargan sus tabs respectivas
         (function() {
@@ -13538,6 +13701,19 @@ ${vendor.notes || 'Sin notas adicionales'}
                             window.adminTicketsInitialized = true;
                         } else {
                             console.warn('⚠️ adminTickets no está disponible');
+                        }
+                    }, 200);
+                }
+
+                // 🏗️ ENGINEERING DASHBOARD: Inicializar Engineering Dashboard
+                if (tabName === 'engineering' && !window.engineeringDashboardInitialized) {
+                    setTimeout(() => {
+                        if (window.EngineeringDashboard && typeof window.EngineeringDashboard.init === 'function') {
+                            console.log('🏗️ Inicializando Engineering Dashboard...');
+                            window.EngineeringDashboard.init();
+                            window.engineeringDashboardInitialized = true;
+                        } else {
+                            console.warn('⚠️ EngineeringDashboard no está disponible');
                         }
                     }, 200);
                 }
