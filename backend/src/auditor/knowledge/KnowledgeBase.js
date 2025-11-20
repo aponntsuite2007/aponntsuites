@@ -18,6 +18,7 @@ const db = require('../../config/database');
 class KnowledgeBase {
   constructor() {
     this.db = db;
+    this.sequelize = db.sequelize; // FIX: Obtener instancia de Sequelize para raw queries
     this.TABLE = 'auditor_knowledge_base';
     this.HISTORY_TABLE = 'auditor_learning_history';
     this.SUGGESTIONS_TABLE = 'auditor_suggestions';
@@ -237,7 +238,7 @@ class KnowledgeBase {
       if (canAutoFix !== undefined) params.push(canAutoFix);
       params.push(limit);
 
-      const [results] = await this.db.query(query, { bind: params });
+      const [results] = await this.sequelize.query(query, { bind: params });
 
       console.log(`🔍 [KB] Encontrados ${results.length} patrones de error (confidence >= ${minConfidence})`);
       return results;
@@ -264,7 +265,7 @@ class KnowledgeBase {
 
       const params = errorType ? [`repair_strategy:${errorType}%`] : [];
 
-      const [results] = await this.db.query(query, { bind: params });
+      const [results] = await this.sequelize.query(query, { bind: params });
 
       console.log(`🔧 [KB] Encontradas ${results.length} estrategias de reparación${errorType ? ` para ${errorType}` : ''}`);
       return results;
@@ -368,7 +369,7 @@ class KnowledgeBase {
         suggestion.priority || 'medium'
       ];
 
-      const [result] = await this.db.query(query, { bind: params });
+      const [result] = await this.sequelize.query(query, { bind: params });
 
       console.log(`💡 [KB] Sugerencia creada: ${suggestion.title}`);
       return result[0];
@@ -390,7 +391,7 @@ class KnowledgeBase {
         LIMIT $1
       `;
 
-      const [results] = await this.db.query(query, { bind: [limit] });
+      const [results] = await this.sequelize.query(query, { bind: [limit] });
 
       console.log(`💡 [KB] ${results.length} sugerencias pendientes`);
       return results;
@@ -422,7 +423,7 @@ class KnowledgeBase {
         GROUP BY knowledge_type
       `;
 
-      const [results] = await this.db.query(query);
+      const [results] = await this.sequelize.query(query);
 
       console.log(`📊 [KB] Estadísticas generadas`);
       return results;
@@ -441,7 +442,7 @@ class KnowledgeBase {
   async _getByKey(key) {
     try {
       const query = `SELECT * FROM ${this.TABLE} WHERE key = $1 LIMIT 1`;
-      const [results] = await this.db.query(query, { bind: [key] });
+      const [results] = await this.sequelize.query(query, { bind: [key] });
       return results[0] || null;
     } catch (error) {
       console.error(`❌ [KB] Error en _getByKey:`, error.message);
@@ -471,7 +472,7 @@ class KnowledgeBase {
         data.status || 'active'
       ];
 
-      const [result] = await this.db.query(query, { bind: params });
+      const [result] = await this.sequelize.query(query, { bind: params });
       return result[0];
     } catch (error) {
       console.error(`❌ [KB] Error en _createKnowledge:`, error.message);
@@ -508,7 +509,7 @@ class KnowledgeBase {
         RETURNING *
       `;
 
-      const [result] = await this.db.query(query, { bind: params });
+      const [result] = await this.sequelize.query(query, { bind: params });
       return result[0];
     } catch (error) {
       console.error(`❌ [KB] Error en _updateKnowledge:`, error.message);
@@ -524,7 +525,7 @@ class KnowledgeBase {
         VALUES ($1, $2, $3, NOW())
       `;
 
-      await this.db.query(query, {
+      await this.sequelize.query(query, {
         bind: [entry.action, entry.knowledge_key || null, JSON.stringify(entry.details || {})]
       });
     } catch (error) {

@@ -169,7 +169,7 @@ class LearningEngine {
       if (testData.failures) {
         for (const failure of testData.failures) {
           // Edge case: Módulo falla solo en carga dinámica
-          if (failure.reason && failure.reason.includes('dynamic') || failure.reason.includes('load')) {
+          if (failure.reason && (failure.reason.includes('dynamic') || failure.reason.includes('load'))) {
             edgeCases.push({
               type: 'dynamic_loading_failure',
               module: failure.module,
