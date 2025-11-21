@@ -1643,20 +1643,47 @@ class Phase4TestOrchestrator {
             if (examButton) {
                 const examTypes = ['examen_preocupacional', 'examen_periodico', 'examen_egreso'];
                 for (let i = 1; i <= 3; i++) {
-                    await examButton.click();
-                    await this.page.waitForSelector('#medicalExamForm', { state: 'visible', timeout: 5000 });
+                    try {
+                        console.log(`      🔍 Llenando examen médico ${i}/3...`);
+                        console.log(`         🔹 Haciendo click en botón "Agregar Examen"...`);
+                        await examButton.click();
 
-                    await this.page.selectOption('#examType', examTypes[i-1]);
-                    await this.page.fill('#examDate', '2024-01-15');
-                    await this.page.selectOption('#examResult', 'apto');
-                    await this.page.fill('#medicalCenter', `TEST_Centro_${i}`);
-                    await this.page.fill('#examDoctor', `TEST_Dr_${i}`);
-                    await this.page.fill('#examNotes', `TEST_Observaciones ${i}`);
+                        console.log(`         🔹 Esperando modal #medicalExamForm...`);
+                        await this.page.waitForSelector('#medicalExamForm', { state: 'visible', timeout: 5000 });
+                        await this.wait(500); // Esperar que el modal se renderice completamente
+                        console.log(`         ✅ Modal abierto`);
 
-                    await this.page.click('#medicalExamForm button[type="submit"]');
-                    await this.wait(1000);
+                        // Selectores CORRECTOS (verificados con frontend HTML)
+                        console.log(`         🔹 Llenando campo #examType...`);
+                        await this.page.selectOption('#examType', examTypes[i-1]);
 
-                    result.filledFields += 6;
+                        console.log(`         🔹 Llenando campo #examDate...`);
+                        await this.page.fill('#examDate', '2024-01-15');
+
+                        console.log(`         🔹 Llenando campo #examResult...`);
+                        await this.page.selectOption('#examResult', 'apto');
+
+                        console.log(`         🔹 Llenando campo #facilityName...`);
+                        await this.page.fill('#facilityName', `TEST_Centro_${i}`);
+
+                        console.log(`         🔹 Llenando campo #performedBy...`);
+                        await this.page.fill('#performedBy', `TEST_Dr_${i}`);
+
+                        console.log(`         🔹 Llenando campo #examNotes...`);
+                        await this.page.fill('#examNotes', `TEST_Observaciones ${i}`);
+
+                        console.log(`         ✅ 6 campos llenados`);
+
+                        console.log(`         🔹 Haciendo click en botón Guardar...`);
+                        await this.page.click('#medicalExamForm button[type="submit"]');
+                        await this.wait(1000);
+                        console.log(`         ✅ Examen ${i} guardado`);
+
+                        result.filledFields += 6;
+                    } catch (examError) {
+                        console.error(`         ❌ ERROR en examen ${i}:`, examError.message);
+                        result.errors.push(`Examen ${i}: ${examError.message}`);
+                    }
                 }
 
                 // Verificar BD
@@ -1667,6 +1694,7 @@ class Phase4TestOrchestrator {
                 console.log(`      🔍 PostgreSQL: ${medicalCount[0].count} exámenes médicos`);
             }
         } catch (error) {
+            console.error(`      ❌ ERROR GENERAL en Tab 5:`, error.message);
             result.errors.push(error.message);
         }
 

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Engineering Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        #test-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .log { padding: 10px; margin: 10px 0; border-left: 4px solid #3b82f6; background: #eff6ff; }
+        .error { border-left-color: #dc2626; background: #fee2e2; }
+        .success { border-left-color: #10b981; background: #d1fae5; }
+    </style>
+</head>
+<body>
+    <div id="test-container">
+        <h1>🧪 Test Engineering Dashboard</h1>
+        <div id="logs"></div>
+        <hr>
+        <h2>Dashboard Container:</h2>
+        <div id="engineering-dashboard-container" style="min-height: 400px; border: 2px solid #e5e7eb; padding: 20px;">
+            <p style="color: #999;">Esperando inicialización...</p>
+        </div>
+    </div>
+
+    <script src="/js/modules/engineering-dashboard.js"></script>
+
+    <script>
+        const logs = document.getElementById('logs');
+
+        function log(message, type = 'log') {
+            const div = document.createElement('div');
+            div.className = type === 'error' ? 'log error' : type === 'success' ? 'log success' : 'log';
+            div.textContent = message;
+            logs.appendChild(div);
+            console.log(message);
+        }
+
+        async function runTest() {
+            log('🚀 Iniciando test...', 'log');
+
+            // Test 1: Verificar que el objeto existe
+            if (typeof EngineeringDashboard === 'undefined') {
+                log('❌ ERROR: EngineeringDashboard no está definido', 'error');
+                return;
+            }
+            log('✅ EngineeringDashboard está definido', 'success');
+
+            // Test 2: Verificar que tiene el método init
+            if (typeof EngineeringDashboard.init !== 'function') {
+                log('❌ ERROR: EngineeringDashboard.init no es una función', 'error');
+                return;
+            }
+            log('✅ EngineeringDashboard.init es una función', 'success');
+
+            // Test 3: Verificar que el container existe
+            const container = document.getElementById('engineering-dashboard-container');
+            if (!container) {
+                log('❌ ERROR: Container no encontrado', 'error');
+                return;
+            }
+            log('✅ Container encontrado', 'success');
+
+            // Test 4: Llamar a init()
+            try {
+                log('🔄 Llamando a EngineeringDashboard.init()...', 'log');
+                await EngineeringDashboard.init();
+                log('✅ init() completado sin errores', 'success');
+            } catch (error) {
+                log('❌ ERROR en init(): ' + error.message, 'error');
+                log('Stack: ' + error.stack, 'error');
+                return;
+            }
+
+            // Test 5: Verificar que se renderizó algo
+            if (container.innerHTML.includes('Engineering Dashboard')) {
+                log('✅ Dashboard renderizado correctamente', 'success');
+            } else {
+                log('❌ Dashboard NO se renderizó', 'error');
+                log('Contenido actual: ' + container.innerHTML.substring(0, 200), 'error');
+            }
+        }
+
+        // Ejecutar test cuando la página cargue
+        window.addEventListener('load', () => {
+            setTimeout(runTest, 500);
+        });
+    </script>
+</body>
+</html>

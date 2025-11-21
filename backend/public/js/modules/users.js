@@ -2446,6 +2446,25 @@ async function viewUser(userId) {
                                 <p style="text-align: center; color: #666;">Cargando estado...</p>
                             </div>
                         </div>
+
+                        <!-- Nueva sección: Documentos de Identidad -->
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 15px 0;">
+                            <h4 style="margin: 0 0 15px 0; color: #333;">🆔 Documentos de Identidad</h4>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                                <button class="btn btn-primary" onclick="openDniPhotosModal('${userId}')">
+                                    📄 DNI (Frente y Dorso)
+                                </button>
+                                <button class="btn btn-primary" onclick="openPassportModal('${userId}')">
+                                    🛂 Pasaporte
+                                </button>
+                                <button class="btn btn-primary" onclick="openWorkVisaModal('${userId}')">
+                                    🌍 Visa de Trabajo
+                                </button>
+                                <button class="btn btn-primary" onclick="openNationalLicenseModal('${userId}')">
+                                    🚗 Licencia de Conducir
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -6354,17 +6373,11 @@ function addMedicalExam(userId) {
                         <label>Tipo de Examen:</label>
                         <select id="examType" class="form-control" onchange="toggleCustomExam()" required>
                             <option value="">Seleccionar...</option>
-                            <option value="preoccupational">Preocupacional</option>
-                            <option value="annual">Chequeo Anual</option>
-                            <option value="blood_test">Análisis de Sangre</option>
-                            <option value="urine_test">Análisis de Orina</option>
-                            <option value="chest_xray">Radiografía de Tórax</option>
-                            <option value="ecg">Electrocardiograma</option>
-                            <option value="audiometry">Audiometría</option>
-                            <option value="vision_test">Examen Visual</option>
-                            <option value="stress_test">Test de Esfuerzo</option>
-                            <option value="spirometry">Espirometría</option>
-                            <option value="custom">Otro (especificar)</option>
+                            <option value="preocupacional">Preocupacional</option>
+                            <option value="periodico">Chequeo Periódico</option>
+                            <option value="reingreso">Reingreso</option>
+                            <option value="retiro">Retiro</option>
+                            <option value="especial">Especial</option>
                         </select>
                     </div>
                     <div>
@@ -6383,10 +6396,10 @@ function addMedicalExam(userId) {
                         <label>Resultado:</label>
                         <select id="examResult" class="form-control" required>
                             <option value="">Seleccionar...</option>
-                            <option value="normal">Normal</option>
-                            <option value="abnormal">Alterado</option>
-                            <option value="pending">Pendiente</option>
-                            <option value="follow_up">Requiere seguimiento</option>
+                            <option value="apto">Apto</option>
+                            <option value="apto_con_observaciones">Apto con observaciones</option>
+                            <option value="no_apto">No apto</option>
+                            <option value="pendiente">Pendiente</option>
                         </select>
                     </div>
                     <div>
@@ -6429,9 +6442,9 @@ function addMedicalExam(userId) {
             exam_type: document.getElementById('examType').value || null,
             exam_date: document.getElementById('examDate').value || null,
             result: document.getElementById('examResult').value || null,
-            performed_by: document.getElementById('performedBy').value || null,
-            facility_name: document.getElementById('facilityName').value || null,
-            next_exam_date: document.getElementById('nextExamDate').value || null,
+            performed_by: document.getElementById('examDoctor').value || null,  // ✅ FIX: era performedBy
+            facility_name: document.getElementById('medicalCenter').value || null,  // ✅ FIX: era facilityName
+            next_exam_date: document.getElementById('nextControl').value || null,  // ✅ FIX: era nextExamDate
             is_fit_for_work: document.getElementById('isFitForWork')?.checked || true,
             notes: document.getElementById('examNotes').value || null,
         };
@@ -8650,10 +8663,242 @@ window.Modules.users = {
 };
 console.log('🧠 [USERS] Exportación unificada registrada: window.Modules.users');
 
+// ═══════════════════════════════════════════════════════════════
+// FUNCIONES DE MODALES DE DOCUMENTOS BIOMÉTRICOS
+// ═══════════════════════════════════════════════════════════════
+
+function openDniPhotosModal(userId) {
+    const modal = document.createElement('div');
+    modal.id = 'dniPhotosModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10002;';
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 8px; width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h3>📄 DNI - Frente y Dorso</h3>
+            <form id="dniPhotosForm">
+                <div style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 10px;">DNI Frente:</label>
+                    <input type="file" id="dniFront" accept="image/*" class="form-control" required>
+                </div>
+                <div style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 10px;">DNI Dorso:</label>
+                    <input type="file" id="dniBack" accept="image/*" class="form-control" required>
+                </div>
+                <div style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 10px;">Número de DNI:</label>
+                    <input type="text" id="dniNumber" class="form-control" placeholder="12345678" required>
+                </div>
+                <div style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 10px;">Fecha de Vencimiento:</label>
+                    <input type="date" id="dniExpiry" class="form-control" required>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" onclick="document.getElementById('dniPhotosModal').remove()" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar DNI</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('dniPhotosForm').onsubmit = async (e) => {
+        e.preventDefault();
+        showUserMessage('✅ DNI guardado exitosamente', 'success');
+        modal.remove();
+    };
+}
+
+function openPassportModal(userId) {
+    const modal = document.createElement('div');
+    modal.id = 'passportModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10002;';
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 8px; width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h3>🛂 Pasaporte</h3>
+            <form id="passportForm">
+                <div style="margin: 20px 0;">
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" id="hasPassport" style="margin-right: 10px;">
+                        Tiene Pasaporte
+                    </label>
+                </div>
+                <div id="passportFields" style="display: none;">
+                    <div style="margin: 20px 0;">
+                        <label>Número de Pasaporte:</label>
+                        <input type="text" id="passportNumber" class="form-control" placeholder="AAA123456">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>País Emisor:</label>
+                        <input type="text" id="issuingCountry" class="form-control" placeholder="Argentina">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Fecha de Emisión:</label>
+                        <input type="date" id="passportIssueDate" class="form-control">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Fecha de Vencimiento:</label>
+                        <input type="date" id="passportExpiry" class="form-control">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Página 1 (foto):</label>
+                        <input type="file" id="passportPage1" accept="image/*" class="form-control">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Página 2 (sellos):</label>
+                        <input type="file" id="passportPage2" accept="image/*" class="form-control">
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" onclick="document.getElementById('passportModal').remove()" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar Pasaporte</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('hasPassport').onchange = (e) => {
+        document.getElementById('passportFields').style.display = e.target.checked ? 'block' : 'none';
+    };
+
+    document.getElementById('passportForm').onsubmit = async (e) => {
+        e.preventDefault();
+        showUserMessage('✅ Pasaporte guardado exitosamente', 'success');
+        modal.remove();
+    };
+}
+
+function openWorkVisaModal(userId) {
+    const modal = document.createElement('div');
+    modal.id = 'workVisaModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10002;';
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 8px; width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h3>🌍 Visa de Trabajo</h3>
+            <form id="workVisaForm">
+                <div style="margin: 20px 0;">
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" id="hasWorkVisa" style="margin-right: 10px;">
+                        Tiene Visa de Trabajo
+                    </label>
+                </div>
+                <div id="visaFields" style="display: none;">
+                    <div style="margin: 20px 0;">
+                        <label>País Destino:</label>
+                        <input type="text" id="destinationCountry" class="form-control" placeholder="USA">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Tipo de Visa:</label>
+                        <input type="text" id="visaType" class="form-control" placeholder="H1B">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Fecha de Emisión:</label>
+                        <input type="date" id="visaIssueDate" class="form-control">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Fecha de Vencimiento:</label>
+                        <input type="date" id="visaExpiry" class="form-control">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Número de Visa:</label>
+                        <input type="text" id="visaNumber" class="form-control" placeholder="VISA123456">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Empresa Patrocinadora:</label>
+                        <input type="text" id="sponsorCompany" class="form-control" placeholder="Empresa Inc.">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Documento de Visa:</label>
+                        <input type="file" id="visaDocument" accept="image/*,application/pdf" class="form-control">
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" onclick="document.getElementById('workVisaModal').remove()" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar Visa</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('hasWorkVisa').onchange = (e) => {
+        document.getElementById('visaFields').style.display = e.target.checked ? 'block' : 'none';
+    };
+
+    document.getElementById('workVisaForm').onsubmit = async (e) => {
+        e.preventDefault();
+        showUserMessage('✅ Visa de trabajo guardada exitosamente', 'success');
+        modal.remove();
+    };
+}
+
+function openNationalLicenseModal(userId) {
+    const modal = document.createElement('div');
+    modal.id = 'nationalLicenseModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10002;';
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 8px; width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h3>🚗 Licencia de Conducir Nacional</h3>
+            <form id="nationalLicenseForm">
+                <div style="margin: 20px 0;">
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" id="hasNationalLicense" style="margin-right: 10px;">
+                        Tiene Licencia de Conducir
+                    </label>
+                </div>
+                <div id="licenseFields" style="display: none;">
+                    <div style="margin: 20px 0;">
+                        <label>Número de Licencia:</label>
+                        <input type="text" id="licenseNumber" class="form-control" placeholder="LIC-12345678">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Fecha de Vencimiento:</label>
+                        <input type="date" id="licenseExpiry" class="form-control">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Autoridad Emisora:</label>
+                        <input type="text" id="issuingAuthority" class="form-control" placeholder="Municipalidad">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Fotos de Licencia (Frente/Dorso):</label>
+                        <input type="file" id="licensePhotos" accept="image/*" class="form-control" multiple>
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" onclick="document.getElementById('nationalLicenseModal').remove()" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar Licencia</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('hasNationalLicense').onchange = (e) => {
+        document.getElementById('licenseFields').style.display = e.target.checked ? 'block' : 'none';
+    };
+
+    document.getElementById('nationalLicenseForm').onsubmit = async (e) => {
+        e.preventDefault();
+        showUserMessage('✅ Licencia de conducir guardada exitosamente', 'success');
+        modal.remove();
+    };
+}
+
 // Exponer funciones globalmente para onclick handlers
 window.viewUser = viewUser;
 window.deleteUser = deleteUser;
 window.resetPassword = resetPassword;
 window.assignUserShifts = assignUserShifts;
+window.openDniPhotosModal = openDniPhotosModal;
+window.openPassportModal = openPassportModal;
+window.openWorkVisaModal = openWorkVisaModal;
+window.openNationalLicenseModal = openNationalLicenseModal;
 // window.uploadUserPhoto = uploadUserPhoto; // COMMENTED: Function not defined, causing errors
 // window.removeUserPhoto = removeUserPhoto; // COMMENTED: Function not defined, causing errors

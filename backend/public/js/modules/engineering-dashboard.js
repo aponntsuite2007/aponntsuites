@@ -29,6 +29,8 @@
  * ============================================================================
  */
 
+console.log('✅ [ENGINEERING] Archivo engineering-dashboard.js cargado');
+
 const EngineeringDashboard = {
   metadata: null,
   stats: null,
@@ -36,11 +38,25 @@ const EngineeringDashboard = {
   currentDrilldown: null,
   searchTerm: '',
   filterStatus: 'all',
+  isInitialized: false,
+  isInitializing: false,
 
   /**
    * Inicializar dashboard
    */
   async init() {
+    // Protección contra inicialización múltiple
+    if (this.isInitialized) {
+      console.log('ℹ️ [ENGINEERING] Dashboard ya inicializado, omitiendo...');
+      return;
+    }
+
+    if (this.isInitializing) {
+      console.log('⏳ [ENGINEERING] Inicialización en progreso, esperando...');
+      return;
+    }
+
+    this.isInitializing = true;
     console.log('🏗️ [ENGINEERING] Inicializando Engineering Dashboard...');
 
     try {
@@ -53,10 +69,13 @@ const EngineeringDashboard = {
       this.setupEventListeners();
       this.startAutoRefresh();
 
+      this.isInitialized = true;
       console.log('✅ [ENGINEERING] Dashboard inicializado correctamente');
     } catch (error) {
       console.error('❌ [ENGINEERING] Error inicializando dashboard:', error);
       this.showError('Error inicializando dashboard: ' + error.message);
+    } finally {
+      this.isInitializing = false;
     }
   },
 
@@ -112,105 +131,71 @@ const EngineeringDashboard = {
       return;
     }
 
+    const engineeringTab = document.getElementById('engineering');
     console.log('✅ [ENGINEERING] Container encontrado');
+    console.log('📊 [ENGINEERING] Tab tiene clase active?', engineeringTab?.classList.contains('active'));
+    console.log('📊 [ENGINEERING] Tab display:', engineeringTab ? window.getComputedStyle(engineeringTab).display : 'N/A');
     console.log('📊 [ENGINEERING] Metadata:', this.metadata ? 'OK' : 'NULL');
     console.log('📊 [ENGINEERING] Stats:', this.stats ? 'OK' : 'NULL');
 
-    // FORZAR visibilidad del tab engineering
-    const engineeringTab = document.getElementById('engineering');
-    if (engineeringTab) {
-      engineeringTab.style.display = 'block';
-      engineeringTab.style.opacity = '1';
-      engineeringTab.style.visibility = 'visible';
-      engineeringTab.style.minHeight = '800px';
-      console.log('✅ [ENGINEERING] Tab engineering forzado a visible');
+    // FORZAR VISIBILIDAD DEL TAB SI NO ESTÁ VISIBLE
+    if (engineeringTab && !engineeringTab.classList.contains('active')) {
+      console.warn('⚠️ [ENGINEERING] Tab NO tiene clase active, agregándola...');
+      engineeringTab.classList.add('active');
     }
 
-    // FORZAR visibilidad del container
-    container.style.display = 'block';
-    container.style.opacity = '1';
-    container.style.visibility = 'visible';
-    container.style.minHeight = '700px';
-    container.style.background = '#ffffff';
-    container.style.position = 'relative';
-    container.style.zIndex = '1';
-    console.log('✅ [ENGINEERING] Container forzado a visible');
+    // FORZAR ESTILOS INLINE DEL TAB Y CONTAINER (MÁXIMA PRIORIDAD)
+    if (engineeringTab) {
+      engineeringTab.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 1 !important; min-height: 600px !important;';
+    }
+    container.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 600px !important; padding: 20px !important; background: #f9f9f9 !important;';
 
     try {
-      // DEBUG: Primero renderizar un mensaje simple CON ESTILOS FORZADOS
+      // RENDERIZAR INMEDIATAMENTE sin setTimeout
       container.innerHTML = `
-        <div style="
-          display: block !important;
-          visibility: visible !important;
-          opacity: 1 !important;
-          background: #e3f2fd;
-          padding: 40px;
-          border: 3px solid #3b82f6;
-          border-radius: 10px;
-          margin: 20px;
-          min-height: 200px;
-          position: relative;
-          z-index: 999;
-        ">
-          <h2 style="color: #3b82f6; font-size: 28px; margin: 0 0 20px 0; display: block;">
-            🏗️ Engineering Dashboard Cargando...
-          </h2>
-          <p style="font-size: 16px; color: #666; display: block; margin: 10px 0;">
-            ✅ Si ves este mensaje, el dashboard está renderizándose correctamente.
-          </p>
-          <p style="font-size: 14px; color: #999; display: block;">
-            Timestamp: ${new Date().toLocaleTimeString()}
-          </p>
-        </div>
-      `;
+        <div style="padding: 20px !important; background: white !important; min-height: 600px !important; border: 5px solid #ff0000 !important; box-shadow: 0 0 20px rgba(255,0,0,0.5) !important; position: relative !important; z-index: 99999 !important;">
+          <h1 style="color: #2563eb !important; margin-bottom: 20px !important; font-size: 32px !important;">🏗️ Engineering Dashboard</h1>
 
-      console.log('✅ [ENGINEERING] Mensaje de debug renderizado');
-
-      // Esperar un momento antes de renderizar el dashboard completo
-      setTimeout(() => {
-        container.innerHTML = `
-          <div class="engineering-dashboard" style="
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            background: white;
-            min-height: 600px;
-            width: 100%;
-            position: relative;
-            z-index: 1;
-          ">
+          ${!this.metadata || !this.stats ? `
+            <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0;">
+              <h3 style="color: #92400e; margin: 0 0 10px 0;">⚠️ Cargando datos...</h3>
+              <p style="color: #78350f; margin: 0;">Metadata: ${this.metadata ? '✅' : '❌'}</p>
+              <p style="color: #78350f; margin: 0;">Stats: ${this.stats ? '✅' : '❌'}</p>
+            </div>
+          ` : `
             <!-- Header con stats globales -->
-            <div class="dashboard-header" style="display: block !important; visibility: visible !important;">
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
               ${this.renderHeader()}
             </div>
 
-            <!-- Toolbar con búsqueda y filtros -->
-            <div class="dashboard-toolbar" style="display: block !important; visibility: visible !important;">
+            <!-- Toolbar -->
+            <div style="margin-bottom: 20px;">
               ${this.renderToolbar()}
             </div>
 
-            <!-- Navegación de layers (tabs) -->
-            <div class="dashboard-navigation" style="display: block !important; visibility: visible !important;">
+            <!-- Navegación -->
+            <div style="margin-bottom: 20px;">
               ${this.renderNavigation()}
             </div>
 
-            <!-- Contenido principal (cambia según currentView) -->
-            <div class="dashboard-content" style="display: block !important; visibility: visible !important;">
+            <!-- Contenido -->
+            <div>
               ${this.renderContent()}
             </div>
-          </div>
-        `;
+          `}
+        </div>
+      `;
 
-        console.log('✅ [ENGINEERING] Dashboard COMPLETO renderizado');
-      }, 100);
+      console.log('✅ [ENGINEERING] Dashboard renderizado');
+      console.log('📝 [ENGINEERING] HTML generado (primeros 300 chars):', container.innerHTML.substring(0, 300));
 
     } catch (error) {
       console.error('❌ [ENGINEERING] Error en renderDashboard:', error);
       container.innerHTML = `
-        <div class="alert alert-danger" style="margin: 20px;">
-          <h4>Error renderizando dashboard</h4>
-          <p>${error.message}</p>
-          <pre>${error.stack}</pre>
+        <div style="background: #fee2e2; border: 2px solid #dc2626; padding: 20px; margin: 20px; border-radius: 8px;">
+          <h4 style="color: #991b1b; margin: 0 0 10px 0;">❌ Error renderizando dashboard</h4>
+          <p style="color: #7f1d1d; margin: 0 0 10px 0;">${error.message}</p>
+          <pre style="background: white; padding: 10px; border-radius: 4px; overflow: auto;">${error.stack}</pre>
         </div>
       `;
     }
@@ -1173,12 +1158,8 @@ const EngineeringDashboard = {
   }
 };
 
-// Auto-inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('engineering-dashboard-container')) {
-    EngineeringDashboard.init();
-  }
-});
+// NOTA: La inicialización se maneja desde panel-administrativo.html
+// cuando se abre el tab 'engineering', NO se auto-inicializa aquí
 
 // Exportar para uso global
 window.EngineeringDashboard = EngineeringDashboard;

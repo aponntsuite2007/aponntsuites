@@ -55,22 +55,10 @@ const UserMedicalExams = sequelize.define('UserMedicalExams', {
         type: DataTypes.TEXT,
         allowNull: true
     },
-    exam_frequency: {
-        type: DataTypes.ENUM('mensual', 'trimestral', 'semestral', 'anual', 'bienal', 'personalizado'),
-        allowNull: true
-    },
-    frequency_months: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        validate: {
-            min: 1,
-            max: 120
-        }
-    },
-    auto_calculate_next_exam: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true
-    },
+    // ✅ FIX: Columnas removidas porque NO existen en la tabla PostgreSQL
+    // - exam_frequency
+    // - frequency_months
+    // - auto_calculate_next_exam
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW

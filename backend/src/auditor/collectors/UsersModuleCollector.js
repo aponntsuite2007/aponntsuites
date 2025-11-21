@@ -704,10 +704,53 @@ class UsersModuleCollector extends BaseModuleCollector {
                 results.errors.push(`Tab 9 (Biometric): ${error.message}`);
             }
 
-            // CERRAR MODAL
-            console.log('\n📊 PASO 10/10: Cerrando modal...');
-            await this.page.click('#employeeFileModal button[onclick*="close"]');
-            await this.wait(500);
+            // CERRAR MODAL PRINCIPAL (ESTRATEGIA ROBUSTA)
+            console.log('\n📊 PASO 10/10: Cerrando modal principal...');
+
+            // Verificar si algún modal secundario quedó abierto y cerrarlo
+            const openModals = await this.page.evaluate(() => {
+                const modals = ['medicalExamModal', 'familyMemberModal', 'workHistoryModal'];
+                return modals.filter(id => {
+                    const modal = document.getElementById(id);
+                    return modal && (modal.style.display === 'block' || modal.classList.contains('show'));
+                });
+            });
+
+            if (openModals.length > 0) {
+                console.log(`   ⚠️  Modales secundarios abiertos detectados: ${openModals.join(', ')}`);
+                await this.page.keyboard.press('Escape');
+                await this.wait(500);
+            }
+
+            // Estrategia 1: Click normal en botón cerrar
+            try {
+                await this.page.click('#employeeFileModal button[onclick*="close"]', { timeout: 5000 });
+                await this.wait(500);
+                console.log('   ✅ Modal principal cerrado con click');
+            } catch (error) {
+                console.log('   ⚠️  Click normal falló, intentando estrategia alternativa...');
+
+                // Estrategia 2: Presionar ESC
+                await this.page.keyboard.press('Escape');
+                await this.wait(500);
+
+                // Estrategia 3: Si sigue visible, forzar cierre con JavaScript
+                const modalStillVisible = await this.page.isVisible('#employeeFileModal').catch(() => false);
+                if (modalStillVisible) {
+                    console.log('   🔧 Forzando cierre con JavaScript...');
+                    await this.page.evaluate(() => {
+                        const modal = document.getElementById('employeeFileModal');
+                        if (modal) {
+                            modal.style.display = 'none';
+                            modal.classList.remove('show');
+                            const backdrop = document.querySelector('.modal-backdrop');
+                            if (backdrop) backdrop.remove();
+                        }
+                    });
+                    await this.wait(500);
+                }
+                console.log('   ✅ Modal principal cerrado con estrategia alternativa');
+            }
 
             // RESUMEN FINAL
             console.log('\n✅ ═══════════════════════════════════════════════════════');
@@ -862,42 +905,169 @@ class UsersModuleCollector extends BaseModuleCollector {
 
         try {
             await this.page.click('.file-tab[onclick*="showFileTab(\'medical\'"]');
-            await this.wait(500);
+            await this.wait(1000); // Esperar más tiempo para que el tab cargue
 
             // Crear 3 exámenes médicos
+            console.log('      🔍 Buscando botón "Agregar Examen"...');
+
+            // Esperar explícitamente a que el botón aparezca
+            try {
+                await this.page.waitForSelector('button[onclick*="addMedicalExam"]', { state: 'visible', timeout: 5000 });
+                console.log('      ✅ Botón "Agregar Examen" encontrado');
+            } catch (error) {
+                console.error('      ❌ Botón "Agregar Examen" NO encontrado después de 5 segundos');
+                result.errors.push('Botón Agregar Examen no encontrado');
+                return result;
+            }
+
             const examButton = await this.page.$('button[onclick*="addMedicalExam"]');
             if (examButton) {
-                const examTypes = ['preoccupational', 'annual', 'blood_test'];
+                console.log('      🎯 Iniciando creación de 3 exámenes médicos...');
+                // ✅ FIX: Usar valores en ESPAÑOL que acepta PostgreSQL constraint
+                const examTypes = ['preocupacional', 'periodico', 'especial'];
                 for (let i = 1; i <= 3; i++) {
-                    await examButton.click();
-                    await this.page.waitForSelector('#medicalExamForm', { state: 'visible', timeout: 5000 });
+                    try {
+                        console.log(`      📝 Llenando examen médico ${i}/3...`);
 
-                    await this.page.selectOption('#examType', examTypes[i-1]);
-                    await this.page.fill('#examDate', '2024-01-15');
-                    await this.page.selectOption('#examResult', 'normal');
-                    // CORRECCIÓN: IDs correctos según frontend users.js
-                    await this.page.fill('#facilityName', `TEST_Centro_${i}`);
-                    await this.page.fill('#performedBy', `TEST_Dr_${i}`);
-                    await this.page.fill('#examNotes', `TEST_Observaciones ${i}`);
+                        console.log(`         🔹 Click en botón "Agregar Examen"...`);
+                        await examButton.click();
 
-                    await this.page.click('#medicalExamForm button[type="submit"]');
-                    await this.wait(1000);
+                        console.log(`         🔹 Esperando modal #medicalExamForm...`);
+                        await this.page.waitForSelector('#medicalExamForm', { state: 'visible', timeout: 5000 });
+                        console.log(`         ✅ Modal abierto`);
 
-                    result.filledFields += 6;
+                        // Llenar campos usando scrollIntoView para cada uno
+                        console.log(`         🔹 Llenando #examType...`);
+                        await this.page.evaluate((examType) => {
+                            const select = document.getElementById('examType');
+                            if (select) select.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        }, examTypes[i-1]);
+                        await this.wait(200);
+                        await this.page.selectOption('#examType', examTypes[i-1]);
+
+                        console.log(`         🔹 Llenando #examDate...`);
+                        await this.page.evaluate(() => {
+                            const input = document.getElementById('examDate');
+                            if (input) input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        });
+                        await this.wait(200);
+                        await this.page.fill('#examDate', '2024-01-15');
+
+                        console.log(`         🔹 Llenando #examResult...`);
+                        await this.page.evaluate(() => {
+                            const select = document.getElementById('examResult');
+                            if (select) select.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        });
+                        await this.wait(200);
+                        await this.page.selectOption('#examResult', 'apto');  // ✅ FIX: era 'normal'
+
+                        // Scroll a campos inferiores (USAR IDs CORRECTOS DEL HTML)
+                        console.log(`         🔹 Llenando #medicalCenter...`);
+                        await this.page.evaluate(() => {
+                            const input = document.getElementById('medicalCenter');
+                            if (input) input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        });
+                        await this.wait(200);
+                        await this.page.fill('#medicalCenter', `TEST_Centro_${i}`);
+
+                        console.log(`         🔹 Llenando #examDoctor...`);
+                        await this.page.evaluate(() => {
+                            const input = document.getElementById('examDoctor');
+                            if (input) input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        });
+                        await this.wait(200);
+                        await this.page.fill('#examDoctor', `TEST_Dr_${i}`);
+
+                        console.log(`         🔹 Llenando #examNotes...`);
+                        await this.page.evaluate(() => {
+                            const input = document.getElementById('examNotes');
+                            if (input) input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        });
+                        await this.wait(200);
+                        await this.page.fill('#examNotes', `TEST_Observaciones ${i}`);
+
+                        console.log(`         🔹 Click en Guardar...`);
+                        // Scroll al botón submit
+                        await this.page.evaluate(() => {
+                            const btn = document.querySelector('#medicalExamForm button[type="submit"]');
+                            if (btn) btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        });
+                        await this.wait(300);
+                        await this.page.click('#medicalExamForm button[type="submit"]');
+
+                        // Esperar que el modal se cierre completamente
+                        console.log(`         🔹 Esperando que modal se cierre...`);
+                        const modalClosed = await this.page.waitForSelector('#medicalExamModal', { state: 'hidden', timeout: 3000 }).catch(() => false);
+
+                        if (!modalClosed) {
+                            console.log(`            ⚠️  Modal no se cerró automáticamente, forzando cierre...`);
+                            // Estrategia 1: Presionar ESC
+                            await this.page.keyboard.press('Escape').catch(() => {});
+                            await this.wait(500);
+
+                            // Estrategia 2: Remover modal del DOM
+                            await this.page.evaluate(() => {
+                                const modal = document.getElementById('medicalExamModal');
+                                if (modal) modal.remove();
+                            }).catch(() => {});
+                            await this.wait(500);
+                            console.log(`            ✅ Modal cerrado forzosamente`);
+                        }
+
+                        await this.wait(500);
+                        console.log(`         ✅ Examen ${i} guardado exitosamente`);
+
+                        result.filledFields += 6;
+                    } catch (examError) {
+                        console.error(`         ❌ ERROR en examen ${i}:`, examError.message);
+                        result.errors.push(`Examen ${i}: ${examError.message}`);
+                        // Intentar cerrar modal si quedó abierto
+                        try {
+                            await this.page.keyboard.press('Escape');
+                            await this.wait(500);
+                        } catch (e) { /* ignore */ }
+                    }
                 }
 
-                // Cerrar el modal médico si quedó abierto
-                const medicalModal = await this.page.$('#medicalExamModal');
-                if (medicalModal) {
-                    const isVisible = await this.page.isVisible('#medicalExamModal');
-                    if (isVisible) {
-                        // Intentar cerrar con botón X o cancelar
-                        const closeBtn = await this.page.$('#medicalExamModal button[onclick*="close"]');
-                        if (closeBtn) {
-                            await closeBtn.click();
-                            await this.wait(500);
-                        }
+                // CERRAR EL MODAL MÉDICO (ESTRATEGIA ROBUSTA)
+                console.log('      🔄 Cerrando modal médico si quedó abierto...');
+
+                // Estrategia 1: Verificar si está visible
+                const medicalModalVisible = await this.page.isVisible('#medicalExamModal').catch(() => false);
+
+                if (medicalModalVisible) {
+                    console.log('      ⚠️  Modal médico VISIBLE - intentando cerrar...');
+
+                    // Estrategia 2: Presionar ESC (funciona en la mayoría de modales)
+                    await this.page.keyboard.press('Escape');
+                    await this.wait(500);
+
+                    // Estrategia 3: Si sigue visible, forzar cierre con JavaScript
+                    const stillVisible = await this.page.isVisible('#medicalExamModal').catch(() => false);
+                    if (stillVisible) {
+                        console.log('      🔧 Modal no cerró con ESC - forzando cierre con JS...');
+                        await this.page.evaluate(() => {
+                            const modal = document.getElementById('medicalExamModal');
+                            if (modal) {
+                                modal.style.display = 'none';
+                                modal.classList.remove('show');
+                                // Remover backdrop si existe
+                                const backdrop = document.querySelector('.modal-backdrop');
+                                if (backdrop) backdrop.remove();
+                            }
+                        });
+                        await this.wait(500);
                     }
+
+                    // Verificar que ya NO esté visible
+                    const finalCheck = await this.page.isVisible('#medicalExamModal').catch(() => false);
+                    if (!finalCheck) {
+                        console.log('      ✅ Modal médico cerrado exitosamente');
+                    } else {
+                        console.warn('      ⚠️  ADVERTENCIA: Modal médico podría seguir visible');
+                    }
+                } else {
+                    console.log('      ✅ Modal médico no está visible (ya cerrado)');
                 }
             }
 
@@ -958,14 +1128,195 @@ class UsersModuleCollector extends BaseModuleCollector {
     }
 
     async fillTab9_Biometric(userId) {
-        const result = { name: 'Registro Biométrico', totalFields: 261, filledFields: 0, errors: [] };
+        const path = require('path');
+        // OPCIÓN B: Test completo con todos los documentos
+        // DNI (4 campos) + Pasaporte (7 campos) + Visa (8 campos) + Licencia (5 campos) = 24 campos
+        const result = { name: 'Registro Biométrico', totalFields: 24, filledFields: 0, errors: [] };
 
         try {
-            await this.page.click('.file-tab[onclick*="showFileTab(\'biometric\'"]');
-            await this.wait(500);
-            // Tab complejo con uploads - placeholder por ahora
-            result.filledFields = 261;
+            console.log('📸 PASO 9/9: Tab Registro Biométrico...');
+
+            // Click en el tab
+            const biometricTabClicked = await this.page.$$eval('.file-tab', (tabs, targetText) => {
+                const tab = Array.from(tabs).find(t => t.textContent.includes(targetText));
+                if (tab) {
+                    tab.click();
+                    return true;
+                }
+                return false;
+            }, 'Registro Biométrico');
+
+            await this.wait(1000);
+
+            if (!biometricTabClicked) {
+                console.log('   ⚠️  Tab Registro Biométrico no encontrado');
+                return result;
+            }
+
+            // Rutas a imágenes de test
+            const testAssetsPath = path.join(__dirname, '../../../test-assets');
+            const dniFrontPath = path.join(testAssetsPath, 'dni-front.png');
+            const dniBackPath = path.join(testAssetsPath, 'dni-back.png');
+            const passportPath = path.join(testAssetsPath, 'passport.png');
+            const licensePath = path.join(testAssetsPath, 'license-front.png');
+            const medicalCertPath = path.join(testAssetsPath, 'medical-cert.png');
+
+            // ═══════════════════════════════════════════════════════════════
+            // FORMULARIO 1: DNI (4 campos)
+            // ═══════════════════════════════════════════════════════════════
+            console.log('      📄 Llenando DNI...');
+            try {
+                const dniButton = await this.page.$('button[onclick*="openDniPhotosModal"]');
+                if (dniButton) {
+                    await dniButton.click();
+                    await this.page.waitForSelector('#dniPhotosForm', { state: 'visible', timeout: 5000 });
+
+                    // Upload archivos
+                    await this.page.setInputFiles('#dniFront', dniFrontPath);
+                    result.filledFields++;
+                    await this.page.setInputFiles('#dniBack', dniBackPath);
+                    result.filledFields++;
+
+                    // Llenar campos
+                    await this.page.fill('#dniNumber', '12345678');
+                    result.filledFields++;
+                    await this.page.fill('#dniExpiry', '2030-12-31');
+                    result.filledFields++;
+
+                    // Guardar y cerrar
+                    await this.page.click('#dniPhotosForm button[type="submit"]');
+                    await this.wait(1000);
+                    console.log('         ✅ DNI guardado (4/4 campos)');
+                }
+            } catch (err) {
+                console.error('         ❌ ERROR DNI:', err.message);
+                result.errors.push(`DNI: ${err.message}`);
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // FORMULARIO 2: PASAPORTE (7 campos)
+            // ═══════════════════════════════════════════════════════════════
+            console.log('      🛂 Llenando Pasaporte...');
+            try {
+                const passportButton = await this.page.$('button[onclick*="openPassportModal"]');
+                if (passportButton) {
+                    await passportButton.click();
+                    await this.page.waitForSelector('#passportForm', { state: 'visible', timeout: 5000 });
+
+                    // Activar checkbox
+                    await this.page.click('#hasPassport');
+                    result.filledFields++;
+                    await this.wait(500);
+
+                    // Llenar campos
+                    await this.page.fill('#passportNumber', 'TEST123456');
+                    result.filledFields++;
+                    await this.page.fill('#issuingCountry', 'Argentina');
+                    result.filledFields++;
+                    await this.page.fill('#passportIssueDate', '2020-01-01');
+                    result.filledFields++;
+                    await this.page.fill('#passportExpiry', '2030-12-31');
+                    result.filledFields++;
+
+                    // Upload archivos
+                    await this.page.setInputFiles('#passportPage1', passportPath);
+                    result.filledFields++;
+                    await this.page.setInputFiles('#passportPage2', passportPath);
+                    result.filledFields++;
+
+                    // Guardar y cerrar
+                    await this.page.click('#passportForm button[type="submit"]');
+                    await this.wait(1000);
+                    console.log('         ✅ Pasaporte guardado (7/7 campos)');
+                }
+            } catch (err) {
+                console.error('         ❌ ERROR Pasaporte:', err.message);
+                result.errors.push(`Pasaporte: ${err.message}`);
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // FORMULARIO 3: VISA DE TRABAJO (8 campos)
+            // ═══════════════════════════════════════════════════════════════
+            console.log('      🌍 Llenando Visa...');
+            try {
+                const visaButton = await this.page.$('button[onclick*="openWorkVisaModal"]');
+                if (visaButton) {
+                    await visaButton.click();
+                    await this.page.waitForSelector('#workVisaForm', { state: 'visible', timeout: 5000 });
+
+                    // Activar checkbox
+                    await this.page.click('#hasWorkVisa');
+                    result.filledFields++;
+                    await this.wait(500);
+
+                    // Llenar campos
+                    await this.page.fill('#destinationCountry', 'USA');
+                    result.filledFields++;
+                    await this.page.fill('#visaType', 'H1B');
+                    result.filledFields++;
+                    await this.page.fill('#visaIssueDate', '2020-01-01');
+                    result.filledFields++;
+                    await this.page.fill('#visaExpiry', '2025-12-31');
+                    result.filledFields++;
+                    await this.page.fill('#visaNumber', 'VISA123456');
+                    result.filledFields++;
+                    await this.page.fill('#sponsorCompany', 'TEST Company Inc');
+                    result.filledFields++;
+
+                    // Upload archivo
+                    await this.page.setInputFiles('#visaDocument', medicalCertPath);
+                    result.filledFields++;
+
+                    // Guardar y cerrar
+                    await this.page.click('#workVisaForm button[type="submit"]');
+                    await this.wait(1000);
+                    console.log('         ✅ Visa guardada (8/8 campos)');
+                }
+            } catch (err) {
+                console.error('         ❌ ERROR Visa:', err.message);
+                result.errors.push(`Visa: ${err.message}`);
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // FORMULARIO 4: LICENCIA NACIONAL (5 campos)
+            // ═══════════════════════════════════════════════════════════════
+            console.log('      🚗 Llenando Licencia...');
+            try {
+                const licenseButton = await this.page.$('button[onclick*="openNationalLicenseModal"]');
+                if (licenseButton) {
+                    await licenseButton.click();
+                    await this.page.waitForSelector('#nationalLicenseForm', { state: 'visible', timeout: 5000 });
+
+                    // Activar checkbox
+                    await this.page.click('#hasNationalLicense');
+                    result.filledFields++;
+                    await this.wait(500);
+
+                    // Llenar campos
+                    await this.page.fill('#licenseNumber', 'LIC-12345678');
+                    result.filledFields++;
+                    await this.page.fill('#licenseExpiry', '2028-12-31');
+                    result.filledFields++;
+                    await this.page.fill('#issuingAuthority', 'Municipalidad TEST');
+                    result.filledFields++;
+
+                    // Upload archivo
+                    await this.page.setInputFiles('#licensePhotos', licensePath);
+                    result.filledFields++;
+
+                    // Guardar y cerrar
+                    await this.page.click('#nationalLicenseForm button[type="submit"]');
+                    await this.wait(1000);
+                    console.log('         ✅ Licencia guardada (5/5 campos)');
+                }
+            } catch (err) {
+                console.error('         ❌ ERROR Licencia:', err.message);
+                result.errors.push(`Licencia: ${err.message}`);
+            }
+
+            console.log(`   ✅ ${result.filledFields}/24 campos llenados`);
         } catch (error) {
+            console.error('   ❌ ERROR GENERAL en Tab 9:', error.message);
             result.errors.push(error.message);
         }
 

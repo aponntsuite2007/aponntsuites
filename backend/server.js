@@ -149,10 +149,22 @@ app.use((req, res, next) => {
 });
 
 // Servir archivos estáticos (DESPUÉS del middleware de comentar scripts)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/docs', express.static(path.join(__dirname, '../docs')));
-app.use('/data', express.static(path.join(__dirname, 'data')));
-app.use(express.static(path.join(__dirname, 'public')));
+// DESHABILITAR CACHE COMPLETAMENTE
+const staticOptions = {
+  etag: false,
+  lastModified: false,
+  maxAge: 0,
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+};
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), staticOptions));
+app.use('/docs', express.static(path.join(__dirname, '../docs'), staticOptions));
+app.use('/data', express.static(path.join(__dirname, 'data'), staticOptions));
+app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 
 // Variable para controlar conexión PostgreSQL
 let isDatabaseConnected = false;

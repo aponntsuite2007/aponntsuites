@@ -2873,6 +2873,75 @@
     </script>
 </head>
 <body>
+    <!-- 🏗️ BOTÓN FLOTANTE ENGINEERING DASHBOARD -->
+    <button id="btn-open-engineering-modal" style="
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        z-index: 9999;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 25px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        transition: all 0.3s ease;
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        🏗️ Engineering Dashboard
+    </button>
+
+    <!-- 🏗️ MODAL ENGINEERING DASHBOARD -->
+    <div id="engineering-modal" style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 99999;
+        overflow: auto;
+    ">
+        <div style="
+            position: relative;
+            max-width: 95%;
+            margin: 20px auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        ">
+            <!-- Botón cerrar -->
+            <button id="btn-close-engineering-modal" style="
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: #ef4444;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+                cursor: pointer;
+                line-height: 1;
+            ">×</button>
+
+            <!-- Contenido del dashboard -->
+            <div id="engineering-dashboard-modal-content">
+                <div style="text-align: center; padding: 60px;">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="sr-only">Cargando Engineering Dashboard...</span>
+                    </div>
+                    <p style="margin-top: 20px; color: #666;">Cargando metadata del sistema...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="dashboard-header" style="padding: 0 !important;">
         <!-- Barra superior con información principal -->
         <div style="padding: 0.65rem 2rem; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 1rem; align-items: center;">
@@ -4868,7 +4937,16 @@
                 <!-- ============================================
                      PESTAÑA: ENGINEERING DASHBOARD
                      ============================================ -->
-                <div id="engineering" class="tab-content" style="min-height: 600px;">
+                <div id="engineering" class="tab-content">
+                    <!-- BOTÓN DE DEBUG -->
+                    <button onclick="
+                        const tab = document.getElementById('engineering');
+                        const container = document.getElementById('engineering-dashboard-container');
+                        alert('Tab display: ' + window.getComputedStyle(tab).display + '\\nContainer display: ' + window.getComputedStyle(container).display + '\\nContainer height: ' + container.offsetHeight + 'px\\nContainer content length: ' + container.innerHTML.length + ' chars');
+                    " style="position: fixed; top: 100px; right: 20px; z-index: 999999; background: red; color: white; padding: 20px; font-size: 18px; border: none; cursor: pointer;">
+                        🔍 DEBUG TAB
+                    </button>
+
                     <div class="section-header">
                         <h2 class="section-title">🏗️ Engineering Dashboard - Arquitectura del Sistema</h2>
                         <p style="color: #666; margin-top: 10px;">
@@ -5631,9 +5709,17 @@
             if (tabName === 'notifications') loadNotificationSystem();
             if (tabName === 'users') loadOperators();
             if (tabName === 'engineering') {
-                // Inicializar Engineering Dashboard
-                if (typeof EngineeringDashboard !== 'undefined' && EngineeringDashboard.init) {
-                    EngineeringDashboard.init();
+                // Inicializar Engineering Dashboard solo UNA VEZ
+                if (!window.engineeringDashboardInitialized) {
+                    if (typeof EngineeringDashboard !== 'undefined' && EngineeringDashboard.init) {
+                        console.log('🏗️ [PANEL-ADMIN] Inicializando Engineering Dashboard...');
+                        EngineeringDashboard.init();
+                        window.engineeringDashboardInitialized = true;
+                    } else {
+                        console.error('❌ EngineeringDashboard no está definido');
+                    }
+                } else {
+                    console.log('ℹ️ Engineering Dashboard ya inicializado, omitiendo...');
                 }
             }
         }
@@ -13653,6 +13739,72 @@ ${vendor.notes || 'Sin notas adicionales'}
     <script src="js/modules/engineering-dashboard.js"></script>
 
     <script>
+        // 🏗️ ENGINEERING DASHBOARD MODAL - Gestión de apertura/cierre
+        (function() {
+            const btnOpen = document.getElementById('btn-open-engineering-modal');
+            const btnClose = document.getElementById('btn-close-engineering-modal');
+            const modal = document.getElementById('engineering-modal');
+            const modalContent = document.getElementById('engineering-dashboard-modal-content');
+            let dashboardInitialized = false;
+
+            // Abrir modal
+            btnOpen.addEventListener('click', function() {
+                console.log('🏗️ [MODAL] Abriendo Engineering Dashboard...');
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+
+                // Inicializar dashboard solo la primera vez
+                if (!dashboardInitialized && typeof EngineeringDashboard !== 'undefined') {
+                    console.log('🏗️ [MODAL] Inicializando Engineering Dashboard...');
+
+                    // Cambiar el container target temporalmente
+                    const originalInit = EngineeringDashboard.init;
+                    EngineeringDashboard.init = async function() {
+                        // Cambiar el ID del container temporalmente
+                        const tempContainer = document.createElement('div');
+                        tempContainer.id = 'engineering-dashboard-container';
+                        modalContent.innerHTML = '';
+                        modalContent.appendChild(tempContainer);
+
+                        // Llamar al init original
+                        await originalInit.call(EngineeringDashboard);
+                        dashboardInitialized = true;
+                    };
+
+                    EngineeringDashboard.init();
+                } else {
+                    console.log('ℹ️ [MODAL] Dashboard ya inicializado');
+                }
+            });
+
+            // Cerrar modal
+            function closeModal() {
+                console.log('🏗️ [MODAL] Cerrando modal...');
+                modal.style.display = 'none';
+                document.body.style.overflow = ''; // Restaurar scroll
+            }
+
+            btnClose.addEventListener('click', closeModal);
+
+            // Cerrar al hacer click fuera del contenido
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Cerrar con ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.style.display === 'block') {
+                    closeModal();
+                }
+            });
+
+            console.log('✅ [MODAL] Engineering Dashboard modal configurado');
+        })();
+    </script>
+
+    <script>
         // Inicializar módulos cuando se cargan sus tabs respectivas
         (function() {
             const originalSwitchTabForTesting = window.switchTab;
@@ -13705,18 +13857,8 @@ ${vendor.notes || 'Sin notas adicionales'}
                     }, 200);
                 }
 
-                // 🏗️ ENGINEERING DASHBOARD: Inicializar Engineering Dashboard
-                if (tabName === 'engineering' && !window.engineeringDashboardInitialized) {
-                    setTimeout(() => {
-                        if (window.EngineeringDashboard && typeof window.EngineeringDashboard.init === 'function') {
-                            console.log('🏗️ Inicializando Engineering Dashboard...');
-                            window.EngineeringDashboard.init();
-                            window.engineeringDashboardInitialized = true;
-                        } else {
-                            console.warn('⚠️ EngineeringDashboard no está disponible');
-                        }
-                    }, 200);
-                }
+                // NOTA: Engineering Dashboard se inicializa en switchTab() (línea ~5636)
+                // No duplicar aquí para evitar múltiples inicializaciones
             };
         })();
     </script>
