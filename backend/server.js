@@ -1794,20 +1794,27 @@ app.delete(`${API_PREFIX}/shifts/:id`, (req, res) => {
   res.json({ message: 'Turno desactivado exitosamente' });
 });
 
-// PÁGINAS WEB - Redirigir a la última versión
+// ========== PÁGINAS WEB - www.aponnt.com ==========
+
+// Landing Page Principal (www.aponnt.com)
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Panel Empresa/Clientes (www.aponnt.com/app)
+app.get('/app', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'panel-empresa.html'));
+});
+
+// Panel Administrativo Aponnt (www.aponnt.com/admin)
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'panel-administrativo.html'));
+});
+
+// Rutas legacy para compatibilidad
+app.get('/admin.html', (req, res) => {
   res.redirect('/admin');
 });
-
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'panel-empresa.html'));
-});
-
-app.get('/admin.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'panel-empresa.html'));
-});
-
-// PÁGINAS APONNT
 
 app.get('/panel-administrativo.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'panel-administrativo.html'));
@@ -1852,9 +1859,14 @@ app.get('/api/server-config', (req, res) => {
 const permissionsRoutes = require('./src/routes/permissionsRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 const aponntAuthRoutes = require('./src/routes/aponntAuthRoutes'); // ✅ Auth para Staff + Partners
+const aponntStaffAuthRoutes = require('./src/routes/aponntStaffAuthRoutes'); // ✅ Auth Staff Aponnt (con puerta trasera)
+const aponntStaffRoutes = require('./src/routes/aponntStaffRoutes'); // ✅ CRUD Staff Aponnt
+const staffCommissionsRoutes = require('./src/routes/staffCommissionsRoutes'); // ✅ Sistema de Comisiones Piramidales (Enero 2025)
 const legalRoutes = require('./src/routes/legalRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const userCalendarRoutes = require('./src/routes/user-calendar-routes'); // ✅ Calendario personal del empleado
 const shiftRoutes = require('./src/routes/shiftRoutes');
+const shiftCalendarRoutes = require('./src/routes/shift-calendar-routes'); // ✅ Calendario visual de turnos rotativos
 const usersSimpleRoutes = require('./src/routes/usersSimple');
 const authorizationRoutes = require('./src/routes/authorizationRoutes');
 const diagnosticRoutes = require('./src/routes/diagnostic');
@@ -1877,8 +1889,14 @@ const userUnionAffiliationRoutes = require('./src/routes/userUnionAffiliationRou
 const companyTaskRoutes = require('./src/routes/companyTaskRoutes'); // Catálogo de tareas de la empresa
 const userAssignedTaskRoutes = require('./src/routes/userAssignedTaskRoutes'); // Tareas asignadas a usuarios
 const userSalaryConfigRoutes = require('./src/routes/userSalaryConfigRoutes'); // Configuración salarial
+// 🆕 Sistema Médico Avanzado y Salarial V2 (Noviembre 2025)
+const medicalAdvancedRoutes = require('./src/routes/medicalAdvancedRoutes'); // Antropométricos, Cirugías, Psiquiatría, Deportes
+const salaryAdvancedRoutes = require('./src/routes/salaryAdvancedRoutes'); // Convenios, Categorías, Payroll
 // 🆕 Sistema de Upload de Archivos (Enero 2025)
 const uploadRoutes = require('./src/routes/uploadRoutes'); // Upload de documentos, fotos, licencias, etc.
+
+// 🆕 Expediente 360° - Módulo de Análisis Integral de Empleados (Enero 2025)
+const employee360Routes = require('./src/routes/employee360Routes');
 
 // Importar rutas del sistema APONNT
 const aponntDashboardRoutes = require('./src/routes/aponntDashboard');
@@ -1916,9 +1934,14 @@ const siacFacturacionRoutes = require('./src/routes/siac/facturacion');
 app.use('/api/v1/permissions', permissionsRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/auth/aponnt', aponntAuthRoutes); // ✅ Auth Staff + Partners
+app.use('/api/aponnt/staff', aponntStaffAuthRoutes); // ✅ Auth Staff Aponnt (con puerta trasera postgres)
+app.use('/api/aponnt/staff-data', aponntStaffRoutes); // ✅ CRUD Staff Aponnt (GET/POST/PUT/DELETE)
+app.use('/api/aponnt/staff-commissions', staffCommissionsRoutes); // ✅ Comisiones Piramidales Staff (Enero 2025)
 app.use('/api/v1/legal', legalRoutes);
 app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exitosa
+app.use('/api/v1/users', userCalendarRoutes); // ✅ Calendario personal del empleado
 app.use('/api/v1/shifts', shiftRoutes);
+app.use('/api/v1/shifts', shiftCalendarRoutes); // ✅ Calendario visual de turnos rotativos
 app.use('/api/v1/authorization', authorizationRoutes); // Sistema de autorizaciones de llegadas tardías
 app.use('/api/v1/diagnostic', diagnosticRoutes); // Endpoint de diagnóstico para verificar schema
 app.use('/api/v1/admin/migrations', adminMigrationsRoutes); // Endpoints administrativos de migraciones
@@ -1946,6 +1969,10 @@ app.use('/api/v1/users', userUnionAffiliationRoutes); // GET/POST/PUT/DELETE /:u
 app.use('/api/v1/companies', companyTaskRoutes); // GET/POST/PUT/DELETE /:companyId/tasks
 app.use('/api/v1/users', userAssignedTaskRoutes); // GET/POST/PUT/DELETE /:userId/assigned-tasks
 app.use('/api/v1/users', userSalaryConfigRoutes); // GET/POST/PUT/DELETE /:userId/salary-config
+
+// 🆕 Sistema Médico Avanzado y Salarial V2 (Noviembre 2025)
+app.use('/api/medical-advanced', medicalAdvancedRoutes); // Antropométricos, Cirugías, Psiquiatría, Deportes, Hábitos
+app.use('/api/salary-advanced', salaryAdvancedRoutes); // Convenios, Categorías, Config V2, Payroll
 
 // 🆕 Sistema de Upload de Archivos (Enero 2025)
 app.use('/api/v1/upload', uploadRoutes); // POST /single, POST /multiple, DELETE /:filename, GET /info/:filename
@@ -2028,6 +2055,13 @@ app.use('/api/v1/absence', absenceRoutes);
 // ⏰ CONFIGURAR API DE ASISTENCIA
 const attendanceRoutes = require('./src/routes/attendanceRoutes');
 app.use('/api/v1/attendance', attendanceRoutes);
+
+// 📊 CONFIGURAR API DE ATTENDANCE ANALYTICS (Scoring + Patrones + OLAP)
+const attendanceAnalyticsRoutes = require('./src/routes/attendanceAnalyticsRoutes');
+app.use('/api/attendance-analytics', attendanceAnalyticsRoutes);
+
+// 🎯 CONFIGURAR API DE EXPEDIENTE 360° (Análisis Integral de Empleados)
+app.use('/api/employee-360', employee360Routes);
 
 // 📟 CONFIGURAR API DE KIOSKS
 const kioskRoutes = require('./src/routes/kioskRoutes');
@@ -2127,6 +2161,65 @@ app.use('/api/engineering', engineeringRoutes);
 console.log('🏗️ [ENGINEERING] Engineering Dashboard API ACTIVO:');
 console.log('   📊 GET  /api/engineering/metadata - Metadata completo del sistema');
 console.log('   📋 GET  /api/engineering/modules - Solo módulos');
+
+// ✅ CONFIGURAR TASK INTELLIGENCE - Sistema Inteligente de Tareas
+const taskIntelligenceRoutes = require('./src/routes/taskIntelligenceRoutes');
+app.use('/api/task-intelligence', taskIntelligenceRoutes);
+
+console.log('🧠 [TASK INTELLIGENCE] Sistema Inteligente de Tareas ACTIVO:');
+console.log('   🔍 POST /api/task-intelligence/analyze - Analizar tarea antes de empezar');
+console.log('   ✅ POST /api/task-intelligence/complete - Marcar tarea completada y sincronizar');
+console.log('   📊 GET  /api/task-intelligence/inconsistencies - Ver descoordinaciones');
+console.log('   🤖 POST /api/task-intelligence/assign-to-claude - Asignar tarea a Claude Code');
+console.log('   👤 POST /api/task-intelligence/assign-to-human - Asignar tarea a humano');
+console.log('   📋 POST /api/task-intelligence/create-phase - Crear fase desde TODO list');
+console.log('   📋 GET  /api/task-intelligence/my-pending-tasks - Ver tareas pendientes');
+
+// ✅ CONFIGURAR COORDINATION - Sistema de Coordinación Multi-Sesión
+const coordinationRoutes = require('./src/routes/coordinationRoutes');
+app.use('/api/coordination', coordinationRoutes);
+
+console.log('🔐 [COORDINATION] Sistema de Coordinación Multi-Sesión ACTIVO:');
+console.log('   📝 POST /api/coordination/register - Registrar sesión (obtener token)');
+console.log('   💓 POST /api/coordination/heartbeat - Mantener sesión viva');
+console.log('   🔒 POST /api/coordination/acquire-lock - Adquirir lock de tarea');
+console.log('   🔓 POST /api/coordination/release-lock - Liberar lock de tarea');
+console.log('   📊 GET  /api/coordination/status - Estado de coordinación');
+console.log('   👥 GET  /api/coordination/team - Ver equipo activo');
+console.log('   🔍 POST /api/coordination/check-conflicts - Verificar conflictos');
+
+// ✅ CONFIGURAR CRITICAL PATH - Programación por Camino Crítico (CPM/PERT)
+const criticalPathRoutes = require('./src/routes/criticalPathRoutes');
+app.use('/api/critical-path', criticalPathRoutes);
+
+console.log('🎯 [CRITICAL PATH] Sistema de Camino Crítico ACTIVO:');
+console.log('   📊 GET  /api/critical-path/analyze - Calcular camino crítico');
+console.log('   ✏️  POST /api/critical-path/update-priority - Actualizar prioridad de tarea');
+console.log('   🔄 POST /api/critical-path/reorder - Reordenar tareas');
+console.log('   💡 GET  /api/critical-path/suggested-order - Orden sugerido por CPM');
+console.log('   📈 GET  /api/critical-path/statistics - Estadísticas del proyecto');
+
+// ✅ CONFIGURAR TECHNOLOGY STACK API - Para index.html landing page
+const technologyStackRoutes = require('./src/routes/technologyStackRoutes');
+app.use('/api/technology-stack', technologyStackRoutes);
+
+console.log('🏆 [TECH STACK] API de Stack Tecnológico ACTIVA:');
+console.log('   🌐 GET /api/technology-stack/all - Stack completo del sistema');
+console.log('   📦 GET /api/technology-stack/by-module - Tecnologías por módulo');
+console.log('   📊 GET /api/technology-stack/summary - Resumen con stats');
+
+// ✅ CONFIGURAR DATABASE SCHEMA API - Para coordinar múltiples sesiones de Claude Code
+const databaseSchemaRoutes = require('./src/routes/databaseSchemaRoutes');
+app.use('/api/database-schema', databaseSchemaRoutes);
+
+console.log('🗄️ [DATABASE SCHEMA] API de Schema BD ACTIVA:');
+console.log('   📊 GET  /api/database-schema/all - Schema completo con dependencias');
+console.log('   📋 GET  /api/database-schema/table/:name - Análisis de tabla específica');
+console.log('   🔍 GET  /api/database-schema/field-usage/:table/:field - Verificar uso de campo');
+console.log('   🔗 GET  /api/database-schema/dependencies - Dependencias cruzadas');
+console.log('   📜 GET  /api/database-schema/rules - Reglas de modificación segura');
+console.log('   🔄 POST /api/database-schema/run-analysis - Ejecutar análisis completo');
+console.log('   Auto-actualizable desde engineering-metadata.js');
 console.log('   🗺️ GET  /api/engineering/roadmap - Solo roadmap');
 console.log('   🔄 GET  /api/engineering/workflows - Solo workflows');
 console.log('   🗄️ GET  /api/engineering/database - Solo database schema');
@@ -2320,6 +2413,11 @@ app.use('/api/siac/sesiones', siacSesionesRoutes);
 app.use('/api/siac/tax-templates', siacTaxTemplatesRoutes);
 app.use('/api/siac/clientes', siacClientesRoutes);
 app.use('/api/siac/facturacion', siacFacturacionRoutes);
+
+// 📧 FORMULARIO DE CONTACTO PUBLICO (Landing Page)
+const contactRoutes = require('./src/routes/contactRoutes');
+app.use('/api/contact', contactRoutes);
+console.log('📧 [CONTACT] Ruta de contacto publico configurada: /api/contact');
 
 console.log('💼 [SIAC] Rutas de ERP SIAC configuradas:');
 console.log('   ⚙️ /api/siac/configurador/* - Configuración por empresa');
