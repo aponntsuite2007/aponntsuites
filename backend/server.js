@@ -107,8 +107,9 @@ app.use((req, res, next) => {
 
 // 🔧 MIDDLEWARE CRÍTICO: Comentar scripts V2.0 para evitar doble carga
 // DEBE IR ANTES de express.static() para interceptar la petición
+// NOTA: Solo para panel-empresa.html y /app, NO para /admin (que es panel-administrativo)
 app.use((req, res, next) => {
-  if (req.path === '/panel-empresa.html' || req.path === '/admin') {
+  if (req.path === '/panel-empresa.html' || req.path === '/app') {
     console.log('🔧 [MIDDLEWARE] Interceptando petición:', req.path);
     const htmlPath = path.join(__dirname, 'public', 'panel-empresa.html');
     fs.readFile(htmlPath, 'utf8', (err, html) => {
@@ -1892,6 +1893,7 @@ const userSalaryConfigRoutes = require('./src/routes/userSalaryConfigRoutes'); /
 // 🆕 Sistema Médico Avanzado y Salarial V2 (Noviembre 2025)
 const medicalAdvancedRoutes = require('./src/routes/medicalAdvancedRoutes'); // Antropométricos, Cirugías, Psiquiatría, Deportes
 const salaryAdvancedRoutes = require('./src/routes/salaryAdvancedRoutes'); // Convenios, Categorías, Payroll
+const payrollRoutes = require('./src/routes/payrollRoutes'); // Sistema Liquidación Parametrizable v3.0
 // 🆕 Sistema de Upload de Archivos (Enero 2025)
 const uploadRoutes = require('./src/routes/uploadRoutes'); // Upload de documentos, fotos, licencias, etc.
 
@@ -1973,6 +1975,7 @@ app.use('/api/v1/users', userSalaryConfigRoutes); // GET/POST/PUT/DELETE /:userI
 // 🆕 Sistema Médico Avanzado y Salarial V2 (Noviembre 2025)
 app.use('/api/medical-advanced', medicalAdvancedRoutes); // Antropométricos, Cirugías, Psiquiatría, Deportes, Hábitos
 app.use('/api/salary-advanced', salaryAdvancedRoutes); // Convenios, Categorías, Config V2, Payroll
+app.use('/api/payroll', payrollRoutes); // ✅ Sistema Liquidación Parametrizable v3.0 (Multi-País, Multi-Sucursal)
 
 // 🆕 Sistema de Upload de Archivos (Enero 2025)
 app.use('/api/v1/upload', uploadRoutes); // POST /single, POST /multiple, DELETE /:filename, GET /info/:filename
