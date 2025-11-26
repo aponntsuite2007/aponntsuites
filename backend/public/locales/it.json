@@ -204,7 +204,119 @@
     "add_department": "➕ Aggiungi Dipartimento",
     "department_list": "📋 Lista Dipartimenti",
     "gps_location": "Posizione GPS",
-    "coverage_radius": "Raggio Copertura"
+    "coverage_radius": "Raggio Copertura",
+    "buttons": {
+      "create": "➕ Crear Departamento",
+      "list": "📋 Lista de Departamentos",
+      "statistics": "📊 Estadísticas",
+      "export": "📤 Exportar",
+      "retry": "🔄 Reintentar",
+      "cancel": "❌ Cancelar",
+      "save": "💾 Guardar",
+      "save_changes": "💾 Guardar Cambios",
+      "update": "Actualizar",
+      "edit": "✏️ Editar",
+      "view": "👁️ Ver",
+      "close": "✖️ Cerrar",
+      "delete": "🗑️ Eliminar"
+    },
+    "messages": {
+      "error_unknown": "Error desconocido",
+      "error_loading": "Error al cargar departamentos",
+      "error_creating": "Error al crear departamento",
+      "error_updating": "Error al actualizar departamento",
+      "error_deleting": "Error al eliminar departamento",
+      "success_created": "Departamento creado exitosamente",
+      "success_updated": "Departamento actualizado exitosamente",
+      "success_deleted": "Departamento eliminado exitosamente",
+      "not_found": "Departamento no encontrado",
+      "geolocation_not_supported": "Geolocalización no soportada en este navegador",
+      "obtaining_location": "Obteniendo ubicación...",
+      "location_obtained": "Ubicación obtenida correctamente",
+      "error_obtaining_location": "Error al obtener ubicación"
+    },
+    "list": {
+      "title": "📋 Lista de Departamentos",
+      "loading": "🔄 Cargando departamentos...",
+      "load_prompt": "Presiona \"Lista de Departamentos\" para cargar...",
+      "empty_title": "📂 No hay departamentos",
+      "empty_message": "No se encontraron departamentos. Crea el primero."
+    },
+    "stats": {
+      "total_departments": "Departamentos Totales",
+      "gps_configured": "Con GPS Configurado",
+      "avg_radius": "Radio Promedio (m)"
+    },
+    "table": {
+      "name": "Nombre",
+      "description": "Descripción",
+      "address": "Dirección",
+      "gps": "GPS",
+      "radius": "Radio",
+      "created": "Creado",
+      "actions": "Acciones",
+      "no_description": "Sin descripción",
+      "no_address": "Sin dirección",
+      "gps_configured": "Configurado",
+      "gps_not_configured": "No configurado",
+      "action_view": "Ver",
+      "action_edit": "Editar",
+      "action_delete": "Eliminar",
+      "legend_title": "Leyenda",
+      "legend_gps_configured": "GPS configurado",
+      "legend_gps_not_configured": "GPS no configurado",
+      "legend_radius": "Radio de cobertura"
+    },
+    "form": {
+      "modal_title_create": "Crear Nuevo Departamento",
+      "modal_title_edit": "Editar Departamento",
+      "branch_label": "Sucursal",
+      "branch_select": "Seleccione una sucursal...",
+      "branch_help": "Seleccione la sucursal a la que pertenece este departamento",
+      "name_label": "Nombre del Departamento",
+      "name_placeholder": "Ej: Recursos Humanos",
+      "description_label": "Descripción",
+      "description_placeholder": "Descripción del departamento...",
+      "address_label": "Dirección",
+      "address_placeholder": "Dirección física del departamento...",
+      "allow_gps_label": "Permitir asistencia por GPS",
+      "allow_gps_help": "Los empleados podrán registrar asistencia desde esta ubicación",
+      "gps_location_label": "Ubicación GPS",
+      "gps_location_help": "Define la ubicación del departamento para control de asistencia por GPS",
+      "map_loading": "Cargando mapa...",
+      "latitude_label": "Latitud",
+      "longitude_label": "Longitud",
+      "radius_label": "Radio (metros)",
+      "map_tip": "Haz clic en el mapa para establecer la ubicación",
+      "kiosks_label": "Kiosks Autorizados",
+      "kiosks_help": "Selecciona los kiosks donde se permite registrar asistencia",
+      "kiosks_loading": "Cargando kiosks...",
+      "mixed_mode_info": "Puedes habilitar GPS y kiosks simultáneamente",
+      "all_kiosks": "Todos los kiosks",
+      "no_kiosks_available": "No hay kiosks disponibles"
+    },
+    "validation": {
+      "branch_required": "Debe seleccionar una sucursal. La empresa tiene múltiples sucursales.",
+      "name_required": "El nombre del departamento es requerido",
+      "name_min_length": "El nombre debe tener al menos 3 caracteres",
+      "at_least_one_option": "Debe seleccionar al menos un kiosk o habilitar GPS",
+      "gps_coordinates_required": "Debe establecer las coordenadas GPS",
+      "radius_range": "El radio debe estar entre 10 y 1000 metros"
+    },
+    "view": {
+      "no_description": "Sin descripción",
+      "no_address": "Sin dirección",
+      "gps_not_configured": "GPS no configurado",
+      "description": "Descripción",
+      "address": "Dirección",
+      "gps": "Ubicación GPS",
+      "radius": "Radio de cobertura",
+      "created": "Fecha de creación",
+      "updated": "Última actualización",
+      "map_title": "Mapa de ubicación",
+      "coordinates": "Coordenadas",
+      "view_in_maps": "Ver en Google Maps"
+    }
   },
   "shifts": {
     "title": "Sistema Avanzato di Turni Flessibili",
@@ -1788,6 +1900,38 @@
       "export": "Esporta condizioni",
       "import": "Importa condizioni",
       "statistics": "Statistiche conformità"
+    },
+    "branches": {
+      "title": "Sucursales",
+      "description": "Ubicaciones de trabajo"
+    },
+    "reports": {
+      "title": "Reportes",
+      "description": "Informes y estadísticas"
+    },
+    "permissions": {
+      "title": "Permisos y Licencias",
+      "description": "Gestión de ausencias"
+    },
+    "documents": {
+      "title": "Gestión de Documentos",
+      "description": "Archivos y expedientes"
+    },
+    "legal": {
+      "title": "Dashboard Legal",
+      "description": "Cumplimiento normativo"
+    },
+    "payroll": {
+      "title": "Liquidación de Sueldos",
+      "description": "Nómina y pagos"
+    },
+    "art": {
+      "title": "Configuración ART",
+      "description": "Aseguradoras de riesgo"
+    },
+    "employee_map": {
+      "title": "Mapa Empleados",
+      "description": "Ubicación en tiempo real"
     }
   },
   "dashboard": {
@@ -1828,6 +1972,75 @@
     },
     "export": {
       "in_development": "Funzione di esportazione in sviluppo"
+    }
+  },
+  "index": {
+    "saas_b2b": "SaaS B2B",
+    "inteligencia_artificial": "Intelligenza Artificiale",
+    "liquidacion": "Busta Paga",
+    "biometria": "Biometria",
+    "modulos": "Moduli",
+    "tecnologia": "Tecnologia",
+    "acceso_clientes": "Accesso Clienti",
+    "acceso_staff": "Accesso Staff",
+    "acceso_asociados": "Accesso Partner",
+    "saas_b2b_multitenant": "SaaS B2B Multi-Tenant",
+    "cloud_native": "Cloud Native",
+    "multitenant": "Multi-Tenant",
+    "pago_por_uso": "Pagamento a consumo",
+    "6_idiomas": "6 Lingue",
+    "que_es_saas_b2b": "Cos'è SaaS B2B?",
+    "sistema_plug_play": "Sistema Plug & Play",
+    "conexion_instantanea": "Connessione Istantanea",
+    "compatibilidad_total": "Compatibilità Totale",
+    "autoconfiguracion": "Auto-Configurazione",
+    "escalabilidad_dinamica": "Scalabilità Dinamica",
+    "analisis_predictivo_y_scoring_deterministico": "Analisi predittiva e punteggio deterministico",
+    "scoring_deterministico": "Punteggio Deterministico",
+    "deteccion_de_15_patrones": "Rilevamento di 15+ Pattern",
+    "regresion_lineal_predictiva": "Regressione Lineare Predittiva",
+    "asistente_ia_local_ollama": "Assistente IA Locale (Ollama)",
+    "notificaciones_proactivas_y_autoescalamiento": "Notifiche Proattive e Auto-scaling",
+    "reglas_proactivas": "Regole Proattive",
+    "workflows_configurables": "Flussi di Lavoro Configurabili",
+    "auditoria_inmutable": "Audit Immutabile",
+    "resolucion_con_ia": "Risoluzione con IA",
+    "maria_gonzalez": "Maria Gonzalez",
+    "7_fuentes_de_datos_consolidadas": "7 Fonti di Dati Consolidate",
+    "reconocimiento_facial_de_nivel_empresarial": "Riconoscimento facciale di livello aziendale",
+    "reconocimiento_facial": "Riconoscimento Facciale",
+    "validacion_gps": "Validazione GPS",
+    "apk_kiosk": "APK Kiosk",
+    "sistema_de_mapeo_facial_avanzado": "Sistema di Mappatura Facciale Avanzato",
+    "hardware_compatible_de_alto_rendimiento": "Hardware Compatibile ad Alte Prestazioni",
+    "gestion_inteligente_de_kioscos": "Gestione Intelligente dei Chioschi",
+    "patrones_detectados_por_ia": "Pattern rilevati dall'IA",
+    "22_modulos_integrados": "22+ moduli integrati",
+    "tecnologias_enterprise_de_clase_mundial": "Tecnologie aziendali di classe mondiale",
+    "comienza_a_optimizar_tu_gestion_de_personal": "Inizia a ottimizzare la tua gestione del personale",
+    "contactanos": "Contattaci",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
+    "envia_tu_consulta": "Invia la tua richiesta",
+    "producto": "Prodotto",
+    "accesos": "Accessi",
+    "soporte": "Supporto",
+    "contacto": "Contatto",
+    "acceder_como_cliente": "Accedi come Cliente",
+    "acceso_staff_aponnt": "Accesso Staff Aponnt",
+    "registrarme_como_asociado": "Registrati come Partner",
+    "nombre_completo_": "Nome completo *",
+    "email_": "Email *",
+    "telefono_whatsapp": "Telefono / WhatsApp",
+    "empresa": "Azienda",
+    "asunto_": "Oggetto *",
+    "mensaje_": "Messaggio *",
+    "placeholder": {
+      "tu_nombre": "Il tuo nome",
+      "tuemailcom": "tua@email.com",
+      "54_9_xxx_xxx_xxxx": "+39 XXX XXX XXXX",
+      "nombre_de_tu_empresa": "Nome della tua azienda",
+      "cuentanos_en_que_podemos_ayudarte": "Raccontaci come possiamo aiutarti..."
     }
   }
 }

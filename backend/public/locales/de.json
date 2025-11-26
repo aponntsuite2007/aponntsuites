@@ -215,7 +215,8 @@
       "edit": "✏️ Edit",
       "view": "👁️ View",
       "delete": "🗑️ Delete",
-      "view_on_maps": "🗺️ View on Google Maps"
+      "view_on_maps": "🗺️ View on Google Maps",
+      "update": "Actualizar"
     },
     "list": {
       "title": "📋 Department List",
@@ -241,7 +242,14 @@
       "no_description": "No description",
       "no_address": "No address",
       "gps_configured": "✅ {{lat}}, {{lng}}",
-      "gps_not_configured": "❌ Not configured"
+      "gps_not_configured": "❌ Not configured",
+      "action_view": "Ver",
+      "action_edit": "Editar",
+      "action_delete": "Eliminar",
+      "legend_title": "Leyenda",
+      "legend_gps_configured": "GPS configurado",
+      "legend_gps_not_configured": "GPS no configurado",
+      "legend_radius": "Radio de cobertura"
     },
     "stats": {
       "total_departments": "Total Departments",
@@ -288,7 +296,31 @@
         "none_available": "No kiosks available",
         "all_kiosks": "✅ All kiosks",
         "mixed_mode": "ℹ️ <strong>Mixed Mode:</strong> You can enable GPS + Kiosks. Employees can use any enabled option."
-      }
+      },
+      "branch_label": "Sucursal",
+      "branch_select": "Seleccione una sucursal...",
+      "branch_help": "Seleccione la sucursal a la que pertenece este departamento",
+      "name_label": "Nombre del Departamento",
+      "name_placeholder": "Ej: Recursos Humanos",
+      "description_label": "Descripción",
+      "description_placeholder": "Descripción del departamento...",
+      "address_label": "Dirección",
+      "address_placeholder": "Dirección física del departamento...",
+      "allow_gps_label": "Permitir asistencia por GPS",
+      "allow_gps_help": "Los empleados podrán registrar asistencia desde esta ubicación",
+      "gps_location_label": "Ubicación GPS",
+      "gps_location_help": "Define la ubicación del departamento para control de asistencia por GPS",
+      "map_loading": "Cargando mapa...",
+      "latitude_label": "Latitud",
+      "longitude_label": "Longitud",
+      "radius_label": "Radio (metros)",
+      "map_tip": "Haz clic en el mapa para establecer la ubicación",
+      "kiosks_label": "Kiosks Autorizados",
+      "kiosks_help": "Selecciona los kiosks donde se permite registrar asistencia",
+      "kiosks_loading": "Cargando kiosks...",
+      "mixed_mode_info": "Puedes habilitar GPS y kiosks simultáneamente",
+      "all_kiosks": "Todos los kiosks",
+      "no_kiosks_available": "No hay kiosks disponibles"
     },
     "view": {
       "description": "📝 Description:",
@@ -303,7 +335,9 @@
       "no_address": "No address",
       "map_section_title": "🗺️ Map Location",
       "coordinates": "📍 Coordinates: {{lat}}, {{lng}}",
-      "radius_meters": "{{radius}} meters"
+      "radius_meters": "{{radius}} meters",
+      "map_title": "Mapa de ubicación",
+      "view_in_maps": "Ver en Google Maps"
     },
     "messages": {
       "loading": "🔄 Loading departments...",
@@ -316,7 +350,13 @@
       "error_creating": "❌ Error creating department: {{message}}",
       "error_updating": "❌ Error updating department: {{message}}",
       "error_deleting": "❌ Error deleting department: {{message}}",
-      "error_exporting": "❌ No departments to export"
+      "error_exporting": "❌ No departments to export",
+      "error_unknown": "Error desconocido",
+      "not_found": "Departamento no encontrado",
+      "geolocation_not_supported": "Geolocalización no soportada en este navegador",
+      "obtaining_location": "Obteniendo ubicación...",
+      "location_obtained": "Ubicación obtenida correctamente",
+      "error_obtaining_location": "Error al obtener ubicación"
     },
     "validation": {
       "branch_required": "❌ You must select a branch. The company has multiple branches.",
@@ -326,13 +366,19 @@
       "gps_coordinates_required": "❌ If you allow GPS, you must enter the department location coordinates.\nUse the map or enter coordinates manually.",
       "gps_radius_required": "❌ If you allow GPS, coverage radius must be between 10 and 1000 meters",
       "gps_coordinates_invalid": "❌ If GPS check-in is enabled, you must provide valid coordinates.",
-      "radius_invalid": "❌ Coverage radius must be between 10 and 1000 meters"
+      "radius_invalid": "❌ Coverage radius must be between 10 and 1000 meters",
+      "at_least_one_option": "Debe seleccionar al menos un kiosk o habilitar GPS",
+      "radius_range": "El radio debe estar entre 10 y 1000 metros"
     },
     "confirm": {
       "delete_title": "❓ Are you sure you want to delete the department \"{{name}}\"?",
       "delete_warning": "⚠️ WARNING: This action cannot be undone.",
       "delete_consequence": "Users assigned to this department will be left without a department."
-    }
+    },
+    "add_department": "➕ Agregar Departamento",
+    "department_list": "📋 Lista de Departamentos",
+    "gps_location": "Ubicación GPS",
+    "coverage_radius": "Radio de Cobertura"
   },
   "shifts": {
     "title": "Advanced Flexible Shift System",
@@ -1332,7 +1378,7 @@
       "description": "Manage employees"
     },
     "attendance": {
-      "title": "Attendance Control", 
+      "title": "Attendance Control",
       "description": "Clock in and out"
     },
     "departments": {
@@ -1673,6 +1719,75 @@
     "employee_map": {
       "title": "Employee Map",
       "description": "Real-time location"
+    }
+  },
+  "index": {
+    "saas_b2b": "SaaS B2B",
+    "inteligencia_artificial": "Künstliche Intelligenz",
+    "liquidacion": "Gehaltsabrechnung",
+    "biometria": "Biometrie",
+    "modulos": "Module",
+    "tecnologia": "Technologie",
+    "acceso_clientes": "Kundenzugang",
+    "acceso_staff": "Mitarbeiterzugang",
+    "acceso_asociados": "Partnerzugang",
+    "saas_b2b_multitenant": "SaaS B2B Multi-Tenant",
+    "cloud_native": "Cloud Native",
+    "multitenant": "Multi-Tenant",
+    "pago_por_uso": "Nutzungsbasierte Bezahlung",
+    "6_idiomas": "6 Sprachen",
+    "que_es_saas_b2b": "Was ist SaaS B2B?",
+    "sistema_plug_play": "Plug & Play System",
+    "conexion_instantanea": "Sofortige Verbindung",
+    "compatibilidad_total": "Vollständige Kompatibilität",
+    "autoconfiguracion": "Automatische Konfiguration",
+    "escalabilidad_dinamica": "Dynamische Skalierbarkeit",
+    "analisis_predictivo_y_scoring_deterministico": "Prädiktive Analyse und deterministische Bewertung",
+    "scoring_deterministico": "Deterministische Bewertung",
+    "deteccion_de_15_patrones": "Erkennung von 15+ Mustern",
+    "regresion_lineal_predictiva": "Prädiktive lineare Regression",
+    "asistente_ia_local_ollama": "Lokaler KI-Assistent (Ollama)",
+    "notificaciones_proactivas_y_autoescalamiento": "Proaktive Benachrichtigungen und Auto-Skalierung",
+    "reglas_proactivas": "Proaktive Regeln",
+    "workflows_configurables": "Konfigurierbare Workflows",
+    "auditoria_inmutable": "Unveränderliches Audit",
+    "resolucion_con_ia": "KI-gestützte Lösung",
+    "maria_gonzalez": "Maria Gonzalez",
+    "7_fuentes_de_datos_consolidadas": "7 Konsolidierte Datenquellen",
+    "reconocimiento_facial_de_nivel_empresarial": "Gesichtserkennung auf Unternehmensniveau",
+    "reconocimiento_facial": "Gesichtserkennung",
+    "validacion_gps": "GPS-Validierung",
+    "apk_kiosk": "APK Kiosk",
+    "sistema_de_mapeo_facial_avanzado": "Fortschrittliches Gesichtskartierungssystem",
+    "hardware_compatible_de_alto_rendimiento": "Hochleistungs-kompatible Hardware",
+    "gestion_inteligente_de_kioscos": "Intelligentes Kiosk-Management",
+    "patrones_detectados_por_ia": "KI-erkannte Muster",
+    "22_modulos_integrados": "22+ integrierte Module",
+    "tecnologias_enterprise_de_clase_mundial": "Weltklasse-Unternehmenstechnologien",
+    "comienza_a_optimizar_tu_gestion_de_personal": "Beginnen Sie, Ihre Personalverwaltung zu optimieren",
+    "contactanos": "Kontaktieren Sie uns",
+    "email": "E-Mail",
+    "whatsapp": "WhatsApp",
+    "envia_tu_consulta": "Senden Sie Ihre Anfrage",
+    "producto": "Produkt",
+    "accesos": "Zugriffe",
+    "soporte": "Support",
+    "contacto": "Kontakt",
+    "acceder_como_cliente": "Als Kunde zugreifen",
+    "acceso_staff_aponnt": "Aponnt Mitarbeiterzugang",
+    "registrarme_como_asociado": "Als Partner registrieren",
+    "nombre_completo_": "Vollständiger Name *",
+    "email_": "E-Mail *",
+    "telefono_whatsapp": "Telefon / WhatsApp",
+    "empresa": "Unternehmen",
+    "asunto_": "Betreff *",
+    "mensaje_": "Nachricht *",
+    "placeholder": {
+      "tu_nombre": "Ihr Name",
+      "tuemailcom": "ihre@email.com",
+      "54_9_xxx_xxx_xxxx": "+49 XXX XXX XXXX",
+      "nombre_de_tu_empresa": "Name Ihres Unternehmens",
+      "cuentanos_en_que_podemos_ayudarte": "Erzählen Sie uns, wie wir Ihnen helfen können..."
     }
   }
 }
