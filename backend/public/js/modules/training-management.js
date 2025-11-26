@@ -6412,6 +6412,15 @@ window.trainingManagement = {
     triggerSanctionForTrainingFailure
 };
 
+// Registro en window.Modules para sistema moderno
+window.Modules = window.Modules || {};
+window.Modules['training-management'] = {
+    init: showTrainingManagementContent
+};
+
+// Mantener compatibilidad legacy
+window.showTrainingManagementContent = showTrainingManagementContent;
+
 // Inicializar datos de demostración
 initializeIndependentEvaluationsDemo();
 

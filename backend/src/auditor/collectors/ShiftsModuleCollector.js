@@ -25,8 +25,8 @@ const BaseModuleCollector = require('./BaseModuleCollector');
 const { Pool } = require('pg');
 
 class ShiftsModuleCollector extends BaseModuleCollector {
-    constructor(database, systemRegistry) {
-        super(database, systemRegistry);
+    constructor(database, systemRegistry, baseURL = null) {
+        super(database, systemRegistry, baseURL);  // ⚡ Pasar baseURL al padre
 
         this.TEST_PREFIX = '[SHIFT-TEST]';
         this.testData = {

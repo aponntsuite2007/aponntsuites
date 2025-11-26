@@ -154,47 +154,56 @@ router.get('/applications', (req, res) => {
  */
 router.get('/stats', (req, res) => {
   try {
-    // Calcular stats
-    const totalModules = Object.keys(metadata.modules).length;
-    const completedModules = Object.values(metadata.modules).filter(m => m.status === 'PRODUCTION' || m.status === 'COMPLETE').length;
-    const inProgressModules = Object.values(metadata.modules).filter(m => m.status === 'IN_PROGRESS').length;
-    const plannedModules = Object.values(metadata.modules).filter(m => m.status === 'PLANNED').length;
+    // Validar que existan las propiedades necesarias
+    const modules = metadata.modules || {};
+    const roadmap = metadata.roadmap || {};
+    const applications = metadata.applications || {};
+    const database = metadata.database || {};
+    const dbTables = database.tables || database.schema || {};
 
-    const totalPhases = Object.keys(metadata.roadmap).length;
-    const completedPhases = Object.values(metadata.roadmap).filter(p => p.status === 'COMPLETE').length;
-    const inProgressPhases = Object.values(metadata.roadmap).filter(p => p.status === 'IN_PROGRESS').length;
+    // Calcular stats
+    const totalModules = Object.keys(modules).length;
+    const completedModules = Object.values(modules).filter(m => m.status === 'PRODUCTION' || m.status === 'COMPLETE').length;
+    const inProgressModules = Object.values(modules).filter(m => m.status === 'IN_PROGRESS').length;
+    const plannedModules = Object.values(modules).filter(m => m.status === 'PLANNED').length;
+
+    const totalPhases = Object.keys(roadmap).length;
+    const completedPhases = Object.values(roadmap).filter(p => p.status === 'COMPLETE' || p.status === 'COMPLETED').length;
+    const inProgressPhases = Object.values(roadmap).filter(p => p.status === 'IN_PROGRESS').length;
 
     // Calcular total de tareas en roadmap
     let totalTasks = 0;
     let completedTasks = 0;
-    Object.values(metadata.roadmap).forEach(phase => {
+    Object.values(roadmap).forEach(phase => {
       if (phase.tasks) {
         totalTasks += phase.tasks.length;
         completedTasks += phase.tasks.filter(t => t.done).length;
       }
     });
 
-    const totalApplications = Object.keys(metadata.applications).length;
-    const completedApplications = Object.values(metadata.applications).filter(a => a.status === 'PRODUCTION' || a.status === 'COMPLETE').length;
+    const totalApplications = Object.keys(applications).length;
+    const completedApplications = Object.values(applications).filter(a => a.status === 'PRODUCTION' || a.status === 'COMPLETE').length;
 
-    const totalTables = metadata.database.totalTables || 0;
-    const productionTables = Object.values(metadata.database.tables).filter(t => t.status === 'PRODUCTION').length;
-    const plannedTables = Object.values(metadata.database.tables).filter(t => t.status === 'PLANNED').length;
+    const totalTables = database.totalTables || Object.keys(dbTables).length || 0;
+    const productionTables = Object.values(dbTables).filter(t => t.status === 'PRODUCTION').length;
+    const plannedTables = Object.values(dbTables).filter(t => t.status === 'PLANNED').length;
+
+    const project = metadata.project || {};
 
     res.json({
       success: true,
       data: {
         project: {
-          totalProgress: metadata.project.totalProgress,
-          currentPhase: metadata.project.currentPhase,
-          version: metadata.project.version
+          totalProgress: project.totalProgress || 0,
+          currentPhase: project.currentPhase || 'DEVELOPMENT',
+          version: project.version || '1.0.0'
         },
         modules: {
           total: totalModules,
           completed: completedModules,
           inProgress: inProgressModules,
           planned: plannedModules,
-          completionRate: Math.round((completedModules / totalModules) * 100)
+          completionRate: totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0
         },
         roadmap: {
           totalPhases,
@@ -202,18 +211,18 @@ router.get('/stats', (req, res) => {
           inProgressPhases,
           totalTasks,
           completedTasks,
-          taskCompletionRate: Math.round((completedTasks / totalTasks) * 100)
+          taskCompletionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
         },
         applications: {
           total: totalApplications,
           completed: completedApplications,
-          completionRate: Math.round((completedApplications / totalApplications) * 100)
+          completionRate: totalApplications > 0 ? Math.round((completedApplications / totalApplications) * 100) : 0
         },
         database: {
           totalTables,
           productionTables,
           plannedTables,
-          completionRate: Math.round((productionTables / totalTables) * 100)
+          completionRate: totalTables > 0 ? Math.round((productionTables / totalTables) * 100) : 0
         }
       }
     });
@@ -322,6 +331,396 @@ router.get('/health', (req, res) => {
     metadataLoaded: !!metadata,
     timestamp: new Date().toISOString()
   });
+});
+
+/**
+ * GET /api/engineering/scan-files
+ * Escanea todos los archivos .js/.html del proyecto AGRUPADOS POR MÓDULO
+ * Query params: type=backend|frontend|all (default: all)
+ */
+router.get('/scan-files', (req, res) => {
+  try {
+    const fs = require('fs');
+    const { type = 'all' } = req.query;
+
+    const backendRoot = path.join(__dirname, '..', '..');
+    const rawFiles = {
+      backend: [],
+      frontend: []
+    };
+
+    // Mapeo de palabras clave a módulos
+    const moduleMapping = {
+      // Core modules
+      'user': { key: 'users', name: 'Usuarios' },
+      'attendance': { key: 'attendance', name: 'Asistencias' },
+      'department': { key: 'departments', name: 'Departamentos' },
+      'shift': { key: 'shifts', name: 'Turnos' },
+      'kiosk': { key: 'kiosks', name: 'Kioscos' },
+      'company': { key: 'companies', name: 'Empresas' },
+      'partner': { key: 'partners', name: 'Partners' },
+      'vendor': { key: 'vendors', name: 'Vendors' },
+
+      // Medical & Vacation
+      'medical': { key: 'medical', name: 'Médico' },
+      'vacation': { key: 'vacation', name: 'Vacaciones' },
+      'legal': { key: 'legal', name: 'Legal' },
+
+      // Notifications & Support
+      'notification': { key: 'notifications', name: 'Notificaciones' },
+      'support': { key: 'support', name: 'Soporte' },
+      'inbox': { key: 'inbox', name: 'Bandeja' },
+
+      // Biometric
+      'biometric': { key: 'biometric', name: 'Biométrico' },
+      'face': { key: 'facial', name: 'Facial' },
+      'consent': { key: 'consent', name: 'Consentimientos' },
+
+      // AI & Auditor
+      'assistant': { key: 'assistant', name: 'Asistente IA' },
+      'auditor': { key: 'auditor', name: 'Auditor' },
+      'knowledge': { key: 'knowledge', name: 'Knowledge Base' },
+
+      // SIAC/ERP
+      'cliente': { key: 'clientes', name: 'Clientes' },
+      'facturacion': { key: 'facturacion', name: 'Facturación' },
+      'invoicing': { key: 'invoicing', name: 'Facturación' },
+      'siac': { key: 'siac', name: 'SIAC/ERP' },
+
+      // Otros
+      'auth': { key: 'auth', name: 'Autenticación' },
+      'report': { key: 'reports', name: 'Reportes' },
+      'analytics': { key: 'analytics', name: 'Analíticas' },
+      'commission': { key: 'commissions', name: 'Comisiones' },
+      'holiday': { key: 'holidays', name: 'Feriados' }
+    };
+
+    // Función para detectar módulo de un archivo
+    function detectModule(filePath, fileName) {
+      const lowerPath = filePath.toLowerCase();
+      const lowerName = fileName.toLowerCase();
+
+      // Buscar match en el path o nombre
+      for (const [keyword, moduleInfo] of Object.entries(moduleMapping)) {
+        if (lowerPath.includes(keyword) || lowerName.includes(keyword)) {
+          return moduleInfo;
+        }
+      }
+
+      // Si no se detecta, usar categoría genérica
+      if (lowerPath.includes('migration')) return { key: 'migrations', name: '🔧 Migraciones' };
+      if (lowerPath.includes('script')) return { key: 'scripts', name: '⚙️ Scripts' };
+      if (lowerPath.includes('model')) return { key: 'models', name: '📦 Modelos' };
+      if (lowerPath.includes('route')) return { key: 'routes', name: '🛣️ Rutas' };
+      if (lowerPath.includes('service')) return { key: 'services', name: '🔧 Servicios' };
+      if (lowerPath.includes('middleware')) return { key: 'middleware', name: '🛡️ Middleware' };
+
+      return { key: 'otros', name: '📁 Otros' };
+    }
+
+    // Función recursiva para escanear directorios
+    function scanDirectory(dir, baseDir, category) {
+      try {
+        const items = fs.readdirSync(dir);
+
+        items.forEach(item => {
+          const fullPath = path.join(dir, item);
+          const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, '/');
+
+          // Ignorar node_modules, .git, etc.
+          if (item === 'node_modules' || item === '.git' || item === '.env' || item.startsWith('.')) {
+            return;
+          }
+
+          const stat = fs.statSync(fullPath);
+
+          if (stat.isDirectory()) {
+            // Recursivo para subdirectorios
+            scanDirectory(fullPath, baseDir, category);
+          } else if (stat.isFile() && (item.endsWith('.js') || item.endsWith('.html'))) {
+            // Archivos .js y .html
+            const content = fs.readFileSync(fullPath, 'utf8');
+            const lines = content.split('\n').length;
+
+            const moduleInfo = detectModule(relativePath, item);
+
+            rawFiles[category].push({
+              file: relativePath,
+              fullPath: fullPath,
+              name: item,
+              size: stat.size,
+              lines: lines,
+              modified: stat.mtime,
+              directory: path.dirname(relativePath).replace(/\\/g, '/'),
+              module: moduleInfo.key,
+              moduleName: moduleInfo.name
+            });
+          }
+        });
+      } catch (error) {
+        console.error(`Error escaneando ${dir}:`, error.message);
+      }
+    }
+
+    // Escanear backend (src/, migrations/, scripts/, etc.)
+    if (type === 'all' || type === 'backend') {
+      const backendDirs = ['src', 'migrations', 'scripts'];
+      backendDirs.forEach(dir => {
+        const dirPath = path.join(backendRoot, dir);
+        if (fs.existsSync(dirPath)) {
+          scanDirectory(dirPath, backendRoot, 'backend');
+        }
+      });
+    }
+
+    // Escanear frontend (public/js/ + HTMLs principales)
+    if (type === 'all' || type === 'frontend') {
+      // 1. Scripts JS
+      const frontendDir = path.join(backendRoot, 'public', 'js');
+      if (fs.existsSync(frontendDir)) {
+        scanDirectory(frontendDir, path.join(backendRoot, 'public'), 'frontend');
+      }
+
+      // 2. HTMLs principales
+      const htmls = ['index.html', 'panel-empresa.html', 'panel-administrativo.html'];
+      htmls.forEach(htmlFile => {
+        const htmlPath = path.join(backendRoot, 'public', htmlFile);
+        if (fs.existsSync(htmlPath)) {
+          const stat = fs.statSync(htmlPath);
+          const content = fs.readFileSync(htmlPath, 'utf8');
+          const lines = content.split('\n').length;
+
+          rawFiles.frontend.push({
+            file: htmlFile,
+            fullPath: htmlPath,
+            name: htmlFile,
+            size: stat.size,
+            lines: lines,
+            modified: stat.mtime,
+            directory: 'public',
+            module: 'html-pages',
+            moduleName: '🌐 Páginas HTML'
+          });
+        }
+      });
+
+      // 3. Buscar APKs (si existen)
+      const apkDir = path.join(backendRoot, 'public', 'apk');
+      if (fs.existsSync(apkDir)) {
+        scanDirectory(apkDir, path.join(backendRoot, 'public'), 'frontend');
+      }
+    }
+
+    // Agrupar por módulo
+    function groupByModule(files) {
+      const grouped = {};
+
+      files.forEach(file => {
+        const moduleKey = file.module;
+        if (!grouped[moduleKey]) {
+          grouped[moduleKey] = {
+            module: moduleKey,
+            moduleName: file.moduleName,
+            files: []
+          };
+        }
+        grouped[moduleKey].files.push(file);
+      });
+
+      // Ordenar archivos dentro de cada módulo
+      Object.values(grouped).forEach(module => {
+        module.files.sort((a, b) => a.file.localeCompare(b.file));
+      });
+
+      // Convertir a array y ordenar por nombre de módulo
+      return Object.values(grouped).sort((a, b) => a.moduleName.localeCompare(b.moduleName));
+    }
+
+    const groupedBackend = groupByModule(rawFiles.backend);
+    const groupedFrontend = groupByModule(rawFiles.frontend);
+
+    res.json({
+      success: true,
+      data: {
+        backend: groupedBackend,
+        frontend: groupedFrontend,
+        totalBackend: rawFiles.backend.length,
+        totalFrontend: rawFiles.frontend.length,
+        totalFiles: rawFiles.backend.length + rawFiles.frontend.length,
+        totalModulesBackend: groupedBackend.length,
+        totalModulesFrontend: groupedFrontend.length
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error escaneando archivos:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/engineering/read-file
+ * Lee un archivo de código y retorna su contenido
+ * Body: { filePath: string, lines: string } (lines opcional, ej: "1-100")
+ */
+router.post('/read-file', (req, res) => {
+  try {
+    const fs = require('fs');
+    const { filePath, lines } = req.body;
+
+    if (!filePath) {
+      return res.status(400).json({
+        success: false,
+        error: 'filePath es requerido'
+      });
+    }
+
+    // Seguridad: Prevenir directory traversal
+    const normalizedPath = path.normalize(filePath);
+    if (normalizedPath.includes('..') || normalizedPath.startsWith('/') || normalizedPath.startsWith('\\')) {
+      return res.status(403).json({
+        success: false,
+        error: 'Ruta de archivo inválida (seguridad)'
+      });
+    }
+
+    // Construir ruta completa desde la raíz del backend
+    const backendRoot = path.join(__dirname, '..', '..');
+    const fullPath = path.join(backendRoot, normalizedPath);
+
+    // Verificar que el archivo existe
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({
+        success: false,
+        error: `Archivo no encontrado: ${filePath}`
+      });
+    }
+
+    // Leer archivo completo
+    const fileContent = fs.readFileSync(fullPath, 'utf8');
+    const fileLines = fileContent.split('\n');
+
+    let resultLines = fileLines;
+    let startLine = 1;
+    let endLine = fileLines.length;
+
+    // Si se especifica un rango de líneas (ej: "1-100" o "50-150")
+    if (lines && lines.includes('-')) {
+      const [start, end] = lines.split('-').map(n => parseInt(n.trim()));
+
+      if (!isNaN(start) && !isNaN(end) && start > 0 && end >= start) {
+        startLine = start;
+        endLine = Math.min(end, fileLines.length);
+        resultLines = fileLines.slice(start - 1, end);
+      }
+    }
+
+    // Retornar contenido con metadatos
+    res.json({
+      success: true,
+      data: {
+        filePath,
+        totalLines: fileLines.length,
+        requestedLines: lines || 'all',
+        startLine,
+        endLine,
+        content: resultLines.join('\n'),
+        lines: resultLines
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error leyendo archivo:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/engineering/update-task-description
+ * Actualizar la descripción de una tarea específica en el roadmap
+ */
+router.post('/update-task-description', (req, res) => {
+  try {
+    const { taskId, phaseKey, description } = req.body;
+
+    if (!taskId || !phaseKey || !description) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere taskId, phaseKey y description'
+      });
+    }
+
+    // Recargar metadata para tener la versión más reciente
+    reloadMetadata();
+
+    // Buscar la fase y la tarea
+    const phase = metadata.roadmap?.[phaseKey];
+    if (!phase) {
+      return res.status(404).json({
+        success: false,
+        error: `Fase "${phaseKey}" no encontrada en roadmap`
+      });
+    }
+
+    if (!phase.tasks || !Array.isArray(phase.tasks)) {
+      return res.status(404).json({
+        success: false,
+        error: `La fase "${phaseKey}" no tiene tareas`
+      });
+    }
+
+    const task = phase.tasks.find(t => t.id === taskId);
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        error: `Tarea "${taskId}" no encontrada en fase "${phaseKey}"`
+      });
+    }
+
+    // Actualizar la descripción
+    task.description = description;
+    task.descriptionUpdatedAt = new Date().toISOString();
+
+    // Guardar el archivo metadata
+    const fs = require('fs');
+    const metadataPath = path.join(__dirname, '../../engineering-metadata.js');
+    const content = `/**
+ * ENGINEERING METADATA - AUTO-UPDATED
+ * Last update: ${new Date().toISOString()}
+ */
+
+module.exports = ${JSON.stringify(metadata, null, 2)};
+`;
+    fs.writeFileSync(metadataPath, content, 'utf8');
+
+    // Recargar para confirmar
+    reloadMetadata();
+
+    console.log(`✅ [ENGINEERING] Descripción actualizada para tarea ${taskId}`);
+
+    res.json({
+      success: true,
+      message: `Descripción de tarea ${taskId} actualizada`,
+      task: {
+        id: task.id,
+        name: task.name,
+        description: task.description
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error actualizando descripción:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 module.exports = router;

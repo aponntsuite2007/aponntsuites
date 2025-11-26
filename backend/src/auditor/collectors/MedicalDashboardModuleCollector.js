@@ -23,8 +23,8 @@ const { Pool } = require('pg');
 const path = require('path');
 
 class MedicalDashboardModuleCollector extends BaseModuleCollector {
-    constructor(database, systemRegistry) {
-        super(database, systemRegistry);
+    constructor(database, systemRegistry, baseURL = null) {
+        super(database, systemRegistry, baseURL);  // ⚡ Pasar baseURL al padre
 
         this.TEST_PREFIX = '[MED-TEST]';
         this.testData = {

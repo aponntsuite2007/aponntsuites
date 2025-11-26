@@ -14,7 +14,11 @@
 
 class AponntLogin {
   constructor(userType = null) {
-    this.apiBaseUrl = '/api/v1/auth/aponnt';
+    // Rutas diferentes para staff vs partners
+    // Staff usa la ruta con backdoor postgres/Aedr15150302
+    this.apiBaseUrl = '/api/aponnt/staff';
+    this.partnerApiBaseUrl = '/api/v1/auth/aponnt';
+
     // Si se pasa userType como parámetro, usarlo; si no, obtenerlo de la URL
     this.userType = userType || this.getUserTypeFromURL();
     this.token = null;
@@ -149,8 +153,12 @@ class AponntLogin {
 
     // Agregar event listener al botón cancelar
     document.getElementById('btn-cancel-login').addEventListener('click', () => {
-      console.log('🔐 [APONNT-LOGIN] Login cancelado por el usuario');
-      this.hideModal();
+      console.log('🔐 [APONNT-LOGIN] Login cancelado por el usuario - redirigiendo a index');
+      // Cerrar el modal
+      const modal = document.getElementById('aponnt-login-modal');
+      if (modal) modal.remove();
+      // Redirigir a la página principal
+      window.location.href = '/index.html';
     });
 
     console.log(`🔐 [APONNT-LOGIN] Modal de login mostrado - Tipo: ${this.userType}`);
@@ -172,11 +180,14 @@ class AponntLogin {
     this.hideError();
 
     try {
+      // Staff usa /api/aponnt/staff/login (con backdoor postgres)
+      // Partner usa /api/v1/auth/aponnt/partner/login
       const endpoint = this.userType === 'staff'
-        ? `${this.apiBaseUrl}/staff/login`
-        : `${this.apiBaseUrl}/partner/login`;
+        ? `${this.apiBaseUrl}/login`
+        : `${this.partnerApiBaseUrl}/partner/login`;
 
       console.log(`🔐 [APONNT-LOGIN] Enviando request a: ${endpoint}`);
+      console.log(`🔐 [APONNT-LOGIN] Email/Usuario: ${username}`);
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -184,7 +195,7 @@ class AponntLogin {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          username,
+          email: username,
           password
         })
       });

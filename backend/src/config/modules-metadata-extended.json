@@ -3228,7 +3228,7 @@
       "providesTo": [],
       "_db_synced_at": "2025-11-02T21:24:57.338Z"
     },
-    "notifications-complete": {
+    "notifications-enterprise": {
       "commercial": {
         "basePrice": 75,
         "isCore": false,
@@ -4084,6 +4084,90 @@
       ],
       "providesTo": [],
       "_db_synced_at": "2025-11-02T21:24:57.338Z"
+    },
+    "employee-360": {
+      "module_key": "employee-360",
+      "name": "Expediente 360°",
+      "name_alt": "Análisis Integral de Empleados con IA",
+      "icon": "🎯",
+      "color": "#9b59b6",
+      "category": "rrhh-premium",
+      "version": "1.0.0",
+      "frontend_file": "/js/modules/employee-360.js",
+      "init_function": "showEmployee360Content",
+      "changelog": [
+        {
+          "version": "1.0.0",
+          "date": "2025-01-25",
+          "author": "Claude Code",
+          "type": "feature",
+          "summary": "Implementación inicial completa del módulo Expediente 360°",
+          "changes": [
+            "Dashboard con selector de empleados",
+            "Scoring integral con 5 categorías (Asistencia, Puntualidad, Disciplina, Capacitación, Estabilidad)",
+            "Timeline unificado de todos los eventos del empleado",
+            "Análisis con IA usando Ollama + Llama 3.1",
+            "Comparación entre múltiples empleados (hasta 10)",
+            "Exportación PDF profesional",
+            "Tabs: Resumen, Asistencia, Disciplina, Capacitaciones, Médico, Timeline, Análisis IA",
+            "Sistema multi-tenant completo"
+          ],
+          "files_created": [
+            "src/services/Employee360Service.js",
+            "src/routes/employee360Routes.js",
+            "public/js/modules/employee-360.js"
+          ],
+          "files_modified": [
+            "server.js"
+          ]
+        }
+      ],
+      "description": {
+        "short": "Análisis integral de empleados con IA, scoring y timeline unificado",
+        "long": "Módulo premium que consolida TODA la información de un empleado en un solo lugar: asistencia, puntualidad, sanciones, vacaciones, capacitaciones, historial médico, auditoría de cambios. Incluye análisis con Inteligencia Artificial (Ollama + Llama 3.1), sistema de scoring ponderado, timeline cronológico de eventos, comparación entre empleados y exportación PDF profesional.",
+        "business_value": "Proporciona a gerentes de RRHH una visión 360° objetiva de cada empleado. Ideal para evaluaciones de desempeño, promociones, renovaciones de contrato y toma de decisiones basadas en datos.",
+        "use_cases": [
+          "Evaluación de desempeño anual → Score integral + análisis IA",
+          "Decisión de promoción → Comparar candidatos lado a lado",
+          "Renovación de contrato → Expediente completo con historial",
+          "Auditoría interna → Timeline de todos los eventos del empleado",
+          "Informe para gerencia → Exportación PDF profesional"
+        ]
+      },
+      "commercial": {
+        "basePrice": 150,
+        "isCore": false,
+        "isActive": true,
+        "isPremium": true,
+        "minEmployees": 10,
+        "maxEmployees": null,
+        "displayOrder": 15,
+        "rubro": "RRHH Premium",
+        "availableIn": "company"
+      },
+      "features": [
+        "Scoring integral de 5 categorías",
+        "Análisis con IA (Ollama + Llama 3.1)",
+        "Timeline unificado de eventos",
+        "Comparación entre empleados",
+        "Exportación PDF profesional",
+        "Multi-tenant completo"
+      ],
+      "requirements": [
+        "users",
+        "attendance"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "attendance",
+        "sanctions-management",
+        "vacation-management",
+        "training-management",
+        "medical-dashboard",
+        "user-audit-logs"
+      ],
+      "providesTo": [],
+      "_db_synced_at": "2025-01-25T00:00:00.000Z"
     }
   }
 }

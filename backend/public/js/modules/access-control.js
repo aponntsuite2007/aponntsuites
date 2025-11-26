@@ -396,4 +396,13 @@ window.validatePageAccess = validatePageAccess;
 window.showAccessDeniedPage = showAccessDeniedPage;
 window.showAccessControlPanel = showAccessControlPanel;
 
+// Alias para compatibilidad con sistema de módulos
+window.showAccessControlContent = showAccessControlPanel;
+
+// Registro en window.Modules para sistema moderno
+window.Modules = window.Modules || {};
+window.Modules['access-control'] = {
+    init: showAccessControlPanel
+};
+
 console.log('✅ [ACCESS-CONTROL] Módulo de control de acceso completamente cargado');

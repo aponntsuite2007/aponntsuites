@@ -242,6 +242,28 @@ module.exports = (sequelize) => {
       defaultValue: {},
       comment: 'User permissions in JSON format'
     },
+
+    // ROLES ADICIONALES v1.1 - Roles internos que NO son el puesto principal
+    // Ejemplos: bombero interno, capacitador, auditor, brigadista, etc.
+    additionalRoles: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+      field: 'additional_roles',
+      comment: 'Roles adicionales internos del empleado (bombero, capacitador, auditor, etc.)'
+      // Estructura esperada:
+      // [
+      //   {
+      //     roleKey: 'bombero_interno',
+      //     roleName: 'Bombero Interno',
+      //     assignedDate: '2024-01-15',
+      //     certificationExpiry: '2025-01-15',
+      //     certificationNumber: 'BOMB-2024-001',
+      //     isActive: true,
+      //     notes: 'Certificado por la ART'
+      //   }
+      // ]
+    },
     settings: {
       type: DataTypes.JSONB,
       allowNull: true,

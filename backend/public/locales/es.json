@@ -204,7 +204,119 @@
     "add_department": "➕ Agregar Departamento",
     "department_list": "📋 Lista de Departamentos",
     "gps_location": "Ubicación GPS",
-    "coverage_radius": "Radio de Cobertura"
+    "coverage_radius": "Radio de Cobertura",
+    "buttons": {
+      "create": "➕ Crear Departamento",
+      "list": "📋 Lista de Departamentos",
+      "statistics": "📊 Estadísticas",
+      "export": "📤 Exportar",
+      "retry": "🔄 Reintentar",
+      "cancel": "❌ Cancelar",
+      "save": "💾 Guardar",
+      "save_changes": "💾 Guardar Cambios",
+      "update": "Actualizar",
+      "edit": "✏️ Editar",
+      "view": "👁️ Ver",
+      "close": "✖️ Cerrar",
+      "delete": "🗑️ Eliminar"
+    },
+    "messages": {
+      "error_unknown": "Error desconocido",
+      "error_loading": "Error al cargar departamentos",
+      "error_creating": "Error al crear departamento",
+      "error_updating": "Error al actualizar departamento",
+      "error_deleting": "Error al eliminar departamento",
+      "success_created": "Departamento creado exitosamente",
+      "success_updated": "Departamento actualizado exitosamente",
+      "success_deleted": "Departamento eliminado exitosamente",
+      "not_found": "Departamento no encontrado",
+      "geolocation_not_supported": "Geolocalización no soportada en este navegador",
+      "obtaining_location": "Obteniendo ubicación...",
+      "location_obtained": "Ubicación obtenida correctamente",
+      "error_obtaining_location": "Error al obtener ubicación"
+    },
+    "list": {
+      "title": "📋 Lista de Departamentos",
+      "loading": "🔄 Cargando departamentos...",
+      "load_prompt": "Presiona \"Lista de Departamentos\" para cargar...",
+      "empty_title": "📂 No hay departamentos",
+      "empty_message": "No se encontraron departamentos. Crea el primero."
+    },
+    "stats": {
+      "total_departments": "Departamentos Totales",
+      "gps_configured": "Con GPS Configurado",
+      "avg_radius": "Radio Promedio (m)"
+    },
+    "table": {
+      "name": "Nombre",
+      "description": "Descripción",
+      "address": "Dirección",
+      "gps": "GPS",
+      "radius": "Radio",
+      "created": "Creado",
+      "actions": "Acciones",
+      "no_description": "Sin descripción",
+      "no_address": "Sin dirección",
+      "gps_configured": "Configurado",
+      "gps_not_configured": "No configurado",
+      "action_view": "Ver",
+      "action_edit": "Editar",
+      "action_delete": "Eliminar",
+      "legend_title": "Leyenda",
+      "legend_gps_configured": "GPS configurado",
+      "legend_gps_not_configured": "GPS no configurado",
+      "legend_radius": "Radio de cobertura"
+    },
+    "form": {
+      "modal_title_create": "Crear Nuevo Departamento",
+      "modal_title_edit": "Editar Departamento",
+      "branch_label": "Sucursal",
+      "branch_select": "Seleccione una sucursal...",
+      "branch_help": "Seleccione la sucursal a la que pertenece este departamento",
+      "name_label": "Nombre del Departamento",
+      "name_placeholder": "Ej: Recursos Humanos",
+      "description_label": "Descripción",
+      "description_placeholder": "Descripción del departamento...",
+      "address_label": "Dirección",
+      "address_placeholder": "Dirección física del departamento...",
+      "allow_gps_label": "Permitir asistencia por GPS",
+      "allow_gps_help": "Los empleados podrán registrar asistencia desde esta ubicación",
+      "gps_location_label": "Ubicación GPS",
+      "gps_location_help": "Define la ubicación del departamento para control de asistencia por GPS",
+      "map_loading": "Cargando mapa...",
+      "latitude_label": "Latitud",
+      "longitude_label": "Longitud",
+      "radius_label": "Radio (metros)",
+      "map_tip": "Haz clic en el mapa para establecer la ubicación",
+      "kiosks_label": "Kiosks Autorizados",
+      "kiosks_help": "Selecciona los kiosks donde se permite registrar asistencia",
+      "kiosks_loading": "Cargando kiosks...",
+      "mixed_mode_info": "Puedes habilitar GPS y kiosks simultáneamente",
+      "all_kiosks": "Todos los kiosks",
+      "no_kiosks_available": "No hay kiosks disponibles"
+    },
+    "validation": {
+      "branch_required": "Debe seleccionar una sucursal. La empresa tiene múltiples sucursales.",
+      "name_required": "El nombre del departamento es requerido",
+      "name_min_length": "El nombre debe tener al menos 3 caracteres",
+      "at_least_one_option": "Debe seleccionar al menos un kiosk o habilitar GPS",
+      "gps_coordinates_required": "Debe establecer las coordenadas GPS",
+      "radius_range": "El radio debe estar entre 10 y 1000 metros"
+    },
+    "view": {
+      "no_description": "Sin descripción",
+      "no_address": "Sin dirección",
+      "gps_not_configured": "GPS no configurado",
+      "description": "Descripción",
+      "address": "Dirección",
+      "gps": "Ubicación GPS",
+      "radius": "Radio de cobertura",
+      "created": "Fecha de creación",
+      "updated": "Última actualización",
+      "map_title": "Mapa de ubicación",
+      "coordinates": "Coordenadas",
+      "view_in_maps": "Ver en Google Maps"
+    }
   },
   "shifts": {
     "title": "Sistema Avanzado de Turnos Flexibles",
@@ -1156,141 +1268,6 @@
         },
         "certification": "Certificación WHO: Empleado cumple con todos los estándares internacionales de higiene personal según WHO-GDHI. Apto para trabajar en entornos de alta exigencia sanitaria."
       }
-    }
-  },
-  "departments": {
-    "title": "🏢 Gestión de Departamentos",
-    "subtitle": "Sistema parametrizable con GPS",
-    "buttons": {
-      "create": "➕ Crear Departamento",
-      "list": "📋 Lista de Departamentos",
-      "statistics": "📊 Estadísticas",
-      "export": "📤 Exportar",
-      "retry": "🔄 Reintentar",
-      "cancel": "❌ Cancelar",
-      "save": "💾 Crear Departamento",
-      "save_changes": "💾 Guardar Cambios",
-      "close": "✖️ Cerrar",
-      "edit": "✏️ Editar",
-      "view": "👁️ Ver",
-      "delete": "🗑️ Eliminar",
-      "view_on_maps": "🗺️ Ver en Google Maps"
-    },
-    "list": {
-      "title": "📋 Lista de Departamentos",
-      "loading": "🔄 Cargando departamentos...",
-      "load_prompt": "Presiona \"Lista de Departamentos\" para cargar...",
-      "empty_title": "📂 No hay departamentos",
-      "empty_message": "Crea el primer departamento usando el botón \"Crear Departamento\"",
-      "legend": {
-        "title": "📋 Leyenda:",
-        "gps_configured": "✅ GPS Configurado",
-        "gps_not_configured": "❌ GPS Sin configurar",
-        "radius_info": "📏 Radio de cobertura en metros"
-      }
-    },
-    "table": {
-      "name": "🏢 Nombre",
-      "description": "📝 Descripción",
-      "address": "📍 Dirección",
-      "gps": "🗺️ GPS",
-      "radius": "📏 Radio (m)",
-      "created": "📅 Creado",
-      "actions": "⚙️ Acciones",
-      "no_description": "Sin descripción",
-      "no_address": "Sin dirección",
-      "gps_configured": "✅ {{lat}}, {{lng}}",
-      "gps_not_configured": "❌ Sin configurar"
-    },
-    "stats": {
-      "total_departments": "Departamentos Totales",
-      "gps_configured": "Con GPS Configurado",
-      "avg_radius": "Radio Promedio (m)"
-    },
-    "form": {
-      "modal_title_create": "🏢 Crear Nuevo Departamento",
-      "modal_title_edit": "✏️ Editar Departamento",
-      "modal_title_view": "🏢 {{name}}",
-      "branch": {
-        "label": "🏛️ Sucursal *:",
-        "placeholder": "Seleccione una sucursal...",
-        "help": "🏢 La empresa tiene múltiples sucursales. Seleccione a cuál pertenece este departamento."
-      },
-      "name": {
-        "label": "🏢 Nombre del Departamento *:",
-        "placeholder": "Ej: IT, RRHH, Ventas"
-      },
-      "description": {
-        "label": "📝 Descripción:",
-        "placeholder": "Descripción del departamento"
-      },
-      "address": {
-        "label": "📍 Dirección física:",
-        "placeholder": "Ej: Oficina Principal - Piso 2"
-      },
-      "gps": {
-        "allow_title": "📱 Permitir marcado por GPS desde APK Empleado",
-        "allow_help": "Si se activa, los empleados podrán marcar asistencia desde su celular (APK) cuando estén dentro del radio de cobertura del departamento",
-        "section_title": "📍 Ubicación GPS del Departamento:",
-        "section_help": "⚠️ Selecciona la ubicación EXACTA del departamento físico (no tu ubicación actual). Usa el mapa o ingresa coordenadas manualmente.",
-        "map_loading": "🗺️ Cargando Google Maps...",
-        "map_error": "⚠️ Error cargando el mapa. Usa las coordenadas manuales.",
-        "latitude": "Latitud:",
-        "longitude": "Longitud:",
-        "radius": "📏 Radio (m):",
-        "tip": "💡 <strong>Tip:</strong> Arrastra el marcador 📍 en el mapa para ajustar la ubicación. El círculo amarillo muestra el radio de cobertura (área donde se puede marcar)."
-      },
-      "kiosks": {
-        "title": "🖥️ Kiosks Físicos Autorizados (opcional):",
-        "help": "📍 Selecciona en qué kiosks físicos los empleados pueden marcar asistencia (además del GPS si está habilitado)",
-        "loading": "Cargando kiosks...",
-        "none_available": "No hay kiosks disponibles",
-        "all_kiosks": "✅ Todos los kiosks",
-        "mixed_mode": "ℹ️ <strong>Modo Mixto:</strong> Puedes activar GPS + Kiosks. Los empleados podrán usar cualquier opción habilitada."
-      }
-    },
-    "view": {
-      "description": "📝 Descripción:",
-      "address": "📍 Dirección:",
-      "gps": "🗺️ Ubicación GPS:",
-      "radius": "📏 Radio de cobertura:",
-      "created": "📅 Creado:",
-      "updated": "📝 Última modificación:",
-      "gps_configured": "✅ {{lat}}, {{lng}}",
-      "gps_not_configured": "❌ Sin configurar",
-      "no_description": "Sin descripción",
-      "no_address": "Sin dirección",
-      "map_section_title": "🗺️ Ubicación en el mapa",
-      "coordinates": "📍 Coordenadas: {{lat}}, {{lng}}",
-      "radius_meters": "{{radius}} metros"
-    },
-    "messages": {
-      "loading": "🔄 Cargando departamentos...",
-      "error_loading": "❌ Error cargando departamentos",
-      "error_not_found": "❌ Departamento no encontrado",
-      "success_created": "✅ Departamento creado exitosamente",
-      "success_updated": "✅ Departamento actualizado exitosamente",
-      "success_deleted": "✅ Departamento eliminado exitosamente",
-      "success_exported": "✅ Departamentos exportados exitosamente",
-      "error_creating": "❌ Error creando departamento: {{message}}",
-      "error_updating": "❌ Error actualizando departamento: {{message}}",
-      "error_deleting": "❌ Error eliminando departamento: {{message}}",
-      "error_exporting": "❌ No hay departamentos para exportar"
-    },
-    "validation": {
-      "branch_required": "❌ Debe seleccionar una sucursal. La empresa tiene múltiples sucursales.",
-      "name_required": "❌ El nombre del departamento es obligatorio",
-      "name_min_length": "❌ El nombre debe tener al menos 2 caracteres",
-      "one_option_required": "❌ Debe habilitar al menos UNA opción:\n- Permitir GPS desde APK, O\n- Seleccionar al menos un kiosk físico autorizado",
-      "gps_coordinates_required": "❌ Si permites GPS, debes ingresar las coordenadas de ubicación del departamento.\nUsa el mapa o ingresa las coordenadas manualmente.",
-      "gps_radius_required": "❌ Si permites GPS, el radio de cobertura debe estar entre 10 y 1000 metros",
-      "gps_coordinates_invalid": "❌ Si habilita marcado por GPS, debe proporcionar coordenadas válidas.",
-      "radius_invalid": "❌ El radio de cobertura debe estar entre 10 y 1000 metros"
-    },
-    "confirm": {
-      "delete_title": "❓ ¿Estás seguro de que deseas eliminar el departamento \"{{name}}\"?",
-      "delete_warning": "⚠️ ATENCIÓN: Esta acción no se puede deshacer.",
-      "delete_consequence": "Los usuarios asignados a este departamento quedarán sin departamento asignado."
     }
   },
   "dashboard": {

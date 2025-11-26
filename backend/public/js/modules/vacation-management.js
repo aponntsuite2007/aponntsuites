@@ -1944,3 +1944,18 @@ async function loadRealEmployeeBalance() {
     }
 }
 
+// ============================================================================
+// EXPORTACIÓN DE MÓDULO
+// ============================================================================
+
+// Registro en window.Modules para sistema moderno
+window.Modules = window.Modules || {};
+window.Modules['vacation-management'] = {
+    init: showVacationManagementContent
+};
+
+// Mantener compatibilidad legacy
+window.showVacationManagementContent = showVacationManagementContent;
+
+console.log('✅ [VACATION-MANAGEMENT] Módulo registrado y listo');
+

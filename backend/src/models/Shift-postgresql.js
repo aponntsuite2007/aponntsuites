@@ -102,13 +102,26 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true,
       field: 'rotationPattern',
-      comment: 'Patrón rotativo: 12x4, 6x2, etc.'
+      comment: 'Patrón rotativo: 5x2x5x2x5x2 (ej: 5 mañana, 2 franco, 5 tarde, etc.)'
     },
     cycleStartDate: {
       type: DataTypes.DATEONLY,
       allowNull: true,
       field: 'cycleStartDate',
-      comment: 'Fecha inicio ciclo rotativo'
+      comment: 'LEGACY: Usar global_cycle_start_date'
+    },
+    global_cycle_start_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      field: 'global_cycle_start_date',
+      comment: 'Fecha en que ARRANCÓ el ciclo del turno (reloj propio global)'
+    },
+    phases: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      field: 'phases',
+      defaultValue: [],
+      comment: 'Fases del turno rotativo con detalles: [{ name, duration, startTime, endTime, groupName }]'
     },
     workDays: {
       type: DataTypes.UUID,
@@ -177,6 +190,37 @@ module.exports = (sequelize) => {
       type: DataTypes.TEXT,
       allowNull: true,
       comment: 'Notas adicionales del turno'
+    },
+    // CAMPOS PARA SISTEMA DE FERIADOS Y SUCURSALES
+    branch_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: 'branch_id',
+      references: {
+        model: 'branches',
+        key: 'id'
+      },
+      onDelete: 'SET NULL',
+      comment: 'Sucursal a la que pertenece el turno (NULL = aplica a TODAS las sucursales)'
+    },
+    respect_national_holidays: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      field: 'respect_national_holidays',
+      comment: 'Si TRUE, excluye feriados nacionales del calendario del turno'
+    },
+    respect_provincial_holidays: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      field: 'respect_provincial_holidays',
+      comment: 'Si TRUE, excluye feriados provinciales del calendario del turno'
+    },
+    custom_non_working_days: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      field: 'custom_non_working_days',
+      defaultValue: [],
+      comment: 'Array de fechas personalizadas no laborables: ["2025-12-24", "2026-01-02"]'
     }
   }, {
     tableName: 'shifts',

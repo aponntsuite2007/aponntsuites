@@ -1,0 +1,20 @@
+    /**
+     * Navegación inicial al módulo de asistencias
+     */
+    async navigateToAttendanceModule() {
+        console.log('\n📂 Navegando al módulo de Asistencias...\n');
+
+        // Navegar directamente con JavaScript (más confiable que buscar botón)
+        await this.page.evaluate(() => {
+            if (typeof window.showModuleContent === 'function') {
+                window.showModuleContent('attendance', 'Control de Asistencias');
+            } else {
+                throw new Error('Función showModuleContent no encontrada');
+            }
+        });
+
+        // Esperar que cargue el contenido del módulo
+        await this.page.waitForSelector('#attendance', { state: 'visible', timeout: 10000 });
+
+        console.log('✅ Módulo de Asistencias cargado\n');
+    }

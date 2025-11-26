@@ -60,10 +60,11 @@
         }
 
         .dashboard-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #1e293b;
+            padding: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-bottom: 3px solid #60a5fa;
         }
 
         .dashboard-title {
@@ -83,7 +84,8 @@
         .dashboard-container {
             max-width: 1457px;
             margin: 0 auto;
-            padding: 2rem;
+            margin-top: -1cm;
+            padding: 0.5rem 2rem 2rem 2rem;
         }
 
         .stats-grid {
@@ -205,7 +207,7 @@
             background: #f8f9fa;
             border: none;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 400;
             transition: all 0.3s ease;
             border-right: 1px solid #e9ecef;
             display: flex;
@@ -213,6 +215,10 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+        }
+
+        .nav-tab span {
+            font-size: 1.2em;
         }
 
         .nav-tab:last-child {
@@ -236,11 +242,6 @@
             display: block !important;
             opacity: 1 !important;
             visibility: visible !important;
-        }
-
-        #engineering.active {
-            display: block !important;
-            min-height: 600px;
         }
 
         .billing-card {
@@ -2857,6 +2858,89 @@
             transform: translateY(0);
         }
 
+        /* 🏗️ ENGINEERING DASHBOARD STYLES */
+        .cube-layer {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+
+        .cube-layer:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .layer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .layer-header h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.2rem;
+        }
+
+        .btn-drill-down {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-drill-down:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .layer-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .preview-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .preview-card h4 {
+            margin: 0 0 8px 0;
+            color: #343a40;
+            font-size: 1rem;
+        }
+
+        .preview-card p {
+            margin: 5px 0;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .dependency-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .dependency-section h3 {
+            margin: 0 0 20px 0;
+            color: #495057;
+        }
+
     </style>
 
     <!-- Google Maps API (para módulo de Departamentos) -->
@@ -2873,112 +2957,45 @@
     </script>
 </head>
 <body>
-    <!-- 🏗️ BOTÓN FLOTANTE ENGINEERING DASHBOARD -->
-    <button id="btn-open-engineering-modal" style="
-        position: fixed;
-        bottom: 80px;
-        right: 20px;
-        z-index: 9999;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 50px;
-        padding: 15px 25px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        transition: all 0.3s ease;
-    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        🏗️ Engineering Dashboard
-    </button>
-
-    <!-- 🏗️ MODAL ENGINEERING DASHBOARD -->
-    <div id="engineering-modal" style="
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        z-index: 99999;
-        overflow: auto;
-    ">
-        <div style="
-            position: relative;
-            max-width: 95%;
-            margin: 20px auto;
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        ">
-            <!-- Botón cerrar -->
-            <button id="btn-close-engineering-modal" style="
-                position: absolute;
-                top: 15px;
-                right: 15px;
-                background: #ef4444;
-                color: white;
-                border: none;
-                border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                font-size: 24px;
-                cursor: pointer;
-                line-height: 1;
-            ">×</button>
-
-            <!-- Contenido del dashboard -->
-            <div id="engineering-dashboard-modal-content">
-                <div style="text-align: center; padding: 60px;">
-                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="sr-only">Cargando Engineering Dashboard...</span>
-                    </div>
-                    <p style="margin-top: 20px; color: #666;">Cargando metadata del sistema...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="dashboard-header" style="padding: 0 !important;">
+    <div class="dashboard-header" style="transform: scale(0.5); transform-origin: top left; width: 200%; margin-bottom: -50px;">
         <!-- Barra superior con información principal -->
-        <div style="padding: 0.65rem 2rem; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 1rem; align-items: center;">
+        <div style="padding: 0.1rem 1rem; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 0.3rem; align-items: center; grid-auto-rows: min-content;">
 
             <!-- Izquierda: Logo y Sistema -->
-            <div class="brand-section" style="display: flex; align-items: center; gap: 15px;">
-                <div class="logo-container" style="display: flex; flex-direction: column;">
-                    <div style="font-size: 2rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 0.25rem;">
-                        <span style="color: #f39c12; font-weight: 800; font-size: 2.5rem; transform: skewX(-15deg); display: inline-block;">A</span><span style="color: white;">ponnt</span> <span style="color: #f39c12; font-weight: 800; font-size: 2.5rem; transform: skewX(-15deg); display: inline-block;">S</span><span style="color: white;">uite's</span>
+            <div class="brand-section" style="display: flex; align-items: center; gap: 20px; height: fit-content;">
+                <div class="logo-container" style="display: flex; flex-direction: column; text-align: center;">
+                    <div style="font-size: 4.4rem; letter-spacing: -2px; line-height: 1;">
+                        <span style="color: #3b82f6; font-weight: 800; font-size: 5.6rem; transform: skewX(-12deg); display: inline-block;">A</span><span style="color: #1e293b; font-weight: 300;">ponnt</span>
                     </div>
-                    <div style="font-size: 0.5rem; color: rgba(255,255,255,0.9); font-weight: 500; text-transform: uppercase; letter-spacing: 0.2px; line-height: 1.1;">Software Integrado de Planificación de Recursos Empresariales</div>
+                    <div style="font-size: 1.5rem; color: #64748b; font-weight: 400; letter-spacing: 0.2px; line-height: 1.5; margin-top: 22px;">Sistema Integral de Planificación y<br>Administración de los Recursos Empresariales</div>
                 </div>
             </div>
 
             <!-- Centro: Dashboard Administrativo -->
-            <div class="admin-info-center" style="display: flex; justify-content: center;">
-                <div style="background: rgba(255,255,255,0.1); padding: 0.75rem 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; gap: 12px; backdrop-filter: blur(10px);">
-                    <span style="color: #f39c12; font-size: 1.75rem;">🏢</span>
+            <div class="admin-info-center" style="display: flex; justify-content: center; height: fit-content;">
+                <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); padding: 1rem 3rem; border-radius: 16px; border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <span style="font-size: 3.2rem;">🏢</span>
                     <div style="text-align: left;">
-                        <div style="font-weight: 700; color: white; font-size: 1.35rem; letter-spacing: -0.02em;">Dashboard Administrativo</div>
-                        <div id="dashboardSubtitle" style="font-size: 0.7rem; color: rgba(255,255,255,0.85);">Sistema Completo de Gestión y Facturación</div>
+                        <div style="font-weight: 700; color: #1e40af; font-size: 2.6rem; line-height: 1.1; white-space: nowrap;">Dashboard Comercial, Administrativo y Ejecutivo</div>
+                        <div id="dashboardSubtitle" style="font-size: 1.6rem; color: #64748b; line-height: 1;">Sistema Completo de Gestión y Facturación</div>
                     </div>
                 </div>
             </div>
 
             <!-- Derecha: Info del usuario logueado -->
-            <div class="system-info" id="userInfoHeader" style="display: flex; align-items: center; justify-content: flex-end; gap: 1rem;">
+            <div class="system-info" id="userInfoHeader" style="display: flex; align-items: center; justify-content: flex-end; gap: 1.6rem; height: fit-content;">
                 <div style="text-align: right;">
-                    <div id="userFullName" style="font-size: 0.9rem; font-weight: 600; color: white; margin-bottom: 0.25rem;">Cargando...</div>
-                    <div id="userRoleAndId" style="font-size: 0.7rem; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">...</div>
+                    <div id="userFullName" style="font-size: 1.5rem; font-weight: 600; color: #1e293b; line-height: 1.1;">Cargando...</div>
+                    <div id="userRoleAndId" style="font-size: 1.1rem; color: #64748b; text-transform: uppercase; line-height: 1;">...</div>
                 </div>
-                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white;" id="userAvatarIcon">
+                <div style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); border: 4px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 2.4rem; color: white;" id="userAvatarIcon">
                     <span>👤</span>
                 </div>
-                <button onclick="handleLogout()" class="btn-logout-header" style="padding: 0.6rem 1.5rem; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: background 0.3s ease; font-weight: 500;">
-                    🚪 Cerrar Sesión
-                </button>
+                <div style="display: flex; flex-direction: row; gap: 0.8rem;">
+                    <button onclick="handleLogout()" class="btn-logout-header" style="padding: 0.8rem 1.8rem; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 1.9rem; font-weight: 500; box-shadow: 0 2px 8px rgba(239,68,68,0.3);">
+                        🚪 Salir
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -3023,6 +3040,8 @@
                         <button class="nav-tab" onclick="switchTab('partners')"><span>🤝</span><br>Asociados</button>
                         <button class="nav-tab" onclick="switchTab('taxTemplates')"><span>🏛️</span><br>Plantillas Fiscales</button>
                         <button class="nav-tab" onclick="switchTab('vendors')"><span>👥</span><br>Vendedores</button>
+                        <button class="nav-tab" onclick="switchTab('staff')"><span>👔</span><br>Staff Aponnt</button>
+                        <button class="nav-tab" onclick="switchTab('staffRoles')"><span>🎭</span><br>Roles de Staff</button>
                         <button class="nav-tab" onclick="switchTab('pricing')"><span>💰</span><br>Precios</button>
                         <button class="nav-tab" onclick="switchTab('billing')"><span>🧾</span><br>Facturación</button>
                         <button class="nav-tab" onclick="switchTab('payments')"><span>💳</span><br>Pagos</button>
@@ -3057,9 +3076,13 @@
                                 <div class="filters-title">
                                     🔍 Filtros de Búsqueda
                                 </div>
-                                <button class="filters-toggle" onclick="toggleFilters()" id="filtersToggle">
-                                    Ocultar Filtros
-                                </button>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <button class="btn-filter secondary" onclick="clearFilters()">Limpiar Filtros</button>
+                                    <button class="btn-filter primary" onclick="applyFilters()">🔍 Buscar</button>
+                                    <button class="filters-toggle" onclick="toggleFilters()" id="filtersToggle">
+                                        Ocultar Filtros
+                                    </button>
+                                </div>
                             </div>
                             <div class="filters-content" id="filtersContent">
                                 <div class="filter-group">
@@ -3109,10 +3132,6 @@
                                 <div class="filter-group">
                                     <label class="filter-label">Vendedor</label>
                                     <input type="text" class="filter-input" id="filterVendor" placeholder="Buscar por vendedor..." onkeyup="applyFiltersDebounced()">
-                                </div>
-                                <div class="filter-actions">
-                                    <button class="btn-filter secondary" onclick="clearFilters()">Limpiar Filtros</button>
-                                    <button class="btn-filter primary" onclick="applyFilters()">🔍 Buscar</button>
                                 </div>
                             </div>
                         </div>
@@ -3436,6 +3455,163 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pestaña Staff Aponnt -->
+                <div id="staff" class="tab-content">
+                    <div class="section-header">
+                        <h2 class="section-title">👔 Gestión de Staff Aponnt</h2>
+                        <button class="btn btn-success" onclick="openNewStaffModal()">
+                            ➕ Agregar Staff
+                        </button>
+                    </div>
+
+                    <!-- Filtros -->
+                    <div class="filters-container" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #666;">Área:</label>
+                                <select id="staffFilterArea" class="filter-input" onchange="loadStaff()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                                    <option value="">Todas las áreas</option>
+                                    <option value="ventas">Ventas</option>
+                                    <option value="admin">Administración</option>
+                                    <option value="desarrollo">Desarrollo</option>
+                                    <option value="externo">Externo</option>
+                                    <option value="direccion">Dirección</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #666;">País:</label>
+                                <select id="staffFilterCountry" class="filter-input" onchange="loadStaff()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                                    <option value="">Todos los países</option>
+                                    <option value="AR">Argentina</option>
+                                    <option value="BR">Brasil</option>
+                                    <option value="CL">Chile</option>
+                                    <option value="MX">México</option>
+                                    <option value="US">Estados Unidos</option>
+                                    <option value="ES">España</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #666;">Estado:</label>
+                                <select id="staffFilterStatus" class="filter-input" onchange="loadStaff()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                                    <option value="">Todos</option>
+                                    <option value="true">Activos</option>
+                                    <option value="false">Inactivos</option>
+                                </select>
+                            </div>
+                            <div style="margin-left: auto;">
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: transparent;">Acciones</label>
+                                <button class="btn btn-info" onclick="exportStaffToExcel()" style="padding: 8px 15px;">
+                                    📊 Exportar Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs Secundarios -->
+                    <div class="vendor-tabs-container" style="margin-top: 20px;">
+                        <div class="nav-tabs-secondary">
+                            <button class="nav-tab-secondary active" onclick="switchStaffSubTab('staff-list')">
+                                📋 Lista de Staff
+                            </button>
+                            <button class="nav-tab-secondary" onclick="switchStaffSubTab('staff-orgchart')">
+                                🌳 Organigrama
+                            </button>
+                        </div>
+
+                        <!-- Sub-Tab: Lista de Staff -->
+                        <div id="staff-list" class="vendor-subtab-content active">
+                            <div id="staffTableContainer">
+                                <div style="text-align: center; padding: 40px; color: #999;">
+                                    <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
+                                    <p>Cargando staff...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Tab: Organigrama -->
+                        <div id="staff-orgchart" class="vendor-subtab-content" style="display: none;">
+                            <div style="margin: 20px 0;">
+                                <!-- Filtro de país para organigrama -->
+                                <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                    <label style="font-weight: bold; margin-right: 10px;">Filtrar por país:</label>
+                                    <select id="orgchartCountryFilter" onchange="renderOrgChart()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                                        <option value="">🌎 Todos los países</option>
+                                        <option value="AR">🇦🇷 Argentina</option>
+                                        <option value="BR">🇧🇷 Brasil</option>
+                                        <option value="CL">🇨🇱 Chile</option>
+                                        <option value="MX">🇲🇽 México</option>
+                                        <option value="US">🇺🇸 Estados Unidos</option>
+                                        <option value="ES">🇪🇸 España</option>
+                                    </select>
+                                </div>
+
+                                <!-- Contenedor del organigrama -->
+                                <div id="orgchartContainer" style="padding: 20px; background: white; border-radius: 8px; overflow-x: auto;">
+                                    <!-- Se renderizará aquí -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pestaña Roles de Staff -->
+                <div id="staffRoles" class="tab-content">
+                    <div class="section-header">
+                        <h2 class="section-title">🎭 Gestión de Roles de Staff</h2>
+                        <button class="btn btn-success" onclick="openNewStaffRoleModal()">
+                            ➕ Agregar Rol
+                        </button>
+                    </div>
+
+                    <!-- Filtros -->
+                    <div class="filters-container" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #666;">Área:</label>
+                                <select id="roleFilterArea" class="filter-input" onchange="loadStaffRoles()">
+                                    <option value="">Todas las áreas</option>
+                                    <option value="ventas">Ventas</option>
+                                    <option value="admin">Administración</option>
+                                    <option value="desarrollo">Desarrollo</option>
+                                    <option value="externo">Externo</option>
+                                    <option value="direccion">Dirección</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #666;">Nivel:</label>
+                                <select id="roleFilterLevel" class="filter-input" onchange="loadStaffRoles()">
+                                    <option value="">Todos los niveles</option>
+                                    <option value="0">Nivel 0 - CEO</option>
+                                    <option value="1">Nivel 1 - Gerentes</option>
+                                    <option value="2">Nivel 2 - Jefes</option>
+                                    <option value="3">Nivel 3 - Coordinadores</option>
+                                    <option value="4">Nivel 4 - Operativos</option>
+                                </select>
+                            </div>
+                            <div style="margin-left: auto;">
+                                <button class="btn btn-info" onclick="exportStaffRolesToExcel()">
+                                    📊 Exportar Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información sobre roles protegidos -->
+                    <div style="margin: 20px 0; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                        <p style="margin: 0; color: #856404; font-size: 0.9rem;">
+                            ⚠️ <strong>Roles base protegidos:</strong> Los 26 roles base del sistema no pueden ser eliminados, solo editados para traducciones i18n.
+                        </p>
+                    </div>
+
+                    <!-- Contenedor de tabla de roles -->
+                    <div id="staffRolesTableContainer">
+                        <div style="text-align: center; padding: 40px; color: #999;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
+                            <p>Cargando roles...</p>
                         </div>
                     </div>
                 </div>
@@ -4793,6 +4969,284 @@
                     <span id="saveVendorBtnText">💾 Guardar Vendedor</span>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODAL: STAFF APONNT (UNIFICADO PARAMETRIZADO)
+         ============================================ -->
+    <div id="staffModal" class="vendor-modal" style="display: none;">
+        <div class="vendor-modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3 id="staffModalTitle">➕ Nuevo Staff Member</h3>
+                <button class="close-btn" onclick="closeStaffModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <form id="staffForm">
+                    <!-- Información Personal -->
+                    <div class="vendor-section">
+                        <h4 class="section-title">👤 Información Personal</h4>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="staffFirstName" class="form-label">Nombre *</label>
+                                <input type="text" id="staffFirstName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="staffLastName" class="form-label">Apellido *</label>
+                                <input type="text" id="staffLastName" class="form-input" required>
+                            </div>
+                        </div>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="staffEmail" class="form-label">Email *</label>
+                                <input type="email" id="staffEmail" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="staffPhone" class="form-label">Teléfono</label>
+                                <input type="tel" id="staffPhone" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rol y Ubicación -->
+                    <div class="vendor-section">
+                        <h4 class="section-title">🏢 Rol y Ubicación</h4>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="staffRole" class="form-label">Rol *</label>
+                                <select id="staffRole" class="form-input" required onchange="updateStaffFormFields()">
+                                    <option value="">-- Seleccionar Rol --</option>
+                                    <!-- Se cargará dinámicamente desde API /api/aponnt/staff-data/roles -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="staffCountry" class="form-label">País *</label>
+                                <select id="staffCountry" class="form-input" required>
+                                    <option value="AR">🇦🇷 Argentina</option>
+                                    <option value="BR">🇧🇷 Brasil</option>
+                                    <option value="CL">🇨🇱 Chile</option>
+                                    <option value="MX">🇲🇽 México</option>
+                                    <option value="US">🇺🇸 Estados Unidos</option>
+                                    <option value="ES">🇪🇸 España</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="staffSupervisor" class="form-label">Supervisor</label>
+                                <select id="staffSupervisor" class="form-input">
+                                    <option value="">-- Sin supervisor (reporta a CEO) --</option>
+                                    <!-- Se cargará dinámicamente -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="staffLanguage" class="form-label">Idioma Preferido</label>
+                                <select id="staffLanguage" class="form-input">
+                                    <option value="es">Español</option>
+                                    <option value="en">English</option>
+                                    <option value="pt">Português</option>
+                                    <option value="fr">Français</option>
+                                    <option value="de">Deutsch</option>
+                                    <option value="it">Italiano</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos Específicos de Vendedor (solo si area=ventas) -->
+                    <div class="vendor-section" id="vendorFieldsSection" style="display: none;">
+                        <h4 class="section-title">💰 Configuración de Vendedor</h4>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="staffCBU" class="form-label">CBU</label>
+                                <input type="text" id="staffCBU" class="form-input" maxlength="22">
+                            </div>
+                            <div class="form-group">
+                                <label for="staffBankName" class="form-label">Banco</label>
+                                <input type="text" id="staffBankName" class="form-input">
+                            </div>
+                        </div>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="staffWhatsapp" class="form-label">WhatsApp</label>
+                                <input type="tel" id="staffWhatsapp" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="staffAcceptsSupportPackages" class="form-label">Acepta Paquetes Soporte</label>
+                                <select id="staffAcceptsSupportPackages" class="form-input">
+                                    <option value="true">✅ Sí</option>
+                                    <option value="false">❌ No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="staffAcceptsAuctions" class="form-label">Participa en Subastas</label>
+                                <select id="staffAcceptsAuctions" class="form-input">
+                                    <option value="true">✅ Sí</option>
+                                    <option value="false">❌ No</option>
+                                </select>
+                            </div>
+                            <div class="form-group"></div>
+                        </div>
+                    </div>
+
+                    <!-- Estado -->
+                    <div class="vendor-section">
+                        <h4 class="section-title">⚙️ Estado</h4>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="staffStatus" class="form-label">Estado</label>
+                                <select id="staffStatus" class="form-input">
+                                    <option value="true">✅ Activo</option>
+                                    <option value="false">❌ Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="form-group"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeStaffModal()">
+                    ❌ Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveStaff()" id="saveStaffBtn">
+                    <span id="saveStaffBtnText">💾 Guardar Staff</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Gestión de Roles de Staff -->
+    <div id="staffRoleModal" class="vendor-modal" style="display: none;">
+        <div class="vendor-modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="staffRoleModalTitle">➕ Nuevo Rol de Staff</h3>
+                <button class="close-btn" onclick="closeStaffRoleModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <form id="staffRoleForm">
+                    <!-- Información Básica -->
+                    <div class="vendor-section">
+                        <h4 class="section-title">🎭 Información Básica del Rol</h4>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="roleCode" class="form-label">Código de Rol *</label>
+                                <input type="text" id="roleCode" class="form-input" required
+                                       maxlength="20" style="text-transform: uppercase;"
+                                       placeholder="Ej: GR-AR, JV-BR">
+                                <small style="color: #666; font-size: 0.85rem;">
+                                    Formato sugerido: NIVEL-PAÍS (ej: GR-AR, JV-MX)
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label for="roleName" class="form-label">Nombre del Rol (español) *</label>
+                                <input type="text" id="roleName" class="form-input" required
+                                       maxlength="100" placeholder="Ej: Gerente Regional Argentina">
+                            </div>
+                        </div>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="roleLevel" class="form-label">Nivel Jerárquico *</label>
+                                <select id="roleLevel" class="form-input" required>
+                                    <option value="">-- Seleccionar Nivel --</option>
+                                    <option value="0">Nivel 0 - CEO (Dirección Ejecutiva)</option>
+                                    <option value="1">Nivel 1 - Gerentes (Gestión Regional/Global)</option>
+                                    <option value="2">Nivel 2 - Jefes (Supervisión de Equipos)</option>
+                                    <option value="3">Nivel 3 - Coordinadores (Coordinación Operativa)</option>
+                                    <option value="4">Nivel 4 - Operativos (Ejecución)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="roleArea" class="form-label">Área Organizacional *</label>
+                                <select id="roleArea" class="form-input" required>
+                                    <option value="">-- Seleccionar Área --</option>
+                                    <option value="direccion">Dirección</option>
+                                    <option value="ventas">Ventas</option>
+                                    <option value="admin">Administración</option>
+                                    <option value="desarrollo">Desarrollo</option>
+                                    <option value="externo">Externo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="roleDescription" class="form-label">Descripción del Rol</label>
+                            <textarea id="roleDescription" class="form-input" rows="3"
+                                      maxlength="500" placeholder="Descripción opcional del rol y sus responsabilidades"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Traducciones i18n (6 idiomas) -->
+                    <div class="vendor-section">
+                        <h4 class="section-title">🌍 Traducciones Multiidioma (i18n)</h4>
+                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+                            Configurar el nombre del rol en los 6 idiomas soportados por el sistema.
+                        </p>
+
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="roleNameES" class="form-label">🇪🇸 Español (es)</label>
+                                <input type="text" id="roleNameES" class="form-input" maxlength="100"
+                                       placeholder="Ej: Gerente Regional Argentina">
+                            </div>
+                            <div class="form-group">
+                                <label for="roleNameEN" class="form-label">🇺🇸 Inglés (en)</label>
+                                <input type="text" id="roleNameEN" class="form-input" maxlength="100"
+                                       placeholder="Ex: Regional Manager Argentina">
+                            </div>
+                        </div>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="roleNamePT" class="form-label">🇧🇷 Portugués (pt)</label>
+                                <input type="text" id="roleNamePT" class="form-input" maxlength="100"
+                                       placeholder="Ex: Gerente Regional Argentina">
+                            </div>
+                            <div class="form-group">
+                                <label for="roleNameFR" class="form-label">🇫🇷 Francés (fr)</label>
+                                <input type="text" id="roleNameFR" class="form-input" maxlength="100"
+                                       placeholder="Ex: Directeur Régional Argentine">
+                            </div>
+                        </div>
+                        <div class="vendor-grid-2">
+                            <div class="form-group">
+                                <label for="roleNameDE" class="form-label">🇩🇪 Alemán (de)</label>
+                                <input type="text" id="roleNameDE" class="form-input" maxlength="100"
+                                       placeholder="Ex: Regionalleiter Argentinien">
+                            </div>
+                            <div class="form-group">
+                                <label for="roleNameIT" class="form-label">🇮🇹 Italiano (it)</label>
+                                <input type="text" id="roleNameIT" class="form-input" maxlength="100"
+                                       placeholder="Ex: Direttore Regionale Argentina">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerta si es un rol base protegido -->
+                    <div id="baseRoleWarning" style="display: none; margin: 20px 0; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                        <p style="margin: 0; color: #856404; font-size: 0.9rem;">
+                            ⚠️ <strong>Rol base protegido:</strong> Este es un rol base del sistema. Solo puedes editar las traducciones i18n.
+                        </p>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeStaffRoleModal()">
+                    ❌ Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveStaffRole()" id="saveStaffRoleBtn">
+                    <span id="saveStaffRoleBtnText">💾 Guardar Rol</span>
+                </button>
+                <button type="button" class="btn btn-danger" onclick="deleteStaffRole()" id="deleteStaffRoleBtn" style="display: none;">
+                    🗑️ Eliminar Rol
+                </button>
+            </div>
+        </div>
+    </div>
 
                 <!-- ============================================
                      PESTAÑA: CONSENTIMIENTOS
@@ -4934,36 +5388,20 @@
                     </div>
                 </div>
 
-                <!-- ============================================
-                     PESTAÑA: ENGINEERING DASHBOARD
-                     ============================================ -->
+                <!-- Pestaña Ingeniería -->
                 <div id="engineering" class="tab-content">
-                    <!-- BOTÓN DE DEBUG -->
-                    <button onclick="
-                        const tab = document.getElementById('engineering');
-                        const container = document.getElementById('engineering-dashboard-container');
-                        alert('Tab display: ' + window.getComputedStyle(tab).display + '\\nContainer display: ' + window.getComputedStyle(container).display + '\\nContainer height: ' + container.offsetHeight + 'px\\nContainer content length: ' + container.innerHTML.length + ' chars');
-                    " style="position: fixed; top: 100px; right: 20px; z-index: 999999; background: red; color: white; padding: 20px; font-size: 18px; border: none; cursor: pointer;">
-                        🔍 DEBUG TAB
-                    </button>
-
                     <div class="section-header">
-                        <h2 class="section-title">🏗️ Engineering Dashboard - Arquitectura del Sistema</h2>
+                        <h2 class="section-title">🏗️ Engineering Dashboard</h2>
                         <p style="color: #666; margin-top: 10px;">
-                            Visualización completa del ecosistema, módulos, roadmap, base de datos y workflows.
-                            Single source of truth para todas las sesiones de desarrollo.
+                            Panel de control de ingeniería con métricas, roadmap, y estado de módulos del sistema.
                         </p>
                     </div>
-
-                    <!-- Container donde se renderizará el dashboard -->
-                    <div id="engineering-dashboard-container" style="min-height: 800px !important; height: auto !important; background: #f9f9f9; padding: 20px; display: block !important; overflow: visible !important;">
+                    <div id="engineering-tab-container">
                         <div class="text-center" style="padding: 60px;">
                             <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                                 <span class="sr-only">Cargando Engineering Dashboard...</span>
                             </div>
-                            <p style="margin-top: 20px; color: #666; font-size: 16px;">
-                                Cargando metadata del sistema...
-                            </p>
+                            <p style="margin-top: 20px; color: #666;">Cargando metadata del sistema...</p>
                         </div>
                     </div>
                 </div>
@@ -5085,13 +5523,27 @@
 
             if (!currentUser) return;
 
-            // Mostrar nombre completo
+            // Mostrar nombre completo con formato: Apellido, Nombre (ID: xxx)
             if (userFullNameEl) {
-                userFullNameEl.textContent = currentUser.fullName || `${currentUser.firstName} ${currentUser.lastName || ''}`;
+                const lastName = currentUser.lastName || '';
+                const firstName = currentUser.firstName || '';
+                const userId = currentUser.id ? ` (ID: ${String(currentUser.id).substring(0, 8)})` : '';
+                // Formato: Apellido, Nombre (ID: xxx)
+                const displayName = lastName && firstName
+                    ? `${lastName}, ${firstName}${userId}`
+                    : currentUser.fullName || `${firstName} ${lastName}${userId}`;
+                userFullNameEl.textContent = displayName;
             }
 
-            // Mostrar rol e ID con badge de color
+            // Mostrar rol con badge de color (ID ya se muestra arriba junto al nombre)
             if (userRoleAndIdEl) {
+                // Extraer rol como string (puede venir como objeto o string)
+                let roleKey = currentUser.role;
+                if (typeof roleKey === 'object' && roleKey !== null) {
+                    roleKey = roleKey.name || roleKey.role || roleKey.key || 'admin';
+                }
+                roleKey = String(roleKey).toLowerCase();
+
                 const roleNames = {
                     'admin': 'Administrador',
                     'supervisor': 'Supervisor',
@@ -5100,7 +5552,9 @@
                     'soporte': 'Soporte',
                     'administrativo': 'Administrativo',
                     'marketing': 'Marketing',
-                    'administrador': 'Administrador Master'
+                    'administrador': 'Administrador Master',
+                    'super admin': 'Super Admin',
+                    'super_admin': 'Super Admin'
                 };
                 const roleColors = {
                     'admin': '#e74c3c',
@@ -5110,17 +5564,17 @@
                     'soporte': '#f39c12',
                     'administrativo': '#34495e',
                     'marketing': '#e67e22',
-                    'administrador': '#c0392b'
+                    'administrador': '#c0392b',
+                    'super admin': '#8e44ad',
+                    'super_admin': '#8e44ad'
                 };
-                const roleName = roleNames[currentUser.role] || currentUser.role;
-                const roleColor = roleColors[currentUser.role] || '#7f8c8d';
-                const userId = currentUser.id ? `ID: ${currentUser.id.substring(0, 8)}...` : '';
+                const roleName = roleNames[roleKey] || roleKey;
+                const roleColor = roleColors[roleKey] || '#7f8c8d';
 
                 userRoleAndIdEl.innerHTML = `
-                    <span style="display: inline-block; padding: 2px 8px; background: ${roleColor}; border-radius: 10px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 8px;">
+                    <span style="display: inline-block; padding: 2px 8px; background: ${roleColor}; border-radius: 10px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
                         ${roleName}
                     </span>
-                    ${userId}
                 `;
             }
 
@@ -5140,10 +5594,15 @@
                 userAvatarIconEl.querySelector('span').textContent = icon;
             }
 
-            // Actualizar subtítulo del dashboard con nombre del usuario
+            // Actualizar subtítulo del dashboard con nombre del usuario (formato: Apellido, Nombre)
             const dashboardSubtitle = document.getElementById('dashboardSubtitle');
             if (dashboardSubtitle) {
-                const userName = currentUser.fullName || `${currentUser.firstName} ${currentUser.lastName || ''}`;
+                const lastName = currentUser.lastName || '';
+                const firstName = currentUser.firstName || '';
+                const userIdShort = currentUser.id ? ` [${String(currentUser.id).substring(0, 6)}]` : '';
+                const userName = lastName && firstName
+                    ? `${lastName}, ${firstName}${userIdShort}`
+                    : currentUser.fullName || `${firstName} ${lastName}${userIdShort}`;
                 dashboardSubtitle.textContent = `👤 ${userName}`;
             }
 
@@ -5533,12 +5992,14 @@
             // ✅ VERIFICAR AUTENTICACIÓN APONNT
             const urlParams = new URLSearchParams(window.location.search);
             const userType = urlParams.get('userType');
+            const forceLogin = urlParams.get('forceLogin');
 
             console.log('🔍 [AUTH] URL userType:', userType);
+            console.log('🔍 [AUTH] URL forceLogin:', forceLogin);
 
-            // LIMPIAR localStorage si viene desde index (nuevo login)
-            if (userType) {
-                console.log('🧹 [AUTH] Limpiando tokens antiguos para nuevo login');
+            // LIMPIAR localStorage si viene desde index (nuevo login) o si forceLogin=true
+            if (userType || forceLogin === 'true') {
+                console.log('🧹 [AUTH] Limpiando tokens antiguos para forzar nuevo login');
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 localStorage.removeItem('aponnt_token_staff');
@@ -5546,6 +6007,11 @@
                 localStorage.removeItem('aponnt_user_staff');
                 localStorage.removeItem('aponnt_user_partner');
                 localStorage.removeItem('aponnt_user_type');
+                localStorage.removeItem('aponnt_assigned_companies');
+                localStorage.removeItem('aponnt_permissions');
+                localStorage.removeItem('aponnt_refresh_token_staff');
+                localStorage.removeItem('aponnt_refresh_token_partner');
+                sessionStorage.clear();
             }
 
             // Verificar si hay token válido
@@ -5555,10 +6021,9 @@
             console.log('🔍 [AUTH] Token encontrado:', !!token);
             console.log('🔍 [AUTH] Usuario encontrado:', !!user);
 
-            // Si viene de index.html o no hay token → Mostrar modal de login
-            if (userType || !token) {
-                console.log('🔐 [AUTH] CASO 1: Mostrando modal de login para:', userType || 'staff (default)');
-                console.log('🔐 [AUTH] Verificando si AponntLogin existe:', typeof AponntLogin);
+            // Si NO hay token → Mostrar login correspondiente
+            if (!token) {
+                console.log('🔐 [AUTH] Sin token - mostrando login');
 
                 if (typeof AponntLogin === 'undefined') {
                     console.error('❌ [AUTH] ERROR CRÍTICO: AponntLogin no está definido');
@@ -5566,10 +6031,19 @@
                     return;
                 }
 
-                const aponntLogin = new AponntLogin(userType || 'staff');
-                console.log('🔐 [AUTH] Instancia de AponntLogin creada:', aponntLogin);
+                // CASO 1: Si viene con userType=partner → Login de Partner
+                if (userType === 'partner') {
+                    console.log('🔐 [AUTH] CASO 1: Login de Partner');
+                    const aponntLogin = new AponntLogin('partner');
+                    aponntLogin.showLoginModal();
+                    return;
+                }
+
+                // CASO 2: Sin userType o userType=staff → Login de Staff de Aponnt
+                console.log('🔐 [AUTH] CASO 2: Login de Staff de Aponnt');
+                const aponntLogin = new AponntLogin('staff');
                 aponntLogin.showLoginModal();
-                return; // No continuar hasta que haya login
+                return;
             }
 
             // Cargar datos del usuario desde localStorage
@@ -5708,20 +6182,8 @@
             if (tabName === 'payments') loadPaymentSystem();
             if (tabName === 'notifications') loadNotificationSystem();
             if (tabName === 'users') loadOperators();
-            if (tabName === 'engineering') {
-                // Inicializar Engineering Dashboard solo UNA VEZ
-                if (!window.engineeringDashboardInitialized) {
-                    if (typeof EngineeringDashboard !== 'undefined' && EngineeringDashboard.init) {
-                        console.log('🏗️ [PANEL-ADMIN] Inicializando Engineering Dashboard...');
-                        EngineeringDashboard.init();
-                        window.engineeringDashboardInitialized = true;
-                    } else {
-                        console.error('❌ EngineeringDashboard no está definido');
-                    }
-                } else {
-                    console.log('ℹ️ Engineering Dashboard ya inicializado, omitiendo...');
-                }
-            }
+            if (tabName === 'staff') loadStaff();
+            if (tabName === 'staffRoles') loadStaffRoles();
         }
 
         async function loadDashboardData() {
@@ -5880,7 +6342,7 @@
                         </td>
                         <td>
                             <div style="font-weight: bold; color: var(--primary-color);">
-                                U$S ${company.pricing.monthlyTotal.toFixed(2)}
+                                U$S ${Math.floor(company.pricing.monthlyTotal).toLocaleString('en-US')}<span style="font-size: 0.7em;">.${(company.pricing.monthlyTotal % 1).toFixed(2).substring(2)}</span>
                             </div>
                             <div style="font-size: 0.8em; color: #666;">
                                 Total mensual con IVA
@@ -6122,7 +6584,7 @@
                         </td>
                         <td>
                             <div style="font-weight: bold; color: var(--primary-color);">
-                                U$S ${company.pricing?.monthlyTotal?.toFixed(2) || '0.00'}
+                                U$S ${company.pricing?.monthlyTotal ? Math.floor(company.pricing.monthlyTotal).toLocaleString('en-US') : '0'}<span style="font-size: 0.7em;">.${company.pricing?.monthlyTotal ? (company.pricing.monthlyTotal % 1).toFixed(2).substring(2) : '00'}</span>
                             </div>
                             <div style="font-size: 0.8em; color: #666;">
                                 Total mensual con IVA
@@ -12233,23 +12695,40 @@
                 return;
             }
 
-            // Crear objeto vendedor
-            const vendorData = {
-                name: name,
+            // Crear objeto vendedor adaptado a estructura aponnt_staff
+            // Dividir nombre en first_name y last_name
+            const nameParts = name.trim().split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || nameParts[0]; // Si solo hay 1 palabra, usar la misma
+
+            const staffData = {
+                first_name: firstName,
+                last_name: lastName,
                 email: email,
                 phone: document.getElementById('vendorPhone').value.trim(),
-                salesCommissionPercentage: salesCommission,
-                supportCommissionPercentage: supportCommission,
-                acceptsSupportPackages: acceptsSupportPackages,
-                acceptsAuctions: acceptsAuctions,
+                whatsapp_number: document.getElementById('vendorPhone').value.trim(), // Usar phone como whatsapp por defecto
                 cbu: document.getElementById('vendorCBU').value.trim(),
-                status: document.getElementById('vendorStatus').value,
-                notes: document.getElementById('vendorNotes').value.trim(),
-                // Campos para el sistema de calificaciones
-                globalRating: 5.0, // Inicia con 5 estrellas
-                totalSupportPackages: 0,
-                activeSupportPackages: 0
+                accepts_support_packages: acceptsSupportPackages,
+                accepts_auctions: acceptsAuctions,
+                is_active: document.getElementById('vendorStatus').value === 'activo',
+                global_rating: 5.0, // Inicia con 5 estrellas
+
+                // Campos de rol y área (obligatorios para aponnt_staff)
+                area: 'ventas',
+                level: 4, // Nivel operativo (vendedores)
+                country: 'AR', // Por defecto Argentina, luego se puede cambiar en modal completo
+                language_preference: 'es',
+
+                // Si estamos editando, incluir role_id del vendedor actual
+                // Si es nuevo, necesitaremos buscar el role_id de 'VEND' (se debe hacer en backend)
             };
+
+            // Si estamos editando, preservar campos adicionales
+            if (currentEditingVendor) {
+                staffData.role_id = currentEditingVendor.role?.role_id;
+                staffData.country = currentEditingVendor.country || 'AR';
+                staffData.language_preference = currentEditingVendor.language || 'es';
+            }
 
             try {
                 const saveBtn = document.getElementById('saveVendorBtn');
@@ -12259,21 +12738,37 @@
                 let response;
                 if (currentEditingVendor) {
                     // Actualizar vendedor existente
-                    response = await fetch(`/api/aponnt/dashboard/vendors/${currentEditingVendor.id}`, {
+                    const staffId = currentEditingVendor.staff_id;
+                    response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(vendorData)
+                        body: JSON.stringify(staffData)
                     });
                 } else {
-                    // Crear nuevo vendedor
-                    response = await fetch('/api/aponnt/dashboard/vendors', {
+                    // Crear nuevo vendedor - Buscar role_id de VEND
+                    console.log('🔍 Buscando role_id para VEND...');
+                    const rolesResponse = await fetch('/api/aponnt/staff-data/roles');
+                    if (!rolesResponse.ok) {
+                        throw new Error('Error obteniendo roles');
+                    }
+                    const rolesData = await rolesResponse.json();
+                    const vendRole = rolesData.data.find(r => r.role_code === 'VEND');
+
+                    if (!vendRole) {
+                        throw new Error('Rol VEND no encontrado. Contacte al administrador.');
+                    }
+
+                    staffData.role_id = vendRole.role_id;
+                    console.log('✅ Role VEND encontrado:', vendRole.role_id);
+
+                    response = await fetch('/api/aponnt/staff-data', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(vendorData)
+                        body: JSON.stringify(staffData)
                     });
                 }
 
@@ -12322,35 +12817,69 @@
 
         // Cargar lista de vendedores con métricas completas
         async function loadVendors() {
-            console.log('📋 Cargando vendedores con métricas...');
+            console.log('📋 Cargando vendedores desde aponnt_staff...');
 
             try {
-                // Intentar cargar vendedores con métricas completas
-                let response = await fetch('/api/vendor-automation/vendors-metrics');
-                if (!response.ok) {
-                    // Fallback al endpoint original
-                    response = await fetch('/api/aponnt/dashboard/vendors');
-                }
+                // Cargar vendedores desde la nueva tabla aponnt_staff (área=ventas)
+                const response = await fetch('/api/aponnt/staff-data?area=ventas');
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('📦 Respuesta API vendedores:', data);
+                    console.log('📦 Respuesta API vendedores (aponnt_staff):', data);
 
-                    // La API puede devolver un objeto con vendors o directamente un array
-                    if (Array.isArray(data)) {
-                        vendors = data;
-                    } else if (data.vendors && Array.isArray(data.vendors)) {
-                        vendors = data.vendors;
-                    } else if (data.data && Array.isArray(data.data)) {
-                        vendors = data.data;
-                    } else if (data.vendorsMetrics && Array.isArray(data.vendorsMetrics)) {
-                        vendors = data.vendorsMetrics;
-                    } else {
-                        console.warn('⚠️ Formato inesperado de respuesta, usando array vacío');
-                        vendors = [];
-                    }
+                    // La API devuelve { success: true, count: X, data: [...] }
+                    const staffVendors = data.data || [];
 
-                    console.log(`✅ ${vendors.length} vendedores cargados`);
+                    // Mapear campos de aponnt_staff a estructura de vendor
+                    vendors = staffVendors.map(staff => ({
+                        // IDs y datos básicos
+                        id: staff.user_id || staff.staff_id,  // Usar user_id si existe, sino staff_id
+                        staff_id: staff.staff_id,
+                        user_id: staff.user_id,
+                        name: `${staff.first_name} ${staff.last_name}`,
+                        email: staff.email,
+                        phone: staff.phone,
+                        whatsapp: staff.whatsapp_number,
+
+                        // Datos bancarios y estado
+                        cbu: staff.cbu,
+                        bank_name: staff.bank_name,
+                        rating: staff.global_rating || 0,
+                        isActive: staff.is_active,
+                        status: staff.is_active ? 'activo' : 'inactivo',
+
+                        // País e idioma
+                        country: staff.country,
+                        language: staff.language_preference,
+
+                        // Configuración de vendedor
+                        acceptsSupportPackages: staff.accepts_support_packages,
+                        acceptsSupport: staff.accepts_support_packages,
+                        acceptsAuctions: staff.accepts_auctions,
+
+                        // Rol y jerarquía
+                        role: staff.role,
+                        level: staff.level,
+                        area: staff.area,
+                        supervisor: staff.supervisor,
+
+                        // Métricas (por ahora en 0, se cargarán después con vendor_statistics)
+                        companies: 0,
+                        salesUsers: 0,
+                        supportUsers: 0,
+                        salesCommission: { percentage: 0, amount: 0 },
+                        supportCommission: { percentage: 0, amount: 0 },
+                        referralCommission: { referrals: 0, amount: 0 },
+                        totalCommission: 0,
+                        totalModuleValue: 0,
+
+                        // Comisiones legacy (para retrocompatibilidad)
+                        commissionPercentage: 0,
+                        salesCommissionPercentage: 0,
+                        supportCommissionPercentage: 0
+                    }));
+
+                    console.log(`✅ ${vendors.length} vendedores cargados desde aponnt_staff`);
                     renderVendors();
                 } else {
                     console.error('❌ Error cargando vendedores:', response.status);
@@ -12598,14 +13127,16 @@ ${vendor.notes || 'Sin notas adicionales'}
             }
 
             try {
-                const response = await fetch(`/api/aponnt/dashboard/vendors/${vendorId}`, {
+                // Usar staff_id para eliminar (soft delete via is_active = false)
+                const staffId = vendor.staff_id;
+                const response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
                     method: 'DELETE'
                 });
 
                 if (response.ok) {
-                    console.log('✅ Vendedor eliminado');
+                    console.log('✅ Vendedor desactivado (soft delete)');
                     loadVendors(); // Recargar lista
-                    alert('✅ Vendedor eliminado exitosamente');
+                    alert('✅ Vendedor desactivado exitosamente');
                 } else {
                     console.error('❌ Error eliminando vendedor');
                     alert('❌ Error eliminando vendedor');
@@ -12772,7 +13303,1186 @@ ${vendor.notes || 'Sin notas adicionales'}
             console.log('✅ Excel exportado:', fileName);
         }
 
-    
+        // ============================================
+        // FUNCIONES DE GESTIÓN DE STAFF APONNT
+        // ============================================
+
+        let staffMembers = [];
+        let staffRoles = [];
+        let currentEditingStaff = null;
+
+        // Cargar roles disponibles
+        async function loadStaffRoles() {
+            try {
+                const response = await fetch('/api/aponnt/staff-data/roles');
+                if (!response.ok) {
+                    console.error('❌ Error cargando roles:', response.status);
+                    return;
+                }
+
+                const data = await response.json();
+                staffRoles = data.data || [];
+
+                // Popular select de roles en el modal
+                const roleSelect = document.getElementById('staffRole');
+                if (roleSelect) {
+                    roleSelect.innerHTML = '<option value="">-- Seleccionar Rol --</option>';
+                    staffRoles.forEach(role => {
+                        const option = document.createElement('option');
+                        option.value = role.role_id;
+                        option.textContent = `${role.role_name} (${role.role_code}) - Nivel ${role.level}`;
+                        option.dataset.area = role.role_area;
+                        option.dataset.level = role.level;
+                        roleSelect.appendChild(option);
+                    });
+                }
+
+                console.log(`✅ ${staffRoles.length} roles cargados`);
+            } catch (error) {
+                console.error('❌ Error cargando roles:', error);
+            }
+        }
+
+        // Cargar lista de staff
+        async function loadStaff() {
+            console.log('📋 Cargando staff desde aponnt_staff...');
+
+            try {
+                // Obtener filtros
+                const area = document.getElementById('staffFilterArea')?.value || '';
+                const country = document.getElementById('staffFilterCountry')?.value || '';
+                const isActive = document.getElementById('staffFilterStatus')?.value || '';
+
+                // Construir query string
+                const params = new URLSearchParams();
+                if (area) params.append('area', area);
+                if (country) params.append('country', country);
+                if (isActive !== '') params.append('is_active', isActive);
+
+                const response = await fetch(`/api/aponnt/staff-data?${params.toString()}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('📦 Respuesta API staff:', data);
+
+                    staffMembers = data.data || [];
+                    console.log(`✅ ${staffMembers.length} staff members cargados`);
+                    renderStaffTable();
+                } else {
+                    console.error('❌ Error cargando staff:', response.status);
+                    staffMembers = [];
+                    renderStaffTable();
+                }
+            } catch (error) {
+                console.error('❌ Error cargando staff:', error);
+                staffMembers = [];
+                renderStaffTable();
+            }
+        }
+
+        // Renderizar tabla de staff
+        function renderStaffTable() {
+            const container = document.getElementById('staffTableContainer');
+
+            if (!container) {
+                console.warn('⚠️ Contenedor staffTableContainer no encontrado');
+                return;
+            }
+
+            if (!staffMembers || staffMembers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👔</div>
+                        <h3>No hay staff registrado</h3>
+                        <p>Comienza agregando el primer staff member</p>
+                        <button class="btn btn-primary" onclick="openNewStaffModal()">
+                            ➕ Agregar Primer Staff
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const tableHTML = `
+                <table class="data-table" style="width: 100%; font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Área</th>
+                            <th>País</th>
+                            <th>Supervisor</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${staffMembers.map(staff => `
+                            <tr>
+                                <td><strong>${staff.first_name} ${staff.last_name}</strong></td>
+                                <td>${staff.email}</td>
+                                <td>${staff.role ? staff.role.role_name : 'Sin rol'}</td>
+                                <td>
+                                    ${staff.area === 'ventas' ? '💼 Ventas' :
+                                      staff.area === 'admin' ? '📊 Admin' :
+                                      staff.area === 'desarrollo' ? '💻 Desarrollo' :
+                                      staff.area === 'externo' ? '🌐 Externo' :
+                                      staff.area === 'direccion' ? '👔 Dirección' : staff.area}
+                                </td>
+                                <td>${staff.country}</td>
+                                <td>${staff.supervisor ? staff.supervisor.first_name + ' ' + staff.supervisor.last_name : 'CEO'}</td>
+                                <td>
+                                    <span class="badge ${staff.is_active ? 'badge-active' : 'badge-inactive'}">
+                                        ${staff.is_active ? '✅ Activo' : '❌ Inactivo'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 5px; justify-content: center;">
+                                        <button class="btn btn-sm btn-info" onclick="editStaff('${staff.staff_id}')" title="Editar">
+                                            ✏️
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteStaff('${staff.staff_id}')" title="Eliminar">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        // Abrir modal para nuevo staff
+        async function openNewStaffModal() {
+            console.log('🆕 Abriendo modal nuevo staff');
+
+            currentEditingStaff = null;
+            document.getElementById('staffModalTitle').textContent = '➕ Nuevo Staff Member';
+            document.getElementById('saveStaffBtnText').textContent = '💾 Guardar Staff';
+
+            // Cargar roles si no están cargados
+            if (staffRoles.length === 0) {
+                await loadStaffRoles();
+            }
+
+            // Cargar supervisores potenciales
+            await loadPotentialSupervisors();
+
+            // Limpiar formulario
+            document.getElementById('staffForm').reset();
+            document.getElementById('staffStatus').value = 'true';
+            document.getElementById('staffLanguage').value = 'es';
+            document.getElementById('staffCountry').value = 'AR';
+            document.getElementById('staffAcceptsSupportPackages').value = 'true';
+            document.getElementById('staffAcceptsAuctions').value = 'true';
+
+            // Ocultar campos de vendedor por defecto
+            document.getElementById('vendorFieldsSection').style.display = 'none';
+
+            // Mostrar modal
+            document.getElementById('staffModal').style.display = 'flex';
+        }
+
+        // Cargar supervisores potenciales
+        async function loadPotentialSupervisors() {
+            try {
+                const response = await fetch('/api/aponnt/staff-data');
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const allStaff = data.data || [];
+
+                const supervisorSelect = document.getElementById('staffSupervisor');
+                if (supervisorSelect) {
+                    supervisorSelect.innerHTML = '<option value="">-- Sin supervisor (reporta a CEO) --</option>';
+                    allStaff.forEach(staff => {
+                        if (staff.is_active && staff.level <= 2) { // Solo nivel 0, 1, 2 pueden ser supervisores
+                            const option = document.createElement('option');
+                            option.value = staff.staff_id;
+                            option.textContent = `${staff.first_name} ${staff.last_name} (${staff.role?.role_name || 'Sin rol'})`;
+                            supervisorSelect.appendChild(option);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Error cargando supervisores:', error);
+            }
+        }
+
+        // Actualizar campos del formulario según rol seleccionado
+        function updateStaffFormFields() {
+            const roleSelect = document.getElementById('staffRole');
+            const selectedOption = roleSelect.options[roleSelect.selectedIndex];
+            const area = selectedOption?.dataset?.area;
+
+            const vendorFieldsSection = document.getElementById('vendorFieldsSection');
+
+            // Mostrar campos de vendedor solo si el área es 'ventas'
+            if (area === 'ventas') {
+                vendorFieldsSection.style.display = 'block';
+            } else {
+                vendorFieldsSection.style.display = 'none';
+            }
+        }
+
+        // Editar staff
+        async function editStaff(staffId) {
+            console.log('✏️ Editando staff:', staffId);
+
+            const staff = staffMembers.find(s => s.staff_id === staffId);
+            if (!staff) {
+                console.error('Staff no encontrado:', staffId);
+                return;
+            }
+
+            currentEditingStaff = staff;
+            document.getElementById('staffModalTitle').textContent = '✏️ Editar Staff Member';
+            document.getElementById('saveStaffBtnText').textContent = '💾 Actualizar Staff';
+
+            // Cargar roles y supervisores
+            if (staffRoles.length === 0) {
+                await loadStaffRoles();
+            }
+            await loadPotentialSupervisors();
+
+            // Cargar datos en el formulario
+            document.getElementById('staffFirstName').value = staff.first_name || '';
+            document.getElementById('staffLastName').value = staff.last_name || '';
+            document.getElementById('staffEmail').value = staff.email || '';
+            document.getElementById('staffPhone').value = staff.phone || '';
+            document.getElementById('staffRole').value = staff.role?.role_id || '';
+            document.getElementById('staffCountry').value = staff.country || 'AR';
+            document.getElementById('staffSupervisor').value = staff.reports_to_staff_id || '';
+            document.getElementById('staffLanguage').value = staff.language_preference || 'es';
+            document.getElementById('staffStatus').value = staff.is_active ? 'true' : 'false';
+
+            // Campos de vendedor
+            document.getElementById('staffCBU').value = staff.cbu || '';
+            document.getElementById('staffBankName').value = staff.bank_name || '';
+            document.getElementById('staffWhatsapp').value = staff.whatsapp_number || '';
+            document.getElementById('staffAcceptsSupportPackages').value = staff.accepts_support_packages ? 'true' : 'false';
+            document.getElementById('staffAcceptsAuctions').value = staff.accepts_auctions ? 'true' : 'false';
+
+            // Actualizar visibilidad de campos según área
+            updateStaffFormFields();
+
+            // Mostrar modal
+            document.getElementById('staffModal').style.display = 'flex';
+        }
+
+        // Cerrar modal de staff
+        function closeStaffModal() {
+            console.log('🚪 Cerrando modal staff');
+            document.getElementById('staffModal').style.display = 'none';
+            currentEditingStaff = null;
+        }
+
+        // Guardar staff
+        async function saveStaff() {
+            console.log('💾 Guardando staff...');
+
+            // Validar campos
+            const firstName = document.getElementById('staffFirstName').value.trim();
+            const lastName = document.getElementById('staffLastName').value.trim();
+            const email = document.getElementById('staffEmail').value.trim();
+            const roleId = document.getElementById('staffRole').value;
+            const country = document.getElementById('staffCountry').value;
+
+            if (!firstName || !lastName) {
+                alert('❌ Nombre y apellido son obligatorios');
+                return;
+            }
+
+            if (!email) {
+                alert('❌ El email es obligatorio');
+                return;
+            }
+
+            if (!roleId) {
+                alert('❌ Debes seleccionar un rol');
+                return;
+            }
+
+            // Obtener datos del rol seleccionado
+            const selectedRole = staffRoles.find(r => r.role_id === roleId);
+
+            // Crear objeto staff
+            const staffData = {
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                phone: document.getElementById('staffPhone').value.trim(),
+                role_id: roleId,
+                country: country,
+                reports_to_staff_id: document.getElementById('staffSupervisor').value || null,
+                language_preference: document.getElementById('staffLanguage').value,
+                is_active: document.getElementById('staffStatus').value === 'true',
+
+                // Campos denormalizados
+                area: selectedRole?.role_area || 'admin',
+                level: selectedRole?.level || 4,
+
+                // Campos de vendedor (si aplica)
+                cbu: document.getElementById('staffCBU').value.trim(),
+                bank_name: document.getElementById('staffBankName').value.trim(),
+                whatsapp_number: document.getElementById('staffWhatsapp').value.trim(),
+                accepts_support_packages: document.getElementById('staffAcceptsSupportPackages').value === 'true',
+                accepts_auctions: document.getElementById('staffAcceptsAuctions').value === 'true'
+            };
+
+            try {
+                const saveBtn = document.getElementById('saveStaffBtn');
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '⏳ Guardando...';
+
+                let response;
+                if (currentEditingStaff) {
+                    // Actualizar staff existente
+                    response = await fetch(`/api/aponnt/staff-data/${currentEditingStaff.staff_id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(staffData)
+                    });
+                } else {
+                    // Crear nuevo staff
+                    response = await fetch('/api/aponnt/staff-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(staffData)
+                    });
+                }
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Staff guardado:', result);
+
+                    closeStaffModal();
+                    loadStaff(); // Recargar lista
+
+                    const action = currentEditingStaff ? 'actualizado' : 'creado';
+                    alert(`✅ Staff ${action} exitosamente`);
+                } else {
+                    const errorData = await response.json();
+                    console.error('❌ Error guardando staff:', errorData);
+                    alert(`❌ Error: ${errorData.message || 'Error guardando staff'}`);
+                }
+            } catch (error) {
+                console.error('❌ Error guardando staff:', error);
+                alert('❌ Error de conexión. Revisa la consola.');
+            } finally {
+                const saveBtn = document.getElementById('saveStaffBtn');
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<span id="saveStaffBtnText">💾 Guardar Staff</span>';
+            }
+        }
+
+        // Eliminar staff
+        async function deleteStaff(staffId) {
+            const staff = staffMembers.find(s => s.staff_id === staffId);
+            if (!staff) {
+                console.error('Staff no encontrado para eliminar:', staffId);
+                return;
+            }
+
+            if (!confirm(`¿Estás seguro de desactivar a "${staff.first_name} ${staff.last_name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/aponnt/staff-data/${staffId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    console.log('✅ Staff desactivado');
+                    loadStaff(); // Recargar lista
+                    alert('✅ Staff desactivado exitosamente');
+                } else {
+                    console.error('❌ Error eliminando staff');
+                    alert('❌ Error eliminando staff');
+                }
+            } catch (error) {
+                console.error('❌ Error eliminando staff:', error);
+                alert('❌ Error de conexión');
+            }
+        }
+
+        // Exportar staff a Excel
+        function exportStaffToExcel() {
+            console.log('📊 Exportando staff a Excel...');
+
+            if (!staffMembers || staffMembers.length === 0) {
+                alert('⚠️ No hay staff para exportar');
+                return;
+            }
+
+            // Preparar datos para Excel
+            const excelData = staffMembers.map(staff => ({
+                'Nombre': staff.first_name,
+                'Apellido': staff.last_name,
+                'Email': staff.email,
+                'Teléfono': staff.phone || '',
+                'Rol': staff.role ? staff.role.role_name : '',
+                'Área': staff.area,
+                'País': staff.country,
+                'Supervisor': staff.supervisor ? `${staff.supervisor.first_name} ${staff.supervisor.last_name}` : 'CEO',
+                'Estado': staff.is_active ? 'Activo' : 'Inactivo',
+                'CBU': staff.cbu || '',
+                'WhatsApp': staff.whatsapp_number || ''
+            }));
+
+            // Crear libro de Excel
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(excelData);
+
+            // Ajustar ancho de columnas
+            ws['!cols'] = [
+                { wch: 15 }, // Nombre
+                { wch: 15 }, // Apellido
+                { wch: 30 }, // Email
+                { wch: 15 }, // Teléfono
+                { wch: 25 }, // Rol
+                { wch: 15 }, // Área
+                { wch: 10 }, // País
+                { wch: 25 }, // Supervisor
+                { wch: 10 }, // Estado
+                { wch: 22 }, // CBU
+                { wch: 15 }  // WhatsApp
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Staff Aponnt');
+
+            // Descargar archivo
+            const fileName = `staff_aponnt_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            console.log('✅ Excel exportado:', fileName);
+        }
+
+        // ============================================================================
+        // GESTIÓN DE ROLES DE STAFF (STAFF ROLES)
+        // ============================================================================
+
+        // Variables globales para roles
+        let allStaffRoles = [];
+        let currentEditingRole = null;
+        const BASE_ROLE_CODES = [
+            'CEO', 'GG', 'GR-AR', 'GR-BR', 'GR-CL', 'GR-MX', 'GR-US', 'GR-ES',
+            'GA', 'GD', 'JV-AR', 'JV-BR', 'JV-CL', 'JV-MX', 'JV-US', 'JV-ES',
+            'CV-AR', 'CV-BR', 'CV-CL', 'CV-MX', 'CV-US', 'CV-ES',
+            'VA', 'DA', 'SA', 'FREELANCE'
+        ];
+
+        // Cargar roles con filtros
+        async function loadStaffRoles() {
+            console.log('📋 Cargando roles de staff...');
+
+            try {
+                const response = await fetch('/api/aponnt/staff-data/roles');
+
+                if (!response.ok) {
+                    console.error('❌ Error cargando roles:', response.status);
+                    allStaffRoles = [];
+                    renderStaffRolesTable();
+                    return;
+                }
+
+                const data = await response.json();
+                allStaffRoles = data.data || [];
+                console.log(`✅ ${allStaffRoles.length} roles cargados`);
+
+                // Aplicar filtros del lado del cliente
+                const filterArea = document.getElementById('roleFilterArea')?.value || '';
+                const filterLevel = document.getElementById('roleFilterLevel')?.value || '';
+
+                let filteredRoles = [...allStaffRoles];
+
+                if (filterArea) {
+                    filteredRoles = filteredRoles.filter(role => role.role_area === filterArea);
+                }
+
+                if (filterLevel !== '') {
+                    filteredRoles = filteredRoles.filter(role => role.level === parseInt(filterLevel));
+                }
+
+                renderStaffRolesTable(filteredRoles);
+
+            } catch (error) {
+                console.error('❌ Error cargando roles:', error);
+                allStaffRoles = [];
+                renderStaffRolesTable([]);
+            }
+        }
+
+        // Renderizar tabla de roles
+        function renderStaffRolesTable(rolesToDisplay = allStaffRoles) {
+            const container = document.getElementById('staffRolesTableContainer');
+
+            if (!rolesToDisplay || rolesToDisplay.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎭</div>
+                        <h3>No hay roles registrados</h3>
+                        <button class="btn btn-primary" onclick="openNewStaffRoleModal()">
+                            ➕ Agregar Primer Rol
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const tableHTML = `
+                <table class="data-table" style="width: 100%; font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre del Rol</th>
+                            <th>Nivel</th>
+                            <th>Área</th>
+                            <th>Descripción</th>
+                            <th>Base</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rolesToDisplay.map(role => {
+                            const isBaseRole = BASE_ROLE_CODES.includes(role.role_code);
+                            const levelLabel = ['CEO', 'Gerente', 'Jefe', 'Coordinador', 'Operativo'][role.level] || `Nivel ${role.level}`;
+                            const areaIcon = getAreaIcon(role.role_area);
+
+                            return `
+                                <tr>
+                                    <td><strong>${role.role_code}</strong></td>
+                                    <td>${role.role_name}</td>
+                                    <td>
+                                        <span class="badge badge-info">
+                                            ${role.level} - ${levelLabel}
+                                        </span>
+                                    </td>
+                                    <td>${areaIcon}</td>
+                                    <td style="max-width: 200px; font-size: 0.85rem; color: #666;">
+                                        ${role.role_description || '<em>Sin descripción</em>'}
+                                    </td>
+                                    <td>
+                                        ${isBaseRole
+                                            ? '<span class="badge badge-warning">🔒 Protegido</span>'
+                                            : '<span class="badge badge-secondary">🆓 Personalizado</span>'
+                                        }
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="editStaffRole('${role.role_id}')">
+                                            ✏️
+                                        </button>
+                                        ${!isBaseRole
+                                            ? `<button class="btn btn-sm btn-danger" onclick="confirmDeleteStaffRole('${role.role_id}')">🗑️</button>`
+                                            : '<button class="btn btn-sm btn-secondary" disabled title="Rol base protegido">🔒</button>'
+                                        }
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        // Abrir modal para nuevo rol
+        function openNewStaffRoleModal() {
+            currentEditingRole = null;
+            document.getElementById('staffRoleModalTitle').textContent = '➕ Nuevo Rol de Staff';
+
+            // Reset form
+            document.getElementById('staffRoleForm').reset();
+            document.getElementById('baseRoleWarning').style.display = 'none';
+            document.getElementById('deleteStaffRoleBtn').style.display = 'none';
+
+            // Habilitar campos (por si venimos de editar un rol base)
+            document.getElementById('roleCode').disabled = false;
+            document.getElementById('roleLevel').disabled = false;
+            document.getElementById('roleArea').disabled = false;
+
+            // Mostrar modal
+            document.getElementById('staffRoleModal').style.display = 'flex';
+        }
+
+        // Editar rol existente
+        async function editStaffRole(roleId) {
+            const role = allStaffRoles.find(r => r.role_id === roleId);
+            if (!role) return;
+
+            currentEditingRole = role;
+            const isBaseRole = BASE_ROLE_CODES.includes(role.role_code);
+
+            document.getElementById('staffRoleModalTitle').textContent = isBaseRole
+                ? '🔒 Editar Rol Base (Solo i18n)'
+                : '✏️ Editar Rol Personalizado';
+
+            // Cargar datos básicos
+            document.getElementById('roleCode').value = role.role_code || '';
+            document.getElementById('roleName').value = role.role_name || '';
+            document.getElementById('roleLevel').value = role.level !== null ? role.level : '';
+            document.getElementById('roleArea').value = role.role_area || '';
+            document.getElementById('roleDescription').value = role.role_description || '';
+
+            // Cargar traducciones i18n
+            const i18n = role.role_name_i18n || {};
+            document.getElementById('roleNameES').value = i18n.es || role.role_name || '';
+            document.getElementById('roleNameEN').value = i18n.en || '';
+            document.getElementById('roleNamePT').value = i18n.pt || '';
+            document.getElementById('roleNameFR').value = i18n.fr || '';
+            document.getElementById('roleNameDE').value = i18n.de || '';
+            document.getElementById('roleNameIT').value = i18n.it || '';
+
+            // Si es rol base, deshabilitar campos críticos y mostrar warning
+            if (isBaseRole) {
+                document.getElementById('roleCode').disabled = true;
+                document.getElementById('roleLevel').disabled = true;
+                document.getElementById('roleArea').disabled = true;
+                document.getElementById('baseRoleWarning').style.display = 'block';
+                document.getElementById('deleteStaffRoleBtn').style.display = 'none';
+            } else {
+                document.getElementById('roleCode').disabled = false;
+                document.getElementById('roleLevel').disabled = false;
+                document.getElementById('roleArea').disabled = false;
+                document.getElementById('baseRoleWarning').style.display = 'none';
+                document.getElementById('deleteStaffRoleBtn').style.display = 'inline-block';
+            }
+
+            // Mostrar modal
+            document.getElementById('staffRoleModal').style.display = 'flex';
+        }
+
+        // Cerrar modal de roles
+        function closeStaffRoleModal() {
+            console.log('🚪 Cerrando modal de roles');
+            document.getElementById('staffRoleModal').style.display = 'none';
+            currentEditingRole = null;
+        }
+
+        // Guardar rol (crear o actualizar)
+        async function saveStaffRole() {
+            console.log('💾 Guardando rol...');
+
+            // Validar campos obligatorios
+            const roleCode = document.getElementById('roleCode').value.trim().toUpperCase();
+            const roleName = document.getElementById('roleName').value.trim();
+            const level = document.getElementById('roleLevel').value;
+            const area = document.getElementById('roleArea').value;
+
+            if (!roleCode || !roleName || level === '' || !area) {
+                alert('❌ Campos obligatorios faltantes: Código, Nombre, Nivel y Área son requeridos');
+                return;
+            }
+
+            // Construir objeto i18n
+            const i18n = {
+                es: document.getElementById('roleNameES').value.trim() || roleName,
+                en: document.getElementById('roleNameEN').value.trim() || roleName,
+                pt: document.getElementById('roleNamePT').value.trim() || roleName,
+                fr: document.getElementById('roleNameFR').value.trim() || roleName,
+                de: document.getElementById('roleNameDE').value.trim() || roleName,
+                it: document.getElementById('roleNameIT').value.trim() || roleName
+            };
+
+            const roleData = {
+                role_code: roleCode,
+                role_name: roleName,
+                level: parseInt(level),
+                role_area: area,
+                role_description: document.getElementById('roleDescription').value.trim() || null,
+                role_name_i18n: i18n
+            };
+
+            try {
+                const saveBtn = document.getElementById('saveStaffRoleBtn');
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '⏳ Guardando...';
+
+                let response;
+                if (currentEditingRole) {
+                    // UPDATE
+                    response = await fetch(`/api/aponnt/staff-data/roles/${currentEditingRole.role_id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(roleData)
+                    });
+                } else {
+                    // CREATE
+                    response = await fetch('/api/aponnt/staff-data/roles', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(roleData)
+                    });
+                }
+
+                if (response.ok) {
+                    closeStaffRoleModal();
+                    loadStaffRoles(); // Recargar lista
+                    const action = currentEditingRole ? 'actualizado' : 'creado';
+                    alert(`✅ Rol ${action} exitosamente`);
+                } else {
+                    const errorData = await response.json();
+                    alert(`❌ Error: ${errorData.message || 'Error guardando rol'}`);
+                }
+
+            } catch (error) {
+                console.error('❌ Error guardando rol:', error);
+                alert('❌ Error de conexión');
+            } finally {
+                const saveBtn = document.getElementById('saveStaffRoleBtn');
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<span id="saveStaffRoleBtnText">💾 Guardar Rol</span>';
+            }
+        }
+
+        // Confirmar eliminación de rol
+        function confirmDeleteStaffRole(roleId) {
+            const role = allStaffRoles.find(r => r.role_id === roleId);
+            if (!role) return;
+
+            if (BASE_ROLE_CODES.includes(role.role_code)) {
+                alert('⚠️ Los roles base no pueden ser eliminados');
+                return;
+            }
+
+            if (!confirm(`¿Estás seguro de eliminar el rol "${role.role_name}" (${role.role_code})?\n\nEsta acción no se puede deshacer.`)) {
+                return;
+            }
+
+            deleteStaffRoleById(roleId);
+        }
+
+        // Eliminar rol (solo desde el modal)
+        async function deleteStaffRole() {
+            if (!currentEditingRole) return;
+
+            if (BASE_ROLE_CODES.includes(currentEditingRole.role_code)) {
+                alert('⚠️ Los roles base no pueden ser eliminados');
+                return;
+            }
+
+            if (!confirm(`¿Estás seguro de eliminar el rol "${currentEditingRole.role_name}"?\n\nEsta acción no se puede deshacer.`)) {
+                return;
+            }
+
+            deleteStaffRoleById(currentEditingRole.role_id);
+        }
+
+        // Eliminar rol por ID
+        async function deleteStaffRoleById(roleId) {
+            try {
+                const response = await fetch(`/api/aponnt/staff-data/roles/${roleId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    closeStaffRoleModal();
+                    loadStaffRoles();
+                    alert('✅ Rol eliminado exitosamente');
+                } else {
+                    const errorData = await response.json();
+                    alert(`❌ Error: ${errorData.message || 'Error eliminando rol'}`);
+                }
+
+            } catch (error) {
+                console.error('❌ Error eliminando rol:', error);
+                alert('❌ Error de conexión');
+            }
+        }
+
+        // Exportar roles a Excel
+        function exportStaffRolesToExcel() {
+            if (!allStaffRoles || allStaffRoles.length === 0) {
+                alert('⚠️ No hay roles para exportar');
+                return;
+            }
+
+            const excelData = allStaffRoles.map(role => {
+                const isBaseRole = BASE_ROLE_CODES.includes(role.role_code);
+                const levelLabel = ['CEO', 'Gerente', 'Jefe', 'Coordinador', 'Operativo'][role.level] || `Nivel ${role.level}`;
+                const i18n = role.role_name_i18n || {};
+
+                return {
+                    'Código': role.role_code,
+                    'Nombre (ES)': role.role_name,
+                    'Nivel': `${role.level} - ${levelLabel}`,
+                    'Área': role.role_area,
+                    'Descripción': role.role_description || '',
+                    'Tipo': isBaseRole ? 'Base (Protegido)' : 'Personalizado',
+                    'Nombre (EN)': i18n.en || '',
+                    'Nombre (PT)': i18n.pt || '',
+                    'Nombre (FR)': i18n.fr || '',
+                    'Nombre (DE)': i18n.de || '',
+                    'Nombre (IT)': i18n.it || ''
+                };
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(excelData);
+
+            // Ajustar ancho de columnas
+            ws['!cols'] = [
+                { wch: 12 }, // Código
+                { wch: 30 }, // Nombre (ES)
+                { wch: 20 }, // Nivel
+                { wch: 15 }, // Área
+                { wch: 40 }, // Descripción
+                { wch: 20 }, // Tipo
+                { wch: 30 }, // Nombre (EN)
+                { wch: 30 }, // Nombre (PT)
+                { wch: 30 }, // Nombre (FR)
+                { wch: 30 }, // Nombre (DE)
+                { wch: 30 }  // Nombre (IT)
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Roles de Staff');
+
+            // Descargar archivo
+            const fileName = `roles_staff_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            console.log('✅ Excel exportado:', fileName);
+        }
+
+        // ============================================================================
+        // ORGANIGRAMA DE STAFF (STAFF ORGCHART)
+        // ============================================================================
+
+        // Función para cambiar entre sub-tabs de Staff
+        function switchStaffSubTab(tabName) {
+            // Ocultar todos los subtabs
+            document.querySelectorAll('.vendor-subtab-content').forEach(tab => {
+                if (tab.parentElement.closest('#staff')) {
+                    tab.style.display = 'none';
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Remover clase active de todos los botones
+            const staffTabsContainer = document.querySelector('#staff .nav-tabs-secondary');
+            if (staffTabsContainer) {
+                staffTabsContainer.querySelectorAll('.nav-tab-secondary').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+            }
+
+            // Mostrar subtab seleccionado
+            const selectedTab = document.getElementById(tabName);
+            if (selectedTab) {
+                selectedTab.style.display = 'block';
+                selectedTab.classList.add('active');
+            }
+
+            // Activar botón
+            event?.target?.classList.add('active');
+
+            // Si es el organigrama, renderizarlo
+            if (tabName === 'staff-orgchart') {
+                renderOrgChart();
+            }
+        }
+
+        // Renderizar organigrama completo (dinámico basado en niveles REALES de BD)
+        async function renderOrgChart() {
+            const container = document.getElementById('orgchartContainer');
+            const countryFilter = document.getElementById('orgchartCountryFilter').value;
+
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">⏳ Cargando organigrama...</div>';
+
+            try {
+                // Cargar ROLES y STAFF en paralelo
+                const [rolesResponse, staffResponse] = await Promise.all([
+                    fetch('/api/aponnt/staff-data/roles'),
+                    fetch('/api/aponnt/staff-data')
+                ]);
+
+                if (!rolesResponse.ok || !staffResponse.ok) {
+                    throw new Error('Error cargando datos');
+                }
+
+                const rolesData = await rolesResponse.json();
+                const staffData = await staffResponse.json();
+
+                const allRoles = rolesData.data || [];
+                const allStaff = staffData.data || [];
+
+                // Crear mapa de staff por role_code
+                const staffByRole = {};
+                allStaff.forEach(staff => {
+                    const roleCode = staff.role?.role_code;
+                    if (roleCode) {
+                        if (!staffByRole[roleCode]) {
+                            staffByRole[roleCode] = [];
+                        }
+                        staffByRole[roleCode].push(staff);
+                    }
+                });
+
+                // Agrupar roles por NIVEL REAL (0, 1, 2, 3, 4)
+                const rolesByLevel = {};
+                allRoles.forEach(role => {
+                    const level = role.level;
+                    if (!rolesByLevel[level]) {
+                        rolesByLevel[level] = [];
+                    }
+                    rolesByLevel[level].push(role);
+                });
+
+                // Determinar países únicos para roles country-specific
+                const countries = { 'AR': '🇦🇷', 'BR': '🇧🇷', 'CL': '🇨🇱', 'MX': '🇲🇽', 'US': '🇺🇸', 'ES': '🇪🇸' };
+
+                // Construir HTML del organigrama
+                let html = '<div class="orgchart-wrapper">';
+
+                // Renderizar cada nivel (0, 1, 2, 3, 4)
+                const levels = Object.keys(rolesByLevel).map(Number).sort((a, b) => a - b);
+
+                const levelNames = {
+                    0: 'NIVEL 0: DIRECCIÓN',
+                    1: 'NIVEL 1: GERENTES',
+                    2: 'NIVEL 2: JEFES',
+                    3: 'NIVEL 3: SUPERVISORES/COORDINADORES',
+                    4: 'NIVEL 4: OPERATIVOS'
+                };
+
+                levels.forEach(level => {
+                    const roles = rolesByLevel[level];
+
+                    html += `<div class="orgchart-level" style="margin-bottom: ${level === 4 ? '15' : '35'}px;">`;
+
+                    // Título del nivel
+                    html += `<div style="text-align: center; margin-bottom: 8px;">`;
+                    html += `<span style="font-size: 0.35rem; font-weight: bold; color: #6b7280; letter-spacing: 0.5px;">${levelNames[level]}</span>`;
+                    html += `</div>`;
+
+                    html += `<div class="orgchart-row" style="justify-content: center; flex-wrap: wrap; gap: 6px;">`;
+
+                    roles.forEach(role => {
+                        // FILTRAR ROLES ESPECÍFICOS QUE NO SE DEBEN MOSTRAR
+                        const rolesExcluidos = [
+                            'Jefe de Facturación y Cobranzas',
+                            'Facturador',
+                            'Cobrador',
+                            'Jefe de Contabilidad e Impuestos',
+                            'Liquidador de Impuestos',
+                            'Contador',
+                            'Jefe Legal',
+                            'Abogado'
+                        ];
+
+                        if (rolesExcluidos.includes(role.role_name)) {
+                            return;
+                        }
+
+                        const roleCountry = role.is_country_specific ? null : null; // Se infiere del role_code si termina en -AR, -BR, etc.
+                        let country = null;
+                        if (role.role_code.includes('-')) {
+                            const parts = role.role_code.split('-');
+                            const potentialCountry = parts[parts.length - 1];
+                            if (countries[potentialCountry]) {
+                                country = potentialCountry;
+                            }
+                        }
+
+                        // Filtrar por país si aplica
+                        if (countryFilter && country && country !== countryFilter) {
+                            return;
+                        }
+
+                        const staffList = staffByRole[role.role_code] || [];
+
+                        // Para nivel 4 (operativos), mostrar múltiples instancias si hay varios staff
+                        if (level === 4 && staffList.length > 0) {
+                            staffList.forEach(staff => {
+                                html += renderOrgChartNode({
+                                    code: role.role_code,
+                                    name: role.role_name,
+                                    country: country,
+                                    role_area: role.role_area  // AGREGADO: pasar área del rol
+                                }, staff, level);
+                            });
+                        } else {
+                            // Para niveles 0-3, mostrar solo uno (o vacante si no hay)
+                            const staff = staffList[0] || null;
+                            html += renderOrgChartNode({
+                                code: role.role_code,
+                                name: role.role_name,
+                                country: country,
+                                role_area: role.role_area  // AGREGADO: pasar área del rol
+                            }, staff, level);
+                        }
+                    });
+
+                    html += '</div></div>';
+                });
+
+                html += '</div>';
+
+                // Agregar CSS del organigrama
+                html += `
+                <style>
+                    .orgchart-wrapper {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    }
+                    .orgchart-level {
+                        position: relative;
+                    }
+                    .orgchart-row {
+                        display: flex;
+                        gap: 5px;
+                    }
+                    .orgchart-node {
+                        width: 70px;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        padding: 5px;
+                        background: white;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+                        transition: all 0.3s ease;
+                        text-align: center;
+                        position: relative;
+                    }
+                    .orgchart-node:hover {
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        transform: translateY(-2px);
+                    }
+                    .orgchart-node.level-0 {
+                        border-color: #8b5cf6;
+                        background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%);
+                    }
+                    .orgchart-node.level-1 {
+                        border-color: #3b82f6;
+                        background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+                    }
+                    .orgchart-node.level-2 {
+                        border-color: #10b981;
+                        background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+                    }
+                    .orgchart-node.level-3 {
+                        border-color: #f59e0b;
+                        background: linear-gradient(135deg, #fed7aa 0%, #fef3c7 100%);
+                    }
+                    .orgchart-node.level-4 {
+                        border-color: #6b7280;
+                        background: linear-gradient(135deg, #e5e7eb 0%, #f9fafb 100%);
+                    }
+                    .orgchart-node.vacant {
+                        opacity: 0.6;
+                        border-style: dashed;
+                    }
+                    /* ASESORES EXTERNOS - Estilo especial */
+                    .orgchart-node.external-advisor {
+                        border: 1px dashed #f59e0b !important;
+                        background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%) !important;
+                        box-shadow: 0 1px 4px rgba(245, 158, 11, 0.15) !important;
+                    }
+                    .orgchart-node.external-advisor:hover {
+                        box-shadow: 0 2px 7px rgba(245, 158, 11, 0.25) !important;
+                    }
+                    .orgchart-role-title {
+                        font-size: 0.3rem;
+                        font-weight: bold;
+                        color: #374151;
+                        margin-bottom: 3px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.2px;
+                        line-height: 1.1;
+                    }
+                    .orgchart-staff-name {
+                        font-size: 0.4rem;
+                        font-weight: 600;
+                        color: #111827;
+                        margin-bottom: 2px;
+                        line-height: 1.1;
+                    }
+                    .orgchart-staff-email {
+                        font-size: 0.3rem;
+                        color: #6b7280;
+                        word-break: break-all;
+                        line-height: 1.1;
+                    }
+                    .orgchart-vacant-label {
+                        font-size: 0.35rem;
+                        color: #9ca3af;
+                        font-style: italic;
+                    }
+                    .orgchart-country-flag {
+                        font-size: 0.5rem;
+                        margin-bottom: 2px;
+                    }
+                </style>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('❌ Error renderizando organigrama:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #dc2626;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+                        <p>Error cargando organigrama</p>
+                        <p style="font-size: 0.9rem; color: #666;">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Renderizar un nodo individual del organigrama
+        function renderOrgChartNode(role, staff, level) {
+            const countryFlags = {
+                'AR': '🇦🇷',
+                'BR': '🇧🇷',
+                'CL': '🇨🇱',
+                'MX': '🇲🇽',
+                'US': '🇺🇸',
+                'ES': '🇪🇸'
+            };
+
+            const isVacant = !staff;
+            const vacantClass = isVacant ? 'vacant' : '';
+
+            // Detectar si es asesor externo (por rol o por contrato)
+            const isExternal = role.role_area === 'externo' ||
+                              (staff && (staff.contract_type === 'externo' || staff.contract_type === 'freelance'));
+            const externalClass = isExternal ? 'external-advisor' : '';
+
+            let html = `<div class="orgchart-node level-${level} ${vacantClass} ${externalClass}">`;
+
+            // Indicador de EXTERNO
+            if (isExternal) {
+                html += `<div style="position: absolute; top: 2px; right: 2px; font-size: 0.45rem;">🔗</div>`;
+                html += `<div style="font-size: 0.25rem; font-weight: bold; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px;">EXTERNO</div>`;
+            }
+
+            // País (si aplica)
+            if (role.country) {
+                html += `<div class="orgchart-country-flag">${countryFlags[role.country] || ''}</div>`;
+            }
+
+            // Título del rol
+            html += `<div class="orgchart-role-title">${role.name}</div>`;
+
+            // Información del staff
+            if (staff) {
+                html += `
+                    <div class="orgchart-staff-name">${staff.first_name} ${staff.last_name}</div>
+                    <div class="orgchart-staff-email">${staff.email}</div>
+                `;
+            } else {
+                html += `<div class="orgchart-vacant-label">Vacante</div>`;
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+
         // 🌍 VALIDACIÓN DE COORDENADAS PARA APK ANDROID
         function validateGeolocationData() {
             const latitude = document.getElementById('companyLatitude').value?.trim();
@@ -13735,74 +15445,12 @@ ${vendor.notes || 'Sin notas adicionales'}
     <!-- ✅ Support Tickets View Module (Phase 7) -->
     <script src="js/modules/admin-support-tickets-view.js"></script>
 
+    <!-- 📊 Frappe Gantt Library -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
+    <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+
     <!-- 🏗️ Engineering Dashboard Module -->
     <script src="js/modules/engineering-dashboard.js"></script>
-
-    <script>
-        // 🏗️ ENGINEERING DASHBOARD MODAL - Gestión de apertura/cierre
-        (function() {
-            const btnOpen = document.getElementById('btn-open-engineering-modal');
-            const btnClose = document.getElementById('btn-close-engineering-modal');
-            const modal = document.getElementById('engineering-modal');
-            const modalContent = document.getElementById('engineering-dashboard-modal-content');
-            let dashboardInitialized = false;
-
-            // Abrir modal
-            btnOpen.addEventListener('click', function() {
-                console.log('🏗️ [MODAL] Abriendo Engineering Dashboard...');
-                modal.style.display = 'block';
-                document.body.style.overflow = 'hidden'; // Prevenir scroll del body
-
-                // Inicializar dashboard solo la primera vez
-                if (!dashboardInitialized && typeof EngineeringDashboard !== 'undefined') {
-                    console.log('🏗️ [MODAL] Inicializando Engineering Dashboard...');
-
-                    // Cambiar el container target temporalmente
-                    const originalInit = EngineeringDashboard.init;
-                    EngineeringDashboard.init = async function() {
-                        // Cambiar el ID del container temporalmente
-                        const tempContainer = document.createElement('div');
-                        tempContainer.id = 'engineering-dashboard-container';
-                        modalContent.innerHTML = '';
-                        modalContent.appendChild(tempContainer);
-
-                        // Llamar al init original
-                        await originalInit.call(EngineeringDashboard);
-                        dashboardInitialized = true;
-                    };
-
-                    EngineeringDashboard.init();
-                } else {
-                    console.log('ℹ️ [MODAL] Dashboard ya inicializado');
-                }
-            });
-
-            // Cerrar modal
-            function closeModal() {
-                console.log('🏗️ [MODAL] Cerrando modal...');
-                modal.style.display = 'none';
-                document.body.style.overflow = ''; // Restaurar scroll
-            }
-
-            btnClose.addEventListener('click', closeModal);
-
-            // Cerrar al hacer click fuera del contenido
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeModal();
-                }
-            });
-
-            // Cerrar con ESC
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && modal.style.display === 'block') {
-                    closeModal();
-                }
-            });
-
-            console.log('✅ [MODAL] Engineering Dashboard modal configurado');
-        })();
-    </script>
 
     <script>
         // Inicializar módulos cuando se cargan sus tabs respectivas
@@ -13857,10 +15505,30 @@ ${vendor.notes || 'Sin notas adicionales'}
                     }, 200);
                 }
 
-                // NOTA: Engineering Dashboard se inicializa en switchTab() (línea ~5636)
-                // No duplicar aquí para evitar múltiples inicializaciones
+                // ✅ Inicializar Engineering Dashboard en Tab
+                if (tabName === 'engineering' && !window.engineeringTabInitialized) {
+                    setTimeout(() => {
+                        if (typeof EngineeringDashboard !== 'undefined') {
+                            console.log('🏗️ [TAB] Inicializando Engineering Dashboard en tab...');
+                            const tabContainer = document.getElementById('engineering-tab-container');
+                            if (tabContainer) {
+                                // Crear container para el dashboard
+                                const dashContainer = document.createElement('div');
+                                dashContainer.id = 'engineering-dashboard-container';
+                                tabContainer.innerHTML = '';
+                                tabContainer.appendChild(dashContainer);
+
+                                // Inicializar el dashboard
+                                EngineeringDashboard.init();
+                                window.engineeringTabInitialized = true;
+                            }
+                        } else {
+                            console.warn('⚠️ EngineeringDashboard no está disponible');
+                        }
+                    }, 200);
+                }
             };
         })();
     </script>
 </body>
-</html>
+</html><!-- Version: 1763816963 -->

@@ -14,40 +14,44 @@ function showDepartmentsContent() {
         <div class="tab-content active" id="departments">
             <div class="card">
                 <h2 data-translate="departments.title">🏢 Gestión de Departamentos</h2>
-                <div class="quick-actions">
-                    <button class="btn btn-primary" onclick="showAddDepartment()" data-translate="departments.buttons.create">➕ Crear Departamento</button>
-                    <button class="btn btn-success" onclick="loadDepartments()" data-translate="departments.buttons.list">📋 Lista de Departamentos</button>
-                    <button class="btn btn-warning" onclick="showDepartmentStats()" data-translate="departments.buttons.statistics">📊 Estadísticas</button>
-                    <button class="btn btn-info" onclick="exportDepartments()" data-translate="departments.buttons.export">📤 Exportar</button>
+
+                <!-- Stats cards - altura fija 45px -->
+                <div id="dept-stats" class="stats-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div class="stat-card" style="flex: 1; height: 45px; display: flex; flex-direction: column; justify-content: center; padding: 0 15px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-radius: 8px; text-align: center; border-left: 4px solid #1976d2;">
+                        <div class="stat-value" id="total-departments" style="font-size: 24px; font-weight: bold; color: #1565c0; line-height: 1;">--</div>
+                        <div class="stat-label" style="font-size: 11px; color: #666; line-height: 1;" data-translate="departments.stats.total_departments">Departamentos Totales</div>
+                    </div>
+                    <div class="stat-card" style="flex: 1; height: 45px; display: flex; flex-direction: column; justify-content: center; padding: 0 15px; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 8px; text-align: center; border-left: 4px solid #4caf50;">
+                        <div class="stat-value" id="gps-enabled-departments" style="font-size: 24px; font-weight: bold; color: #2e7d32; line-height: 1;">--</div>
+                        <div class="stat-label" style="font-size: 11px; color: #666; line-height: 1;" data-translate="departments.stats.gps_configured">Con GPS Configurado</div>
+                    </div>
+                    <div class="stat-card" style="flex: 1; height: 45px; display: flex; flex-direction: column; justify-content: center; padding: 0 15px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-radius: 8px; text-align: center; border-left: 4px solid #ff9800;">
+                        <div class="stat-value" id="avg-coverage-radius" style="font-size: 24px; font-weight: bold; color: #e65100; line-height: 1;">--</div>
+                        <div class="stat-label" style="font-size: 11px; color: #666; line-height: 1;" data-translate="departments.stats.avg_radius">Radio Promedio (m)</div>
+                    </div>
+                </div>
+
+                <!-- Botones en la misma fila con mismo tamaño -->
+                <div class="quick-actions" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="showAddDepartment()" style="flex: 1; padding: 10px 15px;" data-translate="departments.buttons.create">➕ Crear Departamento</button>
+                    <button class="btn btn-success" onclick="loadDepartments()" style="flex: 1; padding: 10px 15px;" data-translate="departments.buttons.list">📋 Lista</button>
+                    <button class="btn btn-info" onclick="exportDepartments()" style="flex: 1; padding: 10px 15px;" data-translate="departments.buttons.export">📤 Exportar</button>
                 </div>
 
                 <div id="departments-container">
                     <h3 data-translate="departments.list.title">📋 Lista de Departamentos</h3>
                     <div id="departments-list" class="server-info" data-translate="departments.list.load_prompt">
-                        Presiona "Lista de Departamentos" para cargar...
-                    </div>
-                </div>
-
-                <div id="dept-stats" class="stats-grid" style="margin-top: 20px;">
-                    <div class="stat-item">
-                        <div class="stat-value" id="total-departments">--</div>
-                        <div class="stat-label" data-translate="departments.stats.total_departments">Departamentos Totales</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="gps-enabled-departments">--</div>
-                        <div class="stat-label" data-translate="departments.stats.gps_configured">Con GPS Configurado</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="avg-coverage-radius">--</div>
-                        <div class="stat-label" data-translate="departments.stats.avg_radius">Radio Promedio (m)</div>
+                        Presiona "Lista" para cargar...
                     </div>
                 </div>
             </div>
         </div>
     `;
 
-    // Auto cargar estadísticas
-    setTimeout(showDepartmentStats, 300);
+    // Auto cargar departamentos y estadísticas al abrir el módulo
+    setTimeout(() => {
+        loadDepartments();
+    }, 300);
 }
 
 // Cargar lista de departamentos
@@ -126,15 +130,15 @@ async function displayDepartmentsList(departments) {
     let html = `
         <div style="overflow-x: auto;">
             <table class="users-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                <thead class="table-dark">
+                <thead style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-bottom: 2px solid #1976d2;">
                     <tr>
-                        <th data-translate="departments.table.name">🏢 ${nameHeader}</th>
-                        <th data-translate="departments.table.description">📝 ${descHeader}</th>
-                        <th data-translate="departments.table.address">📍 ${addressHeader}</th>
-                        <th data-translate="departments.table.gps">🗺️ ${gpsHeader}</th>
-                        <th data-translate="departments.table.radius">📏 ${radiusHeader}</th>
-                        <th data-translate="departments.table.created">📅 ${createdHeader}</th>
-                        <th data-translate="departments.table.actions">⚙️ ${actionsHeader}</th>
+                        <th style="color: #1565c0; padding: 12px 8px; font-weight: 600;" data-translate="departments.table.name">🏢 ${nameHeader}</th>
+                        <th style="color: #1565c0; padding: 12px 8px; font-weight: 600;" data-translate="departments.table.description">📝 ${descHeader}</th>
+                        <th style="color: #1565c0; padding: 12px 8px; font-weight: 600;" data-translate="departments.table.address">📍 ${addressHeader}</th>
+                        <th style="color: #1565c0; padding: 12px 8px; font-weight: 600;" data-translate="departments.table.gps">🗺️ ${gpsHeader}</th>
+                        <th style="color: #1565c0; padding: 12px 8px; font-weight: 600;" data-translate="departments.table.radius">📏 ${radiusHeader}</th>
+                        <th style="color: #1565c0; padding: 12px 8px; font-weight: 600;" data-translate="departments.table.created">📅 ${createdHeader}</th>
+                        <th style="color: #1565c0; padding: 12px 8px; font-weight: 600;" data-translate="departments.table.actions">⚙️ ${actionsHeader}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -202,35 +206,32 @@ async function displayDepartmentsList(departments) {
     container.innerHTML = html;
 }
 
-// Mostrar estadísticas de departamentos
+// Actualizar estadísticas de departamentos (se llama automáticamente desde loadDepartments)
 function updateDepartmentStats(departments) {
     const totalDepts = departments.length;
     const gpsEnabledDepts = departments.filter(d => d.gpsLocation?.lat && d.gpsLocation?.lng).length;
     const totalRadius = departments.reduce((sum, d) => sum + (d.coverageRadius || 0), 0);
     const avgRadius = totalDepts > 0 ? Math.round(totalRadius / totalDepts) : 0;
 
-    console.log('📊 [DEPARTMENTS] Calculando estadísticas:');
-    console.log(`   Departamentos: ${totalDepts}`);
-    console.log(`   Radio total: ${totalRadius}m`);
-    console.log(`   Promedio: ${avgRadius}m`);
-    console.log('   Datos:', departments.map(d => `${d.name}: ${d.coverageRadius}m`));
-    
+    console.log('📊 [DEPARTMENTS] Estadísticas actualizadas:', { totalDepts, gpsEnabledDepts, avgRadius });
+
     const totalElement = document.getElementById('total-departments');
     const gpsElement = document.getElementById('gps-enabled-departments');
     const avgElement = document.getElementById('avg-coverage-radius');
 
     if (totalElement) totalElement.textContent = totalDepts;
     if (gpsElement) gpsElement.textContent = gpsEnabledDepts;
-    if (avgElement) avgElement.textContent = avgRadius;
-}
+    if (avgElement) avgElement.textContent = avgRadius + 'm';
 
-// Función para mostrar estadísticas
-function showDepartmentStats() {
-    if (currentDepartments.length > 0) {
-        updateDepartmentStats(currentDepartments);
-    } else {
-        loadDepartments();
-    }
+    // Efecto visual sutil al actualizar
+    const statsCards = document.querySelectorAll('.stat-card');
+    statsCards.forEach(card => {
+        card.style.transition = 'all 0.2s ease';
+        card.style.transform = 'scale(1.02)';
+        setTimeout(() => {
+            card.style.transform = 'scale(1)';
+        }, 200);
+    });
 }
 
 // Cargar sucursales de la empresa

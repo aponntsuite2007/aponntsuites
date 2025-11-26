@@ -1134,6 +1134,12 @@ if (typeof window !== 'undefined') {
     window.validateArtCompliance = validateArtCompliance;
     window.reportNewAccident = reportNewAccident;
     window.submitQuickAccidentReport = submitQuickAccidentReport;
+
+    // Registro en window.Modules para sistema moderno
+    window.Modules = window.Modules || {};
+    window.Modules['art-management'] = {
+        init: showArtManagementContent
+    };
 }
 
 console.log('✅ [ART-MANAGEMENT] Módulo ART completo y listo');

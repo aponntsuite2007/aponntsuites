@@ -414,9 +414,13 @@ class OllamaAnalyzer {
     }
 
     // Verificar si menciona los errores originales
-    const mentionsOriginalErrors = errors.some(err =>
-      diagnosis.toLowerCase().includes(err.error.toLowerCase().substring(0, 30))
-    );
+    // ✅ FIX: Verificar que err.error exista antes de llamar toLowerCase()
+    const mentionsOriginalErrors = errors.some(err => {
+      const errorText = err.error || err.error_message || err.message || '';
+      if (!errorText) return false;
+      const errorSnippet = errorText.toString().toLowerCase().substring(0, 30);
+      return diagnosis.toLowerCase().includes(errorSnippet);
+    });
     if (mentionsOriginalErrors) {
       confidence += 0.05;
     }

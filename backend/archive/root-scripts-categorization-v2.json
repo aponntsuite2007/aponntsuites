@@ -1,0 +1,3156 @@
+{
+  "scanDate": "2025-11-24T04:59:53.598Z",
+  "totalFiles": 369,
+  "toKeep": 2,
+  "toMoveToScripts": 3,
+  "toArchive": 300,
+  "needsReview": 64,
+  "summary": [
+    {
+      "category": "CRITICAL_KEEP",
+      "count": 2,
+      "action": "KEEP",
+      "destination": null,
+      "reason": "Critical system files - DO NOT ARCHIVE"
+    },
+    {
+      "category": "CLAUDE_INTEGRATION",
+      "count": 3,
+      "action": "MOVE_TO_SCRIPTS",
+      "destination": "scripts/claude-integration/",
+      "reason": "Claude Code integration scripts - move to organized location"
+    },
+    {
+      "category": "ACTIVATION",
+      "count": 14,
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/activation/",
+      "reason": null
+    },
+    {
+      "category": "MIGRATION",
+      "count": 20,
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/migrations/",
+      "reason": null
+    },
+    {
+      "category": "DIAGNOSTIC_CHECK",
+      "count": 54,
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/diagnostics/",
+      "reason": null
+    },
+    {
+      "category": "DIAGNOSTIC_DEBUG",
+      "count": 6,
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/diagnostics/",
+      "reason": null
+    },
+    {
+      "category": "DIAGNOSTIC_ANALYZE",
+      "count": 17,
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/diagnostics/",
+      "reason": null
+    },
+    {
+      "category": "FIX_REPAIR",
+      "count": 56,
+      "action": "ARCHIVE",
+      "destination": "archive/executed-fixes/",
+      "reason": null
+    },
+    {
+      "category": "TEST_RUN",
+      "count": 87,
+      "action": "ARCHIVE",
+      "destination": "archive/old-tests/",
+      "reason": null
+    },
+    {
+      "category": "CLEANUP",
+      "count": 14,
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/cleanup/",
+      "reason": null
+    },
+    {
+      "category": "CREATE_SEED",
+      "count": 31,
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/initialization/",
+      "reason": null
+    },
+    {
+      "category": "DEMO_SCRIPTS",
+      "count": 1,
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/demos/",
+      "reason": null
+    },
+    {
+      "category": "UNCATEGORIZED",
+      "count": 64,
+      "action": "REVIEW",
+      "destination": "archive/legacy-scripts/uncategorized/",
+      "reason": null
+    }
+  ],
+  "detailedCategorization": {
+    "CRITICAL_KEEP": {
+      "pattern": {},
+      "files": [
+        "engineering-metadata.js",
+        "server.js"
+      ],
+      "action": "KEEP",
+      "destination": null,
+      "reason": "Critical system files - DO NOT ARCHIVE"
+    },
+    "CLAUDE_INTEGRATION": {
+      "pattern": {},
+      "files": [
+        "claude-code-polling-client.js",
+        "claude-code-websocket-client.js",
+        "claude-ticket-processor.js"
+      ],
+      "action": "MOVE_TO_SCRIPTS",
+      "destination": "scripts/claude-integration/",
+      "reason": "Claude Code integration scripts - move to organized location"
+    },
+    "ACTIVATION": {
+      "pattern": {},
+      "files": [
+        "activate-all-modules-isi.js",
+        "activate_isi_modules.js",
+        "activate_modules_company1.js",
+        "assign_all_modules_company4.js",
+        "assign_all_modules_isi.js",
+        "assign_all_modules_to_isi.js",
+        "assign_biometric_correct.js",
+        "assign_biometric_to_companies.js",
+        "assign_missing_modules_isi.js",
+        "assign_modules_correct.js",
+        "assign_modules_to_isi.js",
+        "assign_notification_modules.js",
+        "assign_transport_modules.js",
+        "enable_siac_for_isi.js"
+      ],
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/activation/"
+    },
+    "MIGRATION": {
+      "pattern": {},
+      "files": [
+        "add-attendance-methods-v2.js",
+        "add-attendance-methods.js",
+        "add-deploy-routes-to-server.js",
+        "add-method-to-orchestrator.js",
+        "add-phase4-routes-to-server.js",
+        "add-profile-routes-to-server.js",
+        "add-socketio-to-panel.js",
+        "add-support-module.js",
+        "add-username-to-users.js",
+        "add-vacation-columns.js",
+        "add-vacation-tables-company-id.js",
+        "add_ALL_missing_modules.js",
+        "add_biometric_module.js",
+        "add_biometric_simple.js",
+        "add_isactive_column.js",
+        "add_missing_modules.js",
+        "add_plantillas_fiscales.js",
+        "add_rubro_field.js",
+        "add_siac_modules.js",
+        "add_siac_to_company4.js"
+      ],
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/migrations/"
+    },
+    "DIAGNOSTIC_CHECK": {
+      "pattern": {},
+      "files": [
+        "check-admin-isi-status.js",
+        "check-attendance-schema.js",
+        "check-branch-exists.js",
+        "check-branch-in-db.js",
+        "check-branches-structure.js",
+        "check-companies-column.js",
+        "check-create-soporte-user.js",
+        "check-database-export.js",
+        "check-department-inconsistency.js",
+        "check-departments.js",
+        "check-facial-biometric-schema.js",
+        "check-isi-branches.js",
+        "check-isi-creds.js",
+        "check-isi-modules.js",
+        "check-isi-user.js",
+        "check-isi-users.js",
+        "check-shifts-id-type.js",
+        "check-shifts-schema.js",
+        "check-soporte.js",
+        "check-system-info.js",
+        "check-testuser-history.js",
+        "check-user-branch.js",
+        "check-user-data-fixed.js",
+        "check-user-data.js",
+        "check-users-all-columns.js",
+        "check-users-columns.js",
+        "check-users-company-11.js",
+        "check-which-column-has-data.js",
+        "check-workhistory-schema.js",
+        "check_attendance_times.js",
+        "check_biometric_detections.js",
+        "check_biometric_modules.js",
+        "check_columns.js",
+        "check_company_id_db.js",
+        "check_company_modules.js",
+        "check_company_modules_structure.js",
+        "check_company_modules_table.js",
+        "check_db_schema.js",
+        "check_isi_credentials.js",
+        "check_isi_modules_real.js",
+        "check_isi_users.js",
+        "check_missing_tables.js",
+        "check_modules_simple.js",
+        "check_permissions_schema.js",
+        "check_system_modules.js",
+        "check_tables.js",
+        "check_table_structure.js",
+        "check_users_by_company.js",
+        "check_users_columns.js",
+        "check_users_companies.js",
+        "check_users_isi.js",
+        "check_users_simple.js",
+        "check_users_structure.js",
+        "check_user_columns.js"
+      ],
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/diagnostics/"
+    },
+    "DIAGNOSTIC_DEBUG": {
+      "pattern": {},
+      "files": [
+        "debug-company-modules.js",
+        "debug-education-endpoint.js",
+        "debug_company4_modules.js",
+        "debug_modules_issue.js",
+        "debug_modules_query.js",
+        "debug_user_api.js"
+      ],
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/diagnostics/"
+    },
+    "DIAGNOSTIC_ANALYZE": {
+      "pattern": {},
+      "files": [
+        "analyze-all-check-constraints.js",
+        "audit_modules_complete.js",
+        "demo-reporte-tecnico.js",
+        "get-company-id.js",
+        "get-isi-info.js",
+        "get-test-credentials.js",
+        "list-companies.js",
+        "list-empresa-modules.js",
+        "list-user-columns.js",
+        "list_all_modules.js",
+        "list_tables.js",
+        "show-audit-results.js",
+        "verify-login-post-fix.js",
+        "verify-password-hash.js",
+        "verify-production-ready.js",
+        "verify_all_tables.js",
+        "verify_deployment.js"
+      ],
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/diagnostics/"
+    },
+    "FIX_REPAIR": {
+      "pattern": {},
+      "files": [
+        "apply-fixes-from-report.js",
+        "auto-fix-loop.js",
+        "autonomous-auditor.js",
+        "autonomous-repair-agent.js",
+        "empresa-module-autofix.js",
+        "enhance-phase4-comprehensive.js",
+        "fix-add-department-name.js",
+        "fix-admin-role.js",
+        "fix-all-attendance-columns.js",
+        "fix-aponntstaff-import.js",
+        "fix-attendance-corruption.js",
+        "fix-attendance-fields.js",
+        "fix-attendance-navigation.js",
+        "fix-attendance-sql.js",
+        "fix-attendance-token.js",
+        "fix-attendance-userid.js",
+        "fix-auth-column-names.js",
+        "fix-comment-duplicates.js",
+        "fix-company-dropdown.js",
+        "fix-company-id-naming.js",
+        "fix-complete-department-issue.js",
+        "fix-department-name-v2.js",
+        "fix-dollarsign.js",
+        "fix-dollarsign2.js",
+        "fix-dollarsign3.js",
+        "fix-duplicate-columns.js",
+        "fix-extra-closing-brace.js",
+        "fix-kiosk-id.js",
+        "fix-line656.js",
+        "fix-login-debug.js",
+        "fix-login-step2.js",
+        "fix-navigation-timeout.js",
+        "fix-panel-mismatch.js",
+        "fix-refresh-buttons.js",
+        "fix-remaining-9-errors.js",
+        "fix-shifts-simple.js",
+        "fix-shifts-table-multitenant.js",
+        "fix-soporte-role.js",
+        "fix-tabs-detection-v2.js",
+        "fix-test-read.js",
+        "fix-user-modal.js",
+        "fix_attendance_data.js",
+        "fix_biometric_syntax.js",
+        "fix_dynamic_port.js",
+        "fix_hardcoded_login.js",
+        "fix_isi_modules.js",
+        "fix_module_keys.js",
+        "fix_users_schema.js",
+        "repair-shifts-module.js",
+        "update-all-user-functions.js",
+        "update-tickets-sequelize.js",
+        "update-tickets.js",
+        "update-user-department.js",
+        "update_biometric_module.js",
+        "update_biometric_name.js",
+        "update_settings_translations.js"
+      ],
+      "action": "ARCHIVE",
+      "destination": "archive/executed-fixes/"
+    },
+    "TEST_RUN": {
+      "pattern": {},
+      "files": [
+        "run-aponnt-migrations.js",
+        "run-audit-logs-migration.js",
+        "run-audit-test-logs-migration.js",
+        "run-claude-repair-cycle.js",
+        "run-interactive-repair.js",
+        "run-iterative-audit.js",
+        "run-knowledge-base-migration.js",
+        "run-migration.js",
+        "run-migrations.js",
+        "run-passive-audit.js",
+        "run-phase4-working.js",
+        "run-rotative-shifts-migration.js",
+        "run-user-profile-migration.js",
+        "run-user-shifts-migration.js",
+        "run-vendor-migrations.js",
+        "run_migrations.js",
+        "test-all-three-fixes.js",
+        "test-api-with-branch.js",
+        "test-bulk-assign-fix.js",
+        "test-click-desactivar.js",
+        "test-database-import.js",
+        "test-debug-tabs.js",
+        "test-debug-user-modal.js",
+        "test-department-name.js",
+        "test-direct-sql-update.js",
+        "test-edit-form-REAL.js",
+        "test-final-fill-all-tabs.js",
+        "test-full-phase4-flow.js",
+        "test-get-endpoint.js",
+        "test-html-served.js",
+        "test-isi-users-simple.js",
+        "test-login-debug.js",
+        "test-login-response.js",
+        "test-login-with-console.js",
+        "test-manual-login.js",
+        "test-manual-simple.js",
+        "test-manual-tab1-COMPLETO.js",
+        "test-modal-visibility.js",
+        "test-phase4-attendance.js",
+        "test-phase4-users.js",
+        "test-quick.js",
+        "test-save-branch.js",
+        "test-sequelize-fields.js",
+        "test-sequelize-update.js",
+        "test-simple-tab1.js",
+        "test-tab1-crud-complete.js",
+        "test-tab1-diagnostico.js",
+        "test-tab1-directo.js",
+        "test-tab1-persistencia-completa.js",
+        "test-tab1-verificacion-completa.js",
+        "test-tab5-medical-debug.js",
+        "test-tabs-2-3-8-backend.js",
+        "test-todos-modulos-fixed.js",
+        "test-todos-modulos-isi.js",
+        "test-todos-modulos.js",
+        "test-turnos-e2e-fix.js",
+        "test-turnos-fix.js",
+        "test-turnos-playwright-visual.js",
+        "test-turnos-simple.js",
+        "test-user-shifts-api.js",
+        "test-users-create-debug.js",
+        "test-users-crud-tabs-real.js",
+        "test-users-e2e-realista.js",
+        "test_attendance.js",
+        "test_auth_final_fix.js",
+        "test_company_modules_endpoint.js",
+        "test_crud_departments.js",
+        "test_crud_kiosks.js",
+        "test_crud_shifts.js",
+        "test_crud_users.js",
+        "test_final_complete.js",
+        "test_fixed_login.js",
+        "test_frontend_api_endpoint.js",
+        "test_login.js",
+        "test_multitenant_isolation.js",
+        "test_passwords.js",
+        "test_real_database.js",
+        "test_real_departments.js",
+        "test_real_login.js",
+        "test_real_login_9991.js",
+        "test_real_login_9992.js",
+        "test_real_login_9997.js",
+        "test_real_users.js",
+        "test_rubro_api.js",
+        "test_system_modules_query.js",
+        "test_user_fields.js",
+        "test_user_model_attributes.js"
+      ],
+      "action": "ARCHIVE",
+      "destination": "archive/old-tests/"
+    },
+    "CLEANUP": {
+      "pattern": {},
+      "files": [
+        "clean-and-run-migration.js",
+        "cleanup-panel-empresa.js",
+        "cleanup-salary-configs-all.js",
+        "cleanup-salary-configs.js",
+        "cleanup-test-data.js",
+        "cleanup_and_assign_modules.js",
+        "clean_biometric_iris_voice.js",
+        "clean_biometric_v2.js",
+        "clean_biometric_v3_deep.js",
+        "clean_sql.js",
+        "comment-duplicate-endpoint.js",
+        "drop-salary-constraint.js",
+        "reset-admin-password.js",
+        "reset-isi-password.js"
+      ],
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/cleanup/"
+    },
+    "CREATE_SEED": {
+      "pattern": {},
+      "files": [
+        "complete-partners-migration.js",
+        "complete_siac_setup.js",
+        "create-all-user-profile-models.js",
+        "create-default-branch-isi.js",
+        "create-isi-admin.js",
+        "create-notification-tables.js",
+        "create-partner-models.js",
+        "create-soporte-all-companies.js",
+        "create-soporte-isi.js",
+        "create-test-user-render.js",
+        "create-vacation-tables.js",
+        "create_admin_user_isi.js",
+        "create_biometric_detections_table.js",
+        "create_biometric_templates_table.js",
+        "create_bulk_data.js",
+        "create_companies_final.js",
+        "create_companies_simple.js",
+        "create_isi_user.js",
+        "create_isi_user_final.js",
+        "create_missing_table.js",
+        "create_missing_tables.js",
+        "create_test_employee_biometric.js",
+        "create_test_user.js",
+        "create_transport_companies.js",
+        "create_user_admin1.js",
+        "insert-data.js",
+        "insert-modules.js",
+        "insert-test-shifts-isi.js",
+        "seed-partner-roles.js",
+        "seed-test-data-isi.js",
+        "seed-test-executions.js"
+      ],
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/initialization/"
+    },
+    "DEMO_SCRIPTS": {
+      "pattern": {},
+      "files": [
+        "demo-3-opciones-testing.js"
+      ],
+      "action": "ARCHIVE",
+      "destination": "archive/legacy-scripts/demos/"
+    },
+    "UNCATEGORIZED": {
+      "pattern": null,
+      "files": [
+        "advanced_forensic_analyzer.js",
+        "execute-dept-authorized-kiosks-migration.js",
+        "execute-emotional-analysis-migration.js",
+        "execute-fix-render.js",
+        "execute-hardware-migration.js",
+        "execute-kiosk-auth-migration.js",
+        "execute-kiosks-migration.js",
+        "execute-kiosks-simple.js",
+        "execute-sanctions-fixed.js",
+        "execute-sanctions-migration.js",
+        "expand_enum_transport.js",
+        "export-data.js",
+        "extend_kiosks_table.js",
+        "fill-users-random-data.js",
+        "FILLALLTABS_METHOD.js",
+        "find-shifts-junction-table.js",
+        "find-update-soporte.js",
+        "forensic_analysis_tool.js",
+        "generate-api-key.js",
+        "generate_isi_token.js",
+        "geolocalizacion-fix.js",
+        "grant_biometric_permissions.js",
+        "grant_biometric_permissions_correct.js",
+        "IMPLEMENTACION-COMPLETA-9-TABS.js",
+        "import-to-render.js",
+        "improve-testread-debug.js",
+        "inconsistency_report.js",
+        "init-postgresql-schema.js",
+        "integrate-emotional-analysis.js",
+        "kill_and_restart.js",
+        "manual-audit-with-error-detection.js",
+        "migrate-departments-multi-tenant.js",
+        "migrate-to-playwright.js",
+        "migrate-vendormemory-to-aponntstaff.js",
+        "migrate_all.js",
+        "migrate_all_tables.js",
+        "migrate_simple.js",
+        "migrate_transport.js",
+        "migration-add-user-columns.js",
+        "MODAL-CRUD-COMPLETO.js",
+        "monitor-and-migrate.js",
+        "ollama-testing-daemon.js",
+        "query-users-schema.js",
+        "query_users.js",
+        "register-employee-profile-collector.js",
+        "register-shifts-fix-learning.js",
+        "rename-test.js",
+        "revert_biometric_name.js",
+        "safe_restart.js",
+        "set-admin-password.js",
+        "setup_biometric_system.js",
+        "setup_isi_complete.js",
+        "simple_enable_siac.js",
+        "simple_transport_migration.js",
+        "sync-knowledge-v3.js",
+        "TAB1-FUNCIONES-FIXED.js",
+        "temp-audit-details.js",
+        "temp-check-isi.js",
+        "TEMP-extract-fields.js",
+        "TEMP-test-simple.js",
+        "transport_modules_only.js",
+        "trigger-migrations-render.js",
+        "verificar-password-admin.js",
+        "workflows-help-sections.js"
+      ],
+      "action": "REVIEW",
+      "destination": "archive/legacy-scripts/uncategorized/"
+    }
+  },
+  "executionPlan": {
+    "phase1_critical_keep": [
+      {
+        "file": "engineering-metadata.js",
+        "action": "KEEP IN ROOT",
+        "reason": "Critical system file"
+      },
+      {
+        "file": "server.js",
+        "action": "KEEP IN ROOT",
+        "reason": "Critical system file"
+      }
+    ],
+    "phase2_organize_scripts": [
+      {
+        "file": "claude-code-polling-client.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend/claude-code-polling-client.js",
+        "to": "scripts/claude-integration/claude-code-polling-client.js",
+        "risk": "LOW",
+        "reason": "Better organization - still accessible"
+      },
+      {
+        "file": "claude-code-websocket-client.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend/claude-code-websocket-client.js",
+        "to": "scripts/claude-integration/claude-code-websocket-client.js",
+        "risk": "LOW",
+        "reason": "Better organization - still accessible"
+      },
+      {
+        "file": "claude-ticket-processor.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend/claude-ticket-processor.js",
+        "to": "scripts/claude-integration/claude-ticket-processor.js",
+        "risk": "LOW",
+        "reason": "Better organization - still accessible"
+      }
+    ],
+    "phase3_safe_archive": [
+      {
+        "file": "check-admin-isi-status.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-attendance-schema.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-branch-exists.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-branch-in-db.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-branches-structure.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-companies-column.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-create-soporte-user.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-database-export.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-department-inconsistency.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-departments.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-facial-biometric-schema.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-isi-branches.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-isi-creds.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-isi-modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-isi-user.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-isi-users.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-shifts-id-type.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-shifts-schema.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-soporte.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-system-info.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-testuser-history.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-user-branch.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-user-data-fixed.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-user-data.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-users-all-columns.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-users-columns.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-users-company-11.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-which-column-has-data.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check-workhistory-schema.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_attendance_times.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_biometric_detections.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_biometric_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_columns.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_company_id_db.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_company_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_company_modules_structure.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_company_modules_table.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_db_schema.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_isi_credentials.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_isi_modules_real.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_isi_users.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_missing_tables.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_modules_simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_permissions_schema.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_system_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_tables.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_table_structure.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_users_by_company.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_users_columns.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_users_companies.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_users_isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_users_simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_users_structure.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "check_user_columns.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "debug-company-modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "debug-education-endpoint.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "debug_company4_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "debug_modules_issue.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "debug_modules_query.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "debug_user_api.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "analyze-all-check-constraints.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "audit_modules_complete.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "demo-reporte-tecnico.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "get-company-id.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "get-isi-info.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "get-test-credentials.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "list-companies.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "list-empresa-modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "list-user-columns.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "list_all_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "list_tables.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "show-audit-results.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "verify-login-post-fix.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "verify-password-hash.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "verify-production-ready.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "verify_all_tables.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "verify_deployment.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/diagnostics/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-aponnt-migrations.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-audit-logs-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-audit-test-logs-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-claude-repair-cycle.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-interactive-repair.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-iterative-audit.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-knowledge-base-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-migrations.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-passive-audit.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-phase4-working.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-rotative-shifts-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-user-profile-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-user-shifts-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run-vendor-migrations.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "run_migrations.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-all-three-fixes.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-api-with-branch.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-bulk-assign-fix.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-click-desactivar.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-database-import.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-debug-tabs.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-debug-user-modal.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-department-name.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-direct-sql-update.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-edit-form-REAL.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-final-fill-all-tabs.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-full-phase4-flow.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-get-endpoint.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-html-served.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-isi-users-simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-login-debug.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-login-response.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-login-with-console.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-manual-login.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-manual-simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-manual-tab1-COMPLETO.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-modal-visibility.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-phase4-attendance.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-phase4-users.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-quick.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-save-branch.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-sequelize-fields.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-sequelize-update.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-simple-tab1.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-tab1-crud-complete.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-tab1-diagnostico.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-tab1-directo.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-tab1-persistencia-completa.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-tab1-verificacion-completa.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-tab5-medical-debug.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-tabs-2-3-8-backend.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-todos-modulos-fixed.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-todos-modulos-isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-todos-modulos.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-turnos-e2e-fix.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-turnos-fix.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-turnos-playwright-visual.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-turnos-simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-user-shifts-api.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-users-create-debug.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-users-crud-tabs-real.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test-users-e2e-realista.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_attendance.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_auth_final_fix.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_company_modules_endpoint.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_crud_departments.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_crud_kiosks.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_crud_shifts.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_crud_users.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_final_complete.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_fixed_login.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_frontend_api_endpoint.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_login.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_multitenant_isolation.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_passwords.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_real_database.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_real_departments.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_real_login.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_real_login_9991.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_real_login_9992.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_real_login_9997.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_real_users.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_rubro_api.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_system_modules_query.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_user_fields.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "test_user_model_attributes.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/old-tests/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      },
+      {
+        "file": "demo-3-opciones-testing.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/demos/",
+        "risk": "LOW",
+        "reason": "Read-only scripts, safe to archive"
+      }
+    ],
+    "phase4_medium_archive": [
+      {
+        "file": "activate-all-modules-isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "activate_isi_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "activate_modules_company1.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "assign_all_modules_company4.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "assign_all_modules_isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "assign_all_modules_to_isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "assign_biometric_correct.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "assign_biometric_to_companies.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "assign_missing_modules_isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "assign_modules_correct.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "assign_modules_to_isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "assign_notification_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "assign_transport_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "enable_siac_for_isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/activation/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-attendance-methods-v2.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-attendance-methods.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-deploy-routes-to-server.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-method-to-orchestrator.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-phase4-routes-to-server.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-profile-routes-to-server.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-socketio-to-panel.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-support-module.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-username-to-users.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-vacation-columns.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add-vacation-tables-company-id.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add_ALL_missing_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add_biometric_module.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add_biometric_simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add_isactive_column.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add_missing_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add_plantillas_fiscales.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add_rubro_field.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add_siac_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "add_siac_to_company4.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/migrations/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "apply-fixes-from-report.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "auto-fix-loop.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "autonomous-auditor.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "autonomous-repair-agent.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "empresa-module-autofix.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "enhance-phase4-comprehensive.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-add-department-name.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-admin-role.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-all-attendance-columns.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-aponntstaff-import.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-attendance-corruption.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-attendance-fields.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-attendance-navigation.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-attendance-sql.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-attendance-token.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-attendance-userid.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-auth-column-names.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-comment-duplicates.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-company-dropdown.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-company-id-naming.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-complete-department-issue.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-department-name-v2.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-dollarsign.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-dollarsign2.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-dollarsign3.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-duplicate-columns.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-extra-closing-brace.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-kiosk-id.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-line656.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-login-debug.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-login-step2.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-navigation-timeout.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-panel-mismatch.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-refresh-buttons.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-remaining-9-errors.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-shifts-simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-shifts-table-multitenant.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-soporte-role.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-tabs-detection-v2.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-test-read.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix-user-modal.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix_attendance_data.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix_biometric_syntax.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix_dynamic_port.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix_hardcoded_login.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix_isi_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix_module_keys.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "fix_users_schema.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "repair-shifts-module.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "update-all-user-functions.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "update-tickets-sequelize.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "update-tickets.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "update-user-department.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "update_biometric_module.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "update_biometric_name.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "update_settings_translations.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/executed-fixes/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "clean-and-run-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "cleanup-panel-empresa.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "cleanup-salary-configs-all.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "cleanup-salary-configs.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "cleanup-test-data.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "cleanup_and_assign_modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "clean_biometric_iris_voice.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "clean_biometric_v2.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "clean_biometric_v3_deep.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "clean_sql.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "comment-duplicate-endpoint.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "drop-salary-constraint.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "reset-admin-password.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "reset-isi-password.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/cleanup/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "complete-partners-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "complete_siac_setup.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create-all-user-profile-models.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create-default-branch-isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create-isi-admin.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create-notification-tables.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create-partner-models.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create-soporte-all-companies.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create-soporte-isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create-test-user-render.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create-vacation-tables.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_admin_user_isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_biometric_detections_table.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_biometric_templates_table.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_bulk_data.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_companies_final.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_companies_simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_isi_user.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_isi_user_final.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_missing_table.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_missing_tables.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_test_employee_biometric.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_test_user.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_transport_companies.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "create_user_admin1.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "insert-data.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "insert-modules.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "insert-test-shifts-isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "seed-partner-roles.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "seed-test-data-isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      },
+      {
+        "file": "seed-test-executions.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/initialization/",
+        "risk": "MEDIUM",
+        "reason": "One-time scripts, likely already executed"
+      }
+    ],
+    "phase5_manual_review": [
+      {
+        "file": "advanced_forensic_analyzer.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "execute-dept-authorized-kiosks-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "execute-emotional-analysis-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "execute-fix-render.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "execute-hardware-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "execute-kiosk-auth-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "execute-kiosks-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "execute-kiosks-simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "execute-sanctions-fixed.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "execute-sanctions-migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "expand_enum_transport.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "export-data.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "extend_kiosks_table.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "fill-users-random-data.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "FILLALLTABS_METHOD.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "find-shifts-junction-table.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "find-update-soporte.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "forensic_analysis_tool.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "generate-api-key.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "generate_isi_token.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "geolocalizacion-fix.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "grant_biometric_permissions.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "grant_biometric_permissions_correct.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "IMPLEMENTACION-COMPLETA-9-TABS.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "import-to-render.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "improve-testread-debug.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "inconsistency_report.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "init-postgresql-schema.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "integrate-emotional-analysis.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "kill_and_restart.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "manual-audit-with-error-detection.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "migrate-departments-multi-tenant.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "migrate-to-playwright.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "migrate-vendormemory-to-aponntstaff.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "migrate_all.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "migrate_all_tables.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "migrate_simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "migrate_transport.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "migration-add-user-columns.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "MODAL-CRUD-COMPLETO.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "monitor-and-migrate.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "ollama-testing-daemon.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "query-users-schema.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "query_users.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "register-employee-profile-collector.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "register-shifts-fix-learning.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "rename-test.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "revert_biometric_name.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "safe_restart.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "set-admin-password.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "setup_biometric_system.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "setup_isi_complete.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "simple_enable_siac.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "simple_transport_migration.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "sync-knowledge-v3.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "TAB1-FUNCIONES-FIXED.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "temp-audit-details.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "temp-check-isi.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "TEMP-extract-fields.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "TEMP-test-simple.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "transport_modules_only.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "trigger-migrations-render.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "verificar-password-admin.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      },
+      {
+        "file": "workflows-help-sections.js",
+        "from": "C:\\Bio\\sistema_asistencia_biometrico\\backend",
+        "to": "archive/legacy-scripts/uncategorized/",
+        "risk": "NEEDS_MANUAL_REVIEW",
+        "reason": "Could not auto-categorize - needs human review"
+      }
+    ]
+  }
+}

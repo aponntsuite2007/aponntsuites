@@ -108,10 +108,18 @@ class ClaudeCodeWebSocketBridge extends EventEmitter {
             await this.connect();
         }
 
-        console.log(`\n📤 [WEBSOCKET] Enviando ticket ${ticket.id} a Claude Code...`);
-        console.log(`   Módulo: ${ticket.test.module}`);
-        console.log(`   Test: ${ticket.test.test_name}`);
-        console.log(`   Error: ${ticket.test.error_message?.substring(0, 100)}...\n`);
+        console.log(`\n📤 [WEBSOCKET] Enviando ticket ${ticket?.id || 'undefined'} a Claude Code...`);
+
+        // ✅ FIX: Verificar que ticket y ticket.test existan antes de acceder a propiedades
+        if (ticket && ticket.test) {
+            console.log(`   Módulo: ${ticket.test.module || 'unknown'}`);
+            console.log(`   Test: ${ticket.test.test_name || 'unknown'}`);
+            console.log(`   Error: ${ticket.test.error_message?.substring(0, 100) || 'No error message'}...\n`);
+        } else {
+            console.warn(`⚠️  [WEBSOCKET] Ticket incompleto o malformado`);
+            console.warn(`   ticket exists: ${!!ticket}`);
+            console.warn(`   ticket.test exists: ${!!(ticket && ticket.test)}\n`);
+        }
 
         if (this.simulateMode) {
             // MODO SIMULADO: Simular respuesta de Claude Code

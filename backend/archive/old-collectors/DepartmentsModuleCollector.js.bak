@@ -25,8 +25,8 @@ const BaseModuleCollector = require('./BaseModuleCollector');
 const { Pool } = require('pg');
 
 class DepartmentsModuleCollector extends BaseModuleCollector {
-    constructor(database, systemRegistry) {
-        super(database, systemRegistry);
+    constructor(database, systemRegistry, baseURL = null) {
+        super(database, systemRegistry, baseURL);  // ⚡ Pasar baseURL al padre
         this.TEST_PREFIX = '[DEPT-TEST]';
         this.testDepartmentId = null;
         this.testDepartmentName = null;
@@ -73,26 +73,73 @@ class DepartmentsModuleCollector extends BaseModuleCollector {
 
     /**
      * PASO 1: Navegar al módulo de Departamentos
+     * Usa showModuleContent() para cargar dinámicamente el módulo
      */
     async navigateToDepartmentsModule() {
         console.log('\n📂 [DEPARTMENTS] Navegando al módulo de Departamentos...');
 
+        // Capturar errores de consola del navegador
+        const consoleErrors = [];
+        this.page.on('console', msg => {
+            if (msg.type() === 'error') {
+                console.error('🔴 [BROWSER CONSOLE ERROR]:', msg.text());
+                consoleErrors.push(msg.text());
+            }
+        });
+
+        this.page.on('pageerror', error => {
+            console.error('🔴 [BROWSER PAGE ERROR]:', error.message);
+            consoleErrors.push(error.message);
+        });
+
         try {
-            // Esperar a que cargue el panel
-            await this.page.waitForSelector('a[href="#departments"]', { timeout: 10000 });
-
-            // Click en el link de departamentos
-            await this.page.click('a[href="#departments"]');
-            await this.page.waitForTimeout(2000);
-
-            // Verificar que el contenido del módulo se cargó
-            const moduleLoaded = await this.page.evaluate(() => {
-                const content = document.getElementById('mainContent');
-                return content && content.innerHTML.includes('Gestión de Departamentos');
+            // Navegar usando showModuleContent (patrón igual a UsersModuleCollector)
+            await this.page.evaluate(() => {
+                if (typeof window.showModuleContent === 'function') {
+                    window.showModuleContent('departments', 'Gestión de Departamentos');
+                } else if (typeof window.showDepartmentsContent === 'function') {
+                    window.showDepartmentsContent();
+                } else {
+                    throw new Error('Función showModuleContent/showDepartmentsContent no encontrada');
+                }
             });
 
-            if (!moduleLoaded) {
-                throw new Error('Módulo de departamentos no cargó correctamente');
+            // Esperar activamente a que aparezca el elemento #departments
+            console.log('   ⏳ Esperando a que el módulo departments se renderice...');
+
+            const startTime = Date.now();
+            const timeout = 15000; // 15 segundos
+            let found = false;
+
+            while (Date.now() - startTime < timeout) {
+                const exists = await this.page.evaluate(() => {
+                    const el = document.querySelector('#departments');
+                    return el && el.offsetParent !== null;
+                });
+
+                if (exists) {
+                    found = true;
+                    console.log(`   ✅ Elemento #departments visible después de ${Date.now() - startTime}ms`);
+                    break;
+                }
+
+                await this.page.waitForTimeout(100);
+            }
+
+            if (!found) {
+                // Log debugging info antes de fallar
+                const debugInfo = await this.page.evaluate(() => {
+                    return {
+                        mainContent: document.getElementById('mainContent')?.innerHTML.substring(0, 500),
+                        departmentsExists: !!document.querySelector('#departments'),
+                        showDepartmentsContentExists: typeof window.showDepartmentsContent === 'function',
+                        showModuleContentExists: typeof window.showModuleContent === 'function'
+                    };
+                });
+
+                console.error('   ❌ Debug info:', JSON.stringify(debugInfo, null, 2));
+                console.error('   ❌ Console errors capturados:', consoleErrors);
+                throw new Error(`Timeout: Elemento #departments no se hizo visible después de ${timeout}ms`);
             }
 
             console.log('   ✅ Módulo de Departamentos cargado correctamente\n');

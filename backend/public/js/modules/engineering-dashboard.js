@@ -150,12 +150,16 @@ const EngineeringDashboard = {
     }
     container.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 600px !important; padding: 20px !important; background: #f9f9f9 !important;';
 
+    // GUARDAR FOCO ACTUAL ANTES DE RENDERIZAR
+    const activeElement = document.activeElement;
+    const isSearchFocused = activeElement && activeElement.id === 'engineering-search';
+    const searchValue = isSearchFocused ? activeElement.value : this.searchTerm;
+    const cursorPosition = isSearchFocused ? activeElement.selectionStart : 0;
+
     try {
       // RENDERIZAR INMEDIATAMENTE sin setTimeout
       container.innerHTML = `
-        <div style="padding: 20px !important; background: white !important; min-height: 600px !important; border: 5px solid #ff0000 !important; box-shadow: 0 0 20px rgba(255,0,0,0.5) !important; position: relative !important; z-index: 99999 !important;">
-          <h1 style="color: #2563eb !important; margin-bottom: 20px !important; font-size: 32px !important;">🏗️ Engineering Dashboard</h1>
-
+        <div style="padding: 20px !important; background: white !important; min-height: 600px !important; position: relative !important;">
           ${!this.metadata || !this.stats ? `
             <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0;">
               <h3 style="color: #92400e; margin: 0 0 10px 0;">⚠️ Cargando datos...</h3>
@@ -188,6 +192,24 @@ const EngineeringDashboard = {
 
       console.log('✅ [ENGINEERING] Dashboard renderizado');
       console.log('📝 [ENGINEERING] HTML generado (primeros 300 chars):', container.innerHTML.substring(0, 300));
+
+      // Re-configurar event listeners después de re-renderizar
+      setTimeout(() => {
+        this.setupEventListeners();
+
+        // RESTAURAR FOCO AL INPUT DE BÚSQUEDA SI ESTABA ENFOCADO
+        if (isSearchFocused) {
+          const searchInput = document.getElementById('engineering-search');
+          if (searchInput) {
+            searchInput.value = searchValue;
+            searchInput.focus();
+            searchInput.setSelectionRange(cursorPosition, cursorPosition);
+            console.log('✅ [ENGINEERING] Foco restaurado al buscador');
+          }
+        }
+
+        console.log('✅ [ENGINEERING] Event listeners reconfigurados');
+      }, 100);
 
     } catch (error) {
       console.error('❌ [ENGINEERING] Error en renderDashboard:', error);
@@ -264,6 +286,22 @@ const EngineeringDashboard = {
         <div class="header-timestamp">
           <small>Última actualización: ${new Date(project.lastUpdated).toLocaleString('es-AR')}</small>
         </div>
+
+        <!-- Panel de Sincronización de Sesiones -->
+        <div class="sync-panel" style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 20px;">🔄</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; color: #1e40af; margin-bottom: 5px;">Session Coordination System</div>
+              <div id="sync-status-text" style="font-size: 0.9rem; color: #6b7280;">
+                Actualización manual - Usa 🔄 Refresh para ver cambios
+              </div>
+            </div>
+            <div id="session-indicators" style="display: flex; gap: 10px;">
+              <!-- Se llenará dinámicamente -->
+            </div>
+          </div>
+        </div>
       </div>
     `;
   },
@@ -317,8 +355,12 @@ const EngineeringDashboard = {
     const tabs = [
       { id: 'overview', icon: '🌍', label: 'Vista General' },
       { id: 'applications', icon: '📱', label: 'Aplicaciones' },
-      { id: 'modules', icon: '📦', label: 'Módulos Backend' },
+      { id: 'modules', icon: '📦', label: 'Módulos' },
+      { id: 'backend-files', icon: '⚙️', label: 'Archivos Backend' },
+      { id: 'frontend-files', icon: '🎨', label: 'Archivos Frontend' },
       { id: 'roadmap', icon: '🗺️', label: 'Roadmap' },
+      { id: 'critical-path', icon: '🎯', label: 'Camino Crítico (CPM)' },
+      { id: 'organigrama', icon: '🏢', label: 'Organigrama' },
       { id: 'database', icon: '🗄️', label: 'Base de Datos' },
       { id: 'workflows', icon: '🔄', label: 'Workflows' }
     ];
@@ -349,8 +391,26 @@ const EngineeringDashboard = {
         return this.renderApplications();
       case 'modules':
         return this.renderModules();
+      case 'backend-files':
+        return this.renderBackendFiles();
+      case 'frontend-files':
+        return this.renderFrontendFiles();
       case 'roadmap':
         return this.renderRoadmap();
+      case 'critical-path':
+        // Critical Path es async, cargar dinámicamente DESPUÉS de que el DOM esté listo
+        setTimeout(() => this.loadCriticalPathView(), 100);
+        return `
+          <div id="critical-path-dynamic" style="padding: 20px;">
+            <div style="text-align: center; padding: 50px;">
+              <div style="font-size: 64px; margin-bottom: 20px;">🎯</div>
+              <h2 style="color: #1f2937;">Cargando Camino Crítico...</h2>
+              <p style="color: #6b7280;">Analizando tareas y calculando rutas críticas</p>
+            </div>
+          </div>
+        `;
+      case 'organigrama':
+        return this.renderOrganigrama();
       case 'database':
         return this.renderDatabase();
       case 'workflows':
@@ -361,12 +421,175 @@ const EngineeringDashboard = {
   },
 
   /**
+   * VISTA: Backend Files - Todos los archivos/módulos de backend (DINÁMICO)
+   */
+  renderBackendFiles() {
+    // Cargar archivos dinámicamente y renderizar
+    this.loadAndRenderFiles('backend');
+
+    return `
+      <div class="backend-files-container" id="backend-files-dynamic">
+        <h2>⚙️ Escaneando Archivos Backend...</h2>
+        <div style="text-align: center; padding: 50px;">
+          <div style="font-size: 64px; margin-bottom: 20px;">⚙️</div>
+          <div style="font-size: 18px; color: #6b7280;">Escaneando todos los archivos .js del proyecto...</div>
+          <div style="margin-top: 15px; color: #3b82f6;">Esto puede tardar unos segundos</div>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * VISTA: Frontend Files - Todos los archivos/módulos de frontend (DINÁMICO)
+   */
+  renderFrontendFiles() {
+    // Cargar archivos dinámicamente y renderizar
+    this.loadAndRenderFiles('frontend');
+
+    return `
+      <div class="frontend-files-container" id="frontend-files-dynamic">
+        <h2>🎨 Escaneando Archivos Frontend...</h2>
+        <div style="text-align: center; padding: 50px;">
+          <div style="font-size: 64px; margin-bottom: 20px;">🎨</div>
+          <div style="font-size: 18px; color: #6b7280;">Escaneando todos los archivos .js del frontend...</div>
+          <div style="margin-top: 15px; color: #10b981;">Esto puede tardar unos segundos</div>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * MÉTODO HELPER: Carga archivos dinámicamente desde API y renderiza AGRUPADOS POR MÓDULO
+   * @param {string} type - 'backend' o 'frontend'
+   */
+  async loadAndRenderFiles(type) {
+    try {
+      // Fetch files from API
+      const response = await fetch(`/api/engineering/scan-files?type=${type}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al escanear archivos: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Error desconocido');
+      }
+
+      const modules = result.data[type] || [];
+      const totalModules = modules.length;
+      const totalFiles = result.data[`total${type.charAt(0).toUpperCase() + type.slice(1)}`] || 0;
+
+      // Generar HTML agrupado por módulos
+      const gridHtml = `
+        <div class="${type}-files-container">
+          <h2>${type === 'backend' ? '⚙️' : '🎨'} Archivos ${type === 'backend' ? 'Backend' : 'Frontend'}</h2>
+
+          <div style="background: linear-gradient(135deg, ${type === 'backend' ? '#eff6ff' : '#d1fae5'} 0%, ${type === 'backend' ? '#dbeafe' : '#a7f3d0'} 100%); padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-around; text-align: center;">
+              <div>
+                <div style="font-size: 32px; font-weight: 700; color: ${type === 'backend' ? '#1e40af' : '#059669'};">${totalModules}</div>
+                <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">Módulos</div>
+              </div>
+              <div>
+                <div style="font-size: 32px; font-weight: 700; color: ${type === 'backend' ? '#1e40af' : '#059669'};">${totalFiles}</div>
+                <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">Archivos</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background: #eff6ff; padding: 15px; border-left: 4px solid #3b82f6; border-radius: 8px; margin-bottom: 25px;">
+            <p style="margin: 0; color: #1e40af; font-weight: 600;">💡 Archivos organizados por módulo. Click en "Ver Código" para abrir en sub-modal.</p>
+          </div>
+
+          ${modules.map((module, moduleIndex) => `
+            <!-- Módulo ${module.moduleName} -->
+            <div class="module-section" style="margin-bottom: 40px;">
+              <div style="background: linear-gradient(135deg, ${type === 'backend' ? '#3b82f6' : '#10b981'} 0%, ${type === 'backend' ? '#1e40af' : '#059669'} 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 700;">
+                  📦 ${module.moduleName}
+                </h3>
+                <div style="background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">
+                  ${module.files.length} archivo${module.files.length !== 1 ? 's' : ''}
+                </div>
+              </div>
+
+              <div class="${type}-files-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 15px; padding: 20px; background: #f9fafb; border-radius: 0 0 12px 12px; border: 2px solid ${type === 'backend' ? '#3b82f6' : '#10b981'}; border-top: none;">
+                ${module.files.map((file, fileIndex) => `
+                  <div class="${type}-file-card" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; position: relative;" data-file-index="${moduleIndex}-${fileIndex}">
+
+                    <!-- Icono + Archivo -->
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                      <div style="font-size: 24px;">${file.name.endsWith('.html') ? '🌐' : '📄'}</div>
+                      <div style="flex: 1;">
+                        <div style="font-family: 'Courier New', monospace; color: ${type === 'backend' ? '#1e40af' : '#059669'}; font-weight: 700; font-size: 13px; word-break: break-all;">
+                          ${file.name}
+                        </div>
+                        <div style="color: #f59e0b; background: #fef3c7; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block; margin-top: 4px;">
+                          ${file.lines} líneas
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Path completo -->
+                    <div style="color: #6b7280; font-size: 10px; font-family: 'Courier New', monospace; margin-bottom: 12px; background: #f3f4f6; padding: 6px 8px; border-radius: 4px; word-break: break-all; max-height: 40px; overflow: hidden; text-overflow: ellipsis;" title="${file.file}">
+                      ${file.file}
+                    </div>
+
+                    <!-- Botón para ver código -->
+                    <button class="btn-view-code" data-file-path="${file.file}" data-lines="1-${file.lines}" style="width: 100%; padding: 8px; background: linear-gradient(135deg, ${type === 'backend' ? '#3b82f6' : '#10b981'} 0%, ${type === 'backend' ? '#1e40af' : '#059669'} 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s ease;">
+                      👁️ Ver Código
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      // Update DOM
+      const container = document.getElementById(`${type}-files-dynamic`);
+      if (container) {
+        container.innerHTML = gridHtml;
+
+        // Re-attach event listeners to "Ver Código" buttons
+        this.setupEventListeners();
+      }
+
+    } catch (error) {
+      console.error(`Error cargando archivos ${type}:`, error);
+
+      const container = document.getElementById(`${type}-files-dynamic`);
+      if (container) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 50px;">
+            <div style="font-size: 64px; margin-bottom: 20px;">❌</div>
+            <div style="font-size: 18px; color: #ef4444;">Error al cargar archivos</div>
+            <div style="margin-top: 15px; color: #6b7280;">${error.message}</div>
+          </div>
+        `;
+      }
+    }
+  },
+
+  /**
    * VISTA: Overview - Arquitectura global en 3D/cubo
    */
   renderOverview() {
     if (!this.metadata) return '<p>Cargando...</p>';
 
-    const { applications, modules, roadmap, database } = this.metadata;
+    // Validar que existan las propiedades necesarias
+    const applications = this.metadata.applications || {};
+    const modules = this.metadata.modules || {};
+    const roadmap = this.metadata.roadmap || {};
+    const database = this.metadata.database || { tables: {}, schema: {} };
 
     return `
       <div class="overview-container">
@@ -410,7 +633,7 @@ const EngineeringDashboard = {
           <!-- Capa 4: Base de Datos -->
           <div class="cube-layer database-layer" data-layer="database">
             <div class="layer-header">
-              <h3>🗄️ Base de Datos (${Object.keys(database.tables).length} tablas)</h3>
+              <h3>🗄️ Base de Datos (${Object.keys(database.tables || database.schema || {}).length} tablas)</h3>
               <button class="btn-drill-down" data-target="database">Ver Detalle →</button>
             </div>
             <div class="layer-preview">
@@ -509,14 +732,19 @@ const EngineeringDashboard = {
    * Preview de base de datos (para overview)
    */
   renderDatabasePreview(database) {
-    const tables = Object.entries(database.tables).slice(0, 5);
+    const tablesSource = database?.tables || database?.schema || {};
+    const tables = Object.entries(tablesSource).slice(0, 5);
+
+    if (tables.length === 0) {
+      return '<div class="preview-list"><p style="color: #6b7280; text-align: center;">Sin datos de BD</p></div>';
+    }
 
     return `
       <div class="preview-list">
         ${tables.map(([key, table]) => `
-          <div class="list-item ${table.status.toLowerCase()}">
+          <div class="list-item ${(table?.status || 'unknown').toLowerCase()}">
             <span class="table-name">${key}</span>
-            <span class="table-status">${this.getStatusBadge(table.status)}</span>
+            <span class="table-status">${this.getStatusBadge(table?.status || 'UNKNOWN')}</span>
           </div>
         `).join('')}
       </div>
@@ -677,6 +905,16 @@ const EngineeringDashboard = {
                 </div>
               ` : ''}
 
+              <!-- Code Location (Backend + Frontend) -->
+              ${mod.codeLocation ? this.renderCodeLocation(mod.codeLocation) : ''}
+
+              <!-- Botón Ver Detalles Completos -->
+              <div class="module-actions" style="margin: 15px 0;">
+                <button class="btn-view-details" data-module="${key}" style="width: 100%; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease;">
+                  Ver Detalles Completos
+                </button>
+              </div>
+
               <!-- Last Updated -->
               <div class="module-timestamp">
                 <small>Última actualización: ${new Date(mod.lastUpdated).toLocaleString('es-AR')}</small>
@@ -684,6 +922,51 @@ const EngineeringDashboard = {
             </div>
           `).join('')}
         </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Renderizar ubicación de código (Backend + Frontend)
+   */
+  renderCodeLocation(codeLocation) {
+    if (!codeLocation || (!codeLocation.backend && !codeLocation.frontend)) return '';
+
+    return `
+      <div class="code-location-section" style="margin: 15px 0; padding: 15px; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 6px;">
+        <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #1e40af;">📍 Ubicación del Código</h4>
+
+        ${codeLocation.backend && codeLocation.backend.length > 0 ? `
+          <div style="margin-bottom: 10px;">
+            <div style="font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 6px;">🔹 Backend (Bk):</div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              ${codeLocation.backend.map(file => `
+                <div style="background: white; padding: 8px; border-radius: 4px; font-size: 12px; border-left: 3px solid #3b82f6;">
+                  <div style="font-family: 'Courier New', monospace; color: #1e40af; font-weight: 600;">
+                    ${file.file} <span style="color: #f59e0b;">(${file.lines})</span>
+                  </div>
+                  <div style="color: #6b7280; font-size: 11px; margin-top: 3px;">${file.description}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${codeLocation.frontend && codeLocation.frontend.length > 0 ? `
+          <div>
+            <div style="font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 6px;">🔹 Frontend (Fe):</div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              ${codeLocation.frontend.map(file => `
+                <div style="background: white; padding: 8px; border-radius: 4px; font-size: 12px; border-left: 3px solid #10b981;">
+                  <div style="font-family: 'Courier New', monospace; color: #059669; font-weight: 600;">
+                    ${file.file} <span style="color: #f59e0b;">(${file.lines})</span>
+                  </div>
+                  <div style="color: #6b7280; font-size: 11px; margin-top: 3px;">${file.description}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
   },
@@ -746,17 +1029,20 @@ const EngineeringDashboard = {
 
               <!-- Tasks -->
               ${phase.tasks ? `
-                <div class="gantt-tasks">
-                  <button class="btn-toggle-tasks" data-phase="${key}">
-                    ${phase.tasks.length} tareas
-                    <span class="toggle-icon">▼</span>
+                <div class="gantt-tasks" style="margin-top: 15px;">
+                  <button onclick="window.EngineeringDashboard.toggleRoadmapTasks('${key}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);">
+                    <span>📋</span>
+                    <span>${phase.tasks.filter(t => t.done).length}/${phase.tasks.length} tareas</span>
+                    <span id="toggle-icon-${key}" style="margin-left: 5px; transition: transform 0.2s;">▼</span>
                   </button>
-                  <div class="tasks-list" data-phase="${key}" style="display: none;">
+                  <div id="tasks-list-${key}" style="display: none; margin-top: 10px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
                     ${phase.tasks.map(task => `
-                      <div class="task-item ${task.done ? 'done' : 'pending'}">
-                        <span class="task-checkbox">${task.done ? '✅' : '⏸️'}</span>
-                        <span class="task-id">${task.id}</span>
-                        <span class="task-name">${task.name}</span>
+                      <div class="task-item ${task.done ? 'done' : 'pending'}" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 6px; background: ${task.done ? '#f0fdf4' : 'white'}; border-radius: 6px; border-left: 3px solid ${task.done ? '#22c55e' : '#f59e0b'}; transition: all 0.2s;">
+                        <span class="task-checkbox" style="font-size: 16px;">${task.done ? '✅' : '⏳'}</span>
+                        <span class="task-id" style="font-weight: 600; color: ${task.done ? '#166534' : '#92400e'}; min-width: 60px;">${task.id}</span>
+                        <span class="task-name" style="flex: 1; ${task.done ? 'text-decoration: line-through; color: #6b7280;' : 'color: #1f2937;'}">${task.name}</span>
+                        ${task.assignedTo ? `<span style="font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 10px;">👤 ${task.assignedTo}</span>` : ''}
+                        ${task.completedDate ? `<span style="font-size: 11px; color: #059669;">📅 ${task.completedDate}</span>` : ''}
                       </div>
                     `).join('')}
                   </div>
@@ -795,63 +1081,749 @@ const EngineeringDashboard = {
   },
 
   /**
-   * VISTA: Base de Datos
+   * VISTA: Base de Datos - Schema Completo con Campos y Módulos
+   * Para coordinar múltiples sesiones de Claude Code sin interferencias
    */
   renderDatabase() {
     if (!this.metadata) return '<p>Cargando...</p>';
 
     const { database } = this.metadata;
 
+    // Usar schema si existe, sino usar tables
+    const schema = database.schema || database.tables || {};
+    const totalTables = Object.keys(schema).length;
+    const totalFields = Object.values(schema).reduce((sum, t) => sum + (t.fields?.length || 0), 0);
+
     return `
-      <div class="database-container">
-        <h2>🗄️ Base de Datos - Schema</h2>
+      <div class="database-container" style="padding: 20px;">
+        <div style="margin-bottom: 30px;">
+          <h2 style="margin: 0 0 10px 0; color: #1f2937; display: flex; align-items: center; gap: 10px;">
+            <span>🗄️</span>
+            <span>Base de Datos - Schema Coordinado</span>
+          </h2>
+          <p style="margin: 0; color: #6b7280; font-size: 14px;">
+            ⚠️ <strong>IMPORTANTE:</strong> Antes de modificar cualquier campo, verificar qué módulos lo usan para no romper funcionalidad.
+          </p>
+        </div>
 
         <!-- Stats -->
-        <div class="database-stats">
-          <div class="stat-item">
-            <span class="stat-label">Total Tablas:</span>
-            <span class="stat-value">${database.totalTables || Object.keys(database.tables).length}</span>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+          <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);">
+            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">📊 Total Tablas</div>
+            <div style="font-size: 32px; font-weight: 700;">${totalTables}</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">🔧 Total Campos</div>
+            <div style="font-size: 32px; font-weight: 700;">${totalFields}</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);">
+            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">⚠️ Reglas de Seguridad</div>
+            <div style="font-size: 32px; font-weight: 700;">${database.modificationRules?.length || 0}</div>
           </div>
         </div>
 
-        <!-- Tablas -->
-        <div class="tables-grid">
-          ${Object.entries(database.tables).map(([key, table]) => `
-            <div class="table-card ${table.status.toLowerCase()}">
-              <!-- Header -->
-              <div class="table-header">
-                <h3>${key}</h3>
-                <span class="table-status">${this.getStatusBadge(table.status)}</span>
+        <!-- Buscador -->
+        <div style="margin-bottom: 20px;">
+          <input type="text" id="db-search" placeholder="🔍 Buscar tabla o campo..."
+            style="width: 100%; max-width: 400px; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
+            onkeyup="window.EngineeringDashboard.filterDatabaseTables(this.value)">
+        </div>
+
+        <!-- Tablas con campos expandidos -->
+        <div id="database-tables" style="display: flex; flex-direction: column; gap: 15px;">
+          ${Object.entries(schema).map(([tableName, table]) => `
+            <div class="db-table-card" data-table="${tableName}" style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; transition: all 0.2s;">
+              <!-- Header de tabla -->
+              <div class="db-table-header" onclick="window.EngineeringDashboard.toggleTableFields('${tableName}')"
+                style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: #f8fafc; cursor: pointer; border-bottom: 1px solid #e5e7eb; transition: background 0.2s;"
+                onmouseenter="this.style.background='#f1f5f9'" onmouseleave="this.style.background='#f8fafc'">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-size: 20px;">📋</span>
+                  <div>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">${tableName}</h3>
+                    <span style="font-size: 12px; color: #6b7280;">${table.fields?.length || 0} campos</span>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  ${table.fields?.some(f => f.usedBy?.length > 5) ?
+                    '<span style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">⚠️ Alta dependencia</span>' : ''}
+                  <span class="toggle-arrow" data-table="${tableName}" style="font-size: 18px; transition: transform 0.2s;">▼</span>
+                </div>
               </div>
 
-              <!-- Pending Changes (si existen) -->
-              ${table.pendingChanges && table.pendingChanges.length > 0 ? `
-                <div class="table-pending-changes">
-                  <h4>⚠️ Cambios Pendientes:</h4>
-                  <ul>
-                    ${table.pendingChanges.map(change => `
-                      <li>${change}</li>
-                    `).join('')}
-                  </ul>
-                </div>
-              ` : ''}
+              <!-- Campos de la tabla (expandibles) -->
+              <div class="db-fields-list" data-table="${tableName}" style="display: none; padding: 0;">
+                ${table.fields?.map((field, idx) => `
+                  <div class="db-field-row" style="display: flex; align-items: flex-start; gap: 15px; padding: 12px 20px; border-bottom: 1px solid #f3f4f6; ${idx % 2 === 0 ? 'background: #fafafa;' : 'background: white;'}">
+                    <!-- Nombre y tipo -->
+                    <div style="flex: 0 0 200px;">
+                      <div style="font-weight: 600; color: #1f2937; font-size: 14px;">${field.name}</div>
+                      <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">
+                        <span style="background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${field.type}</span>
+                        ${field.nullable === false ? '<span style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">NOT NULL</span>' : ''}
+                      </div>
+                    </div>
 
-              <!-- Relations (si existen) -->
-              ${table.relations && table.relations.length > 0 ? `
-                <div class="table-relations">
-                  <h4>🔗 Relaciones:</h4>
-                  <ul>
-                    ${table.relations.map(rel => `
-                      <li>${rel}</li>
-                    `).join('')}
-                  </ul>
-                </div>
-              ` : ''}
+                    <!-- Módulos que lo usan -->
+                    <div style="flex: 1;">
+                      <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">Usado por ${field.usedBy?.length || 0} módulos:</div>
+                      <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                        ${(field.usedBy || []).slice(0, 10).map(mod => `
+                          <span style="background: #f3f4f6; color: #374151; padding: 2px 8px; border-radius: 10px; font-size: 11px;">${mod}</span>
+                        `).join('')}
+                        ${(field.usedBy?.length || 0) > 10 ? `<span style="color: #6b7280; font-size: 11px;">+${field.usedBy.length - 10} más</span>` : ''}
+                      </div>
+                    </div>
+
+                    <!-- Indicador de riesgo -->
+                    <div style="flex: 0 0 80px; text-align: right;">
+                      ${(field.usedBy?.length || 0) > 10 ?
+                        '<span style="background: #dc2626; color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600;">CRÍTICO</span>' :
+                        (field.usedBy?.length || 0) > 5 ?
+                        '<span style="background: #f59e0b; color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600;">CUIDADO</span>' :
+                        '<span style="background: #22c55e; color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600;">SEGURO</span>'}
+                    </div>
+                  </div>
+                `).join('') || '<div style="padding: 20px; color: #6b7280; text-align: center;">Sin campos definidos</div>'}
+              </div>
             </div>
           `).join('')}
         </div>
       </div>
     `;
+  },
+
+  /**
+   * Toggle campos de una tabla en la vista de BD
+   */
+  toggleTableFields(tableName) {
+    const fieldsList = document.querySelector(`.db-fields-list[data-table="${tableName}"]`);
+    const arrow = document.querySelector(`.toggle-arrow[data-table="${tableName}"]`);
+
+    if (fieldsList && arrow) {
+      if (fieldsList.style.display === 'none') {
+        fieldsList.style.display = 'block';
+        arrow.style.transform = 'rotate(180deg)';
+      } else {
+        fieldsList.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
+      }
+    }
+  },
+
+  /**
+   * Toggle tareas del roadmap
+   */
+  toggleRoadmapTasks(phaseKey) {
+    const tasksList = document.getElementById(`tasks-list-${phaseKey}`);
+    const icon = document.getElementById(`toggle-icon-${phaseKey}`);
+
+    if (tasksList && icon) {
+      if (tasksList.style.display === 'none') {
+        tasksList.style.display = 'block';
+        icon.textContent = '▲';
+      } else {
+        tasksList.style.display = 'none';
+        icon.textContent = '▼';
+      }
+    }
+  },
+
+  /**
+   * Forzar liberación de una tarea específica
+   */
+  async forceReleaseTask(taskId) {
+    if (!confirm(`⚠️ ¿Estás seguro de forzar la liberación de la tarea "${taskId}"?\n\nEsto liberará todos los locks de archivos y tablas asociados.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/coordination/force-release-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`✅ Tarea "${taskId}" liberada exitosamente.\n\nPropietario anterior: ${result.previousOwner}`);
+        // Recargar la vista de camino crítico
+        this.loadCriticalPathView();
+      } else {
+        alert(`❌ Error liberando tarea: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error forzando liberación de tarea:', error);
+      alert(`❌ Error de conexión: ${error.message}`);
+    }
+  },
+
+  /**
+   * Liberar tarea - Alias de forceReleaseTask para uso desde las tarjetas
+   */
+  async releaseTask(taskId) {
+    return this.forceReleaseTask(taskId);
+  },
+
+  /**
+   * Copiar instrucciones de cierre de tarea para Claude
+   * El usuario solo pega esto en la sesión de Claude y Claude ejecuta automáticamente
+   */
+  async copyCloseInstructions(taskId, phaseKey, taskName) {
+    const today = new Date().toISOString().split('T')[0];
+
+    const instructions = `TAREA COMPLETADA - ACTUALIZAR ENGINEERING METADATA
+
+════════════════════════════════════════════════════════════════
+📋 TAREA: ${taskId} - ${taskName}
+📁 FASE: ${phaseKey}
+📅 FECHA: ${today}
+════════════════════════════════════════════════════════════════
+
+EJECUTA ESTOS PASOS EXACTOS:
+
+1. ABRIR el archivo: backend/engineering-metadata.js
+
+2. BUSCAR en roadmap.${phaseKey}.tasks la tarea con id: "${taskId}"
+
+3. CAMBIAR estos campos:
+   - done: false  →  done: true
+   - Agregar: completedDate: "${today}"
+
+4. RECALCULAR el progress de la fase:
+   - Contar cuántas tareas tienen done: true
+   - Dividir por el total de tareas
+   - Multiplicar por 100
+   - Actualizar el campo progress de la fase
+
+5. SI todas las tareas de la fase están done: true:
+   - Cambiar status: "IN_PROGRESS" → status: "COMPLETE"
+   - Agregar completionDate: "${today}"
+
+6. GUARDAR el archivo
+
+7. CONFIRMAR los cambios ejecutando:
+   curl -X POST http://localhost:9998/api/task-intelligence/complete -H "Content-Type: application/json" -d '{"taskId": "${taskId}", "phaseKey": "${phaseKey}", "completedBy": "claude-code"}'
+
+════════════════════════════════════════════════════════════════
+⚠️ EJECUTA ESTOS CAMBIOS AHORA. NO PREGUNTES, SOLO HAZLO.
+════════════════════════════════════════════════════════════════`;
+
+    try {
+      await navigator.clipboard.writeText(instructions);
+      alert('✅ Instrucciones copiadas al portapapeles\\n\\nPega esto en la sesión de Claude para que actualice la tarea automáticamente.');
+    } catch (err) {
+      // Fallback para navegadores que no soportan clipboard API
+      const textarea = document.createElement('textarea');
+      textarea.value = instructions;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      alert('✅ Instrucciones copiadas al portapapeles\\n\\nPega esto en la sesión de Claude para que actualice la tarea automáticamente.');
+    }
+  },
+
+  /**
+   * Forzar cierre de sesión completa
+   */
+  async forceReleaseSession(token) {
+    if (!confirm(`⚠️ ¿Estás seguro de cerrar la sesión "${token}"?\n\nEsto liberará TODAS las tareas y locks asociados a esta sesión.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/coordination/force-release', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokenToRelease: token })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`✅ Sesión "${token}" cerrada exitosamente.\n\nLocks liberados: ${result.releasedLocks || 0}`);
+        this.loadCriticalPathView();
+      } else {
+        alert(`❌ Error cerrando sesión: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error forzando cierre de sesión:', error);
+      alert(`❌ Error de conexión: ${error.message}`);
+    }
+  },
+
+  /**
+   * Asignar tarea a Claude Code - Modal completo con toda la info
+   * @param {string} taskId - ID de la tarea (ej: "MOB-1")
+   * @param {string} phaseKey - Key de la fase (ej: "phase5_mobileApps")
+   * @param {string} taskNameParam - Nombre de la tarea (opcional, se pasa desde el botón)
+   */
+  async assignToClaude(taskId, phaseKey, taskNameParam = null) {
+    // Remover modal anterior si existe
+    const existing = document.getElementById('claude-assignment-modal');
+    if (existing) existing.remove();
+
+    // Crear overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'claude-assignment-modal';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:99999;';
+
+    // Crear modal con loading inicial
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:#fff;border-radius:16px;padding:32px;max-width:850px;width:92%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);';
+    modal.innerHTML = '<div style="text-align:center;padding:40px;"><div style="font-size:48px;margin-bottom:16px;">⏳</div><div style="color:#6b7280;">Cargando información de la tarea...</div></div>';
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Cerrar con click fuera o ESC
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    const escHandler = (e) => { if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', escHandler); } };
+    document.addEventListener('keydown', escHandler);
+
+    try {
+      // Hacer fetch primero
+      const response = await fetch('/api/task-intelligence/assign-to-claude', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId, phaseKey, instructions: '' })
+      });
+      const data = await response.json();
+
+      if (!data.success || !data.claudeContext) {
+        modal.innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;"><div style="font-size:48px;margin-bottom:16px;">❌</div><div>Error: ' + (data.error || 'Respuesta inválida') + '</div><button onclick="this.closest(\'#claude-assignment-modal\').remove()" style="margin-top:20px;padding:10px 24px;background:#6b7280;color:white;border:none;border-radius:6px;cursor:pointer;">Cerrar</button></div>';
+        return;
+      }
+
+      const ctx = data.claudeContext;
+
+      // Obtener nombre descriptivo de la tarea
+      // Prioridad: 1) parámetro directo, 2) metadata cargado, 3) API relatedEntries
+      let taskName = taskNameParam || null;
+
+      // Método 1: Si no viene como parámetro, buscar en metadata del dashboard
+      if (!taskName && window.EngineeringDashboard?.metadata?.roadmap) {
+        const phase = window.EngineeringDashboard.metadata.roadmap[phaseKey];
+        if (phase && phase.tasks) {
+          const foundTask = phase.tasks.find(t => t.id === taskId);
+          if (foundTask && foundTask.name) {
+            taskName = foundTask.name;
+          }
+        }
+      }
+
+      // Método 2: Si aún no encontró, buscar en relatedEntries del API
+      if (!taskName) {
+        const relatedEntries = ctx.preAnalysis?.relatedEntries || [];
+        for (const entry of relatedEntries) {
+          if (entry.tasks && Array.isArray(entry.tasks)) {
+            const foundTask = entry.tasks.find(t => t.id === taskId);
+            if (foundTask && foundTask.name) {
+              taskName = foundTask.name;
+              break;
+            }
+          }
+        }
+      }
+
+      // Fallback final
+      if (!taskName) {
+        taskName = 'Sin descripción disponible';
+      }
+
+      // Obtener descripción detallada de la tarea - SIEMPRE fetch fresco del servidor
+      let taskDescription = '';
+      let taskEstimatedEffort = '';
+      let taskDependencies = [];
+
+      // Primero intentar fetch fresco del servidor (para evitar cache issues)
+      try {
+        const freshResponse = await fetch('/api/engineering/metadata');
+        const freshResult = await freshResponse.json();
+        if (freshResult.success && freshResult.data?.roadmap) {
+          // Actualizar el cache local también
+          window.EngineeringDashboard.metadata = freshResult.data;
+          const phase = freshResult.data.roadmap[phaseKey];
+          if (phase && phase.tasks) {
+            const foundTask = phase.tasks.find(t => t.id === taskId);
+            if (foundTask) {
+              taskDescription = foundTask.description || '';
+              taskEstimatedEffort = foundTask.estimatedEffort || '';
+              taskDependencies = foundTask.dependencies || [];
+            }
+          }
+        }
+      } catch (fetchError) {
+        console.warn('⚠️ No se pudo obtener metadata fresco, usando cache:', fetchError);
+        // Fallback al cache local
+        if (window.EngineeringDashboard?.metadata?.roadmap) {
+          const phase = window.EngineeringDashboard.metadata.roadmap[phaseKey];
+          if (phase && phase.tasks) {
+            const foundTask = phase.tasks.find(t => t.id === taskId);
+            if (foundTask) {
+              taskDescription = foundTask.description || '';
+              taskEstimatedEffort = foundTask.estimatedEffort || '';
+              taskDependencies = foundTask.dependencies || [];
+            }
+          }
+        }
+      }
+
+      console.log('Task name encontrado:', taskName, '(fuente:', taskNameParam ? 'parámetro' : 'metadata/API', ')');
+      console.log('Task description:', taskDescription || '(sin descripción detallada)');
+
+      // Renderizar modal completo
+      modal.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:2px solid #e5e7eb;padding-bottom:16px;">
+          <h2 style="margin:0;color:#1f2937;font-size:22px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:28px;">🤖</span> Asignar Tarea a Claude Code
+          </h2>
+          <button onclick="this.closest('#claude-assignment-modal').remove()" style="background:none;border:none;font-size:28px;cursor:pointer;color:#6b7280;">&times;</button>
+        </div>
+
+        <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:14px 18px;border-radius:10px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:start;">
+            <div>
+              <div style="font-size:11px;opacity:0.8;text-transform:uppercase;">TAREA</div>
+              <div style="font-size:20px;font-weight:700;">${taskId}</div>
+            </div>
+            ${taskEstimatedEffort ? `<div style="background:rgba(255,255,255,0.2);padding:6px 12px;border-radius:6px;font-size:12px;">⏱️ ${taskEstimatedEffort}</div>` : ''}
+          </div>
+          <div style="font-size:14px;opacity:0.95;line-height:1.4;border-top:1px solid rgba(255,255,255,0.2);padding-top:10px;margin-top:8px;">
+            📝 ${taskName}
+          </div>
+          <div style="font-size:12px;opacity:0.75;margin-top:8px;">📂 Phase: ${phaseKey}</div>
+          ${taskDependencies.length > 0 ? `<div style="font-size:11px;opacity:0.7;margin-top:4px;">🔗 Depende de: ${taskDependencies.join(', ')}</div>` : ''}
+        </div>
+
+        <!-- DESCRIPCIÓN DETALLADA - Campo principal editable -->
+        <div style="margin-bottom:16px;">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:#374151;margin-bottom:6px;font-size:13px;">
+            📋 DESCRIPCIÓN DETALLADA DE LA TAREA:
+            ${taskDescription ? '<span style="color:#10b981;font-size:11px;font-weight:normal;">(cargada del roadmap)</span>' : '<span style="color:#f59e0b;font-size:11px;font-weight:normal;">⚠️ Sin descripción - escribe qué debe hacer Claude</span>'}
+          </label>
+          <textarea id="claude-task-description" placeholder="Describe detalladamente qué debe hacer Claude para completar esta tarea...
+
+Ejemplo:
+- Qué archivos modificar o crear
+- Qué funcionalidades implementar
+- Qué tests agregar
+- Referencias a archivos similares
+- Criterios de éxito" style="width:100%;height:120px;padding:12px;border:2px solid ${taskDescription ? '#10b981' : '#f59e0b'};border-radius:8px;font-size:13px;resize:vertical;box-sizing:border-box;line-height:1.5;">${taskDescription}</textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+            <button id="save-description-btn" style="background:#8b5cf6;color:white;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;">
+              💾 Guardar Descripción en Roadmap
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-weight:600;color:#374151;margin-bottom:6px;font-size:13px;">📁 COMANDO PARA TERMINAL:</label>
+          <div style="background:#1f2937;color:#10b981;padding:12px 14px;border-radius:6px;font-family:Consolas,Monaco,monospace;font-size:13px;">${ctx.commandToRun}</div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-weight:600;color:#374151;margin-bottom:6px;font-size:13px;">✏️ INSTRUCCIONES ADICIONALES (opcional):</label>
+          <textarea id="claude-extra-instructions" placeholder="Notas extra, aclaraciones, preferencias..." style="width:100%;height:50px;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button id="modal-confirm-assignment" style="flex:1;min-width:200px;background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);color:white;border:none;padding:14px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">
+            ✅ Confirmar Asignación a Claude
+          </button>
+          <button id="modal-copy-all" style="flex:1;min-width:200px;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:white;border:none;padding:14px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">
+            📋 Copiar TODO al Portapapeles
+          </button>
+          <button id="modal-copy-cmd" style="flex:1;min-width:140px;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:white;border:none;padding:14px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">
+            🖥️ Solo Comando
+          </button>
+          <button onclick="this.closest('#claude-assignment-modal').remove()" style="background:#6b7280;color:white;border:none;padding:14px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">
+            Cerrar
+          </button>
+        </div>
+
+        <div style="margin-top:16px;padding:10px 14px;background:#fef3c7;border-radius:6px;border-left:4px solid #f59e0b;">
+          <div style="font-weight:600;color:#92400e;font-size:12px;">💡 Cómo usar:</div>
+          <div style="color:#78350f;font-size:11px;margin-top:2px;">1. Click "Confirmar Asignación" para bloquear la tarea → 2. "Copiar TODO" → 3. Abrir Claude Code → 4. Pegar (Ctrl+V)</div>
+        </div>
+      `;
+
+      // Event listeners
+
+      // Handler para confirmar asignación (crear lock real)
+      document.getElementById('modal-confirm-assignment').onclick = async function() {
+        this.innerHTML = '⏳ Asignando...';
+        this.disabled = true;
+
+        try {
+          // 1. Registrar sesión de Claude (obtener token)
+          const registerResponse = await fetch('/api/coordination/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'claude',
+              name: 'Claude Code Session',
+              description: 'Sesión asignada desde Engineering Dashboard'
+            })
+          });
+          const registerResult = await registerResponse.json();
+
+          if (!registerResult.success) {
+            throw new Error(registerResult.error || 'Error registrando sesión');
+          }
+
+          const token = registerResult.token;
+
+          // 2. Adquirir lock de la tarea
+          const lockResponse = await fetch('/api/coordination/acquire-lock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: token,
+              taskId: taskId,
+              phaseKey: phaseKey
+            })
+          });
+          const lockResult = await lockResponse.json();
+
+          if (!lockResult.success) {
+            throw new Error(lockResult.error || 'Error adquiriendo lock');
+          }
+
+          this.innerHTML = '✅ ¡Asignada!';
+          this.style.background = '#10b981';
+
+          // 3. Cerrar modal y recargar vista
+          setTimeout(() => {
+            document.getElementById('claude-assignment-modal').remove();
+            window.EngineeringDashboard.loadCriticalPathView();
+          }, 1000);
+
+        } catch(e) {
+          alert('❌ Error: ' + e.message);
+          this.innerHTML = '✅ Confirmar Asignación a Claude';
+          this.style.background = 'linear-gradient(135deg,#dc2626 0%,#b91c1c 100%)';
+          this.disabled = false;
+        }
+      };
+
+      document.getElementById('modal-copy-all').onclick = async function() {
+        const description = document.getElementById('claude-task-description').value.trim();
+        const extraInstructions = document.getElementById('claude-extra-instructions').value.trim();
+
+        // Texto completo con descripción detallada
+        let fullText = `🎯 TAREA: ${taskId} - ${taskName}
+📂 PHASE: ${phaseKey}
+📁 PROYECTO: C:\\Bio\\sistema_asistencia_biometrico
+
+${description ? '📋 QUÉ HACER:\n' + description + '\n' : ''}
+${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''}
+⚠️ ANTES DE EMPEZAR: Decime qué entendiste y esperá mi OK.`;
+
+        try {
+          await navigator.clipboard.writeText(fullText);
+          this.innerHTML = '✅ ¡COPIADO!';
+          this.style.background = '#059669';
+          setTimeout(() => { this.innerHTML = '📋 Copiar TODO al Portapapeles'; this.style.background = 'linear-gradient(135deg,#10b981 0%,#059669 100%)'; }, 2500);
+        } catch(e) { alert('Error al copiar. Usa Ctrl+C manualmente.'); }
+      };
+
+      // Handler para guardar descripción en el roadmap
+      document.getElementById('save-description-btn').onclick = async function() {
+        const newDescription = document.getElementById('claude-task-description').value.trim();
+        if (!newDescription) {
+          alert('La descripción está vacía. Escribe algo primero.');
+          return;
+        }
+
+        this.innerHTML = '⏳ Guardando...';
+        this.disabled = true;
+
+        try {
+          const response = await fetch('/api/engineering/update-task-description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId, phaseKey, description: newDescription })
+          });
+          const result = await response.json();
+
+          if (result.success) {
+            this.innerHTML = '✅ ¡Guardado!';
+            this.style.background = '#10b981';
+            // Actualizar el metadata local
+            if (window.EngineeringDashboard?.metadata?.roadmap?.[phaseKey]?.tasks) {
+              const task = window.EngineeringDashboard.metadata.roadmap[phaseKey].tasks.find(t => t.id === taskId);
+              if (task) task.description = newDescription;
+            }
+            // Cambiar borde del textarea a verde
+            document.getElementById('claude-task-description').style.borderColor = '#10b981';
+            setTimeout(() => { this.innerHTML = '💾 Guardar Descripción en Roadmap'; this.style.background = '#8b5cf6'; }, 2000);
+          } else {
+            throw new Error(result.error || 'Error desconocido');
+          }
+        } catch(e) {
+          alert('Error guardando: ' + e.message);
+          this.innerHTML = '💾 Guardar Descripción en Roadmap';
+        }
+        this.disabled = false;
+      };
+
+      document.getElementById('modal-copy-cmd').onclick = async function() {
+        try {
+          await navigator.clipboard.writeText(ctx.commandToRun);
+          this.innerHTML = '✅ ¡Copiado!';
+          setTimeout(() => { this.innerHTML = '🖥️ Solo Comando'; }, 2000);
+        } catch(e) { alert('Error al copiar'); }
+      };
+
+    } catch (error) {
+      modal.innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;"><div style="font-size:48px;margin-bottom:16px;">❌</div><div>Error de conexión: ' + error.message + '</div><button onclick="this.closest(\'#claude-assignment-modal\').remove()" style="margin-top:20px;padding:10px 24px;background:#6b7280;color:white;border:none;border-radius:6px;cursor:pointer;">Cerrar</button></div>';
+    }
+  },
+
+  /**
+   * Asignar tarea a humano
+   */
+  async assignToHuman(taskId, phaseKey) {
+    const assignedTo = prompt('¿A quién asignar esta tarea? (ej: Juan Pérez)');
+    if (!assignedTo) return;
+
+    try {
+      // 1. Registrar sesión de humano
+      const registerResponse = await fetch('/api/coordination/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'human',
+          name: assignedTo,
+          description: 'Asignado desde Engineering Dashboard'
+        })
+      });
+      const registerResult = await registerResponse.json();
+
+      if (!registerResult.success) {
+        throw new Error(registerResult.error || 'Error registrando sesión');
+      }
+
+      const token = registerResult.token;
+
+      // 2. Adquirir lock de la tarea
+      const lockResponse = await fetch('/api/coordination/acquire-lock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, taskId, phaseKey })
+      });
+      const lockResult = await lockResponse.json();
+
+      if (!lockResult.success) {
+        throw new Error(lockResult.error || 'Error adquiriendo lock');
+      }
+
+      // 3. También actualizar metadata
+      const response = await fetch('/api/task-intelligence/assign-to-human', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId, phaseKey, assignedTo })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`✅ Tarea ${taskId} asignada a ${assignedTo}\n\n🔒 Lock adquirido - la tarea está bloqueada`);
+        this.loadCriticalPathView();
+      } else {
+        alert('Error: ' + (data.error || 'Error desconocido'));
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  },
+
+  /**
+   * Marcar tarea como completada
+   */
+  async completeTask(taskId, phaseKey) {
+    if (!confirm(`¿Marcar tarea ${taskId} como completada?`)) return;
+
+    try {
+      const response = await fetch('/api/task-intelligence/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId,
+          phaseKey,
+          completedBy: 'human'
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`✅ Tarea completada\n\n${data.result.changes?.join('\n') || 'Actualizado'}`);
+        this.loadCriticalPathView();
+      } else {
+        alert('Error: ' + (data.error || 'Error desconocido'));
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  },
+
+  /**
+   * Cambiar prioridad de tarea
+   */
+  async updatePriority(taskId, phaseKey) {
+    const newPriority = prompt('Nueva prioridad (1-10):', '5');
+    if (!newPriority) return;
+
+    const priority = parseInt(newPriority);
+    if (priority < 1 || priority > 10) {
+      alert('La prioridad debe estar entre 1 y 10');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/critical-path/update-priority', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId, phaseKey, priority })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`✅ Prioridad actualizada\nCamino crítico recalculado automáticamente`);
+        this.loadCriticalPathView();
+      } else {
+        alert('Error: ' + (data.error || 'Error desconocido'));
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  },
+
+  /**
+   * Filtrar tablas en la vista de BD
+   */
+  filterDatabaseTables(searchTerm) {
+    const term = searchTerm.toLowerCase();
+    const tables = document.querySelectorAll('.db-table-card');
+
+    tables.forEach(table => {
+      const tableName = table.getAttribute('data-table').toLowerCase();
+      const fields = table.querySelectorAll('.db-field-row');
+      let hasMatch = tableName.includes(term);
+
+      // También buscar en campos
+      fields.forEach(field => {
+        const fieldText = field.textContent.toLowerCase();
+        if (fieldText.includes(term)) hasMatch = true;
+      });
+
+      table.style.display = hasMatch ? 'block' : 'none';
+    });
   },
 
   /**
@@ -908,6 +1880,883 @@ const EngineeringDashboard = {
             </div>
           `).join('')}
         </div>
+      </div>
+    `;
+  },
+
+  /**
+   * VISTA: Organigrama Jerárquico Profesional
+   */
+  renderOrganigrama() {
+    if (!this.metadata) return '<p>Cargando...</p>';
+
+    const { organizationalStructure } = this.metadata;
+    if (!organizationalStructure) return '<p>No hay estructura organizacional definida</p>';
+
+    const { hierarchy } = organizationalStructure;
+
+    return `
+      <div class="organigrama-container" style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px;">
+        <h2 style="color: white; margin-bottom: 10px;">🏢 Organigrama Aponnt</h2>
+        <p style="color: rgba(255,255,255,0.9); margin-bottom: 30px;">
+          Estructura organizacional jerárquica completa
+        </p>
+
+        <!-- NIVEL 0: GERENTE GENERAL -->
+        <div style="text-align: center; margin-bottom: 50px;">
+          ${this.renderOrgBox(hierarchy.gerenteGeneral, '#dc2626', '👔')}
+        </div>
+
+        <!-- NIVEL 1: GERENTES DE ÁREA -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-bottom: 50px; position: relative;">
+
+          <!-- Líneas conectoras desde Gerente General -->
+          <div style="position: absolute; top: -30px; left: 0; right: 0; height: 30px; display: flex; justify-content: center;">
+            <div style="width: 2px; height: 30px; background: white;"></div>
+          </div>
+          <div style="position: absolute; top: 0; left: 10%; right: 10%; height: 2px; background: white;"></div>
+
+          <!-- Gerentes Regionales (Ventas) -->
+          <div style="text-align: center;">
+            ${this.renderOrgBox(hierarchy.gerentesRegionales, '#ea580c', '💼')}
+            ${this.renderSubHierarchy(hierarchy.gerentesRegionales.hierarchy, '#f97316')}
+          </div>
+
+          <!-- Gerente Administrativo -->
+          <div style="text-align: center;">
+            ${this.renderOrgBox(hierarchy.gerenteAdministrativo, '#0891b2', '📊')}
+            ${this.renderSubHierarchy(hierarchy.gerenteAdministrativo.hierarchy, '#06b6d4')}
+          </div>
+
+          <!-- Gerente de Desarrollo -->
+          <div style="text-align: center;">
+            ${this.renderOrgBox(hierarchy.gerenteDesarrollo, '#7c3aed', '💻')}
+            ${this.renderSubHierarchy(hierarchy.gerenteDesarrollo.hierarchy, '#8b5cf6')}
+          </div>
+
+          <!-- Staff Externo -->
+          <div style="text-align: center;">
+            ${this.renderOrgBox(hierarchy.staffExterno, '#059669', '🌐')}
+            ${this.renderExternalStaff(hierarchy.staffExterno.areas)}
+          </div>
+        </div>
+
+        <!-- Resumen de niveles -->
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+          <h3 style="color: white; margin-bottom: 15px;">📋 Resumen de Niveles Jerárquicos</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            ${Object.entries(organizationalStructure.levels).map(([level, data]) => `
+              <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 6px; border-left: 4px solid white;">
+                <div style="color: white; font-weight: 600; font-size: 1.2rem;">Nivel ${level}</div>
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem; margin-top: 4px;">${data.name}</div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 4px;">${data.quantity}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Áreas de negocio -->
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px); margin-top: 20px;">
+          <h3 style="color: white; margin-bottom: 15px;">🏢 Áreas de Negocio</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+            ${organizationalStructure.areas.map(area => `
+              <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 6px;">
+                <div style="color: white; font-weight: 600;">${area.name}</div>
+                <div style="color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-top: 4px;">
+                  👤 ${area.gerente}
+                </div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 2px;">
+                  📍 ${area.type}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Sistema de comisiones -->
+        ${organizationalStructure.commissionSystem ? `
+          <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px); margin-top: 20px;">
+            <h3 style="color: white; margin-bottom: 10px;">💰 Sistema de Comisiones</h3>
+            <p style="color: rgba(255,255,255,0.9); margin-bottom: 10px;">${organizationalStructure.commissionSystem.description}</p>
+            <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 6px; border-left: 4px solid #fbbf24;">
+              <div style="color: white; font-weight: 600; margin-bottom: 8px;">Aplica a:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${organizationalStructure.commissionSystem.applies.map(role => `
+                  <span style="background: rgba(251, 191, 36, 0.3); color: white; padding: 4px 12px; border-radius: 4px; font-size: 0.85rem;">
+                    ${role}
+                  </span>
+                `).join('')}
+              </div>
+              <div style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 12px;">
+                📊 ${organizationalStructure.commissionSystem.structure}
+              </div>
+              <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-top: 8px;">
+                🚧 ${organizationalStructure.commissionSystem.implementation}
+              </div>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  /**
+   * Renderizar caja de posición organizacional
+   */
+  renderOrgBox(position, color, emoji) {
+    const level = position.level !== undefined ? position.level : '';
+    const code = position.code || '';
+    const quantity = position.quantity ? ` (${position.quantity})` : '';
+
+    return `
+      <div style="
+        display: inline-block;
+        background: ${color};
+        color: white;
+        padding: 10px;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        min-width: 120px;
+        text-align: center;
+        position: relative;
+        transform: scale(1);
+        transition: transform 0.2s ease;
+      " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="font-size: 1rem; margin-bottom: 4px;">${emoji}</div>
+        <div style="font-weight: 700; font-size: 0.55rem; margin-bottom: 2px;">
+          ${position.position}${quantity}
+        </div>
+        ${code ? `<div style="background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 6px; border-radius: 2px; font-size: 0.4rem; margin-bottom: 4px;">${code}</div>` : ''}
+        ${level !== '' ? `<div style="font-size: 0.375rem; opacity: 0.8;">Nivel ${level}</div>` : ''}
+        ${position.responsibilities ? `
+          <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.3);">
+            <div style="font-size: 0.375rem; opacity: 0.9; text-align: left;">
+              ${position.responsibilities.slice(0, 2).map(resp => `
+                <div style="margin-bottom: 2px;">• ${resp}</div>
+              `).join('')}
+              ${position.responsibilities.length > 2 ? `<div style="opacity: 0.7;">+${position.responsibilities.length - 2} más...</div>` : ''}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  /**
+   * Renderizar sub-jerarquía
+   */
+  renderSubHierarchy(hierarchy, baseColor) {
+    if (!hierarchy) return '';
+
+    const entries = Object.entries(hierarchy);
+    if (entries.length === 0) return '';
+
+    // Colores más claros para niveles inferiores
+    const lighterColor = this.adjustColorBrightness(baseColor, 20);
+
+    // Si todos los elementos son invisibles, renderizar directamente sus hijos
+    const allInvisible = entries.every(([_, subPosition]) => subPosition.invisible);
+    if (allInvisible && entries.length === 1) {
+      const [_, subPosition] = entries[0];
+      console.log('[DEBUG] Saltando nivel invisible:', subPosition);
+      return `
+        <!-- Nivel invisible omitido -->
+        <div style="margin-top: 20px; padding-top: 20px; position: relative;">
+          <div style="position: absolute; top: 0; left: 50%; width: 2px; height: 20px; background: rgba(255,255,255,0.5);"></div>
+          ${subPosition.hierarchy ? this.renderSubHierarchy(subPosition.hierarchy, baseColor) : ''}
+        </div>
+      `;
+    }
+
+    return `
+      <div style="margin-top: 20px; padding-top: 20px; position: relative;">
+        <!-- Línea conectora vertical -->
+        <div style="position: absolute; top: 0; left: 50%; width: 2px; height: 20px; background: rgba(255,255,255,0.5);"></div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+          ${entries.map(([key, subPosition]) => {
+            // Si es invisible, solo renderizar su jerarquía
+            if (subPosition.invisible) {
+              return subPosition.hierarchy ? this.renderSubHierarchy(subPosition.hierarchy, baseColor) : '';
+            }
+
+            return `
+            <div style="text-align: center;">
+              <div style="
+                background: ${lighterColor};
+                color: white;
+                padding: 12px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                font-size: 0.85rem;
+                min-height: 80px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+              ">
+                <div style="font-weight: 600; margin-bottom: 4px;">${subPosition.position}</div>
+                ${subPosition.code ? `<div style="background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.7rem; margin: 4px auto;">${subPosition.code}</div>` : ''}
+                ${subPosition.level !== undefined ? `<div style="font-size: 0.7rem; opacity: 0.8; margin-top: 4px;">Nivel ${subPosition.level}</div>` : ''}
+                ${subPosition.manages ? `<div style="font-size: 0.7rem; opacity: 0.7; margin-top: 4px;">👥 Gestiona ${subPosition.manages.length} área(s)</div>` : ''}
+              </div>
+              ${subPosition.hierarchy ? this.renderSubHierarchy(subPosition.hierarchy, lighterColor) : ''}
+            </div>
+          `}).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Renderizar staff externo
+   */
+  renderExternalStaff(areas) {
+    if (!areas) return '';
+
+    const entries = Object.entries(areas);
+    if (entries.length === 0) return '';
+
+    return `
+      <div style="margin-top: 20px; padding-top: 20px; position: relative;">
+        <!-- Línea conectora vertical -->
+        <div style="position: absolute; top: 0; left: 50%; width: 2px; height: 20px; background: rgba(255,255,255,0.5);"></div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+          ${entries.map(([key, area]) => `
+            <div style="
+              background: rgba(5, 150, 105, 0.7);
+              color: white;
+              padding: 10px;
+              border-radius: 6px;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+              font-size: 0.8rem;
+              border: 1px dashed rgba(255,255,255,0.4);
+            ">
+              <div style="font-weight: 600;">${area.position}</div>
+              ${area.code ? `<div style="background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-top: 4px;">${area.code}</div>` : ''}
+              ${area.contractType ? `<div style="font-size: 0.7rem; opacity: 0.8; margin-top: 4px;">📄 ${area.contractType}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Ajustar brillo de color (helper)
+   */
+  adjustColorBrightness(color, percent) {
+    // Convertir hex a RGB
+    const num = parseInt(color.replace('#', ''), 16);
+    const r = Math.min(255, Math.floor((num >> 16) + percent));
+    const g = Math.min(255, Math.floor(((num >> 8) & 0x00FF) + percent));
+    const b = Math.min(255, Math.floor((num & 0x0000FF) + percent));
+    return `rgb(${r}, ${g}, ${b})`;
+  },
+
+  /**
+   * Carga async la vista de Camino Crítico
+   */
+  async loadCriticalPathView() {
+    try {
+      const container = document.getElementById('critical-path-dynamic');
+      if (!container) return;
+
+      const html = await this.renderCriticalPathView();
+      container.innerHTML = html;
+    } catch (error) {
+      console.error('Error cargando Critical Path:', error);
+      const container = document.getElementById('critical-path-dynamic');
+      if (container) {
+        container.innerHTML = `
+          <div style="padding: 40px; text-align: center;">
+            <h3 style="color: #dc2626;">❌ Error al cargar Camino Crítico</h3>
+            <p style="color: #6b7280;">${error.message}</p>
+            <button onclick="window.EngineeringDashboard.loadCriticalPathView()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px;">
+              🔄 Reintentar
+            </button>
+          </div>
+        `;
+      }
+    }
+  },
+
+  /**
+   * VISTA: Camino Crítico - CPM/PERT Analysis
+   */
+  async renderCriticalPathView() {
+    if (!this.metadata) return '<p>Cargando...</p>';
+
+    try {
+      // Fetch análisis de camino crítico
+      const response = await fetch('/api/critical-path/analyze');
+      const { analysis } = await response.json();
+
+      // Fetch estadísticas
+      const statsResponse = await fetch('/api/critical-path/statistics');
+      const { statistics } = await statsResponse.json();
+
+      // Fetch sesiones activas de coordinación
+      let sessions = [];
+      let locks = { fileLocks: {}, tableLocks: {}, taskAssignments: {} };
+      try {
+        const sessionsResponse = await fetch('/api/coordination/sessions-with-tasks');
+        const sessionsData = await sessionsResponse.json();
+        if (sessionsData.success) sessions = sessionsData.sessions;
+
+        const locksResponse = await fetch('/api/coordination/locks');
+        const locksData = await locksResponse.json();
+        if (locksData.success) locks = locksData;
+      } catch (e) {
+        console.log('No hay sistema de coordinación activo');
+      }
+
+      // Obtener info de roadmap para las tareas
+      const roadmap = this.metadata.roadmap || {};
+
+      return `
+        <div class="critical-path-container" style="padding: 20px;">
+          <!-- Header -->
+          <div class="cp-header" style="margin-bottom: 30px;">
+            <h2 style="margin: 0 0 10px 0; color: #1f2937; display: flex; align-items: center; gap: 10px;">
+              <span>🎯</span>
+              <span>Camino Crítico - Programación CPM/PERT + Coordinación</span>
+            </h2>
+            <p style="margin: 0; color: #6b7280; font-size: 14px;">
+              Gestión inteligente de tareas con coordinación multi-sesión (Claude + Humanos)
+            </p>
+          </div>
+
+          <!-- Panel de Sesiones Activas -->
+          ${sessions.length > 0 ? `
+            <div class="cp-sessions" style="margin-bottom: 30px; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border-radius: 12px; padding: 20px; color: white;">
+              <h3 style="margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px; font-size: 18px;">
+                <span>👥</span>
+                <span>Equipo Activo (${sessions.length} sesiones)</span>
+                <button onclick="window.EngineeringDashboard.loadCriticalPathView()" style="margin-left: auto; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">🔄 Refresh</button>
+              </h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                ${sessions.map(s => `
+                  <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                      <span style="font-size: 24px;">${s.type === 'claude' ? '🤖' : '👤'}</span>
+                      <div>
+                        <div style="font-weight: 600;">${s.name}</div>
+                        <div style="font-size: 11px; opacity: 0.7;">Token: ${s.token}</div>
+                      </div>
+                      <span style="margin-left: auto; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: ${s.status === 'working' ? '#22c55e' : s.status === 'idle' ? '#f59e0b' : '#6b7280'};">${s.status.toUpperCase()}</span>
+                    </div>
+                    ${s.currentTask ? `
+                      <div style="background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; margin-bottom: 10px;">
+                        <div style="font-size: 12px; opacity: 0.7; margin-bottom: 4px;">📋 Trabajando en:</div>
+                        <div style="font-weight: 600; color: #fbbf24;">${s.currentTask.taskId}: ${s.currentTask.taskName}</div>
+                        <div style="font-size: 11px; opacity: 0.7; margin-top: 4px;">Fase: ${s.currentTask.phaseName}</div>
+                        <div style="font-size: 11px; opacity: 0.7;">🔒 ${s.currentTask.lockedFiles?.length || 0} archivos, ${s.currentTask.lockedTables?.length || 0} tablas</div>
+                      </div>
+                      <button onclick="window.EngineeringDashboard.forceReleaseTask('${s.currentTask.taskId}')" style="width: 100%; background: #dc2626; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">⚠️ Forzar Liberación de Tarea</button>
+                    ` : `
+                      <div style="text-align: center; padding: 10px; opacity: 0.5; font-size: 13px;">Sin tarea asignada</div>
+                    `}
+                    <button onclick="window.EngineeringDashboard.forceReleaseSession('${s.token}')" style="width: 100%; background: transparent; color: #f87171; border: 1px solid #f87171; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-top: 8px;">🗑️ Cerrar Sesión Completa</button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : `
+            <div style="margin-bottom: 30px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 12px; padding: 20px; text-align: center;">
+              <div style="font-size: 32px; margin-bottom: 10px;">👥</div>
+              <div style="color: #64748b; font-weight: 500;">No hay sesiones de coordinación activas</div>
+              <div style="color: #94a3b8; font-size: 13px; margin-top: 5px;">Las sesiones de Claude/Humanos aparecerán aquí cuando se registren</div>
+            </div>
+          `}
+
+          <!-- Locks Activos -->
+          ${Object.keys(locks.taskAssignments).length > 0 ? `
+            <div style="margin-bottom: 20px; background: #fef3c7; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 20px;">🔒</span>
+              <span style="color: #92400e; font-weight: 500;">${Object.keys(locks.taskAssignments).length} tareas bloqueadas, ${Object.keys(locks.fileLocks).length} archivos, ${Object.keys(locks.tableLocks).length} tablas</span>
+            </div>
+          ` : ''}
+
+          <!-- Estadísticas Globales -->
+          <div class="cp-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+            <div class="stat-card critical" style="background: #ffffff !important; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2); border-left: 4px solid #dc2626;">
+              <div style="font-size: 14px; color: #dc2626 !important; font-weight: 600; margin-bottom: 8px;">⚠️ Tareas Críticas</div>
+              <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #b91c1c !important;">${statistics.critical}</div>
+              <div style="font-size: 12px; color: #991b1b !important; font-weight: 500;">de ${statistics.pending} pendientes</div>
+            </div>
+
+            <div class="stat-card" style="background: #ffffff !important; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6;">
+              <div style="font-size: 14px; color: #3b82f6 !important; font-weight: 600; margin-bottom: 8px;">📅 Duración Proyecto</div>
+              <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #2563eb !important;">${statistics.projectDuration}</div>
+              <div style="font-size: 12px; color: #1d4ed8 !important; font-weight: 500;">días estimados</div>
+            </div>
+
+            <div class="stat-card" style="background: #ffffff !important; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); border-left: 4px solid #10b981;">
+              <div style="font-size: 14px; color: #10b981 !important; font-weight: 600; margin-bottom: 8px;">✅ Progreso Global</div>
+              <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #059669 !important;">${statistics.completionPercentage}%</div>
+              <div style="font-size: 12px; color: #047857 !important; font-weight: 500;">${statistics.completed} de ${statistics.total} completadas</div>
+            </div>
+
+            <div class="stat-card" style="background: #ffffff !important; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2); border-left: 4px solid #8b5cf6;">
+              <div style="font-size: 14px; color: #8b5cf6 !important; font-weight: 600; margin-bottom: 8px;">⏱️ Holgura Promedio</div>
+              <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #7c3aed !important;">${statistics.averageSlack}</div>
+              <div style="font-size: 12px; color: #6d28d9 !important; font-weight: 500;">días de slack</div>
+            </div>
+          </div>
+
+          <!-- Tareas Críticas -->
+          ${analysis.criticalTasks > 0 ? `
+            <div class="cp-section" style="margin-bottom: 40px;">
+              <h3 style="margin: 0 0 20px 0; color: #dc2626; display: flex; align-items: center; gap: 10px; font-size: 20px;">
+                <span>⚠️</span>
+                <span>Tareas Críticas (Slack = 0)</span>
+              </h3>
+              <div class="tasks-grid" style="display: flex; flex-direction: column; gap: 15px;">
+                ${analysis.criticalPath.map(task => {
+                  const phase = roadmap[task.phaseKey] || {};
+                  const roadmapTask = phase.tasks?.find(t => t.id === task.id) || {};
+                  const taskAssignment = locks.taskAssignments[task.id];
+                  const isAssigned = !!taskAssignment;
+                  const assignedToName = taskAssignment?.sessionName || roadmapTask.assignedTo || '';
+                  const assignedType = taskAssignment?.sessionName?.toLowerCase().includes('claude') ? 'claude' : 'human';
+                  return `
+                  <div class="task-card critical" style="background: white; border-left: 4px solid ${isAssigned ? '#f59e0b' : '#dc2626'}; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s;" onmouseenter="this.style.transform='translateX(4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseleave="this.style.transform='translateX(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+                    ${isAssigned ? `
+                      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; padding: 12px 16px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                          <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 20px;">${assignedType === 'claude' ? '🤖' : '👤'}</span>
+                            <div>
+                              <div style="font-size: 11px; color: #92400e; text-transform: uppercase; font-weight: 700;">🔒 TAREA ASIGNADA</div>
+                              <div style="font-size: 14px; color: #78350f; font-weight: 600;">${assignedToName}</div>
+                            </div>
+                          </div>
+                          <button onclick="window.EngineeringDashboard.releaseTask('${task.id}')" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                            🔓 Liberar
+                          </button>
+                        </div>
+                        <button onclick="window.EngineeringDashboard.copyCloseInstructions('${task.id}', '${task.phaseKey}', \`${(task.name || '').replace(/`/g, "'").replace(/\\/g, '')}\`)" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                          <span>📋</span> Copiar Instrucciones de Cierre para Claude
+                        </button>
+                      </div>
+                    ` : ''}
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                      <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                          <span style="background: #fee2e2; color: #dc2626; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase;">⚠️ CRÍTICA</span>
+                          <span style="background: #dbeafe; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;" title="${task.phaseKey}">${phase.name || task.phaseKey}</span>
+                          ${roadmapTask.assignedTo && !isAssigned ? `<span style="background: #f3e8ff; color: #7c3aed; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">👤 ${roadmapTask.assignedTo}</span>` : ''}
+                        </div>
+                        <h4 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px; font-weight: 600;">${task.id}: ${task.name}</h4>
+                        ${phase.description ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #6b7280; line-height: 1.5; padding: 8px 12px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #3b82f6;">📋 <strong>Fase:</strong> ${phase.description}</p>` : ''}
+                        ${roadmapTask.estimatedEffort ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #059669; font-weight: 500;">⏱️ Esfuerzo estimado: ${roadmapTask.estimatedEffort}</p>` : ''}
+                        ${roadmapTask.dependencies?.length > 0 ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #f59e0b;">🔗 Depende de: ${roadmapTask.dependencies.join(', ')}</p>` : ''}
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #374151 !important; background: #f8fafc; padding: 10px 12px; border-radius: 6px; margin-top: 10px;">
+                          <span title="Duración estimada" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">📅 Duración:</strong> ${task.duration} días</span>
+                          <span title="Earliest Start" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">ES:</strong> ${task.es}</span>
+                          <span title="Earliest Finish" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">EF:</strong> ${task.ef}</span>
+                          <span title="Latest Start" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">LS:</strong> ${task.ls}</span>
+                          <span title="Latest Finish" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">LF:</strong> ${task.lf}</span>
+                          <span title="Slack/Float" style="color: #dc2626 !important; font-weight: 600;"><strong style="color: #dc2626 !important;">⏱️ Slack:</strong> ${task.slack} días</span>
+                          <span title="Prioridad" style="color: #7c3aed !important; font-weight: 600;"><strong style="color: #7c3aed !important;">🎯 Prioridad:</strong> ${task.priority}/10</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="task-actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                      <button onclick="window.EngineeringDashboard.assignToClaude('${task.id}', '${task.phaseKey}', \`${(task.name || '').replace(/`/g, '').replace(/\$/g, '')}\`)" ${isAssigned ? 'disabled' : ''} style="flex: 1; min-width: 150px; background: ${isAssigned ? '#94a3b8' : '#3b82f6'} !important; color: #ffffff !important; border: none; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: ${isAssigned ? 'not-allowed' : 'pointer'}; font-size: 14px; text-shadow: none; opacity: ${isAssigned ? '0.6' : '1'};">
+                        🤖 Asignar a Claude
+                      </button>
+                      <button onclick="window.EngineeringDashboard.assignToHuman('${task.id}', '${task.phaseKey}')" ${isAssigned ? 'disabled' : ''} style="flex: 1; min-width: 150px; background: ${isAssigned ? '#f1f5f9' : '#ffffff'} !important; color: ${isAssigned ? '#94a3b8' : '#3b82f6'} !important; border: 2px solid ${isAssigned ? '#cbd5e1' : '#3b82f6'}; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: ${isAssigned ? 'not-allowed' : 'pointer'}; font-size: 14px; opacity: ${isAssigned ? '0.6' : '1'};">
+                        👤 Asignar a Humano
+                      </button>
+                      <button onclick="window.EngineeringDashboard.completeTask('${task.id}', '${task.phaseKey}')" style="flex: 1; min-width: 150px; background: #10b981 !important; color: #ffffff !important; border: none; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; text-shadow: none;">
+                        ✅ Marcar Completada
+                      </button>
+                      <button onclick="window.EngineeringDashboard.updatePriority('${task.id}', '${task.phaseKey}')" style="background: #ffffff !important; color: #8b5cf6 !important; border: 2px solid #8b5cf6; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                        🎯 Cambiar Prioridad
+                      </button>
+                    </div>
+                    ${roadmapTask.description ? `
+                      <div class="task-description" style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 8px; border-left: 4px solid #6366f1;">
+                        <p style="margin: 0 0 8px 0; font-size: 12px; color: #6366f1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📝 Descripción de la Tarea:</p>
+                        <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.7; white-space: pre-line;">${roadmapTask.description}</p>
+                      </div>
+                    ` : `
+                      <div class="task-description" style="margin-top: 15px; padding: 12px; background: #fef3c7; border-radius: 6px; border-left: 4px solid #f59e0b;">
+                        <p style="margin: 0; font-size: 12px; color: #92400e;"><strong>⚠️ Sin descripción:</strong> Esta tarea no tiene una descripción detallada. Usa "Asignar a Claude" para agregarla.</p>
+                      </div>
+                    `}
+                  </div>
+                `}).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Tareas No Críticas -->
+          ${analysis.tasks.filter(t => !t.isCritical && !t.done).length > 0 ? `
+            <div class="cp-section">
+              <h3 style="margin: 0 0 20px 0; color: #3b82f6; display: flex; align-items: center; gap: 10px; font-size: 20px;">
+                <span>📋</span>
+                <span>Tareas con Holgura</span>
+              </h3>
+              <div class="tasks-grid" style="display: flex; flex-direction: column; gap: 15px;">
+                ${analysis.tasks.filter(t => !t.isCritical && !t.done).map(task => {
+                  const phase = roadmap[task.phaseKey] || {};
+                  const roadmapTask = phase.tasks?.find(t => t.id === task.id) || {};
+                  const taskAssignment = locks.taskAssignments[task.id];
+                  const isAssigned = !!taskAssignment;
+                  const assignedToName = taskAssignment?.sessionName || roadmapTask.assignedTo || '';
+                  const assignedType = taskAssignment?.sessionName?.toLowerCase().includes('claude') ? 'claude' : 'human';
+                  return `
+                  <div class="task-card" style="background: white; border-left: 4px solid ${isAssigned ? '#f59e0b' : '#3b82f6'}; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s;" onmouseenter="this.style.transform='translateX(4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseleave="this.style.transform='translateX(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+                    ${isAssigned ? `
+                      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; padding: 12px 16px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                          <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 20px;">${assignedType === 'claude' ? '🤖' : '👤'}</span>
+                            <div>
+                              <div style="font-size: 11px; color: #92400e; text-transform: uppercase; font-weight: 700;">🔒 TAREA ASIGNADA</div>
+                              <div style="font-size: 14px; color: #78350f; font-weight: 600;">${assignedToName}</div>
+                            </div>
+                          </div>
+                          <button onclick="window.EngineeringDashboard.releaseTask('${task.id}')" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                            🔓 Liberar
+                          </button>
+                        </div>
+                        <button onclick="window.EngineeringDashboard.copyCloseInstructions('${task.id}', '${task.phaseKey}', \`${(task.name || '').replace(/\`/g, "'").replace(/\\/g, '')}\`)" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                          <span>📋</span> Copiar Instrucciones de Cierre para Claude
+                        </button>
+                      </div>
+                    ` : ''}
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                      <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                          <span style="background: #dbeafe; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">Slack: ${task.slack}d</span>
+                          <span style="background: #f3f4f6; color: #6b7280; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;" title="${task.phaseKey}">${phase.name || task.phaseKey}</span>
+                          ${roadmapTask.assignedTo && !isAssigned ? `<span style="background: #f3e8ff; color: #7c3aed; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">👤 ${roadmapTask.assignedTo}</span>` : ''}
+                        </div>
+                        <h4 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px; font-weight: 600;">${task.id}: ${task.name}</h4>
+                        ${phase.description ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #6b7280; line-height: 1.5; padding: 8px 12px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #10b981;">📋 <strong>Fase:</strong> ${phase.description}</p>` : ''}
+                        ${roadmapTask.estimatedEffort ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #059669; font-weight: 500;">⏱️ Esfuerzo estimado: ${roadmapTask.estimatedEffort}</p>` : ''}
+                        ${roadmapTask.dependencies?.length > 0 ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #f59e0b;">🔗 Depende de: ${roadmapTask.dependencies.join(', ')}</p>` : ''}
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #374151 !important; background: #f8fafc; padding: 10px 12px; border-radius: 6px; margin-top: 10px;">
+                          <span title="Duración estimada" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">📅 Duración:</strong> ${task.duration} días</span>
+                          <span title="Earliest Start" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">ES:</strong> ${task.es}</span>
+                          <span title="Earliest Finish" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">EF:</strong> ${task.ef}</span>
+                          <span title="Latest Start" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">LS:</strong> ${task.ls}</span>
+                          <span title="Latest Finish" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">LF:</strong> ${task.lf}</span>
+                          <span title="Slack/Float" style="color: #10b981 !important; font-weight: 600;"><strong style="color: #10b981 !important;">⏱️ Slack:</strong> ${task.slack} días</span>
+                          <span title="Prioridad" style="color: #7c3aed !important; font-weight: 600;"><strong style="color: #7c3aed !important;">🎯 Prioridad:</strong> ${task.priority}/10</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="task-actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                      <button onclick="window.EngineeringDashboard.assignToClaude('${task.id}', '${task.phaseKey}', \`${(task.name || '').replace(/`/g, '').replace(/\$/g, '')}\`)" ${isAssigned ? 'disabled' : ''} style="flex: 1; min-width: 150px; background: ${isAssigned ? '#94a3b8' : '#3b82f6'} !important; color: #ffffff !important; border: none; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: ${isAssigned ? 'not-allowed' : 'pointer'}; font-size: 14px; text-shadow: none; opacity: ${isAssigned ? '0.6' : '1'};">
+                        🤖 Asignar a Claude
+                      </button>
+                      <button onclick="window.EngineeringDashboard.assignToHuman('${task.id}', '${task.phaseKey}')" ${isAssigned ? 'disabled' : ''} style="flex: 1; min-width: 150px; background: ${isAssigned ? '#f1f5f9' : '#ffffff'} !important; color: ${isAssigned ? '#94a3b8' : '#3b82f6'} !important; border: 2px solid ${isAssigned ? '#cbd5e1' : '#3b82f6'}; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: ${isAssigned ? 'not-allowed' : 'pointer'}; font-size: 14px; opacity: ${isAssigned ? '0.6' : '1'};">
+                        👤 Asignar a Humano
+                      </button>
+                      <button onclick="window.EngineeringDashboard.completeTask('${task.id}', '${task.phaseKey}')" style="flex: 1; min-width: 150px; background: #10b981 !important; color: #ffffff !important; border: none; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; text-shadow: none;">
+                        ✅ Marcar Completada
+                      </button>
+                      <button onclick="window.EngineeringDashboard.updatePriority('${task.id}', '${task.phaseKey}')" style="background: #ffffff !important; color: #8b5cf6 !important; border: 2px solid #8b5cf6; padding: 12px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                        🎯 Cambiar Prioridad
+                      </button>
+                    </div>
+                    ${roadmapTask.description ? `
+                      <div class="task-description" style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 8px; border-left: 4px solid #10b981;">
+                        <p style="margin: 0 0 8px 0; font-size: 12px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📝 Descripción de la Tarea:</p>
+                        <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.7; white-space: pre-line;">${roadmapTask.description}</p>
+                      </div>
+                    ` : `
+                      <div class="task-description" style="margin-top: 15px; padding: 12px; background: #fef3c7; border-radius: 6px; border-left: 4px solid #f59e0b;">
+                        <p style="margin: 0; font-size: 12px; color: #92400e;"><strong>⚠️ Sin descripción:</strong> Esta tarea no tiene una descripción detallada. Usa "Asignar a Claude" para agregarla.</p>
+                      </div>
+                    `}
+                  </div>
+                `}).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Análisis por Phases -->
+          <div class="cp-section" style="margin-top: 40px;">
+            <h3 style="margin: 0 0 20px 0; color: #1f2937; display: flex; align-items: center; gap: 10px; font-size: 20px;">
+              <span>📊</span>
+              <span>Análisis por Phases</span>
+            </h3>
+            <div style="display: grid; gap: 20px;">
+              ${analysis.phases.map(phase => `
+                <div class="phase-card" style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; ${phase.isCritical ? 'border-left: 4px solid #dc2626;' : ''}">
+                  <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        ${phase.isCritical ? '<span style="background: #fee2e2; color: #dc2626; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">⚠️ PHASE CRÍTICA</span>' : ''}
+                        <span style="background: ${phase.status === 'COMPLETED' ? '#d1fae5' : phase.status === 'IN_PROGRESS' ? '#dbeafe' : '#f3f4f6'}; color: ${phase.status === 'COMPLETED' ? '#065f46' : phase.status === 'IN_PROGRESS' ? '#1e40af' : '#374151'}; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">${phase.status}</span>
+                      </div>
+                      <h4 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px; font-weight: 600;">${phase.name}</h4>
+                      <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #6b7280;">
+                        <span><strong>Total Tareas:</strong> ${phase.totalTasks}</span>
+                        <span><strong>✅ Completadas:</strong> ${phase.completedTasks}</span>
+                        <span><strong>📋 Pendientes:</strong> ${phase.pendingTasks}</span>
+                        <span style="${phase.criticalTasks > 0 ? 'color: #dc2626; font-weight: 600;' : ''}"><strong>⚠️ Críticas:</strong> ${phase.criticalTasks}</span>
+                        <span><strong>📈 Progreso:</strong> ${phase.progress}%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="progress-bar-container" style="width: 100%; height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden;">
+                    <div class="progress-bar" style="width: ${phase.progress}%; height: 100%; background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%); transition: width 0.3s;"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+        </div>
+      `;
+
+    } catch (error) {
+      console.error('Error renderizando Critical Path:', error);
+      return `
+        <div style="padding: 40px; text-align: center;">
+          <h3 style="color: #dc2626;">❌ Error al cargar Camino Crítico</h3>
+          <p style="color: #6b7280;">${error.message}</p>
+          <button onclick="location.reload()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px;">
+            🔄 Reintentar
+          </button>
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * Calcular Critical Path (CPM - Critical Path Method)
+   */
+  calculateCriticalPath(roadmap) {
+    const phases = Object.entries(roadmap);
+    let totalTasks = 0;
+    let completedTasks = 0;
+    let criticalPath = [];
+    let maxDuration = 0;
+
+    // Calcular duración de cada fase
+    const phasesWithDuration = phases.map(([key, phase]) => {
+      const start = new Date(phase.startDate);
+      const end = new Date(phase.estimatedCompletion);
+      const duration = Math.ceil((end - start) / (1000 * 60 * 60 * 24)); // días
+
+      const tasksCount = phase.tasks ? phase.tasks.length : 0;
+      const doneCount = phase.tasks ? phase.tasks.filter(t => t.done).length : 0;
+
+      totalTasks += tasksCount;
+      completedTasks += doneCount;
+
+      return {
+        key,
+        ...phase,
+        duration,
+        tasksCount,
+        doneCount,
+        dependencies: phase.dependencies || []
+      };
+    });
+
+    // Encontrar Critical Path (considerando dependencias)
+    // En este caso simplificado, el critical path es la secuencia de fases dependientes
+    const visited = new Set();
+    const findLongestPath = (phaseKey, currentPath = [], currentDuration = 0) => {
+      if (visited.has(phaseKey)) return { path: currentPath, duration: currentDuration };
+
+      const phase = phasesWithDuration.find(p => p.key === phaseKey);
+      if (!phase) return { path: currentPath, duration: currentDuration };
+
+      visited.add(phaseKey);
+      const newPath = [...currentPath, phaseKey];
+      const newDuration = currentDuration + phase.duration;
+
+      if (phase.dependencies && phase.dependencies.length > 0) {
+        // Explorar dependencias
+        let longestPath = { path: newPath, duration: newDuration };
+        phase.dependencies.forEach(dep => {
+          const result = findLongestPath(dep, newPath, newDuration);
+          if (result.duration > longestPath.duration) {
+            longestPath = result;
+          }
+        });
+        return longestPath;
+      }
+
+      return { path: newPath, duration: newDuration };
+    };
+
+    // Encontrar el camino más largo
+    phasesWithDuration.forEach(phase => {
+      visited.clear();
+      const result = findLongestPath(phase.key);
+      if (result.duration > maxDuration) {
+        maxDuration = result.duration;
+        criticalPath = result.path;
+      }
+    });
+
+    return {
+      totalPhases: phases.length,
+      totalTasks,
+      completedTasks,
+      criticalPathLength: maxDuration,
+      criticalPath,
+      phases: phasesWithDuration
+    };
+  },
+
+  /**
+   * Renderizar PERT Chart
+   */
+  renderPERTChart(roadmap, criticalPathData) {
+    const { phases, criticalPath } = criticalPathData;
+
+    return `
+      <h3 style="margin-bottom: 20px;">🔄 PERT Chart (Program Evaluation Review Technique)</h3>
+      <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+        ${phases.map(phase => {
+          const isCritical = criticalPath.includes(phase.key);
+          const optimistic = Math.ceil(phase.duration * 0.75); // 75% del tiempo estimado
+          const mostLikely = phase.duration; // Tiempo estimado
+          const pessimistic = Math.ceil(phase.duration * 1.5); // 150% del tiempo estimado
+          const expectedTime = Math.ceil((optimistic + 4 * mostLikely + pessimistic) / 6);
+          const variance = Math.pow((pessimistic - optimistic) / 6, 2).toFixed(2);
+
+          return `
+            <div style="background: ${isCritical ? '#fee2e2' : 'white'}; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid ${isCritical ? '#ef4444' : '#3b82f6'};">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: ${isCritical ? '#991b1b' : '#1e40af'};">
+                  ${isCritical ? '⚠️ ' : ''}${phase.name}
+                </h4>
+                ${isCritical ? '<span style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">CRITICAL PATH</span>' : ''}
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; font-size: 0.875rem;">
+                <div>
+                  <div style="color: #6b7280; font-size: 0.75rem;">Optimista</div>
+                  <div style="font-weight: 600;">${optimistic} días</div>
+                </div>
+                <div>
+                  <div style="color: #6b7280; font-size: 0.75rem;">Más Probable</div>
+                  <div style="font-weight: 600;">${mostLikely} días</div>
+                </div>
+                <div>
+                  <div style="color: #6b7280; font-size: 0.75rem;">Pesimista</div>
+                  <div style="font-weight: 600;">${pessimistic} días</div>
+                </div>
+                <div>
+                  <div style="color: #6b7280; font-size: 0.75rem;">Tiempo Esperado</div>
+                  <div style="font-weight: 600; color: #059669;">${expectedTime} días</div>
+                </div>
+                <div>
+                  <div style="color: #6b7280; font-size: 0.75rem;">Varianza</div>
+                  <div style="font-weight: 600;">${variance}</div>
+                </div>
+              </div>
+              ${phase.dependencies && phase.dependencies.length > 0 ? `
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                  <span style="font-size: 0.75rem; color: #6b7280;">Depende de:</span>
+                  <span style="font-size: 0.875rem; font-weight: 500;"> ${phase.dependencies.join(', ')}</span>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  },
+
+  /**
+   * Renderizar Dependency Graph
+   */
+  renderDependenciesGraph(roadmap, criticalPathData) {
+    const { phases, criticalPath } = criticalPathData;
+
+    return `
+      <h3 style="margin-bottom: 20px;">🔗 Grafo de Dependencias</h3>
+      <div style="background: #f9fafb; padding: 30px; border-radius: 8px; overflow-x: auto;">
+        <svg id="dependency-graph-svg" width="100%" height="600" style="border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
+          <!-- El grafo se renderizará con JavaScript después del DOM -->
+        </svg>
+      </div>
+
+      <div style="margin-top: 20px;">
+        <h4>📊 Análisis de Dependencias:</h4>
+        <ul style="list-style: none; padding: 0;">
+          ${phases.map(phase => `
+            <li style="padding: 10px; margin-bottom: 10px; background: ${criticalPath.includes(phase.key) ? '#fee2e2' : 'white'}; border-radius: 8px; border-left: 4px solid ${criticalPath.includes(phase.key) ? '#ef4444' : '#3b82f6'};">
+              <strong>${phase.name}</strong>
+              ${phase.dependencies && phase.dependencies.length > 0
+                ? `<br><span style="color: #6b7280; font-size: 0.875rem;">→ Bloquea: ${phases.filter(p => p.dependencies && p.dependencies.includes(phase.key)).map(p => p.name).join(', ') || 'Ninguna'}</span>`
+                : '<br><span style="color: #22c55e; font-size: 0.875rem;">✓ Sin dependencias</span>'
+              }
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  },
+
+  /**
+   * Renderizar detalles de fases
+   */
+  renderPhaseDetails(roadmap, criticalPathData) {
+    const { phases, criticalPath } = criticalPathData;
+
+    return `
+      <div style="display: grid; gap: 20px;">
+        ${phases.map(phase => {
+          const isCritical = criticalPath.includes(phase.key);
+          const progress = phase.tasksCount > 0 ? Math.round((phase.doneCount / phase.tasksCount) * 100) : 0;
+
+          return `
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid ${isCritical ? '#ef4444' : '#3b82f6'};">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                <div>
+                  <h4 style="margin: 0 0 5px 0; color: ${isCritical ? '#991b1b' : '#1e40af'};">
+                    ${isCritical ? '⚠️ ' : ''}${phase.name}
+                  </h4>
+                  <div style="font-size: 0.875rem; color: #6b7280;">
+                    ${new Date(phase.startDate).toLocaleDateString('es-AR')} - ${new Date(phase.estimatedCompletion).toLocaleDateString('es-AR')}
+                  </div>
+                </div>
+                <span class="status-badge ${phase.status.toLowerCase()}">${this.getStatusBadge(phase.status)}</span>
+              </div>
+
+              <!-- Progress Bar -->
+              <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                  <span style="font-size: 0.875rem; font-weight: 500;">Progreso: ${progress}%</span>
+                  <span style="font-size: 0.875rem; color: #6b7280;">${phase.doneCount} / ${phase.tasksCount} tareas</span>
+                </div>
+                <div style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                  <div style="height: 100%; width: ${progress}%; background: ${isCritical ? '#ef4444' : '#22c55e'}; transition: width 0.3s;"></div>
+                </div>
+              </div>
+
+              <!-- Tasks -->
+              ${phase.tasks && phase.tasks.length > 0 ? `
+                <div style="margin-top: 15px;">
+                  <h5 style="font-size: 0.875rem; color: #6b7280; margin-bottom: 10px;">Tareas:</h5>
+                  <div style="display: grid; gap: 5px;">
+                    ${phase.tasks.map(task => `
+                      <div style="display: flex; align-items: center; gap: 10px; padding: 8px; background: ${task.done ? '#dcfce7' : '#f9fafb'}; border-radius: 4px;">
+                        <span style="font-size: 1.2rem;">${task.done ? '✅' : '⏸️'}</span>
+                        <span style="flex: 1; font-size: 0.875rem; ${task.done ? 'text-decoration: line-through; color: #6b7280;' : ''}">${task.name}</span>
+                        ${task.assignedTo ? `<span style="font-size: 0.75rem; color: #6b7280; background: white; padding: 2px 6px; border-radius: 4px;">${task.assignedTo}</span>` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
       </div>
     `;
   },
@@ -1023,6 +2872,28 @@ const EngineeringDashboard = {
       });
     }
 
+    // Ver Detalles Completos buttons (Applications y Modules)
+    document.querySelectorAll('.btn-view-details').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const moduleKey = e.currentTarget.getAttribute('data-app') || e.currentTarget.getAttribute('data-module');
+        const moduleData = this.metadata.modules[moduleKey] || this.metadata.applications[moduleKey];
+        if (moduleData) {
+          this.showDetailsModal(moduleKey, moduleData);
+        }
+      });
+    });
+
+    // Ver Código buttons (Frontend/Backend Files tabs)
+    document.querySelectorAll('.btn-view-code').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const filePath = e.currentTarget.getAttribute('data-file-path');
+        const lines = e.currentTarget.getAttribute('data-lines');
+        if (filePath) {
+          await this.showCodeModal(filePath, lines);
+        }
+      });
+    });
+
     // Toggle tasks en roadmap
     document.querySelectorAll('.btn-toggle-tasks').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -1039,6 +2910,143 @@ const EngineeringDashboard = {
         }
       });
     });
+
+    // Gantt sub-tabs switching (Gantt / PERT / Dependencies)
+    document.querySelectorAll('.gantt-subtab').forEach(subtab => {
+      subtab.addEventListener('click', (e) => {
+        const view = e.currentTarget.getAttribute('data-gantt-view');
+
+        // Update active state
+        document.querySelectorAll('.gantt-subtab').forEach(t => {
+          t.classList.remove('active');
+          t.style.background = '#e5e7eb';
+          t.style.color = '#374151';
+        });
+        e.currentTarget.classList.add('active');
+        e.currentTarget.style.background = '#3b82f6';
+        e.currentTarget.style.color = 'white';
+
+        // Show/hide views
+        document.querySelectorAll('.gantt-view').forEach(v => {
+          v.classList.remove('active');
+          v.style.display = 'none';
+        });
+
+        const targetView = document.getElementById(`${view}-chart-view`);
+        if (targetView) {
+          targetView.classList.add('active');
+          targetView.style.display = 'block';
+        }
+      });
+    });
+
+    // Initialize Frappe Gantt if on gantt view
+    if (this.currentView === 'gantt') {
+      this.initializeFrappeGantt();
+    }
+  },
+
+  /**
+   * Initialize Frappe Gantt Chart
+   */
+  initializeFrappeGantt() {
+    // Wait for next tick to ensure DOM is ready
+    setTimeout(() => {
+      const ganttContainer = document.getElementById('gantt-chart');
+      if (!ganttContainer || !this.metadata || !window.Gantt) {
+        console.warn('⚠️ [GANTT] Container, metadata, or Frappe Gantt not available');
+        return;
+      }
+
+      const { roadmap } = this.metadata;
+      const criticalPathData = this.calculateCriticalPath(roadmap);
+
+      // Convert roadmap phases to Gantt tasks format
+      const ganttTasks = criticalPathData.phases.map(phase => {
+        const isCritical = criticalPathData.criticalPath.includes(phase.key);
+
+        return {
+          id: phase.key,
+          name: phase.name,
+          start: phase.startDate,
+          end: phase.estimatedCompletion,
+          progress: phase.progress || 0,
+          dependencies: (phase.dependencies || []).join(', '),
+          custom_class: isCritical ? 'bar-critical' : (phase.status === 'COMPLETE' ? 'bar-complete' : (phase.status === 'IN_PROGRESS' ? 'bar-progress' : 'bar-planned'))
+        };
+      });
+
+      // Clear previous gantt if exists
+      ganttContainer.innerHTML = '';
+
+      try {
+        // Initialize Frappe Gantt
+        const gantt = new Gantt(ganttContainer, ganttTasks, {
+          view_mode: 'Week',
+          date_format: 'YYYY-MM-DD',
+          language: 'es',
+          custom_popup_html: (task) => {
+            const phase = criticalPathData.phases.find(p => p.key === task.id);
+            const isCritical = criticalPathData.criticalPath.includes(task.id);
+
+            return `
+              <div class="gantt-popup" style="padding: 15px; min-width: 300px;">
+                <h4 style="margin: 0 0 10px 0; color: ${isCritical ? '#991b1b' : '#1e40af'};">
+                  ${isCritical ? '⚠️ ' : ''}${task.name}
+                </h4>
+                ${isCritical ? '<div style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin-bottom: 10px; display: inline-block;">CRITICAL PATH</div>' : ''}
+                <div style="margin-bottom: 8px;">
+                  <strong>Fechas:</strong> ${new Date(task._start).toLocaleDateString('es-AR')} - ${new Date(task._end).toLocaleDateString('es-AR')}
+                </div>
+                <div style="margin-bottom: 8px;">
+                  <strong>Duración:</strong> ${phase.duration} días
+                </div>
+                <div style="margin-bottom: 8px;">
+                  <strong>Progreso:</strong> ${task.progress}%
+                </div>
+                <div style="margin-bottom: 8px;">
+                  <strong>Tareas:</strong> ${phase.doneCount} / ${phase.tasksCount} completadas
+                </div>
+                ${phase.dependencies && phase.dependencies.length > 0
+                  ? `<div style="margin-bottom: 8px;"><strong>Depende de:</strong> ${phase.dependencies.join(', ')}</div>`
+                  : ''
+                }
+              </div>
+            `;
+          }
+        });
+
+        // Add custom CSS for critical path
+        const style = document.createElement('style');
+        style.textContent = `
+          .bar-critical .bar { fill: #ef4444 !important; }
+          .bar-critical .bar-progress { fill: #dc2626 !important; }
+          .bar-complete .bar { fill: #22c55e !important; }
+          .bar-complete .bar-progress { fill: #16a34a !important; }
+          .bar-progress .bar { fill: #3b82f6 !important; }
+          .bar-progress .bar-progress { fill: #2563eb !important; }
+          .bar-planned .bar { fill: #9ca3af !important; }
+          .bar-planned .bar-progress { fill: #6b7280 !important; }
+        `;
+        if (!document.getElementById('gantt-custom-styles')) {
+          style.id = 'gantt-custom-styles';
+          document.head.appendChild(style);
+        }
+
+        console.log('✅ [GANTT] Frappe Gantt initialized with', ganttTasks.length, 'tasks');
+      } catch (error) {
+        console.error('❌ [GANTT] Error initializing Frappe Gantt:', error);
+        ganttContainer.innerHTML = `
+          <div style="background: #fee2e2; padding: 20px; border-radius: 8px; border-left: 4px solid #ef4444;">
+            <h4 style="margin: 0 0 10px 0; color: #991b1b;">❌ Error al cargar Gantt Chart</h4>
+            <p style="margin: 0; color: #7f1d1d;">${error.message}</p>
+            <p style="margin: 10px 0 0 0; color: #7f1d1d; font-size: 0.875rem;">
+              Por favor, verifica que la librería Frappe Gantt esté cargada correctamente.
+            </p>
+          </div>
+        `;
+      }
+    }, 200);
   },
 
   /**
@@ -1080,26 +3088,525 @@ const EngineeringDashboard = {
   },
 
   /**
-   * Auto-refresh cada 5 minutos
+   * Mostrar modal de detalles completos (INTERNO - sin abrir ventanas)
    */
-  startAutoRefresh() {
-    setInterval(() => {
-      this.refresh();
-    }, 5 * 60 * 1000); // 5 minutos
+  showDetailsModal(moduleKey, moduleData) {
+    // Crear overlay (backdrop)
+    const overlay = document.createElement('div');
+    overlay.id = 'details-modal-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    `;
+
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      max-width: 1000px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      position: relative;
+    `;
+
+    // Contenido del modal
+    modal.innerHTML = `
+      <div style="padding: 30px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 15px;">
+          <div>
+            <h2 style="margin: 0; color: #1e40af; font-size: 28px;">
+              ${moduleData.name || moduleKey}
+            </h2>
+            <div style="margin-top: 8px; display: flex; gap: 10px;">
+              ${this.getStatusBadge(moduleData.status)}
+              <span style="background: #e0e7ff; color: #4f46e5; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                ${moduleData.category || 'N/A'}
+              </span>
+              <span style="background: #f0fdf4; color: #15803d; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                ${moduleData.progress || 0}% Completado
+              </span>
+            </div>
+          </div>
+          <button id="close-details-modal" style="background: #dc2626; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 20px; line-height: 1;">✕</button>
+        </div>
+
+        <!-- Descripción -->
+        ${moduleData.description ? `
+          <div style="margin-bottom: 25px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+            <h4 style="margin: 0 0 10px 0; color: #374151; font-size: 14px; font-weight: 600;">📝 Descripción</h4>
+            <p style="margin: 0; color: #6b7280; line-height: 1.6;">${moduleData.description}</p>
+          </div>
+        ` : ''}
+
+        <!-- Code Location (SI EXISTE) -->
+        ${moduleData.codeLocation ? this.renderCodeLocationFull(moduleData.codeLocation) : ''}
+
+        <!-- Features -->
+        ${moduleData.features ? `
+          <div style="margin-bottom: 25px;">
+            <h4 style="margin: 0 0 15px 0; color: #374151; font-size: 16px; font-weight: 600;">⚡ Features</h4>
+            ${this.renderModuleFeatures(moduleData.features)}
+          </div>
+        ` : ''}
+
+        <!-- API Endpoints -->
+        ${moduleData.apiEndpoints && moduleData.apiEndpoints.length > 0 ? `
+          <div style="margin-bottom: 25px; padding: 15px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 6px;">
+            <h4 style="margin: 0 0 12px 0; color: #1e40af; font-size: 14px; font-weight: 600;">🌐 API Endpoints (${moduleData.apiEndpoints.length})</h4>
+            <div style="font-family: 'Courier New', monospace; font-size: 12px; max-height: 200px; overflow-y: auto;">
+              ${moduleData.apiEndpoints.map(endpoint => `
+                <div style="padding: 6px 0; color: #1e40af;">${endpoint}</div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Tables -->
+        ${moduleData.tables && moduleData.tables.length > 0 ? `
+          <div style="margin-bottom: 25px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px;">
+            <h4 style="margin: 0 0 12px 0; color: #92400e; font-size: 14px; font-weight: 600;">🗄️ Tablas de Base de Datos (${moduleData.tables.length})</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${moduleData.tables.map(table => `
+                <span style="background: white; padding: 6px 12px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 12px; color: #78350f;">${table}</span>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Dependencies -->
+        ${moduleData.dependencies ? this.renderDependencies(moduleData.dependencies) : ''}
+
+        <!-- Known Issues -->
+        ${moduleData.knownIssues && moduleData.knownIssues.length > 0 ? this.renderKnownIssues(moduleData.knownIssues) : ''}
+
+        <!-- Botón cerrar al final -->
+        <div style="margin-top: 30px; text-align: center;">
+          <button class="close-modal-btn" style="padding: 12px 30px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Event listeners para cerrar
+    const closeBtn = overlay.querySelector('#close-details-modal');
+    const closeModalBtn = overlay.querySelector('.close-modal-btn');
+
+    const closeModal = () => {
+      overlay.remove();
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    closeModalBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    // ESC para cerrar
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
   },
 
   /**
-   * Filtrar por estado
+   * Mostrar código de un archivo en sub-modal
+   */
+  async showCodeModal(filePath, lines) {
+    // Crear overlay de carga
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'code-loading-overlay';
+    loadingOverlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 9999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+    loadingOverlay.innerHTML = `
+      <div style="background: white; padding: 30px; border-radius: 12px; text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 15px;">📄</div>
+        <div style="font-size: 16px; color: #374151; font-weight: 600;">Cargando código...</div>
+        <div style="font-size: 13px; color: #6b7280; margin-top: 5px;">${filePath}</div>
+      </div>
+    `;
+    document.body.appendChild(loadingOverlay);
+
+    try {
+      // Llamar al endpoint para leer el archivo
+      const response = await fetch('/api/engineering/read-file', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ filePath, lines })
+      });
+
+      const result = await response.json();
+
+      // Remover loading
+      loadingOverlay.remove();
+
+      if (!result.success) {
+        alert(`Error: ${result.error}`);
+        return;
+      }
+
+      const { data } = result;
+
+      // Crear modal de código
+      const overlay = document.createElement('div');
+      overlay.id = 'code-modal-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 9999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      `;
+
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        background: #1e1e1e;
+        border-radius: 12px;
+        max-width: 1200px;
+        width: 100%;
+        max-height: 90vh;
+        overflow: hidden;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+      `;
+
+      // Header del modal
+      const header = document.createElement('div');
+      header.style.cssText = `
+        padding: 20px;
+        background: #2d2d2d;
+        border-bottom: 2px solid #3b82f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      `;
+      header.innerHTML = `
+        <div>
+          <div style="font-family: 'Courier New', monospace; color: #3b82f6; font-size: 16px; font-weight: 700;">
+            📄 ${data.filePath}
+          </div>
+          <div style="margin-top: 6px; display: flex; gap: 10px; font-size: 12px;">
+            <span style="background: #f59e0b; color: white; padding: 3px 10px; border-radius: 6px; font-weight: 600;">
+              Líneas ${data.startLine} - ${data.endLine}
+            </span>
+            <span style="background: #10b981; color: white; padding: 3px 10px; border-radius: 6px; font-weight: 600;">
+              Total: ${data.totalLines} líneas
+            </span>
+          </div>
+        </div>
+        <button id="close-code-modal" style="background: #dc2626; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 20px; line-height: 1;">✕</button>
+      `;
+
+      // Contenedor de código con scroll
+      const codeContainer = document.createElement('div');
+      codeContainer.style.cssText = `
+        flex: 1;
+        overflow-y: auto;
+        background: #1e1e1e;
+        padding: 20px;
+      `;
+
+      // Pre con el código
+      const pre = document.createElement('pre');
+      pre.style.cssText = `
+        margin: 0;
+        font-family: 'Courier New', Consolas, Monaco, monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #d4d4d4;
+        white-space: pre;
+        overflow-x: auto;
+      `;
+
+      // Generar líneas con números
+      const codeLines = data.lines.map((line, index) => {
+        const lineNumber = data.startLine + index;
+        const lineNumberStr = String(lineNumber).padStart(5, ' ');
+
+        // Escapar HTML
+        const escapedLine = line
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+
+        return `<span style="color: #858585; user-select: none;">${lineNumberStr} │ </span><span style="color: #d4d4d4;">${escapedLine}</span>`;
+      }).join('\n');
+
+      pre.innerHTML = codeLines;
+      codeContainer.appendChild(pre);
+
+      // Footer con botones
+      const footer = document.createElement('div');
+      footer.style.cssText = `
+        padding: 15px 20px;
+        background: #2d2d2d;
+        border-top: 1px solid #3f3f3f;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      `;
+      footer.innerHTML = `
+        <div style="color: #9ca3af; font-size: 12px;">
+          💡 <strong>Tip:</strong> Presioná ESC para cerrar
+        </div>
+        <button class="close-code-modal-btn" style="padding: 10px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+          Cerrar
+        </button>
+      `;
+
+      // Ensamblar modal
+      modal.appendChild(header);
+      modal.appendChild(codeContainer);
+      modal.appendChild(footer);
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+      // Event listeners para cerrar
+      const closeBtn = header.querySelector('#close-code-modal');
+      const closeModalBtn = footer.querySelector('.close-code-modal-btn');
+
+      const closeModal = () => {
+        overlay.remove();
+      };
+
+      closeBtn.addEventListener('click', closeModal);
+      closeModalBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeModal();
+      });
+
+      // ESC para cerrar
+      const escHandler = (e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+          document.removeEventListener('keydown', escHandler);
+        }
+      };
+      document.addEventListener('keydown', escHandler);
+
+    } catch (error) {
+      loadingOverlay.remove();
+      console.error('Error cargando código:', error);
+      alert(`Error cargando código: ${error.message}`);
+    }
+  },
+
+  /**
+   * Renderizar ubicación de código COMPLETA (para modal)
+   */
+  renderCodeLocationFull(codeLocation) {
+    if (!codeLocation || (!codeLocation.backend && !codeLocation.frontend)) return '';
+
+    return `
+      <div style="margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #3b82f6; border-radius: 10px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);">
+        <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #1e40af; display: flex; align-items: center; gap: 10px;">
+          📍 Ubicación del Código
+          <span style="background: #3b82f6; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+            ${(codeLocation.backend?.length || 0) + (codeLocation.frontend?.length || 0)} archivos
+          </span>
+        </h3>
+
+        ${codeLocation.backend && codeLocation.backend.length > 0 ? `
+          <div style="margin-bottom: 20px;">
+            <div style="font-weight: 700; font-size: 15px; color: #1e40af; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+              🔹 Backend (Bk) <span style="background: #3b82f6; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">${codeLocation.backend.length}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              ${codeLocation.backend.map(file => `
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                  <div style="font-family: 'Courier New', monospace; color: #1e40af; font-weight: 700; font-size: 13px; margin-bottom: 6px;">
+                    ${file.file} <span style="color: #f59e0b; background: #fef3c7; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">Líneas ${file.lines}</span>
+                  </div>
+                  <div style="color: #6b7280; font-size: 12px; line-height: 1.5;">${file.description}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${codeLocation.frontend && codeLocation.frontend.length > 0 ? `
+          <div>
+            <div style="font-weight: 700; font-size: 15px; color: #059669; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+              🔹 Frontend (Fe) <span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">${codeLocation.frontend.length}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              ${codeLocation.frontend.map(file => `
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                  <div style="font-family: 'Courier New', monospace; color: #059669; font-weight: 700; font-size: 13px; margin-bottom: 6px;">
+                    ${file.file} <span style="color: #f59e0b; background: #fef3c7; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">Líneas ${file.lines}</span>
+                  </div>
+                  <div style="color: #6b7280; font-size: 12px; line-height: 1.5;">${file.description}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <div style="margin-top: 15px; padding: 10px; background: rgba(255, 255, 255, 0.6); border-radius: 6px; font-size: 11px; color: #6b7280; text-align: center;">
+          💡 <strong>Tip:</strong> Usá estas rutas y líneas para navegar directo al código en tu editor
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Auto-refresh cada 5 minutos
+   */
+  startAutoRefresh() {
+    // Polling para detectar cambios de otras sesiones (cada 30 segundos - no agresivo)
+    this.lastMetadataChecksum = null;
+
+    setInterval(async () => {
+      await this.checkForChanges();
+    }, 30000); // Cada 30 segundos (no cada 3 para evitar carga innecesaria)
+
+    // Auto-refresh completo cada 5 minutos
+    setInterval(() => {
+      this.refresh();
+    }, 5 * 60 * 1000);
+  },
+
+  /**
+   * Verificar cambios de otras sesiones
+   */
+  async checkForChanges() {
+    try {
+      // Obtener checksum actual de metadata
+      const response = await fetch('/api/engineering/metadata');
+      const result = await response.json();
+
+      if (!result.success) return;
+
+      // Crear checksum simple del metadata
+      const currentChecksum = JSON.stringify(result.data);
+
+      // Primera vez, solo guardar checksum
+      if (!this.lastMetadataChecksum) {
+        this.lastMetadataChecksum = currentChecksum;
+        return;
+      }
+
+      // Detectar cambio
+      if (currentChecksum !== this.lastMetadataChecksum) {
+        console.log('🔔 [SYNC] Cambios detectados en metadata, actualizando...');
+        this.showSyncNotification('Metadata actualizado por otra sesión');
+
+        // Actualizar checksum
+        this.lastMetadataChecksum = currentChecksum;
+
+        // Refrescar dashboard
+        await this.refresh();
+      }
+    } catch (error) {
+      console.error('Error verificando cambios:', error);
+    }
+  },
+
+  /**
+   * Mostrar notificación de sincronización
+   */
+  showSyncNotification(message) {
+    // Crear notificación visual
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 999999;
+      font-size: 14px;
+      animation: slideIn 0.3s ease;
+    `;
+    notification.innerHTML = `🔄 ${message}`;
+
+    document.body.appendChild(notification);
+
+    // Remover después de 3 segundos
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  },
+
+  /**
+   * Filtrar por estado y búsqueda
    */
   filterByStatus(items) {
-    if (this.filterStatus === 'all') return items;
+    let filtered = items;
 
-    const filtered = {};
-    Object.entries(items).forEach(([key, item]) => {
-      if (item.status === this.filterStatus) {
-        filtered[key] = item;
-      }
-    });
+    // Filtrar por estado
+    if (this.filterStatus !== 'all') {
+      const statusFiltered = {};
+      Object.entries(filtered).forEach(([key, item]) => {
+        if (item.status === this.filterStatus) {
+          statusFiltered[key] = item;
+        }
+      });
+      filtered = statusFiltered;
+    }
+
+    // Filtrar por búsqueda
+    if (this.searchTerm && this.searchTerm.trim() !== '') {
+      const searchLower = this.searchTerm.toLowerCase().trim();
+      const searchFiltered = {};
+      Object.entries(filtered).forEach(([key, item]) => {
+        const itemName = (item.name || '').toLowerCase();
+        const itemDesc = (item.description || '').toLowerCase();
+        const itemKey = key.toLowerCase();
+
+        if (itemName.includes(searchLower) ||
+            itemDesc.includes(searchLower) ||
+            itemKey.includes(searchLower)) {
+          searchFiltered[key] = item;
+        }
+      });
+      filtered = searchFiltered;
+    }
 
     return filtered;
   },

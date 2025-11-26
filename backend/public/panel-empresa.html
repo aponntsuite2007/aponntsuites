@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" style="scroll-behavior: auto;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,8 +16,31 @@
         let userPermissions = {};
         let isAuthenticated = false;
 
+        // VERIFICAR SI VIENE DESDE INDEX CON forceLogin=true
+        function checkForceLogin() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const forceLogin = urlParams.get('forceLogin');
+            if (forceLogin === 'true') {
+                console.log('🧹 [AUTH] forceLogin=true detectado - limpiando sesiones');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('currentCompany');
+                localStorage.removeItem('user_data');
+                localStorage.removeItem('selectedCompany');
+                sessionStorage.clear();
+                return true;
+            }
+            return false;
+        }
+        const forcedLogout = checkForceLogin();
+
         // VERIFICAR Y RESTAURAR SESIONES - MANTENER LOGIN
         function checkExistingSession() {
+            // Si se forzó logout, no restaurar sesión
+            if (forcedLogout) {
+                console.log('⚠️ [SESSION] Login forzado - no restaurar sesión');
+                return false;
+            }
             try {
                 // Intentar recuperar sesión guardada
                 const savedToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
@@ -837,7 +860,24 @@
     <!-- 📱 Responsive CSS para móviles/tablets -->
     <link rel="stylesheet" href="css/responsive.css">
 </head>
-<body>
+<body style="overflow: hidden; opacity: 0;">
+    <!-- Ocultar página hasta que esté posicionada arriba -->
+    <script>
+    (function(){
+        var forceTop = setInterval(function(){
+            window.scrollTo(0,0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+        }, 10);
+        // Después de 1.5s: mostrar página y liberar scroll
+        setTimeout(function(){
+            clearInterval(forceTop);
+            document.body.style.opacity = '1';
+            document.body.style.overflow = 'auto';
+            window.scrollTo(0,0);
+        }, 1500);
+    })();
+    </script>
     <!-- 📱 Botón menú móvil (solo visible en móvil) -->
     <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" style="display: none;">
         ☰
@@ -850,7 +890,7 @@
     <div id="loginContainer" class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <h1>🏢 Aponnt Suite's</h1>
+                <h1>🏢 <span style="color: #5dade2;">A</span>ponnt</h1>
                 <p style="color: #667eea; font-size: 16px; font-weight: 600; margin-bottom: 5px;">Acceso Empresarial Multi-Tenant</p>
             </div>
 
@@ -893,7 +933,7 @@
         <div class="company-login-content">
             <div style="margin-bottom: 12px;">
                 <h1 style="color: #0066CC; font-size: 1.8em; margin-bottom: 6px; font-weight: bold; transform: translateY(-10px);">
-                    <span style="color: #0066CC; font-size: 1.2em; font-weight: bold; font-style: italic; transform: skewX(-15deg); display: inline-block;">A</span><span style="color: #333; font-weight: normal;">ponnt </span><span style="color: #0066CC; font-size: 1.2em; font-weight: bold; font-style: italic; transform: skewX(-15deg); display: inline-block;">S</span><span style="color: #333; font-weight: normal;">uite's</span>
+                    <span style="color: #5dade2; font-size: 1.2em; font-weight: bold; font-style: italic; transform: skewX(-15deg); display: inline-block;">A</span><span style="color: #333; font-weight: normal;">ponnt</span>
                 </h1>
                 <h2 style="color: #333; font-size: 1.0em; margin-bottom: 4px; font-weight: 600; line-height: 1.2;">Sistema Integral de Administración<br>de Los Recursos Humanos</h2>
                 <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 8px; border-radius: 8px; margin: 12px 0; border: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between;">
@@ -1895,7 +1935,7 @@
                 <div class="brand-section" style="display: flex; align-items: center; gap: 15px;">
                     <div class="logo-container" style="display: flex; flex-direction: column; transform: translateY(-30px);">
                         <div style="font-size: 35px; font-weight: 700; letter-spacing: -1px; margin-bottom: 2px;">
-                            <span style="color: #f39c12; font-weight: 800; font-size: 42px; transform: skewX(-15deg); display: inline-block;">A</span><span style="color: white;">ponnt</span> <span style="color: #f39c12; font-weight: 800; font-size: 42px; transform: skewX(-15deg); display: inline-block;">S</span><span style="color: white;">uite's</span>
+                            <span style="color: #5dade2; font-weight: 800; font-size: 42px; transform: skewX(-15deg); display: inline-block;">A</span><span style="color: white;">ponnt</span>
                         </div>
                         <div id="systemTitle" style="font-size: 8px; color: rgba(255,255,255,0.9); font-weight: 500; text-transform: uppercase; letter-spacing: 0.2px; line-height: 1.1; white-space: nowrap;" data-translate="header.system_title">Software Integrado de Planificación de Recursos Empresariales</div>
                     </div>
@@ -1935,21 +1975,9 @@
             </div>
             
             <!-- Barra inferior con información secundaria - REDUCIDA 1cm v2.2.0 -->
-            <div style="background: linear-gradient(135deg, #3498db 0%, #5dade2 50%, #87ceeb 100%); padding: 1px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #2c3e50;">
-                
-                <!-- Información del propietario -->
-                <div class="owner-info" style="display: flex; align-items: center; gap: 15px;">
-                    <div style="display: flex; flex-direction: column; line-height: 1.3;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
-                            <span id="developedBy" style="color: #2c3e50; font-weight: 600;" data-translate="header.developed_by">Desarrollado por:</span>
-                            <span style="color: #34495e; font-weight: 500;">Pablo Rivas Jordan / Valentino Rivas Jordan</span>
-                        </div>
-                        <div style="color: #34495e; font-size: 10px; margin-bottom: 1px;">📍 Villa Mercedes, San Luis, Argentina</div>
-                        <div style="color: #34495e; font-size: 10px;">📞 +54 2657 673741</div>
-                    </div>
-                </div>
-                
-                <!-- Widgets de Fecha, Hora y Clima movidos abajo a la derecha -->
+            <div style="background: linear-gradient(135deg, #3498db 0%, #5dade2 50%, #87ceeb 100%); padding: 1px 20px; display: flex; justify-content: flex-end; align-items: center; font-size: 9px; color: #2c3e50;">
+
+                <!-- Widgets de Fecha, Hora y Clima -->
                 <div class="bottom-widgets" style="display: flex; align-items: center; gap: 10px;">
                     <!-- Widget de Fecha y Hora -->
                     <div class="datetime-card" style="background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 130px; backdrop-filter: blur(5px);">
@@ -2011,8 +2039,8 @@
 
         </div>
 
-        <div class="content" id="mainContent">
-            <!-- Content will be loaded progressively -->
+        <div class="content" id="mainContent" style="display:none;">
+            <!-- Content will be loaded progressively - se muestra en loadCoreInterface -->
         </div>
     </div>
 
@@ -2056,11 +2084,11 @@
     <script src="js/modules/psychological-assessment.js"></script>
 
     <!-- HR Management Modules -->
-    <!-- <script src="js/modules/training-management.js"></script> --> <!-- CARGA DINÁMICA -->
+    <script src="js/modules/training-management.js"></script>
     <script src="js/modules/sanctions-management.js"></script>
     <script src="js/modules/vacation-management.js"></script>
-    <!-- <script src="js/modules/payroll-liquidation.js"></script> --> <!-- CARGA DINÁMICA -->
-    <!-- <script src="js/modules/job-postings.js"></script> --> <!-- CARGA DINÁMICA -->
+    <script src="js/modules/payroll-liquidation.js"></script>
+    <script src="js/modules/job-postings.js"></script>
 
     <!-- Notification Systems -->
     <!-- <script src="js/modules/notifications-complete.js"></script> --> <!-- CARGA DINÁMICA como 'notifications' -->
@@ -2069,7 +2097,7 @@
     <!-- <script src="js/modules/legal-dashboard.js"></script> --> <!-- CARGA DINÁMICA -->
     <!-- <script src="js/modules/document-management.js"></script> --> <!-- CARGA DINÁMICA -->
     <script src="js/modules/licensing-management.js"></script>
-    <!-- <script src="js/modules/art-management.js"></script> --> <!-- CARGA DINÁMICA -->
+    <script src="js/modules/art-management.js"></script>
 
     <!-- FIX: Eliminar modales fantasma que aparecen al abrir módulo usuarios -->
     <script>
@@ -2111,7 +2139,7 @@
     <!-- Sistema de Notificaciones Avanzado V2.0 - CARGA DINÁMICA AUTOMÁTICA (scripts eliminados para evitar doble carga) -->
 
     <!-- Geolocation & Mapping -->
-    <!-- <script src="js/modules/employee-map.js"></script> --> <!-- CARGA DINÁMICA -->
+    <script src="js/modules/employee-map.js"></script>
 
     <!-- Testing & Permissions -->
     <!-- <script src="js/modules/permissions-test.js"></script> --> <!-- Archivo no existe, comentado para evitar 404 -->
@@ -2135,6 +2163,7 @@
     let isServerConnected = false;
     let currentTab = 'dashboard';
     let loadedModules = new Set();
+    let isInitialPageLoad = true; // Flag para evitar scroll automático al cargar la página
     // isAuthenticated ya declarado globalmente
     let networkChangeCount = 0;
     let lastConnectionTime = Date.now();
@@ -3179,7 +3208,7 @@
 
             // Mostrar la interfaz principal y grid de módulos
             const body = document.body;
-            if (body) body.style.overflow = 'auto'; // Permitir scroll
+            // overflow se restaura en loadCoreInterface después de posicionar arriba
 
             const moduleGrid = document.querySelector('.module-grid');
             if (moduleGrid) {
@@ -3845,15 +3874,41 @@
         `).join('');
     }
 
-    // Cargar módulo JS dinámicamente (v3.0.0)
+    // Cargar módulo JS dinámicamente (v3.0.1 - Anti-duplicados mejorado)
     async function loadModuleDynamically(moduleId, scriptPath) {
         return new Promise((resolve, reject) => {
             try {
-                console.log(`📦 [DYNAMIC-LOAD] Creando script para: ${moduleId}`);
+                console.log(`📦 [DYNAMIC-LOAD] Verificando script para: ${moduleId}`);
+
+                // 🔒 VERIFICAR 1: Si ya existe el script en el DOM
+                const existingScript = document.querySelector(`script[data-module-id="${moduleId}"]`);
+                if (existingScript) {
+                    console.log(`✅ [DYNAMIC-LOAD] Script ya cargado (por data-module-id): ${moduleId}`);
+                    resolve();
+                    return;
+                }
+
+                // 🔒 VERIFICAR 2: Si la función de inicialización ya existe
+                const initFunctionName = `show${capitalize(moduleId)}Content`;
+                if (typeof window[initFunctionName] === 'function') {
+                    console.log(`✅ [DYNAMIC-LOAD] Módulo ya inicializado (función ${initFunctionName} existe): ${moduleId}`);
+                    resolve();
+                    return;
+                }
+
+                // 🔒 VERIFICAR 3: Si existe en window.Modules
+                if (window.Modules && window.Modules[moduleId]) {
+                    console.log(`✅ [DYNAMIC-LOAD] Módulo ya registrado (window.Modules.${moduleId}): ${moduleId}`);
+                    resolve();
+                    return;
+                }
+
+                console.log(`📦 [DYNAMIC-LOAD] Módulo no cargado, procediendo a cargar: ${moduleId}`);
 
                 const script = document.createElement('script');
                 const cacheBuster = Date.now();
                 script.src = `${scriptPath}?v=${cacheBuster}`;
+                script.setAttribute('data-module-id', moduleId); // Marcar para evitar duplicados
 
                 console.log(`📦 [DYNAMIC-LOAD] Script src: ${script.src}`);
 
@@ -4082,8 +4137,8 @@
                         break;
 
                     case 'access-control':
-                        if (typeof checkUserAccess === 'function') {
-                            showAccessControlPanel();
+                        if (typeof showAccessControlContent === 'function') {
+                            showAccessControlContent();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'access-control.js no cargado');
                         }
@@ -4126,8 +4181,8 @@
                         break;
 
                     case 'biometric-consent':
-                        if (typeof showBiometricconsentContent === 'function') {
-                            showBiometricconsentContent();
+                        if (typeof showBiometricConsentContent === 'function') {
+                            showBiometricConsentContent();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'biometric-consent.js no cargado');
                         }
@@ -4176,6 +4231,7 @@
                         }
                         break;
 
+                    case 'notifications-complete':  // Alias para notifications-enterprise
                     case 'notifications-enterprise':
                         if (typeof NotificationsEnterprise !== 'undefined' && NotificationsEnterprise.init) {
                             NotificationsEnterprise.init();
@@ -4395,6 +4451,7 @@
                                 showModuleFallback(moduleId, moduleName, 'Error: ' + error.message);
                             });
                         break;
+                    case 'notifications-complete':  // Alias para notifications-enterprise
                     case 'notifications-enterprise':
                         console.log('🎯 [NOTIF-ENTERPRISE-CASE] Cargando Notificaciones Enterprise V3.0');
                         loadModuleDynamically('notifications-enterprise', '/js/modules/notifications-enterprise.js')
@@ -4419,12 +4476,15 @@
             } // Cierre if (false) - SWITCH LEGACY DESHABILITADO
 
             // Scroll automático al inicio del contenido del módulo
-            setTimeout(() => {
-                const mainContent = document.getElementById('mainContent');
-                if (mainContent) {
-                    mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }, 100);
+            // PERO NO en la carga inicial (cuando el usuario aún no seleccionó ningún módulo)
+            if (!isInitialPageLoad) {
+                setTimeout(() => {
+                    const mainContent = document.getElementById('mainContent');
+                    if (mainContent) {
+                        mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 100);
+            }
 
         }, 500);
     }
@@ -5250,10 +5310,22 @@
             console.error('❌ [PROGRESSIVE] Error en auto-login:', error);
         });
 
+        // Ocultar scroll mientras carga para evitar salto visual
+        document.body.style.overflow = 'hidden';
+        window.scrollTo(0, 0);
+
         // Cargar dashboard por defecto
         showTab('dashboard', document.querySelector('.tab[onclick*="dashboard"]'));
-        
+
         console.log('✅ [PROGRESSIVE] Interfaz principal cargada');
+
+        // Posicionar arriba y restaurar scroll
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+            document.body.style.overflow = 'auto';
+            isInitialPageLoad = false;
+            console.log('✅ [SCROLL] Página lista, scroll habilitado');
+        }, 800);
     }
     
     // Auto-login para pruebas (ahora usa token empresarial)
@@ -5696,12 +5768,15 @@
         }, 100);
 
         // Scroll automático al inicio del contenido del módulo
-        setTimeout(() => {
-            const mainContent = document.getElementById('mainContent');
-            if (mainContent) {
-                mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }, 200);
+        // PERO NO en la carga inicial - solo cuando el usuario selecciona un módulo
+        if (!isInitialPageLoad) {
+            setTimeout(() => {
+                const mainContent = document.getElementById('mainContent');
+                if (mainContent) {
+                    mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 200);
+        }
     }
 
     // Default content display
@@ -6068,11 +6143,8 @@
             console.error('❌ [DASHBOARD] module-grid NO ENCONTRADO');
         }
 
-        // Asegurar que body no tenga overflow hidden
-        if (bodyElement) {
-            bodyElement.style.overflow = 'auto';
-            console.log('✅ [DASHBOARD] Body overflow configurado');
-        }
+        // overflow se restaura en loadCoreInterface después de posicionar arriba
+        // NO poner overflow:auto aquí para evitar salto visual
 
         // FORZAR ELIMINACIÓN COMPLETA DE OVERLAYS Y MODALES
         const allOverlays = document.querySelectorAll('.modal-overlay, .overlay, [class*="modal"], [class*="backdrop"]');
@@ -6188,6 +6260,7 @@
         setTimeout(() => {
             console.log('🚀 [BYPASS-TOTAL] Cargando dashboard directamente');
             loadCoreInterface();
+            // loadCoreInterface ya maneja el scroll hacia arriba
         }, 500);
 
         // Inicializar objeto progressiveAdmin para los módulos
@@ -7023,12 +7096,29 @@
                 console.log('🔄 [LOGIN] Empleados se cargarán al abrir módulo de registro biométrico');
 
                 console.log('✅ Login exitoso - mostrando interfaz');
+
+                // Ocultar página mientras se posiciona arriba (evita ver el scroll)
+                document.body.style.opacity = '0';
+                document.body.style.overflow = 'hidden';
+                window.scrollTo(0, 0);
+
+                // Loop para mantener scroll arriba mientras carga
+                var postLoginScroll = setInterval(function(){
+                    window.scrollTo(0,0);
+                    document.documentElement.scrollTop = 0;
+                }, 10);
+
                 showDashboard();
 
-                // NO hacer scroll automático - dejar que el usuario seleccione el módulo
+                // Después de posicionar: mostrar página y liberar scroll
                 setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: 'instant' });
-                }, 100);
+                    clearInterval(postLoginScroll);
+                    window.scrollTo(0, 0);
+                    document.body.style.opacity = '1';
+                    document.body.style.overflow = 'auto';
+                    isInitialPageLoad = false;
+                    console.log('✅ [SCROLL] Página lista post-login');
+                }, 1200);
 
             } else {
                 throw new Error(data.error || 'Error de autenticación');
@@ -7101,6 +7191,30 @@
     <!-- 🏆 TECH STACK BADGES - Marketing Subliminal Profesional -->
     <!-- DESACTIVADO: No mostrar badges en login -->
     <!-- <script src="js/modules/tech-badges.js"></script> -->
+
+    <!-- 🧹 LIMPIEZA DE SCRIPTS DUPLICADOS (ejecutar al final) -->
+    <script>
+    (function cleanupDuplicateScripts() {
+        console.log('🧹 [CLEANUP] Limpiando scripts duplicados de users.js...');
+
+        // Buscar todos los scripts de users.js (excepto el primero encontrado)
+        const userScripts = Array.from(document.querySelectorAll('script[src*="users.js"]'));
+
+        if (userScripts.length > 1) {
+            console.log(`⚠️ [CLEANUP] Encontrados ${userScripts.length} scripts de users.js, eliminando duplicados...`);
+
+            // Mantener solo el primero, eliminar el resto
+            userScripts.slice(1).forEach(script => {
+                console.log('🗑️ [CLEANUP] Eliminando script duplicado:', script.src);
+                script.remove();
+            });
+
+            console.log('✅ [CLEANUP] Scripts duplicados eliminados');
+        } else {
+            console.log('✅ [CLEANUP] No hay scripts duplicados de users.js');
+        }
+    })();
+    </script>
 
     <!-- Bootstrap 5 JavaScript Bundle (incluye Popper.js para modales) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

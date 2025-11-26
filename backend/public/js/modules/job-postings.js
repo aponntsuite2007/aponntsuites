@@ -1143,5 +1143,11 @@ window.downloadCV = downloadCV;
 window.updateApplicationStatus = updateApplicationStatus;
 window.showCandidateModal = showCandidateModal;
 
+// Registro en window.Modules para sistema moderno
+window.Modules = window.Modules || {};
+window.Modules['job-postings'] = {
+    init: showJobPostingsContent
+};
+
 console.log('✅ [JOB-POSTINGS] Todas las funciones exportadas a window');
 console.log('✅ [JOB-POSTINGS] typeof window.showJobPostingsContent:', typeof window.showJobPostingsContent);

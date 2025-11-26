@@ -1,0 +1,1432 @@
+{
+  "timestamp": "2025-11-25T12:18:18.348Z",
+  "inventory": {
+    "routes": 124,
+    "models": 141,
+    "services": 75,
+    "auditor": 46,
+    "frontendModules": 70,
+    "htmlPages": 29,
+    "scripts": 91,
+    "migrations": 77,
+    "total": 653
+  },
+  "files": {
+    "routes": [
+      "/src/routes/absenceRoutes.js",
+      "/src/routes/admin-migrations.js",
+      "/src/routes/adminRoutes.js",
+      "/src/routes/ai-analysis-api.js",
+      "/src/routes/apkRoutes.js",
+      "/src/routes/aponntAuthRoutes.js",
+      "/src/routes/aponntDashboard.js",
+      "/src/routes/aponntStaffAuthRoutes.js",
+      "/src/routes/aponntStaffRoutes.js",
+      "/src/routes/assistantRoutes.js",
+      "/src/routes/attendanceAnalyticsRoutes.js",
+      "/src/routes/attendanceRoutes.js",
+      "/src/routes/attendance_stats_advanced.js",
+      "/src/routes/auditorPhase4Routes.js",
+      "/src/routes/auditorRoutes.js",
+      "/src/routes/auditReports.js",
+      "/src/routes/authorizationRoutes.js",
+      "/src/routes/authRoutes.js",
+      "/src/routes/autoRepairRoutes.js",
+      "/src/routes/biometric-api.js",
+      "/src/routes/biometric-attendance-api.js",
+      "/src/routes/biometric-enterprise-routes.js",
+      "/src/routes/biometric-hub.js",
+      "/src/routes/biometric-management-routes.js",
+      "/src/routes/biometricConsentRoutes.js",
+      "/src/routes/biometricRoutes.js",
+      "/src/routes/biometric_v2.js",
+      "/src/routes/branchRoutes.js",
+      "/src/routes/companyModuleRoutes.js",
+      "/src/routes/companyPanel.js",
+      "/src/routes/companyPricingRoutes.js",
+      "/src/routes/companyRoutes.js",
+      "/src/routes/companyTaskRoutes.js",
+      "/src/routes/compliance.js",
+      "/src/routes/configRoutes.js",
+      "/src/routes/consentManagementRoutes.js",
+      "/src/routes/ConsentRoutes.js",
+      "/src/routes/contractsRoutes.js",
+      "/src/routes/coordinationRoutes.js",
+      "/src/routes/criticalPathRoutes.js",
+      "/src/routes/databaseSchemaRoutes.js",
+      "/src/routes/debug-db.js",
+      "/src/routes/departmentRoutes.js",
+      "/src/routes/deployRoutes.js",
+      "/src/routes/diagnostic.js",
+      "/src/routes/documentRoutes.js",
+      "/src/routes/emailRoutes.js",
+      "/src/routes/emailVerificationRoutes.js",
+      "/src/routes/emotionalAnalysisRoutes.js",
+      "/src/routes/employeeDocumentRoutes.js",
+      "/src/routes/engineeringRoutes.js",
+      "/src/routes/enterprise-scalability-api.js",
+      "/src/routes/faceAuthRoutes.js",
+      "/src/routes/facialBiometricRoutes.js",
+      "/src/routes/inbox.js",
+      "/src/routes/invoicingRoutes.js",
+      "/src/routes/jobPostingsRoutes.js",
+      "/src/routes/kiosk-enterprise.js",
+      "/src/routes/kioskRoutes.js",
+      "/src/routes/kiosks.js",
+      "/src/routes/legalRoutes.js",
+      "/src/routes/locationRoutes.js",
+      "/src/routes/medicalRoutes-basic.js",
+      "/src/routes/medicalRoutes-simple.js",
+      "/src/routes/medicalRoutes.js",
+      "/src/routes/messageRoutes.js",
+      "/src/routes/military-security-api.js",
+      "/src/routes/mobileRoutes.js",
+      "/src/routes/modulesRoutes.js",
+      "/src/routes/multipleARTRoutes.js",
+      "/src/routes/notificationRoutes.js",
+      "/src/routes/notificationsEnterprise.js",
+      "/src/routes/offlineSyncRoutes.js",
+      "/src/routes/partnerRoutes.js",
+      "/src/routes/payrollTemplates.js",
+      "/src/routes/permissionsRoutes.js",
+      "/src/routes/postgresql-partitioning.js",
+      "/src/routes/pricingRoutes.js",
+      "/src/routes/proactive.js",
+      "/src/routes/quotesRoutes.js",
+      "/src/routes/real-biometric-api.js",
+      "/src/routes/reportRoutes.js",
+      "/src/routes/resourceCenter.js",
+      "/src/routes/sanctionRoutes.js",
+      "/src/routes/shift-calendar-routes.js",
+      "/src/routes/shiftRoutes.js",
+      "/src/routes/siac/clientes.js",
+      "/src/routes/siac/configurador.js",
+      "/src/routes/siac/facturacion.js",
+      "/src/routes/siac/sesiones.js",
+      "/src/routes/siac/taxTemplates.js",
+      "/src/routes/sla.js",
+      "/src/routes/staffCommissionsRoutes.js",
+      "/src/routes/supportRoutesV2.js",
+      "/src/routes/taskIntelligenceRoutes.js",
+      "/src/routes/technologyStackRoutes.js",
+      "/src/routes/testing-realtime.js",
+      "/src/routes/trainingRoutes.js",
+      "/src/routes/transportFleetRoutes.js",
+      "/src/routes/transportRoutes.js",
+      "/src/routes/transportTripsRoutes.js",
+      "/src/routes/trialsRoutes.js",
+      "/src/routes/uploadRoutes.js",
+      "/src/routes/user-calendar-routes.js",
+      "/src/routes/userAdminRoutes.js",
+      "/src/routes/userAssignedTaskRoutes.js",
+      "/src/routes/userDocumentsRoutes.js",
+      "/src/routes/userDriverLicenseRoutes.js",
+      "/src/routes/userLegalIssueRoutes.js",
+      "/src/routes/userMedicalExamsRoutes.js",
+      "/src/routes/userMedicalRoutes.js",
+      "/src/routes/userProfessionalLicenseRoutes.js",
+      "/src/routes/userProfileRoutes.js",
+      "/src/routes/userRoutes.js",
+      "/src/routes/userSalaryConfigRoutes.js",
+      "/src/routes/usersSimple.js",
+      "/src/routes/userUnionAffiliationRoutes.js",
+      "/src/routes/userWorkHistoryRoutes.js",
+      "/src/routes/vacationRoutes.js",
+      "/src/routes/vendorAutomationRoutes.js",
+      "/src/routes/vendorCommissionsRoutes.js",
+      "/src/routes/vendorRoutes.js",
+      "/src/routes/visibleTestingRoutes.js",
+      "/src/routes/visitorRoutes.js"
+    ],
+    "models": [
+      "/src/models/AccessNotification-postgresql.js",
+      "/src/models/aponntModels.js",
+      "/src/models/AponntStaff.js",
+      "/src/models/AponntStaffCompany.js",
+      "/src/models/AponntStaffRole.js",
+      "/src/models/ARTConfiguration.js",
+      "/src/models/AssistantConversation.js",
+      "/src/models/AssistantKnowledgeBase.js",
+      "/src/models/Attendance-postgresql.js",
+      "/src/models/AttendanceAnalyticsCache.js",
+      "/src/models/AttendanceBatch-postgresql.js",
+      "/src/models/AttendancePattern.js",
+      "/src/models/AttendanceProfile.js",
+      "/src/models/AuditLog.js",
+      "/src/models/AuditTestLog.js",
+      "/src/models/BiometricConsent.js",
+      "/src/models/BiometricData.js",
+      "/src/models/biometricModels.js",
+      "/src/models/BiometricTemplate.js",
+      "/src/models/biometric_template.js",
+      "/src/models/Branch-postgresql.js",
+      "/src/models/BranchMemory.js",
+      "/src/models/Commission.js",
+      "/src/models/CommunicationLog.js",
+      "/src/models/Company.js",
+      "/src/models/CompanyModule.js",
+      "/src/models/CompanySupportAssignment.js",
+      "/src/models/CompanyTask.js",
+      "/src/models/ComparativeAnalytics.js",
+      "/src/models/ConsentAuditLog.js",
+      "/src/models/ConsentDefinition.js",
+      "/src/models/Contract.js",
+      "/src/models/Department-postgresql.js",
+      "/src/models/EmailVerificationToken.js",
+      "/src/models/EmotionalAnalysis.js",
+      "/src/models/Employee.js",
+      "/src/models/EmployeeDocument.js",
+      "/src/models/EmployeeLocation.js",
+      "/src/models/EmployeeMedicalRecord.js",
+      "/src/models/EmployeeMemory.js",
+      "/src/models/ExtraordinaryLicense.js",
+      "/src/models/FacialBiometricData.js",
+      "/src/models/Holiday.js",
+      "/src/models/Invoice.js",
+      "/src/models/InvoiceItem.js",
+      "/src/models/Kiosk-postgresql.js",
+      "/src/models/MedicalCertificate.js",
+      "/src/models/MedicalDiagnosis.js",
+      "/src/models/MedicalHistory.js",
+      "/src/models/MedicalPhoto.js",
+      "/src/models/MedicalPrescription.js",
+      "/src/models/MedicalQuestionnaire.js",
+      "/src/models/MedicalStatistics.js",
+      "/src/models/MedicalStudy.js",
+      "/src/models/MedicalStudyRequest.js",
+      "/src/models/Message.js",
+      "/src/models/ModuleTrial.js",
+      "/src/models/MultipleARTConfiguration.js",
+      "/src/models/Notification.js",
+      "/src/models/NotificationActionsLog.js",
+      "/src/models/NotificationTemplate.js",
+      "/src/models/NotificationWorkflow.js",
+      "/src/models/Partner.js",
+      "/src/models/PartnerAvailability.js",
+      "/src/models/PartnerCommissionLog.js",
+      "/src/models/PartnerDocument.js",
+      "/src/models/PartnerLegalConsent.js",
+      "/src/models/PartnerMediationCase.js",
+      "/src/models/PartnerNotification.js",
+      "/src/models/PartnerReview.js",
+      "/src/models/PartnerRole.js",
+      "/src/models/PartnerServiceConversation.js",
+      "/src/models/PartnerServiceRequest.js",
+      "/src/models/Payment.js",
+      "/src/models/PaymentMemory.js",
+      "/src/models/Permission.js",
+      "/src/models/Quote.js",
+      "/src/models/Sanction-postgresql.js",
+      "/src/models/ScoringHistory.js",
+      "/src/models/Shift-postgresql.js",
+      "/src/models/siac/Cliente.js",
+      "/src/models/siac/ClienteFixed.js",
+      "/src/models/siac/ConfiguracionEmpresa.js",
+      "/src/models/siac/FacturacionModels.js",
+      "/src/models/siac/SesionLocal.js",
+      "/src/models/siac/TaxTemplate.js",
+      "/src/models/SupportActivityLog.js",
+      "/src/models/SupportAssistantAttempt.js",
+      "/src/models/SupportEscalation.js",
+      "/src/models/SupportPackage.js",
+      "/src/models/SupportPackageAuction.js",
+      "/src/models/SupportSLAPlan.js",
+      "/src/models/SupportTicket.js",
+      "/src/models/SupportTicketMessage.js",
+      "/src/models/SupportTicketV2.js",
+      "/src/models/SupportVendorStats.js",
+      "/src/models/SupportVendorSupervisor.js",
+      "/src/models/SystemConfig.js",
+      "/src/models/SystemModule.js",
+      "/src/models/TaskCompatibility.js",
+      "/src/models/TestExecution.js",
+      "/src/models/Training-postgresql.js",
+      "/src/models/TrainingAssignment-postgresql.js",
+      "/src/models/TrainingProgress-postgresql.js",
+      "/src/models/User-postgresql.js",
+      "/src/models/UserActivityRestrictions.js",
+      "/src/models/UserAllergies.js",
+      "/src/models/UserAssignedTask.js",
+      "/src/models/UserChildren.js",
+      "/src/models/UserChronicConditions.js",
+      "/src/models/UserConsent.js",
+      "/src/models/UserDisciplinaryActions.js",
+      "/src/models/UserDocuments.js",
+      "/src/models/UserDriverLicense.js",
+      "/src/models/UserEducation.js",
+      "/src/models/UserFamilyMembers.js",
+      "/src/models/UserLegalIssue.js",
+      "/src/models/UserMaritalStatus.js",
+      "/src/models/UserMedicalDocuments.js",
+      "/src/models/UserMedicalExams.js",
+      "/src/models/UserMedications.js",
+      "/src/models/UserNotificationPreference.js",
+      "/src/models/UserPermissionRequests.js",
+      "/src/models/UserPrimaryPhysician.js",
+      "/src/models/UserProfessionalLicense.js",
+      "/src/models/UserSalaryConfig.js",
+      "/src/models/UserShiftAssignment.js",
+      "/src/models/UserUnionAffiliation.js",
+      "/src/models/UserVaccinations.js",
+      "/src/models/UserWorkHistory.js",
+      "/src/models/UserWorkRestrictions.js",
+      "/src/models/VacationConfiguration.js",
+      "/src/models/VacationRequest.js",
+      "/src/models/VacationScale.js",
+      "/src/models/VendorCommission.js",
+      "/src/models/VendorMemory.js",
+      "/src/models/VendorRating.js",
+      "/src/models/VendorReferral.js",
+      "/src/models/VendorStatistics.js",
+      "/src/models/Visitor-postgresql.js",
+      "/src/models/VisitorGpsTracking-postgresql.js"
+    ],
+    "services": [
+      "/src/services/admin-panel-websocket.js",
+      "/src/services/ai-analysis-engine.js",
+      "/src/services/ai-biometric-engine.js",
+      "/src/services/ai_analysis_professional.js",
+      "/src/services/ai_analysis_professional_real.js",
+      "/src/services/AponntNotificationService.js",
+      "/src/services/AssistantService.js",
+      "/src/services/AttendanceAnalyticsService.js",
+      "/src/services/AttendanceScoringEngine.js",
+      "/src/services/auditReportService.js",
+      "/src/services/azure-face-service.js",
+      "/src/services/biometric-matching-service.js",
+      "/src/services/biometric-processing-pipeline.js",
+      "/src/services/biometricConsentService.js",
+      "/src/services/BiometricPhotoExpirationScheduler.js",
+      "/src/services/ClaudeCodeAutoRepairService.js",
+      "/src/services/ClaudeCodeBridge.js",
+      "/src/services/ClaudeCodeWebSocketBridge.js",
+      "/src/services/ClaudeCodeWebSocketServer.js",
+      "/src/services/CodeIntelligenceService.js",
+      "/src/services/CommissionCalculationService.js",
+      "/src/services/complianceService.js",
+      "/src/services/complianceServiceSimple.js",
+      "/src/services/consent-management-service.js",
+      "/src/services/ConsentService.js",
+      "/src/services/CriticalPathAnalyzer.js",
+      "/src/services/DatabaseAnalyzer.js",
+      "/src/services/DocumentExpirationScheduler.js",
+      "/src/services/EmailService.js",
+      "/src/services/EmailVerificationService.js",
+      "/src/services/emotional-analysis-service.js",
+      "/src/services/enterprise-scalability-engine.js",
+      "/src/services/face-api-backend-engine.js",
+      "/src/services/face-duplicate-detector.js",
+      "/src/services/fingerprint-recognition-service.js",
+      "/src/services/flowExecutorService.js",
+      "/src/services/inboxService.js",
+      "/src/services/InvoiceGenerationService.js",
+      "/src/services/kiosk-websocket-server.js",
+      "/src/services/LateArrivalAuthorizationService.js",
+      "/src/services/MedicalExamExpirationScheduler.js",
+      "/src/services/medicalStatisticsService.js",
+      "/src/services/military-security-engine.js",
+      "/src/services/moduleService.js",
+      "/src/services/ModuleTrialService.js",
+      "/src/services/NotificationEnterpriseService.js",
+      "/src/services/notificationService.js",
+      "/src/services/NotificationWorkflowService.js",
+      "/src/services/offlineSync.js",
+      "/src/services/PartnerNotificationService.js",
+      "/src/services/PatternDetectionService.js",
+      "/src/services/PaymentService.js",
+      "/src/services/postgresql-partitioning-service.js",
+      "/src/services/PostTaskSynchronizer.js",
+      "/src/services/PreTaskAnalyzer.js",
+      "/src/services/proactiveNotificationService.js",
+      "/src/services/QuoteManagementService.js",
+      "/src/services/real-biometric-analysis-engine.js",
+      "/src/services/requestService.js",
+      "/src/services/resourceCenterService.js",
+      "/src/services/ScoringCalculationService.js",
+      "/src/services/SessionCoordinator.js",
+      "/src/services/ShiftCalculatorService.js",
+      "/src/services/siac/SessionManager.js",
+      "/src/services/slaService.js",
+      "/src/services/slaServiceSimple.js",
+      "/src/services/StaffCommissionService.js",
+      "/src/services/SupportNotificationService.js",
+      "/src/services/SupportPackageService.js",
+      "/src/services/TechnologyDetector.js",
+      "/src/services/UnifiedKnowledgeService.js",
+      "/src/services/vendorAutomationService.js",
+      "/src/services/VendorHierarchyService.js",
+      "/src/services/vendorMetricsService.js",
+      "/src/services/vendorReferralService.js"
+    ],
+    "auditor": [
+      "/src/auditor/core/AuditorEngine.js",
+      "/src/auditor/core/AuditorKnowledgeBase.js",
+      "/src/auditor/core/AutoAuditTicketSystem.js",
+      "/src/auditor/core/AutonomousRepairAgent.js",
+      "/src/auditor/core/ClaudeCodeRepairAgent.js",
+      "/src/auditor/core/ClaudeHealer.js",
+      "/src/auditor/core/IntelligentTestingOrchestrator.js",
+      "/src/auditor/core/IterativeAuditor.js",
+      "/src/auditor/core/ModuleScanner.js",
+      "/src/auditor/core/OllamaAnalyzer.js",
+      "/src/auditor/core/Phase4TestOrchestrator.js",
+      "/src/auditor/core/Phase4TestOrchestrator_v2.0.0_backup_20251111_190931.js",
+      "/src/auditor/core/Phase4TestOrchestrator_v2.1.0_backup_20251111_192415.js",
+      "/src/auditor/core/ProductionErrorMonitor.js",
+      "/src/auditor/core/RealtimeMonitor.js",
+      "/src/auditor/core/TicketGenerator.js",
+      "/src/auditor/collectors/AdvancedUserSimulationCollector.js",
+      "/src/auditor/collectors/AndroidKioskCollector.js",
+      "/src/auditor/collectors/AttendanceModuleCollector.js",
+      "/src/auditor/collectors/BaseModuleCollector.js",
+      "/src/auditor/collectors/BiometricDevicesCollector.js",
+      "/src/auditor/collectors/DatabaseCollector.js",
+      "/src/auditor/collectors/DepartmentsModuleCollector.js",
+      "/src/auditor/collectors/E2ECollector.js",
+      "/src/auditor/collectors/EmployeeProfileCollector.js",
+      "/src/auditor/collectors/EndpointCollector.js",
+      "/src/auditor/collectors/FrontendCollector.js",
+      "/src/auditor/collectors/IntegrationCollector.js",
+      "/src/auditor/collectors/KiosksModuleCollector.js",
+      "/src/auditor/collectors/MedicalDashboardModuleCollector.js",
+      "/src/auditor/collectors/MedicalWorkflowCollector.js",
+      "/src/auditor/collectors/NotificationsCollector.js",
+      "/src/auditor/collectors/RealtimeCollector.js",
+      "/src/auditor/collectors/RealUserExperienceCollector.js",
+      "/src/auditor/collectors/ReportsModuleCollector.js",
+      "/src/auditor/collectors/ShiftsModuleCollector.js",
+      "/src/auditor/collectors/UsersCrudCollector.js",
+      "/src/auditor/collectors/UsersModuleCollector.js",
+      "/src/auditor/healers/AdvancedHealer.js",
+      "/src/auditor/healers/HybridHealer.js",
+      "/src/auditor/reporters/AuditReportGenerator.js",
+      "/src/auditor/reporters/MarketingDynamicReporter.js",
+      "/src/auditor/reporters/OllamaTicketReporter.js",
+      "/src/auditor/reporters/TechnicalArchitectureReporter.js",
+      "/src/auditor/reporters/TechnicalReportGenerator.js",
+      "/src/auditor/seeders/UniversalSeeder.js"
+    ],
+    "frontendModules": [
+      "/public/js/modules/access-control.js",
+      "/public/js/modules/admin-consent-management.js",
+      "/public/js/modules/admin-support-tickets-view.js",
+      "/public/js/modules/ai-assistant-chat.js",
+      "/public/js/modules/aponnt-login.js",
+      "/public/js/modules/art-management.js",
+      "/public/js/modules/attendance.js",
+      "/public/js/modules/audit-reports.js",
+      "/public/js/modules/auditor-dashboard-unified.js",
+      "/public/js/modules/auditor-metrics-dashboard.js",
+      "/public/js/modules/biometric-attendance-module.js",
+      "/public/js/modules/biometric-consent.js",
+      "/public/js/modules/biometric-dashboard.js",
+      "/public/js/modules/biometric-simple.js",
+      "/public/js/modules/clientes.js",
+      "/public/js/modules/compliance-dashboard.js",
+      "/public/js/modules/configurador-modulos.js",
+      "/public/js/modules/critical-path-ui.js",
+      "/public/js/modules/dashboard.js",
+      "/public/js/modules/departments.js",
+      "/public/js/modules/deploy-manager-3stages.js",
+      "/public/js/modules/deploy-manager.js",
+      "/public/js/modules/document-expiration-manager.js",
+      "/public/js/modules/document-management.js",
+      "/public/js/modules/email-verification-ui.js",
+      "/public/js/modules/emotional-analysis.js",
+      "/public/js/modules/employee-map.js",
+      "/public/js/modules/engineering-dashboard.js",
+      "/public/js/modules/facturacion.js",
+      "/public/js/modules/in-browser-test-runner.js",
+      "/public/js/modules/inbox.js",
+      "/public/js/modules/job-postings.js",
+      "/public/js/modules/kiosks-professional.js",
+      "/public/js/modules/legal-dashboard.js",
+      "/public/js/modules/licensing-management.js",
+      "/public/js/modules/medical-dashboard-v5.2-backup.js",
+      "/public/js/modules/medical-dashboard-v5.3-CONVERSACIONES-backup.js",
+      "/public/js/modules/medical-dashboard-v5.6-COMPLETO-backup.js",
+      "/public/js/modules/medical-dashboard-v5.8-NARANJA-backup.js",
+      "/public/js/modules/medical-dashboard.js",
+      "/public/js/modules/medical-exams-manager.js",
+      "/public/js/modules/notifications-enterprise.js",
+      "/public/js/modules/partner-scoring-system.js",
+      "/public/js/modules/partners-admin-panel.js",
+      "/public/js/modules/partners-admin.js",
+      "/public/js/modules/partners-marketplace.js",
+      "/public/js/modules/payroll-liquidation.js",
+      "/public/js/modules/phase4-integrated-manager.js",
+      "/public/js/modules/plantillas-fiscales.js",
+      "/public/js/modules/psychological-assessment.js",
+      "/public/js/modules/real-browser-test-runner.js",
+      "/public/js/modules/resource-center.js",
+      "/public/js/modules/sanctions-management.js",
+      "/public/js/modules/settings.js",
+      "/public/js/modules/shift-calendar-view.js",
+      "/public/js/modules/shifts.js",
+      "/public/js/modules/sla-tracking.js",
+      "/public/js/modules/support-customer-view.js",
+      "/public/js/modules/support-system.js",
+      "/public/js/modules/tech-badges.js",
+      "/public/js/modules/terms-conditions.js",
+      "/public/js/modules/testing-metrics-dashboard.js",
+      "/public/js/modules/training-management.js",
+      "/public/js/modules/user-calendar-tab.js",
+      "/public/js/modules/users-v4.0-BACKUP-20250925_001450.js",
+      "/public/js/modules/users.js",
+      "/public/js/modules/vacation-management.js",
+      "/public/js/modules/vendor-invoicing-system.js",
+      "/public/js/modules/visitors.js",
+      "/public/js/modules/work-history-manager.js"
+    ],
+    "htmlPages": [
+      "/public/auditor-metrics.html",
+      "/public/consent.html",
+      "/public/debug-device-detection.html",
+      "/public/debug-js-errors.html",
+      "/public/debug-shifts.html",
+      "/public/deploy-manager-3stages.html",
+      "/public/emotional-analysis-dashboard.html",
+      "/public/force-isi-login.html",
+      "/public/index.html",
+      "/public/isi-direct.html",
+      "/public/kiosk-android.html",
+      "/public/kiosk-simple.html",
+      "/public/kiosk.html",
+      "/public/panel-administrativo-BACKUP-20251118_121840.html",
+      "/public/panel-administrativo.html",
+      "/public/panel-empresa.html",
+      "/public/panel-isi-direct.html",
+      "/public/partner-register.html",
+      "/public/privacidad.html",
+      "/public/siac-panel-empresa.html",
+      "/public/terminos.html",
+      "/public/test-banner-update.html",
+      "/public/test-biometric-dashboard.html",
+      "/public/test-login-debug.html",
+      "/public/test-shifts-simple.html",
+      "/public/test-shifts.html",
+      "/public/test-simple-load.html",
+      "/public/testing-realtime.html",
+      "/public/verify-email.html"
+    ],
+    "scripts": [
+      "/scripts/add-auditor-to-isi.js",
+      "/scripts/add-code-location-to-metadata.js",
+      "/scripts/add-documentation-tasks-to-all-modules.js",
+      "/scripts/add-workflow-help-sections.js",
+      "/scripts/add_siac_category_enum.js",
+      "/scripts/apply-metadata-updates.js",
+      "/scripts/apply-workflow-help-robust.js",
+      "/scripts/assign_siac_modules.js",
+      "/scripts/categorize-root-scripts-v2.js",
+      "/scripts/categorize-root-scripts.js",
+      "/scripts/check-company-modules.js",
+      "/scripts/check-partner-tables.js",
+      "/scripts/claude-integration/claude-code-polling-client.js",
+      "/scripts/claude-integration/claude-code-websocket-client.js",
+      "/scripts/claude-integration/claude-ticket-processor.js",
+      "/scripts/clean-active-modules.js",
+      "/scripts/cleanup-old-vendor-fk.js",
+      "/scripts/cleanup-unnecessary-files.js",
+      "/scripts/create-concurrency-tables.js",
+      "/scripts/create-siac-basic.js",
+      "/scripts/create-siac-simple.js",
+      "/scripts/create-siac-tables.js",
+      "/scripts/create-tax-templates.js",
+      "/scripts/create_clients_tables.js",
+      "/scripts/create_clients_tables_fixed.js",
+      "/scripts/create_invoicing_tables.js",
+      "/scripts/create_products_tables.js",
+      "/scripts/demo-task-intelligence.js",
+      "/scripts/deploy-notifications-enterprise.js",
+      "/scripts/deploy-notifications-node.js",
+      "/scripts/execute-cleanup-plan.js",
+      "/scripts/final-system-certification.js",
+      "/scripts/final-system-validation.js",
+      "/scripts/fix-audit-logs-schema.js",
+      "/scripts/generate-sample-images.js",
+      "/scripts/get-admin-info.js",
+      "/scripts/get-isi-credentials.js",
+      "/scripts/get-login-3steps.js",
+      "/scripts/implement-postgresql-partitioning.js",
+      "/scripts/insert-help-at-lines.js",
+      "/scripts/list-all-admins.js",
+      "/scripts/migrate_biometric.js",
+      "/scripts/partitioning-direct.js",
+      "/scripts/populate-module-technologies.js",
+      "/scripts/remove-broken-help.js",
+      "/scripts/replace-gantt-with-cpm.js",
+      "/scripts/run-all-migrations.js",
+      "/scripts/run-analytics-migration.js",
+      "/scripts/run-android-migration.js",
+      "/scripts/run-assistant-migration.js",
+      "/scripts/run-audit-migration.js",
+      "/scripts/run-audit-types-migration.js",
+      "/scripts/run-commission-migration.js",
+      "/scripts/run-database-analysis.js",
+      "/scripts/run-diagnosis-metrics-migration.js",
+      "/scripts/run-e2e-migration.js",
+      "/scripts/run-full-audit.js",
+      "/scripts/run-holidays-migration.js",
+      "/scripts/run-invoicing-migration.js",
+      "/scripts/run-kiosks-migration.js",
+      "/scripts/run-knowledge-global-migration.js",
+      "/scripts/run-legal-migration.js",
+      "/scripts/run-medical-migration.js",
+      "/scripts/run-partner-status-history-migration.js",
+      "/scripts/run-partners-migration-split.js",
+      "/scripts/run-partners-migration.js",
+      "/scripts/run-single-migration.js",
+      "/scripts/run-support-migration.js",
+      "/scripts/run-support-sla-migration.js",
+      "/scripts/run-tab2-9-migrations.js",
+      "/scripts/run-vacation-migration.js",
+      "/scripts/run-vendor-commission-fk-fix.js",
+      "/scripts/session-lock.js",
+      "/scripts/setup_invoicing_basic.js",
+      "/scripts/setup_invoicing_initial_data.js",
+      "/scripts/start-postgresql-system.js",
+      "/scripts/sync-coordinator.js",
+      "/scripts/sync-metadata-exhaustive.js",
+      "/scripts/sync-metadata-registry.js",
+      "/scripts/test-ai-analysis.js",
+      "/scripts/test-coordination.js",
+      "/scripts/test-enterprise-scalability.js",
+      "/scripts/test-military-security.js",
+      "/scripts/test_clientes_module.js",
+      "/scripts/test_integration_modules.js",
+      "/scripts/test_invoicing_integration.js",
+      "/scripts/update-commission-system-metadata.js",
+      "/scripts/update-engineering-metadata.js",
+      "/scripts/verify-isi-login.js",
+      "/scripts/verify-system-health.js",
+      "/scripts/verify-tables.js"
+    ],
+    "migrations": [
+      "/migrations/20250117_add_tab2_extended_fields_to_users.sql",
+      "/migrations/20250117_create_driver_licenses_table.sql",
+      "/migrations/20250117_create_professional_licenses_table.sql",
+      "/migrations/20250117_create_tab3_legal_union_tables.sql",
+      "/migrations/20250117_create_tab8_tasks_salary_system.sql",
+      "/migrations/20250119_add_commission_fields_to_companies.sql",
+      "/migrations/20250119_create_assistant_knowledge_base.sql",
+      "/migrations/20250119_create_audit_logs.sql",
+      "/migrations/20250119_create_pyramid_commission_functions.sql",
+      "/migrations/20250119_create_vendor_statistics.sql",
+      "/migrations/20250119_update_aponnt_staff_hierarchy.sql",
+      "/migrations/20250120_make_knowledge_base_global.sql",
+      "/migrations/20250121_alter_users_add_staff_fields.sql",
+      "/migrations/20250121_create_aponnt_staff_roles.sql",
+      "/migrations/20250121_create_aponnt_staff_table.sql",
+      "/migrations/20250121_revert_users_staff_fields.sql",
+      "/migrations/20250122_add_holidays_system.sql",
+      "/migrations/20250122_fix_commission_system_complete.sql",
+      "/migrations/20250122_fix_vendor_commission_fk.sql",
+      "/migrations/20250122_rotative_shifts_system.sql",
+      "/migrations/20250123_add_audit_diagnosis_metrics.sql",
+      "/migrations/20250124_vendor_invoicing_complete_system.sql",
+      "/migrations/20250128_complete_user_profile_system.sql",
+      "/migrations/20250128_drop_check_constraints_medical.sql",
+      "/migrations/20250130_sync_44_modules_master_registry.sql",
+      "/migrations/20250131_add_biometric_photo_fields_to_users.sql",
+      "/migrations/20250131_add_glasses_fields_to_medical_records.sql",
+      "/migrations/20251019_create_notifications_enterprise.sql",
+      "/migrations/20251019_legal_notification_templates.sql",
+      "/migrations/20251019_medical_notification_templates.sql",
+      "/migrations/20251019_update_user_attendance_roles.sql",
+      "/migrations/20251019_vacation_notification_templates.sql",
+      "/migrations/20251020_add_test_description_to_audit_logs.sql",
+      "/migrations/20251020_complete_audit_logs_schema.sql",
+      "/migrations/20251020_rebuild_audit_logs_complete.sql",
+      "/migrations/20251021_add_android_to_audit_logs.sql",
+      "/migrations/20251022_add_e2e_to_audit_logs.sql",
+      "/migrations/20251023_add_new_audit_test_types.sql",
+      "/migrations/20251023_add_support_sla_escalation.sql",
+      "/migrations/20251023_create_support_system.sql",
+      "/migrations/20251023_create_testing_tickets.sql",
+      "/migrations/20251024_create_partners_system.sql",
+      "/migrations/20251024_invoicing_commissions_support_packages.sql",
+      "/migrations/20251024_partners_part1_base_tables.sql",
+      "/migrations/20251024_partners_part2_dependent_tables.sql",
+      "/migrations/20251024_partners_part3_interaction_tables.sql",
+      "/migrations/20251024_partners_part4_final_and_triggers.sql",
+      "/migrations/20251024_partner_status_history_and_notifications.sql",
+      "/migrations/20251026_create_auditor_knowledge_base.sql",
+      "/migrations/20251028_email_system_multicapa.sql",
+      "/migrations/20251028_extend_email_for_partners_vendors.sql",
+      "/migrations/20251028_integrate_email_with_notifications.sql",
+      "/migrations/20251029_add_execution_id_to_audit_logs.sql",
+      "/migrations/20251029_add_missing_columns_audit_test_logs.sql",
+      "/migrations/20251029_create_audit_test_logs.sql",
+      "/migrations/20251030_add_module_bundling_system.sql",
+      "/migrations/20251030_add_module_bundling_system_fixed.sql",
+      "/migrations/20251030_create_aponnt_staff.sql",
+      "/migrations/20251030_create_aponnt_staff_companies.sql",
+      "/migrations/20251030_create_partners_simple.sql",
+      "/migrations/20251030_modify_partners_add_auth.sql",
+      "/migrations/20251031_add_medical_exam_frequency_fields.sql",
+      "/migrations/20251031_add_termination_details_to_work_history.sql",
+      "/migrations/20251101_add_email_verification_mandatory_fields.sql",
+      "/migrations/20251101_alter_users_partners_verification.sql",
+      "/migrations/20251101_create_consent_tables.sql",
+      "/migrations/20251101_create_email_verification.sql",
+      "/migrations/20251101_create_system_consciousness.sql",
+      "/migrations/20251101_create_system_consciousness_tables_only.sql",
+      "/migrations/20251101_update_system_consciousness.sql",
+      "/migrations/20251106_add_kiosk_fields_to_departments.sql",
+      "/migrations/20251107_create_test_executions.sql",
+      "/migrations/20251121_create_attendance_analytics_system.sql",
+      "/migrations/add_late_arrival_authorization_fields.sql",
+      "/migrations/create-user-shifts-table.sql",
+      "/migrations/fix-schema-complete.sql",
+      "/migrations/fix-schema-minimal.sql"
+    ]
+  },
+  "issues": {
+    "backups": [
+      "/public/js/modules/admin-support-tickets-view.js",
+      "/public/js/modules/email-verification-ui.js",
+      "/public/js/modules/medical-dashboard-v5.2-backup.js",
+      "/public/js/modules/medical-dashboard-v5.3-CONVERSACIONES-backup.js",
+      "/public/js/modules/medical-dashboard-v5.6-COMPLETO-backup.js",
+      "/public/js/modules/medical-dashboard-v5.8-NARANJA-backup.js",
+      "/public/js/modules/shift-calendar-view.js",
+      "/public/js/modules/support-customer-view.js",
+      "/public/js/modules/users-v4.0-BACKUP-20250925_001450.js"
+    ],
+    "potentialDuplicates": [
+      {
+        "file": "medicalRoutes-basic.js",
+        "similar": [
+          "medicalRoutes-simple.js",
+          "medicalRoutes.js"
+        ]
+      },
+      {
+        "file": "medicalRoutes-simple.js",
+        "similar": [
+          "medicalRoutes-basic.js",
+          "medicalRoutes.js"
+        ]
+      },
+      {
+        "file": "medicalRoutes.js",
+        "similar": [
+          "medicalRoutes-basic.js",
+          "medicalRoutes-simple.js"
+        ]
+      }
+    ],
+    "testDebugPages": [
+      "/public/debug-device-detection.html",
+      "/public/debug-js-errors.html",
+      "/public/debug-shifts.html",
+      "/public/test-banner-update.html",
+      "/public/test-biometric-dashboard.html",
+      "/public/test-login-debug.html",
+      "/public/test-shifts-simple.html",
+      "/public/test-shifts.html",
+      "/public/test-simple-load.html",
+      "/public/testing-realtime.html"
+    ]
+  },
+  "newWorkflows": {
+    "attendanceTracking": {
+      "name": "Control de Asistencia Biométrica",
+      "status": "IMPLEMENTED",
+      "implemented": true,
+      "trigger": "Empleado marca entrada/salida en kiosk",
+      "steps": [
+        {
+          "step": 1,
+          "name": "Empleado se identifica en kiosk",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 2,
+          "name": "Sistema verifica biometría (facial/huella)",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 3,
+          "name": "Registra entrada/salida en attendance",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 4,
+          "name": "Calcula horas trabajadas",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 5,
+          "name": "Notifica a supervisores si hay anomalías",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "affectedModules": [
+        "attendance",
+        "kiosks",
+        "biometric",
+        "notifications"
+      ],
+      "files": [
+        "src/routes/attendanceRoutes.js",
+        "src/services/AttendanceAnalyticsService.js"
+      ]
+    },
+    "medicalExamManagement": {
+      "name": "Gestión de Exámenes Médicos Ocupacionales",
+      "status": "IMPLEMENTED",
+      "implemented": true,
+      "trigger": "Vencimiento próximo de examen o nuevo empleado",
+      "steps": [
+        {
+          "step": 1,
+          "name": "Detectar exámenes por vencer (30 días)",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 2,
+          "name": "Notificar a RRHH y empleado",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 3,
+          "name": "Agendar turno con profesional médico",
+          "status": "PARTIAL"
+        },
+        {
+          "step": 4,
+          "name": "Registrar resultado de examen",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 5,
+          "name": "Actualizar aptitud laboral",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "affectedModules": [
+        "medical",
+        "notifications",
+        "users"
+      ],
+      "files": [
+        "src/routes/medicalRoutes.js",
+        "public/js/modules/medical-dashboard.js"
+      ]
+    },
+    "vacationRequest": {
+      "name": "Solicitud de Vacaciones",
+      "status": "IMPLEMENTED",
+      "implemented": true,
+      "trigger": "Empleado solicita vacaciones",
+      "steps": [
+        {
+          "step": 1,
+          "name": "Empleado carga solicitud de vacaciones",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 2,
+          "name": "Sistema verifica días disponibles",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 3,
+          "name": "Notifica a supervisor para aprobación",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 4,
+          "name": "Supervisor aprueba/rechaza",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 5,
+          "name": "Sistema actualiza calendario y días restantes",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "affectedModules": [
+        "vacation",
+        "notifications",
+        "users"
+      ],
+      "files": [
+        "src/routes/vacationRoutes.js",
+        "public/js/modules/vacation-management.js"
+      ]
+    },
+    "trainingManagement": {
+      "name": "Gestión de Capacitaciones",
+      "status": "IMPLEMENTED",
+      "implemented": true,
+      "trigger": "Nueva capacitación creada o asignada",
+      "steps": [
+        {
+          "step": 1,
+          "name": "Admin crea capacitación",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 2,
+          "name": "Asigna empleados a capacitación",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 3,
+          "name": "Notifica a empleados",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 4,
+          "name": "Empleados completan capacitación",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 5,
+          "name": "Registra progreso y certificación",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "affectedModules": [
+        "training",
+        "notifications",
+        "users"
+      ],
+      "files": [
+        "src/routes/trainingRoutes.js",
+        "public/js/modules/training-management.js"
+      ]
+    },
+    "sanctionProcess": {
+      "name": "Proceso de Sanciones Disciplinarias",
+      "status": "IMPLEMENTED",
+      "implemented": true,
+      "trigger": "Incumplimiento detectado",
+      "steps": [
+        {
+          "step": 1,
+          "name": "Supervisor registra incumplimiento",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 2,
+          "name": "Sistema evalúa historial del empleado",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 3,
+          "name": "Genera propuesta de sanción",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 4,
+          "name": "RRHH/Legal revisan y aprueban",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 5,
+          "name": "Notifica a empleado y registra en historial",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "affectedModules": [
+        "sanctions",
+        "legal",
+        "notifications",
+        "users"
+      ],
+      "files": [
+        "src/routes/sanctionRoutes.js",
+        "public/js/modules/sanctions-management.js"
+      ]
+    },
+    "biometricEnrollment": {
+      "name": "Enrolamiento Biométrico de Empleados",
+      "status": "IMPLEMENTED",
+      "implemented": true,
+      "trigger": "Nuevo empleado o actualización de datos biométricos",
+      "steps": [
+        {
+          "step": 1,
+          "name": "Empleado se presenta en punto de enrolamiento",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 2,
+          "name": "Captura foto facial frontal",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 3,
+          "name": "Captura huella dactilar (si aplica)",
+          "status": "PARTIAL"
+        },
+        {
+          "step": 4,
+          "name": "Genera template biométrico",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 5,
+          "name": "Almacena en BD con encriptación",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 6,
+          "name": "Solicita consentimiento GDPR",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "affectedModules": [
+        "biometric",
+        "biometric-consent",
+        "users"
+      ],
+      "files": [
+        "src/routes/biometricRoutes.js",
+        "public/js/modules/biometric-dashboard.js"
+      ]
+    },
+    "supportTicketResolution": {
+      "name": "Resolución de Tickets de Soporte",
+      "status": "IMPLEMENTED",
+      "implemented": true,
+      "trigger": "Cliente crea ticket de soporte",
+      "steps": [
+        {
+          "step": 1,
+          "name": "Cliente crea ticket desde panel",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 2,
+          "name": "IA intenta resolver automáticamente",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 3,
+          "name": "Si no resuelve, asigna a agente",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 4,
+          "name": "Agente responde/resuelve",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 5,
+          "name": "Cliente confirma resolución",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 6,
+          "name": "Sistema actualiza métricas SLA",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "affectedModules": [
+        "support",
+        "ai-assistant",
+        "notifications"
+      ],
+      "files": [
+        "src/routes/supportRoutesV2.js",
+        "public/js/modules/support-system.js"
+      ]
+    },
+    "auditExecution": {
+      "name": "Ejecución de Auditoría Automatizada",
+      "status": "IMPLEMENTED",
+      "implemented": true,
+      "trigger": "Manual o programado",
+      "steps": [
+        {
+          "step": 1,
+          "name": "Iniciar ejecución de auditoría",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 2,
+          "name": "Escanear endpoints de API",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 3,
+          "name": "Probar base de datos",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 4,
+          "name": "Ejecutar tests E2E",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 5,
+          "name": "Generar reporte de resultados",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "step": 6,
+          "name": "Proponer fixes automáticos",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "affectedModules": [
+        "auditor",
+        "engineering"
+      ],
+      "files": [
+        "/src/auditor/core/AuditorEngine.js",
+        "/src/auditor/core/AuditorKnowledgeBase.js",
+        "/src/auditor/core/AutoAuditTicketSystem.js",
+        "/src/auditor/core/AutonomousRepairAgent.js",
+        "/src/auditor/core/ClaudeCodeRepairAgent.js",
+        "/src/auditor/core/ClaudeHealer.js",
+        "/src/auditor/core/IntelligentTestingOrchestrator.js",
+        "/src/auditor/core/IterativeAuditor.js",
+        "/src/auditor/core/ModuleScanner.js",
+        "/src/auditor/core/OllamaAnalyzer.js",
+        "/src/auditor/core/Phase4TestOrchestrator.js",
+        "/src/auditor/core/Phase4TestOrchestrator_v2.0.0_backup_20251111_190931.js",
+        "/src/auditor/core/Phase4TestOrchestrator_v2.1.0_backup_20251111_192415.js",
+        "/src/auditor/core/ProductionErrorMonitor.js",
+        "/src/auditor/core/RealtimeMonitor.js",
+        "/src/auditor/core/TicketGenerator.js",
+        "/src/auditor/collectors/AdvancedUserSimulationCollector.js",
+        "/src/auditor/collectors/AndroidKioskCollector.js",
+        "/src/auditor/collectors/AttendanceModuleCollector.js",
+        "/src/auditor/collectors/BaseModuleCollector.js",
+        "/src/auditor/collectors/BiometricDevicesCollector.js",
+        "/src/auditor/collectors/DatabaseCollector.js",
+        "/src/auditor/collectors/DepartmentsModuleCollector.js",
+        "/src/auditor/collectors/E2ECollector.js",
+        "/src/auditor/collectors/EmployeeProfileCollector.js",
+        "/src/auditor/collectors/EndpointCollector.js",
+        "/src/auditor/collectors/FrontendCollector.js",
+        "/src/auditor/collectors/IntegrationCollector.js",
+        "/src/auditor/collectors/KiosksModuleCollector.js",
+        "/src/auditor/collectors/MedicalDashboardModuleCollector.js",
+        "/src/auditor/collectors/MedicalWorkflowCollector.js",
+        "/src/auditor/collectors/NotificationsCollector.js",
+        "/src/auditor/collectors/RealtimeCollector.js",
+        "/src/auditor/collectors/RealUserExperienceCollector.js",
+        "/src/auditor/collectors/ReportsModuleCollector.js",
+        "/src/auditor/collectors/ShiftsModuleCollector.js",
+        "/src/auditor/collectors/UsersCrudCollector.js",
+        "/src/auditor/collectors/UsersModuleCollector.js",
+        "/src/auditor/healers/AdvancedHealer.js",
+        "/src/auditor/healers/HybridHealer.js",
+        "/src/auditor/reporters/AuditReportGenerator.js",
+        "/src/auditor/reporters/MarketingDynamicReporter.js",
+        "/src/auditor/reporters/OllamaTicketReporter.js",
+        "/src/auditor/reporters/TechnicalArchitectureReporter.js",
+        "/src/auditor/reporters/TechnicalReportGenerator.js",
+        "/src/auditor/seeders/UniversalSeeder.js"
+      ]
+    }
+  },
+  "cleanupPhase": {
+    "name": "Limpieza y Consolidación de Código",
+    "status": "PLANNED",
+    "startDate": "2025-11-25",
+    "estimatedCompletion": "2025-02-01",
+    "progress": 0,
+    "priority": "MEDIUM",
+    "tasks": [
+      {
+        "id": "CLEAN-1",
+        "name": "Revisar y eliminar archivos backup (frontend)",
+        "description": "Se detectaron 9 archivos con sufijo backup/BACKUP:\n/public/js/modules/admin-support-tickets-view.js\n/public/js/modules/email-verification-ui.js\n/public/js/modules/medical-dashboard-v5.2-backup.js\n/public/js/modules/medical-dashboard-v5.3-CONVERSACIONES-backup.js\n/public/js/modules/medical-dashboard-v5.6-COMPLETO-backup.js\n/public/js/modules/medical-dashboard-v5.8-NARANJA-backup.js\n/public/js/modules/shift-calendar-view.js\n/public/js/modules/support-customer-view.js\n/public/js/modules/users-v4.0-BACKUP-20250925_001450.js",
+        "done": false,
+        "estimatedEffort": "2-4 horas"
+      },
+      {
+        "id": "CLEAN-2",
+        "name": "Consolidar routes duplicados",
+        "description": "Revisar archivos con nombres similares:\n- medicalRoutes-basic.js similar a: medicalRoutes-simple.js, medicalRoutes.js\n- medicalRoutes-simple.js similar a: medicalRoutes-basic.js, medicalRoutes.js\n- medicalRoutes.js similar a: medicalRoutes-basic.js, medicalRoutes-simple.js",
+        "done": false,
+        "estimatedEffort": "4-8 horas"
+      },
+      {
+        "id": "CLEAN-3",
+        "name": "Revisar medical routes (3 versiones)",
+        "description": "Existen: medicalRoutes.js, medicalRoutes-basic.js, medicalRoutes-simple.js. Consolidar en uno.",
+        "done": false,
+        "estimatedEffort": "2-4 horas"
+      },
+      {
+        "id": "CLEAN-4",
+        "name": "Auditar scripts no utilizados",
+        "description": "91 scripts en /scripts/. Verificar cuáles son necesarios vs. legacy.",
+        "done": false,
+        "estimatedEffort": "4-6 horas"
+      },
+      {
+        "id": "CLEAN-5",
+        "name": "Documentar módulos sin documentación",
+        "description": "Crear docs para módulos faltantes usando template MODULE-DOCUMENTATION-TEMPLATE.md",
+        "done": false,
+        "estimatedEffort": "10-20 horas"
+      },
+      {
+        "id": "CLEAN-6",
+        "name": "Revisar HTML pages de test/debug",
+        "description": "Detectadas páginas de test/debug:\n/public/debug-device-detection.html\n/public/debug-js-errors.html\n/public/debug-shifts.html\n/public/test-banner-update.html\n/public/test-biometric-dashboard.html\n/public/test-login-debug.html\n/public/test-shifts-simple.html\n/public/test-shifts.html\n/public/test-simple-load.html\n/public/testing-realtime.html",
+        "done": false,
+        "estimatedEffort": "2-4 horas"
+      },
+      {
+        "id": "CLEAN-7",
+        "name": "Unificar services duplicados",
+        "description": "Revisar services con funcionalidad similar y consolidar donde sea posible",
+        "done": false,
+        "estimatedEffort": "6-10 horas"
+      }
+    ],
+    "estimatedEffort": "30-50 horas totales",
+    "notes": [
+      "Esta fase se generó automáticamente por el script sync-metadata-exhaustive.js",
+      "Priorizar según impacto en mantenibilidad",
+      "No eliminar archivos sin verificar que no hay dependencias"
+    ]
+  },
+  "newApplications": {
+    "auditor_metrics": {
+      "name": "Auditor Metrics",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/auditor-metrics.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/auditor-metrics.html"
+      ],
+      "lastUpdated": "2025-10-23",
+      "needsReview": true
+    },
+    "consent": {
+      "name": "Consent",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/consent.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/consent.html"
+      ],
+      "lastUpdated": "2025-10-15",
+      "needsReview": true
+    },
+    "deploy_manager_3stages": {
+      "name": "Deploy Manager 3stages",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/deploy-manager-3stages.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/deploy-manager-3stages.html"
+      ],
+      "lastUpdated": "2025-10-30",
+      "needsReview": true
+    },
+    "emotional_analysis_dashboard": {
+      "name": "Emotional Analysis Dashboard",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/emotional-analysis-dashboard.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/emotional-analysis-dashboard.html"
+      ],
+      "lastUpdated": "2025-10-13",
+      "needsReview": true
+    },
+    "force_isi_login": {
+      "name": "Force Isi Login",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/force-isi-login.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/force-isi-login.html"
+      ],
+      "lastUpdated": "2025-09-25",
+      "needsReview": true
+    },
+    "index": {
+      "name": "Index",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/index.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/index.html"
+      ],
+      "lastUpdated": "2025-11-25",
+      "needsReview": true
+    },
+    "isi_direct": {
+      "name": "Isi Direct",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/isi-direct.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/isi-direct.html"
+      ],
+      "lastUpdated": "2025-09-25",
+      "needsReview": true
+    },
+    "kiosk_android": {
+      "name": "Kiosk Android",
+      "type": "KIOSK_APP",
+      "platform": "Android",
+      "url": "http://localhost:9998/public/kiosk-android.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/kiosk-android.html"
+      ],
+      "lastUpdated": "2025-09-28",
+      "needsReview": true
+    },
+    "kiosk_simple": {
+      "name": "Kiosk Simple",
+      "type": "KIOSK_APP",
+      "platform": "Kiosk Terminal",
+      "url": "http://localhost:9998/public/kiosk-simple.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/kiosk-simple.html"
+      ],
+      "lastUpdated": "2025-09-28",
+      "needsReview": true
+    },
+    "kiosk": {
+      "name": "Kiosk",
+      "type": "KIOSK_APP",
+      "platform": "Kiosk Terminal",
+      "url": "http://localhost:9998/public/kiosk.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/kiosk.html"
+      ],
+      "lastUpdated": "2025-10-08",
+      "needsReview": true
+    },
+    "panel_administrativo": {
+      "name": "Panel Administrativo",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/panel-administrativo.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/panel-administrativo.html"
+      ],
+      "lastUpdated": "2025-11-25",
+      "needsReview": true
+    },
+    "panel_empresa": {
+      "name": "Panel Empresa",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/panel-empresa.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/panel-empresa.html"
+      ],
+      "lastUpdated": "2025-11-25",
+      "needsReview": true
+    },
+    "panel_isi_direct": {
+      "name": "Panel Isi Direct",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/panel-isi-direct.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/panel-isi-direct.html"
+      ],
+      "lastUpdated": "2025-09-25",
+      "needsReview": true
+    },
+    "partner_register": {
+      "name": "Partner Register",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/partner-register.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/partner-register.html"
+      ],
+      "lastUpdated": "2025-10-24",
+      "needsReview": true
+    },
+    "privacidad": {
+      "name": "Privacidad",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/privacidad.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/privacidad.html"
+      ],
+      "lastUpdated": "2025-10-24",
+      "needsReview": true
+    },
+    "siac_panel_empresa": {
+      "name": "Siac Panel Empresa",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/siac-panel-empresa.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/siac-panel-empresa.html"
+      ],
+      "lastUpdated": "2025-09-24",
+      "needsReview": true
+    },
+    "terminos": {
+      "name": "Terminos",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/terminos.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/terminos.html"
+      ],
+      "lastUpdated": "2025-10-24",
+      "needsReview": true
+    },
+    "verify_email": {
+      "name": "Verify Email",
+      "type": "WEB_APP",
+      "platform": "Web",
+      "url": "http://localhost:9998/public/verify-email.html",
+      "status": "UNKNOWN",
+      "progress": 0,
+      "files": [
+        "/public/verify-email.html"
+      ],
+      "lastUpdated": "2025-11-02",
+      "needsReview": true
+    }
+  }
+}

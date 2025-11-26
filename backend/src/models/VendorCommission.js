@@ -12,8 +12,8 @@ module.exports = (sequelize) => {
             allowNull: false,
             field: 'vendor_id',
             references: {
-                model: 'users',
-                key: 'id'
+                model: 'aponnt_staff',
+                key: 'staff_id'
             }
         },
         companyId: {
@@ -67,8 +67,8 @@ module.exports = (sequelize) => {
             allowNull: true,
             field: 'original_vendor_id',
             references: {
-                model: 'users',
-                key: 'id'
+                model: 'aponnt_staff',
+                key: 'staff_id'
             },
             comment: 'Vendedor original de la venta (para tracking)'
         },

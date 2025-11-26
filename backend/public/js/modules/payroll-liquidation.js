@@ -1418,6 +1418,12 @@ if (typeof window !== 'undefined') {
     window.saveTemplate = saveTemplate;
     window.updateApplyFilters = updateApplyFilters;
     window.updateCalculationFields = updateCalculationFields;
+
+    // Registro en window.Modules para sistema moderno
+    window.Modules = window.Modules || {};
+    window.Modules['payroll-liquidation'] = {
+        init: showPayrollLiquidationContent
+    };
 }
 
 console.log('✅ [PAYROLL] Módulo de Liquidación completo y listo');

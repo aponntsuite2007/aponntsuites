@@ -373,3 +373,28 @@
         border-radius: 0 !important;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+ * EXCEPCIÓN: employeeFileModal - Modal de Expediente de Usuario
+ * Este modal tiene su propia estructura y NO debe ser afectado
+ * ═══════════════════════════════════════════════════════════════════ */
+#employeeFileModal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+}
+
+#employeeFileModal > div:first-child {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    border-radius: 0 !important;
+}

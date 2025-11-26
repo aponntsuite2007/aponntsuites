@@ -72,7 +72,9 @@ console.log('🐘 Configuración PostgreSQL - Sistema Optimizado');
 const User = require('../models/User-postgresql')(sequelize);
 const Attendance = require('../models/Attendance-postgresql')(sequelize);
 const Shift = require('../models/Shift-postgresql')(sequelize);
+const UserShiftAssignment = require('../models/UserShiftAssignment')(sequelize);
 const Branch = require('../models/Branch-postgresql')(sequelize);
+const Holiday = require('../models/Holiday')(sequelize);
 const Department = require('../models/Department-postgresql')(sequelize);
 const BiometricData = require('../models/BiometricData')(sequelize);
 const Message = require('../models/Message')(sequelize);
@@ -158,9 +160,20 @@ const AuditLog = require('../models/AuditLog')(sequelize);
 const AssistantKnowledgeBase = require('../models/AssistantKnowledgeBase')(sequelize);
 const AssistantConversation = require('../models/AssistantConversation')(sequelize);
 
+// ✅ MODELOS - Sistema de Staff Aponnt Multi-País
+const AponntStaffRole = require('../models/AponntStaffRole')(sequelize);
+const AponntStaff = require('../models/AponntStaff')(sequelize);
+
 // ✅ MODELO - Sistema de Testing Phase 4 (Audit Test Logs)
 const { defineModel: defineAuditTestLog } = require('../models/AuditTestLog');
 const AuditTestLog = defineAuditTestLog(sequelize);
+
+// ✅ MODELOS - Sistema de Attendance Analytics (Scoring + Patrones + OLAP)
+const AttendanceProfile = require('../models/AttendanceProfile')(sequelize);
+const AttendancePattern = require('../models/AttendancePattern')(sequelize);
+const ScoringHistory = require('../models/ScoringHistory')(sequelize);
+const AttendanceAnalyticsCache = require('../models/AttendanceAnalyticsCache')(sequelize);
+const ComparativeAnalytics = require('../models/ComparativeAnalytics')(sequelize);
 
 // ✅ MODELOS - Email Verification & Consent Management System
 const EmailVerificationToken = require('../models/EmailVerificationToken')(sequelize);
@@ -169,7 +182,6 @@ const UserConsent = require('../models/UserConsent')(sequelize);
 const ConsentAuditLog = require('../models/ConsentAuditLog')(sequelize);
 
 // ✅ MODELOS - Personal de Aponnt (Staff, Vendedores, Supervisores, etc.)
-const AponntStaff = require('../models/AponntStaff')(sequelize);
 const AponntStaffCompany = require('../models/AponntStaffCompany')(sequelize);
 const VendorStatistics = require('../models/VendorStatistics')(sequelize);
 
@@ -200,6 +212,67 @@ const CompanyTask = require('../models/CompanyTask')(sequelize);
 const UserAssignedTask = require('../models/UserAssignedTask')(sequelize);
 const UserSalaryConfig = require('../models/UserSalaryConfig')(sequelize);
 
+// ✅ MODELO - Sistema de Auditoría de Cambios de Usuarios
+const UserAuditLog = require('../models/UserAuditLog')(sequelize);
+
+// ✅ MODELO - Sistema de Roles Adicionales (bombero, capacitador, auditor, etc.)
+const AdditionalRoleType = require('../models/AdditionalRoleType')(sequelize);
+
+// ✅ MODELOS - Sistema Médico Avanzado (Antropométricos, Cirugías, Psiquiatría, Deportes)
+const {
+    UserAnthropometricData: UserAnthropometricDataFn,
+    ChronicConditionsCatalog: ChronicConditionsCatalogFn,
+    UserChronicConditionsV2: UserChronicConditionsV2Fn,
+    UserSurgeries: UserSurgeriesFn,
+    UserPsychiatricTreatments: UserPsychiatricTreatmentsFn,
+    SportsCatalog: SportsCatalogFn,
+    UserSportsActivities: UserSportsActivitiesFn,
+    UserHealthyHabits: UserHealthyHabitsFn
+} = require('../models/UserMedicalAdvanced');
+
+const UserAnthropometricData = UserAnthropometricDataFn(sequelize);
+const ChronicConditionsCatalog = ChronicConditionsCatalogFn(sequelize);
+const UserChronicConditionsV2 = UserChronicConditionsV2Fn(sequelize);
+const UserSurgeries = UserSurgeriesFn(sequelize);
+const UserPsychiatricTreatments = UserPsychiatricTreatmentsFn(sequelize);
+const SportsCatalog = SportsCatalogFn(sequelize);
+const UserSportsActivities = UserSportsActivitiesFn(sequelize);
+const UserHealthyHabits = UserHealthyHabitsFn(sequelize);
+
+// ✅ MODELOS - Sistema Salarial Avanzado (Convenios, Categorías, Payroll)
+const {
+    LaborAgreementsCatalog: LaborAgreementsCatalogFn,
+    SalaryCategories: SalaryCategoriesFn,
+    UserSalaryConfigV2: UserSalaryConfigV2Fn,
+    UserPayrollRecords: UserPayrollRecordsFn
+} = require('../models/UserSalaryAdvanced');
+
+const LaborAgreementsCatalog = LaborAgreementsCatalogFn(sequelize);
+const SalaryCategories = SalaryCategoriesFn(sequelize);
+const UserSalaryConfigV2 = UserSalaryConfigV2Fn(sequelize);
+const UserPayrollRecords = UserPayrollRecordsFn(sequelize);
+
+// ✅ MODELOS - Sistema de Liquidación Parametrizable v3.0 (Multi-País, Multi-Sucursal)
+const PayrollCountry = require('../models/PayrollCountry')(sequelize);
+const CompanyBranch = require('../models/CompanyBranch')(sequelize);
+const LaborAgreementV2 = require('../models/LaborAgreementV2')(sequelize);
+const PayrollConceptType = require('../models/PayrollConceptType')(sequelize);
+const PayrollTemplate = require('../models/PayrollTemplate')(sequelize);
+const PayrollTemplateConcept = require('../models/PayrollTemplateConcept')(sequelize);
+const SalaryCategoryV2 = require('../models/SalaryCategoryV2')(sequelize);
+const UserPayrollAssignment = require('../models/UserPayrollAssignment')(sequelize);
+const UserPayrollConceptOverride = require('../models/UserPayrollConceptOverride')(sequelize);
+const UserPayrollBonus = require('../models/UserPayrollBonus')(sequelize);
+const PayrollRun = require('../models/PayrollRun')(sequelize);
+const PayrollRunDetail = require('../models/PayrollRunDetail')(sequelize);
+const PayrollRunConceptDetail = require('../models/PayrollRunConceptDetail')(sequelize);
+
+// Modelos de Entidades y Liquidaciones Consolidadas
+const PayrollEntity = require('../models/PayrollEntity')(sequelize);
+const PayrollEntitySettlement = require('../models/PayrollEntitySettlement')(sequelize);
+const PayrollEntitySettlementDetail = require('../models/PayrollEntitySettlementDetail')(sequelize);
+const PayrollPayslipTemplate = require('../models/PayrollPayslipTemplate')(sequelize);
+
 // SuperUser eliminado - se unificó con tabla User
 
 // Definir asociaciones
@@ -209,6 +282,30 @@ Attendance.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id' });
 
 User.belongsToMany(Shift, { through: 'UserShifts', sourceKey: 'user_id' });
 Shift.belongsToMany(User, { through: 'UserShifts', targetKey: 'user_id' });
+
+// =========================================================================
+// ✅ ASOCIACIONES - Sistema de Turnos Rotativos (User Shift Assignments)
+// =========================================================================
+
+// User <-> UserShiftAssignment
+User.hasMany(UserShiftAssignment, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'shiftAssignments' });
+UserShiftAssignment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// Shift <-> UserShiftAssignment
+Shift.hasMany(UserShiftAssignment, { foreignKey: 'shift_id', as: 'userAssignments' });
+UserShiftAssignment.belongsTo(Shift, { foreignKey: 'shift_id', as: 'shift' });
+
+// Company <-> UserShiftAssignment
+Company.hasMany(UserShiftAssignment, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'shiftAssignments' });
+UserShiftAssignment.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// Assigned by (User) <-> UserShiftAssignment
+User.hasMany(UserShiftAssignment, { foreignKey: 'assigned_by', sourceKey: 'user_id', as: 'assignedShifts' });
+UserShiftAssignment.belongsTo(User, { foreignKey: 'assigned_by', targetKey: 'user_id', as: 'assigner' });
+
+// Deactivated by (User) <-> UserShiftAssignment
+User.hasMany(UserShiftAssignment, { foreignKey: 'deactivated_by', sourceKey: 'user_id', as: 'deactivatedShifts' });
+UserShiftAssignment.belongsTo(User, { foreignKey: 'deactivated_by', targetKey: 'user_id', as: 'deactivator' });
 
 // Asociaciones con Branch comentadas temporalmente para PostgreSQL
 // User.belongsTo(Branch, { as: 'defaultBranch', foreignKey: 'defaultBranchId' });
@@ -248,6 +345,175 @@ MedicalHistory.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id' });
 
 MedicalCertificate.hasMany(MedicalStudy, { foreignKey: 'certificateId', as: 'studies' });
 MedicalStudy.belongsTo(MedicalCertificate, { foreignKey: 'certificateId' });
+
+// =========================================================================
+// ✅ ASOCIACIONES - Sistema Médico Avanzado
+// =========================================================================
+
+// User <-> UserAnthropometricData
+User.hasMany(UserAnthropometricData, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'anthropometricData' });
+UserAnthropometricData.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// User <-> UserChronicConditionsV2
+User.hasMany(UserChronicConditionsV2, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'chronicConditionsV2' });
+UserChronicConditionsV2.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// ChronicConditionsCatalog <-> UserChronicConditionsV2
+ChronicConditionsCatalog.hasMany(UserChronicConditionsV2, { foreignKey: 'condition_catalog_id', as: 'userConditions' });
+UserChronicConditionsV2.belongsTo(ChronicConditionsCatalog, { foreignKey: 'condition_catalog_id', as: 'catalogEntry' });
+
+// User <-> UserSurgeries
+User.hasMany(UserSurgeries, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'surgeries' });
+UserSurgeries.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// User <-> UserPsychiatricTreatments
+User.hasMany(UserPsychiatricTreatments, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'psychiatricTreatments' });
+UserPsychiatricTreatments.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// User <-> UserSportsActivities
+User.hasMany(UserSportsActivities, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'sportsActivities' });
+UserSportsActivities.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// SportsCatalog <-> UserSportsActivities
+SportsCatalog.hasMany(UserSportsActivities, { foreignKey: 'sport_catalog_id', as: 'userActivities' });
+UserSportsActivities.belongsTo(SportsCatalog, { foreignKey: 'sport_catalog_id', as: 'sportCatalog' });
+
+// User <-> UserHealthyHabits (one-to-one)
+User.hasOne(UserHealthyHabits, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'healthyHabits' });
+UserHealthyHabits.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// =========================================================================
+// ✅ ASOCIACIONES - Sistema Salarial Avanzado
+// =========================================================================
+
+// User <-> UserSalaryConfigV2
+User.hasMany(UserSalaryConfigV2, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'salaryConfigsV2' });
+UserSalaryConfigV2.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// LaborAgreementsCatalog <-> SalaryCategories
+LaborAgreementsCatalog.hasMany(SalaryCategories, { foreignKey: 'labor_agreement_id', as: 'categories' });
+SalaryCategories.belongsTo(LaborAgreementsCatalog, { foreignKey: 'labor_agreement_id', as: 'laborAgreement' });
+
+// LaborAgreementsCatalog <-> UserSalaryConfigV2
+LaborAgreementsCatalog.hasMany(UserSalaryConfigV2, { foreignKey: 'labor_agreement_id', as: 'userConfigs' });
+UserSalaryConfigV2.belongsTo(LaborAgreementsCatalog, { foreignKey: 'labor_agreement_id', as: 'laborAgreement' });
+
+// SalaryCategories <-> UserSalaryConfigV2
+SalaryCategories.hasMany(UserSalaryConfigV2, { foreignKey: 'salary_category_id', as: 'userConfigs' });
+UserSalaryConfigV2.belongsTo(SalaryCategories, { foreignKey: 'salary_category_id', as: 'salaryCategory' });
+
+// User <-> UserPayrollRecords
+User.hasMany(UserPayrollRecords, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'payrollRecords' });
+UserPayrollRecords.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// =========================================================================
+// ✅ ASOCIACIONES - Sistema de Liquidación Parametrizable v3.0
+// =========================================================================
+
+// PayrollCountry associations
+PayrollCountry.hasMany(CompanyBranch, { foreignKey: 'country_id', as: 'branches' });
+CompanyBranch.belongsTo(PayrollCountry, { foreignKey: 'country_id', as: 'country' });
+
+PayrollCountry.hasMany(LaborAgreementV2, { foreignKey: 'country_id', as: 'laborAgreements' });
+LaborAgreementV2.belongsTo(PayrollCountry, { foreignKey: 'country_id', as: 'country' });
+
+PayrollCountry.hasMany(PayrollTemplate, { foreignKey: 'country_id', as: 'templates' });
+PayrollTemplate.belongsTo(PayrollCountry, { foreignKey: 'country_id', as: 'country' });
+
+// CompanyBranch associations
+Company.hasMany(CompanyBranch, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'branches' });
+CompanyBranch.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+CompanyBranch.belongsTo(PayrollTemplate, { foreignKey: 'default_template_id', as: 'defaultTemplate' });
+PayrollTemplate.hasMany(CompanyBranch, { foreignKey: 'default_template_id', as: 'defaultForBranches' });
+
+CompanyBranch.hasMany(PayrollRun, { foreignKey: 'branch_id', as: 'payrollRuns' });
+PayrollRun.belongsTo(CompanyBranch, { foreignKey: 'branch_id', as: 'branch' });
+
+// LaborAgreementV2 associations
+LaborAgreementV2.hasMany(PayrollTemplate, { foreignKey: 'agreement_id', as: 'templates' });
+PayrollTemplate.belongsTo(LaborAgreementV2, { foreignKey: 'agreement_id', as: 'laborAgreement' });
+
+LaborAgreementV2.hasMany(SalaryCategoryV2, { foreignKey: 'agreement_id', as: 'categories' });
+SalaryCategoryV2.belongsTo(LaborAgreementV2, { foreignKey: 'agreement_id', as: 'laborAgreement' });
+
+// PayrollTemplate associations
+Company.hasMany(PayrollTemplate, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'payrollTemplates' });
+PayrollTemplate.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(PayrollTemplate, { foreignKey: 'created_by', sourceKey: 'user_id', as: 'createdPayrollTemplates' });
+PayrollTemplate.belongsTo(User, { foreignKey: 'created_by', targetKey: 'user_id', as: 'creator' });
+
+PayrollTemplate.hasMany(PayrollTemplateConcept, { foreignKey: 'template_id', as: 'concepts' });
+PayrollTemplateConcept.belongsTo(PayrollTemplate, { foreignKey: 'template_id', as: 'template' });
+
+PayrollTemplate.hasMany(UserPayrollAssignment, { foreignKey: 'template_id', as: 'userAssignments' });
+UserPayrollAssignment.belongsTo(PayrollTemplate, { foreignKey: 'template_id', as: 'template' });
+
+PayrollTemplate.hasMany(PayrollRun, { foreignKey: 'template_id', as: 'payrollRuns' });
+PayrollRun.belongsTo(PayrollTemplate, { foreignKey: 'template_id', as: 'template' });
+
+// PayrollConceptType associations
+PayrollConceptType.hasMany(PayrollTemplateConcept, { foreignKey: 'concept_type_id', as: 'templateConcepts' });
+PayrollTemplateConcept.belongsTo(PayrollConceptType, { foreignKey: 'concept_type_id', as: 'conceptType' });
+
+// PayrollTemplateConcept associations
+PayrollTemplateConcept.hasMany(UserPayrollConceptOverride, { foreignKey: 'concept_id', as: 'userOverrides' });
+UserPayrollConceptOverride.belongsTo(PayrollTemplateConcept, { foreignKey: 'concept_id', as: 'concept' });
+
+PayrollTemplateConcept.hasMany(PayrollRunConceptDetail, { foreignKey: 'concept_id', as: 'runDetails' });
+PayrollRunConceptDetail.belongsTo(PayrollTemplateConcept, { foreignKey: 'concept_id', as: 'templateConcept' });
+
+// SalaryCategoryV2 associations
+SalaryCategoryV2.hasMany(UserPayrollAssignment, { foreignKey: 'category_id', as: 'userAssignments' });
+UserPayrollAssignment.belongsTo(SalaryCategoryV2, { foreignKey: 'category_id', as: 'category' });
+
+// UserPayrollAssignment associations
+User.hasMany(UserPayrollAssignment, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'payrollAssignments' });
+UserPayrollAssignment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+UserPayrollAssignment.belongsTo(CompanyBranch, { foreignKey: 'branch_id', as: 'branch' });
+CompanyBranch.hasMany(UserPayrollAssignment, { foreignKey: 'branch_id', as: 'userAssignments' });
+
+UserPayrollAssignment.hasMany(UserPayrollConceptOverride, { foreignKey: 'assignment_id', as: 'conceptOverrides' });
+UserPayrollConceptOverride.belongsTo(UserPayrollAssignment, { foreignKey: 'assignment_id', as: 'assignment' });
+
+// UserPayrollConceptOverride associations
+User.hasMany(UserPayrollConceptOverride, { foreignKey: 'approved_by', sourceKey: 'user_id', as: 'approvedOverrides' });
+UserPayrollConceptOverride.belongsTo(User, { foreignKey: 'approved_by', targetKey: 'user_id', as: 'approver' });
+
+// UserPayrollBonus associations
+User.hasMany(UserPayrollBonus, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'payrollBonuses' });
+UserPayrollBonus.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+Company.hasMany(UserPayrollBonus, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'payrollBonuses' });
+UserPayrollBonus.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(UserPayrollBonus, { foreignKey: 'approved_by', sourceKey: 'user_id', as: 'approvedBonuses' });
+UserPayrollBonus.belongsTo(User, { foreignKey: 'approved_by', targetKey: 'user_id', as: 'bonusApprover' });
+
+// PayrollRun associations
+Company.hasMany(PayrollRun, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'payrollRuns' });
+PayrollRun.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(PayrollRun, { foreignKey: 'created_by', sourceKey: 'user_id', as: 'createdPayrollRuns' });
+PayrollRun.belongsTo(User, { foreignKey: 'created_by', targetKey: 'user_id', as: 'creator' });
+
+User.hasMany(PayrollRun, { foreignKey: 'approved_by', sourceKey: 'user_id', as: 'approvedPayrollRuns' });
+PayrollRun.belongsTo(User, { foreignKey: 'approved_by', targetKey: 'user_id', as: 'approver' });
+
+PayrollRun.hasMany(PayrollRunDetail, { foreignKey: 'run_id', as: 'details' });
+PayrollRunDetail.belongsTo(PayrollRun, { foreignKey: 'run_id', as: 'payrollRun' });
+
+// PayrollRunDetail associations
+User.hasMany(PayrollRunDetail, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'payrollRunDetails' });
+PayrollRunDetail.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+PayrollRunDetail.belongsTo(UserPayrollAssignment, { foreignKey: 'assignment_id', as: 'assignment' });
+UserPayrollAssignment.hasMany(PayrollRunDetail, { foreignKey: 'assignment_id', as: 'runDetails' });
+
+PayrollRunDetail.hasMany(PayrollRunConceptDetail, { foreignKey: 'detail_id', as: 'concepts' });
+PayrollRunConceptDetail.belongsTo(PayrollRunDetail, { foreignKey: 'detail_id', as: 'runDetail' });
 
 // Department relations (ajustadas para PostgreSQL)
 Department.hasMany(User, { foreignKey: 'departmentId', as: 'employees' });
@@ -616,17 +882,13 @@ Company.hasMany(EmailVerificationToken, {
 // ASOCIACIONES - Personal de Aponnt (Staff System)
 // ============================================================================
 
-// AponntStaff - Auto-relación (líder)
-AponntStaff.belongsTo(AponntStaff, { foreignKey: 'leader_id', as: 'leader' });
-AponntStaff.hasMany(AponntStaff, { foreignKey: 'leader_id', as: 'team_members' });
+// AponntStaff - Auto-relación (jerarquía organizacional)
+AponntStaff.belongsTo(AponntStaff, { foreignKey: 'reports_to_staff_id', as: 'supervisor' });
+AponntStaff.hasMany(AponntStaff, { foreignKey: 'reports_to_staff_id', as: 'subordinates' });
 
-// AponntStaff - Auto-relación (supervisor)
-AponntStaff.belongsTo(AponntStaff, { foreignKey: 'supervisor_id', as: 'supervisor' });
-AponntStaff.hasMany(AponntStaff, { foreignKey: 'supervisor_id', as: 'supervised_staff' });
-
-// AponntStaff - Auto-relación (auditoría: quién creó)
-AponntStaff.belongsTo(AponntStaff, { foreignKey: 'created_by', as: 'creator' });
-AponntStaff.hasMany(AponntStaff, { foreignKey: 'created_by', as: 'created_staff' });
+// AponntStaff <-> AponntStaffRole (rol organizacional)
+AponntStaff.belongsTo(AponntStaffRole, { foreignKey: 'role_id', as: 'role' });
+AponntStaffRole.hasMany(AponntStaff, { foreignKey: 'role_id', as: 'staff_members' });
 
 // AponntStaff <-> Company (many-to-many via AponntStaffCompany)
 AponntStaff.belongsToMany(Company, {
@@ -807,12 +1069,59 @@ UserSalaryConfig.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id', a
 Company.hasMany(UserSalaryConfig, { foreignKey: 'companyId', sourceKey: 'company_id', as: 'salaryConfigs' });
 UserSalaryConfig.belongsTo(Company, { foreignKey: 'companyId', targetKey: 'company_id', as: 'company' });
 
+// =========================================================================
+// ✅ ASOCIACIONES - Sistema de Attendance Analytics (Scoring + Patrones)
+// =========================================================================
+
+// AttendanceProfile associations
+User.hasOne(AttendanceProfile, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'attendanceProfile' });
+AttendanceProfile.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+Company.hasMany(AttendanceProfile, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'attendanceProfiles' });
+AttendanceProfile.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+Department.hasMany(AttendanceProfile, { foreignKey: 'department_id', as: 'attendanceProfiles' });
+AttendanceProfile.belongsTo(Department, { foreignKey: 'department_id', as: 'department' });
+
+Shift.hasMany(AttendanceProfile, { foreignKey: 'shift_id', as: 'attendanceProfiles' });
+AttendanceProfile.belongsTo(Shift, { foreignKey: 'shift_id', as: 'shift' });
+
+Branch.hasMany(AttendanceProfile, { foreignKey: 'branch_id', as: 'attendanceProfiles' });
+AttendanceProfile.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
+
+// AttendancePattern associations
+User.hasMany(AttendancePattern, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'attendancePatterns' });
+AttendancePattern.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+Company.hasMany(AttendancePattern, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'attendancePatterns' });
+AttendancePattern.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(AttendancePattern, { foreignKey: 'action_taken_by', sourceKey: 'user_id', as: 'patternsActionsBy' });
+AttendancePattern.belongsTo(User, { foreignKey: 'action_taken_by', targetKey: 'user_id', as: 'actionTaker' });
+
+// ScoringHistory associations
+User.hasMany(ScoringHistory, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'scoringHistory' });
+ScoringHistory.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+Company.hasMany(ScoringHistory, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'scoringHistory' });
+ScoringHistory.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// AttendanceAnalyticsCache associations
+Company.hasMany(AttendanceAnalyticsCache, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'analyticsCache' });
+AttendanceAnalyticsCache.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// ComparativeAnalytics associations
+Company.hasMany(ComparativeAnalytics, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'comparativeAnalytics' });
+ComparativeAnalytics.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
 module.exports = {
   sequelize,
+  Sequelize,
   User,
   Attendance,
   Shift,
   Branch,
+  Holiday,
   Department,
   Kiosk,
   Sanction,
@@ -877,6 +1186,9 @@ module.exports = {
   // ✅ EXPORT - Sistema de Asistente IA
   AssistantKnowledgeBase,
   AssistantConversation,
+  // ✅ EXPORTS - Sistema de Staff Aponnt Multi-País
+  AponntStaffRole,
+  AponntStaff,
   // ✅ EXPORTS - Email Verification & Consent Management
   EmailVerificationToken,
   ConsentDefinition,
@@ -898,6 +1210,9 @@ module.exports = {
   PartnerLegalConsent,
   PartnerCommissionLog,
 
+  // ✅ EXPORT - Sistema de Turnos Rotativos
+  UserShiftAssignment,
+
   // Vendor Invoicing System
   Quote,
   ModuleTrial,
@@ -911,6 +1226,49 @@ module.exports = {
   CompanyTask,
   UserAssignedTask,
   UserSalaryConfig,
+  // ✅ EXPORT - Sistema de Auditoría de Cambios de Usuarios
+  UserAuditLog,
+
+  // ✅ EXPORT - Sistema de Roles Adicionales (Bombero, Capacitador, Auditor, etc.)
+  AdditionalRoleType,
+
+  // ✅ EXPORTS - Sistema de Attendance Analytics (Scoring + Patrones + OLAP)
+  AttendanceProfile,
+  AttendancePattern,
+  ScoringHistory,
+  AttendanceAnalyticsCache,
+  ComparativeAnalytics,
+
+  // ✅ EXPORTS - Sistema Médico Avanzado (Antropométricos, Cirugías, Psiquiatría, Deportes)
+  UserAnthropometricData,
+  ChronicConditionsCatalog,
+  UserChronicConditionsV2,
+  UserSurgeries,
+  UserPsychiatricTreatments,
+  SportsCatalog,
+  UserSportsActivities,
+  UserHealthyHabits,
+
+  // ✅ EXPORTS - Sistema Salarial Avanzado (Convenios, Categorías, Payroll)
+  LaborAgreementsCatalog,
+  SalaryCategories,
+  UserSalaryConfigV2,
+  UserPayrollRecords,
+
+  // ✅ EXPORTS - Sistema de Liquidación Parametrizable v3.0 (Multi-País, Multi-Sucursal)
+  PayrollCountry,
+  CompanyBranch,
+  LaborAgreementV2,
+  PayrollConceptType,
+  PayrollTemplate,
+  PayrollTemplateConcept,
+  SalaryCategoryV2,
+  UserPayrollAssignment,
+  UserPayrollConceptOverride,
+  UserPayrollBonus,
+  PayrollRun,
+  PayrollRunDetail,
+  PayrollRunConceptDetail,
 
   connect: async () => {
     try {

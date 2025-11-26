@@ -145,6 +145,7 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       breakEndTime,
       rotationPattern,
       cycleStartDate,
+      global_cycle_start_date: cycleStartDate, // Mapear a campo actual
       workDays,
       restDays,
       flashStartDate,
@@ -188,7 +189,13 @@ router.put('/:id', auth, supervisorOrAdmin, async (req, res) => {
       });
     }
 
-    await shift.update(req.body);
+    // Mapear cycleStartDate a global_cycle_start_date si existe
+    const updateData = { ...req.body };
+    if (updateData.cycleStartDate) {
+      updateData.global_cycle_start_date = updateData.cycleStartDate;
+    }
+
+    await shift.update(updateData);
 
     const updatedShift = await Shift.findByPk(req.params.id);
 

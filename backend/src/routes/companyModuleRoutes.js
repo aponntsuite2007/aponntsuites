@@ -396,7 +396,8 @@ router.get('/:companyId', async (req, res) => {
         sm.icon,
         sm.color,
         sm.category,
-        sm.base_price
+        sm.base_price,
+        sm.metadata
       FROM company_modules cm
       INNER JOIN system_modules sm ON cm.system_module_id = sm.id
       WHERE cm.company_id = ?
@@ -437,6 +438,7 @@ router.get('/:companyId', async (req, res) => {
     // Transformar módulos contratados a formato esperado por el frontend
     const modules = contractedModules.map(module => ({
       id: module.module_key,
+      module_key: module.module_key,
       name: module.name || 'Módulo Sin Nombre',
       description: module.description || 'Sin descripción disponible',
       icon: module.icon || '📦',
@@ -448,7 +450,11 @@ router.get('/:companyId', async (req, res) => {
       isOperational: module.is_active, // Si está contratado y activo, es operacional
       contractedAt: module.contracted_at,
       companyId: module.company_id,
-      isTemporary: false
+      isTemporary: false,
+      // Metadata para carga dinámica de módulos
+      metadata: module.metadata,
+      frontend_file: module.metadata?.frontend_file,
+      init_function: module.metadata?.init_function
     }));
 
     // Agregar módulos temporales (ej: auditor-dashboard)

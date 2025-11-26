@@ -20,108 +20,11 @@ function showBiometricDashboardContent() {
     return;
   }
 
-  contentArea.innerHTML = `
-    <div class="biometric-dashboard-container">
-      <div class="page-header">
-        <h2>
-          <i class="fas fa-fingerprint"></i>
-          Dashboard Biométrico
-        </h2>
-        <p class="text-muted">Centro de control de todos los módulos biométricos del sistema</p>
-      </div>
-
-      <div class="biometric-modules-grid">
-        <!-- Registro Biométrico -->
-        <div class="biometric-card" onclick="openBiometricModule('registration')">
-          <div class="card-icon registration">
-            <i class="fas fa-user-plus"></i>
-          </div>
-          <div class="card-content">
-            <h3>Registro Biométrico</h3>
-            <p>Captura y almacenamiento de templates biométricos de empleados</p>
-            <div class="card-footer">
-              <span class="badge badge-primary">Activo</span>
-              <i class="fas fa-arrow-right"></i>
-            </div>
-          </div>
-        </div>
-
-        <!-- Análisis Emocional -->
-        <div class="biometric-card" onclick="openBiometricModule('emotional')">
-          <div class="card-icon emotional">
-            <i class="fas fa-smile"></i>
-          </div>
-          <div class="card-content">
-            <h3>Análisis Emocional</h3>
-            <p>Análisis de estados emocionales mediante reconocimiento facial</p>
-            <div class="card-footer">
-              <span class="badge badge-primary">Activo</span>
-              <i class="fas fa-arrow-right"></i>
-            </div>
-          </div>
-        </div>
-
-        <!-- Consentimientos Biométricos -->
-        <div class="biometric-card" onclick="openBiometricModule('consent')">
-          <div class="card-icon consent">
-            <i class="fas fa-file-contract"></i>
-          </div>
-          <div class="card-content">
-            <h3>Consentimientos Biométricos</h3>
-            <p>Gestión de consentimientos legales para uso de datos biométricos</p>
-            <div class="card-footer">
-              <span class="badge badge-success">Legal</span>
-              <i class="fas fa-arrow-right"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Estadísticas Rápidas -->
-      <div class="biometric-stats">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value" id="totalRegisteredUsers">-</span>
-            <span class="stat-label">Usuarios Registrados</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-fingerprint"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value" id="totalBiometricTemplates">-</span>
-            <span class="stat-label">Templates Almacenados</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-check-circle"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value" id="totalConsents">-</span>
-            <span class="stat-label">Consentimientos</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-clock"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value" id="lastSync">-</span>
-            <span class="stat-label">Última Sincronización</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <style>
+  // Inyectar estilos en el head si no existen
+  if (!document.getElementById('biometric-dashboard-styles')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'biometric-dashboard-styles';
+    styleEl.textContent = `
       .biometric-dashboard-container {
         padding: 20px;
         max-width: 1400px;
@@ -281,7 +184,110 @@ function showBiometricDashboardContent() {
           grid-template-columns: repeat(2, 1fr);
         }
       }
-    </style>
+    `;
+    document.head.appendChild(styleEl);
+  }
+
+  contentArea.innerHTML = `
+    <div class="biometric-dashboard-container">
+      <div class="page-header">
+        <h2>
+          <i class="fas fa-fingerprint"></i>
+          Dashboard Biométrico
+        </h2>
+        <p class="text-muted">Centro de control de todos los módulos biométricos del sistema</p>
+      </div>
+
+      <div class="biometric-modules-grid">
+        <!-- Registro Biométrico -->
+        <div class="biometric-card" onclick="openBiometricModule('registration')">
+          <div class="card-icon registration">
+            <i class="fas fa-user-plus"></i>
+          </div>
+          <div class="card-content">
+            <h3>Registro Biométrico</h3>
+            <p>Captura y almacenamiento de templates biométricos de empleados</p>
+            <div class="card-footer">
+              <span class="badge badge-primary">Activo</span>
+              <i class="fas fa-arrow-right"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Análisis Emocional -->
+        <div class="biometric-card" onclick="openBiometricModule('emotional')">
+          <div class="card-icon emotional">
+            <i class="fas fa-smile"></i>
+          </div>
+          <div class="card-content">
+            <h3>Análisis Emocional</h3>
+            <p>Análisis de estados emocionales mediante reconocimiento facial</p>
+            <div class="card-footer">
+              <span class="badge badge-primary">Activo</span>
+              <i class="fas fa-arrow-right"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Consentimientos Biométricos -->
+        <div class="biometric-card" onclick="openBiometricModule('consent')">
+          <div class="card-icon consent">
+            <i class="fas fa-file-contract"></i>
+          </div>
+          <div class="card-content">
+            <h3>Consentimientos Biométricos</h3>
+            <p>Gestión de consentimientos legales para uso de datos biométricos</p>
+            <div class="card-footer">
+              <span class="badge badge-success">Legal</span>
+              <i class="fas fa-arrow-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estadísticas Rápidas -->
+      <div class="biometric-stats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value" id="totalRegisteredUsers">-</span>
+            <span class="stat-label">Usuarios Registrados</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-fingerprint"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value" id="totalBiometricTemplates">-</span>
+            <span class="stat-label">Templates Almacenados</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value" id="totalConsents">-</span>
+            <span class="stat-label">Consentimientos</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value" id="lastSync">-</span>
+            <span class="stat-label">Última Sincronización</span>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 
   // Cargar estadísticas
@@ -355,7 +361,13 @@ async function loadBiometricStats() {
   }
 }
 
-// Exportar función para uso global
+// Exportar usando el patrón moderno (window.Modules)
+window.Modules = window.Modules || {};
+window.Modules['biometric-dashboard'] = {
+  init: showBiometricDashboardContent
+};
+
+// También mantener compatibilidad legacy
 window.showBiometricDashboardContent = showBiometricDashboardContent;
 
 console.log('✅ Módulo biometric-dashboard.js cargado');

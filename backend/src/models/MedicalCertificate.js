@@ -90,6 +90,43 @@ module.exports = (sequelize) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
+
+    // NUEVOS CAMPOS v1.1 - Diagnóstico final y observaciones
+    finalDiagnosis: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Diagnóstico final confirmado por el médico auditor'
+    },
+
+    diagnosisCategory: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'Categoría del diagnóstico (respiratorio, muscular, digestivo, mental, etc.)'
+    },
+
+    doctorObservations: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Observaciones médicas detalladas del auditor'
+    },
+
+    medicalRecommendations: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Recomendaciones médicas para el empleado'
+    },
+
+    followUpRequired: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: 'Si requiere seguimiento médico posterior'
+    },
+
+    followUpDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Fecha del próximo seguimiento médico'
+    },
     
     // Información del médico tratante
     treatingPhysician: {

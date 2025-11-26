@@ -41,14 +41,20 @@
 const { v4: uuidv4 } = require('uuid');
 
 class IntelligentTestingOrchestrator {
-    constructor(database, systemRegistry) {
+    constructor(database, systemRegistry, baseURL = null) {
         this.database = database;
         this.systemRegistry = systemRegistry;
+
+        // ⚡ BASE URL DINÁMICA (heredada de Phase4TestOrchestrator)
+        this.baseURL = baseURL;
 
         // Registry de collectors disponibles
         this.collectors = new Map();
 
         console.log('🎯 [ORCHESTRATOR] Intelligent Testing Orchestrator inicializado');
+        if (this.baseURL) {
+            console.log(`   🌐 Base URL heredada: ${this.baseURL}`);
+        }
     }
 
     /**
@@ -332,7 +338,8 @@ class IntelligentTestingOrchestrator {
                     console.log(`\n🔄 Reintento ${attempt}/${maxRetries} para módulo ${moduleName}...\n`);
                 }
 
-                const collector = new CollectorClass(this.database, this.systemRegistry);
+                // ⚡ PASAR BASE URL AL COLLECTOR (hereda puerto auto-detectado)
+                const collector = new CollectorClass(this.database, this.systemRegistry, this.baseURL);
                 const config = { company_id: companyId };
 
                 // Si hay un navegador externo, usarlo (skip login)

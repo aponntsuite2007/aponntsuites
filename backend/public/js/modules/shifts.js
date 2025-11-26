@@ -189,9 +189,6 @@ function showShiftTab(tabName) {
     
     // Cargar contenido según la tab
     switch(tabName) {
-        case 'assignments':
-            showAdvancedAssignments();
-            break;
         case 'calendar':
             showAdvancedCalendar();
             break;
@@ -235,9 +232,13 @@ async function loadAdvancedShifts() {
                 });
                 
                 if (response.ok) {
-                    const apiShifts = await response.json();
-                    console.log('🕐 [SHIFTS] Turnos desde API:', apiShifts);
-                    
+                    const apiResponse = await response.json();
+                    console.log('🕐 [SHIFTS] Turnos desde API:', apiResponse);
+
+                    // ✅ FIX: Manejar diferentes formatos de respuesta
+                    const apiShifts = Array.isArray(apiResponse) ? apiResponse :
+                                     (apiResponse.shifts || apiResponse.data || []);
+
                     // Transformar datos de la API al formato esperado
                     shifts = apiShifts.map(shift => {
                         const shiftType = shift.shiftType || 'standard';
@@ -268,7 +269,7 @@ async function loadAdvancedShifts() {
                             breakEnd: shift.breakEndTime,
                             days: shift.days || [],
                             pattern: shift.rotationPattern,
-                            cycleStartDate: shift.cycleStartDate,
+                            cycleStartDate: shift.global_cycle_start_date || shift.cycleStartDate,
                             startDate: shift.flashStartDate,
                             endDate: shift.flashEndDate,
                             priority: shift.flashPriority || shift.permanentPriority,
@@ -382,7 +383,8 @@ async function displayAdvancedShiftsTable(shifts) {
                     patternInfo = formatDays(shift.days);
                     break;
                 case 'rotative':
-                    patternInfo = `${shift.pattern || 'Rotativo'} ${shift.cycleStartDate ? '(desde ' + shift.cycleStartDate + ')' : ''}`;
+                    const cycleStart = shift.global_cycle_start_date || shift.cycleStartDate;
+                    patternInfo = `${shift.pattern || 'Rotativo'} ${cycleStart ? '(desde ' + cycleStart + ')' : ''}`;
                     break;
                 case 'flash':
                     patternInfo = `${shift.startDate || ''} → ${shift.endDate || ''}`;
@@ -409,7 +411,7 @@ async function displayAdvancedShiftsTable(shifts) {
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="editAdvancedShift('${shift.id}')" title="Editar">✏️</button>
                     <button class="btn btn-sm btn-info" onclick="viewAdvancedShift('${shift.id}')" title="Ver">👁️</button>
-                    <button class="btn btn-sm btn-warning" onclick="assignEmployeesToShift('${shift.id}')" title="Asignar">👥</button>
+                    <button class="btn btn-sm" style="background-color: #4CAF50; color: white;" onclick="viewShiftCalendar('${shift.id}')" title="Ver Calendario">📅</button>
                     <button class="btn btn-sm btn-success" onclick="duplicateShift('${shift.id}')" title="Duplicar">📋</button>
                     <button class="btn btn-sm btn-danger" onclick="deleteAdvancedShift('${shift.id}')" title="Eliminar">🗑️</button>
                 </td>
@@ -572,6 +574,51 @@ function showAdvancedShiftCreator() {
                 </div>
             </div>
 
+            <!-- Sucursal y Feriados -->
+            <div style="margin: 20px 0; padding: 20px; background: #f0f0ff; border-radius: 8px;">
+                <h4>🏢 Sucursal y Feriados</h4>
+                <p style="font-size: 0.9em; color: #666; margin: 5px 0 15px 0;">
+                    Configure la sucursal del turno y el respeto a feriados nacionales/provinciales
+                </p>
+                <div style="margin-bottom: 15px;">
+                    <label>🏢 Sucursal:</label>
+                    <select id="advBranchId" style="width: 100%; padding: 8px; margin-top: 5px;">
+                        <option value="">TODAS las sucursales</option>
+                        <!-- Se llenará dinámicamente -->
+                    </select>
+                    <small style="color: #666;">Si no selecciona sucursal, el turno aplica a TODAS</small>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div style="background: #fff; padding: 15px; border-radius: 8px; border: 2px solid #2196F3;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="advRespectNationalHolidays" style="margin-right: 10px;">
+                            <span>🎉 Respetar feriados nacionales</span>
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 5px;">Excluye feriados nacionales del calendario del turno</small>
+                    </div>
+                    <div style="background: #fff; padding: 15px; border-radius: 8px; border: 2px solid #9C27B0;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="advRespectProvincialHolidays" style="margin-right: 10px;">
+                            <span>📍 Respetar feriados provinciales</span>
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 5px;">Excluye feriados provinciales/estatales del calendario</small>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <label>📅 Días no laborables personalizados:</label>
+                    <div style="margin-top: 5px;">
+                        <input type="date" id="advCustomNonWorkingDay" style="padding: 8px; margin-right: 10px;">
+                        <button onclick="addCustomNonWorkingDay()" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            ➕ Agregar
+                        </button>
+                    </div>
+                    <div id="customNonWorkingDaysList" style="margin-top: 10px; min-height: 40px; background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                        <small style="color: #999;">No hay días personalizados agregados</small>
+                    </div>
+                    <small style="color: #666;">Ej: Día del empleado, cierres especiales, etc.</small>
+                </div>
+            </div>
+
             <!-- Configuración específica por tipo -->
             <div id="shiftTypeConfig" style="margin: 20px 0; padding: 20px; background: #f0f8ff; border-radius: 8px;">
                 <!-- Se llena dinámicamente según el tipo -->
@@ -617,6 +664,8 @@ function showAdvancedShiftCreator() {
     });
 
     updateShiftForm(); // Inicializar form
+    loadBranches(); // Cargar sucursales en dropdown
+    window.customNonWorkingDays = []; // Reiniciar lista de días no laborables
 }
 
 // Actualizar formulario según tipo de turno
@@ -752,378 +801,6 @@ function updateShiftForm() {
 }
 
 // Funciones auxiliares para el sistema de turnos
-function showAdvancedAssignments() {
-    console.log('👥 [SHIFTS] Cargando asignaciones avanzadas...');
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal fade';
-    modal.id = 'advancedAssignmentsModal';
-    modal.innerHTML = `
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-clock-history"></i> <span data-translate="shifts.assignment.title">Asignación de Turnos</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <!-- Filtros -->
-                        <div class="col-12 mb-3">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6><i class="bi bi-funnel"></i> <span data-translate="shifts.assignment.filters_title">Filtros de Búsqueda</span></h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <label class="form-label" data-translate="shifts.assignment.dni_search">DNI:</label>
-                                            <input type="text" id="assignDniSearch" class="form-control" data-translate-placeholder="shifts.assignment.dni_placeholder" placeholder="Buscar por DNI">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label" data-translate="shifts.assignment.name_search">Nombre/Apellido:</label>
-                                            <input type="text" id="assignNameSearch" class="form-control" data-translate-placeholder="shifts.assignment.name_placeholder" placeholder="Buscar por nombre">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label" data-translate="shifts.assignment.department_filter">Departamento:</label>
-                                            <select id="assignDeptFilter" class="form-control">
-                                                <option value="" data-translate="shifts.assignment.all_departments">Todos los departamentos</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3 d-flex align-items-end">
-                                            <button type="button" id="clearAssignFilters" class="btn btn-outline-secondary">
-                                                <i class="bi bi-x-circle"></i> <span data-translate="shifts.assignment.clear_button">Limpiar</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Selección de Turnos -->
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6><i class="bi bi-clock"></i> <span data-translate="shifts.assignment.shifts_available">Turnos Disponibles</span></h6>
-                                </div>
-                                <div class="card-body">
-                                    <div id="availableShifts" style="max-height: 300px; overflow-y: auto;">
-                                        <!-- Turnos se cargan aquí -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Usuarios -->
-                        <div class="col-md-8">
-                            <div class="card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6><i class="bi bi-people"></i> <span data-translate="shifts.assignment.users_title">Usuarios</span> (<span id="usersCount">0</span>)</h6>
-                                    <div>
-                                        <button type="button" id="selectAllUsers" class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-check-square"></i> <span data-translate="shifts.buttons.select_all">Seleccionar Todo</span>
-                                        </button>
-                                        <button type="button" id="deselectAllUsers" class="btn btn-outline-secondary btn-sm">
-                                            <i class="bi bi-square"></i> <span data-translate="shifts.buttons.deselect_all">Deseleccionar</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="card-body p-0">
-                                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                        <table class="table table-striped table-hover mb-0">
-                                            <thead class="table-dark sticky-top">
-                                                <tr>
-                                                    <th width="50px">
-                                                        <input type="checkbox" id="masterCheckbox" class="form-check-input">
-                                                    </th>
-                                                    <th data-translate="shifts.assignment.table.dni">DNI</th>
-                                                    <th data-translate="shifts.assignment.table.name">Nombre</th>
-                                                    <th data-translate="shifts.assignment.table.department">Departamento</th>
-                                                    <th data-translate="shifts.assignment.table.current_shifts">Turnos Actuales</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="assignUsersTableBody">
-                                                <!-- Usuarios se cargan aquí -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <div class="d-flex justify-content-between w-100">
-                        <div>
-                            <span class="text-muted">
-                                <span id="selectedUsersCount">0</span> <span data-translate="shifts.assignment.selected_count">usuarios seleccionados</span>
-                            </span>
-                        </div>
-                        <div>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" id="assignShiftsBtn" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> <span data-translate="shifts.buttons.assign">Asignar Turnos</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-    const modalInstance = new bootstrap.Modal(modal);
-    
-    // Variables globales para el modal
-    let allAssignUsers = [];
-    let filteredAssignUsers = [];
-    let selectedUsers = new Set();
-    let availableShiftsList = [];
-    let selectedShifts = new Set();
-
-    // Inicializar modal
-    modal.addEventListener('shown.bs.modal', async () => {
-        await loadAssignmentData();
-        setupAssignmentEvents();
-    });
-
-    // Limpiar modal al cerrar
-    modal.addEventListener('hidden.bs.modal', () => {
-        document.body.removeChild(modal);
-    });
-
-    modalInstance.show();
-
-    // Cargar datos iniciales
-    async function loadAssignmentData() {
-        try {
-            // Cargar usuarios
-            const usersResponse = await fetch('/api/users');
-            if (usersResponse.ok) {
-                allAssignUsers = await usersResponse.json();
-                filteredAssignUsers = [...allAssignUsers];
-            }
-
-            // Cargar departamentos
-            const deptsResponse = await fetch('/api/departments');
-            if (deptsResponse.ok) {
-                const departments = await deptsResponse.json();
-                const deptSelect = document.getElementById('assignDeptFilter');
-                departments.forEach(dept => {
-                    const option = document.createElement('option');
-                    option.value = dept.id;
-                    option.textContent = dept.name;
-                    deptSelect.appendChild(option);
-                });
-            }
-
-            // Cargar turnos
-            const shiftsResponse = await fetch('/api/shifts');
-            if (shiftsResponse.ok) {
-                availableShiftsList = await shiftsResponse.json();
-                renderAvailableShifts();
-            }
-
-            renderAssignUsers();
-        } catch (error) {
-            console.error('Error cargando datos:', error);
-            showNotification('Error cargando datos de asignación', 'error');
-        }
-    }
-
-    // Renderizar turnos disponibles
-    function renderAvailableShifts() {
-        const container = document.getElementById('availableShifts');
-        container.innerHTML = '';
-
-        availableShiftsList.forEach(shift => {
-            const shiftCard = document.createElement('div');
-            shiftCard.className = 'form-check mb-2 p-2 border rounded';
-            shiftCard.innerHTML = `
-                <input class="form-check-input" type="checkbox" value="${shift.id}" id="shift_${shift.id}">
-                <label class="form-check-label" for="shift_${shift.id}">
-                    <strong>${shift.name}</strong><br>
-                    <small class="text-muted">${shift.start_time} - ${shift.end_time}</small>
-                </label>
-            `;
-            container.appendChild(shiftCard);
-        });
-    }
-
-    // Renderizar usuarios para asignación
-    function renderAssignUsers() {
-        const tbody = document.getElementById('assignUsersTableBody');
-        tbody.innerHTML = '';
-
-        filteredAssignUsers.forEach(user => {
-            const row = document.createElement('tr');
-            const isSelected = selectedUsers.has(user.user_id);
-            row.className = isSelected ? 'table-active' : '';
-            
-            // Obtener turnos actuales del usuario
-            const currentShifts = user.shifts || [];
-            const shiftsText = currentShifts.length > 0 
-                ? currentShifts.map(s => s.name).join(', ')
-                : '<span data-translate="shifts.assignment.table.no_shifts">Sin turnos</span>';
-
-            row.innerHTML = `
-                <td>
-                    <input type="checkbox" class="form-check-input user-checkbox" 
-                           value="${user.user_id}" ${isSelected ? 'checked' : ''}>
-                </td>
-                <td>${user.dni}</td>
-                <td>${user.name} ${user.surname}</td>
-                <td>${user.department ? user.department.name : '<span data-translate="shifts.assignment.table.no_department">Sin departamento</span>'}</td>
-                <td><small class="text-muted">${shiftsText}</small></td>
-            `;
-            tbody.appendChild(row);
-        });
-
-        // Actualizar contadores
-        document.getElementById('usersCount').textContent = filteredAssignUsers.length;
-        document.getElementById('selectedUsersCount').textContent = selectedUsers.size;
-        
-        // Actualizar master checkbox
-        const masterCheckbox = document.getElementById('masterCheckbox');
-        const userCheckboxes = document.querySelectorAll('.user-checkbox');
-        if (userCheckboxes.length === 0) {
-            masterCheckbox.indeterminate = false;
-            masterCheckbox.checked = false;
-        } else if (selectedUsers.size === filteredAssignUsers.length) {
-            masterCheckbox.indeterminate = false;
-            masterCheckbox.checked = true;
-        } else if (selectedUsers.size === 0) {
-            masterCheckbox.indeterminate = false;
-            masterCheckbox.checked = false;
-        } else {
-            masterCheckbox.indeterminate = true;
-        }
-    }
-
-    // Filtrar usuarios
-    function filterAssignUsers() {
-        const dniSearch = document.getElementById('assignDniSearch').value.trim().toLowerCase();
-        const nameSearch = document.getElementById('assignNameSearch').value.trim().toLowerCase();
-        const deptFilter = document.getElementById('assignDeptFilter').value;
-
-        filteredAssignUsers = allAssignUsers.filter(user => {
-            const matchesDni = !dniSearch || user.dni.toLowerCase().includes(dniSearch);
-            const matchesName = !nameSearch || 
-                `${user.name} ${user.surname}`.toLowerCase().includes(nameSearch);
-            const matchesDept = !deptFilter || 
-                (user.department && user.department.id.toString() === deptFilter);
-
-            return matchesDni && matchesName && matchesDept;
-        });
-
-        renderAssignUsers();
-    }
-
-    // Configurar eventos
-    function setupAssignmentEvents() {
-        // Filtros
-        document.getElementById('assignDniSearch').addEventListener('input', filterAssignUsers);
-        document.getElementById('assignNameSearch').addEventListener('input', filterAssignUsers);
-        document.getElementById('assignDeptFilter').addEventListener('change', filterAssignUsers);
-        document.getElementById('clearAssignFilters').addEventListener('click', () => {
-            document.getElementById('assignDniSearch').value = '';
-            document.getElementById('assignNameSearch').value = '';
-            document.getElementById('assignDeptFilter').value = '';
-            filterAssignUsers();
-        });
-
-        // Selección de usuarios
-        document.getElementById('masterCheckbox').addEventListener('change', (e) => {
-            if (e.target.checked) {
-                filteredAssignUsers.forEach(user => selectedUsers.add(user.user_id));
-            } else {
-                filteredAssignUsers.forEach(user => selectedUsers.delete(user.user_id));
-            }
-            renderAssignUsers();
-        });
-
-        document.getElementById('selectAllUsers').addEventListener('click', () => {
-            filteredAssignUsers.forEach(user => selectedUsers.add(user.user_id));
-            renderAssignUsers();
-        });
-
-        document.getElementById('deselectAllUsers').addEventListener('click', () => {
-            selectedUsers.clear();
-            renderAssignUsers();
-        });
-
-        // Checkboxes individuales
-        document.addEventListener('change', (e) => {
-            if (e.target.classList.contains('user-checkbox')) {
-                const userId = parseInt(e.target.value);
-                if (e.target.checked) {
-                    selectedUsers.add(userId);
-                } else {
-                    selectedUsers.delete(userId);
-                }
-                renderAssignUsers();
-            }
-        });
-
-        // Selección de turnos
-        document.addEventListener('change', (e) => {
-            if (e.target.type === 'checkbox' && e.target.id.startsWith('shift_')) {
-                const shiftId = parseInt(e.target.value);
-                if (e.target.checked) {
-                    selectedShifts.add(shiftId);
-                } else {
-                    selectedShifts.delete(shiftId);
-                }
-            }
-        });
-
-        // Botón de asignación
-        document.getElementById('assignShiftsBtn').addEventListener('click', performShiftAssignment);
-    }
-
-    // Realizar asignación de turnos
-    async function performShiftAssignment() {
-        if (selectedUsers.size === 0) {
-            showNotification('Debe seleccionar al menos un usuario', 'warning');
-            return;
-        }
-
-        if (selectedShifts.size === 0) {
-            showNotification('Debe seleccionar al menos un turno', 'warning');
-            return;
-        }
-
-        const confirmMsg = `¿Desea asignar ${selectedShifts.size} turno(s) a ${selectedUsers.size} usuario(s) seleccionado(s)?`;
-        if (!confirm(confirmMsg)) return;
-
-        try {
-            const assignmentData = {
-                userIds: Array.from(selectedUsers),
-                shiftIds: Array.from(selectedShifts)
-            };
-
-            const response = await fetch('/api/shifts/bulk-assign', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(assignmentData)
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                showNotification(`Turnos asignados exitosamente. ${result.assigned} asignaciones realizadas.`, 'success');
-                modalInstance.hide();
-                loadShifts(); // Recargar datos principales
-            } else {
-                const error = await response.json();
-                showNotification(`Error: ${error.message}`, 'error');
-            }
-        } catch (error) {
-            console.error('Error asignando turnos:', error);
-            showNotification('Error al asignar turnos', 'error');
-        }
-    }
-}
 
 function showAdvancedCalendar() {
     console.log('📅 [SHIFTS] Cargando calendario avanzado...');
@@ -1297,7 +974,24 @@ async function saveAdvancedShift() {
                 }
             }
         };
-        
+
+        // Obtener datos de sucursal y feriados
+        const branchIdEl = document.getElementById('advBranchId');
+        const respectNationalHolidaysEl = document.getElementById('advRespectNationalHolidays');
+        const respectProvincialHolidaysEl = document.getElementById('advRespectProvincialHolidays');
+
+        shiftData.branch_id = branchIdEl && branchIdEl.value ? branchIdEl.value : null;
+        shiftData.respect_national_holidays = respectNationalHolidaysEl ? respectNationalHolidaysEl.checked : false;
+        shiftData.respect_provincial_holidays = respectProvincialHolidaysEl ? respectProvincialHolidaysEl.checked : false;
+        shiftData.custom_non_working_days = window.customNonWorkingDays || [];
+
+        console.log('🏢 [SHIFTS] Configuración de feriados:', {
+            branch_id: shiftData.branch_id,
+            respect_national_holidays: shiftData.respect_national_holidays,
+            respect_provincial_holidays: shiftData.respect_provincial_holidays,
+            custom_non_working_days: shiftData.custom_non_working_days
+        });
+
         // Configuración específica según tipo
         switch(shiftType) {
             case 'standard':
@@ -1553,9 +1247,9 @@ function populateSpecificFields(shift) {
         case 'rotative':
             const patternEl = document.getElementById('rotativePattern');
             const cycleStartEl = document.getElementById('rotativeCycleStart');
-            
+
             if (patternEl) patternEl.value = shift.rotationPattern || '12x4';
-            if (cycleStartEl) cycleStartEl.value = shift.cycleStartDate || '';
+            if (cycleStartEl) cycleStartEl.value = shift.global_cycle_start_date || shift.cycleStartDate || '';
             
             if (shift.workDays && shift.restDays) {
                 const workDaysEl = document.getElementById('customWorkDays');
@@ -1851,11 +1545,6 @@ function closeViewShiftModal() {
     }
 }
 
-function assignEmployeesToShift(shiftId) {
-    console.log('👥 [SHIFTS] Asignando <span data-translate="shifts.table.employees_count">empleados</span> al turno:', shiftId);
-    showAdvancedAssignments();
-}
-
 async function duplicateShift(shiftId) {
     console.log('📋 [SHIFTS] Duplicando turno:', shiftId);
 
@@ -1964,10 +1653,6 @@ function showShiftCalendar() {
     showShiftTab('calendar');
 }
 
-function showShiftAssignments() {
-    showShiftTab('assignments');
-}
-
 function showHourlyConfiguration() {
     showShiftTab('config');
 }
@@ -2017,8 +1702,218 @@ function showShiftMessage(message, type) {
     }, 3000);
 }
 
+// 📅 Ver calendario de turno rotativo
+async function viewShiftCalendar(shiftId) {
+    console.log('📅 [SHIFT-CALENDAR] Abriendo calendario del turno:', shiftId);
+
+    try {
+        // Store shiftId globally
+        window.currentViewShiftId = shiftId;
+
+        // Cargar el script del calendario si no está cargado
+        if (!window.ShiftCalendarView) {
+            console.log('📦 [SHIFT-CALENDAR] Cargando script shift-calendar-view.js...');
+            await loadCalendarScript('/js/modules/shift-calendar-view.js');
+            console.log('✅ [SHIFT-CALENDAR] Script cargado');
+        }
+
+        // Crear modal para mostrar el calendario
+        const modal = document.createElement('div');
+        modal.id = 'shiftCalendarModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            overflow-y: auto;
+            padding: 20px;
+        `;
+
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 12px; max-width: 1200px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative;">
+                <div style="position: sticky; top: 0; background: white; border-bottom: 1px solid #ddd; padding: 20px; z-index: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="margin: 0;">📅 Calendario del Turno Rotativo</h2>
+                        <button onclick="closeShiftCalendarModal()" style="background: #f44336; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 16px;">✕ Cerrar</button>
+                    </div>
+                </div>
+                <div id="shift-calendar-content" style="padding: 20px;">
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📅</div>
+                        <p>Cargando calendario del turno...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Cargar y renderizar el calendario
+        console.log('🎨 [SHIFT-CALENDAR] Renderizando calendario...');
+
+        // Crear instancia global para que los botones onclick funcionen
+        window.shiftCalendarView = new ShiftCalendarView();
+        const html = await window.shiftCalendarView.render(shiftId);
+
+        const container = document.getElementById('shift-calendar-content');
+        if (container) {
+            container.innerHTML = html;
+        }
+
+        console.log('✅ [SHIFT-CALENDAR] Calendario cargado exitosamente');
+    } catch (error) {
+        console.error('❌ [SHIFT-CALENDAR] Error cargando calendario:', error);
+        showShiftMessage(`Error al cargar calendario: ${error.message}`, 'error');
+    }
+}
+
+// Cerrar modal de calendario
+function closeShiftCalendarModal() {
+    const modal = document.getElementById('shiftCalendarModal');
+    if (modal && modal.parentNode) {
+        modal.parentNode.removeChild(modal);
+    }
+}
+
+// Helper para cargar scripts dinámicamente
+function loadCalendarScript(src) {
+    return new Promise((resolve, reject) => {
+        // Verificar si ya está cargado
+        if (document.querySelector(`script[src="${src}"]`)) {
+            console.log(`📦 Script ${src} ya estaba cargado`);
+            resolve();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => {
+            console.log(`✅ Script ${src} cargado`);
+            resolve();
+        };
+        script.onerror = () => {
+            console.error(`❌ Error cargando script ${src}`);
+            reject(new Error(`No se pudo cargar ${src}`));
+        };
+        document.head.appendChild(script);
+    });
+}
+
+// ============ FUNCIONES DE GESTIÓN DE FERIADOS Y SUCURSALES ============
+
+// Variable global para días no laborables custom
+window.customNonWorkingDays = [];
+
+// Cargar sucursales y poblar dropdown
+async function loadBranches() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/branches', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            console.warn('⚠️ [SHIFTS] No se pudieron cargar sucursales');
+            return;
+        }
+
+        const data = await response.json();
+        const branches = data.branches || data.data || [];
+
+        const branchSelect = document.getElementById('advBranchId');
+        if (!branchSelect) return;
+
+        // Limpiar opciones existentes excepto "TODAS"
+        branchSelect.innerHTML = '<option value="">TODAS las sucursales</option>';
+
+        // Agregar sucursales
+        branches.forEach(branch => {
+            const option = document.createElement('option');
+            option.value = branch.id;
+            option.textContent = branch.name || branch.nombre || `Sucursal ${branch.id}`;
+            branchSelect.appendChild(option);
+        });
+
+        console.log(`✅ [SHIFTS] ${branches.length} sucursales cargadas`);
+    } catch (error) {
+        console.error('❌ [SHIFTS] Error cargando sucursales:', error);
+    }
+}
+
+// Agregar día no laborable personalizado
+function addCustomNonWorkingDay() {
+    const dateInput = document.getElementById('advCustomNonWorkingDay');
+    if (!dateInput || !dateInput.value) {
+        alert('Por favor seleccione una fecha');
+        return;
+    }
+
+    const date = dateInput.value;
+
+    // Verificar si ya existe
+    if (window.customNonWorkingDays.includes(date)) {
+        alert('Esta fecha ya está en la lista');
+        return;
+    }
+
+    // Agregar a la lista
+    window.customNonWorkingDays.push(date);
+    window.customNonWorkingDays.sort();
+
+    // Actualizar UI
+    renderCustomNonWorkingDays();
+
+    // Limpiar input
+    dateInput.value = '';
+
+    console.log('✅ [SHIFTS] Día no laborable agregado:', date);
+}
+
+// Remover día no laborable personalizado
+function removeCustomNonWorkingDay(date) {
+    const index = window.customNonWorkingDays.indexOf(date);
+    if (index > -1) {
+        window.customNonWorkingDays.splice(index, 1);
+        renderCustomNonWorkingDays();
+        console.log('✅ [SHIFTS] Día no laborable eliminado:', date);
+    }
+}
+
+// Renderizar lista de días no laborables
+function renderCustomNonWorkingDays() {
+    const listContainer = document.getElementById('customNonWorkingDaysList');
+    if (!listContainer) return;
+
+    if (window.customNonWorkingDays.length === 0) {
+        listContainer.innerHTML = '<small style="color: #999;">No hay días personalizados agregados</small>';
+        return;
+    }
+
+    listContainer.innerHTML = window.customNonWorkingDays.map(date => `
+        <div style="display: inline-flex; align-items: center; background: #e3f2fd; padding: 5px 10px; border-radius: 5px; margin: 2px;">
+            <span style="margin-right: 8px;">${date}</span>
+            <button onclick="removeCustomNonWorkingDay('${date}')" style="background: #f44336; color: white; border: none; border-radius: 3px; padding: 2px 6px; cursor: pointer; font-size: 0.8em;">
+                ✕
+            </button>
+        </div>
+    `).join('');
+}
+
 // ✅ EXPOSICIÓN GLOBAL (requerido para panel-empresa.html) (Legacy)
 window.showShiftsContent = showShiftsContent;
+window.viewShiftCalendar = viewShiftCalendar;
+window.closeShiftCalendarModal = closeShiftCalendarModal;
+window.addCustomNonWorkingDay = addCustomNonWorkingDay;
+window.removeCustomNonWorkingDay = removeCustomNonWorkingDay;
 
 // ✅ EXPORTACIÓN UNIFICADA (Sistema de Auto-Conocimiento v3.0)
 if (!window.Modules) window.Modules = {};

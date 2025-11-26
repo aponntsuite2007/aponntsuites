@@ -1327,6 +1327,12 @@ if (typeof window !== 'undefined') {
     window.refreshMapView = refreshMapView;
     window.centerMapView = centerMapView;
     window.toggleMapLayers = toggleMapLayers;
+
+    // Registro en window.Modules para sistema moderno
+    window.Modules = window.Modules || {};
+    window.Modules['employee-map'] = {
+        init: showEmployeeMapContent
+    };
 }
 
 console.log('✅ [EMPLOYEE-MAP] Módulo de mapa de empleados listo');

@@ -43,14 +43,21 @@ const { chromium } = require('playwright');
 const LearningEngine = require('../learning/LearningEngine');
 
 class BaseModuleCollector {
-    constructor(database, systemRegistry) {
+    constructor(database, systemRegistry, baseURL = null) {
         this.database = database;
         this.systemRegistry = systemRegistry;
         this.learningEngine = new LearningEngine();
 
-        // Configuración base
-        const port = process.env.PORT || '9998';
-        this.baseURL = process.env.BASE_URL || `http://localhost:${port}`;
+        // ⚡ CONFIGURACIÓN BASE - PUERTO DINÁMICO
+        // Prioridad: 1) baseURL pasado como parámetro (desde orchestrator)
+        //            2) Variable de entorno BASE_URL
+        //            3) Fallback a process.env.PORT o 9998
+        if (baseURL) {
+            this.baseURL = baseURL;
+        } else {
+            const port = process.env.PORT || '9998';
+            this.baseURL = process.env.BASE_URL || `http://localhost:${port}`;
+        }
 
         this.browser = null;
         this.page = null;
@@ -181,6 +188,7 @@ class BaseModuleCollector {
             if (this.database && this.database.AuditLog) {
                 results.push(await this.database.AuditLog.create({
                     execution_id,
+                    company_id: this.company_id, // ✅ FIX: Incluir company_id (NOT NULL constraint)
                     test_type: 'e2e',
                     module_name: moduleConfig.moduleName,
                     test_name: 'frontend_crud_general',

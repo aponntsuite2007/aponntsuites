@@ -301,7 +301,7 @@ Datos de aceptación registrados:
 // FUNCIONES PRINCIPALES
 // ========================================
 
-function showBiometricconsentContent() {
+function showBiometricConsentContent() {
     const content = document.getElementById('mainContent');
     if (!content) return;
 
@@ -893,10 +893,19 @@ function showConsentMessage(message, type) {
 
 // Exportar funciones globales
 window.biometricConsent = {
-    show: showBiometricconsentContent,
+    show: showBiometricConsentContent,
     requestValidation: requestBiometricValidation,
     config: BIOMETRIC_CONSENT_CONFIG
 };
+
+// Registro en window.Modules para sistema moderno
+window.Modules = window.Modules || {};
+window.Modules['biometric-consent'] = {
+    init: showBiometricConsentContent
+};
+
+// Mantener compatibilidad legacy
+window.showBiometricConsentContent = showBiometricConsentContent;
 
 console.log('✅ [BIOMETRIC-CONSENT] Módulo cargado completamente');
 

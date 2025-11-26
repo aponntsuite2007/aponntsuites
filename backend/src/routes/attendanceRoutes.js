@@ -11,6 +11,85 @@ const NotificationWorkflowService = require('../services/NotificationWorkflowSer
 // Importar sistema modular Plug & Play
 const { useModuleIfAvailable } = require('../utils/moduleHelper');
 
+// Importar rutas de estadísticas avanzadas
+const advancedStatsRouter = require('./attendance_stats_advanced');
+
+/**
+ * @route POST /api/v1/attendance
+ * @desc Crear asistencia manual (entrada/salida completa)
+ */
+router.post('/', auth, async (req, res) => {
+  try {
+    const {
+      user_id,
+      date,
+      time_in,
+      time_out,
+      status = 'present'
+    } = req.body;
+
+    // Validaciones
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id es requerido'
+      });
+    }
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: 'date es requerida'
+      });
+    }
+
+    // Verificar que el usuario existe y pertenece a la misma empresa
+    const user = await User.findOne({
+      where: {
+        user_id,
+        company_id: req.user.company_id
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado o no pertenece a la empresa'
+      });
+    }
+
+    // Combinar fecha y hora - usar Date objects
+    const check_in_datetime = time_in ? new Date(`${date}T${time_in}`) : new Date();
+    const check_out_datetime = time_out ? new Date(`${date}T${time_out}`) : null;
+
+    // Crear asistencia
+    const attendance = await Attendance.create({
+      user_id,
+      company_id: req.user.company_id,
+      date: date, // Fecha en formato YYYY-MM-DD
+      check_in: check_in_datetime, // Date object (NOT NULL)
+      check_out: check_out_datetime, // Date object (nullable)
+      isManualEntry: true,
+      checkInMethod: 'manual',
+      notes: `Creado por ${req.user.usuario || req.user.user_id}`
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Asistencia creada exitosamente',
+      data: attendance
+    });
+
+  } catch (error) {
+    console.error('❌ Error creando asistencia manual:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creando asistencia',
+      error: error.message
+    });
+  }
+});
+
 /**
  * @route POST /api/v1/attendance/checkin
  * @desc Registrar entrada
@@ -394,6 +473,56 @@ router.put('/:id', auth, supervisorOrAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error actualizando registro:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @route GET /api/v1/attendance/stats
+ * @desc Obtener estadísticas básicas (alias simple para el frontend)
+ */
+router.get('/stats', auth, async (req, res) => {
+  try {
+    console.log('📊 [ATTENDANCE STATS] Obteniendo estadísticas básicas para empresa:', req.user.company_id);
+
+    // Obtener estadísticas del día actual
+    const today = new Date().toISOString().split('T')[0];
+
+    const [stats] = await sequelize.query(`
+      SELECT
+        COUNT(a.id) as total,
+        COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present,
+        COUNT(CASE WHEN a.status = 'late' THEN 1 END) as late,
+        COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent
+      FROM attendances a
+      INNER JOIN users u ON a.user_id = u.user_id
+      WHERE u.company_id = :companyId
+        AND a.date >= :today
+    `, {
+      replacements: {
+        companyId: req.user.company_id,
+        today: today
+      },
+      type: QueryTypes.SELECT
+    });
+
+    const result = stats || {
+      total: 0,
+      present: 0,
+      late: 0,
+      absent: 0
+    };
+
+    console.log('✅ [ATTENDANCE STATS] Estadísticas obtenidas:', result);
+
+    res.json(result);
+
+  } catch (error) {
+    console.error('❌ [ATTENDANCE STATS] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      message: error.message
+    });
   }
 });
 
@@ -856,11 +985,17 @@ router.post('/mobile', async (req, res) => {
 
   } catch (error) {
     console.error('Error procesando datos del móvil:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Error interno del servidor',
       details: process.env.NODE_ENV !== 'production' ? error.message : undefined
     });
   }
 });
 
+// ========================================
+// 📊 MOUNT ADVANCED STATS ROUTES
+// ========================================
+router.use('/stats', advancedStatsRouter);
+
 module.exports = router;
+

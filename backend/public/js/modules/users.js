@@ -1,5 +1,15 @@
 // Users Module - v5.0 PROGRESSIVE + PLUG & PLAY
-console.log('👥 [USERS] Módulo users v6.0 - PLUG & PLAY SYSTEM INTEGRADO');
+
+// 🔒 GUARD MEJORADO: Prevenir doble carga del módulo (BLOQUEA ejecución duplicada)
+if (typeof window.showUsersContent === 'function') {
+    console.warn('⚠️ [USERS] Módulo ya fue cargado anteriormente - SKIPPING re-ejecución');
+    // Early return para evitar re-declaración de variables
+    // El script termina aquí en la segunda carga
+    void(0); // No-op statement para evitar syntax error
+} else {
+    // ✅ PRIMERA CARGA: Ejecutar todo el código del módulo
+    console.log('👥 [USERS] Módulo users v6.0 - PLUG & PLAY SYSTEM INTEGRADO - PRIMERA CARGA');
+    window.__USERS_MODULE_LOADED__ = true;
 
 // ═══════════════════════════════════════════════════════════════════
 // 🎨 INYECTAR CSS RESPONSIVE GLOBAL PARA TODOS LOS MODALES
@@ -1489,6 +1499,9 @@ function closeEditModal() {
 async function viewUser(userId) {
     console.log('📋 [USERS] Abriendo expediente completo del usuario:', userId);
 
+    // Store userId globally for calendar and other components
+    window.currentViewUserId = userId;
+
     try {
         // Get auth token, if none exists, login first
         let token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
@@ -1585,21 +1598,20 @@ async function viewUser(userId) {
         // Create comprehensive employee file modal
         const modal = document.createElement('div');
         modal.id = 'employeeFileModal';
-        modal.setAttribute('data-version', '12.0-WRAPPER-3CM-MAS');
-        console.log('✅ MODAL VERSIÓN 12.0 - CONTENEDOR PRINCIPAL +3cm MÁS ALTO | MARGIN:0 | PADDING:5px');
+        modal.setAttribute('data-version', '13.0-FULLSCREEN-CSS-EXCEPTION');
+        console.log('✅ MODAL VERSIÓN 13.0 - FULLSCREEN | CSS Exception en modal-fullscreen-responsive.css');
         modal.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
             padding: 0;
+            border: none;
             z-index: 10000;
-            overflow-y: auto;
+            overflow: hidden;
+            background: white;
         `;
         
         const roleText = user.role === 'admin' ? 'Administrador' : 
@@ -1613,14 +1625,17 @@ async function viewUser(userId) {
         let modalWidth, modalMaxWidth, modalHeight;
 
         // MAXIMIZAR MODAL AL 100% - FORZADO CON PÍXELES + AJUSTES PERSONALIZADOS
-        modalWidth = (screenWidth + 50) + 'px';  // +50px más ancho
-        modalMaxWidth = (screenWidth + 50) + 'px';
-        modalHeight = (screenHeight + 836) + 'px';  // Contenedor principal +3cm MÁS (113px adicionales)
+        modalWidth = '100vw';  // Pantalla completa
+        modalMaxWidth = '100vw';
+        modalHeight = '100vh';  // Pantalla completa
+
+        // Ocultar scroll del body mientras el modal está abierto
+        document.body.style.overflow = 'hidden';
 
         modal.innerHTML = `
-            <div style="background: white; border-radius: 0; width: ${modalWidth}; max-width: ${modalMaxWidth}; height: ${modalHeight}; display: flex; flex-direction: column; overflow: hidden; box-shadow: none; margin: 0 !important; padding: 5px !important;">
+            <div style="background: white; position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: block; overflow: hidden; margin: 0 !important; padding: 0 !important;">
                 <!-- Header del Expediente -->
-                <div style="position: sticky; top: 0; background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 20px; border-radius: 0; display: flex; justify-content: space-between; align-items: center; z-index: 100;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 70px; background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 15px 20px; border-radius: 0; display: flex; justify-content: space-between; align-items: center; z-index: 100;">
                     <div>
                         <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
                             📋 Expediente Digital: ${user.firstName} ${user.lastName}
@@ -1631,20 +1646,21 @@ async function viewUser(userId) {
                 </div>
 
                 <!-- Tabs del Expediente -->
-                <div style="position: sticky; top: 80px; background: #ecf0f1; padding: 10px 20px; display: flex; gap: 5px; flex-wrap: wrap; z-index: 99; border-bottom: 2px solid #ddd;">
+                <div style="position: absolute; top: 70px; left: 0; right: 0; height: 50px; background: #ecf0f1; padding: 10px 20px; display: flex; gap: 5px; flex-wrap: wrap; z-index: 99; border-bottom: 2px solid #ddd;">
                     <button class="file-tab active" onclick="showFileTab('admin', this)">⚙️ Administración</button>
                     <button class="file-tab" onclick="showFileTab('personal', this)">👤 Datos Personales</button>
                     <button class="file-tab" onclick="showFileTab('work', this)">💼 Antecedentes Laborales</button>
                     <button class="file-tab" onclick="showFileTab('family', this)">👨‍👩‍👧‍👦 Grupo Familiar</button>
                     <button class="file-tab" onclick="showFileTab('medical', this)">🏥 Antecedentes Médicos</button>
                     <button class="file-tab" onclick="showFileTab('attendance', this)">📅 Asistencias/Permisos</button>
+                    <button class="file-tab" onclick="showFileTab('calendar', this)">📆 Calendario</button>
                     <button class="file-tab" onclick="showFileTab('disciplinary', this)">⚖️ Disciplinarios</button>
                     <button class="file-tab" onclick="showFileTab('tasks', this)">🎯 Config. Tareas</button>
                     <button class="file-tab" onclick="showFileTab('biometric', this)">📸 Registro Biométrico</button>
                 </div>
 
                 <!-- Contenido del Expediente -->
-                <div style="flex: 1; padding: 20px; overflow-y: auto;">
+                <div style="position: absolute; top: 160px; left: 0; right: 0; bottom: 0; padding: 20px; overflow-y: auto; background: white;">
                     
                     <!-- Tab: Administración -->
                     <div id="admin-tab" class="file-tab-content active">
@@ -1966,7 +1982,132 @@ async function viewUser(userId) {
                                     <div><strong>Salario:</strong><br>${user.salary ? '$' + user.salary.toLocaleString() : 'No especificado'}</div>
                                 </div>
                             </div>
-                            
+
+                            <!-- SECCIÓN SALARIAL COMPLETA -->
+                            <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #4caf50;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h4 style="color: #2e7d32; margin: 0;">💰 Configuración Salarial</h4>
+                                    <button class="btn btn-sm btn-success" onclick="editSalaryConfig('${userId}')">✏️ Editar Configuración</button>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                    <!-- Convenio y Categoría -->
+                                    <div style="background: rgba(255,255,255,0.8); padding: 15px; border-radius: 8px;">
+                                        <h5 style="color: #1b5e20; margin: 0 0 12px 0; font-size: 14px;">📋 Convenio y Categoría</h5>
+                                        <div style="font-size: 13px;">
+                                            <div style="margin-bottom: 8px;">
+                                                <strong>Convenio (CCT):</strong><br>
+                                                <span id="salary-agreement" style="color: #2e7d32; font-weight: bold;">No asignado</span>
+                                            </div>
+                                            <div style="margin-bottom: 8px;">
+                                                <strong>Categoría:</strong><br>
+                                                <span id="salary-category">No asignada</span>
+                                            </div>
+                                            <div>
+                                                <strong>Tipo de Salario:</strong><br>
+                                                <span id="salary-type" style="padding: 2px 8px; background: #c8e6c9; border-radius: 10px; font-size: 11px;">--</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Salario Actual -->
+                                    <div style="background: rgba(255,255,255,0.8); padding: 15px; border-radius: 8px;">
+                                        <h5 style="color: #1b5e20; margin: 0 0 12px 0; font-size: 14px;">💵 Salario Actual</h5>
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 28px; font-weight: bold; color: #2e7d32;" id="salary-base-amount">$--</div>
+                                            <div style="font-size: 11px; color: #666;">Salario Base Bruto</div>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; font-size: 12px;">
+                                            <div style="text-align: center; background: #e8f5e9; padding: 6px; border-radius: 4px;">
+                                                <div id="salary-hourly-rate">$--</div>
+                                                <div style="font-size: 10px; color: #666;">Hora Normal</div>
+                                            </div>
+                                            <div style="text-align: center; background: #fff3e0; padding: 6px; border-radius: 4px;">
+                                                <div id="salary-overtime-rate">$--</div>
+                                                <div style="font-size: 10px; color: #666;">Hora Extra 50%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Historial de Aumentos -->
+                                <div style="background: rgba(255,255,255,0.8); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <h5 style="color: #1b5e20; margin: 0; font-size: 14px;">📈 Historial de Aumentos</h5>
+                                        <button class="btn btn-sm btn-outline-success" onclick="addSalaryIncrease('${userId}')">+ Registrar Aumento</button>
+                                    </div>
+                                    <div id="salary-history-list" style="font-size: 12px; max-height: 120px; overflow-y: auto;">
+                                        <p style="text-align: center; color: #666; font-style: italic;">Sin historial de aumentos</p>
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 11px; text-align: center;">
+                                        <div style="background: #e3f2fd; padding: 6px; border-radius: 4px;">
+                                            <strong id="salary-last-increase">--</strong><br>Último Aumento
+                                        </div>
+                                        <div style="background: #e3f2fd; padding: 6px; border-radius: 4px;">
+                                            <strong id="salary-increase-pct">--</strong><br>% Incremento
+                                        </div>
+                                        <div style="background: #e3f2fd; padding: 6px; border-radius: 4px;">
+                                            <strong id="salary-update-date">--</strong><br>Fecha Actualización
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ÚLTIMAS LIQUIDACIONES -->
+                            <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #2196f3;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h4 style="color: #1565c0; margin: 0;">📊 Últimas Liquidaciones</h4>
+                                    <div>
+                                        <button class="btn btn-sm btn-info" onclick="viewPayrollHistory('${userId}')">📜 Ver Historial</button>
+                                        <button class="btn btn-sm btn-primary" onclick="generatePayroll('${userId}')">+ Nueva Liquidación</button>
+                                    </div>
+                                </div>
+
+                                <div id="recent-payrolls" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                                    <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 8px; text-align: center;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Mes Actual</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #1565c0;" id="payroll-current">$--</div>
+                                        <div style="font-size: 10px; color: #666;" id="payroll-current-status">Sin procesar</div>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 8px; text-align: center;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Mes Anterior</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #388e3c;" id="payroll-previous">$--</div>
+                                        <div style="font-size: 10px; color: #2e7d32;" id="payroll-previous-status">--</div>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 8px; text-align: center;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Acumulado Año</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #7b1fa2;" id="payroll-ytd">$--</div>
+                                        <div style="font-size: 10px; color: #666;" id="payroll-months-processed">0 meses procesados</div>
+                                    </div>
+                                </div>
+
+                                <div style="background: rgba(255,255,255,0.8); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                                    <h5 style="color: #1565c0; margin: 0 0 10px 0; font-size: 13px;">📋 Desglose Última Liquidación</h5>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 12px;">
+                                        <div>
+                                            <div style="color: #2e7d32; font-weight: bold; margin-bottom: 5px;">Haberes (+)</div>
+                                            <div style="display: flex; justify-content: space-between;"><span>Sueldo Básico:</span><span id="payroll-basic">$--</span></div>
+                                            <div style="display: flex; justify-content: space-between;"><span>Horas Extra:</span><span id="payroll-overtime">$--</span></div>
+                                            <div style="display: flex; justify-content: space-between;"><span>Presentismo:</span><span id="payroll-attendance">$--</span></div>
+                                            <div style="display: flex; justify-content: space-between;"><span>Adicionales:</span><span id="payroll-additionals">$--</span></div>
+                                            <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px;">
+                                                <span>Total Bruto:</span><span id="payroll-gross">$--</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style="color: #d32f2f; font-weight: bold; margin-bottom: 5px;">Deducciones (-)</div>
+                                            <div style="display: flex; justify-content: space-between;"><span>Jubilación (11%):</span><span id="payroll-retirement">$--</span></div>
+                                            <div style="display: flex; justify-content: space-between;"><span>Obra Social (3%):</span><span id="payroll-health">$--</span></div>
+                                            <div style="display: flex; justify-content: space-between;"><span>Ley 19.032 (3%):</span><span id="payroll-pami">$--</span></div>
+                                            <div style="display: flex; justify-content: space-between;"><span>Sindicato:</span><span id="payroll-union">$--</span></div>
+                                            <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px; color: #1565c0;">
+                                                <span>Neto a Cobrar:</span><span id="payroll-net">$--</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                                 <div style="background: #f8d7da; padding: 15px; border-radius: 8px;">
                                     <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
@@ -2115,6 +2256,52 @@ async function viewUser(userId) {
                                 </div>
                             </div>
                             
+                            <!-- Nueva fila: Datos Antropométricos -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 15px; border-radius: 8px; border: 1px solid #90caf9;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <h4 style="color: #1565c0; margin: 0;">📊 Datos Antropométricos</h4>
+                                        <button class="btn btn-sm btn-primary" onclick="editAnthropometricData('${userId}')">✏️ Actualizar</button>
+                                    </div>
+                                    <div id="anthropometric-data" style="font-size: 13px;">
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                            <div style="background: rgba(255,255,255,0.7); padding: 10px; border-radius: 6px; text-align: center;">
+                                                <div style="font-size: 24px; font-weight: bold; color: #1565c0;" id="user-weight">--</div>
+                                                <div style="font-size: 11px; color: #666;">Peso (kg)</div>
+                                            </div>
+                                            <div style="background: rgba(255,255,255,0.7); padding: 10px; border-radius: 6px; text-align: center;">
+                                                <div style="font-size: 24px; font-weight: bold; color: #1565c0;" id="user-height">--</div>
+                                                <div style="font-size: 11px; color: #666;">Altura (cm)</div>
+                                            </div>
+                                        </div>
+                                        <div style="background: rgba(255,255,255,0.7); padding: 10px; border-radius: 6px; margin-top: 10px; text-align: center;">
+                                            <div style="display: flex; justify-content: space-around; align-items: center;">
+                                                <div>
+                                                    <div style="font-size: 28px; font-weight: bold;" id="user-bmi">--</div>
+                                                    <div style="font-size: 11px; color: #666;">IMC</div>
+                                                </div>
+                                                <div id="bmi-indicator" style="padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+                                                    Sin datos
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="font-size: 11px; color: #666; margin-top: 8px; text-align: center;">
+                                            Última medición: <span id="anthropometric-date">No registrada</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%); padding: 15px; border-radius: 8px; border: 1px solid #f48fb1;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <h4 style="color: #c2185b; margin: 0;">🔪 Historial de Cirugías</h4>
+                                        <button class="btn btn-sm btn-danger" onclick="addSurgery('${userId}')">+ Agregar</button>
+                                    </div>
+                                    <div id="surgeries-list" style="max-height: 180px; overflow-y: auto;">
+                                        <p style="font-style: italic; color: #666; font-size: 12px; text-align: center;">Sin cirugías registradas</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Segunda fila: Condiciones crónicas y Medicación -->
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                                 <div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
@@ -2184,20 +2371,85 @@ async function viewUser(userId) {
                                     </div>
                                 </div>
                                 
-                                <div style="background: #f3e5f5; padding: 15px; border-radius: 8px;">
-                                    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
-                                        <h4 style="color: #7b1fa2; margin: 0;">🧠 Salud Mental</h4>
-                                        <button class="btn btn-sm btn-secondary" onclick="editMentalHealth('${userId}')">✏️ Editar</button>
+                                <div style="background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); padding: 15px; border-radius: 8px; border: 1px solid #ce93d8;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <h4 style="color: #7b1fa2; margin: 0;">🧠 Salud Mental y Tratamientos Psiquiátricos</h4>
+                                        <button class="btn btn-sm btn-secondary" onclick="addPsychiatricTreatment('${userId}')">+ Tratamiento</button>
                                     </div>
                                     <div id="mental-health-info" style="font-size: 13px;">
-                                        <div style="margin-bottom: 8px;"><strong>Depresión:</strong> <span id="depression-status">No registrada</span></div>
-                                        <div style="margin-bottom: 8px;"><strong>Ansiedad:</strong> <span id="anxiety-status">No registrada</span></div>
-                                        <div style="margin-bottom: 8px;"><strong>Tratamiento:</strong> <span id="mental-treatment">-</span></div>
-                                        <div><strong>Observaciones:</strong> <span id="mental-health-notes">-</span></div>
+                                        <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px; margin-bottom: 8px;">
+                                            <strong>Estado General:</strong>
+                                            <span id="mental-health-status" style="margin-left: 8px; padding: 2px 8px; border-radius: 10px; font-size: 11px; background: #c8e6c9; color: #2e7d32;">Sin condiciones</span>
+                                        </div>
+                                        <div style="margin-bottom: 8px;"><strong>Tratamientos Activos:</strong> <span id="active-psychiatric-count">0</span></div>
+                                        <div style="margin-bottom: 8px;"><strong>Tratamientos Anteriores:</strong> <span id="past-psychiatric-count">0</span></div>
+                                        <div id="psychiatric-treatments-list" style="max-height: 100px; overflow-y: auto; font-size: 11px;">
+                                            <p style="font-style: italic; color: #666; text-align: center;">Sin tratamientos registrados</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
+                            <!-- Nueva fila: Deportes y Hábitos Saludables -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 15px; border-radius: 8px; border: 1px solid #a5d6a7;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <h4 style="color: #2e7d32; margin: 0;">⚽ Actividades Deportivas</h4>
+                                        <button class="btn btn-sm btn-success" onclick="addSportsActivity('${userId}')">+ Agregar</button>
+                                    </div>
+                                    <div id="sports-activities-summary" style="font-size: 13px;">
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                                            <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 6px; text-align: center;">
+                                                <div style="font-size: 20px; font-weight: bold; color: #2e7d32;" id="total-sports">0</div>
+                                                <div style="font-size: 10px; color: #666;">Deportes</div>
+                                            </div>
+                                            <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 6px; text-align: center;">
+                                                <div style="font-size: 20px; font-weight: bold; color: #1565c0;" id="weekly-hours">0</div>
+                                                <div style="font-size: 10px; color: #666;">Hrs/Semana</div>
+                                            </div>
+                                            <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 6px; text-align: center;">
+                                                <div style="font-size: 20px; font-weight: bold; color: #f57c00;" id="competition-level">-</div>
+                                                <div style="font-size: 10px; color: #666;">Nivel</div>
+                                            </div>
+                                        </div>
+                                        <div id="sports-list" style="max-height: 100px; overflow-y: auto;">
+                                            <p style="font-style: italic; color: #666; font-size: 12px; text-align: center;">Sin actividades deportivas</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); padding: 15px; border-radius: 8px; border: 1px solid #ffd54f;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <h4 style="color: #f57c00; margin: 0;">🌿 Hábitos Saludables</h4>
+                                        <button class="btn btn-sm btn-warning" onclick="editHealthyHabits('${userId}')">✏️ Editar</button>
+                                    </div>
+                                    <div id="healthy-habits-info" style="font-size: 13px;">
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                            <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 6px;">
+                                                <div style="font-size: 11px; color: #666;">🚬 Tabaco</div>
+                                                <div id="smoking-status" style="font-weight: bold;">No fuma</div>
+                                            </div>
+                                            <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 6px;">
+                                                <div style="font-size: 11px; color: #666;">🍺 Alcohol</div>
+                                                <div id="alcohol-status" style="font-weight: bold;">Ocasional</div>
+                                            </div>
+                                            <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 6px;">
+                                                <div style="font-size: 11px; color: #666;">😴 Sueño</div>
+                                                <div id="sleep-hours" style="font-weight: bold;">-- hrs</div>
+                                            </div>
+                                            <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 6px;">
+                                                <div style="font-size: 11px; color: #666;">🥗 Dieta</div>
+                                                <div id="diet-type" style="font-weight: bold;">--</div>
+                                            </div>
+                                        </div>
+                                        <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 6px; margin-top: 8px;">
+                                            <div style="font-size: 11px; color: #666;">⚠️ Deportes Extremos</div>
+                                            <div id="extreme-sports" style="font-weight: bold; color: #d32f2f;">Ninguno declarado</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Quinta fila: Vacunación y Exámenes -->
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                                 <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
@@ -2285,7 +2537,18 @@ async function viewUser(userId) {
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- Tab: Calendario Personal -->
+                    <div id="calendar-tab" class="file-tab-content" style="display: none;">
+                        <h3>📆 Calendario de Trabajo Personal</h3>
+                        <div id="user-calendar-container">
+                            <div style="text-align: center; padding: 40px; color: #666;">
+                                <div style="font-size: 48px; margin-bottom: 15px;">📅</div>
+                                <p>Cargando calendario...</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Tab: Acciones Disciplinarias -->
                     <div id="disciplinary-tab" class="file-tab-content" style="display: none;">
                         <h3>⚖️ Acciones Disciplinarias y Suspensiones</h3>
@@ -2819,8 +3082,8 @@ function showBulkActions() {
                 
                 <h4 style="margin-top: 20px;">📊 Informes</h4>
                 <div style="margin: 10px 0;">
-                    <button class="btn btn-secondary" onclick="generateUserReport()" style="margin: 5px;">
-                        📋 Generar reporte completo
+                    <button class="btn btn-secondary" onclick="generateAllUsersReportSimple()" style="margin: 5px;">
+                        📋 Generar reporte simple (consola)
                     </button>
                     <button class="btn btn-secondary" onclick="checkDuplicateEmails()" style="margin: 5px;">
                         🔍 Verificar emails duplicados
@@ -3053,13 +3316,14 @@ async function deactivateInactiveUsers() {
 }
 
 // Generate user report (placeholder)
-function generateUserReport() {
+// ✅ RENOMBRADA para evitar conflicto con generateUserReport(userId) de línea 8205
+function generateAllUsersReportSimple() {
     const users = window.currentUsersData || [];
     if (users.length === 0) {
         showUserMessage('⚠️ Primero carga la lista de usuarios', 'warning');
         return;
     }
-    
+
     const report = `
 📊 REPORTE DE USUARIOS
 ======================
@@ -3070,7 +3334,7 @@ Empleados: ${users.filter(u => u.role === 'Empleado').length}
 
 📧 Emails registrados: ${users.map(u => u.email).join(', ')}
     `;
-    
+
     console.log(report);
     showUserMessage('📋 Reporte generado - Ver consola del navegador', 'success');
 }
@@ -3567,6 +3831,8 @@ function closeEmployeeFile() {
     if (modal) {
         document.body.removeChild(modal);
     }
+    // Restaurar scroll del body
+    document.body.style.overflow = 'auto';
 }
 
 // Iniciar captura biométrica del empleado
@@ -3643,10 +3909,128 @@ window.showFileTab = function(tabName, button) {
         targetTab.classList.add('active');
         button.classList.add('active');
         console.log(`✅ [TABS] Tab "${tabName}" mostrado correctamente`);
+
+        // Si es el tab de calendario, cargar el calendario
+        if (tabName === 'calendar' && !window.userCalendarLoaded) {
+            console.log('📅 [CALENDAR] Cargando calendario personal del usuario...');
+            loadUserCalendar();
+            window.userCalendarLoaded = true;
+        }
+
+        // Si es el tab médico, cargar datos médicos avanzados
+        if (tabName === 'medical') {
+            console.log('🏥 [MEDICAL] Cargando datos médicos avanzados...');
+            const userId = window.currentViewUserId;
+            if (userId && typeof loadMedicalAdvancedData === 'function') {
+                loadMedicalAdvancedData(userId);
+            }
+        }
+
+        // Si es el tab laboral, cargar datos salariales avanzados
+        if (tabName === 'work') {
+            console.log('💼 [SALARY] Cargando datos salariales avanzados...');
+            const userId = window.currentViewUserId;
+            if (userId && typeof loadSalaryAdvancedData === 'function') {
+                loadSalaryAdvancedData(userId);
+            }
+        }
     } else {
         console.error(`❌ [TABS] No se encontró el tab con ID: ${tabName}-tab`);
     }
 };
+
+// Cargar calendario personal del usuario
+async function loadUserCalendar() {
+    console.log('📅 [USER-CALENDAR] Iniciando carga del calendario...');
+
+    try {
+        // Obtener userId del modal actual
+        const modal = document.getElementById('employeeFileModal');
+        if (!modal) {
+            console.error('❌ [USER-CALENDAR] Modal no encontrado');
+            return;
+        }
+
+        // Extraer userId del header del modal
+        const headerText = modal.querySelector('h2').textContent;
+        console.log('📋 [USER-CALENDAR] Header:', headerText);
+
+        // El userId está guardado en window.currentViewUserId (se setea en viewUser)
+        const userId = window.currentViewUserId;
+        if (!userId) {
+            console.error('❌ [USER-CALENDAR] No se pudo obtener userId');
+            return;
+        }
+
+        console.log('👤 [USER-CALENDAR] userId:', userId);
+
+        // Cargar el script del calendario si no está cargado
+        if (!window.UserCalendarTab) {
+            console.log('📦 [USER-CALENDAR] Cargando script user-calendar-tab.js...');
+            await loadScript('/js/modules/user-calendar-tab.js');
+            console.log('✅ [USER-CALENDAR] Script cargado');
+        }
+
+        // Inicializar y renderizar el calendario
+        const container = document.getElementById('user-calendar-container');
+        if (!container) {
+            console.error('❌ [USER-CALENDAR] Container no encontrado');
+            return;
+        }
+
+        console.log('🎨 [USER-CALENDAR] Renderizando calendario...');
+
+        // Crear instancia del calendario
+        const calendar = new UserCalendarTab();
+        const html = calendar.render(userId);
+
+        // Insertar HTML
+        container.innerHTML = html;
+
+        // Cargar datos
+        setTimeout(async () => {
+            await calendar.loadCalendarData();
+        }, 100);
+
+        console.log('✅ [USER-CALENDAR] Calendario cargado exitosamente');
+    } catch (error) {
+        console.error('❌ [USER-CALENDAR] Error cargando calendario:', error);
+        const container = document.getElementById('user-calendar-container');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #d32f2f;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
+                    <p><strong>Error al cargar el calendario</strong></p>
+                    <p style="font-size: 14px; color: #666;">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+}
+
+// Helper para cargar scripts dinámicamente
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        // Verificar si ya está cargado
+        if (document.querySelector(`script[src="${src}"]`)) {
+            console.log(`📦 Script ${src} ya estaba cargado`);
+            resolve();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => {
+            console.log(`✅ Script ${src} cargado`);
+            resolve();
+        };
+        script.onerror = () => {
+            console.error(`❌ Error cargando script ${src}`);
+            reject(new Error(`No se pudo cargar ${src}`));
+        };
+        document.head.appendChild(script);
+    });
+}
 
 // Cargar datos iniciales del expediente
 async function loadEmployeeFileData(userId) {
@@ -3781,19 +4165,19 @@ function addEmployeeFileStyles() {
             border-radius: 8px 8px 0 0;
             cursor: pointer;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: normal;
             transition: all 0.2s;
         }
-        
+
         .file-tab:hover {
             background: #e9ecef;
         }
-        
+
         .file-tab.active {
             background: white;
             border-bottom: 1px solid white;
             transform: translateY(1px);
-            font-weight: 600;
+            font-weight: normal;
             color: #2c3e50;
         }
         
@@ -6109,6 +6493,1238 @@ function addWorkRestriction(userId) {
         }
     };
 }
+
+// ============================================================================
+// FUNCIONES MÉDICAS AVANZADAS - Antropométricos, Cirugías, Psiquiatría, Deportes
+// ============================================================================
+
+function editAnthropometricData(userId) {
+    console.log('📊 [MEDICAL-ADV] Editando datos antropométricos:', userId);
+
+    const modal = document.createElement('div');
+    modal.id = 'anthropometricModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 550px; max-height: 90vh; overflow-y: auto;">
+            <h4 style="color: #1565c0; margin-bottom: 20px;">📊 Datos Antropométricos</h4>
+            <form id="anthropometricForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Peso (kg) *</label>
+                        <input type="number" id="anthroWeight" class="form-control" step="0.1" min="20" max="300" placeholder="Ej: 75.5" required>
+                    </div>
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Altura (cm) *</label>
+                        <input type="number" id="anthroHeight" class="form-control" step="0.1" min="100" max="250" placeholder="Ej: 175" required>
+                    </div>
+                </div>
+
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="text-align: center;">
+                        <span style="font-size: 12px; color: #666;">IMC Calculado</span>
+                        <div style="font-size: 32px; font-weight: bold; color: #1565c0;" id="calculatedBMI">--</div>
+                        <div id="bmiClassification" style="padding: 5px 15px; border-radius: 20px; display: inline-block; margin-top: 5px;">--</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Circunf. Cintura (cm)</label>
+                        <input type="number" id="anthroWaist" class="form-control" step="0.1" min="40" max="200" placeholder="Opcional">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Circunf. Cadera (cm)</label>
+                        <input type="number" id="anthroHip" class="form-control" step="0.1" min="50" max="200" placeholder="Opcional">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Circunf. Cuello (cm)</label>
+                        <input type="number" id="anthroNeck" class="form-control" step="0.1" min="20" max="80" placeholder="Opcional">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: #666;">Fecha de Medición</label>
+                    <input type="date" id="anthroDate" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: #666;">Observaciones</label>
+                    <textarea id="anthroNotes" class="form-control" rows="2" placeholder="Notas adicionales..."></textarea>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" onclick="closeModal('anthropometricModal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">💾 Guardar Medición</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Calcular IMC automáticamente
+    const calcBMI = () => {
+        const weight = parseFloat(document.getElementById('anthroWeight').value);
+        const height = parseFloat(document.getElementById('anthroHeight').value);
+        if (weight && height) {
+            const heightM = height / 100;
+            const bmi = (weight / (heightM * heightM)).toFixed(1);
+            document.getElementById('calculatedBMI').textContent = bmi;
+
+            let classification, bgColor, textColor;
+            if (bmi < 18.5) { classification = 'Bajo peso'; bgColor = '#fff3cd'; textColor = '#856404'; }
+            else if (bmi < 25) { classification = 'Normal'; bgColor = '#d4edda'; textColor = '#155724'; }
+            else if (bmi < 30) { classification = 'Sobrepeso'; bgColor = '#fff3cd'; textColor = '#856404'; }
+            else { classification = 'Obesidad'; bgColor = '#f8d7da'; textColor = '#721c24'; }
+
+            const classEl = document.getElementById('bmiClassification');
+            classEl.textContent = classification;
+            classEl.style.background = bgColor;
+            classEl.style.color = textColor;
+        }
+    };
+    document.getElementById('anthroWeight').addEventListener('input', calcBMI);
+    document.getElementById('anthroHeight').addEventListener('input', calcBMI);
+
+    document.getElementById('anthropometricForm').onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const formData = {
+                weight_kg: parseFloat(document.getElementById('anthroWeight').value),
+                height_cm: parseFloat(document.getElementById('anthroHeight').value),
+                waist_cm: document.getElementById('anthroWaist').value ? parseFloat(document.getElementById('anthroWaist').value) : null,
+                hip_cm: document.getElementById('anthroHip').value ? parseFloat(document.getElementById('anthroHip').value) : null,
+                neck_cm: document.getElementById('anthroNeck').value ? parseFloat(document.getElementById('anthroNeck').value) : null,
+                measurement_date: document.getElementById('anthroDate').value || new Date().toISOString().split('T')[0],
+                notes: document.getElementById('anthroNotes').value || null
+            };
+
+            const response = await fetch(`/api/medical-advanced/anthropometric/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error || 'Error al guardar');
+
+            closeModal('anthropometricModal');
+            showUserMessage('✅ Datos antropométricos guardados', 'success');
+            loadMedicalAdvancedData(userId);
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
+    };
+}
+
+function addSurgery(userId) {
+    console.log('🔪 [MEDICAL-ADV] Agregando cirugía:', userId);
+
+    const modal = document.createElement('div');
+    modal.id = 'surgeryModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h4 style="color: #c2185b; margin-bottom: 20px;">🔪 Registrar Cirugía</h4>
+            <form id="surgeryForm">
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; color: #333;">Tipo de Cirugía *</label>
+                    <select id="surgeryType" class="form-control" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="appendectomy">Apendicectomía</option>
+                        <option value="cholecystectomy">Colecistectomía (vesícula)</option>
+                        <option value="hernia">Hernia (inguinal/umbilical)</option>
+                        <option value="cesarean">Cesárea</option>
+                        <option value="knee">Rodilla (menisco/ligamentos)</option>
+                        <option value="shoulder">Hombro (manguito rotador)</option>
+                        <option value="spine">Columna vertebral</option>
+                        <option value="cardiac">Cirugía cardíaca</option>
+                        <option value="bariatric">Bariátrica (bypass/manga)</option>
+                        <option value="cosmetic">Estética</option>
+                        <option value="dental">Dental/maxilofacial</option>
+                        <option value="eye">Ocular (cataratas/láser)</option>
+                        <option value="other">Otra</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; color: #333;">Nombre/Descripción de la Cirugía *</label>
+                    <input type="text" id="surgeryName" class="form-control" placeholder="Ej: Artroscopia de rodilla derecha" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Fecha de la Cirugía *</label>
+                        <input type="date" id="surgeryDate" class="form-control" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Hospital/Clínica</label>
+                        <input type="text" id="surgeryHospital" class="form-control" placeholder="Nombre del centro médico">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Cirujano</label>
+                        <input type="text" id="surgerySurgeon" class="form-control" placeholder="Dr./Dra.">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Resultado</label>
+                        <select id="surgeryOutcome" class="form-control">
+                            <option value="successful">✅ Exitosa</option>
+                            <option value="partial">⚠️ Parcialmente exitosa</option>
+                            <option value="complications">❌ Con complicaciones</option>
+                            <option value="pending">⏳ En recuperación</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: #666;">Complicaciones/Secuelas</label>
+                    <textarea id="surgeryComplications" class="form-control" rows="2" placeholder="Describir si hubo complicaciones o secuelas..."></textarea>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: #666;">Observaciones</label>
+                    <textarea id="surgeryNotes" class="form-control" rows="2" placeholder="Información adicional..."></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="surgeryHasImplant"> Tiene implante/prótesis
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="surgeryWorkRestriction"> Genera restricción laboral
+                    </label>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" onclick="closeModal('surgeryModal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">🔪 Registrar Cirugía</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('surgeryForm').onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const formData = {
+                surgery_type: document.getElementById('surgeryType').value,
+                surgery_name: document.getElementById('surgeryName').value,
+                surgery_date: document.getElementById('surgeryDate').value,
+                hospital_name: document.getElementById('surgeryHospital').value || null,
+                surgeon_name: document.getElementById('surgerySurgeon').value || null,
+                outcome: document.getElementById('surgeryOutcome').value,
+                complications: document.getElementById('surgeryComplications').value || null,
+                notes: document.getElementById('surgeryNotes').value || null,
+                has_implant: document.getElementById('surgeryHasImplant').checked,
+                causes_work_restriction: document.getElementById('surgeryWorkRestriction').checked
+            };
+
+            const response = await fetch(`/api/medical-advanced/surgeries/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error || 'Error al guardar');
+
+            closeModal('surgeryModal');
+            showUserMessage('✅ Cirugía registrada correctamente', 'success');
+            loadMedicalAdvancedData(userId);
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
+    };
+}
+
+function addPsychiatricTreatment(userId) {
+    console.log('🧠 [MEDICAL-ADV] Agregando tratamiento psiquiátrico:', userId);
+
+    const modal = document.createElement('div');
+    modal.id = 'psychiatricModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 650px; max-height: 90vh; overflow-y: auto;">
+            <h4 style="color: #7b1fa2; margin-bottom: 20px;">🧠 Tratamiento Psiquiátrico/Psicológico</h4>
+            <form id="psychiatricForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Tipo de Tratamiento *</label>
+                        <select id="treatmentType" class="form-control" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="psychiatry">Psiquiatría</option>
+                            <option value="psychology">Psicología/Terapia</option>
+                            <option value="both">Ambos (psiquiatría + psicología)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Estado *</label>
+                        <select id="treatmentStatus" class="form-control" required>
+                            <option value="active">🟢 Activo (en curso)</option>
+                            <option value="completed">✅ Completado</option>
+                            <option value="abandoned">❌ Abandonado</option>
+                            <option value="paused">⏸️ Pausado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; color: #333;">Diagnóstico/Condición *</label>
+                    <select id="psychiatricCondition" class="form-control" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="depression">Depresión</option>
+                        <option value="anxiety">Ansiedad generalizada</option>
+                        <option value="panic">Trastorno de pánico</option>
+                        <option value="bipolar">Trastorno bipolar</option>
+                        <option value="ocd">TOC (Trastorno obsesivo compulsivo)</option>
+                        <option value="ptsd">TEPT (Estrés post-traumático)</option>
+                        <option value="adhd">TDAH</option>
+                        <option value="eating">Trastorno alimentario</option>
+                        <option value="addiction">Adicciones</option>
+                        <option value="burnout">Burnout laboral</option>
+                        <option value="grief">Duelo</option>
+                        <option value="other">Otro</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Fecha de Inicio *</label>
+                        <input type="date" id="treatmentStartDate" class="form-control" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Fecha de Fin (si terminó)</label>
+                        <input type="date" id="treatmentEndDate" class="form-control">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Profesional Tratante</label>
+                        <input type="text" id="therapistName" class="form-control" placeholder="Lic./Dr.">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Frecuencia de Sesiones</label>
+                        <select id="sessionFrequency" class="form-control">
+                            <option value="">No especificada</option>
+                            <option value="weekly">Semanal</option>
+                            <option value="biweekly">Quincenal</option>
+                            <option value="monthly">Mensual</option>
+                            <option value="asneeded">Según necesidad</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <label style="font-weight: bold; color: #e65100;">💊 Medicación Psiquiátrica</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <input type="checkbox" id="hasMedication" onchange="document.getElementById('medicationDetails').style.display = this.checked ? 'block' : 'none'">
+                            Actualmente toma medicación
+                        </label>
+                        <div id="medicationDetails" style="display: none;">
+                            <textarea id="medicationList" class="form-control" rows="2" placeholder="Listar medicamentos, dosis y frecuencia..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: #666;">Observaciones (confidencial)</label>
+                    <textarea id="treatmentNotes" class="form-control" rows="2" placeholder="Información adicional relevante..."></textarea>
+                </div>
+
+                <div style="background: #fce4ec; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px; color: #c2185b;">
+                        <input type="checkbox" id="affectsWork"> ⚠️ Afecta capacidad laboral
+                    </label>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" onclick="closeModal('psychiatricModal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-purple" style="background: #7b1fa2; color: white;">🧠 Guardar Tratamiento</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('psychiatricForm').onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const formData = {
+                treatment_type: document.getElementById('treatmentType').value,
+                condition: document.getElementById('psychiatricCondition').value,
+                status: document.getElementById('treatmentStatus').value,
+                start_date: document.getElementById('treatmentStartDate').value,
+                end_date: document.getElementById('treatmentEndDate').value || null,
+                therapist_name: document.getElementById('therapistName').value || null,
+                session_frequency: document.getElementById('sessionFrequency').value || null,
+                has_medication: document.getElementById('hasMedication').checked,
+                medication_details: document.getElementById('medicationList')?.value || null,
+                notes: document.getElementById('treatmentNotes').value || null,
+                affects_work_capacity: document.getElementById('affectsWork').checked
+            };
+
+            const response = await fetch(`/api/medical-advanced/psychiatric/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error || 'Error al guardar');
+
+            closeModal('psychiatricModal');
+            showUserMessage('✅ Tratamiento psiquiátrico registrado', 'success');
+            loadMedicalAdvancedData(userId);
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
+    };
+}
+
+function addSportsActivity(userId) {
+    console.log('⚽ [MEDICAL-ADV] Agregando actividad deportiva:', userId);
+
+    const modal = document.createElement('div');
+    modal.id = 'sportsModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h4 style="color: #2e7d32; margin-bottom: 20px;">⚽ Actividad Deportiva</h4>
+            <form id="sportsForm">
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; color: #333;">Deporte *</label>
+                    <select id="sportType" class="form-control" required>
+                        <option value="">Seleccionar...</option>
+                        <optgroup label="🏃 Individuales">
+                            <option value="running">Running/Atletismo</option>
+                            <option value="swimming">Natación</option>
+                            <option value="cycling">Ciclismo</option>
+                            <option value="gym">Gimnasio/Musculación</option>
+                            <option value="yoga">Yoga/Pilates</option>
+                            <option value="martial_arts">Artes Marciales</option>
+                            <option value="tennis">Tenis</option>
+                            <option value="golf">Golf</option>
+                        </optgroup>
+                        <optgroup label="⚽ Colectivos">
+                            <option value="football">Fútbol</option>
+                            <option value="basketball">Básquetbol</option>
+                            <option value="volleyball">Vóleibol</option>
+                            <option value="rugby">Rugby</option>
+                            <option value="hockey">Hockey</option>
+                            <option value="handball">Handball</option>
+                        </optgroup>
+                        <optgroup label="⚠️ Extremos/Riesgo">
+                            <option value="mountaineering">Montañismo/Escalada</option>
+                            <option value="skydiving">Paracaidismo</option>
+                            <option value="paragliding">Parapente</option>
+                            <option value="diving">Buceo</option>
+                            <option value="motorsport">Deportes de Motor</option>
+                            <option value="combat">Deportes de Combate</option>
+                        </optgroup>
+                        <option value="other">Otro</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Nivel *</label>
+                        <select id="sportLevel" class="form-control" required>
+                            <option value="recreational">🏠 Recreativo</option>
+                            <option value="amateur">🎯 Amateur</option>
+                            <option value="federated">🏅 Federado</option>
+                            <option value="professional">🏆 Profesional</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Frecuencia *</label>
+                        <select id="sportFrequency" class="form-control" required>
+                            <option value="occasional">Ocasional (1-2/mes)</option>
+                            <option value="weekly">Semanal (1-2/semana)</option>
+                            <option value="regular">Regular (3-4/semana)</option>
+                            <option value="daily">Diario</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Horas por Semana</label>
+                        <input type="number" id="sportHours" class="form-control" min="0" max="50" step="0.5" placeholder="Ej: 5">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #666;">Años de Práctica</label>
+                        <input type="number" id="sportYears" class="form-control" min="0" max="60" placeholder="Ej: 3">
+                    </div>
+                </div>
+
+                <div style="background: #fff8e1; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <label style="font-weight: bold; color: #f57c00;">🏆 Competencias</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <input type="checkbox" id="hasCompetitions" onchange="document.getElementById('competitionDetails').style.display = this.checked ? 'block' : 'none'">
+                            Participa en competencias
+                        </label>
+                        <div id="competitionDetails" style="display: none;">
+                            <input type="text" id="competitionLevel" class="form-control" placeholder="Nivel de competencias (ej: torneos locales, ligas, campeonatos)">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: #666;">Club/Institución</label>
+                    <input type="text" id="sportClub" class="form-control" placeholder="Nombre del club o institución donde practica">
+                </div>
+
+                <div style="background: #ffebee; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px; color: #c62828;">
+                        <input type="checkbox" id="isExtremeSport"> ⚠️ Deporte de alto riesgo (requiere declaración especial)
+                    </label>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" onclick="closeModal('sportsModal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">⚽ Agregar Deporte</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('sportsForm').onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const formData = {
+                sport_type: document.getElementById('sportType').value,
+                level: document.getElementById('sportLevel').value,
+                frequency: document.getElementById('sportFrequency').value,
+                hours_per_week: document.getElementById('sportHours').value ? parseFloat(document.getElementById('sportHours').value) : null,
+                years_practicing: document.getElementById('sportYears').value ? parseInt(document.getElementById('sportYears').value) : null,
+                participates_competitions: document.getElementById('hasCompetitions').checked,
+                competition_level: document.getElementById('competitionLevel')?.value || null,
+                club_name: document.getElementById('sportClub').value || null,
+                is_extreme: document.getElementById('isExtremeSport').checked
+            };
+
+            const response = await fetch(`/api/medical-advanced/sports/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error || 'Error al guardar');
+
+            closeModal('sportsModal');
+            showUserMessage('✅ Actividad deportiva agregada', 'success');
+            loadMedicalAdvancedData(userId);
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
+    };
+}
+
+function editHealthyHabits(userId) {
+    console.log('🌿 [MEDICAL-ADV] Editando hábitos saludables:', userId);
+
+    const modal = document.createElement('div');
+    modal.id = 'habitsModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h4 style="color: #f57c00; margin-bottom: 20px;">🌿 Hábitos de Vida</h4>
+            <form id="habitsForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 8px;">
+                        <label style="font-weight: bold; color: #e65100;">🚬 Tabaco</label>
+                        <select id="smokingStatus" class="form-control" style="margin-top: 8px;">
+                            <option value="never">Nunca fumó</option>
+                            <option value="former">Ex fumador</option>
+                            <option value="occasional">Fumador ocasional</option>
+                            <option value="regular">Fumador regular</option>
+                            <option value="heavy">Fumador intenso (+20/día)</option>
+                        </select>
+                        <div id="smokingDetails" style="margin-top: 8px;">
+                            <input type="number" id="cigarettesPerDay" class="form-control" placeholder="Cigarrillos/día" min="0" max="100">
+                        </div>
+                    </div>
+
+                    <div style="background: #fff8e1; padding: 15px; border-radius: 8px;">
+                        <label style="font-weight: bold; color: #f9a825;">🍺 Alcohol</label>
+                        <select id="alcoholStatus" class="form-control" style="margin-top: 8px;">
+                            <option value="never">No consume</option>
+                            <option value="occasional">Ocasional (eventos)</option>
+                            <option value="moderate">Moderado (1-2/semana)</option>
+                            <option value="frequent">Frecuente (3+/semana)</option>
+                            <option value="daily">Diario</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px;">
+                        <label style="font-weight: bold; color: #2e7d32;">😴 Sueño</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                            <div>
+                                <label style="font-size: 11px; color: #666;">Horas/noche</label>
+                                <input type="number" id="sleepHours" class="form-control" min="3" max="14" step="0.5" placeholder="7">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #666;">Calidad</label>
+                                <select id="sleepQuality" class="form-control">
+                                    <option value="good">Buena</option>
+                                    <option value="regular">Regular</option>
+                                    <option value="poor">Mala</option>
+                                    <option value="insomnia">Insomnio</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                        <label style="font-weight: bold; color: #1565c0;">🥗 Alimentación</label>
+                        <select id="dietType" class="form-control" style="margin-top: 8px;">
+                            <option value="regular">Regular/Balanceada</option>
+                            <option value="vegetarian">Vegetariana</option>
+                            <option value="vegan">Vegana</option>
+                            <option value="keto">Keto/Low carb</option>
+                            <option value="mediterranean">Mediterránea</option>
+                            <option value="celiac">Sin gluten (celiaquía)</option>
+                            <option value="diabetic">Diabética</option>
+                            <option value="poor">Desordenada/Mala</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="background: #fce4ec; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <label style="font-weight: bold; color: #c2185b;">💊 Otras Sustancias</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                            <input type="checkbox" id="usesCaffeine"> ☕ Consumo alto de cafeína (+4 cafés/día)
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 5px;">
+                            <input type="checkbox" id="usesSupplements"> 💊 Usa suplementos/vitaminas
+                        </label>
+                    </div>
+                </div>
+
+                <div style="background: #ffebee; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <label style="font-weight: bold; color: #c62828;">⚠️ Deportes Extremos Declarados</label>
+                    <textarea id="extremeSportsDeclaration" class="form-control" rows="2" style="margin-top: 8px;"
+                              placeholder="Listar deportes de riesgo que practica (paracaidismo, escalada, buceo, etc.)"></textarea>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" onclick="closeModal('habitsModal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">🌿 Guardar Hábitos</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('habitsForm').onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const formData = {
+                smoking_status: document.getElementById('smokingStatus').value,
+                cigarettes_per_day: document.getElementById('cigarettesPerDay').value ? parseInt(document.getElementById('cigarettesPerDay').value) : null,
+                alcohol_consumption: document.getElementById('alcoholStatus').value,
+                sleep_hours: document.getElementById('sleepHours').value ? parseFloat(document.getElementById('sleepHours').value) : null,
+                sleep_quality: document.getElementById('sleepQuality').value,
+                diet_type: document.getElementById('dietType').value,
+                high_caffeine: document.getElementById('usesCaffeine').checked,
+                uses_supplements: document.getElementById('usesSupplements').checked,
+                extreme_sports_declaration: document.getElementById('extremeSportsDeclaration').value || null
+            };
+
+            const response = await fetch(`/api/medical-advanced/healthy-habits/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error || 'Error al guardar');
+
+            closeModal('habitsModal');
+            showUserMessage('✅ Hábitos saludables actualizados', 'success');
+            loadMedicalAdvancedData(userId);
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
+    };
+}
+
+// Función para cargar todos los datos médicos avanzados
+async function loadMedicalAdvancedData(userId) {
+    console.log('📊 [MEDICAL-ADV] Cargando datos médicos avanzados para:', userId);
+
+    try {
+        const response = await fetch(`/api/medical-advanced/complete/${userId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            console.warn('⚠️ No se pudieron cargar datos médicos avanzados');
+            return;
+        }
+
+        const data = result.data;
+
+        // Actualizar datos antropométricos
+        if (data.anthropometric) {
+            const a = data.anthropometric;
+            document.getElementById('user-weight').textContent = a.weight_kg ? a.weight_kg.toFixed(1) : '--';
+            document.getElementById('user-height').textContent = a.height_cm ? a.height_cm.toFixed(0) : '--';
+            document.getElementById('user-bmi').textContent = a.bmi ? a.bmi.toFixed(1) : '--';
+
+            const bmiEl = document.getElementById('bmi-indicator');
+            if (a.bmi) {
+                if (a.bmi < 18.5) { bmiEl.textContent = 'Bajo peso'; bmiEl.style.background = '#fff3cd'; bmiEl.style.color = '#856404'; }
+                else if (a.bmi < 25) { bmiEl.textContent = 'Normal'; bmiEl.style.background = '#d4edda'; bmiEl.style.color = '#155724'; }
+                else if (a.bmi < 30) { bmiEl.textContent = 'Sobrepeso'; bmiEl.style.background = '#fff3cd'; bmiEl.style.color = '#856404'; }
+                else { bmiEl.textContent = 'Obesidad'; bmiEl.style.background = '#f8d7da'; bmiEl.style.color = '#721c24'; }
+            }
+
+            if (a.measurement_date) {
+                document.getElementById('anthropometric-date').textContent = new Date(a.measurement_date).toLocaleDateString('es-AR');
+            }
+        }
+
+        // Actualizar lista de cirugías
+        const surgeriesList = document.getElementById('surgeries-list');
+        if (data.surgeries && data.surgeries.length > 0) {
+            surgeriesList.innerHTML = data.surgeries.map(s => `
+                <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px; margin-bottom: 5px; font-size: 12px;">
+                    <div style="font-weight: bold;">🔪 ${s.surgery_name}</div>
+                    <div style="color: #666;">${new Date(s.surgery_date).toLocaleDateString('es-AR')} - ${s.outcome === 'successful' ? '✅' : s.outcome === 'complications' ? '❌' : '⚠️'}</div>
+                </div>
+            `).join('');
+        }
+
+        // Actualizar tratamientos psiquiátricos
+        if (data.psychiatric && data.psychiatric.length > 0) {
+            const active = data.psychiatric.filter(t => t.status === 'active').length;
+            const past = data.psychiatric.filter(t => t.status !== 'active').length;
+            document.getElementById('active-psychiatric-count').textContent = active;
+            document.getElementById('past-psychiatric-count').textContent = past;
+
+            const statusEl = document.getElementById('mental-health-status');
+            if (active > 0) {
+                statusEl.textContent = 'En tratamiento';
+                statusEl.style.background = '#fff3cd';
+                statusEl.style.color = '#856404';
+            }
+
+            const listEl = document.getElementById('psychiatric-treatments-list');
+            listEl.innerHTML = data.psychiatric.slice(0, 3).map(t => `
+                <div style="background: rgba(255,255,255,0.5); padding: 5px; border-radius: 4px; margin-bottom: 3px;">
+                    ${t.status === 'active' ? '🟢' : '⚪'} ${t.condition} (${t.treatment_type})
+                </div>
+            `).join('');
+        }
+
+        // Actualizar deportes
+        if (data.sports && data.sports.length > 0) {
+            document.getElementById('total-sports').textContent = data.sports.length;
+            const totalHours = data.sports.reduce((sum, s) => sum + (s.hours_per_week || 0), 0);
+            document.getElementById('weekly-hours').textContent = totalHours.toFixed(1);
+
+            const levels = { recreational: 1, amateur: 2, federated: 3, professional: 4 };
+            const maxLevel = Math.max(...data.sports.map(s => levels[s.level] || 0));
+            const levelNames = { 1: 'Rec', 2: 'Ama', 3: 'Fed', 4: 'Pro' };
+            document.getElementById('competition-level').textContent = levelNames[maxLevel] || '-';
+
+            const sportsList = document.getElementById('sports-list');
+            sportsList.innerHTML = data.sports.map(s => `
+                <div style="display: inline-block; background: #e8f5e9; padding: 3px 8px; border-radius: 12px; margin: 2px; font-size: 11px;">
+                    ${s.sport_type}${s.is_extreme ? ' ⚠️' : ''}
+                </div>
+            `).join('');
+        }
+
+        // Actualizar hábitos saludables
+        if (data.habits) {
+            const h = data.habits;
+            const smokingLabels = { never: 'No fuma', former: 'Ex fumador', occasional: 'Ocasional', regular: 'Regular', heavy: 'Intenso' };
+            const alcoholLabels = { never: 'No consume', occasional: 'Ocasional', moderate: 'Moderado', frequent: 'Frecuente', daily: 'Diario' };
+            const dietLabels = { regular: 'Balanceada', vegetarian: 'Vegetariana', vegan: 'Vegana', keto: 'Keto', mediterranean: 'Mediterránea', celiac: 'Sin gluten', diabetic: 'Diabética', poor: 'Desordenada' };
+
+            document.getElementById('smoking-status').textContent = smokingLabels[h.smoking_status] || '--';
+            document.getElementById('alcohol-status').textContent = alcoholLabels[h.alcohol_consumption] || '--';
+            document.getElementById('sleep-hours').textContent = h.sleep_hours ? `${h.sleep_hours} hrs` : '-- hrs';
+            document.getElementById('diet-type').textContent = dietLabels[h.diet_type] || '--';
+
+            if (h.extreme_sports_declaration) {
+                document.getElementById('extreme-sports').textContent = h.extreme_sports_declaration;
+                document.getElementById('extreme-sports').style.color = '#d32f2f';
+            }
+        }
+
+        console.log('✅ [MEDICAL-ADV] Datos médicos avanzados cargados');
+
+    } catch (error) {
+        console.error('❌ Error cargando datos médicos avanzados:', error);
+    }
+}
+
+// ============================================================================
+// FIN FUNCIONES MÉDICAS AVANZADAS
+// ============================================================================
+
+// ============================================================================
+// FUNCIONES SALARIALES AVANZADAS - Convenios, Categorías, Liquidaciones
+// ============================================================================
+
+async function editSalaryConfig(userId) {
+    console.log('💰 [SALARY] Editando configuración salarial:', userId);
+
+    // Cargar catálogos de convenios
+    let agreements = [];
+    let categories = [];
+    try {
+        const agreementsRes = await fetch('/api/salary-advanced/labor-agreements', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const agreementsData = await agreementsRes.json();
+        if (agreementsData.success) agreements = agreementsData.data;
+    } catch (e) { console.warn('No se pudieron cargar convenios'); }
+
+    const modal = document.createElement('div');
+    modal.id = 'salaryConfigModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    const agreementOptions = agreements.map(a => `<option value="${a.id}">${a.code} - ${a.name}</option>`).join('');
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 650px; max-height: 90vh; overflow-y: auto;">
+            <h4 style="color: #2e7d32; margin-bottom: 20px;">💰 Configuración Salarial</h4>
+            <form id="salaryConfigForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Convenio Colectivo (CCT) *</label>
+                        <select id="laborAgreement" class="form-control" onchange="loadCategories(this.value)" required>
+                            <option value="">Seleccionar convenio...</option>
+                            ${agreementOptions}
+                            <option value="none">Sin convenio (Fuera de convenio)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Categoría Salarial *</label>
+                        <select id="salaryCategory" class="form-control" required>
+                            <option value="">Primero seleccione convenio...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Tipo de Salario *</label>
+                        <select id="salaryType" class="form-control" required>
+                            <option value="monthly">Mensual</option>
+                            <option value="biweekly">Quincenal</option>
+                            <option value="weekly">Semanal</option>
+                            <option value="daily">Jornal (diario)</option>
+                            <option value="hourly">Por hora</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Modalidad de Contrato</label>
+                        <select id="contractType" class="form-control">
+                            <option value="permanent">Permanente</option>
+                            <option value="temporary">Temporario</option>
+                            <option value="seasonal">De temporada</option>
+                            <option value="parttime">Part-time</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h5 style="color: #2e7d32; margin: 0 0 12px 0;">💵 Valores Salariales</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="font-size: 12px; color: #666;">Salario Base Bruto *</label>
+                            <input type="number" id="baseSalary" class="form-control" step="0.01" min="0" placeholder="$850000" required>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #666;">Adicional por Presentismo (%)</label>
+                            <input type="number" id="attendanceBonus" class="form-control" step="0.1" min="0" max="100" value="8.33" placeholder="8.33">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #666;">Adicional por Antigüedad (%/año)</label>
+                            <input type="number" id="seniorityBonus" class="form-control" step="0.1" min="0" max="10" value="1" placeholder="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h5 style="color: #e65100; margin: 0 0 12px 0;">⏰ Configuración Jornada</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="font-size: 12px; color: #666;">Horas Mensuales</label>
+                            <input type="number" id="monthlyHours" class="form-control" min="0" max="300" value="176" placeholder="176">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #666;">Días por Semana</label>
+                            <select id="workDays" class="form-control">
+                                <option value="5">5 días (Lun-Vie)</option>
+                                <option value="6">6 días (Lun-Sáb)</option>
+                                <option value="4">4 días</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #666;">Turno</label>
+                            <select id="workShift" class="form-control">
+                                <option value="day">Diurno</option>
+                                <option value="night">Nocturno (+30%)</option>
+                                <option value="mixed">Mixto</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: #666;">Fecha de Vigencia</label>
+                    <input type="date" id="effectiveFrom" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                </div>
+
+                <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" onclick="closeModal('salaryConfigModal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">💾 Guardar Configuración</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Cargar categorías cuando se selecciona convenio
+    window.loadCategories = async function(agreementId) {
+        const categorySelect = document.getElementById('salaryCategory');
+        if (!agreementId || agreementId === 'none') {
+            categorySelect.innerHTML = '<option value="none">Sin categoría (fuera de convenio)</option>';
+            return;
+        }
+        try {
+            const res = await fetch(`/api/salary-advanced/labor-agreements/${agreementId}/categories`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                categorySelect.innerHTML = data.data.map(c =>
+                    `<option value="${c.id}" data-base="${c.base_salary}">${c.category_code} - ${c.description} ($${c.base_salary?.toLocaleString() || '--'})</option>`
+                ).join('');
+            }
+        } catch (e) { console.error('Error cargando categorías:', e); }
+    };
+
+    document.getElementById('salaryConfigForm').onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const formData = {
+                user_id: userId,
+                labor_agreement_id: document.getElementById('laborAgreement').value !== 'none' ? document.getElementById('laborAgreement').value : null,
+                salary_category_id: document.getElementById('salaryCategory').value !== 'none' ? document.getElementById('salaryCategory').value : null,
+                salary_type: document.getElementById('salaryType').value,
+                contract_type: document.getElementById('contractType').value,
+                base_salary: parseFloat(document.getElementById('baseSalary').value),
+                attendance_bonus_pct: parseFloat(document.getElementById('attendanceBonus').value) || 0,
+                seniority_bonus_pct: parseFloat(document.getElementById('seniorityBonus').value) || 0,
+                monthly_hours: parseInt(document.getElementById('monthlyHours').value) || 176,
+                work_days_per_week: parseInt(document.getElementById('workDays').value) || 5,
+                work_shift: document.getElementById('workShift').value,
+                effective_from: document.getElementById('effectiveFrom').value,
+                is_current: true
+            };
+
+            const response = await fetch('/api/salary-advanced/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error || 'Error al guardar');
+
+            closeModal('salaryConfigModal');
+            showUserMessage('✅ Configuración salarial guardada', 'success');
+            loadSalaryAdvancedData(userId);
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
+    };
+}
+
+function addSalaryIncrease(userId) {
+    console.log('📈 [SALARY] Registrando aumento salarial:', userId);
+
+    const modal = document.createElement('div');
+    modal.id = 'salaryIncreaseModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 500px;">
+            <h4 style="color: #2e7d32; margin-bottom: 20px;">📈 Registrar Aumento Salarial</h4>
+            <form id="salaryIncreaseForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-weight: bold; color: #333;">Nuevo Salario Base *</label>
+                        <input type="number" id="newSalary" class="form-control" step="0.01" min="0" required>
+                    </div>
+                    <div>
+                        <label style="font-weight: bold; color: #333;">% de Aumento</label>
+                        <input type="number" id="increasePercent" class="form-control" step="0.1" readonly style="background: #e8f5e9;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; color: #333;">Motivo del Aumento *</label>
+                    <select id="increaseReason" class="form-control" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="paritarias">Paritarias/Actualización CCT</option>
+                        <option value="promotion">Promoción/Ascenso</option>
+                        <option value="merit">Mérito/Desempeño</option>
+                        <option value="category">Cambio de Categoría</option>
+                        <option value="inflation">Ajuste por Inflación</option>
+                        <option value="market">Ajuste de Mercado</option>
+                        <option value="other">Otro</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: #666;">Fecha de Vigencia *</label>
+                    <input type="date" id="increaseDate" class="form-control" value="${new Date().toISOString().split('T')[0]}" required>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: #666;">Observaciones</label>
+                    <textarea id="increaseNotes" class="form-control" rows="2" placeholder="Detalles adicionales..."></textarea>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" onclick="closeModal('salaryIncreaseModal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">📈 Registrar Aumento</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('salaryIncreaseForm').onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const formData = {
+                newBaseSalary: parseFloat(document.getElementById('newSalary').value),
+                increasePercentage: parseFloat(document.getElementById('increasePercent').value) || null,
+                reason: document.getElementById('increaseReason').value,
+                effectiveFrom: document.getElementById('increaseDate').value,
+                notes: document.getElementById('increaseNotes').value || null
+            };
+
+            const response = await fetch(`/api/salary-advanced/config/${userId}/update-salary`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error || 'Error al registrar');
+
+            closeModal('salaryIncreaseModal');
+            showUserMessage(`✅ Aumento registrado. Salario anterior: $${result.previousSalary?.toLocaleString() || '--'}`, 'success');
+            loadSalaryAdvancedData(userId);
+        } catch (error) {
+            console.error('❌ Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
+    };
+}
+
+function viewPayrollHistory(userId) {
+    console.log('📜 [SALARY] Viendo historial de liquidaciones:', userId);
+    showUserMessage('📜 Abriendo historial de liquidaciones...', 'info');
+    // TODO: Implementar modal con historial completo
+}
+
+function generatePayroll(userId) {
+    console.log('💼 [SALARY] Generando nueva liquidación:', userId);
+    showUserMessage('⚠️ Módulo de liquidaciones pendiente de integración real', 'warning');
+    // TODO: Integrar con módulo de liquidación de sueldos
+}
+
+// Función para cargar todos los datos salariales avanzados
+async function loadSalaryAdvancedData(userId) {
+    console.log('💰 [SALARY] Cargando datos salariales avanzados para:', userId);
+
+    try {
+        const response = await fetch(`/api/salary-advanced/summary/${userId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            console.warn('⚠️ No se pudieron cargar datos salariales');
+            return;
+        }
+
+        const data = result.data;
+
+        // Actualizar configuración salarial
+        if (data.currentConfig) {
+            const c = data.currentConfig;
+            document.getElementById('salary-agreement').textContent = c.laborAgreement?.name || 'Sin convenio';
+            document.getElementById('salary-category').textContent = c.salaryCategory?.description || 'Sin categoría';
+
+            const salaryTypes = { monthly: 'Mensual', biweekly: 'Quincenal', weekly: 'Semanal', daily: 'Jornal', hourly: 'Por hora' };
+            document.getElementById('salary-type').textContent = salaryTypes[c.salary_type] || '--';
+
+            document.getElementById('salary-base-amount').textContent = c.base_salary ? `$${c.base_salary.toLocaleString()}` : '$--';
+
+            // Calcular valor hora
+            const monthlyHours = c.monthly_hours || 176;
+            const hourlyRate = c.base_salary ? (c.base_salary / monthlyHours) : 0;
+            document.getElementById('salary-hourly-rate').textContent = `$${hourlyRate.toFixed(0)}`;
+            document.getElementById('salary-overtime-rate').textContent = `$${(hourlyRate * 1.5).toFixed(0)}`;
+
+            // Datos de último aumento
+            if (c.previous_base_salary) {
+                document.getElementById('salary-last-increase').textContent = `$${(c.base_salary - c.previous_base_salary).toLocaleString()}`;
+            }
+            if (c.salary_increase_percentage) {
+                document.getElementById('salary-increase-pct').textContent = `${c.salary_increase_percentage.toFixed(1)}%`;
+            }
+            if (c.last_salary_update) {
+                document.getElementById('salary-update-date').textContent = new Date(c.last_salary_update).toLocaleDateString('es-AR');
+            }
+        }
+
+        // Actualizar historial de salarios
+        if (data.salaryHistory && data.salaryHistory.length > 0) {
+            const historyList = document.getElementById('salary-history-list');
+            historyList.innerHTML = data.salaryHistory.map(h => `
+                <div style="display: flex; justify-content: space-between; padding: 5px; background: ${h.is_current ? '#e8f5e9' : '#f5f5f5'}; border-radius: 4px; margin-bottom: 3px;">
+                    <span>${new Date(h.effective_from).toLocaleDateString('es-AR')}</span>
+                    <span style="font-weight: bold;">$${h.base_salary?.toLocaleString() || '--'}</span>
+                    <span style="color: #2e7d32;">${h.salary_increase_percentage ? `+${h.salary_increase_percentage.toFixed(1)}%` : ''}</span>
+                </div>
+            `).join('');
+        }
+
+        // Actualizar resumen de liquidaciones
+        if (data.yearSummary) {
+            const y = data.yearSummary;
+            document.getElementById('payroll-ytd').textContent = `$${y.netTotal?.toLocaleString() || '--'}`;
+            document.getElementById('payroll-months-processed').textContent = `${y.monthsProcessed} meses procesados`;
+        }
+
+        // Actualizar última liquidación
+        if (data.payrollRecords && data.payrollRecords.length > 0) {
+            const latest = data.payrollRecords[0];
+            document.getElementById('payroll-current').textContent = `$${latest.net_salary?.toLocaleString() || '--'}`;
+            document.getElementById('payroll-current-status').textContent = latest.status === 'paid' ? '✅ Pagado' : latest.status === 'approved' ? '✔️ Aprobado' : '⏳ Borrador';
+
+            // Desglose
+            document.getElementById('payroll-basic').textContent = `$${latest.base_salary?.toLocaleString() || '--'}`;
+            document.getElementById('payroll-overtime').textContent = `$${((latest.overtime_50_amount || 0) + (latest.overtime_100_amount || 0)).toLocaleString()}`;
+            document.getElementById('payroll-attendance').textContent = `$${latest.attendance_bonus?.toLocaleString() || '--'}`;
+            document.getElementById('payroll-additionals').textContent = `$${latest.other_additions?.toLocaleString() || '0'}`;
+            document.getElementById('payroll-gross').textContent = `$${latest.gross_total?.toLocaleString() || '--'}`;
+            document.getElementById('payroll-retirement').textContent = `$${latest.retirement_deduction?.toLocaleString() || '--'}`;
+            document.getElementById('payroll-health').textContent = `$${latest.social_work_deduction?.toLocaleString() || '--'}`;
+            document.getElementById('payroll-pami').textContent = `$${latest.pami_deduction?.toLocaleString() || '--'}`;
+            document.getElementById('payroll-union').textContent = `$${latest.union_deduction?.toLocaleString() || '0'}`;
+            document.getElementById('payroll-net').textContent = `$${latest.net_salary?.toLocaleString() || '--'}`;
+
+            // Mes anterior
+            if (data.payrollRecords.length > 1) {
+                const prev = data.payrollRecords[1];
+                document.getElementById('payroll-previous').textContent = `$${prev.net_salary?.toLocaleString() || '--'}`;
+                document.getElementById('payroll-previous-status').textContent = prev.status === 'paid' ? '✅ Pagado' : '--';
+            }
+        }
+
+        console.log('✅ [SALARY] Datos salariales cargados');
+
+    } catch (error) {
+        console.error('❌ Error cargando datos salariales:', error);
+    }
+}
+
+// ============================================================================
+// FIN FUNCIONES SALARIALES AVANZADAS
+// ============================================================================
 
 function editMentalHealth(userId) {
     console.log('🧠 [MEDICAL] Editando salud mental:', userId);
@@ -8902,3 +10518,5 @@ window.openWorkVisaModal = openWorkVisaModal;
 window.openNationalLicenseModal = openNationalLicenseModal;
 // window.uploadUserPhoto = uploadUserPhoto; // COMMENTED: Function not defined, causing errors
 // window.removeUserPhoto = removeUserPhoto; // COMMENTED: Function not defined, causing errors
+
+} // Cierre del bloque else - previene re-ejecución en doble carga del módulo

@@ -910,4 +910,10 @@ window.reviewAppeal = reviewAppeal;
 // Initialize integrations when module loads
 initializeSanctionsIntegration();
 
+// Registro en window.Modules para sistema moderno
+window.Modules = window.Modules || {};
+window.Modules['sanctions-management'] = {
+    init: showSanctionsManagementContent
+};
+
 console.log('✅ [SANCTIONS-MANAGEMENT] Módulo completamente cargado y funcional');

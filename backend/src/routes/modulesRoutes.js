@@ -185,6 +185,7 @@ module.exports = (database) => {
         // Por ahora simple: admin pasa todos los filtros
 
         // Construir objeto de módulo para frontend
+        // Prioridad: campos directos > objeto frontend > fallback generado
         availableModules.push({
           module_key: moduleKey,
           name: metadata.name || moduleKey,
@@ -194,8 +195,8 @@ module.exports = (database) => {
           is_core: isCore,
           version: metadata.version || '1.0.0',
           description: metadata.description?.short || '',
-          frontend_file: metadata.frontend?.file || `/js/modules/${moduleKey}.js`,
-          init_function: metadata.frontend?.init_function || `show${capitalize(moduleKey)}Content`,
+          frontend_file: metadata.frontend_file || metadata.frontend?.file || `/js/modules/${moduleKey}.js`,
+          init_function: metadata.init_function || metadata.frontend?.init_function || `show${capitalize(moduleKey)}Content`,
           submódulos: metadata.submódulos || [],
           available_in: availableIn
         });

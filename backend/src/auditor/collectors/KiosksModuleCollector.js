@@ -33,8 +33,8 @@ const BaseModuleCollector = require('./BaseModuleCollector');
 const { Pool } = require('pg');
 
 class KiosksModuleCollector extends BaseModuleCollector {
-    constructor(database, systemRegistry) {
-        super(database, systemRegistry);
+    constructor(database, systemRegistry, baseURL = null) {
+        super(database, systemRegistry, baseURL);  // ⚡ Pasar baseURL al padre
         this.TEST_PREFIX = '[KIOSK-TEST]';
         this.testData = {
             kioskId: null,

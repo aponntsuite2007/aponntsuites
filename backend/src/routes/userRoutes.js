@@ -13,7 +13,7 @@ router.get('/test', async (req, res) => {
   }
 });
 const bcrypt = require('bcryptjs');
-const { User, Branch, BiometricData, sequelize } = require('../config/database');
+const { User, Branch, BiometricData, UserAuditLog, sequelize } = require('../config/database');
 const { Op } = require('sequelize');
 const { auth, adminOnly, supervisorOrAdmin } = require('../middleware/auth');
 const multer = require('multer');
@@ -415,6 +415,29 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
 
     console.log(`📧 [USER-CREATION] Usuario creado: ${newUser.user_id} - Enviando email de verificación...`);
 
+    // 📋 AUDIT: Registrar creación de usuario
+    try {
+      await UserAuditLog.logChange({
+        userId: newUser.user_id,
+        changedByUserId: req.user.user_id,
+        companyId: req.user.companyId,
+        action: 'CREATE',
+        description: `Usuario creado: ${firstName} ${lastName} (${employeeId})`,
+        metadata: {
+          employeeId,
+          email,
+          role,
+          department,
+          position
+        },
+        ipAddress: req.ip || req.connection?.remoteAddress,
+        userAgent: req.headers['user-agent']
+      });
+      console.log(`📋 [AUDIT] Usuario ${newUser.user_id} creado registrado`);
+    } catch (auditError) {
+      console.error('⚠️ [AUDIT] Error registrando creación:', auditError.message);
+    }
+
     // ENVIAR EMAIL DE VERIFICACIÓN INMEDIATAMENTE
     try {
       // Obtener consentimientos pendientes para el rol
@@ -476,6 +499,9 @@ router.put('/:id', auth, async (req, res) => {
         error: 'Usuario no encontrado'
       });
     }
+
+    // 📋 AUDIT: Guardar estado anterior para comparar cambios
+    const previousState = user.toJSON();
 
     let updateData = { ...req.body };
 
@@ -555,6 +581,59 @@ router.put('/:id', auth, async (req, res) => {
       attributes: { exclude: ['password'] }
     });
 
+    // 📋 AUDIT: Registrar cambios en user_audit_logs (MULTI-TENANT)
+    try {
+      const newState = updatedUser.toJSON();
+      const companyId = user.company_id || user.companyId;
+      const changedByUserId = req.user.user_id;
+      const ipAddress = req.ip || req.connection?.remoteAddress;
+      const userAgent = req.headers['user-agent'];
+
+      // Campos a auditar (excluir campos sensibles y técnicos)
+      const auditableFields = [
+        'firstName', 'lastName', 'email', 'phone', 'role', 'isActive',
+        'departmentId', 'department_id', 'address', 'birthDate', 'hireDate',
+        'employeeId', 'dni', 'cuil', 'position', 'salary',
+        'gpsEnabled', 'defaultBranchId', 'default_branch_id',
+        'emergencyContact', 'emergencyPhone', 'canUseMobileApp', 'canUseKiosk'
+      ];
+
+      const changes = [];
+
+      for (const field of auditableFields) {
+        const oldVal = previousState[field];
+        const newVal = newState[field];
+
+        // Comparar valores (convertir a string para comparación consistente)
+        const oldStr = oldVal !== null && oldVal !== undefined ? String(oldVal) : null;
+        const newStr = newVal !== null && newVal !== undefined ? String(newVal) : null;
+
+        if (oldStr !== newStr) {
+          changes.push({
+            fieldName: field,
+            oldValue: oldStr,
+            newValue: newStr
+          });
+        }
+      }
+
+      // Registrar cada cambio
+      if (changes.length > 0) {
+        await UserAuditLog.logMultipleChanges({
+          userId: req.params.id,
+          changedByUserId,
+          companyId,
+          changes,
+          ipAddress,
+          userAgent
+        });
+        console.log(`📋 [AUDIT] Registrados ${changes.length} cambios para usuario ${req.params.id}`);
+      }
+    } catch (auditError) {
+      // No fallar la operación por error de auditoría
+      console.error('⚠️ [AUDIT] Error registrando cambios:', auditError.message);
+    }
+
     console.log('🔧 [DEBUG-GPS] Usuario DESPUÉS del update:');
     console.log('   gpsEnabled (en BD):', updatedUser.gpsEnabled);
     console.log('   allowOutsideRadius (calculado):', updatedUser.gpsEnabled !== null ? !updatedUser.gpsEnabled : true);
@@ -592,6 +671,25 @@ router.delete('/:id', auth, adminOnly, async (req, res) => {
 
     // Soft delete
     await user.update({ isActive: false });
+
+    // 📋 AUDIT: Registrar desactivación
+    try {
+      await UserAuditLog.logChange({
+        userId: req.params.id,
+        changedByUserId: req.user.user_id,
+        companyId: user.company_id || user.companyId,
+        action: 'DEACTIVATE',
+        fieldName: 'isActive',
+        oldValue: 'true',
+        newValue: 'false',
+        description: `Usuario desactivado por ${req.user.firstName} ${req.user.lastName}`,
+        ipAddress: req.ip || req.connection?.remoteAddress,
+        userAgent: req.headers['user-agent']
+      });
+      console.log(`📋 [AUDIT] Usuario ${req.params.id} desactivado`);
+    } catch (auditError) {
+      console.error('⚠️ [AUDIT] Error registrando desactivación:', auditError.message);
+    }
 
     res.json({
       message: 'Usuario desactivado exitosamente'
@@ -704,6 +802,25 @@ router.post('/:id/reset-password', auth, supervisorOrAdmin, async (req, res) => 
     });
     console.log('🔑 [RESET-PASSWORD] Verificación - Hash después del update:', userAfterUpdate.password.substring(0, 30) + '...');
     console.log('🔑 [RESET-PASSWORD] Verificación - updatedAt:', userAfterUpdate.updatedAt);
+
+    // 📋 AUDIT: Registrar reset de contraseña
+    try {
+      await UserAuditLog.logChange({
+        userId: req.params.id,
+        changedByUserId: req.user.user_id,
+        companyId: user.company_id || user.companyId,
+        action: 'PASSWORD_RESET',
+        fieldName: 'password',
+        oldValue: '[PROTECTED]',
+        newValue: '[PROTECTED]',
+        description: `Contraseña reseteada por ${req.user.firstName} ${req.user.lastName}`,
+        ipAddress: req.ip || req.connection?.remoteAddress,
+        userAgent: req.headers['user-agent']
+      });
+      console.log(`📋 [AUDIT] Contraseña reseteada para usuario ${req.params.id}`);
+    } catch (auditError) {
+      console.error('⚠️ [AUDIT] Error registrando reset:', auditError.message);
+    }
 
     res.json({
       message: 'Contraseña reseteada exitosamente'
@@ -969,6 +1086,120 @@ router.get('/by-employee-id/:employeeId', auth, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor'
+    });
+  }
+});
+
+// ============================================================================
+// SISTEMA DE AUDITORÍA DE CAMBIOS DE USUARIOS
+// ============================================================================
+
+/**
+ * @route GET /api/v1/users/:id/audit-logs
+ * @desc Obtener historial de cambios de un usuario (MULTI-TENANT)
+ * @access Auth + Admin/Supervisor
+ */
+router.get('/:id/audit-logs', auth, supervisorOrAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { limit = 100, offset = 0, action } = req.query;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    console.log(`📋 [AUDIT-LOGS] Obteniendo historial para usuario: ${id}, company: ${companyId}`);
+
+    // Verificar que el usuario pertenece a la misma empresa (MULTI-TENANT)
+    const targetUser = await User.findOne({
+      where: {
+        user_id: id,
+        company_id: companyId
+      },
+      attributes: ['user_id', 'firstName', 'lastName', 'employeeId']
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuario no encontrado o no pertenece a su empresa'
+      });
+    }
+
+    // Obtener historial de cambios
+    const logs = await UserAuditLog.getHistory(id, companyId, {
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      action: action || null
+    });
+
+    // Obtener estadísticas
+    const stats = await UserAuditLog.getStats(id, companyId);
+
+    console.log(`✅ [AUDIT-LOGS] Encontrados ${logs.length} registros para usuario ${id}`);
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: targetUser.user_id,
+          firstName: targetUser.firstName,
+          lastName: targetUser.lastName,
+          employeeId: targetUser.employeeId
+        },
+        logs: logs.map(log => ({
+          id: log.id,
+          action: log.action,
+          fieldName: log.field_name,
+          oldValue: log.old_value,
+          newValue: log.new_value,
+          description: log.description,
+          changedBy: log.changedByUser ? {
+            id: log.changedByUser.id,
+            name: `${log.changedByUser.firstName} ${log.changedByUser.lastName}`,
+            email: log.changedByUser.email
+          } : { name: 'Sistema', email: null },
+          ipAddress: log.ip_address,
+          createdAt: log.created_at
+        })),
+        stats: stats,
+        pagination: {
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+          total: stats?.total_changes || 0
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [AUDIT-LOGS] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener historial de cambios',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @route GET /api/v1/users/:id/audit-logs/stats
+ * @desc Obtener estadísticas de cambios de un usuario
+ * @access Auth + Admin/Supervisor
+ */
+router.get('/:id/audit-logs/stats', auth, supervisorOrAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    const stats = await UserAuditLog.getStats(id, companyId);
+
+    res.json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error) {
+    console.error('❌ [AUDIT-LOGS-STATS] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener estadísticas'
     });
   }
 });

@@ -19,8 +19,8 @@
 const BaseModuleCollector = require('./BaseModuleCollector');
 
 class ReportsModuleCollector extends BaseModuleCollector {
-    constructor(database, systemRegistry) {
-        super(database, systemRegistry);
+    constructor(database, systemRegistry, baseURL = null) {
+        super(database, systemRegistry, baseURL);  // ⚡ Pasar baseURL al padre
         this.TEST_PREFIX = '[TEST-REPORTS]';
     }
 

@@ -1,0 +1,62 @@
+{
+  "version": "1.0.0",
+  "last_sync": null,
+  "sessions": {
+    "session-backend": {
+      "id": "session-backend",
+      "name": "Backend & API Development",
+      "active": false,
+      "working_on": [],
+      "last_update": "2025-11-21T22:20:52.041Z",
+      "last_heartbeat": null,
+      "status": "idle",
+      "current_task": null
+    },
+    "session-frontend": {
+      "id": "session-frontend",
+      "name": "Frontend & Panel Admin",
+      "active": false,
+      "working_on": [],
+      "last_update": "2025-11-21T22:20:52.048Z",
+      "last_heartbeat": null,
+      "status": "idle",
+      "current_task": null
+    }
+  },
+  "locks": {
+    "engineering-metadata.js": {
+      "locked_by": null,
+      "locked_at": null,
+      "expires_at": null,
+      "reason": null
+    },
+    "backend/server.js": {
+      "locked_by": null,
+      "locked_at": null,
+      "expires_at": null,
+      "reason": null
+    },
+    "backend/public/panel-administrativo.html": {
+      "locked_by": null,
+      "locked_at": null,
+      "expires_at": null,
+      "reason": null
+    },
+    "backend/public/panel-empresa.html": {
+      "locked_by": null,
+      "locked_at": null,
+      "expires_at": null,
+      "reason": null
+    }
+  },
+  "metadata_versions": {
+    "engineering-metadata.js": {
+      "version": "2025-11-21T22:20:52.052Z",
+      "last_modified": "2025-11-21T22:20:52.052Z",
+      "last_modified_by": "session-frontend",
+      "checksum": "43fbb855f98210d8c793b09f1baeb550"
+    }
+  },
+  "conflict_log": [],
+  "sync_history": []
+}

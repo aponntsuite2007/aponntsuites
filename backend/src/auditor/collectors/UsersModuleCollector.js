@@ -20,8 +20,8 @@
 const BaseModuleCollector = require('./BaseModuleCollector');
 
 class UsersModuleCollector extends BaseModuleCollector {
-    constructor(database, systemRegistry) {
-        super(database, systemRegistry);
+    constructor(database, systemRegistry, baseURL = null) {
+        super(database, systemRegistry, baseURL);  // ⚡ Pasar baseURL al padre
         this.TEST_PREFIX = '[TEST-USERS]';
         this.testUserData = null; // Para guardar datos del usuario creado
     }
@@ -71,6 +71,20 @@ class UsersModuleCollector extends BaseModuleCollector {
     async navigateToUsersModule() {
         console.log('\n📂 Navegando al módulo de Usuarios...\n');
 
+        // ✅ CAPTURAR ERRORES DE CONSOLA DEL NAVEGADOR
+        const consoleErrors = [];
+        this.page.on('console', msg => {
+            if (msg.type() === 'error') {
+                console.error('🔴 [BROWSER CONSOLE ERROR]:', msg.text());
+                consoleErrors.push(msg.text());
+            }
+        });
+
+        this.page.on('pageerror', error => {
+            console.error('🔴 [BROWSER PAGE ERROR]:', error.message);
+            consoleErrors.push(error.message);
+        });
+
         // Navegar directamente con JavaScript (más confiable que buscar botón)
         await this.page.evaluate(() => {
             if (typeof window.showModuleContent === 'function') {
@@ -80,8 +94,56 @@ class UsersModuleCollector extends BaseModuleCollector {
             }
         });
 
-        // Esperar que cargue el contenido del módulo
-        await this.page.waitForSelector('#users', { state: 'visible', timeout: 10000 });
+        // ✅ FIX: Esperar activamente a que aparezca el elemento #users con polling
+        // showModuleContent usa setTimeout + carga async, el tiempo varía
+        console.log('⏳ Esperando a que el módulo users se renderice...');
+
+        const startTime = Date.now();
+        const timeout = 15000; // 15 segundos
+        let found = false;
+
+        while (Date.now() - startTime < timeout) {
+            // Verificar si el elemento existe y es visible
+            const exists = await this.page.evaluate(() => {
+                const el = document.querySelector('#users');
+                if (el) {
+                    console.log('🔍 [PHASE4] Elemento #users encontrado!', {
+                        display: getComputedStyle(el).display,
+                        visibility: getComputedStyle(el).visibility,
+                        offsetParent: el.offsetParent,
+                        innerHTML: el.innerHTML.substring(0, 100)
+                    });
+                }
+                return el && el.offsetParent !== null;
+            });
+
+            if (exists) {
+                found = true;
+                console.log(`✅ Elemento #users visible después de ${Date.now() - startTime}ms`);
+                break;
+            }
+
+            // Esperar 100ms antes de reintentar
+            await this.page.waitForTimeout(100);
+        }
+
+        if (!found) {
+            // Log debugging info antes de fallar
+            const debugInfo = await this.page.evaluate(() => {
+                return {
+                    mainContent: document.getElementById('mainContent')?.innerHTML.substring(0, 500),
+                    usersExists: !!document.querySelector('#users'),
+                    showUsersContentExists: typeof window.showUsersContent === 'function',
+                    activeModules: window.activeModules?.find(m => m.module_key === 'users'),
+                    loadedScripts: Array.from(document.querySelectorAll('script[data-module-id="users"]')).map(s => s.src),
+                    allErrors: window.__lastErrors || []
+                };
+            });
+
+            console.error('❌ Debug info:', JSON.stringify(debugInfo, null, 2));
+            console.error('❌ Console errors capturados:', consoleErrors);
+            throw new Error(`Timeout: Elemento #users no se hizo visible después de ${timeout}ms. Console errors: ${consoleErrors.join('; ')}`);
+        }
 
         console.log('✅ Módulo de Usuarios cargado\n');
     }
