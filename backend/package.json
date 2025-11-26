@@ -18,6 +18,7 @@
     "db:migrate:status": "sequelize-cli db:migrate:status",
     "db:create-migration": "sequelize-cli migration:generate --name",
     "db:fix-render": "node execute-fix-render.js",
+    "seed:isi": "node scripts/seed-isi-production.js",
     "migrate:notifications": "node run-migrations.js",
     "seed": "node database/seeds/seed.js",
     "backup": "node scripts/backup/backup.js"
