@@ -10,7 +10,9 @@
  * @version 1.0.0
  */
 
-const { chromium } = require('playwright');
+// Playwright opcional para produccion
+let chromium = null;
+try { chromium = require('playwright').chromium; } catch(e) { console.log('Playwright no disponible'); }
 const axios = require('axios');
 const LearningEngine = require('../learning/LearningEngine');
 

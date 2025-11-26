@@ -1170,4 +1170,440 @@ router.get('/reports/by-concept', async (req, res) => {
     }
 });
 
+// ============================================================================
+// ENTIDADES Y LIQUIDACIONES CONSOLIDADAS
+// ============================================================================
+
+// GET /entities - Listar entidades (por pais o company)
+router.get('/entities', async (req, res) => {
+    try {
+        const { country_id, entity_type, include_global = 'true' } = req.query;
+
+        let whereClause = 'WHERE 1=1';
+        const replacements = { companyId: req.companyId };
+
+        if (country_id) {
+            whereClause += ' AND pe.country_id = :countryId';
+            replacements.countryId = country_id;
+        }
+
+        if (entity_type) {
+            whereClause += ' AND pe.entity_type = :entityType';
+            replacements.entityType = entity_type;
+        }
+
+        if (include_global === 'true') {
+            whereClause += ' AND (pe.company_id IS NULL OR pe.company_id = :companyId)';
+        } else {
+            whereClause += ' AND pe.company_id = :companyId';
+        }
+
+        whereClause += ' AND pe.is_active = true';
+
+        const entities = await sequelize.query(`
+            SELECT pe.*, pc.country_code, pc.country_name
+            FROM payroll_entities pe
+            LEFT JOIN payroll_countries pc ON pe.country_id = pc.id
+            ${whereClause}
+            ORDER BY pc.country_code, pe.entity_type, pe.entity_name
+        `, {
+            replacements,
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        res.json({ success: true, data: entities });
+    } catch (error) {
+        console.error('Error fetching entities:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /entities/:id - Obtener entidad por ID
+router.get('/entities/:id', async (req, res) => {
+    try {
+        const { PayrollEntity } = require('../config/database');
+        const entity = await PayrollEntity.findByPk(req.params.id);
+        if (!entity) {
+            return res.status(404).json({ success: false, error: 'Entidad no encontrada' });
+        }
+        res.json({ success: true, data: entity });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /entities - Crear entidad custom de la empresa
+router.post('/entities', async (req, res) => {
+    try {
+        const { PayrollEntity } = require('../config/database');
+        const entity = await PayrollEntity.create({
+            ...req.body,
+            company_id: req.companyId
+        });
+        res.status(201).json({ success: true, data: entity });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// PUT /entities/:id - Actualizar entidad
+router.put('/entities/:id', async (req, res) => {
+    try {
+        const { PayrollEntity } = require('../config/database');
+        const entity = await PayrollEntity.findOne({
+            where: { entity_id: req.params.id, company_id: req.companyId }
+        });
+        if (!entity) {
+            return res.status(404).json({ success: false, error: 'Entidad no encontrada o no pertenece a su empresa' });
+        }
+        await entity.update(req.body);
+        res.json({ success: true, data: entity });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================================
+// LIQUIDACIONES CONSOLIDADAS POR ENTIDAD
+// ============================================================================
+
+// POST /entity-settlements/generate - Generar liquidacion consolidada
+router.post('/entity-settlements/generate', async (req, res) => {
+    try {
+        const { run_id, entity_ids } = req.body;
+
+        if (!run_id || !entity_ids || !entity_ids.length) {
+            return res.status(400).json({
+                success: false,
+                error: 'Se requiere run_id y al menos una entity_id'
+            });
+        }
+
+        const settlements = [];
+        for (const entity_id of entity_ids) {
+            const [[result]] = await sequelize.query(`
+                SELECT generate_entity_settlement(:companyId, :entityId, :runId, :userId) as settlement_id
+            `, {
+                replacements: {
+                    companyId: req.companyId,
+                    entityId: entity_id,
+                    runId: run_id,
+                    userId: req.userId
+                }
+            });
+
+            if (result && result.settlement_id) {
+                const [settlement] = await sequelize.query(`
+                    SELECT * FROM v_entity_settlements_summary WHERE settlement_id = :settlementId
+                `, { replacements: { settlementId: result.settlement_id }, type: sequelize.QueryTypes.SELECT });
+                settlements.push(settlement);
+            }
+        }
+
+        res.json({ success: true, data: settlements });
+    } catch (error) {
+        console.error('Error generating entity settlements:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /entity-settlements - Listar liquidaciones consolidadas
+router.get('/entity-settlements', async (req, res) => {
+    try {
+        const { year, month, entity_id, status } = req.query;
+
+        let whereClause = 'WHERE company_id = :companyId';
+        const replacements = { companyId: req.companyId };
+
+        if (year) {
+            whereClause += ' AND period_year = :year';
+            replacements.year = year;
+        }
+        if (month) {
+            whereClause += ' AND period_month = :month';
+            replacements.month = month;
+        }
+        if (entity_id) {
+            whereClause += ' AND entity_id = :entityId';
+            replacements.entityId = entity_id;
+        }
+        if (status) {
+            whereClause += ' AND status = :status';
+            replacements.status = status;
+        }
+
+        const settlements = await sequelize.query(`
+            SELECT * FROM v_entity_settlements_summary
+            ${whereClause}
+            ORDER BY period_year DESC, period_month DESC, entity_name
+        `, {
+            replacements,
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        res.json({ success: true, data: settlements });
+    } catch (error) {
+        console.error('Error fetching entity settlements:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /entity-settlements/:id - Obtener detalle de liquidacion
+router.get('/entity-settlements/:id', async (req, res) => {
+    try {
+        const { PayrollEntitySettlement, PayrollEntitySettlementDetail, PayrollEntity, User } = require('../config/database');
+
+        const settlement = await PayrollEntitySettlement.findOne({
+            where: { settlement_id: req.params.id, company_id: req.companyId },
+            include: [
+                { model: PayrollEntity, as: 'entity' },
+                {
+                    model: PayrollEntitySettlementDetail,
+                    as: 'details',
+                    include: [{ model: User, as: 'user', attributes: ['user_id', 'firstName', 'lastName', 'dni', 'employee_code'] }]
+                }
+            ]
+        });
+
+        if (!settlement) {
+            return res.status(404).json({ success: false, error: 'Liquidacion no encontrada' });
+        }
+
+        res.json({ success: true, data: settlement });
+    } catch (error) {
+        console.error('Error fetching settlement detail:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// PUT /entity-settlements/:id/status - Actualizar estado
+router.put('/entity-settlements/:id/status', async (req, res) => {
+    try {
+        const { PayrollEntitySettlement } = require('../config/database');
+        const { status, notes, payment_reference, payment_date, payment_method } = req.body;
+
+        const settlement = await PayrollEntitySettlement.findOne({
+            where: { settlement_id: req.params.id, company_id: req.companyId }
+        });
+
+        if (!settlement) {
+            return res.status(404).json({ success: false, error: 'Liquidacion no encontrada' });
+        }
+
+        const updateData = { status };
+        const now = new Date();
+
+        switch (status) {
+            case 'reviewed':
+                updateData.reviewed_at = now;
+                updateData.reviewed_by = req.userId;
+                break;
+            case 'approved':
+                updateData.approved_at = now;
+                updateData.approved_by = req.userId;
+                break;
+            case 'submitted':
+                updateData.submitted_at = now;
+                break;
+            case 'paid':
+                updateData.paid_at = now;
+                updateData.payment_reference = payment_reference;
+                updateData.payment_date = payment_date;
+                updateData.payment_method = payment_method;
+                break;
+        }
+
+        if (notes) updateData.notes = notes;
+
+        await settlement.update(updateData);
+        res.json({ success: true, data: settlement });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================================
+// PLANTILLAS DE RECIBOS DE SUELDO
+// ============================================================================
+
+// GET /payslip-templates - Listar plantillas
+router.get('/payslip-templates', async (req, res) => {
+    try {
+        const { PayrollPayslipTemplate } = require('../config/database');
+        const { Op } = require('sequelize');
+
+        const templates = await PayrollPayslipTemplate.findAll({
+            where: {
+                [Op.or]: [
+                    { company_id: null },
+                    { company_id: req.companyId }
+                ]
+            },
+            order: [['is_default', 'DESC'], ['template_name', 'ASC']]
+        });
+
+        res.json({ success: true, data: templates });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /payslip-templates/:id
+router.get('/payslip-templates/:id', async (req, res) => {
+    try {
+        const { PayrollPayslipTemplate } = require('../config/database');
+        const template = await PayrollPayslipTemplate.findByPk(req.params.id);
+        if (!template) {
+            return res.status(404).json({ success: false, error: 'Plantilla no encontrada' });
+        }
+        res.json({ success: true, data: template });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /payslip-templates
+router.post('/payslip-templates', async (req, res) => {
+    try {
+        const { PayrollPayslipTemplate } = require('../config/database');
+        const template = await PayrollPayslipTemplate.create({
+            ...req.body,
+            company_id: req.companyId,
+            created_by: req.userId,
+            is_default: false
+        });
+        res.status(201).json({ success: true, data: template });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// PUT /payslip-templates/:id
+router.put('/payslip-templates/:id', async (req, res) => {
+    try {
+        const { PayrollPayslipTemplate } = require('../config/database');
+        const template = await PayrollPayslipTemplate.findOne({
+            where: { template_id: req.params.id, company_id: req.companyId }
+        });
+        if (!template) {
+            return res.status(404).json({ success: false, error: 'Plantilla no encontrada o no pertenece a su empresa' });
+        }
+        await template.update(req.body);
+        res.json({ success: true, data: template });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /payslip/generate - Generar recibo de sueldo HTML
+router.post('/payslip/generate', async (req, res) => {
+    try {
+        const { run_detail_id, template_id } = req.body;
+
+        // Obtener datos del detalle
+        const [runDetail] = await sequelize.query(`
+            SELECT
+                prd.*,
+                pr.period_year, pr.period_month, pr.period_start, pr.period_end, pr.payment_date,
+                u."firstName", u."lastName", u.dni, u.employee_code, u.hire_date,
+                d.name as department_name,
+                c.name as company_name, c.legal_name as company_legal_name, c.tax_id as company_tax_id,
+                c.address as company_address, c.logo_url as company_logo_url
+            FROM payroll_run_details prd
+            JOIN payroll_runs pr ON prd.run_id = pr.id
+            JOIN users u ON prd.user_id = u.user_id
+            LEFT JOIN departments d ON u."departmentId" = d.id
+            JOIN companies c ON pr.company_id = c.company_id
+            WHERE prd.id = :runDetailId AND pr.company_id = :companyId
+        `, {
+            replacements: { runDetailId: run_detail_id, companyId: req.companyId },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!runDetail.length) {
+            return res.status(404).json({ success: false, error: 'Detalle de nomina no encontrado' });
+        }
+
+        // Obtener plantilla
+        const { PayrollPayslipTemplate } = require('../config/database');
+        let template;
+        if (template_id) {
+            template = await PayrollPayslipTemplate.findByPk(template_id);
+        } else {
+            template = await PayrollPayslipTemplate.findOne({ where: { is_default: true, is_active: true } });
+        }
+
+        if (!template) {
+            return res.status(404).json({ success: false, error: 'Plantilla no encontrada' });
+        }
+
+        // Obtener conceptos
+        const concepts = await sequelize.query(`
+            SELECT prcd.*, pct.affects_gross, pct.is_deduction, pct.is_employer_cost
+            FROM payroll_run_concept_details prcd
+            JOIN payroll_concept_types pct ON prcd.concept_type_id = pct.id
+            WHERE prcd.run_detail_id = :runDetailId
+            ORDER BY pct.display_order, prcd.concept_name
+        `, {
+            replacements: { runDetailId: run_detail_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const detail = runDetail[0];
+        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        const payslipData = {
+            company: {
+                name: detail.company_name,
+                legal_name: detail.company_legal_name,
+                tax_id: detail.company_tax_id,
+                address: detail.company_address,
+                logo_url: detail.company_logo_url
+            },
+            period: {
+                year: detail.period_year,
+                month: detail.period_month,
+                month_name: monthNames[detail.period_month - 1],
+                start: detail.period_start,
+                end: detail.period_end
+            },
+            employee: {
+                full_name: `${detail.firstName} ${detail.lastName}`,
+                tax_id: detail.dni,
+                code: detail.employee_code,
+                hire_date: detail.hire_date,
+                department: detail.department_name
+            },
+            concepts: concepts.map(c => ({
+                code: c.concept_code,
+                name: c.concept_name,
+                quantity: c.quantity || '',
+                amount: parseFloat(c.calculated_amount || 0).toFixed(2),
+                is_earning: !c.is_deduction && !c.is_employer_cost,
+                is_deduction: c.is_deduction && !c.is_employer_cost
+            })),
+            totals: {
+                gross_remunerative: parseFloat(detail.gross_earnings || 0).toFixed(2),
+                non_remunerative: parseFloat(detail.non_remunerative || 0).toFixed(2),
+                deductions: parseFloat(detail.total_deductions || 0).toFixed(2),
+                net_salary: parseFloat(detail.net_salary || 0).toFixed(2),
+                employer_cost: parseFloat(detail.employer_contributions || 0).toFixed(2)
+            },
+            legal_disclaimer: template.legal_disclaimer,
+            generation_date: new Date().toLocaleDateString('es-AR')
+        };
+
+        res.json({ success: true, data: payslipData, template_html: {
+            header: template.header_html,
+            body: template.body_html,
+            footer: template.footer_html,
+            css: template.styles_css
+        }});
+    } catch (error) {
+        console.error('Error generating payslip:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 module.exports = router;

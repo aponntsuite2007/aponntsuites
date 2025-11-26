@@ -39,7 +39,9 @@
  * ============================================================================
  */
 
-const { chromium } = require('playwright');
+// Playwright opcional para produccion
+let chromium = null;
+try { chromium = require('playwright').chromium; } catch(e) { console.log('Playwright no disponible'); }
 const LearningEngine = require('../learning/LearningEngine');
 
 class BaseModuleCollector {

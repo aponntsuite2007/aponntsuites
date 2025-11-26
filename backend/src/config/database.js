@@ -515,6 +515,43 @@ UserPayrollAssignment.hasMany(PayrollRunDetail, { foreignKey: 'assignment_id', a
 PayrollRunDetail.hasMany(PayrollRunConceptDetail, { foreignKey: 'detail_id', as: 'concepts' });
 PayrollRunConceptDetail.belongsTo(PayrollRunDetail, { foreignKey: 'detail_id', as: 'runDetail' });
 
+// =========================================================================
+// PayrollEntity associations (Entidades para consolidacion de deducciones)
+// =========================================================================
+Company.hasMany(PayrollEntity, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'payrollEntities' });
+PayrollEntity.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+PayrollCountry.hasMany(PayrollEntity, { foreignKey: 'country_id', as: 'entities' });
+PayrollEntity.belongsTo(PayrollCountry, { foreignKey: 'country_id', as: 'country' });
+
+PayrollEntity.hasMany(PayrollEntitySettlement, { foreignKey: 'entity_id', as: 'settlements' });
+PayrollEntitySettlement.belongsTo(PayrollEntity, { foreignKey: 'entity_id', as: 'entity' });
+
+// PayrollTemplateConcept -> PayrollEntity (campo entity_id agregado)
+PayrollEntity.hasMany(PayrollTemplateConcept, { foreignKey: 'entity_id', as: 'concepts' });
+PayrollTemplateConcept.belongsTo(PayrollEntity, { foreignKey: 'entity_id', as: 'entity' });
+
+// PayrollEntitySettlement associations
+Company.hasMany(PayrollEntitySettlement, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'entitySettlements' });
+PayrollEntitySettlement.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+PayrollRun.hasMany(PayrollEntitySettlement, { foreignKey: 'run_id', as: 'entitySettlements' });
+PayrollEntitySettlement.belongsTo(PayrollRun, { foreignKey: 'run_id', as: 'payrollRun' });
+
+PayrollEntitySettlement.hasMany(PayrollEntitySettlementDetail, { foreignKey: 'settlement_id', as: 'details' });
+PayrollEntitySettlementDetail.belongsTo(PayrollEntitySettlement, { foreignKey: 'settlement_id', as: 'settlement' });
+
+// PayrollEntitySettlementDetail associations
+User.hasMany(PayrollEntitySettlementDetail, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'entitySettlementDetails' });
+PayrollEntitySettlementDetail.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// PayrollPayslipTemplate associations
+Company.hasMany(PayrollPayslipTemplate, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'payslipTemplates' });
+PayrollPayslipTemplate.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+PayrollCountry.hasMany(PayrollPayslipTemplate, { foreignKey: 'country_id', as: 'payslipTemplates' });
+PayrollPayslipTemplate.belongsTo(PayrollCountry, { foreignKey: 'country_id', as: 'country' });
+
 // Department relations (ajustadas para PostgreSQL)
 Department.hasMany(User, { foreignKey: 'departmentId', as: 'employees' });
 User.belongsTo(Department, { foreignKey: 'departmentId', as: 'department' });
@@ -1269,6 +1306,12 @@ module.exports = {
   PayrollRun,
   PayrollRunDetail,
   PayrollRunConceptDetail,
+
+  // Entidades y Liquidaciones Consolidadas
+  PayrollEntity,
+  PayrollEntitySettlement,
+  PayrollEntitySettlementDetail,
+  PayrollPayslipTemplate,
 
   connect: async () => {
     try {

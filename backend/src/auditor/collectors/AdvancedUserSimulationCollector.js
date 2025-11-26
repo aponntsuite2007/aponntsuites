@@ -27,7 +27,9 @@
  * @date 2025-10-22
  */
 
-const { chromium } = require('playwright');
+// Playwright opcional para produccion
+let chromium = null;
+try { chromium = require('playwright').chromium; } catch(e) { console.log('Playwright no disponible'); }
 const faker = require('faker');
 
 // Configurar faker en español

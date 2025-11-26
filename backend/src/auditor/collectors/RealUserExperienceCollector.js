@@ -16,7 +16,9 @@
  * @date 2025-10-22
  */
 
-const { chromium } = require('playwright');
+// Playwright opcional para produccion
+let chromium = null;
+try { chromium = require('playwright').chromium; } catch(e) { console.log('Playwright no disponible'); }
 
 class RealUserExperienceCollector {
   constructor(database, systemRegistry) {
