@@ -2202,7 +2202,7 @@
   "modelo_de_negocio": "Business Model",
   "arquitectura_modular": "Modular Architecture",
   "sistema_plug_play": "Plug & Play System",
-  "desc_sistema_integral": "Ecosystem for Administration and Planning of Business Resources",
+  "desc_sistema_integral": "<span style=\"color: #60a5fa;\">Ecosystem</span> for Administration and Planning of Business Resources",
   "recursos_empresariales": "Business Resources",
   "hero_subtitle_full": "B2B SaaS platform for attendance management, biometrics and human resources. Predictive analysis with AI to anticipate patterns and optimize personnel management. Available in 6 languages for global companies.",
   "es_espanol": "ES Spanish",

@@ -2203,7 +2203,7 @@
   "modelo_de_negocio": "Geschäftsmodell",
   "arquitectura_modular": "Modulare Architektur",
   "sistema_plug_play": "Plug & Play System",
-  "desc_sistema_integral": "Ökosystem für Verwaltung und Planung von Unternehmensressourcen",
+  "desc_sistema_integral": "<span style=\"color: #60a5fa;\">Ökosystem</span> für Verwaltung und Planung von Unternehmensressourcen",
   "recursos_empresariales": "Unternehmensressourcen",
   "hero_subtitle_full": "B2B-SaaS-Plattform für Anwesenheitsverwaltung, Biometrie und Personalwesen. Prädiktive Analyse mit KI zur Mustererkennung und Personaloptimierung. Verfügbar in 6 Sprachen für globale Unternehmen.",
   "es_espanol": "ES Spanisch",

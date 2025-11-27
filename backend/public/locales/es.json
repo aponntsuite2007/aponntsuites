@@ -2140,7 +2140,7 @@
   "modelo_de_negocio": "Modelo de Negocio",
   "arquitectura_modular": "Arquitectura Modular",
   "sistema_plug_play": "Sistema Plug & Play",
-  "desc_sistema_integral": "Ecosistema de Administración y Planificación de los Recursos Empresariales",
+  "desc_sistema_integral": "<span style=\"color: #60a5fa;\">Ecosistema</span> de Administración y Planificación de los Recursos Empresariales",
   "recursos_empresariales": "Recursos Empresariales",
   "hero_subtitle_full": "Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos. Análisis predictivo con IA para anticipar patrones y optimizar la gestión de personal. Disponible en 6 idiomas para empresas globales.",
   "es_espanol": "ES Español",
