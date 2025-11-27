@@ -166,7 +166,7 @@
 
     <!-- CONFIGURACIÓN DINÁMICA DE PUERTOS - DEBE SER EL PRIMER SCRIPT -->
     <script src="js/port-config.js"></script>
-    <script src="js/translation-system.js"></script>
+    <script src="js/translation-system-v4.js"></script>
 
     <!-- ⏰ FUNCIONES GLOBALES - FECHA/HORA Y SELECTOR DE IDIOMAS -->
     <script>
@@ -6717,11 +6717,11 @@
         // CARGAR MÓDULOS DE LA EMPRESA AL INICIO
         // Se cargarán cuando el usuario haga login y seleccione empresa
 
-        // Verificar si TranslationSystem está disponible
-        if (typeof TranslationSystem !== 'undefined') {
-            // Inicializar el sistema de traducciones
-            window.translator = new TranslationSystem();
-            console.log('✅ [TRANSLATION] Sistema de traducciones inicializado');
+        // Verificar si SmartTranslationSystem está disponible
+        if (typeof SmartTranslationSystem !== 'undefined') {
+            // Inicializar el sistema de traducciones V4
+            window.translator = new SmartTranslationSystem();
+            console.log('✅ [TRANSLATION V4] Sistema de traducciones inteligente inicializado');
 
             // Inicializar selector de idioma después de un breve delay
             setTimeout(() => {
@@ -6734,7 +6734,7 @@
             }, 100);
 
         } else {
-            console.error('❌ [TRANSLATION] TranslationSystem no está disponible');
+            console.error('❌ [TRANSLATION V4] SmartTranslationSystem no está disponible');
             // Crear selector básico de fallback
             if (typeof initializeLanguageSelector === 'function') {
                 setTimeout(initializeLanguageSelector, 100);

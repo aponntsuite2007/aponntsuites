@@ -424,15 +424,17 @@ PayrollTemplate.belongsTo(PayrollCountry, { foreignKey: 'country_id', as: 'count
 Company.hasMany(CompanyBranch, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'branches' });
 CompanyBranch.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
 
-CompanyBranch.belongsTo(PayrollTemplate, { foreignKey: 'default_template_id', as: 'defaultTemplate' });
-PayrollTemplate.hasMany(CompanyBranch, { foreignKey: 'default_template_id', as: 'defaultForBranches' });
+// NOTA: Asociación comentada - columna default_template_id no existe en company_branches
+// CompanyBranch.belongsTo(PayrollTemplate, { foreignKey: 'default_template_id', as: 'defaultTemplate' });
+// PayrollTemplate.hasMany(CompanyBranch, { foreignKey: 'default_template_id', as: 'defaultForBranches' });
 
 CompanyBranch.hasMany(PayrollRun, { foreignKey: 'branch_id', as: 'payrollRuns' });
 PayrollRun.belongsTo(CompanyBranch, { foreignKey: 'branch_id', as: 'branch' });
 
 // LaborAgreementV2 associations
-LaborAgreementV2.hasMany(PayrollTemplate, { foreignKey: 'agreement_id', as: 'templates' });
-PayrollTemplate.belongsTo(LaborAgreementV2, { foreignKey: 'agreement_id', as: 'laborAgreement' });
+// RESTAURADO: FK correcto es labor_agreement_id (verificado en esquema BD real)
+LaborAgreementV2.hasMany(PayrollTemplate, { foreignKey: 'labor_agreement_id', as: 'templates' });
+PayrollTemplate.belongsTo(LaborAgreementV2, { foreignKey: 'labor_agreement_id', as: 'laborAgreement' });
 
 LaborAgreementV2.hasMany(SalaryCategoryV2, { foreignKey: 'agreement_id', as: 'categories' });
 SalaryCategoryV2.belongsTo(LaborAgreementV2, { foreignKey: 'agreement_id', as: 'laborAgreement' });
@@ -450,8 +452,9 @@ PayrollTemplateConcept.belongsTo(PayrollTemplate, { foreignKey: 'template_id', a
 PayrollTemplate.hasMany(UserPayrollAssignment, { foreignKey: 'template_id', as: 'userAssignments' });
 UserPayrollAssignment.belongsTo(PayrollTemplate, { foreignKey: 'template_id', as: 'template' });
 
-PayrollTemplate.hasMany(PayrollRun, { foreignKey: 'template_id', as: 'payrollRuns' });
-PayrollRun.belongsTo(PayrollTemplate, { foreignKey: 'template_id', as: 'template' });
+// PayrollTemplate-PayrollRun association removed - template_id doesn't exist in payroll_runs table
+// PayrollTemplate.hasMany(PayrollRun, { foreignKey: 'template_id', as: 'payrollRuns' });
+// PayrollRun.belongsTo(PayrollTemplate, { foreignKey: 'template_id', as: 'template' });
 
 // PayrollConceptType associations
 PayrollConceptType.hasMany(PayrollTemplateConcept, { foreignKey: 'concept_type_id', as: 'templateConcepts' });

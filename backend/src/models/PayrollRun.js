@@ -1,43 +1,28 @@
 /**
  * Modelo PayrollRun - Ejecuciones de liquidación
  * Sistema de Liquidación Parametrizable v3.0
+ * SINCRONIZADO con esquema BD real
  */
 
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
     const PayrollRun = sequelize.define('PayrollRun', {
-        run_id: {
+        id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
         company_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: 'companies',
-                key: 'company_id'
-            }
+            allowNull: false
         },
         branch_id: {
-            type: DataTypes.INTEGER,
-            references: {
-                model: 'company_branches',
-                key: 'branch_id'
-            }
-        },
-        template_id: {
-            type: DataTypes.INTEGER,
-            references: {
-                model: 'payroll_templates',
-                key: 'template_id'
-            }
+            type: DataTypes.INTEGER
         },
         run_code: {
             type: DataTypes.STRING(50),
-            allowNull: false,
-            comment: 'Código único de la corrida'
+            allowNull: false
         },
         run_name: {
             type: DataTypes.STRING(200)
@@ -48,8 +33,13 @@ module.exports = (sequelize) => {
         },
         period_month: {
             type: DataTypes.INTEGER,
-            allowNull: false,
-            comment: '1-12'
+            allowNull: false
+        },
+        period_half: {
+            type: DataTypes.INTEGER
+        },
+        period_week: {
+            type: DataTypes.INTEGER
         },
         period_start: {
             type: DataTypes.DATEONLY,
@@ -59,14 +49,8 @@ module.exports = (sequelize) => {
             type: DataTypes.DATEONLY,
             allowNull: false
         },
-        pay_date: {
-            type: DataTypes.DATEONLY,
-            comment: 'Fecha de pago'
-        },
-        status: {
-            type: DataTypes.STRING(20),
-            defaultValue: 'draft',
-            comment: 'draft, processing, completed, approved, paid, cancelled'
+        payment_date: {
+            type: DataTypes.DATEONLY
         },
         total_employees: {
             type: DataTypes.INTEGER,
@@ -88,87 +72,61 @@ module.exports = (sequelize) => {
             type: DataTypes.DECIMAL(18, 2),
             defaultValue: 0
         },
-        processing_started_at: {
-            type: DataTypes.DATE
-        },
-        processing_completed_at: {
-            type: DataTypes.DATE
+        status: {
+            type: DataTypes.STRING(20),
+            defaultValue: 'draft'
         },
         approved_by: {
-            type: DataTypes.UUID,
-            references: {
-                model: 'users',
-                key: 'user_id'
-            }
+            type: DataTypes.UUID
         },
         approved_at: {
+            type: DataTypes.DATE
+        },
+        paid_at: {
             type: DataTypes.DATE
         },
         notes: {
             type: DataTypes.TEXT
         },
-        metadata: {
-            type: DataTypes.JSONB,
-            defaultValue: {}
-        },
         created_by: {
-            type: DataTypes.UUID,
-            references: {
-                model: 'users',
-                key: 'user_id'
-            }
+            type: DataTypes.UUID
         }
     }, {
         tableName: 'payroll_runs',
         timestamps: true,
         createdAt: 'created_at',
-        updatedAt: 'updated_at',
-        indexes: [
-            { fields: ['company_id'] },
-            { fields: ['branch_id'] },
-            { fields: ['template_id'] },
-            { fields: ['company_id', 'run_code'], unique: true },
-            { fields: ['period_year', 'period_month'] },
-            { fields: ['status'] }
-        ]
+        updatedAt: 'updated_at'
     });
 
     PayrollRun.associate = (models) => {
-        // Pertenece a una empresa
-        PayrollRun.belongsTo(models.Company, {
-            foreignKey: 'company_id',
-            as: 'company'
-        });
-
-        // Pertenece a una sucursal
-        PayrollRun.belongsTo(models.CompanyBranch, {
-            foreignKey: 'branch_id',
-            as: 'branch'
-        });
-
-        // Pertenece a una plantilla
-        PayrollRun.belongsTo(models.PayrollTemplate, {
-            foreignKey: 'template_id',
-            as: 'template'
-        });
-
-        // Usuario creador
-        PayrollRun.belongsTo(models.User, {
-            foreignKey: 'created_by',
-            as: 'creator'
-        });
-
-        // Usuario aprobador
-        PayrollRun.belongsTo(models.User, {
-            foreignKey: 'approved_by',
-            as: 'approver'
-        });
-
-        // Tiene muchos detalles por empleado
-        PayrollRun.hasMany(models.PayrollRunDetail, {
-            foreignKey: 'run_id',
-            as: 'details'
-        });
+        if (models.Company) {
+            PayrollRun.belongsTo(models.Company, {
+                foreignKey: 'company_id',
+                as: 'company'
+            });
+        }
+        if (models.CompanyBranch) {
+            PayrollRun.belongsTo(models.CompanyBranch, {
+                foreignKey: 'branch_id',
+                as: 'branch'
+            });
+        }
+        if (models.User) {
+            PayrollRun.belongsTo(models.User, {
+                foreignKey: 'created_by',
+                as: 'creator'
+            });
+            PayrollRun.belongsTo(models.User, {
+                foreignKey: 'approved_by',
+                as: 'approver'
+            });
+        }
+        if (models.PayrollRunDetail) {
+            PayrollRun.hasMany(models.PayrollRunDetail, {
+                foreignKey: 'run_id',
+                as: 'details'
+            });
+        }
     };
 
     return PayrollRun;

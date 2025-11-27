@@ -37,12 +37,25 @@ const {
 } = require('../config/database');
 
 const PayrollCalculatorService = require('../services/PayrollCalculatorService');
+const jwt = require('jsonwebtoken');
 
-// Middleware para verificar autenticación
+// Middleware para verificar autenticación (soporta JWT y headers x-company-id)
 const verifyAuth = (req, res, next) => {
-    // Por ahora simplificado - en producción verificar JWT
-    const companyId = req.headers['x-company-id'] || req.query.company_id;
-    const userId = req.headers['x-user-id'] || req.query.user_id;
+    let companyId = req.headers['x-company-id'] || req.query.company_id;
+    let userId = req.headers['x-user-id'] || req.query.user_id;
+
+    // También soportar JWT en Authorization header
+    const authHeader = req.headers['authorization'];
+    if (!companyId && authHeader && authHeader.startsWith('Bearer ')) {
+        try {
+            const token = authHeader.split(' ')[1];
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+            companyId = decoded.companyId || decoded.company_id;
+            userId = decoded.id || decoded.userId;
+        } catch (err) {
+            // Token inválido - continuar sin él
+        }
+    }
 
     if (!companyId) {
         return res.status(401).json({ success: false, error: 'Company ID required' });
@@ -260,7 +273,8 @@ router.get('/templates', async (req, res) => {
 
         const include = [
             { model: PayrollCountry, as: 'country' },
-            { model: LaborAgreementV2, as: 'laborAgreement' }
+            // RESTAURADO: FK correcto es labor_agreement_id
+            { model: LaborAgreementV2, as: 'laborAgreement', required: false }
         ];
 
         if (include_concepts === 'true') {
@@ -295,12 +309,12 @@ router.get('/templates/:id', async (req, res) => {
     try {
         const template = await PayrollTemplate.findOne({
             where: {
-                template_id: req.params.id,
+                id: req.params.id,
                 company_id: req.companyId
             },
             include: [
                 { model: PayrollCountry, as: 'country' },
-                { model: LaborAgreementV2, as: 'laborAgreement' },
+                { model: LaborAgreementV2, as: 'laborAgreement', required: false },
                 {
                     model: PayrollTemplateConcept,
                     as: 'concepts',
@@ -538,7 +552,6 @@ router.get('/assignments', async (req, res) => {
                     where: { company_id: req.companyId },
                     attributes: ['user_id', 'firstName', 'lastName', 'email']
                 },
-                { model: PayrollTemplate, as: 'template' },
                 { model: SalaryCategoryV2, as: 'category' },
                 { model: CompanyBranch, as: 'branch' }
             ],
@@ -862,6 +875,144 @@ router.post('/calculate/bulk', async (req, res) => {
 // ============================================================================
 
 /**
+ * GET /api/payroll/runs/summary
+ * Resumen de liquidaciones para el dashboard (KPIs)
+ */
+router.get('/runs/summary', async (req, res) => {
+    try {
+        const { year, month, branch_id } = req.query;
+        const currentYear = year || new Date().getFullYear();
+        const currentMonth = month || new Date().getMonth() + 1;
+
+        // Obtener datos de payroll_runs para el periodo
+        const runData = await sequelize.query(`
+            SELECT
+                COALESCE(SUM(total_employees), 0) as total_employees,
+                COALESCE(SUM(total_gross), 0) as total_gross,
+                COALESCE(SUM(total_net), 0) as total_net,
+                COALESCE(SUM(total_deductions), 0) as total_deductions,
+                COALESCE(SUM(total_employer_cost), 0) as total_employer_cost,
+                COUNT(CASE WHEN status = 'draft' THEN 1 END) as pending,
+                COUNT(CASE WHEN status IN ('completed', 'approved', 'paid') THEN 1 END) as processed,
+                COUNT(CASE WHEN status = 'error' THEN 1 END) as errors
+            FROM payroll_runs
+            WHERE company_id = :companyId
+            AND period_year = :year
+            AND period_month = :month
+            ${branch_id ? 'AND branch_id = :branchId' : ''}
+        `, {
+            replacements: {
+                companyId: req.companyId,
+                year: currentYear,
+                month: currentMonth,
+                branchId: branch_id
+            },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        // Si no hay payroll_runs o total_employees es 0, obtener datos de user_salary_config_v2
+        if (!runData || !runData.length || parseInt(runData[0].total_employees) === 0) {
+            const salaryData = await sequelize.query(`
+                SELECT
+                    COUNT(*) as total_employees,
+                    COALESCE(SUM(base_salary::numeric), 0) as total_gross,
+                    COALESCE(SUM(base_salary::numeric * 0.83), 0) as total_net
+                FROM user_salary_config_v2
+                WHERE company_id = :companyId AND is_current = true
+            `, {
+                replacements: { companyId: req.companyId },
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            return res.json({
+                success: true,
+                data: {
+                    total_employees: parseInt(salaryData[0]?.total_employees || 0),
+                    processed: 0,
+                    pending: parseInt(salaryData[0]?.total_employees || 0),
+                    errors: 0,
+                    total_gross: parseFloat(salaryData[0]?.total_gross || 0),
+                    total_net: parseFloat(salaryData[0]?.total_net || 0),
+                    period: { year: currentYear, month: currentMonth }
+                }
+            });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                total_employees: parseInt(runData[0].total_employees || 0),
+                processed: parseInt(runData[0].processed || 0),
+                pending: parseInt(runData[0].pending || 0),
+                errors: parseInt(runData[0].errors || 0),
+                total_gross: parseFloat(runData[0].total_gross || 0),
+                total_net: parseFloat(runData[0].total_net || 0),
+                total_deductions: parseFloat(runData[0].total_deductions || 0),
+                total_employer_cost: parseFloat(runData[0].total_employer_cost || 0),
+                period: { year: currentYear, month: currentMonth }
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching runs summary:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/payroll/runs/details
+ * Detalle de empleados para una liquidación (usado por la tabla de empleados)
+ */
+router.get('/runs/details', async (req, res) => {
+    try {
+        const { year, month, branch_id } = req.query;
+        const currentYear = year || new Date().getFullYear();
+        const currentMonth = month || new Date().getMonth() + 1;
+
+        // Obtener empleados con sus configuraciones salariales
+        const employees = await sequelize.query(`
+            SELECT
+                u.user_id as id,
+                u."firstName",
+                u."lastName",
+                u.employee_code,
+                d.name as department_name,
+                pt.template_name,
+                usc.base_salary as gross_earnings,
+                usc.base_salary * 0.17 as total_deductions,
+                usc.base_salary * 0.83 as net_salary,
+                CASE
+                    WHEN pr.id IS NOT NULL AND pr.status = 'paid' THEN 'paid'
+                    WHEN pr.id IS NOT NULL AND pr.status = 'approved' THEN 'approved'
+                    WHEN pr.id IS NOT NULL THEN 'calculated'
+                    ELSE 'pending'
+                END as status
+            FROM users u
+            LEFT JOIN user_salary_config_v2 usc ON u.user_id = usc.user_id AND usc.is_current = true
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN payroll_templates pt ON pt.company_id = u.company_id AND pt.is_active = true
+            LEFT JOIN payroll_runs pr ON pr.company_id = u.company_id
+                AND pr.period_year = :year AND pr.period_month = :month
+            WHERE u.company_id = :companyId
+            AND u.is_active = true
+            ORDER BY u."lastName", u."firstName"
+            LIMIT 100
+        `, {
+            replacements: {
+                companyId: req.companyId,
+                year: currentYear,
+                month: currentMonth
+            },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        res.json({ success: true, data: employees });
+    } catch (error) {
+        console.error('Error fetching runs details:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * GET /api/payroll/runs
  * Lista ejecuciones de liquidación
  */
@@ -878,10 +1029,7 @@ router.get('/runs', async (req, res) => {
         const runs = await PayrollRun.findAll({
             where,
             include: [
-                { model: CompanyBranch, as: 'branch' },
-                { model: PayrollTemplate, as: 'template' },
-                { model: User, as: 'creator', attributes: ['firstName', 'lastName'] },
-                { model: User, as: 'approver', attributes: ['firstName', 'lastName'] }
+                { model: CompanyBranch, as: 'branch', required: false }
             ],
             order: [['created_at', 'DESC']]
         });
@@ -900,10 +1048,9 @@ router.get('/runs', async (req, res) => {
 router.get('/runs/:id', async (req, res) => {
     try {
         const run = await PayrollRun.findOne({
-            where: { run_id: req.params.id, company_id: req.companyId },
+            where: { id: req.params.id, company_id: req.companyId },
             include: [
                 { model: CompanyBranch, as: 'branch' },
-                { model: PayrollTemplate, as: 'template' },
                 {
                     model: PayrollRunDetail,
                     as: 'details',
@@ -941,7 +1088,7 @@ router.get('/runs/:id', async (req, res) => {
 router.put('/runs/:id/approve', async (req, res) => {
     try {
         const run = await PayrollRun.findOne({
-            where: { run_id: req.params.id, company_id: req.companyId }
+            where: { id: req.params.id, company_id: req.companyId }
         });
 
         if (!run) {
@@ -975,7 +1122,7 @@ router.put('/runs/:id/approve', async (req, res) => {
 router.put('/runs/:id/pay', async (req, res) => {
     try {
         const run = await PayrollRun.findOne({
-            where: { run_id: req.params.id, company_id: req.companyId }
+            where: { id: req.params.id, company_id: req.companyId }
         });
 
         if (!run) {
@@ -1490,6 +1637,110 @@ router.put('/payslip-templates/:id', async (req, res) => {
         }
         await template.update(req.body);
         res.json({ success: true, data: template });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================================
+// EXPORTACION MULTI-PLATAFORMA (SAP, Workday, ADP, Oracle, Bancos, Contabilidad)
+// ============================================================================
+
+const PayrollExportService = require('../services/PayrollExportService');
+
+// GET /export/formats - Obtener formatos de exportacion disponibles
+router.get('/export/formats', async (req, res) => {
+    try {
+        const formats = await PayrollExportService.getAvailableFormats(req.companyId);
+        res.json({ success: true, data: formats });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /export/formats/erp - Obtener solo formatos ERP
+router.get('/export/formats/erp', (req, res) => {
+    const erpFormats = Object.values(PayrollExportService.EXPORT_FORMATS)
+        .filter(f => f.type === 'ERP');
+    res.json({ success: true, data: erpFormats });
+});
+
+// POST /export/payroll-run/:runId - Exportar corrida de nomina
+router.post('/export/payroll-run/:runId', async (req, res) => {
+    try {
+        const { runId } = req.params;
+        const { format, options } = req.body;
+
+        const result = await PayrollExportService.exportPayrollRun(runId, format, options || {});
+
+        if (req.query.download === 'true') {
+            res.setHeader('Content-Type', result.mimeType);
+            res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+            res.send(result.content);
+        } else {
+            res.json({ success: true, data: result });
+        }
+    } catch (error) {
+        console.error('Error exporting payroll run:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /export/entity-settlement/:settlementId - Exportar consolidacion por entidad
+router.post('/export/entity-settlement/:settlementId', async (req, res) => {
+    try {
+        const { settlementId } = req.params;
+        const { format, options } = req.body;
+
+        const result = await PayrollExportService.exportEntitySettlement(settlementId, format, options || {});
+
+        if (req.query.download === 'true') {
+            res.setHeader('Content-Type', result.mimeType);
+            res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+            res.send(result.content);
+        } else {
+            res.json({ success: true, data: result });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /export/bank-transfer/:runId - Exportar archivo bancario (ISO 20022 o CSV)
+router.post('/export/bank-transfer/:runId', async (req, res) => {
+    try {
+        const { runId } = req.params;
+        const { format = 'BANK_TRANSFER_CSV', options } = req.body;
+
+        const result = await PayrollExportService.exportPayrollRun(runId, format, options || {});
+
+        if (req.query.download === 'true') {
+            res.setHeader('Content-Type', result.mimeType);
+            res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+            res.send(result.content);
+        } else {
+            res.json({ success: true, data: result });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /export/accounting/:runId - Exportar asiento contable
+router.post('/export/accounting/:runId', async (req, res) => {
+    try {
+        const { runId } = req.params;
+        const { options } = req.body;
+
+        const result = await PayrollExportService.exportPayrollRun(runId, 'ACCOUNTING_JOURNAL', options || {});
+
+        if (req.query.download === 'true') {
+            res.setHeader('Content-Type', result.mimeType);
+            res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+            res.send(result.content);
+        } else {
+            res.json({ success: true, data: result });
+        }
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }

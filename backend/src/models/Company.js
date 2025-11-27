@@ -406,6 +406,15 @@ module.exports = (sequelize) => {
     },
 
     // Metadata
+    // Multi-Branch Feature Flag (Fase MB-1)
+    multiBranchEnabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'multi_branch_enabled',
+      comment: 'Feature flag para habilitar funcionalidad multi-sucursal'
+    },
+
     metadata: {
       type: DataTypes.JSONB,
       allowNull: true,

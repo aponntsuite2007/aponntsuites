@@ -94,6 +94,9 @@ class IntelligentTestingOrchestrator {
         // Nuevo collector de Kiosks (2025-11-08)
         const KiosksModuleCollector = require('../collectors/KiosksModuleCollector');
 
+        // Nuevo collector de Payroll/Liquidación (2025-11-27)
+        const PayrollModuleCollector = require('../collectors/PayrollModuleCollector');
+
         // Registrar collectors
         this.registerCollector('employee_profile', EmployeeProfileCollector);
         this.registerCollector('attendance', AttendanceModuleCollector);
@@ -104,8 +107,9 @@ class IntelligentTestingOrchestrator {
         this.registerCollector('biometric_devices', BiometricDevicesCollector);
         this.registerCollector('medical-dashboard', MedicalDashboardModuleCollector);
         this.registerCollector('kiosks', KiosksModuleCollector);
+        this.registerCollector('payroll-liquidation', PayrollModuleCollector);
 
-        // TODO: Agregar los 27 collectors restantes aquí a medida que se implementen
+        // TODO: Agregar los collectors restantes aquí a medida que se implementen
         // this.registerCollector('notifications', NotificationsModuleCollector);
         // etc...
 

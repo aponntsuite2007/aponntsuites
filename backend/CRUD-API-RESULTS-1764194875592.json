@@ -1,0 +1,155 @@
+{
+  "timestamp": "2025-11-26T22:07:52.468Z",
+  "modules": {
+    "departments": {
+      "tests": [
+        {
+          "name": "CREATE - Crear departamento",
+          "passed": false,
+          "details": "Status: 400"
+        },
+        {
+          "name": "READ ALL - Listar departamentos",
+          "passed": true,
+          "details": "Count: 4"
+        }
+      ],
+      "passed": 1,
+      "failed": 1
+    },
+    "shifts": {
+      "tests": [
+        {
+          "name": "CREATE - Crear turno",
+          "passed": true,
+          "details": "ID: shift_1764194875000"
+        },
+        {
+          "name": "READ ALL - Listar turnos",
+          "passed": false,
+          "details": "Count: 0"
+        },
+        {
+          "name": "READ ONE - Obtener por ID",
+          "passed": true,
+          "details": ""
+        },
+        {
+          "name": "UPDATE - Actualizar turno",
+          "passed": true,
+          "details": ""
+        },
+        {
+          "name": "DELETE - Eliminar turno",
+          "passed": true,
+          "details": ""
+        }
+      ],
+      "passed": 4,
+      "failed": 1
+    },
+    "users": {
+      "tests": [
+        {
+          "name": "CREATE - Crear usuario",
+          "passed": false,
+          "details": "Status: 401"
+        },
+        {
+          "name": "READ ALL - Listar usuarios",
+          "passed": true,
+          "details": "Count: 138"
+        }
+      ],
+      "passed": 1,
+      "failed": 1
+    },
+    "attendance": {
+      "tests": [
+        {
+          "name": "READ ALL - Listar asistencias",
+          "passed": false,
+          "details": "Count: 0"
+        },
+        {
+          "name": "READ - Estado de hoy",
+          "passed": false,
+          "details": ""
+        },
+        {
+          "name": "READ - Estadísticas",
+          "passed": false,
+          "details": ""
+        },
+        {
+          "name": "CREATE - Check-in",
+          "passed": false,
+          "details": "OK"
+        },
+        {
+          "name": "UPDATE - Check-out",
+          "passed": false,
+          "details": "OK"
+        }
+      ],
+      "passed": 0,
+      "failed": 5
+    },
+    "payroll": {
+      "tests": [
+        {
+          "name": "READ - Listar países",
+          "passed": false,
+          "details": "Count: 0"
+        },
+        {
+          "name": "READ - Tipos de conceptos",
+          "passed": false,
+          "details": ""
+        },
+        {
+          "name": "READ ALL - Listar plantillas",
+          "passed": false,
+          "details": "Count: 0"
+        },
+        {
+          "name": "CREATE - Crear plantilla",
+          "passed": false,
+          "details": "Status: 401"
+        },
+        {
+          "name": "READ - Listar sucursales",
+          "passed": false,
+          "details": "Count: 0"
+        },
+        {
+          "name": "READ - Listar convenios",
+          "passed": false,
+          "details": "Count: 0"
+        },
+        {
+          "name": "READ - Historial liquidaciones",
+          "passed": false,
+          "details": "Count: 0"
+        },
+        {
+          "name": "READ - Categorías salariales",
+          "passed": false,
+          "details": "Count: 0"
+        },
+        {
+          "name": "CALCULATE - Preview liquidación",
+          "passed": false,
+          "details": ""
+        }
+      ],
+      "passed": 0,
+      "failed": 9
+    }
+  },
+  "summary": {
+    "total": 23,
+    "passed": 6,
+    "failed": 17
+  }
+}

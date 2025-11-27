@@ -1,0 +1,4565 @@
+{
+  "analyzedAt": "2025-11-27T04:16:33.302Z",
+  "tables": {
+    "users": {
+      "columnCount": 102,
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "employeeId",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "firstName",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "lastName",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "email",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "dni",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "phone",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "password",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "role",
+          "type": "USER-DEFINED",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "position",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "salary",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "hireDate",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "birthDate",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "address",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "emergencyContact",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "emergencyPhone",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "allowOutsideRadius",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "convenioColectivo",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "whatsapp_number",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "accepts_support_packages",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "accepts_auctions",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "accepts_email_notifications",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "accepts_whatsapp_notifications",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "accepts_sms_notifications",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "communication_consent_date",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "global_rating",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "cbu",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "bank_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "usuario",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "department_id",
+          "type": "bigint",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "default_branch_id",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "birth_date",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "cuil",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "emergency_contact",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "work_schedule",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "last_login",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "failed_login_attempts",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "locked_until",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "password_reset_token",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "password_reset_expires",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "two_factor_enabled",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "two_factor_secret",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "permissions",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "settings",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "has_fingerprint",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "has_facial_data",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "biometric_last_updated",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "gps_enabled",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "allowed_locations",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "concurrent_sessions",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "last_activity",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "display_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "vendor_code",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "biometric_enrolled",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "biometric_templates_count",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "last_biometric_scan",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "biometric_quality_avg",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "ai_analysis_enabled",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "fatigue_monitoring",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "emotion_monitoring",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "biometric_notes",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "can_authorize_late_arrivals",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "authorized_departments",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "notification_preference_late_arrivals",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "can_use_mobile_app",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "can_use_kiosk",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "can_use_all_kiosks",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "authorized_kiosks",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "has_flexible_schedule",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "flexible_schedule_notes",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "legajo",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "biometric_photo_url",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "biometric_photo_date",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "biometric_photo_expiration",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "email_verified",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "email_verified_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "pending_consents",
+          "type": "ARRAY",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "verification_pending",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "account_status",
+          "type": "USER-DEFINED",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "secondary_phone",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "home_phone",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "city",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "province",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "postal_code",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "neighborhood",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "street",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "street_number",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "floor_apt",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "health_insurance_provider",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "health_insurance_plan",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "health_insurance_number",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "health_insurance_expiry",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "branch_id",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "additional_roles",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "branch_scope",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "branch_id",
+          "references": "branches.id"
+        },
+        {
+          "column": "default_branch_id",
+          "references": "branches.id"
+        }
+      ]
+    },
+    "departments": {
+      "columnCount": 16,
+      "columns": [
+        {
+          "name": "name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "address",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "gps_lat",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "gps_lng",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "coverage_radius",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "branch_id",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "default_kiosk_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "authorized_kiosks",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "allow_gps_attendance",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "company_id",
+          "references": "companies.company_id"
+        },
+        {
+          "column": "branch_id",
+          "references": "branches.id"
+        },
+        {
+          "column": "default_kiosk_id",
+          "references": "kiosks.id"
+        }
+      ]
+    },
+    "shifts": {
+      "columnCount": 35,
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "startTime",
+          "type": "time without time zone",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "endTime",
+          "type": "time without time zone",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "toleranceMinutes",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "days",
+          "type": "json",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "toleranceMinutesEntry",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "toleranceMinutesExit",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "shiftType",
+          "type": "USER-DEFINED",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "breakStartTime",
+          "type": "time without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "breakEndTime",
+          "type": "time without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "rotationPattern",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "cycleStartDate",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "workDays",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "restDays",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "flashStartDate",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "flashEndDate",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "flashPriority",
+          "type": "USER-DEFINED",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "allowOverride",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "permanentPriority",
+          "type": "USER-DEFINED",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "hourlyRates",
+          "type": "json",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "color",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "toleranceConfig",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "global_cycle_start_date",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "phases",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "branch_id",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "respect_national_holidays",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "respect_provincial_holidays",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "custom_non_working_days",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "branch_id",
+          "references": "branches.id"
+        },
+        {
+          "column": "company_id",
+          "references": "companies.company_id"
+        }
+      ]
+    },
+    "companies": {
+      "columnCount": 69,
+      "columns": [
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "slug",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "contact_email",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "phone",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "address",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "tax_id",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "displayName",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "max_employees",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "modules_data",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "modules_pricing",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "monthly_total",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "license_type",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "legal_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "contact_phone",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "city",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "province",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "country",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "website",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "registration_number",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "timezone",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "locale",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "currency",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "logo",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "primary_color",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "secondary_color",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "subscription_type",
+          "type": "USER-DEFINED",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "max_branches",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "status",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "is_trial",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "trial_ends_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "subscription_expires_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "features",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "pricing_info",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "password_policy",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "two_factor_required",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "session_timeout",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "settings",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_by",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "last_config_update",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "display_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "postal_code",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "vendor",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "commission_percentage",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "cbu",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "pricing",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "modules",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "contracted_employees",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "monthly_subtotal",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "monthly_tax",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "state",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "email",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "fallback_notification_email",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "fallback_notification_whatsapp",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "active_modules",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "created_by_staff_id",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "assigned_vendor_id",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "support_vendor_id",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "sales_commission_usd",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "support_commission_usd",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "multi_branch_enabled",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": []
+    },
+    "company_branches": {
+      "columnCount": 24,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "country_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "branch_code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "branch_name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "address",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "city",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "state_province",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "postal_code",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "phone",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "email",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "local_tax_id",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "local_registration_number",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "local_labor_authority",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "default_pay_day",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "pay_frequency_override",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "timezone",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_headquarters",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "default_agreement_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "default_template_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "payroll_settings",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "default_agreement_id",
+          "references": "labor_agreements_catalog.id"
+        },
+        {
+          "column": "default_template_id",
+          "references": "payroll_templates.id"
+        },
+        {
+          "column": "company_id",
+          "references": "companies.company_id"
+        },
+        {
+          "column": "country_id",
+          "references": "payroll_countries.id"
+        }
+      ]
+    },
+    "kiosks": {
+      "columnCount": 21,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "device_id",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "gps_lat",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "gps_lng",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "is_configured",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "location",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "authorized_departments",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "has_external_reader",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "reader_model",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "reader_config",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "ip_address",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "port",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "last_seen",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "apk_version",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "company_id",
+          "references": "companies.company_id"
+        }
+      ]
+    },
+    "payroll_templates": {
+      "columnCount": 29,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "country_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "branch_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "labor_agreement_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "template_code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "template_name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "pay_frequency",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "calculation_basis",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "work_hours_per_day",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "work_days_per_week",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "work_hours_per_month",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "overtime_50_after_hours",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "overtime_100_after_hours",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "night_shift_start",
+          "type": "time without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "night_shift_end",
+          "type": "time without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "round_to_cents",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "round_method",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "receipt_header",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "receipt_legal_text",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "receipt_footer",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_current_version",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "parent_template_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "company_id",
+          "references": "companies.company_id"
+        },
+        {
+          "column": "country_id",
+          "references": "payroll_countries.id"
+        },
+        {
+          "column": "branch_id",
+          "references": "company_branches.id"
+        },
+        {
+          "column": "labor_agreement_id",
+          "references": "labor_agreements_v2.id"
+        },
+        {
+          "column": "parent_template_id",
+          "references": "payroll_templates.id"
+        },
+        {
+          "column": "created_by",
+          "references": "users.user_id"
+        }
+      ]
+    },
+    "payroll_template_concepts": {
+      "columnCount": 28,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "template_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "concept_type_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "concept_code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "concept_name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "short_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "calculation_type",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "default_value",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "percentage_base",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "formula",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "min_value",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "max_value",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "cap_value",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "applies_to_hourly",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "applies_to_monthly",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_mandatory",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_visible_receipt",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_editable_per_user",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "employee_contribution_rate",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "employer_contribution_rate",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "legal_reference",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "display_order",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "entity_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "entity_account_code",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "template_id",
+          "references": "payroll_templates.id"
+        },
+        {
+          "column": "concept_type_id",
+          "references": "payroll_concept_types.id"
+        },
+        {
+          "column": "entity_id",
+          "references": "payroll_entities.entity_id"
+        }
+      ]
+    },
+    "payroll_concept_types": {
+      "columnCount": 11,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "type_code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "type_name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "affects_gross",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "affects_net",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_taxable",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_deduction",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_employer_cost",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "display_order",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": []
+    },
+    "payroll_countries": {
+      "columnCount": 21,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "country_code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "country_name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "currency_code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "currency_symbol",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "decimal_places",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "thousand_separator",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "decimal_separator",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "labor_law_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "labor_law_reference",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "collective_agreement_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "default_pay_frequency",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "fiscal_year_start_month",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "aguinaldo_enabled",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "aguinaldo_frequency",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "vacation_calculation_method",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "tax_id_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "tax_id_format",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": []
+    },
+    "payroll_runs": {
+      "columnCount": 25,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "branch_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "run_code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "run_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "period_year",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "period_month",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "period_half",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "period_week",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "period_start",
+          "type": "date",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "period_end",
+          "type": "date",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "payment_date",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "total_employees",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "total_gross",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "total_deductions",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "total_net",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "total_employer_cost",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "status",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "approved_by",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "approved_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "paid_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "company_id",
+          "references": "companies.company_id"
+        },
+        {
+          "column": "branch_id",
+          "references": "company_branches.id"
+        },
+        {
+          "column": "approved_by",
+          "references": "users.user_id"
+        },
+        {
+          "column": "created_by",
+          "references": "users.user_id"
+        }
+      ]
+    },
+    "payroll_run_details": {
+      "columnCount": 25,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "run_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "assignment_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "worked_days",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "worked_hours",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "overtime_50_hours",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "overtime_100_hours",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "night_hours",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "absent_days",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "gross_earnings",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "non_remunerative",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "total_deductions",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "net_salary",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "employer_contributions",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "earnings_detail",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "deductions_detail",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "employer_detail",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "status",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "error_message",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "receipt_number",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "receipt_generated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "receipt_url",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "run_id",
+          "references": "payroll_runs.id"
+        },
+        {
+          "column": "user_id",
+          "references": "users.user_id"
+        },
+        {
+          "column": "assignment_id",
+          "references": "user_payroll_assignment.id"
+        }
+      ]
+    },
+    "labor_agreements_v2": {
+      "columnCount": 22,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "country_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "short_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "industry",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "legal_references",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "effective_date",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "expiration_date",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "base_work_hours_weekly",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "base_work_hours_daily",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "overtime_threshold_daily",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "overtime_50_multiplier",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "overtime_100_multiplier",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "night_shift_multiplier",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "vacation_days_by_seniority",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "receipt_legal_text",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "receipt_footer_text",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "country_id",
+          "references": "payroll_countries.id"
+        },
+        {
+          "column": "company_id",
+          "references": "companies.company_id"
+        }
+      ]
+    },
+    "labor_agreements_catalog": {
+      "columnCount": 8,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "industry",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "union_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": []
+    },
+    "salary_categories": {
+      "columnCount": 9,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "labor_agreement_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "category_code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "category_name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "base_salary_reference",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "effective_date",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "labor_agreement_id",
+          "references": "labor_agreements_catalog.id"
+        }
+      ]
+    },
+    "salary_categories_v2": {
+      "columnCount": 18,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "labor_agreement_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "category_code",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "category_name",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "base_salary_min",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "base_salary_max",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "hourly_rate_min",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "hourly_rate_max",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "recommended_base_salary",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "recommended_hourly_rate",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "seniority_level",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "effective_from",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "effective_to",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "labor_agreement_id",
+          "references": "labor_agreements_v2.id"
+        },
+        {
+          "column": "company_id",
+          "references": "companies.company_id"
+        }
+      ]
+    },
+    "user_salary_config_v2": {
+      "columnCount": 39,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "labor_agreement_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "salary_category_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "custom_category",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "payment_type",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "base_salary",
+          "type": "numeric",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "gross_salary",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "net_salary",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "currency",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "seniority_bonus",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "presentation_bonus",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "food_allowance",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "transport_allowance",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "other_bonuses",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "other_bonuses_detail",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "contracted_hours_per_week",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "work_schedule_type",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "hourly_rate",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "overtime_rate_50",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "overtime_rate_100",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "last_salary_update",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "previous_base_salary",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "salary_increase_percentage",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "salary_increase_reason",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "next_review_date",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "bank_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "bank_account_type",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "bank_account_number",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "bank_cbu",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "bank_alias",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "effective_from",
+          "type": "date",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "effective_to",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "is_current",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "labor_agreement_id",
+          "references": "labor_agreements_catalog.id"
+        },
+        {
+          "column": "salary_category_id",
+          "references": "salary_categories.id"
+        },
+        {
+          "column": "user_id",
+          "references": "users.user_id"
+        }
+      ]
+    },
+    "user_salary_config": {
+      "columnCount": 45,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "base_salary",
+          "type": "numeric",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "salary_currency",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "salary_type",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "payment_frequency",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "payment_day",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "bank_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "bank_account_number",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "bank_account_type",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "cbu",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "alias_cbu",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "swift_code",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "payment_method",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "payment_notes",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "bonuses",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "allowances",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "deductions",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "has_obra_social",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "obra_social_deduction",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "has_sindicato",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "sindicato_deduction",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "tax_withholding_percentage",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "has_tax_exemption",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "tax_exemption_reason",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "overtime_enabled",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "overtime_rate_weekday",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "overtime_rate_weekend",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "overtime_rate_holiday",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "vacation_days_per_year",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "vacation_days_used",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "vacation_days_pending",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "sac_enabled",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "sac_calculation_method",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "last_salary_review_date",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "next_salary_review_date",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "salary_increase_percentage",
+          "type": "numeric",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "salary_increase_notes",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "last_updated_by",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "user_id",
+          "references": "users.user_id"
+        },
+        {
+          "column": "company_id",
+          "references": "companies.company_id"
+        },
+        {
+          "column": "created_by",
+          "references": "users.user_id"
+        },
+        {
+          "column": "last_updated_by",
+          "references": "users.user_id"
+        }
+      ]
+    },
+    "sanctions": {
+      "columnCount": 27,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "company_id",
+          "type": "integer",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "employee_id",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "employee_name",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "employee_department",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "sanction_type",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "severity",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "title",
+          "type": "character varying",
+          "nullable": false,
+          "hasDefault": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "sanction_date",
+          "type": "date",
+          "nullable": false,
+          "hasDefault": true
+        },
+        {
+          "name": "expiration_date",
+          "type": "date",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "status",
+          "type": "character varying",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "points_deducted",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "is_automatic",
+          "type": "boolean",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "related_attendance_id",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "related_incident_id",
+          "type": "integer",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "approved_by",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "approval_date",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "appeal_notes",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "appeal_date",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "appeal_resolved_by",
+          "type": "uuid",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "appeal_resolution",
+          "type": "text",
+          "nullable": true,
+          "hasDefault": false
+        },
+        {
+          "name": "documents",
+          "type": "jsonb",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "hasDefault": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "company_id",
+          "references": "companies.company_id"
+        },
+        {
+          "column": "user_id",
+          "references": "users.user_id"
+        },
+        {
+          "column": "created_by",
+          "references": "users.user_id"
+        },
+        {
+          "column": "approved_by",
+          "references": "users.user_id"
+        },
+        {
+          "column": "appeal_resolved_by",
+          "references": "users.user_id"
+        }
+      ]
+    }
+  },
+  "metadataFormat": {
+    "users": {
+      "columns": [
+        "user_id",
+        "employeeId",
+        "firstName",
+        "lastName",
+        "email",
+        "dni",
+        "phone",
+        "password",
+        "role",
+        "position",
+        "salary",
+        "hireDate",
+        "birthDate",
+        "address",
+        "emergencyContact",
+        "emergencyPhone",
+        "allowOutsideRadius",
+        "convenioColectivo",
+        "createdAt",
+        "updatedAt",
+        "company_id",
+        "is_active",
+        "whatsapp_number",
+        "accepts_support_packages",
+        "accepts_auctions",
+        "accepts_email_notifications",
+        "accepts_whatsapp_notifications",
+        "accepts_sms_notifications",
+        "communication_consent_date",
+        "global_rating",
+        "cbu",
+        "bank_name",
+        "notes",
+        "usuario",
+        "department_id",
+        "default_branch_id",
+        "birth_date",
+        "cuil",
+        "emergency_contact",
+        "work_schedule",
+        "last_login",
+        "failed_login_attempts",
+        "locked_until",
+        "password_reset_token",
+        "password_reset_expires",
+        "two_factor_enabled",
+        "two_factor_secret",
+        "permissions",
+        "settings",
+        "has_fingerprint",
+        "has_facial_data",
+        "biometric_last_updated",
+        "gps_enabled",
+        "allowed_locations",
+        "concurrent_sessions",
+        "last_activity",
+        "display_name",
+        "vendor_code",
+        "version",
+        "biometric_enrolled",
+        "biometric_templates_count",
+        "last_biometric_scan",
+        "biometric_quality_avg",
+        "ai_analysis_enabled",
+        "fatigue_monitoring",
+        "emotion_monitoring",
+        "biometric_notes",
+        "can_authorize_late_arrivals",
+        "authorized_departments",
+        "notification_preference_late_arrivals",
+        "can_use_mobile_app",
+        "can_use_kiosk",
+        "can_use_all_kiosks",
+        "authorized_kiosks",
+        "has_flexible_schedule",
+        "flexible_schedule_notes",
+        "legajo",
+        "isActive",
+        "biometric_photo_url",
+        "biometric_photo_date",
+        "biometric_photo_expiration",
+        "email_verified",
+        "email_verified_at",
+        "pending_consents",
+        "verification_pending",
+        "account_status",
+        "secondary_phone",
+        "home_phone",
+        "city",
+        "province",
+        "postal_code",
+        "neighborhood",
+        "street",
+        "street_number",
+        "floor_apt",
+        "health_insurance_provider",
+        "health_insurance_plan",
+        "health_insurance_number",
+        "health_insurance_expiry",
+        "branch_id",
+        "additional_roles",
+        "branch_scope"
+      ],
+      "columnCount": 102,
+      "primaryKey": "user_id",
+      "foreignKeys": {
+        "branch_id": "branches.id",
+        "default_branch_id": "branches.id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.300Z"
+    },
+    "departments": {
+      "columns": [
+        "name",
+        "description",
+        "address",
+        "gps_lat",
+        "gps_lng",
+        "coverage_radius",
+        "is_active",
+        "created_at",
+        "updated_at",
+        "deleted_at",
+        "company_id",
+        "id",
+        "branch_id",
+        "default_kiosk_id",
+        "authorized_kiosks",
+        "allow_gps_attendance"
+      ],
+      "columnCount": 16,
+      "primaryKey": "company_id",
+      "foreignKeys": {
+        "company_id": "companies.company_id",
+        "branch_id": "branches.id",
+        "default_kiosk_id": "kiosks.id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "shifts": {
+      "columns": [
+        "id",
+        "name",
+        "startTime",
+        "endTime",
+        "toleranceMinutes",
+        "isActive",
+        "description",
+        "days",
+        "toleranceMinutesEntry",
+        "toleranceMinutesExit",
+        "shiftType",
+        "breakStartTime",
+        "breakEndTime",
+        "rotationPattern",
+        "cycleStartDate",
+        "workDays",
+        "restDays",
+        "flashStartDate",
+        "flashEndDate",
+        "flashPriority",
+        "allowOverride",
+        "permanentPriority",
+        "hourlyRates",
+        "color",
+        "notes",
+        "createdAt",
+        "updatedAt",
+        "company_id",
+        "toleranceConfig",
+        "global_cycle_start_date",
+        "phases",
+        "branch_id",
+        "respect_national_holidays",
+        "respect_provincial_holidays",
+        "custom_non_working_days"
+      ],
+      "columnCount": 35,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "branch_id": "branches.id",
+        "company_id": "companies.company_id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "companies": {
+      "columns": [
+        "company_id",
+        "name",
+        "slug",
+        "contact_email",
+        "phone",
+        "address",
+        "tax_id",
+        "is_active",
+        "created_at",
+        "updated_at",
+        "deleted_at",
+        "displayName",
+        "description",
+        "max_employees",
+        "modules_data",
+        "modules_pricing",
+        "monthly_total",
+        "license_type",
+        "createdAt",
+        "updatedAt",
+        "legal_name",
+        "contact_phone",
+        "city",
+        "province",
+        "country",
+        "website",
+        "registration_number",
+        "timezone",
+        "locale",
+        "currency",
+        "logo",
+        "primary_color",
+        "secondary_color",
+        "subscription_type",
+        "max_branches",
+        "status",
+        "is_trial",
+        "trial_ends_at",
+        "subscription_expires_at",
+        "features",
+        "pricing_info",
+        "password_policy",
+        "two_factor_required",
+        "session_timeout",
+        "settings",
+        "created_by",
+        "last_config_update",
+        "metadata",
+        "display_name",
+        "postal_code",
+        "vendor",
+        "commission_percentage",
+        "cbu",
+        "pricing",
+        "modules",
+        "contracted_employees",
+        "monthly_subtotal",
+        "monthly_tax",
+        "state",
+        "email",
+        "fallback_notification_email",
+        "fallback_notification_whatsapp",
+        "active_modules",
+        "created_by_staff_id",
+        "assigned_vendor_id",
+        "support_vendor_id",
+        "sales_commission_usd",
+        "support_commission_usd",
+        "multi_branch_enabled"
+      ],
+      "columnCount": 69,
+      "primaryKey": "company_id",
+      "foreignKeys": {},
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "company_branches": {
+      "columns": [
+        "id",
+        "company_id",
+        "country_id",
+        "branch_code",
+        "branch_name",
+        "address",
+        "city",
+        "state_province",
+        "postal_code",
+        "phone",
+        "email",
+        "local_tax_id",
+        "local_registration_number",
+        "local_labor_authority",
+        "default_pay_day",
+        "pay_frequency_override",
+        "timezone",
+        "is_headquarters",
+        "is_active",
+        "created_at",
+        "updated_at",
+        "default_agreement_id",
+        "default_template_id",
+        "payroll_settings"
+      ],
+      "columnCount": 24,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "default_agreement_id": "labor_agreements_catalog.id",
+        "default_template_id": "payroll_templates.id",
+        "company_id": "companies.company_id",
+        "country_id": "payroll_countries.id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "kiosks": {
+      "columns": [
+        "id",
+        "name",
+        "description",
+        "device_id",
+        "gps_lat",
+        "gps_lng",
+        "is_configured",
+        "is_active",
+        "company_id",
+        "created_at",
+        "updated_at",
+        "deleted_at",
+        "location",
+        "authorized_departments",
+        "has_external_reader",
+        "reader_model",
+        "reader_config",
+        "ip_address",
+        "port",
+        "last_seen",
+        "apk_version"
+      ],
+      "columnCount": 21,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "company_id": "companies.company_id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "payroll_templates": {
+      "columns": [
+        "id",
+        "company_id",
+        "country_id",
+        "branch_id",
+        "labor_agreement_id",
+        "template_code",
+        "template_name",
+        "description",
+        "pay_frequency",
+        "calculation_basis",
+        "work_hours_per_day",
+        "work_days_per_week",
+        "work_hours_per_month",
+        "overtime_50_after_hours",
+        "overtime_100_after_hours",
+        "night_shift_start",
+        "night_shift_end",
+        "round_to_cents",
+        "round_method",
+        "receipt_header",
+        "receipt_legal_text",
+        "receipt_footer",
+        "version",
+        "is_current_version",
+        "parent_template_id",
+        "is_active",
+        "created_by",
+        "created_at",
+        "updated_at"
+      ],
+      "columnCount": 29,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "company_id": "companies.company_id",
+        "country_id": "payroll_countries.id",
+        "branch_id": "company_branches.id",
+        "labor_agreement_id": "labor_agreements_v2.id",
+        "parent_template_id": "payroll_templates.id",
+        "created_by": "users.user_id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "payroll_template_concepts": {
+      "columns": [
+        "id",
+        "template_id",
+        "concept_type_id",
+        "concept_code",
+        "concept_name",
+        "short_name",
+        "description",
+        "calculation_type",
+        "default_value",
+        "percentage_base",
+        "formula",
+        "min_value",
+        "max_value",
+        "cap_value",
+        "applies_to_hourly",
+        "applies_to_monthly",
+        "is_mandatory",
+        "is_visible_receipt",
+        "is_editable_per_user",
+        "employee_contribution_rate",
+        "employer_contribution_rate",
+        "legal_reference",
+        "display_order",
+        "is_active",
+        "created_at",
+        "updated_at",
+        "entity_id",
+        "entity_account_code"
+      ],
+      "columnCount": 28,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "template_id": "payroll_templates.id",
+        "concept_type_id": "payroll_concept_types.id",
+        "entity_id": "payroll_entities.entity_id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "payroll_concept_types": {
+      "columns": [
+        "id",
+        "type_code",
+        "type_name",
+        "description",
+        "affects_gross",
+        "affects_net",
+        "is_taxable",
+        "is_deduction",
+        "is_employer_cost",
+        "display_order",
+        "created_at"
+      ],
+      "columnCount": 11,
+      "primaryKey": "id",
+      "foreignKeys": {},
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "payroll_countries": {
+      "columns": [
+        "id",
+        "country_code",
+        "country_name",
+        "currency_code",
+        "currency_symbol",
+        "decimal_places",
+        "thousand_separator",
+        "decimal_separator",
+        "labor_law_name",
+        "labor_law_reference",
+        "collective_agreement_name",
+        "default_pay_frequency",
+        "fiscal_year_start_month",
+        "aguinaldo_enabled",
+        "aguinaldo_frequency",
+        "vacation_calculation_method",
+        "tax_id_name",
+        "tax_id_format",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "columnCount": 21,
+      "primaryKey": "id",
+      "foreignKeys": {},
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "payroll_runs": {
+      "columns": [
+        "id",
+        "company_id",
+        "branch_id",
+        "run_code",
+        "run_name",
+        "period_year",
+        "period_month",
+        "period_half",
+        "period_week",
+        "period_start",
+        "period_end",
+        "payment_date",
+        "total_employees",
+        "total_gross",
+        "total_deductions",
+        "total_net",
+        "total_employer_cost",
+        "status",
+        "approved_by",
+        "approved_at",
+        "paid_at",
+        "notes",
+        "created_by",
+        "created_at",
+        "updated_at"
+      ],
+      "columnCount": 25,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "company_id": "companies.company_id",
+        "branch_id": "company_branches.id",
+        "approved_by": "users.user_id",
+        "created_by": "users.user_id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "payroll_run_details": {
+      "columns": [
+        "id",
+        "run_id",
+        "user_id",
+        "assignment_id",
+        "worked_days",
+        "worked_hours",
+        "overtime_50_hours",
+        "overtime_100_hours",
+        "night_hours",
+        "absent_days",
+        "gross_earnings",
+        "non_remunerative",
+        "total_deductions",
+        "net_salary",
+        "employer_contributions",
+        "earnings_detail",
+        "deductions_detail",
+        "employer_detail",
+        "status",
+        "error_message",
+        "receipt_number",
+        "receipt_generated_at",
+        "receipt_url",
+        "created_at",
+        "updated_at"
+      ],
+      "columnCount": 25,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "run_id": "payroll_runs.id",
+        "user_id": "users.user_id",
+        "assignment_id": "user_payroll_assignment.id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "labor_agreements_v2": {
+      "columns": [
+        "id",
+        "country_id",
+        "company_id",
+        "code",
+        "name",
+        "short_name",
+        "industry",
+        "legal_references",
+        "effective_date",
+        "expiration_date",
+        "base_work_hours_weekly",
+        "base_work_hours_daily",
+        "overtime_threshold_daily",
+        "overtime_50_multiplier",
+        "overtime_100_multiplier",
+        "night_shift_multiplier",
+        "vacation_days_by_seniority",
+        "receipt_legal_text",
+        "receipt_footer_text",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "columnCount": 22,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "country_id": "payroll_countries.id",
+        "company_id": "companies.company_id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "labor_agreements_catalog": {
+      "columns": [
+        "id",
+        "code",
+        "name",
+        "industry",
+        "union_name",
+        "description",
+        "is_active",
+        "created_at"
+      ],
+      "columnCount": 8,
+      "primaryKey": "id",
+      "foreignKeys": {},
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "salary_categories": {
+      "columns": [
+        "id",
+        "labor_agreement_id",
+        "category_code",
+        "category_name",
+        "description",
+        "base_salary_reference",
+        "effective_date",
+        "is_active",
+        "created_at"
+      ],
+      "columnCount": 9,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "labor_agreement_id": "labor_agreements_catalog.id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "salary_categories_v2": {
+      "columns": [
+        "id",
+        "labor_agreement_id",
+        "company_id",
+        "category_code",
+        "category_name",
+        "description",
+        "base_salary_min",
+        "base_salary_max",
+        "hourly_rate_min",
+        "hourly_rate_max",
+        "recommended_base_salary",
+        "recommended_hourly_rate",
+        "seniority_level",
+        "is_active",
+        "effective_from",
+        "effective_to",
+        "created_at",
+        "updated_at"
+      ],
+      "columnCount": 18,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "labor_agreement_id": "labor_agreements_v2.id",
+        "company_id": "companies.company_id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "user_salary_config_v2": {
+      "columns": [
+        "id",
+        "user_id",
+        "company_id",
+        "labor_agreement_id",
+        "salary_category_id",
+        "custom_category",
+        "payment_type",
+        "base_salary",
+        "gross_salary",
+        "net_salary",
+        "currency",
+        "seniority_bonus",
+        "presentation_bonus",
+        "food_allowance",
+        "transport_allowance",
+        "other_bonuses",
+        "other_bonuses_detail",
+        "contracted_hours_per_week",
+        "work_schedule_type",
+        "hourly_rate",
+        "overtime_rate_50",
+        "overtime_rate_100",
+        "last_salary_update",
+        "previous_base_salary",
+        "salary_increase_percentage",
+        "salary_increase_reason",
+        "next_review_date",
+        "bank_name",
+        "bank_account_type",
+        "bank_account_number",
+        "bank_cbu",
+        "bank_alias",
+        "effective_from",
+        "effective_to",
+        "is_current",
+        "notes",
+        "created_at",
+        "updated_at",
+        "created_by"
+      ],
+      "columnCount": 39,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "labor_agreement_id": "labor_agreements_catalog.id",
+        "salary_category_id": "salary_categories.id",
+        "user_id": "users.user_id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "user_salary_config": {
+      "columns": [
+        "id",
+        "user_id",
+        "company_id",
+        "base_salary",
+        "salary_currency",
+        "salary_type",
+        "payment_frequency",
+        "payment_day",
+        "bank_name",
+        "bank_account_number",
+        "bank_account_type",
+        "cbu",
+        "alias_cbu",
+        "swift_code",
+        "payment_method",
+        "payment_notes",
+        "bonuses",
+        "allowances",
+        "deductions",
+        "has_obra_social",
+        "obra_social_deduction",
+        "has_sindicato",
+        "sindicato_deduction",
+        "tax_withholding_percentage",
+        "has_tax_exemption",
+        "tax_exemption_reason",
+        "overtime_enabled",
+        "overtime_rate_weekday",
+        "overtime_rate_weekend",
+        "overtime_rate_holiday",
+        "vacation_days_per_year",
+        "vacation_days_used",
+        "vacation_days_pending",
+        "sac_enabled",
+        "sac_calculation_method",
+        "last_salary_review_date",
+        "next_salary_review_date",
+        "salary_increase_percentage",
+        "salary_increase_notes",
+        "notes",
+        "is_active",
+        "created_by",
+        "last_updated_by",
+        "created_at",
+        "updated_at"
+      ],
+      "columnCount": 45,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "user_id": "users.user_id",
+        "company_id": "companies.company_id",
+        "created_by": "users.user_id",
+        "last_updated_by": "users.user_id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    },
+    "sanctions": {
+      "columns": [
+        "id",
+        "company_id",
+        "user_id",
+        "employee_id",
+        "employee_name",
+        "employee_department",
+        "sanction_type",
+        "severity",
+        "title",
+        "description",
+        "sanction_date",
+        "expiration_date",
+        "status",
+        "points_deducted",
+        "is_automatic",
+        "related_attendance_id",
+        "related_incident_id",
+        "created_by",
+        "approved_by",
+        "approval_date",
+        "appeal_notes",
+        "appeal_date",
+        "appeal_resolved_by",
+        "appeal_resolution",
+        "documents",
+        "created_at",
+        "updated_at"
+      ],
+      "columnCount": 27,
+      "primaryKey": "id",
+      "foreignKeys": {
+        "company_id": "companies.company_id",
+        "user_id": "users.user_id",
+        "created_by": "users.user_id",
+        "approved_by": "users.user_id",
+        "appeal_resolved_by": "users.user_id"
+      },
+      "indexes": [],
+      "lastUpdated": "2025-11-27T04:16:33.302Z"
+    }
+  }
+}

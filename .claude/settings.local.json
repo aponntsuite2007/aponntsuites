@@ -120,7 +120,15 @@
       "Bash(nslookup:*)",
       "Bash(node scripts/verify-entities.js:*)",
       "WebSearch",
-      "Bash(DATABASE_URL=\"postgresql://attendance_system_866u_user:Ihb9jdoOTYzb4c0u7cXxGo8XaIb1Iyvt@dpg-d3i4mqjipnbc73dsnd6g-a.oregon-postgres.render.com/attendance_system_866u\" node:*)"
+      "Bash(DATABASE_URL=\"postgresql://attendance_system_866u_user:Ihb9jdoOTYzb4c0u7cXxGo8XaIb1Iyvt@dpg-d3i4mqjipnbc73dsnd6g-a.oregon-postgres.render.com/attendance_system_866u\" node:*)",
+      "Bash(node:*)",
+      "Bash(git checkout:*)",
+      "WebFetch(domain:unsplash.com)",
+      "WebFetch(domain:www.freepik.com)",
+      "WebFetch(domain:azure.microsoft.com)",
+      "Bash(timeout 120 node:*)",
+      "Bash(wait)",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []

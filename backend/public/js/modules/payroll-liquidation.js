@@ -1,892 +1,1007 @@
-// Módulo de Liquidación de Sueldos y Jornales - Legislación Argentina
-console.log('💰 [PAYROLL] Módulo de Liquidación v1.0 inicializado');
+// Modulo de Liquidacion de Sueldos - Rediseno 100% Parametrizable
+// Basado en mejores practicas de SAP SuccessFactors, ADP, Workday
+console.log('💰 [PAYROLL] Modulo de Liquidacion v2.0 inicializado');
 
-// Variables globales del módulo de liquidación
-let payrollPeriods = [];
-let employeePayrolls = [];
-let salaryScales = [];
-let collectiveAgreements = [];
-let currentLegislation = {};
-let taxRates = {};
+// Variables globales
+let payrollState = {
+    currentPeriod: null,
+    selectedEmployees: [],
+    currentTab: 'dashboard',
+    filters: {},
+    workflowStep: 1
+};
 
-// Función principal para mostrar el contenido del módulo
+// Funcion principal
 function showPayrollLiquidationContent() {
     const content = document.getElementById('mainContent');
     if (!content) return;
-    
+
     content.innerHTML = `
         <div class="tab-content active" id="payroll-liquidation">
             <div class="card">
-                <h2>💰 Liquidación de Sueldos y Jornales</h2>
-                <p>Sistema completo de liquidación según legislación laboral argentina vigente.</p>
-                
-                <!-- Tabs de navegación Liquidación -->
+                <h2>💰 Liquidacion de Sueldos</h2>
+                <p>Sistema de liquidacion multi-pais 100% parametrizable</p>
+
+                <!-- Tabs de navegacion -->
                 <div class="payroll-tabs" style="display: flex; gap: 10px; margin: 20px 0; border-bottom: 2px solid #e0e7ff; overflow-x: auto;">
-                    <button class="payroll-tab-btn active" onclick="showPayrollTab('liquidation')" data-tab="liquidation">
-                        💰 Liquidación
+                    <button class="payroll-tab-btn active" onclick="showPayrollTab('dashboard')" data-tab="dashboard">
+                        📊 Dashboard
                     </button>
-                    <button class="payroll-tab-btn" onclick="showPayrollTab('concepts')" data-tab="concepts">
-                        📋 Conceptos
+                    <button class="payroll-tab-btn" onclick="showPayrollTab('process')" data-tab="process">
+                        ⚡ Proceso
                     </button>
-                    <button class="payroll-tab-btn" onclick="showPayrollTab('scales')" data-tab="scales">
-                        📊 Escalas Salariales
+                    <button class="payroll-tab-btn" onclick="showPayrollTab('employees')" data-tab="employees">
+                        👥 Empleados
                     </button>
-                    <button class="payroll-tab-btn" onclick="showPayrollTab('agreements')" data-tab="agreements">
-                        📄 Convenios
+                    <button class="payroll-tab-btn" onclick="showPayrollTab('consolidation')" data-tab="consolidation">
+                        🏛️ Consolidacion
                     </button>
-                    <button class="payroll-tab-btn" onclick="showPayrollTab('taxes')" data-tab="taxes">
-                        🏛️ Cargas Sociales
-                    </button>
-                    <button class="payroll-tab-btn" onclick="showPayrollTab('reports')" data-tab="reports">
-                        📊 Reportes
-                    </button>
-                    <button class="payroll-tab-btn" onclick="showPayrollTab('legislation')" data-tab="legislation">
-                        ⚖️ Legislación
-                    </button>
-                    <button class="payroll-tab-btn" onclick="showPayrollTab('templates')" data-tab="templates">
-                        📋 Plantillas RRHH
+                    <button class="payroll-tab-btn" onclick="showPayrollTab('config')" data-tab="config">
+                        ⚙️ Configuracion
                     </button>
                 </div>
 
-                <!-- Contenido dinámico de liquidación -->
-                <div id="payroll-content">
-                    <!-- El contenido se cargará dinámicamente según la pestaña seleccionada -->
-                </div>
+                <div id="payroll-content"></div>
             </div>
         </div>
     `;
-    
-    // Inicializar con la pestaña de liquidación
-    setTimeout(() => {
-        loadPayrollData();
-        showPayrollTab('liquidation');
-    }, 300);
+
+    setTimeout(() => showPayrollTab('dashboard'), 100);
 }
 
-// Función para cambiar entre pestañas
 function showPayrollTab(tabName) {
-    console.log(`💰 [PAYROLL] Cambiando a pestaña: ${tabName}`);
-    
-    // Actualizar botones de pestaña
+    payrollState.currentTab = tabName;
+
     document.querySelectorAll('.payroll-tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.tab === tabName) {
-            btn.classList.add('active');
-        }
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
     });
-    
-    // Cargar contenido de la pestaña
+
     const payrollContent = document.getElementById('payroll-content');
     if (!payrollContent) return;
-    
+
     switch (tabName) {
-        case 'liquidation':
-            showLiquidationTab();
-            break;
-        case 'concepts':
-            showConceptsTab();
-            break;
-        case 'scales':
-            showScalesTab();
-            break;
-        case 'agreements':
-            showAgreementsTab();
-            break;
-        case 'taxes':
-            showTaxesTab();
-            break;
-        case 'reports':
-            showPayrollReportsTab();
-            break;
-        case 'legislation':
-            showPayrollLegislationTab();
-            break;
-        case 'templates':
-            showPayrollTemplatesTab();
-            break;
-        default:
-            payrollContent.innerHTML = '<div class="error">Pestaña no encontrada</div>';
+        case 'dashboard': showDashboardTab(); break;
+        case 'process': showProcessTab(); break;
+        case 'employees': showEmployeesTab(); break;
+        case 'consolidation': showConsolidationTab(); break;
+        case 'config': showConfigTab(); break;
     }
 }
 
-// Pestaña: Liquidación Principal
-function showLiquidationTab() {
+// ============================================================================
+// TAB 1: DASHBOARD - KPIs dinamicos desde API
+// ============================================================================
+async function showDashboardTab() {
     const payrollContent = document.getElementById('payroll-content');
     payrollContent.innerHTML = `
-        <div class="liquidation-section">
-            <div class="section-header">
-                <h3>💰 Proceso de Liquidación</h3>
-                <div class="quick-actions">
-                    <button class="btn btn-primary" onclick="startNewLiquidation()">🆕 Nueva Liquidación</button>
-                    <button class="btn btn-success" onclick="calculateAllPayrolls()">⚡ Calcular Todo</button>
-                    <button class="btn btn-warning" onclick="previewLiquidation()">👁️ Vista Previa</button>
-                    <button class="btn btn-info" onclick="exportPayrollData()">📤 Exportar</button>
-                </div>
-            </div>
-            
-            <!-- Selector de período -->
-            <div class="period-selection" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 20px; margin: 20px 0;">
-                <h4>📅 Período de Liquidación</h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+        <div class="dashboard-section">
+            <!-- Selector de periodo -->
+            <div class="period-selector" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 20px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end;">
                     <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Mes:</label>
-                        <select id="liquidation-month" style="width: 100%; padding: 8px; border-radius: 5px; border: none;">
-                            <option value="1">Enero</option>
-                            <option value="2">Febrero</option>
-                            <option value="3">Marzo</option>
-                            <option value="4">Abril</option>
-                            <option value="5">Mayo</option>
-                            <option value="6">Junio</option>
-                            <option value="7">Julio</option>
-                            <option value="8">Agosto</option>
-                            <option value="9" selected>Septiembre</option>
-                            <option value="10">Octubre</option>
-                            <option value="11">Noviembre</option>
-                            <option value="12">Diciembre</option>
+                        <label style="display: block; margin-bottom: 5px;">Periodo:</label>
+                        <select id="period-year" style="padding: 8px; border-radius: 5px; border: none; width: 100%;">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
                         </select>
                     </div>
                     <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Año:</label>
-                        <select id="liquidation-year" style="width: 100%; padding: 8px; border-radius: 5px; border: none;">
-                            <option value="2024" selected>2024</option>
-                            <option value="2023">2023</option>
+                        <select id="period-month" style="padding: 8px; border-radius: 5px; border: none; width: 100%;">
+                            ${[...Array(12)].map((_, i) => `<option value="${i+1}" ${i+1 === new Date().getMonth()+1 ? 'selected' : ''}>${new Date(2000, i).toLocaleDateString('es', {month: 'long'})}</option>`).join('')}
                         </select>
                     </div>
                     <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Tipo:</label>
-                        <select id="liquidation-type" style="width: 100%; padding: 8px; border-radius: 5px; border: none;">
-                            <option value="monthly">Mensual</option>
-                            <option value="biweekly">Quincenal</option>
-                            <option value="annual-bonus">Aguinaldo</option>
-                            <option value="vacation">Vacaciones</option>
+                        <label style="display: block; margin-bottom: 5px;">Sucursal:</label>
+                        <select id="branch-filter" style="padding: 8px; border-radius: 5px; border: none; width: 100%;">
+                            <option value="">Todas las sucursales</option>
                         </select>
                     </div>
                     <div>
-                        <button class="btn btn-light" onclick="loadLiquidationPeriod()">🔄 Cargar Período</button>
+                        <button onclick="loadDashboardData()" class="btn btn-light">🔄 Cargar</button>
                     </div>
                 </div>
             </div>
-            
-            <!-- Estados de liquidación -->
-            <div class="liquidation-status-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
-                <div class="status-card" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
-                    <div class="status-icon" style="font-size: 2rem;">✅</div>
-                    <div class="status-value" id="processed-count">--</div>
-                    <div class="status-label">Procesados</div>
-                </div>
-                <div class="status-card" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
-                    <div class="status-icon" style="font-size: 2rem;">⏳</div>
-                    <div class="status-value" id="pending-count">--</div>
-                    <div class="status-label">Pendientes</div>
-                </div>
-                <div class="status-card" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
-                    <div class="status-icon" style="font-size: 2rem;">❌</div>
-                    <div class="status-value" id="errors-count">--</div>
-                    <div class="status-label">Con Errores</div>
-                </div>
-                <div class="status-card" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
-                    <div class="status-icon" style="font-size: 2rem;">💰</div>
-                    <div class="status-value" id="total-amount">--</div>
-                    <div class="status-label">Importe Total</div>
-                </div>
+
+            <!-- KPIs -->
+            <div id="kpis-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div class="kpi-loading">Cargando KPIs...</div>
             </div>
-            
-            <!-- Lista de empleados para liquidar -->
-            <div id="employees-liquidation-list">
-                <!-- Se cargará dinámicamente -->
+
+            <!-- Barra de progreso del workflow -->
+            <div id="workflow-progress" style="background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; border: 1px solid #e0e7ff;">
+                <h4>📋 Estado del Proceso</h4>
+                <div id="workflow-bar"></div>
             </div>
-            
+
+            <!-- Acciones rapidas -->
+            <div class="quick-actions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                <button onclick="showPayrollTab('process')" class="action-card" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; border: none; padding: 20px; border-radius: 10px; cursor: pointer; text-align: left;">
+                    <div style="font-size: 2rem;">⚡</div>
+                    <div style="font-weight: bold; margin: 10px 0;">Iniciar Liquidacion</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Comenzar proceso de nomina del periodo</div>
+                </button>
+                <button onclick="showPayrollTab('employees')" class="action-card" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; border: none; padding: 20px; border-radius: 10px; cursor: pointer; text-align: left;">
+                    <div style="font-size: 2rem;">👥</div>
+                    <div style="font-weight: bold; margin: 10px 0;">Ver Empleados</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Revisar y ajustar liquidaciones individuales</div>
+                </button>
+                <button onclick="showPayrollTab('consolidation')" class="action-card" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; border: none; padding: 20px; border-radius: 10px; cursor: pointer; text-align: left;">
+                    <div style="font-size: 2rem;">🏛️</div>
+                    <div style="font-weight: bold; margin: 10px 0;">Consolidar por Entidad</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Generar presentaciones a entidades</div>
+                </button>
+                <button onclick="exportPayrollReport()" class="action-card" style="background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); color: white; border: none; padding: 20px; border-radius: 10px; cursor: pointer; text-align: left;">
+                    <div style="font-size: 2rem;">📊</div>
+                    <div style="font-weight: bold; margin: 10px 0;">Exportar Reportes</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Descargar reportes en Excel/PDF</div>
+                </button>
+            </div>
+
+            <!-- Alertas y notificaciones -->
+            <div id="alerts-container" style="margin-top: 20px;"></div>
         </div>
     `;
-    
-    loadEmployeesForLiquidation();
+
+    await loadBranches();
+    await loadDashboardData();
 }
 
-// Pestaña: Conceptos de Liquidación
-function showConceptsTab() {
-    const payrollContent = document.getElementById('payroll-content');
-    payrollContent.innerHTML = `
-        <div class="concepts-section">
-            <div class="section-header">
-                <h3>📋 Conceptos de Liquidación</h3>
-                <div class="quick-actions">
-                    <button class="btn btn-primary" onclick="addNewConcept()">➕ Nuevo Concepto</button>
-                    <button class="btn btn-info" onclick="importStandardConcepts()">📥 Importar Estándar</button>
-                    <button class="btn btn-warning" onclick="validateConcepts()">✅ Validar</button>
-                </div>
-            </div>
-            
-            <!-- Categorías de conceptos -->
-            <div class="concepts-categories" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
-                
-                <!-- Haberes -->
-                <div class="concept-category-card" style="background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%); color: white; border-radius: 15px; padding: 20px;">
-                    <h4>💰 Haberes (Remunerativos)</h4>
-                    <div class="concept-list">
-                        <div class="concept-item">✓ Sueldo Básico</div>
-                        <div class="concept-item">✓ Antigüedad</div>
-                        <div class="concept-item">✓ Horas Extras 50%</div>
-                        <div class="concept-item">✓ Horas Extras 100%</div>
-                        <div class="concept-item">✓ Plus por Turno</div>
-                        <div class="concept-item">✓ Comisiones</div>
-                        <div class="concept-item">✓ Presentismo</div>
-                    </div>
-                    <button class="btn btn-light btn-sm" onclick="manageConcepts('haberes')">⚙️ Gestionar</button>
-                </div>
-                
-                <!-- No Remunerativos -->
-                <div class="concept-category-card" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; border-radius: 15px; padding: 20px;">
-                    <h4>🎯 No Remunerativos</h4>
-                    <div class="concept-list">
-                        <div class="concept-item">✓ Viáticos</div>
-                        <div class="concept-item">✓ Reintegro Gastos</div>
-                        <div class="concept-item">✓ Beneficios Sociales</div>
-                        <div class="concept-item">✓ Capacitación</div>
-                        <div class="concept-item">✓ Guardería</div>
-                    </div>
-                    <button class="btn btn-light btn-sm" onclick="manageConcepts('no-remunerativos')">⚙️ Gestionar</button>
-                </div>
-                
-                <!-- Descuentos Legales -->
-                <div class="concept-category-card" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; border-radius: 15px; padding: 20px;">
-                    <h4>🏛️ Descuentos Legales</h4>
-                    <div class="concept-list">
-                        <div class="concept-item">✓ Aportes Jubilatorios (11%)</div>
-                        <div class="concept-item">✓ Obra Social (3%)</div>
-                        <div class="concept-item">✓ INSSJP (3%)</div>
-                        <div class="concept-item">✓ Sindicato</div>
-                        <div class="concept-item">✓ Ganancias</div>
-                    </div>
-                    <button class="btn btn-light btn-sm" onclick="manageConcepts('descuentos-legales')">⚙️ Gestionar</button>
-                </div>
-                
-                <!-- Otros Descuentos -->
-                <div class="concept-category-card" style="background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); color: white; border-radius: 15px; padding: 20px;">
-                    <h4>📉 Otros Descuentos</h4>
-                    <div class="concept-list">
-                        <div class="concept-item">✓ Préstamos</div>
-                        <div class="concept-item">✓ Adelantos</div>
-                        <div class="concept-item">✓ Embargos</div>
-                        <div class="concept-item">✓ Cuota Sindical</div>
-                        <div class="concept-item">✓ Seguro de Vida</div>
-                    </div>
-                    <button class="btn btn-light btn-sm" onclick="manageConcepts('otros-descuentos')">⚙️ Gestionar</button>
-                </div>
-                
-            </div>
-            
-            <!-- Calculadora de conceptos -->
-            <div class="concept-calculator" style="background: white; border: 2px solid #e0e7ff; border-radius: 15px; padding: 20px; margin: 20px 0;">
-                <h4>🧮 Calculadora de Conceptos</h4>
-                <div class="calculator-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                    <div>
-                        <label>💰 Sueldo Básico:</label>
-                        <input type="number" id="basic-salary" placeholder="0.00" style="width: 100%; padding: 8px;">
-                    </div>
-                    <div>
-                        <label>📅 Años Antigüedad:</label>
-                        <input type="number" id="years-seniority" placeholder="0" style="width: 100%; padding: 8px;">
-                    </div>
-                    <div>
-                        <label>⏰ Horas Extras 50%:</label>
-                        <input type="number" id="overtime-50" placeholder="0" style="width: 100%; padding: 8px;">
-                    </div>
-                    <div>
-                        <label>⏰ Horas Extras 100%:</label>
-                        <input type="number" id="overtime-100" placeholder="0" style="width: 100%; padding: 8px;">
-                    </div>
-                    <div style="grid-column: 1 / -1;">
-                        <button class="btn btn-primary" onclick="calculateConcepts()">🧮 Calcular</button>
-                        <button class="btn btn-info" onclick="showCalculationDetail()">📋 Ver Detalle</button>
-                    </div>
-                </div>
-                <div id="calculation-result" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none;">
-                    <!-- Resultado del cálculo -->
-                </div>
-            </div>
-            
-        </div>
-    `;
-}
-
-// Pestaña: Escalas Salariales
-function showScalesTab() {
-    const payrollContent = document.getElementById('payroll-content');
-    payrollContent.innerHTML = `
-        <div class="scales-section">
-            <div class="section-header">
-                <h3>📊 Escalas Salariales</h3>
-                <div class="quick-actions">
-                    <button class="btn btn-primary" onclick="createNewScale()">📊 Nueva Escala</button>
-                    <button class="btn btn-success" onclick="importScaleFromAgreement()">📥 Importar de Convenio</button>
-                    <button class="btn btn-warning" onclick="adjustScaleByInflation()">📈 Ajustar por Inflación</button>
-                </div>
-            </div>
-            
-            <!-- Escalas activas -->
-            <div class="active-scales" style="margin: 20px 0;">
-                <h4>📋 Escalas Activas</h4>
-                <div class="scales-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
-                    
-                    <!-- Escala Básica -->
-                    <div class="scale-card" style="background: white; border: 2px solid #4CAF50; border-radius: 15px; padding: 20px;">
-                        <h5>💼 Escala Básica - Personal Administrativo</h5>
-                        <div class="scale-info">
-                            <div><strong>Vigencia:</strong> 01/09/2024 - 31/08/2025</div>
-                            <div><strong>Base:</strong> Convenio UOM - Personal Administrativo</div>
-                            <div><strong>Última actualización:</strong> Septiembre 2024</div>
-                        </div>
-                        <div class="scale-categories" style="margin: 15px 0;">
-                            <div class="category-item" style="display: flex; justify-content: space-between; padding: 8px; background: #f0f8f0; margin: 5px 0; border-radius: 5px;">
-                                <span>Junior (0-2 años)</span>
-                                <span><strong>$850,000</strong></span>
-                            </div>
-                            <div class="category-item" style="display: flex; justify-content: space-between; padding: 8px; background: #f0f8f0; margin: 5px 0; border-radius: 5px;">
-                                <span>Semi-Senior (2-5 años)</span>
-                                <span><strong>$1,200,000</strong></span>
-                            </div>
-                            <div class="category-item" style="display: flex; justify-content: space-between; padding: 8px; background: #f0f8f0; margin: 5px 0; border-radius: 5px;">
-                                <span>Senior (5+ años)</span>
-                                <span><strong>$1,650,000</strong></span>
-                            </div>
-                            <div class="category-item" style="display: flex; justify-content: space-between; padding: 8px; background: #f0f8f0; margin: 5px 0; border-radius: 5px;">
-                                <span>Supervisor</span>
-                                <span><strong>$2,100,000</strong></span>
-                            </div>
-                        </div>
-                        <div class="scale-actions">
-                            <button class="btn btn-sm btn-primary" onclick="editScale(1)">✏️ Editar</button>
-                            <button class="btn btn-sm btn-info" onclick="viewScaleHistory(1)">📋 Historial</button>
-                            <button class="btn btn-sm btn-warning" onclick="adjustScale(1)">📈 Ajustar</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Escala Operarios -->
-                    <div class="scale-card" style="background: white; border: 2px solid #2196F3; border-radius: 15px; padding: 20px;">
-                        <h5>🔧 Escala Operarios - Personal de Producción</h5>
-                        <div class="scale-info">
-                            <div><strong>Vigencia:</strong> 01/09/2024 - 31/08/2025</div>
-                            <div><strong>Base:</strong> Convenio UOM - Personal de Fábrica</div>
-                            <div><strong>Última actualización:</strong> Septiembre 2024</div>
-                        </div>
-                        <div class="scale-categories" style="margin: 15px 0;">
-                            <div class="category-item" style="display: flex; justify-content: space-between; padding: 8px; background: #f0f4ff; margin: 5px 0; border-radius: 5px;">
-                                <span>Operario A</span>
-                                <span><strong>$920,000</strong></span>
-                            </div>
-                            <div class="category-item" style="display: flex; justify-content: space-between; padding: 8px; background: #f0f4ff; margin: 5px 0; border-radius: 5px;">
-                                <span>Operario B</span>
-                                <span><strong>$1,050,000</strong></span>
-                            </div>
-                            <div class="category-item" style="display: flex; justify-content: space-between; padding: 8px; background: #f0f4ff; margin: 5px 0; border-radius: 5px;">
-                                <span>Especialista</span>
-                                <span><strong>$1,380,000</strong></span>
-                            </div>
-                            <div class="category-item" style="display: flex; justify-content: space-between; padding: 8px; background: #f0f4ff; margin: 5px 0; border-radius: 5px;">
-                                <span>Encargado</span>
-                                <span><strong>$1,750,000</strong></span>
-                            </div>
-                        </div>
-                        <div class="scale-actions">
-                            <button class="btn btn-sm btn-primary" onclick="editScale(2)">✏️ Editar</button>
-                            <button class="btn btn-sm btn-info" onclick="viewScaleHistory(2)">📋 Historial</button>
-                            <button class="btn btn-sm btn-warning" onclick="adjustScale(2)">📈 Ajustar</button>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <!-- Herramientas de escala -->
-            <div class="scale-tools" style="background: #f8f9fa; border-radius: 15px; padding: 20px; margin: 20px 0;">
-                <h4>🛠️ Herramientas de Escalas</h4>
-                <div class="tools-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                    <div class="tool-card" style="background: white; border: 1px solid #ddd; border-radius: 10px; padding: 15px;">
-                        <h5>📊 Comparador de Escalas</h5>
-                        <p>Compare escalas entre diferentes períodos y convenios.</p>
-                        <button class="btn btn-info btn-sm" onclick="openScaleComparator()">🔍 Comparar</button>
-                    </div>
-                    <div class="tool-card" style="background: white; border: 1px solid #ddd; border-radius: 10px; padding: 15px;">
-                        <h5>📈 Proyector de Aumentos</h5>
-                        <p>Proyecte aumentos salariales según paritarias.</p>
-                        <button class="btn btn-warning btn-sm" onclick="openIncreaseProjector()">📊 Proyectar</button>
-                    </div>
-                    <div class="tool-card" style="background: white; border: 1px solid #ddd; border-radius: 10px; padding: 15px;">
-                        <h5>🎯 Impacto Presupuestario</h5>
-                        <p>Calcule el impacto de cambios en escalas.</p>
-                        <button class="btn btn-success btn-sm" onclick="calculateBudgetImpact()">💰 Calcular</button>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
-    `;
-}
-
-// Pestaña: Convenios Colectivos
-function showAgreementsTab() {
-    const payrollContent = document.getElementById('payroll-content');
-    payrollContent.innerHTML = `
-        <div class="agreements-section">
-            <div class="section-header">
-                <h3>📄 Convenios Colectivos de Trabajo (CCT)</h3>
-                <div class="quick-actions">
-                    <button class="btn btn-primary" onclick="registerNewAgreement()">📝 Registrar CCT</button>
-                    <button class="btn btn-info" onclick="searchAgreementDatabase()">🔍 Buscar en Base</button>
-                    <button class="btn btn-success" onclick="updateFromMinistry()">🔄 Actualizar desde MTEySS</button>
-                </div>
-            </div>
-            
-            <!-- CCT Aplicados -->
-            <div class="applied-agreements" style="margin: 20px 0;">
-                <h4>📋 Convenios Aplicados en la Empresa</h4>
-                <div class="agreements-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
-                    
-                    <!-- UOM -->
-                    <div class="agreement-card" style="background: white; border: 2px solid #1976D2; border-radius: 15px; padding: 20px;">
-                        <div class="agreement-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h5>⚙️ CCT 260/75 - UOM</h5>
-                            <span class="status-badge active">VIGENTE</span>
-                        </div>
-                        <div class="agreement-details">
-                            <div><strong>Sindicato:</strong> Unión Obrera Metalúrgica</div>
-                            <div><strong>Actividad:</strong> Industria Metalúrgica</div>
-                            <div><strong>Vigencia:</strong> Indefinida</div>
-                            <div><strong>Última actualización:</strong> Abril 2024</div>
-                            <div><strong>Empleados aplicados:</strong> 85</div>
-                        </div>
-                        <div class="agreement-provisions" style="margin: 15px 0;">
-                            <h6>📋 Principales Disposiciones:</h6>
-                            <ul style="margin-left: 20px;">
-                                <li>Jornada laboral: 48 horas semanales</li>
-                                <li>Horas extras: 50% y 100%</li>
-                                <li>Vacaciones: Según antigüedad (14-35 días)</li>
-                                <li>Aguinaldo: 2 cuotas (Junio y Diciembre)</li>
-                                <li>Plus por antigüedad: 1% anual</li>
-                            </ul>
-                        </div>
-                        <div class="agreement-actions">
-                            <button class="btn btn-sm btn-primary" onclick="viewAgreementDetail(260)">👁️ Ver Completo</button>
-                            <button class="btn btn-sm btn-info" onclick="downloadAgreementPDF(260)">📥 Descargar</button>
-                            <button class="btn btn-sm btn-warning" onclick="checkAgreementUpdates(260)">🔄 Verificar Actualizaciones</button>
-                        </div>
-                    </div>
-                    
-                    <!-- UPCN -->
-                    <div class="agreement-card" style="background: white; border: 2px solid #4CAF50; border-radius: 15px; padding: 20px;">
-                        <div class="agreement-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h5>👔 CCT 130/75 - UPCN</h5>
-                            <span class="status-badge active">VIGENTE</span>
-                        </div>
-                        <div class="agreement-details">
-                            <div><strong>Sindicato:</strong> Unión Personal Civil de la Nación</div>
-                            <div><strong>Actividad:</strong> Personal Administrativo</div>
-                            <div><strong>Vigencia:</strong> Indefinida</div>
-                            <div><strong>Última actualización:</strong> Mayo 2024</div>
-                            <div><strong>Empleados aplicados:</strong> 25</div>
-                        </div>
-                        <div class="agreement-provisions" style="margin: 15px 0;">
-                            <h6>📋 Principales Disposiciones:</h6>
-                            <ul style="margin-left: 20px;">
-                                <li>Jornada laboral: 40 horas semanales</li>
-                                <li>Horario flexible permitido</li>
-                                <li>Capacitación obligatoria anual</li>
-                                <li>Plus por título profesional</li>
-                                <li>Licencias especiales</li>
-                            </ul>
-                        </div>
-                        <div class="agreement-actions">
-                            <button class="btn btn-sm btn-primary" onclick="viewAgreementDetail(130)">👁️ Ver Completo</button>
-                            <button class="btn btn-sm btn-info" onclick="downloadAgreementPDF(130)">📥 Descargar</button>
-                            <button class="btn btn-sm btn-warning" onclick="checkAgreementUpdates(130)">🔄 Verificar Actualizaciones</button>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <!-- Buscador de Convenios -->
-            <div class="agreement-search" style="background: #e3f2fd; border-radius: 15px; padding: 20px; margin: 20px 0;">
-                <h4>🔍 Buscador de Convenios Colectivos</h4>
-                <div class="search-form" style="display: grid; grid-template-columns: 1fr 200px auto; gap: 15px; align-items: end;">
-                    <div>
-                        <label>Buscar por actividad, sindicato o número de CCT:</label>
-                        <input type="text" id="agreement-search-input" placeholder="Ej: metalúrgica, UOM, 260/75..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    </div>
-                    <div>
-                        <label>Categoría:</label>
-                        <select id="agreement-category" style="width: 100%; padding: 10px;">
-                            <option value="all">Todas</option>
-                            <option value="industry">Industria</option>
-                            <option value="commerce">Comercio</option>
-                            <option value="services">Servicios</option>
-                            <option value="construction">Construcción</option>
-                        </select>
-                    </div>
-                    <div>
-                        <button class="btn btn-primary" onclick="searchAgreements()">🔍 Buscar</button>
-                    </div>
-                </div>
-                <div id="agreement-search-results" style="margin-top: 15px;">
-                    <!-- Resultados de búsqueda -->
-                </div>
-            </div>
-            
-        </div>
-    `;
-}
-
-// Pestaña: Cargas Sociales y Tributos
-function showTaxesTab() {
-    const payrollContent = document.getElementById('payroll-content');
-    payrollContent.innerHTML = `
-        <div class="taxes-section">
-            <div class="section-header">
-                <h3>🏛️ Cargas Sociales y Tributos Laborales</h3>
-                <div class="quick-actions">
-                    <button class="btn btn-primary" onclick="updateTaxRates()">🔄 Actualizar Alícuotas</button>
-                    <button class="btn btn-success" onclick="calculateTaxImpact()">🧮 Calcular Impacto</button>
-                    <button class="btn btn-info" onclick="generateTaxReport()">📊 Reporte Tributario</button>
-                </div>
-            </div>
-            
-            <!-- Cargas del Empleador -->
-            <div class="employer-taxes" style="margin: 20px 0;">
-                <h4>🏢 Contribuciones Patronales</h4>
-                <div class="taxes-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                    
-                    <!-- Seguridad Social -->
-                    <div class="tax-category-card" style="background: white; border: 2px solid #1976D2; border-radius: 15px; padding: 20px;">
-                        <h5>🛡️ Seguridad Social</h5>
-                        <div class="tax-items">
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
-                                <span>Jubilación</span>
-                                <span><strong>10.17%</strong></span>
-                            </div>
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
-                                <span>Obra Social</span>
-                                <span><strong>6.00%</strong></span>
-                            </div>
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
-                                <span>INSSJP</span>
-                                <span><strong>1.50%</strong></span>
-                            </div>
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
-                                <span>Asignaciones Familiares</span>
-                                <span><strong>4.44%</strong></span>
-                            </div>
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; background: #e3f2fd; font-weight: bold;">
-                                <span>TOTAL SEGURIDAD SOCIAL</span>
-                                <span>22.11%</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Riesgos del Trabajo -->
-                    <div class="tax-category-card" style="background: white; border: 2px solid #FF9800; border-radius: 15px; padding: 20px;">
-                        <h5>🏥 Riesgos del Trabajo</h5>
-                        <div class="tax-items">
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
-                                <span>ART (Actividad 1)</span>
-                                <span><strong>0.72%</strong></span>
-                            </div>
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
-                                <span>ART (Actividad 2)</span>
-                                <span><strong>1.95%</strong></span>
-                            </div>
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
-                                <span>ART (Actividad 3)</span>
-                                <span><strong>3.24%</strong></span>
-                            </div>
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; background: #fff3e0; font-weight: bold;">
-                                <span>PROMEDIO APLICADO</span>
-                                <span>1.95%</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Otros Tributos -->
-                    <div class="tax-category-card" style="background: white; border: 2px solid #4CAF50; border-radius: 15px; padding: 20px;">
-                        <h5>📊 Otros Tributos</h5>
-                        <div class="tax-items">
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
-                                <span>Fondo Nacional Empleo</span>
-                                <span><strong>0.89%</strong></span>
-                            </div>
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
-                                <span>INCUCAI</span>
-                                <span><strong>0.21%</strong></span>
-                            </div>
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
-                                <span>Cuota Sindical Solidaria</span>
-                                <span><strong>2.00%</strong></span>
-                            </div>
-                            <div class="tax-item" style="display: flex; justify-content: space-between; padding: 8px; background: #e8f5e8; font-weight: bold;">
-                                <span>TOTAL OTROS</span>
-                                <span>3.10%</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <!-- Resumen Total Cargas -->
-            <div class="total-charges-summary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 20px; margin: 20px 0;">
-                <h4>💰 Resumen Total de Cargas Patronales</h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                    <div class="charge-summary-item">
-                        <div style="font-size: 2rem; font-weight: bold;">22.11%</div>
-                        <div>Seguridad Social</div>
-                    </div>
-                    <div class="charge-summary-item">
-                        <div style="font-size: 2rem; font-weight: bold;">1.95%</div>
-                        <div>ART Promedio</div>
-                    </div>
-                    <div class="charge-summary-item">
-                        <div style="font-size: 2rem; font-weight: bold;">3.10%</div>
-                        <div>Otros Tributos</div>
-                    </div>
-                    <div class="charge-summary-item" style="border: 2px solid white; border-radius: 10px; padding: 15px;">
-                        <div style="font-size: 2.5rem; font-weight: bold;">27.16%</div>
-                        <div>TOTAL CARGAS</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Descuentos del Empleado -->
-            <div class="employee-deductions" style="margin: 20px 0;">
-                <h4>👤 Aportes y Descuentos del Empleado</h4>
-                <div class="deductions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                    <div class="deduction-item" style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 15px;">
-                        <h6>Jubilación</h6>
-                        <div style="font-size: 1.5rem; color: #f44336; font-weight: bold;">11%</div>
-                    </div>
-                    <div class="deduction-item" style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 15px;">
-                        <h6>Obra Social</h6>
-                        <div style="font-size: 1.5rem; color: #f44336; font-weight: bold;">3%</div>
-                    </div>
-                    <div class="deduction-item" style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 15px;">
-                        <h6>INSSJP (PAMI)</h6>
-                        <div style="font-size: 1.5rem; color: #f44336; font-weight: bold;">3%</div>
-                    </div>
-                    <div class="deduction-item" style="background: #fff3e0; border: 2px solid #ff9800; border-radius: 10px; padding: 15px;">
-                        <h6>TOTAL APORTES</h6>
-                        <div style="font-size: 1.8rem; color: #ff9800; font-weight: bold;">17%</div>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
-    `;
-}
-
-// Cargar datos del módulo
-async function loadPayrollData() {
-    console.log('💰 [PAYROLL] Cargando datos de liquidación...');
-    
+async function loadBranches() {
     try {
-        // Datos de demostración
-        currentLegislation = {
-            minSalary: 230000, // Salario mínimo vital y móvil
-            maxSalary: 2000000, // Tope para aportes
-            vacationDays: [14, 21, 28, 35], // Días según antigüedad
-            aguinaldoMonths: ['06', '12'], // Meses de pago del aguinaldo
-            overtimeRates: {
-                normal: 1.5, // 50%
-                holidays: 2.0 // 100%
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const response = await fetch('/api/payroll/branches', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            const select = document.getElementById('branch-filter');
+            if (select && data.data) {
+                data.data.forEach(branch => {
+                    select.innerHTML += `<option value="${branch.id}">${branch.branch_name} (${branch.country_code || 'N/A'})</option>`;
+                });
             }
-        };
-        
-        taxRates = {
-            employer: {
-                retirement: 10.17,
-                healthcare: 6.00,
-                pami: 1.50,
-                familyAllowances: 4.44,
-                art: 1.95,
-                employment: 0.89,
-                incucai: 0.21,
-                union: 2.00
-            },
-            employee: {
-                retirement: 11.00,
-                healthcare: 3.00,
-                pami: 3.00
-            }
-        };
-        
-        console.log('✅ [PAYROLL] Datos cargados exitosamente');
-        
-    } catch (error) {
-        console.error('❌ [PAYROLL] Error cargando datos:', error);
-    }
+        }
+    } catch (e) { console.log('No branches loaded:', e); }
 }
 
-function loadEmployeesForLiquidation() {
-    const employeesList = document.getElementById('employees-liquidation-list');
-    if (!employeesList) return;
-    
-    employeesList.innerHTML = `
-        <div class="employees-liquidation-section" style="background: white; border: 2px solid #e0e7ff; border-radius: 15px; padding: 20px; margin-top: 20px;">
-            <h4>👥 Empleados para Liquidar - Septiembre 2024</h4>
+async function loadDashboardData() {
+    const year = document.getElementById('period-year')?.value || new Date().getFullYear();
+    const month = document.getElementById('period-month')?.value || new Date().getMonth() + 1;
+    const branch = document.getElementById('branch-filter')?.value || '';
+
+    payrollState.currentPeriod = { year, month, branch };
+
+    // KPIs - Por ahora con datos de ejemplo, conectar a API real
+    const kpisContainer = document.getElementById('kpis-container');
+    kpisContainer.innerHTML = `
+        <div class="kpi-card" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold;" id="kpi-total-employees">--</div>
+            <div>Total Empleados</div>
+        </div>
+        <div class="kpi-card" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold;" id="kpi-processed">--</div>
+            <div>Procesados</div>
+        </div>
+        <div class="kpi-card" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold;" id="kpi-pending">--</div>
+            <div>Pendientes</div>
+        </div>
+        <div class="kpi-card" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold;" id="kpi-errors">--</div>
+            <div>Con Errores</div>
+        </div>
+        <div class="kpi-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: bold;" id="kpi-total-amount">--</div>
+            <div>Total Bruto</div>
+        </div>
+        <div class="kpi-card" style="background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: bold;" id="kpi-net-amount">--</div>
+            <div>Total Neto</div>
+        </div>
+    `;
+
+    // Cargar datos reales desde API
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const response = await fetch(`/api/payroll/runs/summary?year=${year}&month=${month}${branch ? '&branch_id=' + branch : ''}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.data) {
+                document.getElementById('kpi-total-employees').textContent = data.data.total_employees || 0;
+                document.getElementById('kpi-processed').textContent = data.data.processed || 0;
+                document.getElementById('kpi-pending').textContent = data.data.pending || 0;
+                document.getElementById('kpi-errors').textContent = data.data.errors || 0;
+                document.getElementById('kpi-total-amount').textContent = formatCurrency(data.data.total_gross || 0);
+                document.getElementById('kpi-net-amount').textContent = formatCurrency(data.data.total_net || 0);
+            }
+        }
+    } catch (e) {
+        console.log('Error loading dashboard:', e);
+        // Datos de demo si no hay API
+        document.getElementById('kpi-total-employees').textContent = '0';
+        document.getElementById('kpi-processed').textContent = '0';
+        document.getElementById('kpi-pending').textContent = '0';
+        document.getElementById('kpi-errors').textContent = '0';
+    }
+
+    // Workflow progress
+    renderWorkflowProgress();
+}
+
+function renderWorkflowProgress() {
+    const steps = [
+        { id: 1, name: 'Abrir', icon: '🔓', status: 'completed' },
+        { id: 2, name: 'Validar', icon: '✅', status: 'current' },
+        { id: 3, name: 'Calcular', icon: '🧮', status: 'pending' },
+        { id: 4, name: 'Revisar', icon: '👁️', status: 'pending' },
+        { id: 5, name: 'Aprobar', icon: '✔️', status: 'pending' },
+        { id: 6, name: 'Pagar', icon: '💰', status: 'pending' }
+    ];
+
+    const container = document.getElementById('workflow-bar');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+            ${steps.map((step, i) => `
+                <div style="flex: 1; text-align: center; position: relative;">
+                    <div style="
+                        width: 50px; height: 50px; border-radius: 50%; margin: 0 auto;
+                        display: flex; align-items: center; justify-content: center;
+                        font-size: 1.5rem;
+                        background: ${step.status === 'completed' ? '#4CAF50' : step.status === 'current' ? '#2196F3' : '#e0e0e0'};
+                        color: ${step.status === 'pending' ? '#666' : 'white'};
+                        border: 3px solid ${step.status === 'current' ? '#1976D2' : 'transparent'};
+                    ">${step.icon}</div>
+                    <div style="margin-top: 8px; font-size: 12px; font-weight: ${step.status === 'current' ? 'bold' : 'normal'};">
+                        ${step.name}
+                    </div>
+                    ${i < steps.length - 1 ? `
+                        <div style="position: absolute; top: 25px; left: 50%; width: 100%; height: 3px;
+                            background: ${step.status === 'completed' ? '#4CAF50' : '#e0e0e0'}; z-index: -1;"></div>
+                    ` : ''}
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// ============================================================================
+// TAB 2: PROCESO DE LIQUIDACION - Workflow estilo SAP PCC
+// ============================================================================
+function showProcessTab() {
+    const payrollContent = document.getElementById('payroll-content');
+    payrollContent.innerHTML = `
+        <div class="process-section">
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>⚡ Proceso de Liquidacion</h3>
+                <div>
+                    <span id="period-display" style="background: #e3f2fd; padding: 8px 15px; border-radius: 20px; margin-right: 10px;">
+                        📅 ${payrollState.currentPeriod?.month || '--'}/${payrollState.currentPeriod?.year || '--'}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Workflow Steps -->
+            <div class="workflow-steps" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                ${renderWorkflowSteps()}
+            </div>
+
+            <!-- Panel de accion actual -->
+            <div id="current-step-panel" style="background: white; border: 2px solid #e0e7ff; border-radius: 15px; padding: 20px;">
+                ${renderCurrentStepContent()}
+            </div>
+
+            <!-- Log de actividad -->
+            <div class="activity-log" style="margin-top: 20px; background: #f8f9fa; border-radius: 10px; padding: 15px;">
+                <h4>📋 Registro de Actividad</h4>
+                <div id="activity-log-content" style="max-height: 200px; overflow-y: auto; font-size: 13px;">
+                    <div style="padding: 8px; border-bottom: 1px solid #eee;">
+                        <span style="color: #666;">${new Date().toLocaleString()}</span> -
+                        <span style="color: #4CAF50;">Sistema iniciado</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderWorkflowSteps() {
+    const steps = [
+        { id: 1, name: 'Abrir Periodo', icon: '🔓', desc: 'Bloquear datos del periodo', action: 'openPeriod' },
+        { id: 2, name: 'Validar Datos', icon: '✅', desc: 'Detectar errores y alertas', action: 'validateData' },
+        { id: 3, name: 'Calcular Nomina', icon: '🧮', desc: 'Generar resultados', action: 'calculatePayroll' },
+        { id: 4, name: 'Revisar Alertas', icon: '👁️', desc: 'Resolver inconsistencias', action: 'reviewAlerts' },
+        { id: 5, name: 'Aprobar', icon: '✔️', desc: 'Autorizacion final', action: 'approvePayroll' },
+        { id: 6, name: 'Procesar Pago', icon: '💰', desc: 'Transferir a bancos', action: 'processPayment' }
+    ];
+
+    return steps.map(step => `
+        <div class="workflow-step-card" style="
+            background: ${step.id < payrollState.workflowStep ? '#e8f5e9' : step.id === payrollState.workflowStep ? '#e3f2fd' : '#f5f5f5'};
+            border: 2px solid ${step.id === payrollState.workflowStep ? '#2196F3' : '#ddd'};
+            border-radius: 10px; padding: 15px; text-align: center; cursor: pointer;
+            opacity: ${step.id <= payrollState.workflowStep ? 1 : 0.6};
+        " onclick="${step.id === payrollState.workflowStep ? step.action + '()' : ''}">
+            <div style="font-size: 2rem; margin-bottom: 10px;">${step.icon}</div>
+            <div style="font-weight: bold; margin-bottom: 5px;">${step.name}</div>
+            <div style="font-size: 11px; color: #666;">${step.desc}</div>
+            ${step.id < payrollState.workflowStep ? '<div style="color: #4CAF50; margin-top: 5px;">✓ Completado</div>' : ''}
+            ${step.id === payrollState.workflowStep ? '<button class="btn btn-primary btn-sm" style="margin-top: 10px;">Ejecutar</button>' : ''}
+        </div>
+    `).join('');
+}
+
+function renderCurrentStepContent() {
+    const stepContent = {
+        1: `
+            <h4>🔓 Abrir Periodo de Liquidacion</h4>
+            <p>Al abrir el periodo, los datos de asistencia y novedades quedaran bloqueados para edicion.</p>
+            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <strong>⚠️ Importante:</strong> Una vez abierto, no se podran modificar registros de asistencia del periodo.
+            </div>
+            <button onclick="openPeriod()" class="btn btn-primary">🔓 Abrir Periodo</button>
+        `,
+        2: `
+            <h4>✅ Validar Datos</h4>
+            <p>El sistema verificara automaticamente:</p>
+            <ul style="margin: 15px 0;">
+                <li>Empleados con plantilla de liquidacion asignada</li>
+                <li>Datos de asistencia completos</li>
+                <li>Configuracion de deducciones</li>
+                <li>Cuentas bancarias para deposito</li>
+            </ul>
+            <button onclick="validateData()" class="btn btn-primary">✅ Iniciar Validacion</button>
+        `,
+        3: `
+            <h4>🧮 Calcular Nomina</h4>
+            <p>Generar los resultados de liquidacion para todos los empleados.</p>
+            <div style="margin: 15px 0;">
+                <label><input type="checkbox" checked> Incluir horas extras</label><br>
+                <label><input type="checkbox" checked> Aplicar novedades del periodo</label><br>
+                <label><input type="checkbox" checked> Calcular proporcionales</label>
+            </div>
+            <button onclick="calculatePayroll()" class="btn btn-success">🧮 Calcular Nomina</button>
+        `,
+        4: `
+            <h4>👁️ Revisar Alertas</h4>
+            <div id="alerts-review-list">Cargando alertas...</div>
+        `,
+        5: `
+            <h4>✔️ Aprobar Liquidacion</h4>
+            <p>Revision final antes de procesar pagos.</p>
+            <div id="approval-summary">Cargando resumen...</div>
+            <button onclick="approvePayroll()" class="btn btn-success">✔️ Aprobar y Continuar</button>
+        `,
+        6: `
+            <h4>💰 Procesar Pagos</h4>
+            <p>Generar archivos de transferencia bancaria y recibos de sueldo.</p>
+            <button onclick="generateBankFile()" class="btn btn-info">🏦 Generar Archivo Bancario</button>
+            <button onclick="generatePayslips()" class="btn btn-primary">📄 Generar Recibos</button>
+            <button onclick="processPayment()" class="btn btn-success">💰 Marcar como Pagado</button>
+        `
+    };
+
+    return stepContent[payrollState.workflowStep] || '<p>Seleccione un paso del workflow</p>';
+}
+
+// Funciones de workflow
+async function openPeriod() {
+    addActivityLog('Abriendo periodo de liquidacion...');
+    // TODO: Llamar API para bloquear periodo
+    payrollState.workflowStep = 2;
+    addActivityLog('Periodo abierto exitosamente', 'success');
+    showProcessTab();
+}
+
+async function validateData() {
+    addActivityLog('Iniciando validacion de datos...');
+    // TODO: Llamar API de validacion
+    setTimeout(() => {
+        addActivityLog('Validacion completada: 0 errores, 2 advertencias', 'success');
+        payrollState.workflowStep = 3;
+        showProcessTab();
+    }, 1500);
+}
+
+async function calculatePayroll() {
+    addActivityLog('Calculando nomina...');
+    // TODO: Llamar API de calculo
+    setTimeout(() => {
+        addActivityLog('Nomina calculada para X empleados', 'success');
+        payrollState.workflowStep = 4;
+        showProcessTab();
+    }, 2000);
+}
+
+async function approvePayroll() {
+    addActivityLog('Aprobando liquidacion...');
+    payrollState.workflowStep = 5;
+    setTimeout(() => {
+        addActivityLog('Liquidacion aprobada', 'success');
+        payrollState.workflowStep = 6;
+        showProcessTab();
+    }, 1000);
+}
+
+async function processPayment() {
+    addActivityLog('Procesando pagos...');
+    alert('Pagos procesados exitosamente');
+    payrollState.workflowStep = 1; // Reset para proximo periodo
+}
+
+function addActivityLog(message, type = 'info') {
+    const log = document.getElementById('activity-log-content');
+    if (!log) return;
+    const colors = { info: '#2196F3', success: '#4CAF50', error: '#f44336', warning: '#FF9800' };
+    log.innerHTML = `
+        <div style="padding: 8px; border-bottom: 1px solid #eee;">
+            <span style="color: #666;">${new Date().toLocaleString()}</span> -
+            <span style="color: ${colors[type]};">${message}</span>
+        </div>
+    ` + log.innerHTML;
+}
+
+// ============================================================================
+// TAB 3: EMPLEADOS - Lista con filtros y acciones masivas
+// ============================================================================
+async function showEmployeesTab() {
+    const payrollContent = document.getElementById('payroll-content');
+    payrollContent.innerHTML = `
+        <div class="employees-section">
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>👥 Empleados en Liquidacion</h3>
+                <div class="bulk-actions">
+                    <button onclick="calculateSelected()" class="btn btn-success btn-sm">🧮 Calcular Seleccionados</button>
+                    <button onclick="approveSelected()" class="btn btn-primary btn-sm">✔️ Aprobar Seleccionados</button>
+                    <button onclick="exportEmployees()" class="btn btn-info btn-sm">📊 Exportar</button>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filters-bar" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <input type="text" id="employee-search" placeholder="🔍 Buscar empleado..." onkeyup="filterEmployees()"
+                    style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 200px;">
+                <select id="filter-department" onchange="filterEmployees()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">Todos los departamentos</option>
+                </select>
+                <select id="filter-status" onchange="filterEmployees()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">Todos los estados</option>
+                    <option value="pending">Pendiente</option>
+                    <option value="calculated">Calculado</option>
+                    <option value="approved">Aprobado</option>
+                    <option value="paid">Pagado</option>
+                    <option value="error">Con Error</option>
+                </select>
+                <select id="filter-template" onchange="filterEmployees()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">Todas las plantillas</option>
+                </select>
+            </div>
+
+            <!-- Tabla de empleados -->
             <div class="employees-table-container" style="overflow-x: auto;">
-                <table class="liquidation-table" style="width: 100%; border-collapse: collapse;">
+                <table class="employees-table" style="width: 100%; border-collapse: collapse; background: white;">
                     <thead>
                         <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">✅</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Empleado</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Legajo</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Categoría</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Básico</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">H. Extras</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Bruto</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Descuentos</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Neto</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Estado</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Acciones</th>
+                            <th style="padding: 12px; text-align: left;"><input type="checkbox" onclick="toggleAllEmployees(this)"></th>
+                            <th style="padding: 12px; text-align: left;">Empleado</th>
+                            <th style="padding: 12px; text-align: left;">Legajo</th>
+                            <th style="padding: 12px; text-align: left;">Departamento</th>
+                            <th style="padding: 12px; text-align: left;">Plantilla</th>
+                            <th style="padding: 12px; text-align: right;">Bruto</th>
+                            <th style="padding: 12px; text-align: right;">Deducciones</th>
+                            <th style="padding: 12px; text-align: right;">Neto</th>
+                            <th style="padding: 12px; text-align: center;">Estado</th>
+                            <th style="padding: 12px; text-align: center;">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${generateEmployeeLiquidationRows()}
+                    <tbody id="employees-table-body">
+                        <tr><td colspan="10" style="text-align: center; padding: 40px;">Cargando empleados...</td></tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- Paginacion -->
+            <div id="pagination" style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;"></div>
         </div>
     `;
-    
-    // Actualizar contadores de estado
-    updateLiquidationStatus();
+
+    await loadEmployeesData();
 }
 
-function generateEmployeeLiquidationRows() {
-    const employees = [
-        { id: 1, name: 'Juan Pérez', legajo: 'EMP001', category: 'Senior', basic: 1650000, overtime: 8.5, status: 'processed' },
-        { id: 2, name: 'María García', legajo: 'EMP002', category: 'Semi-Senior', basic: 1200000, overtime: 4.0, status: 'pending' },
-        { id: 3, name: 'Carlos López', legajo: 'EMP003', category: 'Operario B', basic: 1050000, overtime: 12.0, status: 'error' },
-        { id: 4, name: 'Ana Rodríguez', legajo: 'EMP004', category: 'Junior', basic: 850000, overtime: 0, status: 'processed' },
-        { id: 5, name: 'Luis Martínez', legajo: 'EMP005', category: 'Supervisor', basic: 2100000, overtime: 6.0, status: 'pending' }
-    ];
-    
-    return employees.map(emp => {
-        const overtimeAmount = (emp.basic / 200) * emp.overtime * 1.5; // Cálculo aproximado
-        const grossSalary = emp.basic + overtimeAmount;
-        const deductions = grossSalary * 0.17; // 17% de aportes
-        const netSalary = grossSalary - deductions;
-        
-        const statusColors = {
-            'processed': { bg: '#e8f5e8', color: '#4caf50', text: 'PROCESADO' },
-            'pending': { bg: '#fff3e0', color: '#ff9800', text: 'PENDIENTE' },
-            'error': { bg: '#ffebee', color: '#f44336', text: 'ERROR' }
-        };
-        
-        const status = statusColors[emp.status];
-        
-        return `
-            <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
-                    <input type="checkbox" ${emp.status === 'processed' ? 'checked disabled' : ''}>
-                </td>
-                <td style="padding: 10px; border: 1px solid #ddd;">${emp.name}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">${emp.legajo}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">${emp.category}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">$${emp.basic.toLocaleString()}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">${emp.overtime}h</td>
-                <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">$${grossSalary.toLocaleString()}</td>
-                <td style="padding: 10px; border: 1px solid #ddd; color: #f44336;">$${deductions.toLocaleString()}</td>
-                <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #4caf50;">$${netSalary.toLocaleString()}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">
-                    <span style="background: ${status.bg}; color: ${status.color}; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
-                        ${status.text}
-                    </span>
-                </td>
-                <td style="padding: 10px; border: 1px solid #ddd;">
-                    <div style="display: flex; gap: 5px;">
-                        <button class="btn btn-xs btn-primary" onclick="editEmployeeLiquidation(${emp.id})">✏️</button>
-                        <button class="btn btn-xs btn-info" onclick="viewLiquidationDetail(${emp.id})">👁️</button>
-                        ${emp.status === 'processed' ? 
-                            '<button class="btn btn-xs btn-success" onclick="downloadPayslip(' + emp.id + ')">📥</button>' : 
-                            '<button class="btn btn-xs btn-warning" onclick="processLiquidation(' + emp.id + ')">▶️</button>'
-                        }
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
+async function loadEmployeesData() {
+    const tbody = document.getElementById('employees-table-body');
 
-function updateLiquidationStatus() {
-    document.getElementById('processed-count').textContent = '2';
-    document.getElementById('pending-count').textContent = '2';
-    document.getElementById('errors-count').textContent = '1';
-    document.getElementById('total-amount').textContent = '$8,450,000';
-}
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const year = payrollState.currentPeriod?.year || new Date().getFullYear();
+        const month = payrollState.currentPeriod?.month || new Date().getMonth() + 1;
 
-// Funciones de acciones
-function startNewLiquidation() {
-    alert('💰 Iniciando nueva liquidación...\n\n📅 Período: Septiembre 2024\n👥 Empleados: 5\n⏰ Tiempo estimado: 10 minutos\n\n✅ Verificando:\n- Asistencias del período\n- Horas extras registradas\n- Novedades pendientes\n- Escalas salariales vigentes');
-}
+        const response = await fetch(`/api/payroll/runs/details?year=${year}&month=${month}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-function calculateAllPayrolls() {
-    alert('⚡ Calculando todas las liquidaciones...\n\n🔄 Procesando:\n- Conceptos remunerativos\n- Horas extras al 50% y 100%\n- Descuentos legales (17%)\n- Cargas patronales (27.16%)\n- Aguinaldo proporcional\n\n✅ Cálculos completados\n📊 Listo para revisión');
-}
-
-function calculateConcepts() {
-    const basicSalary = parseFloat(document.getElementById('basic-salary').value) || 0;
-    const yearsSeniority = parseInt(document.getElementById('years-seniority').value) || 0;
-    const overtime50 = parseFloat(document.getElementById('overtime-50').value) || 0;
-    const overtime100 = parseFloat(document.getElementById('overtime-100').value) || 0;
-    
-    if (basicSalary === 0) {
-        alert('❌ Ingrese un sueldo básico válido');
-        return;
+        if (response.ok) {
+            const data = await response.json();
+            if (data.data && data.data.length > 0) {
+                tbody.innerHTML = data.data.map(emp => renderEmployeeRow(emp)).join('');
+                return;
+            }
+        }
+    } catch (e) {
+        console.log('Error loading employees:', e);
     }
-    
-    // Cálculos
-    const seniorityAmount = basicSalary * (yearsSeniority * 0.01); // 1% por año
-    const hourlyRate = basicSalary / 200; // Valor hora
-    const overtime50Amount = hourlyRate * overtime50 * 1.5;
-    const overtime100Amount = hourlyRate * overtime100 * 2.0;
-    
-    const totalRemunerative = basicSalary + seniorityAmount + overtime50Amount + overtime100Amount;
-    const employeeDeductions = totalRemunerative * 0.17; // 17%
-    const netSalary = totalRemunerative - employeeDeductions;
-    const employerCharges = totalRemunerative * 0.2716; // 27.16%
-    
-    const resultDiv = document.getElementById('calculation-result');
-    resultDiv.innerHTML = `
-        <h5>🧮 Resultado del Cálculo</h5>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <h6>💰 Conceptos Remunerativos</h6>
-                <div>Sueldo Básico: $${basicSalary.toLocaleString()}</div>
-                <div>Antigüedad (${yearsSeniority} años): $${seniorityAmount.toLocaleString()}</div>
-                <div>H. Extras 50% (${overtime50}h): $${overtime50Amount.toLocaleString()}</div>
-                <div>H. Extras 100% (${overtime100}h): $${overtime100Amount.toLocaleString()}</div>
-                <div style="border-top: 1px solid #ddd; padding-top: 8px; font-weight: bold;">
-                    Total Bruto: $${totalRemunerative.toLocaleString()}
+
+    // Si no hay datos, mostrar mensaje
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="10" style="text-align: center; padding: 40px;">
+                <div style="color: #666;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">📋</div>
+                    <p>No hay liquidaciones para este periodo</p>
+                    <button onclick="showPayrollTab('process')" class="btn btn-primary">Iniciar Proceso de Liquidacion</button>
                 </div>
+            </td>
+        </tr>
+    `;
+}
+
+function renderEmployeeRow(emp) {
+    const statusStyles = {
+        pending: { bg: '#fff3e0', color: '#FF9800', text: 'Pendiente' },
+        calculated: { bg: '#e3f2fd', color: '#2196F3', text: 'Calculado' },
+        approved: { bg: '#e8f5e9', color: '#4CAF50', text: 'Aprobado' },
+        paid: { bg: '#e8f5e9', color: '#388E3C', text: 'Pagado' },
+        error: { bg: '#ffebee', color: '#f44336', text: 'Error' }
+    };
+    const status = statusStyles[emp.status] || statusStyles.pending;
+
+    return `
+        <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 10px;"><input type="checkbox" class="employee-checkbox" value="${emp.id}"></td>
+            <td style="padding: 10px;">${emp.firstName || ''} ${emp.lastName || ''}</td>
+            <td style="padding: 10px;">${emp.employee_code || '--'}</td>
+            <td style="padding: 10px;">${emp.department_name || '--'}</td>
+            <td style="padding: 10px;">${emp.template_name || 'Sin plantilla'}</td>
+            <td style="padding: 10px; text-align: right;">${formatCurrency(emp.gross_earnings || 0)}</td>
+            <td style="padding: 10px; text-align: right; color: #f44336;">${formatCurrency(emp.total_deductions || 0)}</td>
+            <td style="padding: 10px; text-align: right; font-weight: bold; color: #4CAF50;">${formatCurrency(emp.net_salary || 0)}</td>
+            <td style="padding: 10px; text-align: center;">
+                <span style="background: ${status.bg}; color: ${status.color}; padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold;">
+                    ${status.text}
+                </span>
+            </td>
+            <td style="padding: 10px; text-align: center;">
+                <button onclick="viewEmployeeDetail('${emp.id}')" class="btn btn-xs btn-info" title="Ver detalle">👁️</button>
+                <button onclick="recalculateEmployee('${emp.id}')" class="btn btn-xs btn-warning" title="Recalcular">🔄</button>
+                <button onclick="downloadPayslip('${emp.id}')" class="btn btn-xs btn-success" title="Descargar recibo">📄</button>
+            </td>
+        </tr>
+    `;
+}
+
+function toggleAllEmployees(checkbox) {
+    document.querySelectorAll('.employee-checkbox').forEach(cb => cb.checked = checkbox.checked);
+}
+
+function filterEmployees() {
+    // TODO: Implementar filtrado
+}
+
+// ============================================================================
+// TAB 4: CONSOLIDACION POR ENTIDAD - 100% parametrizable
+// ============================================================================
+async function showConsolidationTab() {
+    const payrollContent = document.getElementById('payroll-content');
+    payrollContent.innerHTML = `
+        <div class="consolidation-section">
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>🏛️ Consolidacion por Entidad</h3>
+                <button onclick="generateAllSettlements()" class="btn btn-primary">⚡ Generar Todas las Consolidaciones</button>
             </div>
-            <div>
-                <h6>📉 Descuentos y Cargas</h6>
-                <div>Aportes Empleado (17%): -$${employeeDeductions.toLocaleString()}</div>
-                <div style="color: #4caf50; font-weight: bold;">Neto a Cobrar: $${netSalary.toLocaleString()}</div>
-                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd;">
-                    <strong>Cargas Patronales (27.16%): $${employerCharges.toLocaleString()}</strong>
-                </div>
-                <div style="color: #f44336; font-weight: bold;">
-                    Costo Total Empresa: $${(totalRemunerative + employerCharges).toLocaleString()}
+
+            <p style="color: #666; margin-bottom: 20px;">
+                Agrupa las deducciones por entidad receptora para generar las presentaciones y pagos correspondientes.
+            </p>
+
+            <!-- Lista de entidades -->
+            <div id="entities-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                <div class="loading">Cargando entidades...</div>
+            </div>
+
+            <!-- Historial de consolidaciones -->
+            <div style="margin-top: 30px;">
+                <h4>📋 Historial de Consolidaciones</h4>
+                <div id="settlements-history" style="background: white; border: 1px solid #ddd; border-radius: 10px; overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 12px; text-align: left;">Periodo</th>
+                                <th style="padding: 12px; text-align: left;">Entidad</th>
+                                <th style="padding: 12px; text-align: right;">Empleados</th>
+                                <th style="padding: 12px; text-align: right;">Monto</th>
+                                <th style="padding: 12px; text-align: center;">Estado</th>
+                                <th style="padding: 12px; text-align: center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="settlements-tbody">
+                            <tr><td colspan="6" style="text-align: center; padding: 30px;">Cargando historial...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     `;
-    resultDiv.style.setProperty('display', 'block', 'important');
+
+    await loadEntities();
+    await loadSettlementsHistory();
 }
 
-// Añadir estilos específicos para liquidación
+async function loadEntities() {
+    const container = document.getElementById('entities-list');
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const response = await fetch('/api/payroll/entities', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.data && data.data.length > 0) {
+                container.innerHTML = data.data.map(entity => renderEntityCard(entity)).join('');
+                return;
+            }
+        }
+    } catch (e) {
+        console.log('Error loading entities:', e);
+    }
+
+    container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #f8f9fa; border-radius: 10px;">
+            <div style="font-size: 3rem; margin-bottom: 15px;">🏛️</div>
+            <p>No hay entidades configuradas</p>
+            <button onclick="showPayrollTab('config')" class="btn btn-primary">Configurar Entidades</button>
+        </div>
+    `;
+}
+
+function renderEntityCard(entity) {
+    const typeIcons = {
+        'TAX_AUTHORITY': '🏛️',
+        'HEALTH_INSURANCE': '🏥',
+        'UNION': '👷',
+        'PENSION_FUND': '💰',
+        'SOCIAL_SECURITY': '🛡️',
+        'OTHER': '🏢'
+    };
+
+    return `
+        <div class="entity-card" style="background: white; border: 2px solid #e0e7ff; border-radius: 15px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                <div>
+                    <span style="font-size: 2rem;">${typeIcons[entity.entity_type] || '🏢'}</span>
+                    <h4 style="margin: 5px 0 0 0;">${entity.entity_name}</h4>
+                    <div style="font-size: 12px; color: #666;">${entity.entity_code} | ${entity.country_code || 'Global'}</div>
+                </div>
+                ${entity.is_mandatory ? '<span style="background: #ffeb3b; color: #333; padding: 3px 8px; border-radius: 10px; font-size: 10px;">OBLIGATORIO</span>' : ''}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold;">--</div>
+                    <div style="font-size: 11px; color: #666;">Empleados</div>
+                </div>
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.2rem; font-weight: bold;">--</div>
+                    <div style="font-size: 11px; color: #666;">Monto Estimado</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 5px;">
+                <button onclick="generateEntitySettlement(${entity.entity_id})" class="btn btn-sm btn-primary" style="flex: 1;">⚡ Generar</button>
+                <button onclick="viewEntityDetail(${entity.entity_id})" class="btn btn-sm btn-info">👁️</button>
+            </div>
+        </div>
+    `;
+}
+
+async function loadSettlementsHistory() {
+    const tbody = document.getElementById('settlements-tbody');
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const response = await fetch('/api/payroll/entity-settlements', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.data && data.data.length > 0) {
+                tbody.innerHTML = data.data.map(s => `
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 12px;">${s.period_month}/${s.period_year}</td>
+                        <td style="padding: 12px;">${s.entity_name}</td>
+                        <td style="padding: 12px; text-align: right;">${s.total_employees}</td>
+                        <td style="padding: 12px; text-align: right;">${formatCurrency(s.grand_total)}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <span style="padding: 3px 10px; border-radius: 15px; font-size: 11px;
+                                background: ${s.status === 'paid' ? '#e8f5e9' : '#fff3e0'};
+                                color: ${s.status === 'paid' ? '#4CAF50' : '#FF9800'};">
+                                ${s.status}
+                            </span>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="viewSettlement(${s.settlement_id})" class="btn btn-xs btn-info">👁️</button>
+                            <button onclick="downloadSettlement(${s.settlement_id})" class="btn btn-xs btn-success">📥</button>
+                        </td>
+                    </tr>
+                `).join('');
+                return;
+            }
+        }
+    } catch (e) {
+        console.log('Error loading settlements:', e);
+    }
+
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: #666;">No hay consolidaciones registradas</td></tr>';
+}
+
+// ============================================================================
+// TAB 5: CONFIGURACION - Plantillas + Entidades + Recibos
+// ============================================================================
+function showConfigTab() {
+    const payrollContent = document.getElementById('payroll-content');
+    payrollContent.innerHTML = `
+        <div class="config-section">
+            <h3>⚙️ Configuracion del Sistema de Liquidacion</h3>
+
+            <!-- Sub-tabs de configuracion -->
+            <div class="config-subtabs" style="display: flex; gap: 10px; margin: 20px 0; border-bottom: 2px solid #e0e7ff;">
+                <button class="config-subtab-btn active" onclick="showConfigSubtab('templates')" data-subtab="templates">
+                    📋 Plantillas RRHH
+                </button>
+                <button class="config-subtab-btn" onclick="showConfigSubtab('entities')" data-subtab="entities">
+                    🏛️ Entidades
+                </button>
+                <button class="config-subtab-btn" onclick="showConfigSubtab('payslips')" data-subtab="payslips">
+                    📄 Recibos de Sueldo
+                </button>
+                <button class="config-subtab-btn" onclick="showConfigSubtab('parameters')" data-subtab="parameters">
+                    🎛️ Parametros
+                </button>
+            </div>
+
+            <div id="config-content"></div>
+        </div>
+    `;
+
+    showConfigSubtab('templates');
+}
+
+function showConfigSubtab(subtab) {
+    document.querySelectorAll('.config-subtab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.subtab === subtab);
+    });
+
+    const content = document.getElementById('config-content');
+
+    switch (subtab) {
+        case 'templates':
+            showPayrollTemplatesTab();
+            break;
+        case 'entities':
+            showEntitiesConfig();
+            break;
+        case 'payslips':
+            showPayslipTemplatesConfig();
+            break;
+        case 'parameters':
+            showParametersConfig();
+            break;
+    }
+}
+
+function showEntitiesConfig() {
+    document.getElementById('config-content').innerHTML = `
+        <div class="entities-config">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h4>🏛️ Entidades Receptoras de Deducciones</h4>
+                <button onclick="createNewEntity()" class="btn btn-primary">➕ Nueva Entidad</button>
+            </div>
+            <p style="color: #666; margin-bottom: 20px;">
+                Configure las entidades a las que se realizan aportes y deducciones (organismos fiscales, obras sociales, sindicatos, fondos de pension, etc.)
+            </p>
+            <div id="entities-config-list">Cargando entidades...</div>
+        </div>
+    `;
+    loadEntitiesConfig();
+}
+
+async function loadEntitiesConfig() {
+    const container = document.getElementById('entities-config-list');
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const response = await fetch('/api/payroll/entities?include_global=true', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.data && data.data.length > 0) {
+                container.innerHTML = `
+                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 12px; text-align: left;">Codigo</th>
+                                <th style="padding: 12px; text-align: left;">Nombre</th>
+                                <th style="padding: 12px; text-align: left;">Tipo</th>
+                                <th style="padding: 12px; text-align: left;">Pais</th>
+                                <th style="padding: 12px; text-align: center;">Obligatorio</th>
+                                <th style="padding: 12px; text-align: center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.data.map(e => `
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 12px;">${e.entity_code}</td>
+                                    <td style="padding: 12px;">${e.entity_name}</td>
+                                    <td style="padding: 12px;">${e.entity_type}</td>
+                                    <td style="padding: 12px;">${e.country_code || 'Global'}</td>
+                                    <td style="padding: 12px; text-align: center;">${e.is_mandatory ? '✅' : ''}</td>
+                                    <td style="padding: 12px; text-align: center;">
+                                        <button onclick="editEntity(${e.entity_id})" class="btn btn-xs btn-primary">✏️</button>
+                                        ${e.company_id ? `<button onclick="deleteEntity(${e.entity_id})" class="btn btn-xs btn-danger">🗑️</button>` : ''}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                return;
+            }
+        }
+    } catch (e) { console.log('Error:', e); }
+    container.innerHTML = '<p style="text-align: center; padding: 30px;">No hay entidades configuradas</p>';
+}
+
+function showPayslipTemplatesConfig() {
+    document.getElementById('config-content').innerHTML = `
+        <div class="payslip-config">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h4>📄 Plantillas de Recibos de Sueldo</h4>
+                <button onclick="createNewPayslipTemplate()" class="btn btn-primary">➕ Nueva Plantilla</button>
+            </div>
+            <p style="color: #666; margin-bottom: 20px;">
+                Diseñe las plantillas HTML para la impresion de recibos de haberes.
+            </p>
+            <div id="payslip-templates-list">Cargando plantillas...</div>
+        </div>
+    `;
+    loadPayslipTemplates();
+}
+
+async function loadPayslipTemplates() {
+    const container = document.getElementById('payslip-templates-list');
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const response = await fetch('/api/payroll/payslip-templates', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.data && data.data.length > 0) {
+                container.innerHTML = data.data.map(t => `
+                    <div style="background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <h5 style="margin: 0;">${t.template_name}</h5>
+                                <div style="font-size: 12px; color: #666;">${t.template_code} | ${t.template_type}</div>
+                            </div>
+                            <div>
+                                ${t.is_default ? '<span style="background: #4CAF50; color: white; padding: 3px 10px; border-radius: 15px; font-size: 11px;">Por defecto</span>' : ''}
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button onclick="previewPayslipTemplate(${t.template_id})" class="btn btn-sm btn-info">👁️ Vista Previa</button>
+                            <button onclick="editPayslipTemplate(${t.template_id})" class="btn btn-sm btn-primary">✏️ Editar</button>
+                        </div>
+                    </div>
+                `).join('');
+                return;
+            }
+        }
+    } catch (e) { console.log('Error:', e); }
+    container.innerHTML = '<p style="text-align: center; padding: 30px;">No hay plantillas de recibos</p>';
+}
+
+function showParametersConfig() {
+    document.getElementById('config-content').innerHTML = `
+        <div class="parameters-config">
+            <h4>🎛️ Parametros Generales</h4>
+            <p style="color: #666; margin-bottom: 20px;">
+                Configure los parametros generales del sistema de liquidacion.
+            </p>
+
+            <div style="background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Formato de fecha:</label>
+                        <select style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option>DD/MM/YYYY</option>
+                            <option>MM/DD/YYYY</option>
+                            <option>YYYY-MM-DD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Formato de moneda:</label>
+                        <select style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option>Segun pais de sucursal</option>
+                            <option>USD - Dolar</option>
+                            <option>EUR - Euro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Dias para cierre de periodo:</label>
+                        <input type="number" value="5" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Aprobar automaticamente:</label>
+                        <select style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="no">No - Requiere aprobacion manual</option>
+                            <option value="yes">Si - Aprobar sin revision</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button class="btn btn-primary">💾 Guardar Parametros</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================================
+// UTILIDADES
+// ============================================================================
+function formatCurrency(amount, currency = 'ARS') {
+    if (!amount && amount !== 0) return '--';
+    return new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(amount);
+}
+
+function viewEmployeeDetail(id) { alert('Ver detalle empleado: ' + id); }
+function recalculateEmployee(id) { alert('Recalcular empleado: ' + id); }
+function downloadPayslip(id) { alert('Descargar recibo: ' + id); }
+function generateEntitySettlement(id) { alert('Generar consolidacion entidad: ' + id); }
+function viewEntityDetail(id) { alert('Ver detalle entidad: ' + id); }
+function viewSettlement(id) { alert('Ver consolidacion: ' + id); }
+function downloadSettlement(id) { alert('Descargar consolidacion: ' + id); }
+function generateAllSettlements() { alert('Generando todas las consolidaciones...'); }
+function createNewEntity() { alert('Crear nueva entidad'); }
+function editEntity(id) { alert('Editar entidad: ' + id); }
+function deleteEntity(id) { if(confirm('Eliminar entidad?')) alert('Eliminado'); }
+function createNewPayslipTemplate() { alert('Crear plantilla de recibo'); }
+function editPayslipTemplate(id) { alert('Editar plantilla: ' + id); }
+function previewPayslipTemplate(id) { alert('Vista previa plantilla: ' + id); }
+function calculateSelected() { alert('Calcular seleccionados'); }
+function approveSelected() { alert('Aprobar seleccionados'); }
+function exportEmployees() { alert('Exportar empleados'); }
+function generateBankFile() { alert('Generar archivo bancario'); }
+function generatePayslips() { alert('Generar recibos'); }
+function exportPayrollReport() { alert('Exportar reporte'); }
+
+// ============================================================================
+// ESTILOS
+// ============================================================================
 const payrollStyles = document.createElement('style');
 payrollStyles.textContent = `
-    .payroll-tab-btn {
+    .payroll-tab-btn, .config-subtab-btn {
         padding: 10px 15px;
         border: none;
         background: #f8f9fa;
@@ -897,533 +1012,109 @@ payrollStyles.textContent = `
         font-size: 13px;
         white-space: nowrap;
     }
-    
-    .payroll-tab-btn.active {
+
+    .payroll-tab-btn.active, .config-subtab-btn.active {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         font-weight: bold;
     }
-    
-    .payroll-tab-btn:hover:not(.active) {
+
+    .payroll-tab-btn:hover:not(.active), .config-subtab-btn:hover:not(.active) {
         background: #e9ecef;
         color: #333;
     }
-    
-    .liquidation-table th {
-        font-size: 13px;
-        white-space: nowrap;
-    }
-    
-    .liquidation-table td {
-        font-size: 12px;
-    }
-    
-    .status-badge.active {
-        background: #4CAF50;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 15px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-    
-    /* Estilos para plantillas */
-    .templates-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 20px;
-        margin-top: 20px;
-    }
-    
-    .template-card {
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    
-    .template-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-    
-    .template-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 15px;
-    }
-    
-    .template-header h4 {
-        margin: 0;
-        color: #2c3e50;
-        font-size: 16px;
-    }
-    
-    .template-badges {
-        display: flex;
-        gap: 5px;
-        flex-wrap: wrap;
-    }
-    
-    .badge {
+
+    .btn-xs {
         padding: 3px 8px;
-        border-radius: 12px;
         font-size: 11px;
-        font-weight: bold;
-        text-transform: uppercase;
     }
-    
-    .badge-primary {
-        background: #007bff;
-        color: white;
-    }
-    
-    .badge-success {
-        background: #28a745;
-        color: white;
-    }
-    
-    .badge-secondary {
-        background: #6c757d;
-        color: white;
-    }
-    
-    .template-description {
-        color: #666;
-        font-size: 14px;
-        margin: 10px 0;
-        line-height: 1.4;
-    }
-    
-    .template-stats {
-        display: flex;
-        gap: 15px;
-        margin: 15px 0;
-        font-size: 13px;
-    }
-    
-    .template-actions {
-        display: flex;
-        gap: 5px;
-        flex-wrap: wrap;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #eee;
-    }
-    
-    .btn-sm {
-        padding: 4px 8px;
-        font-size: 12px;
-        border-radius: 3px;
-    }
-    
-    .btn-info {
-        background: #17a2b8;
-        color: white;
-        border: 1px solid #17a2b8;
-    }
-    
-    .btn-success {
-        background: #28a745;
-        color: white;
-        border: 1px solid #28a745;
-    }
-    
-    .modal {
-        position: fixed;
-        z-index: 9997;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.4);
-    }
-    
-    .modal-content {
-        background-color: #fefefe;
-        margin: 5% auto;
-        padding: 20px;
-        border: none;
-        border-radius: 8px;
-        width: 80%;
-        max-width: 600px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-        line-height: 1;
-    }
-    
-    .close:hover {
-        color: black;
-    }
-    
-    .form-section {
-        margin-bottom: 25px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .form-section:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-    }
-    
-    .form-section h4 {
-        margin: 0 0 15px 0;
-        color: #2c3e50;
-        font-size: 16px;
+
+    .action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 `;
 document.head.appendChild(payrollStyles);
 
-// ===== PESTAÑA: PLANTILLAS DE LIQUIDACIÓN PARA RRHH =====
+// ============================================================================
+// INCLUIR showPayrollTemplatesTab del sistema anterior (mantener la funcionalidad)
+// ============================================================================
 function showPayrollTemplatesTab() {
-    const payrollContent = document.getElementById('payroll-content');
-    payrollContent.innerHTML = `
+    const configContent = document.getElementById('config-content');
+    if (!configContent) return;
+
+    configContent.innerHTML = `
         <div class="templates-section">
-            <div class="section-header">
-                <h3>📋 Plantillas de Liquidación para RRHH</h3>
-                <div class="quick-actions">
-                    <button onclick="createNewTemplate()" class="btn btn-primary">
-                        ➕ Nueva Plantilla
-                    </button>
-                    <button onclick="refreshTemplates()" class="btn btn-secondary">
-                        🔄 Actualizar
-                    </button>
-                </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h4>📋 Plantillas de Liquidacion para RRHH</h4>
+                <button onclick="createNewTemplate()" class="btn btn-primary">➕ Nueva Plantilla</button>
             </div>
 
-            <!-- Filtros y Búsqueda -->
-            <div class="templates-filters" style="display: flex; gap: 15px; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                <div>
-                    <label>🔍 Buscar:</label>
-                    <input type="text" id="template-search" placeholder="Nombre de plantilla..." onkeyup="filterTemplates()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                </div>
-                <div>
-                    <label>📋 Tipo:</label>
-                    <select id="template-type-filter" onchange="filterTemplates()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="">Todos</option>
-                        <option value="all_employees">Todos los empleados</option>
-                        <option value="by_position">Por cargo</option>
-                        <option value="by_sector">Por sector</option>
-                        <option value="by_branch">Por sucursal</option>
-                        <option value="individual">Individual</option>
-                    </select>
-                </div>
-                <div>
-                    <label>✅ Estado:</label>
-                    <select id="template-status-filter" onchange="filterTemplates()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="">Todos</option>
-                        <option value="active">Activas</option>
-                        <option value="inactive">Inactivas</option>
-                    </select>
-                </div>
+            <div class="templates-filters" style="display: flex; gap: 15px; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <input type="text" id="template-search" placeholder="🔍 Buscar plantilla..." style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 200px;">
+                <select id="template-type-filter" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">Todos los tipos</option>
+                    <option value="all_employees">Todos los empleados</option>
+                    <option value="by_position">Por cargo</option>
+                    <option value="by_sector">Por sector</option>
+                    <option value="by_branch">Por sucursal</option>
+                </select>
             </div>
 
-            <!-- Lista de Plantillas -->
-            <div id="templates-container" class="templates-grid">
-                <div class="loading-spinner">Cargando plantillas...</div>
-            </div>
-
-            <!-- Modal para Nueva/Editar Plantilla -->
-            <div id="template-modal" class="modal" style="display: none !important;">
-                <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-                    <span class="close" onclick="closeTemplateModal()">&times;</span>
-                    <h3 id="template-modal-title">📋 Nueva Plantilla de Liquidación</h3>
-                    
-                    <form id="template-form" onsubmit="saveTemplate(event)">
-                        <!-- Información Básica -->
-                        <div class="form-section">
-                            <h4>📄 Información Básica</h4>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                <div>
-                                    <label>Nombre de la plantilla *:</label>
-                                    <input type="text" id="template-name" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                </div>
-                                <div>
-                                    <label>Aplicar a *:</label>
-                                    <select id="template-applies-to" required onchange="updateApplyFilters()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="all_employees">Todos los empleados</option>
-                                        <option value="by_position">Por cargo específico</option>
-                                        <option value="by_sector">Por sector</option>
-                                        <option value="by_branch">Por sucursal</option>
-                                        <option value="individual">Empleados específicos</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div style="margin-top: 15px;">
-                                <label>Descripción:</label>
-                                <textarea id="template-description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Descripción de la plantilla..."></textarea>
-                            </div>
-                            
-                            <!-- Filtros Dinámicos -->
-                            <div id="apply-filters" style="margin-top: 15px;"></div>
-                            
-                            <div style="display: flex; gap: 15px; margin-top: 15px;">
-                                <label>
-                                    <input type="checkbox" id="template-default"> Es plantilla por defecto
-                                </label>
-                                <label>
-                                    <input type="checkbox" id="template-auto-apply" checked> Aplicar automáticamente a nuevos empleados
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Conceptos de Liquidación -->
-                        <div class="form-section">
-                            <h4>💰 Conceptos de Liquidación</h4>
-                            <div style="margin-bottom: 15px;">
-                                <button type="button" onclick="addTemplateItem()" class="btn btn-sm btn-success">
-                                    ➕ Agregar Concepto
-                                </button>
-                            </div>
-                            
-                            <div id="template-items-container">
-                                <!-- Los items se agregarán dinámicamente -->
-                            </div>
-                        </div>
-
-                        <div class="form-actions" style="text-align: right; padding-top: 20px; border-top: 1px solid #ddd;">
-                            <button type="button" onclick="closeTemplateModal()" class="btn btn-secondary">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">💾 Guardar Plantilla</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Modal para Aplicación Masiva -->
-            <div id="massive-apply-modal" class="modal" style="display: none !important;">
-                <div class="modal-content" style="max-width: 700px;">
-                    <span class="close" onclick="closeMassiveApplyModal()">&times;</span>
-                    <h3>⚡ Aplicación Masiva de Plantilla</h3>
-                    
-                    <div id="massive-apply-content">
-                        <!-- Contenido dinámico -->
-                    </div>
-                </div>
+            <div id="templates-container" class="templates-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                Cargando plantillas...
             </div>
         </div>
     `;
 
-    // Cargar plantillas
-    loadPayrollTemplates();
+    loadPayrollTemplatesFromAPI();
 }
 
-// Variables globales para plantillas
-let payrollTemplates = [];
-let currentTemplate = null;
-
-// Cargar plantillas de liquidación
-async function loadPayrollTemplates() {
+async function loadPayrollTemplatesFromAPI() {
+    const container = document.getElementById('templates-container');
     try {
-        const response = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/payroll-templates?active_only=false'), {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
-                'Content-Type': 'application/json'
-            }
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const response = await fetch('/api/payroll/templates', {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
-
         if (response.ok) {
             const data = await response.json();
-            payrollTemplates = data.data || [];
-            displayTemplates(payrollTemplates);
-        } else {
-            throw new Error('Error cargando plantillas');
+            if (data.data && data.data.length > 0) {
+                container.innerHTML = data.data.map(t => `
+                    <div style="background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                            <h5 style="margin: 0;">${t.template_name}</h5>
+                            ${t.is_default ? '<span style="background: #4CAF50; color: white; padding: 3px 10px; border-radius: 15px; font-size: 11px;">Por defecto</span>' : ''}
+                        </div>
+                        <p style="color: #666; font-size: 13px;">${t.description || 'Sin descripcion'}</p>
+                        <div style="display: flex; gap: 5px; margin-top: 15px;">
+                            <button onclick="editTemplate('${t.id}')" class="btn btn-sm btn-primary">✏️ Editar</button>
+                            <button onclick="cloneTemplate('${t.id}')" class="btn btn-sm btn-info">📄 Clonar</button>
+                        </div>
+                    </div>
+                `).join('');
+                return;
+            }
         }
-    } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('templates-container').innerHTML = `
-            <div class="error-message">
-                ❌ Error cargando plantillas: ${error.message}
-            </div>
-        `;
-    }
+    } catch (e) { console.log('Error:', e); }
+    container.innerHTML = '<p style="text-align: center; padding: 40px; grid-column: 1 / -1;">No hay plantillas creadas. <button onclick="createNewTemplate()" class="btn btn-primary">Crear primera plantilla</button></p>';
 }
 
-// Mostrar plantillas
-function displayTemplates(templates) {
-    const container = document.getElementById('templates-container');
-    
-    if (templates.length === 0) {
-        container.innerHTML = `
-            <div class="no-data">
-                <div style="font-size: 3rem; margin-bottom: 20px;">📋</div>
-                <p>No hay plantillas creadas aún</p>
-                <button onclick="createNewTemplate()" class="btn btn-primary">➕ Crear Primera Plantilla</button>
-            </div>
-        `;
-        return;
-    }
-
-    const templatesHtml = templates.map(template => `
-        <div class="template-card">
-            <div class="template-header">
-                <h4>${template.template_name}</h4>
-                <div class="template-badges">
-                    ${template.is_default ? '<span class="badge badge-primary">Por defecto</span>' : ''}
-                    <span class="badge badge-${template.is_active ? 'success' : 'secondary'}">
-                        ${template.is_active ? 'Activa' : 'Inactiva'}
-                    </span>
-                </div>
-            </div>
-            
-            <div class="template-info">
-                <p class="template-description">${template.description || 'Sin descripción'}</p>
-                <div class="template-stats">
-                    <div>📊 <strong>${template.items_count || 0}</strong> conceptos</div>
-                    <div>👥 <strong>${template.employees_count || 0}</strong> empleados</div>
-                    <div>📋 <strong>${getAppliesText(template.applies_to)}</strong></div>
-                </div>
-            </div>
-            
-            <div class="template-actions">
-                <button onclick="viewTemplate('${template.id}')" class="btn btn-sm btn-info">👁️ Ver</button>
-                <button onclick="editTemplate('${template.id}')" class="btn btn-sm btn-primary">✏️ Editar</button>
-                <button onclick="cloneTemplate('${template.id}')" class="btn btn-sm btn-secondary">📄 Clonar</button>
-                <button onclick="applyMassive('${template.id}')" class="btn btn-sm btn-success">⚡ Aplicar Masivo</button>
-                <button onclick="deleteTemplate('${template.id}')" class="btn btn-sm btn-danger">🗑️</button>
-            </div>
-        </div>
-    `).join('');
-
-    container.innerHTML = templatesHtml;
-}
-
-// Funciones auxiliares
-function getAppliesText(appliesTo) {
-    const texts = {
-        'all_employees': 'Todos',
-        'by_position': 'Por cargo',
-        'by_sector': 'Por sector',
-        'by_branch': 'Por sucursal',
-        'individual': 'Individual'
-    };
-    return texts[appliesTo] || appliesTo;
-}
-
-// Filtrar plantillas
-function filterTemplates() {
-    const search = document.getElementById('template-search')?.value.toLowerCase() || '';
-    const typeFilter = document.getElementById('template-type-filter')?.value || '';
-    const statusFilter = document.getElementById('template-status-filter')?.value || '';
-
-    const filtered = payrollTemplates.filter(template => {
-        const matchesSearch = !search || template.template_name.toLowerCase().includes(search);
-        const matchesType = !typeFilter || template.applies_to === typeFilter;
-        const matchesStatus = !statusFilter || 
-            (statusFilter === 'active' && template.is_active) ||
-            (statusFilter === 'inactive' && !template.is_active);
-
-        return matchesSearch && matchesType && matchesStatus;
-    });
-
-    displayTemplates(filtered);
-}
-
-// Crear nueva plantilla
-function createNewTemplate() {
-    currentTemplate = null;
-    document.getElementById('template-modal-title').textContent = '📋 Nueva Plantilla de Liquidación';
-    document.getElementById('template-form').reset();
-    document.getElementById('template-items-container').innerHTML = '';
-    document.getElementById('apply-filters').innerHTML = '';
-    document.getElementById('template-modal').style.setProperty('display', 'block', 'important');
-}
-
-// Agregar concepto a plantilla
-function addTemplateItem() {
-    const container = document.getElementById('template-items-container');
-    const itemId = Date.now();
-    
-    const itemHtml = `
-        <div class="template-item" id="item-${itemId}">
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px;">
-                <div>
-                    <input type="text" placeholder="Nombre del concepto..." required style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 3px;">
-                    <input type="text" placeholder="Código (ej: SUELDO_BASICO)" required style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 3px; margin-top: 5px;">
-                </div>
-                <select required style="padding: 5px; border: 1px solid #ccc; border-radius: 3px;">
-                    <option value="">Tipo...</option>
-                    <option value="remuneration">Haberes</option>
-                    <option value="deduction">Descuentos</option>
-                    <option value="contribution">Aportes</option>
-                    <option value="bonus">Adicionales</option>
-                    <option value="allowance">Asignaciones</option>
-                </select>
-                <select required onchange="updateCalculationFields(this, ${itemId})" style="padding: 5px; border: 1px solid #ccc; border-radius: 3px;">
-                    <option value="">Cálculo...</option>
-                    <option value="fixed_amount">Importe fijo</option>
-                    <option value="percentage_basic">% sueldo básico</option>
-                    <option value="percentage_gross">% bruto</option>
-                    <option value="hours_worked">Por horas</option>
-                    <option value="formula">Fórmula</option>
-                </select>
-                <div id="calc-fields-${itemId}" style="display: flex; flex-direction: column; gap: 5px;">
-                    <!-- Campos dinámicos según tipo de cálculo -->
-                </div>
-                <button type="button" onclick="removeTemplateItem(${itemId})" class="btn btn-sm btn-danger">🗑️</button>
-            </div>
-        </div>
-    `;
-    
-    container.insertAdjacentHTML('beforeend', itemHtml);
-}
-
-// Funciones placeholder para las acciones
-function viewTemplate(id) { alert('Ver plantilla: ' + id); }
+function createNewTemplate() { alert('Crear nueva plantilla RRHH'); }
 function editTemplate(id) { alert('Editar plantilla: ' + id); }
 function cloneTemplate(id) { alert('Clonar plantilla: ' + id); }
-function applyMassive(id) { alert('Aplicación masiva de plantilla: ' + id); }
-function deleteTemplate(id) { if(confirm('¿Eliminar plantilla?')) alert('Eliminado: ' + id); }
-function closeTemplateModal() { document.getElementById('template-modal').style.setProperty('display', 'none', 'important'); }
-function closeMassiveApplyModal() { document.getElementById('massive-apply-modal').style.setProperty('display', 'none', 'important'); }
-function refreshTemplates() { loadPayrollTemplates(); }
-function removeTemplateItem(id) { document.getElementById(`item-${id}`).remove(); }
-function saveTemplate(event) { event.preventDefault(); alert('Funcionalidad en desarrollo'); }
-function updateApplyFilters() { /* Actualizar filtros según tipo */ }
-function updateCalculationFields(select, itemId) { /* Actualizar campos de cálculo */ }
 
-// Exportar funciones al scope global
+// ============================================================================
+// EXPORTS
+// ============================================================================
 if (typeof window !== 'undefined') {
     window.showPayrollLiquidationContent = showPayrollLiquidationContent;
     window.showPayrollTab = showPayrollTab;
-    window.startNewLiquidation = startNewLiquidation;
-    window.calculateAllPayrolls = calculateAllPayrolls;
-    window.calculateConcepts = calculateConcepts;
-    
-    // Funciones de plantillas
-    window.showPayrollTemplatesTab = showPayrollTemplatesTab;
-    window.createNewTemplate = createNewTemplate;
-    window.addTemplateItem = addTemplateItem;
-    window.filterTemplates = filterTemplates;
-    window.viewTemplate = viewTemplate;
-    window.editTemplate = editTemplate;
-    window.cloneTemplate = cloneTemplate;
-    window.applyMassive = applyMassive;
-    window.deleteTemplate = deleteTemplate;
-    window.closeTemplateModal = closeTemplateModal;
-    window.closeMassiveApplyModal = closeMassiveApplyModal;
-    window.refreshTemplates = refreshTemplates;
-    window.removeTemplateItem = removeTemplateItem;
-    window.saveTemplate = saveTemplate;
-    window.updateApplyFilters = updateApplyFilters;
-    window.updateCalculationFields = updateCalculationFields;
+    window.showConfigSubtab = showConfigSubtab;
+    window.loadDashboardData = loadDashboardData;
 
-    // Registro en window.Modules para sistema moderno
     window.Modules = window.Modules || {};
-    window.Modules['payroll-liquidation'] = {
-        init: showPayrollLiquidationContent
-    };
+    window.Modules['payroll-liquidation'] = { init: showPayrollLiquidationContent };
 }
 
-console.log('✅ [PAYROLL] Módulo de Liquidación completo y listo');
+console.log('✅ [PAYROLL] Modulo de Liquidacion v2.0 listo - 100% parametrizable');

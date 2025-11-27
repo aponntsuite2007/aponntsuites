@@ -1,0 +1,70 @@
+{
+  "startTime": "2025-11-26T18:50:54.971Z",
+  "tests": [
+    {
+      "name": "users_structure",
+      "status": "passed",
+      "data": {
+        "total": "155",
+        "active": "152",
+        "with_dept": "151",
+        "roles": "3"
+      }
+    },
+    {
+      "name": "departments_structure",
+      "status": "passed",
+      "data": {
+        "total": "6",
+        "active": "6",
+        "with_gps": "6"
+      }
+    },
+    {
+      "name": "shifts_structure",
+      "status": "passed",
+      "data": {
+        "total": "7",
+        "active": "7",
+        "types": "1"
+      }
+    },
+    {
+      "name": "attendance_structure",
+      "status": "failed",
+      "error": "no existe la relación «attendance»"
+    },
+    {
+      "name": "payroll_tables",
+      "status": "passed",
+      "count": 1
+    },
+    {
+      "name": "users_depts_fk",
+      "status": "passed"
+    },
+    {
+      "name": "attendance_users_fk",
+      "status": "failed",
+      "error": "no existe la relación «attendance»"
+    },
+    {
+      "name": "multitenant_isolation",
+      "status": "failed",
+      "error": "Usuarios tienen departamentos de otras empresas"
+    },
+    {
+      "name": "shift_assignments",
+      "status": "failed",
+      "error": "la referencia a la columna «user_id» es ambigua"
+    },
+    {
+      "name": "data_freshness",
+      "status": "failed",
+      "error": "no existe la columna «created_at»"
+    }
+  ],
+  "passed": 5,
+  "failed": 5,
+  "endTime": "2025-11-26T18:50:55.172Z"
+}

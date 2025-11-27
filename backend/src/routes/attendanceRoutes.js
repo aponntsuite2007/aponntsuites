@@ -368,6 +368,34 @@ router.get('/', auth, async (req, res) => {
 });
 
 /**
+ * @route GET /api/v1/attendance/stats
+ * @desc Obtener estadísticas básicas - DEBE estar antes de /:id
+ */
+router.get('/stats', auth, async (req, res) => {
+  try {
+    console.log('📊 [ATTENDANCE STATS] Obteniendo estadísticas para empresa:', req.user.company_id);
+    const today = new Date().toISOString().split('T')[0];
+    const [stats] = await sequelize.query(`
+      SELECT
+        COUNT(a.id) as total,
+        COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present,
+        COUNT(CASE WHEN a.status = 'late' THEN 1 END) as late,
+        COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent
+      FROM attendances a
+      INNER JOIN users u ON a."UserId" = u.user_id
+      WHERE u.company_id = :companyId AND a.date >= :today
+    `, {
+      replacements: { companyId: req.user.company_id, today },
+      type: QueryTypes.SELECT
+    });
+    res.json(stats || { total: 0, present: 0, late: 0, absent: 0 });
+  } catch (error) {
+    console.error('❌ [ATTENDANCE STATS] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
  * @route GET /api/v1/attendance/:id
  * @desc Obtener registro específico
  */
@@ -494,7 +522,7 @@ router.get('/stats', auth, async (req, res) => {
         COUNT(CASE WHEN a.status = 'late' THEN 1 END) as late,
         COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent
       FROM attendances a
-      INNER JOIN users u ON a.user_id = u.user_id
+      INNER JOIN users u ON a."UserId" = u.user_id
       WHERE u.company_id = :companyId
         AND a.date >= :today
     `, {

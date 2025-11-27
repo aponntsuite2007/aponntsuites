@@ -2991,7 +2991,9 @@
                 <div style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); border: 4px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 2.4rem; color: white;" id="userAvatarIcon">
                     <span>👤</span>
                 </div>
-                <div style="display: flex; flex-direction: row; gap: 0.8rem;">
+                <div style="display: flex; flex-direction: row; gap: 0.8rem; align-items: center;">
+                    <!-- Language Selector -->
+                    <div id="languageSelectorContainer" style="transform: scale(2); transform-origin: center;"></div>
                     <button onclick="handleLogout()" class="btn-logout-header" style="padding: 0.8rem 1.8rem; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 1.9rem; font-weight: 500; box-shadow: 0 2px 8px rgba(239,68,68,0.3);">
                         🚪 Salir
                     </button>
@@ -15529,6 +15531,49 @@ ${vendor.notes || 'Sin notas adicionales'}
                 }
             };
         })();
+    </script>
+
+    <!-- Translation System V4 -->
+    <script src="js/translation-system-v4.js"></script>
+    <script>
+        // Initialize Translation System for panel-administrativo.html (manual selector only)
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🌍 [ADMIN] Inicializando sistema de traducción...');
+
+            // Wait for translator to be ready
+            setTimeout(() => {
+                if (typeof SmartTranslationSystem !== 'undefined' && window.translator) {
+                    console.log('✅ [ADMIN] Translator disponible');
+
+                    // Create language selector in container
+                    const container = document.getElementById('languageSelectorContainer');
+                    if (container && window.translator) {
+                        const selector = window.translator.createLanguageSelector();
+                        if (selector) {
+                            // Style selector for panel-administrativo (adapt to scaled header)
+                            selector.style.cssText = `
+                                background: rgba(59, 130, 246, 0.1);
+                                border: 1px solid rgba(59, 130, 246, 0.3);
+                                border-radius: 6px;
+                                color: #1e293b;
+                                padding: 0.4rem 0.6rem;
+                                font-size: 0.9rem;
+                                cursor: pointer;
+                                min-width: 100px;
+                                font-weight: 500;
+                            `;
+                            container.appendChild(selector);
+                            console.log('✅ [ADMIN] Selector de idioma agregado');
+
+                            // Translate initial interface
+                            window.translator.updateInterface();
+                        }
+                    }
+                } else {
+                    console.warn('⚠️ [ADMIN] Translator no disponible');
+                }
+            }, 500);
+        });
     </script>
 </body>
 </html><!-- Version: 1763816963 -->

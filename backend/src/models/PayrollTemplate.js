@@ -1,13 +1,14 @@
 /**
  * Modelo PayrollTemplate - Plantillas de liquidación
  * Sistema de Liquidación Parametrizable v3.0
+ * SINCRONIZADO con esquema BD real (29 columnas)
  */
 
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
     const PayrollTemplate = sequelize.define('PayrollTemplate', {
-        template_id: {
+        id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
@@ -22,19 +23,27 @@ module.exports = (sequelize) => {
         },
         country_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
             references: {
                 model: 'payroll_countries',
-                key: 'country_id'
+                key: 'id'
             }
         },
-        agreement_id: {
+        branch_id: {
             type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'company_branches',
+                key: 'id'
+            }
+        },
+        labor_agreement_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
             references: {
                 model: 'labor_agreements_v2',
-                key: 'agreement_id'
-            },
-            comment: 'Convenio colectivo aplicable'
+                key: 'id'
+            }
         },
         template_code: {
             type: DataTypes.STRING(50),
@@ -45,66 +54,102 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         description: {
-            type: DataTypes.TEXT
+            type: DataTypes.TEXT,
+            allowNull: true
         },
         pay_frequency: {
             type: DataTypes.STRING(20),
+            allowNull: false,
             defaultValue: 'monthly',
             comment: 'weekly, biweekly, monthly'
         },
-        calculation_base: {
+        calculation_basis: {
             type: DataTypes.STRING(20),
+            allowNull: false,
             defaultValue: 'monthly',
             comment: 'hourly, daily, monthly'
         },
-        work_hours_day: {
+        work_hours_per_day: {
             type: DataTypes.DECIMAL(4, 2),
+            allowNull: true,
             defaultValue: 8.00
         },
-        work_days_week: {
-            type: DataTypes.INTEGER,
+        work_days_per_week: {
+            type: DataTypes.DECIMAL(3, 1),
+            allowNull: true,
             defaultValue: 5
         },
-        overtime_calculation: {
-            type: DataTypes.JSONB,
-            defaultValue: {
-                threshold_daily: 8,
-                threshold_weekly: 40,
-                multiplier_50: 1.5,
-                multiplier_100: 2.0
-            }
+        work_hours_per_month: {
+            type: DataTypes.DECIMAL(6, 2),
+            allowNull: true,
+            defaultValue: 200
         },
-        rounding_rules: {
-            type: DataTypes.JSONB,
-            defaultValue: {
-                hours: 2,
-                amounts: 2,
-                round_method: 'half_up'
-            }
+        overtime_50_after_hours: {
+            type: DataTypes.DECIMAL(5, 2),
+            allowNull: true,
+            defaultValue: 8
+        },
+        overtime_100_after_hours: {
+            type: DataTypes.DECIMAL(5, 2),
+            allowNull: true,
+            defaultValue: 12
+        },
+        night_shift_start: {
+            type: DataTypes.TIME,
+            allowNull: true
+        },
+        night_shift_end: {
+            type: DataTypes.TIME,
+            allowNull: true
+        },
+        round_to_cents: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+            defaultValue: true
+        },
+        round_method: {
+            type: DataTypes.STRING(20),
+            allowNull: true,
+            defaultValue: 'half_up'
+        },
+        receipt_header: {
+            type: DataTypes.TEXT,
+            allowNull: true
+        },
+        receipt_legal_text: {
+            type: DataTypes.TEXT,
+            allowNull: true
+        },
+        receipt_footer: {
+            type: DataTypes.TEXT,
+            allowNull: true
         },
         version: {
             type: DataTypes.INTEGER,
+            allowNull: true,
             defaultValue: 1
         },
-        effective_from: {
-            type: DataTypes.DATEONLY,
-            defaultValue: DataTypes.NOW
-        },
-        effective_to: {
-            type: DataTypes.DATEONLY,
-            comment: 'Null = vigente'
-        },
-        is_default: {
+        is_current_version: {
             type: DataTypes.BOOLEAN,
-            defaultValue: false,
-            comment: 'Plantilla por defecto para nuevos empleados'
+            allowNull: true,
+            defaultValue: true
+        },
+        parent_template_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'payroll_templates',
+                key: 'id'
+            }
         },
         is_active: {
             type: DataTypes.BOOLEAN,
+            allowNull: true,
             defaultValue: true
         },
         created_by: {
             type: DataTypes.UUID,
+            allowNull: true,
             references: {
                 model: 'users',
                 key: 'user_id'
@@ -118,55 +163,70 @@ module.exports = (sequelize) => {
         indexes: [
             { fields: ['company_id'] },
             { fields: ['country_id'] },
-            { fields: ['agreement_id'] },
+            { fields: ['labor_agreement_id'] },
             { fields: ['company_id', 'template_code'], unique: true },
-            { fields: ['is_default'] },
             { fields: ['is_active'] }
         ]
     });
 
     PayrollTemplate.associate = (models) => {
         // Pertenece a una empresa
-        PayrollTemplate.belongsTo(models.Company, {
-            foreignKey: 'company_id',
-            as: 'company'
-        });
+        if (models.Company) {
+            PayrollTemplate.belongsTo(models.Company, {
+                foreignKey: 'company_id',
+                as: 'company'
+            });
+        }
 
         // Pertenece a un país
-        PayrollTemplate.belongsTo(models.PayrollCountry, {
-            foreignKey: 'country_id',
-            as: 'country'
-        });
+        if (models.PayrollCountry) {
+            PayrollTemplate.belongsTo(models.PayrollCountry, {
+                foreignKey: 'country_id',
+                as: 'country'
+            });
+        }
 
-        // Pertenece a un convenio
-        PayrollTemplate.belongsTo(models.LaborAgreementV2, {
-            foreignKey: 'agreement_id',
-            as: 'laborAgreement'
-        });
+        // Pertenece a una sucursal
+        if (models.CompanyBranch) {
+            PayrollTemplate.belongsTo(models.CompanyBranch, {
+                foreignKey: 'branch_id',
+                as: 'branch'
+            });
+        }
+
+        // Pertenece a un convenio colectivo (IMPORTANTE para config salarial)
+        if (models.LaborAgreementV2) {
+            PayrollTemplate.belongsTo(models.LaborAgreementV2, {
+                foreignKey: 'labor_agreement_id',
+                as: 'laborAgreement'
+            });
+        }
 
         // Tiene muchos conceptos
-        PayrollTemplate.hasMany(models.PayrollTemplateConcept, {
-            foreignKey: 'template_id',
-            as: 'concepts'
-        });
+        if (models.PayrollTemplateConcept) {
+            PayrollTemplate.hasMany(models.PayrollTemplateConcept, {
+                foreignKey: 'template_id',
+                as: 'concepts'
+            });
+        }
 
-        // Tiene muchas asignaciones a usuarios
-        PayrollTemplate.hasMany(models.UserPayrollAssignment, {
-            foreignKey: 'template_id',
-            as: 'userAssignments'
+        // Versiones (self-referential para versionamiento)
+        PayrollTemplate.belongsTo(PayrollTemplate, {
+            foreignKey: 'parent_template_id',
+            as: 'parentTemplate'
         });
-
-        // Tiene muchas ejecuciones
-        PayrollTemplate.hasMany(models.PayrollRun, {
-            foreignKey: 'template_id',
-            as: 'payrollRuns'
+        PayrollTemplate.hasMany(PayrollTemplate, {
+            foreignKey: 'parent_template_id',
+            as: 'childVersions'
         });
 
         // Usuario creador
-        PayrollTemplate.belongsTo(models.User, {
-            foreignKey: 'created_by',
-            as: 'creator'
-        });
+        if (models.User) {
+            PayrollTemplate.belongsTo(models.User, {
+                foreignKey: 'created_by',
+                as: 'creator'
+            });
+        }
     };
 
     return PayrollTemplate;

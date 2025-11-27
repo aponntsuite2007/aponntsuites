@@ -109,6 +109,14 @@ module.exports = (sequelize) => {
       },
       index: true
     },
+    // Multi-Branch Scope (Fase MB-2)
+    branchScope: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: null,
+      field: 'branch_scope',
+      comment: 'Array de branch_ids accesibles. NULL = todas las sucursales (gerente general)'
+    },
     hireDate: {
       type: DataTypes.DATEONLY,
       allowNull: true,

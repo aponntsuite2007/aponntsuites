@@ -593,53 +593,69 @@ app.post(`${API_PREFIX}/departments`, async (req, res) => {
       });
     }
     
-    // LÓGICA MULTI-SUCURSAL: Verificar duplicados según si la empresa tiene sucursales
-    const [branches] = await database.sequelize.query(
-      'SELECT COUNT(*) as total FROM branches WHERE company_id = 1 AND "isActive" = true'
+    // LÓGICA MULTI-SUCURSAL: Verificar según multi_branch_enabled de la empresa
+    // Obtener company_id del usuario autenticado o usar 1 como fallback
+    const companyId = req.user?.companyId || 1;
+
+    // Verificar si la empresa tiene multi_branch_enabled = true
+    const [companyConfig] = await database.sequelize.query(
+      'SELECT multi_branch_enabled FROM companies WHERE company_id = $1',
+      { bind: [companyId], type: database.sequelize.QueryTypes.SELECT }
     );
-    const hasBranches = branches[0].total > 0;
+    const multiBranchEnabled = companyConfig?.multi_branch_enabled === true;
 
-    if (hasBranches) {
-      // Si tiene sucursales, verificar que branch_id sea obligatorio
-      if (!deptData.branchId) {
+    if (multiBranchEnabled) {
+      // Solo si multi_branch_enabled = true, verificar branch_id
+      const [branches] = await database.sequelize.query(
+        'SELECT COUNT(*) as total FROM company_branches WHERE company_id = $1 AND is_active = true',
+        { bind: [companyId] }
+      );
+      const hasBranches = parseInt(branches[0]?.total || 0) > 0;
+
+      if (hasBranches && !deptData.branchId) {
         return res.status(400).json({
           success: false,
-          error: 'Debe seleccionar una sucursal. La empresa tiene múltiples sucursales.'
+          error: 'Debe seleccionar una sucursal. La empresa tiene multi-branch habilitado.'
         });
       }
 
-      // Verificar que no exista otro departamento con el mismo nombre EN LA MISMA SUCURSAL
-      const existingDept = await Department.findOne({
-        where: {
-          name: deptData.name.trim(),
-          branch_id: deptData.branchId,
-          company_id: 1,
-          is_active: true
+      if (deptData.branchId) {
+        // Verificar que no exista otro departamento con el mismo nombre EN LA MISMA SUCURSAL
+        const existingDept = await Department.findOne({
+          where: {
+            name: deptData.name.trim(),
+            branch_id: deptData.branchId,
+            company_id: companyId,
+            is_active: true
+          }
+        });
+
+        if (existingDept) {
+          return res.status(400).json({
+            success: false,
+            error: 'Ya existe un departamento con ese nombre en esta sucursal'
+          });
         }
-      });
-
-      if (existingDept) {
-        return res.status(400).json({
-          success: false,
-          error: 'Ya existe un departamento con ese nombre en esta sucursal'
-        });
       }
-    } else {
-      // Si NO tiene sucursales, verificar que no exista el nombre en la empresa
-      const existingDept = await Department.findOne({
-        where: {
-          name: deptData.name.trim(),
-          company_id: 1,
-          is_active: true
-        }
-      });
+    }
 
-      if (existingDept) {
-        return res.status(400).json({
-          success: false,
-          error: 'Ya existe un departamento con ese nombre'
-        });
-      }
+    // Verificar que no exista el nombre en la empresa (globales o sin multi-branch)
+    const whereClause = {
+      name: deptData.name.trim(),
+      company_id: companyId,
+      is_active: true
+    };
+    if (!multiBranchEnabled) {
+      whereClause.branch_id = null; // Solo verificar departamentos globales
+    }
+
+    const existingDept = await Department.findOne({ where: whereClause });
+
+    if (existingDept) {
+      return res.status(400).json({
+        success: false,
+        error: 'Ya existe un departamento con ese nombre'
+      });
     }
     
     // Crear nuevo departamento con soporte multi-sucursal
@@ -652,7 +668,7 @@ app.post(`${API_PREFIX}/departments`, async (req, res) => {
       coverage_radius: parseInt(deptData.coverageRadius) || 50,
       is_active: true,
       company_id: 1,  // APONNT - Empresa Demo
-      branch_id: hasBranches ? deptData.branchId : null  // Solo asignar sucursal si la empresa las tiene
+      branch_id: multiBranchEnabled && deptData.branchId ? deptData.branchId : null  // Solo asignar sucursal si multi_branch_enabled=true
     });
     
     console.log(`✅ Departamento "${deptData.name}" creado con ID: ${newDepartment.id}`);

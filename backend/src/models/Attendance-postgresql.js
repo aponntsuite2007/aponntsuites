@@ -10,7 +10,7 @@ module.exports = (sequelize) => {
     user_id: {
       type: DataTypes.UUID,
       allowNull: false,
-      field: 'user_id',
+      field: 'UserId',
       references: {
         model: 'users',
         key: 'user_id'
@@ -41,6 +41,7 @@ module.exports = (sequelize) => {
     branch_id: {
       type: DataTypes.BIGINT,
       allowNull: true,
+      field: 'BranchId',
       references: {
         model: 'branches',
         key: 'id'
@@ -49,8 +50,8 @@ module.exports = (sequelize) => {
     },
     check_in: {
       type: DataTypes.DATE,
-      allowNull: false,
-      field: 'check_in',
+      allowNull: true,
+      field: 'checkInTime',
       // Partitioning key for time-based partitioning
       index: true,
       comment: 'Check-in timestamp (real column name in production)'
@@ -58,7 +59,7 @@ module.exports = (sequelize) => {
     check_out: {
       type: DataTypes.DATE,
       allowNull: true,
-      field: 'check_out',
+      field: 'checkOutTime',
       index: true,
       comment: 'Check-out timestamp (real column name in production)'
     },
@@ -230,12 +231,14 @@ module.exports = (sequelize) => {
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW
+      defaultValue: DataTypes.NOW,
+      field: 'createdAt'
     },
     updated_at: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW
+      defaultValue: DataTypes.NOW,
+      field: 'updatedAt'
     },
     version: {
       type: DataTypes.INTEGER,
@@ -245,10 +248,10 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'attendances',
-    underscored: true,
+    underscored: false,
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
     version: 'version',
     
     // Database-level optimizations
@@ -256,21 +259,21 @@ module.exports = (sequelize) => {
       // Primary composite index for most common queries
       {
         name: 'idx_attendance_user_date_primary',
-        fields: ['user_id', 'work_date'],
+        fields: ['UserId', 'work_date'],
         using: 'BTREE'
       },
       // Index for clock-in operations (most frequent)
       {
         name: 'idx_attendance_clock_in_fast',
-        fields: ['clock_in', 'user_id'],
+        fields: ['checkInTime', 'UserId'],
         using: 'BTREE'
       },
       // Index for incomplete attendances
       {
         name: 'idx_attendance_incomplete',
-        fields: ['user_id', 'clock_in'],
+        fields: ['UserId', 'checkInTime'],
         where: {
-          clock_out: null
+          checkOutTime: null
         },
         using: 'BTREE'
       },
@@ -303,7 +306,7 @@ module.exports = (sequelize) => {
       // Branch-based reporting
       {
         name: 'idx_attendance_branch_reporting',
-        fields: ['branch_id', 'work_date', 'is_processed'],
+        fields: ['BranchId', 'work_date', 'is_processed'],
         using: 'BTREE'
       }
     ],
@@ -311,21 +314,21 @@ module.exports = (sequelize) => {
     // Hooks for optimizations
     hooks: {
       beforeCreate: (attendance, options) => {
-        // Set work_date from clock_in
-        if (attendance.clock_in) {
-          attendance.work_date = attendance.clock_in.toISOString().split('T')[0];
+        // Set work_date from check_in
+        if (attendance.check_in) {
+          attendance.work_date = attendance.check_in.toISOString().split('T')[0];
         }
-        
+
         // Generate batch_id for high-concurrency scenarios
         if (!attendance.batch_id) {
           attendance.batch_id = require('crypto').randomUUID();
         }
       },
-      
+
       beforeUpdate: (attendance, options) => {
-        // Update work_hours when clock_out is set
-        if (attendance.clock_out && attendance.clock_in) {
-          const diffMs = new Date(attendance.clock_out) - new Date(attendance.clock_in);
+        // Update work_hours when check_out is set
+        if (attendance.check_out && attendance.check_in) {
+          const diffMs = new Date(attendance.check_out) - new Date(attendance.check_in);
           attendance.work_hours = (diffMs / (1000 * 60 * 60)).toFixed(2);
         }
       },
@@ -344,7 +347,7 @@ module.exports = (sequelize) => {
     scopes: {
       incomplete: {
         where: {
-          clock_out: null
+          check_out: null
         }
       },
       today: {
@@ -368,11 +371,11 @@ module.exports = (sequelize) => {
         where: {
           is_processed: false
         },
-        order: [['processing_queue', 'ASC'], ['created_at', 'ASC']]
+        order: [['processing_queue', 'ASC'], ['createdAt', 'ASC']]
       },
       // High-performance scope for bulk operations
       bulkReadable: {
-        attributes: ['id', 'user_id', 'employee_id', 'clock_in', 'clock_out', 'work_date', 'status'],
+        attributes: ['id', 'user_id', 'employee_id', 'check_in', 'check_out', 'work_date', 'status'],
         raw: true
       }
     },
@@ -384,7 +387,7 @@ module.exports = (sequelize) => {
     // Custom validation
     validate: {
       clockOutAfterClockIn() {
-        if (this.clock_out && this.clock_in && this.clock_out <= this.clock_in) {
+        if (this.check_out && this.check_in && this.check_out <= this.check_in) {
           throw new Error('Clock out time must be after clock in time');
         }
       }
@@ -396,22 +399,22 @@ module.exports = (sequelize) => {
     const transaction = await sequelize.transaction({
       isolationLevel: sequelize.Sequelize.Transaction.ISOLATION_LEVELS.READ_COMMITTED
     });
-    
+
     try {
       const batchId = require('crypto').randomUUID();
       const processedData = attendanceData.map((data, index) => ({
         ...data,
         batch_id: batchId,
         processing_queue: index,
-        work_date: data.clock_in.toISOString().split('T')[0]
+        work_date: data.check_in.toISOString().split('T')[0]
       }));
-      
+
       const result = await Attendance.bulkCreate(processedData, {
         transaction,
-        returning: ['id', 'user_id', 'clock_in'],
-        updateOnDuplicate: ['clock_in', 'updated_at']
+        returning: ['id', 'user_id', 'check_in'],
+        updateOnDuplicate: ['check_in', 'updatedAt']
       });
-      
+
       await transaction.commit();
       return result;
     } catch (error) {
@@ -424,24 +427,24 @@ module.exports = (sequelize) => {
     const transaction = await sequelize.transaction({
       isolationLevel: sequelize.Sequelize.Transaction.ISOLATION_LEVELS.READ_COMMITTED
     });
-    
+
     try {
-      const promises = clockOutData.map(data => 
+      const promises = clockOutData.map(data =>
         Attendance.update({
-          clock_out: data.clock_out,
+          check_out: data.check_out,
           clock_out_location: data.clock_out_location,
-          clock_out_method: data.clock_out_method,
+          checkOutMethod: data.checkOutMethod,
           clock_out_ip: data.clock_out_ip
         }, {
           where: {
             user_id: data.user_id,
             work_date: data.work_date,
-            clock_out: null
+            check_out: null
           },
           transaction
         })
       );
-      
+
       const results = await Promise.all(promises);
       await transaction.commit();
       return results;
@@ -453,8 +456,8 @@ module.exports = (sequelize) => {
 
   // Instance methods
   Attendance.prototype.calculateWorkHours = function() {
-    if (this.clock_out && this.clock_in) {
-      const diffMs = new Date(this.clock_out) - new Date(this.clock_in);
+    if (this.check_out && this.check_in) {
+      const diffMs = new Date(this.check_out) - new Date(this.check_in);
       const hours = diffMs / (1000 * 60 * 60);
       this.work_hours = Math.max(0, hours - (this.break_time / 60));
       return this.work_hours;
