@@ -67,12 +67,21 @@ class PayrollCalculatorService {
                 period.endDate
             );
 
+            // 6.5. Obtener ausencias justificadas (vacaciones, licencias médicas)
+            const justifiedAbsences = await this.getJustifiedAbsences(
+                userId,
+                companyId,
+                period.startDate,
+                period.endDate
+            );
+
             // 7. Calcular horas trabajadas, extras, nocturnas, inasistencias
             const hoursAnalysis = this.analyzeWorkHours(
                 attendanceData,
                 template,
                 holidays,
-                userData.shift
+                userData.shift,
+                justifiedAbsences
             );
 
             // 8. Obtener overrides del usuario
@@ -327,7 +336,7 @@ class PayrollCalculatorService {
     // =========================================================================
     // ANALIZAR HORAS TRABAJADAS
     // =========================================================================
-    analyzeWorkHours(attendanceRecords, template, holidays, shift) {
+    analyzeWorkHours(attendanceRecords, template, holidays, shift, justifiedAbsences = { vacationDays: 0, medicalDays: 0, otherDays: 0 }) {
         const holidayDates = new Set(holidays.map(h =>
             new Date(h.holiday_date).toISOString().split('T')[0]
         ));
@@ -346,17 +355,28 @@ class PayrollCalculatorService {
         const overtime100Threshold = template.overtime_100_after_hours || 12;
         const overtime50Multiplier = template.overtime_50_multiplier || 1.5;
         const overtime100Multiplier = template.overtime_100_multiplier || 2.0;
+        const nightMultiplier = template.night_shift_multiplier || 1.08; // 8% adicional según LCT Argentina
+
+        // Constantes para horario nocturno (Argentina: 21:00 - 06:00)
+        const NIGHT_START_HOUR = 21;
+        const NIGHT_END_HOUR = 6;
 
         // Agrupar por día
         const byDay = {};
         attendanceRecords.forEach(record => {
             const date = record.work_date;
             if (!byDay[date]) {
-                byDay[date] = { records: [], totalHours: 0 };
+                byDay[date] = { records: [], totalHours: 0, nightHours: 0 };
             }
             const hours = (parseFloat(record.raw_hours) || 0) - (parseFloat(record.break_hours) || 0);
             byDay[date].records.push(record);
             byDay[date].totalHours += Math.max(0, hours);
+
+            // CÁLCULO DE HORAS NOCTURNAS (FIX del bug - antes siempre era 0)
+            if (record.check_in && record.check_out) {
+                const dayNightHours = this.calculateNightHours(record.check_in, record.check_out, NIGHT_START_HOUR, NIGHT_END_HOUR);
+                byDay[date].nightHours += dayNightHours;
+            }
         });
 
         // Calcular por día
@@ -365,6 +385,9 @@ class PayrollCalculatorService {
             const hours = day.totalHours;
             workedDays++;
             totalWorkedHours += hours;
+
+            // Acumular horas nocturnas del día
+            nightHours += day.nightHours;
 
             if (isHoliday) {
                 // Horas en feriado pagan al 100%
@@ -388,7 +411,15 @@ class PayrollCalculatorService {
         // Calcular días laborables del período
         const expectedWorkDays = template.work_days_per_week ?
             Math.round(template.work_days_per_week * 4.33) : 22;  // ~22 días/mes
-        absentDays = Math.max(0, expectedWorkDays - workedDays - holidays.length);
+
+        // Calcular ausencias DESCONTANDO las justificadas (vacaciones, licencias médicas)
+        const totalJustifiedDays = (justifiedAbsences.vacationDays || 0) +
+                                   (justifiedAbsences.medicalDays || 0) +
+                                   (justifiedAbsences.otherDays || 0);
+
+        // Ausencias injustificadas = días esperados - trabajados - feriados - justificadas
+        const rawAbsentDays = expectedWorkDays - workedDays - holidays.length - totalJustifiedDays;
+        absentDays = Math.max(0, rawAbsentDays);
 
         return {
             totalWorkedHours: Math.round(totalWorkedHours * 100) / 100,
@@ -402,8 +433,160 @@ class PayrollCalculatorService {
             expectedWorkDays,
             attendanceRecordCount: attendanceRecords.length,
             overtime50Multiplier,
-            overtime100Multiplier
+            overtime100Multiplier,
+            nightMultiplier,
+            // Desglose de ausencias justificadas (para transparencia)
+            justifiedAbsences: {
+                vacationDays: justifiedAbsences.vacationDays || 0,
+                medicalDays: justifiedAbsences.medicalDays || 0,
+                otherDays: justifiedAbsences.otherDays || 0,
+                total: totalJustifiedDays
+            }
         };
+    }
+
+    // =========================================================================
+    // CALCULAR HORAS NOCTURNAS (21:00 - 06:00 según Ley de Contrato de Trabajo Argentina)
+    // =========================================================================
+    calculateNightHours(checkIn, checkOut, nightStartHour = 21, nightEndHour = 6) {
+        const start = new Date(checkIn);
+        const end = new Date(checkOut);
+
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return 0;
+        }
+
+        let nightMinutes = 0;
+        let current = new Date(start);
+
+        // Iterar minuto a minuto para calcular horas nocturnas
+        while (current < end) {
+            const hour = current.getHours();
+            // Horario nocturno: 21:00-23:59 o 00:00-05:59
+            if (hour >= nightStartHour || hour < nightEndHour) {
+                nightMinutes++;
+            }
+            current = new Date(current.getTime() + 60000); // +1 minuto
+        }
+
+        // Convertir minutos a horas con 2 decimales
+        return Math.round((nightMinutes / 60) * 100) / 100;
+    }
+
+    // =========================================================================
+    // OBTENER AUSENCIAS JUSTIFICADAS (Vacaciones, Licencias Médicas, Otras)
+    // Elimina duplicación: el usuario YA cargó la vacación/licencia aprobada
+    // No necesita marcar manualmente "ausencia justificada" en liquidación
+    // =========================================================================
+    async getJustifiedAbsences(userId, companyId, startDate, endDate) {
+        let vacationDays = 0;
+        let medicalDays = 0;
+        let otherDays = 0;
+
+        try {
+            // 1. VACACIONES APROBADAS
+            const vacationsQuery = `
+                SELECT id, start_date, end_date, days_requested
+                FROM vacation_requests
+                WHERE user_id = $1
+                AND company_id = $2
+                AND status = 'approved'
+                AND (
+                    (start_date <= $4 AND end_date >= $3)
+                    OR (start_date BETWEEN $3 AND $4)
+                    OR (end_date BETWEEN $3 AND $4)
+                )
+            `;
+            const [vacations] = await sequelize.query(vacationsQuery, {
+                bind: [userId, companyId, startDate, endDate]
+            });
+
+            vacations.forEach(v => {
+                // Contar días que caen dentro del período
+                const vStart = new Date(v.start_date) < new Date(startDate) ? new Date(startDate) : new Date(v.start_date);
+                const vEnd = new Date(v.end_date) > new Date(endDate) ? new Date(endDate) : new Date(v.end_date);
+                const days = this.countWorkDays(vStart, vEnd);
+                vacationDays += days;
+            });
+
+            // 2. LICENCIAS MÉDICAS APROBADAS
+            const medicalQuery = `
+                SELECT id, start_date, end_date, days_off
+                FROM medical_certificates
+                WHERE user_id = $1
+                AND company_id = $2
+                AND status = 'approved'
+                AND (
+                    (start_date <= $4 AND end_date >= $3)
+                    OR (start_date BETWEEN $3 AND $4)
+                    OR (end_date BETWEEN $3 AND $4)
+                )
+            `;
+            const [medicals] = await sequelize.query(medicalQuery, {
+                bind: [userId, companyId, startDate, endDate]
+            });
+
+            medicals.forEach(m => {
+                const mStart = new Date(m.start_date) < new Date(startDate) ? new Date(startDate) : new Date(m.start_date);
+                const mEnd = new Date(m.end_date) > new Date(endDate) ? new Date(endDate) : new Date(m.end_date);
+                const days = this.countWorkDays(mStart, mEnd);
+                medicalDays += days;
+            });
+
+            // 3. OTROS PERMISOS APROBADOS (si existe la tabla)
+            try {
+                const otherQuery = `
+                    SELECT id, start_date, end_date
+                    FROM leave_requests
+                    WHERE user_id = $1
+                    AND company_id = $2
+                    AND status = 'approved'
+                    AND (
+                        (start_date <= $4 AND end_date >= $3)
+                        OR (start_date BETWEEN $3 AND $4)
+                        OR (end_date BETWEEN $3 AND $4)
+                    )
+                `;
+                const [others] = await sequelize.query(otherQuery, {
+                    bind: [userId, companyId, startDate, endDate]
+                });
+
+                others.forEach(o => {
+                    const oStart = new Date(o.start_date) < new Date(startDate) ? new Date(startDate) : new Date(o.start_date);
+                    const oEnd = new Date(o.end_date) > new Date(endDate) ? new Date(endDate) : new Date(o.end_date);
+                    const days = this.countWorkDays(oStart, oEnd);
+                    otherDays += days;
+                });
+            } catch (e) {
+                // Tabla leave_requests no existe, ignorar
+            }
+
+        } catch (error) {
+            console.log(`⚠️ [PAYROLL] Error obteniendo ausencias justificadas: ${error.message}`);
+            // Retornar 0 si las tablas no existen
+        }
+
+        return { vacationDays, medicalDays, otherDays };
+    }
+
+    // =========================================================================
+    // CONTAR DÍAS LABORABLES ENTRE DOS FECHAS (excluyendo fines de semana)
+    // =========================================================================
+    countWorkDays(startDate, endDate) {
+        let count = 0;
+        let current = new Date(startDate);
+        const end = new Date(endDate);
+
+        while (current <= end) {
+            const day = current.getDay();
+            // 0 = Domingo, 6 = Sábado
+            if (day !== 0 && day !== 6) {
+                count++;
+            }
+            current.setDate(current.getDate() + 1);
+        }
+
+        return count;
     }
 
     // =========================================================================

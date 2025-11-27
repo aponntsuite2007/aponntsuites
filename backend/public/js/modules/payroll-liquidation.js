@@ -416,6 +416,15 @@ async function calculatePayroll() {
     }, 2000);
 }
 
+async function reviewAlerts() {
+    addActivityLog('Revisando alertas e inconsistencias...');
+    setTimeout(() => {
+        addActivityLog('Alertas revisadas - Sin inconsistencias', 'success');
+        payrollState.workflowStep = 5;
+        showProcessTab();
+    }, 1500);
+}
+
 async function approvePayroll() {
     addActivityLog('Aprobando liquidacion...');
     payrollState.workflowStep = 5;

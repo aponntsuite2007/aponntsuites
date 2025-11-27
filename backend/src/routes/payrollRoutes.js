@@ -132,8 +132,7 @@ router.get('/branches', async (req, res) => {
                 is_active: true
             },
             include: [
-                { model: PayrollCountry, as: 'country' },
-                { model: PayrollTemplate, as: 'defaultTemplate' }
+                { model: PayrollCountry, as: 'country' }
             ],
             order: [['branch_name', 'ASC']]
         });
@@ -974,7 +973,7 @@ router.get('/runs/details', async (req, res) => {
                 u.user_id as id,
                 u."firstName",
                 u."lastName",
-                u.employee_code,
+                u.dni as employee_code,
                 d.name as department_name,
                 pt.template_name,
                 usc.base_salary as gross_earnings,
@@ -1059,11 +1058,6 @@ router.get('/runs/:id', async (req, res) => {
                             model: User,
                             as: 'user',
                             attributes: ['user_id', 'firstName', 'lastName', 'email']
-                        },
-                        {
-                            model: PayrollRunConceptDetail,
-                            as: 'concepts',
-                            order: [['display_order', 'ASC']]
                         }
                     ]
                 }
@@ -1173,11 +1167,6 @@ router.get('/runs/:runId/details/:userId', async (req, res) => {
                     model: User,
                     as: 'user',
                     attributes: ['user_id', 'firstName', 'lastName', 'email', 'dni']
-                },
-                {
-                    model: PayrollRunConceptDetail,
-                    as: 'concepts',
-                    order: [['display_order', 'ASC']]
                 }
             ]
         });

@@ -1724,7 +1724,7 @@
   "modelo_de_negocio": "Geschäftsmodell",
   "arquitectura_modular": "Modulare Architektur",
   "sistema_plug_play": "Plug & Play System",
-  "desc_sistema_integral": "<span style=\"color: #60a5fa;\"><span style=\"font-size: 1.30em;\">i</span>ntelligentes <span style=\"font-size: 1.30em;\">Ö</span>kosystem</span> für Verwaltung und Planung von Unternehmensressourcen",
+  "desc_sistema_integral": "<span style=\"font-size: 1.30em; color: #60a5fa;\">i</span><span style=\"color: #60a5fa;\">ntelligentes</span> <span style=\"font-size: 1.30em; color: #60a5fa;\">Ö</span><span style=\"color: #1a1a2e;\">kosystem</span> für Verwaltung und Planung von Unternehmensressourcen",
   "recursos_empresariales": "Geschäftsressourcen",
   "hero_subtitle_full": "B2B-SaaS-Plattform für Anwesenheitsmanagement, Biometrie und Personalwesen. Prädiktive Analyse mit KI zur Antizipation von Mustern und zur Optimierung des Personalmanagements. Verfügbar in 6 Sprachen für globale Unternehmen.",
   "es_espanol": "DE Spanisch",
@@ -2196,7 +2196,7 @@
   "cada_kiosko_tiene": "Jeder Kiosk verfügt über einen",
   "por_depto_validacion": "nach Abteilung. Das System überprüft automatisch, ob sich der Mitarbeiter innerhalb des autorisierten Radius befindet, bevor es die Anmeldung zulässt.",
   "analisis_predictivo_badge": "ECHTZEIT-PRÄDIKTIVE ANALYSE",
-  "expediente_360_desc_html": "Das einzige HR-Tool, das <strong style=\"color: #8b5cf6;\" data-translate=\"index.predice_comportamientos\">Verhaltensweisen vorhersagt</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"index.detecta_riesgos_de_fuga\">Fluchtrisiken erkennt</strong> und <strong style=\"color: #22c55e;\" data-translate=\"index.evaluaciones_automaticas_con_ia\">automatische Bewertungen mit KI</strong> generiert",
-  "liquidacion_desc_html": "Vollständig <strong style=\"color: #22c55e;\" data-translate=\"index.multipais_totalmente_configurable\">mehrländerkonfigurierbares</strong> System. Definieren Sie Ihre eigenen Konzepte, Beiträge und Abzüge gemäß der <strong style=\"color: #14b8a6;\" data-translate=\"index.legislacion_de_tu_pais\">Gesetzgebung Ihres Landes</strong>",
-  "kiosko_gps_desc_html": "Jeder Kiosk verfügt über einen <strong data-translate=\"index.area_de_cobertura_gps_configurable\">konfigurierbaren GPS-Abdeckungsbereich</strong> pro Abteilung. Das System validiert automatisch, ob sich der Mitarbeiter innerhalb des autorisierten Radius befindet, bevor ein Check-in ermöglicht wird."
+  "expediente_360_desc_html": "Das einzige HR-Tool, das <strong style=\"color: #8b5cf6;\" data-translate=\"predice_comportamientos\">Verhaltensweisen vorhersagt</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"detecta_riesgos_de_fuga\">Fluchtrisiken erkennt</strong> und <strong style=\"color: #22c55e;\" data-translate=\"evaluaciones_automaticas_con_ia\">automatische Bewertungen mit KI</strong> generiert",
+  "liquidacion_desc_html": "Vollständig <strong style=\"color: #22c55e;\" data-translate=\"multipais_totalmente_configurable\">mehrländerkonfigurierbares</strong> System. Definieren Sie Ihre eigenen Konzepte, Beiträge und Abzüge gemäß der <strong style=\"color: #14b8a6;\" data-translate=\"legislacion_de_tu_pais\">Gesetzgebung Ihres Landes</strong>",
+  "kiosko_gps_desc_html": "Jeder Kiosk verfügt über einen <strong data-translate=\"area_de_cobertura_gps_configurable\">konfigurierbaren GPS-Abdeckungsbereich</strong> pro Abteilung. Das System validiert automatisch, ob sich der Mitarbeiter innerhalb des autorisierten Radius befindet, bevor ein Check-in ermöglicht wird."
 }

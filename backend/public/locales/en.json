@@ -1724,7 +1724,7 @@
   "modelo_de_negocio": "Business Model",
   "arquitectura_modular": "Modular Architecture",
   "sistema_plug_play": "Plug & Play System",
-  "desc_sistema_integral": "<span style=\"color: #60a5fa;\"><span style=\"font-size: 1.30em;\">i</span>ntelligent <span style=\"font-size: 1.30em;\">e</span>cosystem</span> for Administration and Planning of Business Resources",
+  "desc_sistema_integral": "<span style=\"font-size: 1.30em; color: #60a5fa;\">i</span><span style=\"color: #60a5fa;\">ntelligent</span> <span style=\"font-size: 1.30em; color: #60a5fa;\">e</span><span style=\"color: #1a1a2e;\">cosystem</span> for Administration and Planning of Business Resources",
   "recursos_empresariales": "Business Resources",
   "hero_subtitle_full": "B2B SaaS platform for attendance management, biometrics and human resources. ",
   "es_espanol": "EN Spanish",
@@ -2196,7 +2196,7 @@
   "cada_kiosko_tiene": "Each kiosk has a",
   "por_depto_validacion": "by department. ",
   "analisis_predictivo_badge": "REAL-TIME PREDICTIVE ANALYSIS",
-  "expediente_360_desc_html": "The only HR tool that <strong style=\"color: #8b5cf6;\" data-translate=\"index.predice_comportamientos\">predicts behaviors</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"index.detecta_riesgos_de_fuga\">detects flight risks</strong> and generates <strong style=\"color: #22c55e;\" data-translate=\"index.evaluaciones_automaticas_con_ia\">automatic evaluations with AI</strong>",
-  "liquidacion_desc_html": "Fully <strong style=\"color: #22c55e;\" data-translate=\"index.multipais_totalmente_configurable\">multi-country configurable</strong> system. Define your own concepts, contributions and deductions according to the <strong style=\"color: #14b8a6;\" data-translate=\"index.legislacion_de_tu_pais\">legislation of your country</strong>",
-  "kiosko_gps_desc_html": "Each kiosk has a <strong data-translate=\"index.area_de_cobertura_gps_configurable\">configurable GPS coverage area</strong> per department. The system automatically validates that the employee is within the authorized radius before allowing check-in."
+  "expediente_360_desc_html": "The only HR tool that <strong style=\"color: #8b5cf6;\" data-translate=\"predice_comportamientos\">predicts behaviors</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"detecta_riesgos_de_fuga\">detects flight risks</strong> and generates <strong style=\"color: #22c55e;\" data-translate=\"evaluaciones_automaticas_con_ia\">automatic evaluations with AI</strong>",
+  "liquidacion_desc_html": "Fully <strong style=\"color: #22c55e;\" data-translate=\"multipais_totalmente_configurable\">multi-country configurable</strong> system. Define your own concepts, contributions and deductions according to the <strong style=\"color: #14b8a6;\" data-translate=\"legislacion_de_tu_pais\">legislation of your country</strong>",
+  "kiosko_gps_desc_html": "Each kiosk has a <strong data-translate=\"area_de_cobertura_gps_configurable\">configurable GPS coverage area</strong> per department. The system automatically validates that the employee is within the authorized radius before allowing check-in."
 }

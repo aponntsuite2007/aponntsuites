@@ -1,85 +1,58 @@
 /**
  * Modelo PayrollRunDetail - Detalle de liquidación por empleado
  * Sistema de Liquidación Parametrizable v3.0
+ * SINCRONIZADO con esquema BD real
  */
 
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
     const PayrollRunDetail = sequelize.define('PayrollRunDetail', {
-        detail_id: {
+        id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
         run_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: 'payroll_runs',
-                key: 'run_id'
-            }
+            allowNull: false
         },
         user_id: {
             type: DataTypes.UUID,
-            allowNull: false,
-            references: {
-                model: 'users',
-                key: 'user_id'
-            }
-        },
-        assignment_id: {
-            type: DataTypes.INTEGER,
-            references: {
-                model: 'user_payroll_assignment',
-                key: 'assignment_id'
-            }
-        },
-        base_salary: {
-            type: DataTypes.DECIMAL(15, 2),
             allowNull: false
         },
-        days_worked: {
-            type: DataTypes.INTEGER,
-            defaultValue: 0
+        assignment_id: {
+            type: DataTypes.INTEGER
         },
-        hours_regular: {
+        worked_days: {
             type: DataTypes.DECIMAL(8, 2),
             defaultValue: 0
         },
-        hours_overtime_50: {
+        worked_hours: {
             type: DataTypes.DECIMAL(8, 2),
             defaultValue: 0
         },
-        hours_overtime_100: {
+        overtime_50_hours: {
             type: DataTypes.DECIMAL(8, 2),
             defaultValue: 0
         },
-        hours_night: {
+        overtime_100_hours: {
             type: DataTypes.DECIMAL(8, 2),
             defaultValue: 0
         },
-        hours_holiday: {
+        night_hours: {
             type: DataTypes.DECIMAL(8, 2),
             defaultValue: 0
         },
-        days_absent: {
-            type: DataTypes.INTEGER,
+        absent_days: {
+            type: DataTypes.DECIMAL(8, 2),
             defaultValue: 0
         },
-        days_vacation: {
-            type: DataTypes.INTEGER,
-            defaultValue: 0
-        },
-        days_sick_leave: {
-            type: DataTypes.INTEGER,
-            defaultValue: 0
-        },
-        gross_salary: {
+        gross_earnings: {
             type: DataTypes.DECIMAL(15, 2),
             defaultValue: 0
         },
-        total_earnings: {
+        non_remunerative: {
             type: DataTypes.DECIMAL(15, 2),
             defaultValue: 0
         },
@@ -87,75 +60,70 @@ module.exports = (sequelize) => {
             type: DataTypes.DECIMAL(15, 2),
             defaultValue: 0
         },
-        total_non_remunerative: {
-            type: DataTypes.DECIMAL(15, 2),
-            defaultValue: 0
-        },
         net_salary: {
             type: DataTypes.DECIMAL(15, 2),
             defaultValue: 0
         },
-        employer_cost: {
+        employer_contributions: {
             type: DataTypes.DECIMAL(15, 2),
             defaultValue: 0
         },
+        earnings_detail: {
+            type: DataTypes.JSONB,
+            defaultValue: {}
+        },
+        deductions_detail: {
+            type: DataTypes.JSONB,
+            defaultValue: {}
+        },
+        employer_detail: {
+            type: DataTypes.JSONB,
+            defaultValue: {}
+        },
         status: {
-            type: DataTypes.STRING(20),
-            defaultValue: 'calculated',
-            comment: 'calculated, reviewed, approved, paid, error'
+            type: DataTypes.STRING(50),
+            defaultValue: 'calculated'
         },
         error_message: {
             type: DataTypes.TEXT
         },
-        calculation_log: {
-            type: DataTypes.JSONB,
-            defaultValue: {},
-            comment: 'Log detallado del cálculo'
+        receipt_number: {
+            type: DataTypes.STRING(100)
         },
-        payslip_generated: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: false
+        receipt_generated_at: {
+            type: DataTypes.DATE
         },
-        payslip_url: {
-            type: DataTypes.STRING(500)
+        receipt_url: {
+            type: DataTypes.TEXT
         }
     }, {
         tableName: 'payroll_run_details',
         timestamps: true,
         createdAt: 'created_at',
-        updatedAt: 'updated_at',
-        indexes: [
-            { fields: ['run_id'] },
-            { fields: ['user_id'] },
-            { fields: ['run_id', 'user_id'], unique: true },
-            { fields: ['status'] }
-        ]
+        updatedAt: 'updated_at'
     });
 
     PayrollRunDetail.associate = (models) => {
-        // Pertenece a una corrida
-        PayrollRunDetail.belongsTo(models.PayrollRun, {
-            foreignKey: 'run_id',
-            as: 'payrollRun'
-        });
+        if (models.PayrollRun) {
+            PayrollRunDetail.belongsTo(models.PayrollRun, {
+                foreignKey: 'run_id',
+                as: 'payrollRun'
+            });
+        }
 
-        // Pertenece a un usuario
-        PayrollRunDetail.belongsTo(models.User, {
-            foreignKey: 'user_id',
-            as: 'user'
-        });
+        if (models.User) {
+            PayrollRunDetail.belongsTo(models.User, {
+                foreignKey: 'user_id',
+                as: 'user'
+            });
+        }
 
-        // Pertenece a una asignación
-        PayrollRunDetail.belongsTo(models.UserPayrollAssignment, {
-            foreignKey: 'assignment_id',
-            as: 'assignment'
-        });
-
-        // Tiene muchos conceptos detallados
-        PayrollRunDetail.hasMany(models.PayrollRunConceptDetail, {
-            foreignKey: 'detail_id',
-            as: 'concepts'
-        });
+        if (models.UserPayrollAssignment) {
+            PayrollRunDetail.belongsTo(models.UserPayrollAssignment, {
+                foreignKey: 'assignment_id',
+                as: 'assignment'
+            });
+        }
     };
 
     return PayrollRunDetail;

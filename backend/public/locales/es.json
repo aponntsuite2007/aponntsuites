@@ -1662,7 +1662,7 @@
   "modelo_de_negocio": "Modelo de Negocio",
   "arquitectura_modular": "Arquitectura Modular",
   "sistema_plug_play": "Sistema Plug & Play",
-  "desc_sistema_integral": "<span style=\"color: #60a5fa;\"><span style=\"font-size: 1.30em;\">e</span>cosistema Inteligente</span> de Administración y Planificación de los Recursos Empresariales",
+  "desc_sistema_integral": "<span style=\"font-size: 1.30em; color: #60a5fa;\">e</span><span style=\"color: #1a1a2e;\">cosistema</span> <span style=\"font-size: 1.30em; color: #60a5fa;\">I</span><span style=\"color: #60a5fa;\">nteligente</span> de Administración y Planificación de los Recursos Empresariales",
   "recursos_empresariales": "Recursos Empresariales",
   "hero_subtitle_full": "Plataforma SaaS B2B de gestion de asistencias, biometria y recursos humanos. Analisis predictivo con IA para anticipar patrones y optimizar la gestion de personal. Disponible en 6 idiomas para empresas globales.",
   "es_espanol": "ES Espanol",
@@ -2134,7 +2134,7 @@
   "cada_kiosko_tiene": "Cada kiosko tiene un ",
   "por_depto_validacion": " por departamento. El sistema valida automaticamente que el empleado este dentro del radio autorizado antes de permitir el fichaje.",
   "analisis_predictivo_badge": "ANALISIS PREDICTIVO EN TIEMPO REAL",
-  "expediente_360_desc_html": "La unica herramienta de RRHH que <strong style=\"color: #8b5cf6;\" data-translate=\"index.predice_comportamientos\">predice comportamientos</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"index.detecta_riesgos_de_fuga\">detecta riesgos de fuga</strong> y genera <strong style=\"color: #22c55e;\" data-translate=\"index.evaluaciones_automaticas_con_ia\">evaluaciones automaticas con IA</strong>",
-  "liquidacion_desc_html": "Sistema <strong style=\"color: #22c55e;\" data-translate=\"index.multipais_totalmente_configurable\">multi-pais totalmente configurable</strong>. Define tus propios conceptos, aportes y deducciones segun la <strong style=\"color: #14b8a6;\" data-translate=\"index.legislacion_de_tu_pais\">legislacion de tu pais</strong>",
-  "kiosko_gps_desc_html": "Cada kiosko tiene un <strong data-translate=\"index.area_de_cobertura_gps_configurable\">area de cobertura GPS configurable</strong> por departamento. El sistema valida automaticamente que el empleado este dentro del radio autorizado antes de permitir el fichaje."
+  "expediente_360_desc_html": "La unica herramienta de RRHH que <strong style=\"color: #8b5cf6;\" data-translate=\"predice_comportamientos\">predice comportamientos</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"detecta_riesgos_de_fuga\">detecta riesgos de fuga</strong> y genera <strong style=\"color: #22c55e;\" data-translate=\"evaluaciones_automaticas_con_ia\">evaluaciones automaticas con IA</strong>",
+  "liquidacion_desc_html": "Sistema <strong style=\"color: #22c55e;\" data-translate=\"multipais_totalmente_configurable\">multi-pais totalmente configurable</strong>. Define tus propios conceptos, aportes y deducciones segun la <strong style=\"color: #14b8a6;\" data-translate=\"legislacion_de_tu_pais\">legislacion de tu pais</strong>",
+  "kiosko_gps_desc_html": "Cada kiosko tiene un <strong data-translate=\"area_de_cobertura_gps_configurable\">area de cobertura GPS configurable</strong> por departamento. El sistema valida automaticamente que el empleado este dentro del radio autorizado antes de permitir el fichaje."
 }

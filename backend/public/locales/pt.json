@@ -1724,7 +1724,7 @@
   "modelo_de_negocio": "Modelo de Negócios",
   "arquitectura_modular": "Arquitetura Modular",
   "sistema_plug_play": "Sistema Plug & Play",
-  "desc_sistema_integral": "<span style=\"color: #60a5fa;\"><span style=\"font-size: 1.30em;\">e</span>cossistema Inteligente</span> de Administração e Planejamento dos Recursos Empresariais",
+  "desc_sistema_integral": "<span style=\"font-size: 1.30em; color: #60a5fa;\">e</span><span style=\"color: #1a1a2e;\">cossistema</span> <span style=\"font-size: 1.30em; color: #60a5fa;\">I</span><span style=\"color: #60a5fa;\">nteligente</span> de Administração e Planejamento dos Recursos Empresariais",
   "recursos_empresariales": "Recursos de negócios",
   "hero_subtitle_full": "Plataforma SaaS B2B para gestão de atendimento, biometria e recursos humanos. Análise preditiva com IA para antecipar padrões e otimizar a gestão de pessoal. Disponível em 6 idiomas para empresas globais.",
   "es_espanol": "PT espanhol",
@@ -2196,7 +2196,7 @@
   "cada_kiosko_tiene": "Cada quiosque possui um",
   "por_depto_validacion": "por departamento. O sistema valida automaticamente se o funcionário está dentro do raio autorizado antes de permitir o login.",
   "analisis_predictivo_badge": "ANÁLISE PREDITIVA EM TEMPO REAL",
-  "expediente_360_desc_html": "A única ferramenta de RH que <strong style=\"color: #8b5cf6;\" data-translate=\"index.predice_comportamientos\">prevê comportamentos</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"index.detecta_riesgos_de_fuga\">detecta riscos de fuga</strong> e gera <strong style=\"color: #22c55e;\" data-translate=\"index.evaluaciones_automaticas_con_ia\">avaliações automáticas com IA</strong>",
-  "liquidacion_desc_html": "Sistema totalmente <strong style=\"color: #22c55e;\" data-translate=\"index.multipais_totalmente_configurable\">configurável multipaís</strong>. Defina seus próprios conceitos, contribuições e deduções de acordo com a <strong style=\"color: #14b8a6;\" data-translate=\"index.legislacion_de_tu_pais\">legislação de seu país</strong>",
-  "kiosko_gps_desc_html": "Cada quiosque tem uma <strong data-translate=\"index.area_de_cobertura_gps_configurable\">área de cobertura GPS configurável</strong> por departamento. O sistema valida automaticamente se o funcionário está dentro do raio autorizado antes de permitir o check-in."
+  "expediente_360_desc_html": "A única ferramenta de RH que <strong style=\"color: #8b5cf6;\" data-translate=\"predice_comportamientos\">prevê comportamentos</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"detecta_riesgos_de_fuga\">detecta riscos de fuga</strong> e gera <strong style=\"color: #22c55e;\" data-translate=\"evaluaciones_automaticas_con_ia\">avaliações automáticas com IA</strong>",
+  "liquidacion_desc_html": "Sistema totalmente <strong style=\"color: #22c55e;\" data-translate=\"multipais_totalmente_configurable\">configurável multipaís</strong>. Defina seus próprios conceitos, contribuições e deduções de acordo com a <strong style=\"color: #14b8a6;\" data-translate=\"legislacion_de_tu_pais\">legislação de seu país</strong>",
+  "kiosko_gps_desc_html": "Cada quiosque tem uma <strong data-translate=\"area_de_cobertura_gps_configurable\">área de cobertura GPS configurável</strong> por departamento. O sistema valida automaticamente se o funcionário está dentro do raio autorizado antes de permitir o check-in."
 }
