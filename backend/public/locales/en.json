@@ -2199,5 +2199,8 @@
     "expediente_360_desc_html": "The only HR tool that <strong style=\"color: #8b5cf6;\" data-translate=\"index.predice_comportamientos\">predicts behaviors</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"index.detecta_riesgos_de_fuga\">detects flight risks</strong> and generates <strong style=\"color: #22c55e;\" data-translate=\"index.evaluaciones_automaticas_con_ia\">automatic evaluations with AI</strong>",
     "liquidacion_desc_html": "Fully <strong style=\"color: #22c55e;\" data-translate=\"index.multipais_totalmente_configurable\">multi-country configurable</strong> system. Define your own concepts, contributions and deductions according to the <strong style=\"color: #14b8a6;\" data-translate=\"index.legislacion_de_tu_pais\">legislation of your country</strong>",
     "kiosko_gps_desc_html": "Each kiosk has a <strong data-translate=\"index.area_de_cobertura_gps_configurable\">configurable GPS coverage area</strong> per department. The system automatically validates that the employee is within the authorized radius before allowing check-in."
-  }
+  },
+  "modelo_de_negocio": "Business Model",
+  "arquitectura_modular": "Modular Architecture",
+  "sistema_plug_play": "Plug & Play System"
 }

@@ -2137,5 +2137,8 @@
     "expediente_360_desc_html": "La unica herramienta de RRHH que <strong style=\"color: #8b5cf6;\" data-translate=\"index.predice_comportamientos\">predice comportamientos</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"index.detecta_riesgos_de_fuga\">detecta riesgos de fuga</strong> y genera <strong style=\"color: #22c55e;\" data-translate=\"index.evaluaciones_automaticas_con_ia\">evaluaciones automaticas con IA</strong>",
     "liquidacion_desc_html": "Sistema <strong style=\"color: #22c55e;\" data-translate=\"index.multipais_totalmente_configurable\">multi-pais totalmente configurable</strong>. Define tus propios conceptos, aportes y deducciones segun la <strong style=\"color: #14b8a6;\" data-translate=\"index.legislacion_de_tu_pais\">legislacion de tu pais</strong>",
     "kiosko_gps_desc_html": "Cada kiosko tiene un <strong data-translate=\"index.area_de_cobertura_gps_configurable\">area de cobertura GPS configurable</strong> por departamento. El sistema valida automaticamente que el empleado este dentro del radio autorizado antes de permitir el fichaje."
-  }
+  },
+  "modelo_de_negocio": "Modelo de Negocio",
+  "arquitectura_modular": "Arquitectura Modular",
+  "sistema_plug_play": "Sistema Plug & Play"
 }

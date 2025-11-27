@@ -2452,5 +2452,8 @@
     "expediente_360_desc_html": "Le seul outil RH qui <strong style=\"color: #8b5cf6;\" data-translate=\"index.predice_comportamientos\">prédit les comportements</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"index.detecta_riesgos_de_fuga\">détecte les risques de fuite</strong> et génère des <strong style=\"color: #22c55e;\" data-translate=\"index.evaluaciones_automaticas_con_ia\">évaluations automatiques avec IA</strong>",
     "liquidacion_desc_html": "Système entièrement <strong style=\"color: #22c55e;\" data-translate=\"index.multipais_totalmente_configurable\">configurable multipays</strong>. Définissez vos propres concepts, cotisations et déductions selon la <strong style=\"color: #14b8a6;\" data-translate=\"index.legislacion_de_tu_pais\">législation de votre pays</strong>",
     "kiosko_gps_desc_html": "Chaque kiosque dispose d'une <strong data-translate=\"index.area_de_cobertura_gps_configurable\">zone de couverture GPS configurable</strong> par département. Le système valide automatiquement que l'employé se trouve dans le rayon autorisé avant d'autoriser l'enregistrement."
-  }
+  },
+  "modelo_de_negocio": "Modèle d'Affaires",
+  "arquitectura_modular": "Architecture Modulaire",
+  "sistema_plug_play": "Système Plug & Play"
 }

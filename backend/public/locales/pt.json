@@ -2199,5 +2199,8 @@
     "expediente_360_desc_html": "A única ferramenta de RH que <strong style=\"color: #8b5cf6;\" data-translate=\"index.predice_comportamientos\">prevê comportamentos</strong>, <strong style=\"color: #06b6d4;\" data-translate=\"index.detecta_riesgos_de_fuga\">detecta riscos de fuga</strong> e gera <strong style=\"color: #22c55e;\" data-translate=\"index.evaluaciones_automaticas_con_ia\">avaliações automáticas com IA</strong>",
     "liquidacion_desc_html": "Sistema totalmente <strong style=\"color: #22c55e;\" data-translate=\"index.multipais_totalmente_configurable\">configurável multipaís</strong>. Defina seus próprios conceitos, contribuições e deduções de acordo com a <strong style=\"color: #14b8a6;\" data-translate=\"index.legislacion_de_tu_pais\">legislação de seu país</strong>",
     "kiosko_gps_desc_html": "Cada quiosque tem uma <strong data-translate=\"index.area_de_cobertura_gps_configurable\">área de cobertura GPS configurável</strong> por departamento. O sistema valida automaticamente se o funcionário está dentro do raio autorizado antes de permitir o check-in."
-  }
+  },
+  "modelo_de_negocio": "Modelo de Negócios",
+  "arquitectura_modular": "Arquitetura Modular",
+  "sistema_plug_play": "Sistema Plug & Play"
 }
