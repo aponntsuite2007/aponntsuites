@@ -145,7 +145,12 @@ class SmartTranslationSystem {
         if (element.hasAttribute && element.hasAttribute('data-translate')) {
             const key = element.getAttribute('data-translate');
             const translation = await this.t(key);
-            element.textContent = translation;
+            // SMART FIX: Detectar HTML y usar innerHTML para preservar tags
+            if (/<[^>]+>/.test(translation)) {
+                element.innerHTML = translation;
+            } else {
+                element.textContent = translation;
+            }
         } else {
             // 🔥 NUEVO: Auto-detectar traducción por contenido
             const text = element.textContent?.trim();
@@ -153,7 +158,12 @@ class SmartTranslationSystem {
                 const key = await this.findKeyByText(text);
                 if (key) {
                     const translation = await this.t(key);
-                    element.textContent = translation;
+                    // SMART FIX: Detectar HTML y usar innerHTML para preservar tags
+            if (/<[^>]+>/.test(translation)) {
+                element.innerHTML = translation;
+            } else {
+                element.textContent = translation;
+            }
                     // Marcar como traducido para evitar re-procesar
                     element.setAttribute('data-auto-translated', 'true');
                 }
@@ -359,7 +369,12 @@ class SmartTranslationSystem {
         for (const element of elementsToTranslate) {
             const key = element.getAttribute('data-translate');
             const translation = await this.t(key);
-            element.textContent = translation;
+            // SMART FIX: Detectar HTML y usar innerHTML para preservar tags
+            if (/<[^>]+>/.test(translation)) {
+                element.innerHTML = translation;
+            } else {
+                element.textContent = translation;
+            }
         }
 
         // 2. 🔥 NUEVO: Auto-traducción de elementos sin data-translate
