@@ -2772,10 +2772,19 @@ function injectEnterpriseStyles() {
         .pe-table td {
             padding: 12px 16px;
             border-bottom: 1px solid var(--pe-border);
+            color: var(--pe-text-primary);
         }
 
         .pe-table tr:hover td {
             background: rgba(255, 255, 255, 0.02);
+        }
+
+        .pe-table code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--accent-cyan, #00d4ff);
         }
 
         .text-right {
