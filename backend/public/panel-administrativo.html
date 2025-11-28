@@ -6269,104 +6269,52 @@
             if (suspendedCompaniesElement) suspendedCompaniesElement.textContent = suspendedCount;
         }
 
-        function renderCompaniesTable() {
-            console.log('🎨 renderCompaniesTable iniciado');
+                function renderCompaniesTable() {
+            console.log('🎨 [ENTERPRISE] renderCompaniesTable iniciado con diseño Bloomberg/SAP Fiori');
             console.log('🏢 companies variable actual:', companies);
             console.log('📊 companies.length:', companies.length);
 
             const container = document.getElementById('companiesContainer');
             console.log('📦 container elemento:', container);
 
-            if (companies.length === 0) {
-                console.log('⚠️ companies.length === 0, mostrando mensaje vacío');
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 3rem; color: #7f8c8d;">
-                        <div style="font-size: 3em; margin-bottom: 1rem;">🏢</div>
-                        <h3>No hay empresas registradas</h3>
-                        <p>Comienza creando tu primera empresa</p>
-                    </div>
-                `;
+            if (!container) {
+                console.error('❌ No se encontró el contenedor companiesContainer');
                 return;
             }
 
-            let html = `
-                <table class="companies-table">
-                    <thead>
-                        <tr>
-                            <th>Empresa</th>
-                            <th>CUIT</th>
-                            <th>Estado</th>
-                            <th>Empleados</th>
-                            <th>Plan</th>
-                            <th>Módulos</th>
-                            <th>Total Mensual</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            companies.forEach(company => {
-                html += `
-                    <tr>
-                        <td>
-                            <div><strong>${company.name}</strong></div>
-                            <div style="font-size: 0.9em; color: #666;">${company.legalName}</div>
-                            <div style="font-size: 0.8em; color: #999;">${company.contactEmail}</div>
-                        </td>
-                        <td>${company.taxId}</td>
-                        <td>
-                            <span class="status-badge status-${company.status}">
-                                ${company.status === 'active' ? 'Activa' : company.status === 'trial' ? 'Prueba' : 'Suspendida'}
-                            </span>
-                        </td>
-                        <td>
-                            <div style="font-weight: bold; color: #2e7d32;">${company.currentEmployees || 0}</div>
-                            <div style="font-size: 0.8em; color: #666;">usuarios activos</div>
-                            <div style="font-weight: bold; color: #1976d2; margin-top: 4px;">${company.contractedEmployees || company.maxEmployees || 1}</div>
-                            <div style="font-size: 0.8em; color: #666;">empleados contratados</div>
-                        </td>
-                        <td>
-                            <div style="font-weight: bold; color: #1976d2;">
-                                ${company.licenseType || 'Básico'} (${company.maxEmployees})
+            // Usar el nuevo módulo Enterprise Companies Grid
+            if (typeof EnterpriseCompaniesGrid !== 'undefined') {
+                console.log('✅ Usando EnterpriseCompaniesGrid (Bloomberg/SAP Fiori style)');
+                EnterpriseCompaniesGrid.render(companies, container);
+            } else {
+                console.warn('⚠️ EnterpriseCompaniesGrid no disponible, usando fallback');
+                // Fallback a diseño simple si el módulo no carga
+                if (companies.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; color: #7f8c8d;">
+                            <div style="font-size: 3em; margin-bottom: 1rem;">🏢</div>
+                            <h3>No hay empresas registradas</h3>
+                            <p>Comienza creando tu primera empresa</p>
+                        </div>
+                    `;
+                } else {
+                    // Render simplificado
+                    let html = '<div style="padding: 20px;">';
+                    companies.forEach(company => {
+                        html += `
+                            <div style="background: #f5f5f5; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
+                                <h3>${company.name}</h3>
+                                <p>Módulos: ${company.modulesSummary ? company.modulesSummary.contractedModules : 'N/A'}</p>
+                                <button onclick="editCompany(${company.company_id})">Editar</button>
                             </div>
-                            <div style="font-size: 0.8em; color: #666;">
-                                Plan de hasta ${company.maxEmployees} empleados
-                            </div>
-                        </td>
-                        <td>
-                            <div style="font-weight: bold; color: #2e7d32;">
-                                ${company.modulesSummary ? `${company.modulesSummary.contractedModules}/${company.modulesSummary.totalSystemModules}` : 'N/A'}
-                            </div>
-                            <div style="font-size: 0.8em; color: #666;">
-                                Módulos contratados
-                            </div>
-                        </td>
-                        <td>
-                            <div style="font-weight: bold; color: var(--primary-color);">
-                                U$S ${Math.floor(company.pricing.monthlyTotal).toLocaleString('en-US')}<span style="font-size: 0.7em;">.${(company.pricing.monthlyTotal % 1).toFixed(2).substring(2)}</span>
-                            </div>
-                            <div style="font-size: 0.8em; color: #666;">
-                                Total mensual con IVA
-                            </div>
-                        </td>
-                        <td>
-                            <button class="btn btn-primary" onclick="editCompany(${company.company_id})" style="margin-right: 5px;">
-                                ✏️ Editar
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            html += `
-                    </tbody>
-                </table>
-            `;
-
-            container.innerHTML = html;
-            // Ya no es necesario cargar módulos por separado - vienen del backend
+                        `;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                }
+            }
         }
+
 
         // =============================
         // Función para cargar módulos reales desde la BD (TEMPORALMENTE DESHABILITADA)
@@ -15575,5 +15523,7 @@ ${vendor.notes || 'Sin notas adicionales'}
             }, 500);
         });
     </script>
+    <!-- 🎨 ENTERPRISE COMPANIES GRID - Bloomberg/SAP Fiori Style -->
+    <script src="/js/modules/enterprise-companies-grid.js"></script>
 </body>
 </html><!-- Version: 1763816963 -->
