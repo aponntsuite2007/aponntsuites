@@ -13,7 +13,7 @@ const { v4: uuidv4 } = require('uuid');
 const { auth: authMiddleware } = require('../middleware/auth');
 
 // 🔔 Servicio de Notificaciones Enterprise (altaEmpresa workflow)
-const AltaEmpresaNotificationService = require('../services/AltaEmpresaNotificationService');
+// TEMP COMMENTED: const AltaEmpresaNotificationService = require('../services/AltaEmpresaNotificationService');
 
 // Conexión PostgreSQL
 const pool = new Pool({

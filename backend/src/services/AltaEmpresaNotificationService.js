@@ -12,7 +12,7 @@ const { sequelize } = require('../config/database');
 class AltaEmpresaNotificationService {
 
   constructor() {
-    this.workflowService = new NotificationWorkflowService();
+    this.workflowService = NotificationWorkflowService; // Singleton instance, not a class
   }
 
   /**

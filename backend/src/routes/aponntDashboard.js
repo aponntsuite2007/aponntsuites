@@ -362,8 +362,8 @@ router.get('/companies/:id/modules', async (req, res) => {
       SELECT
         cm.id,
         cm.company_id,
-        cm.is_active,
-        cm.contracted_price,
+        cm.activo as is_active,
+        cm.precio_mensual as contracted_price,
         sm.module_key,
         sm.name as module_name,
         sm.description,
@@ -946,7 +946,7 @@ router.put('/companies/:id', async (req, res) => {
 
       // Obtener módulos actualmente contratados
       const currentModules = await sequelize.query(`
-        SELECT cm.system_module_id, sm.module_key, cm.activo
+        SELECT cm.module_code, sm.module_key, cm.activo
         FROM company_modules cm
         INNER JOIN system_modules sm ON cm.system_module_id = sm.id
         WHERE cm.company_id = :companyId
@@ -1051,7 +1051,7 @@ router.put('/companies/:id', async (req, res) => {
               SET precio_mensual = :newPrice, updated_at = NOW()
               FROM system_modules sm
               WHERE cm.system_module_id = sm.id
-                AND sm.module_key = :moduleKey
+                AND sm.module_code = :moduleKey
                 AND cm.company_id = :companyId
                 AND cm.precio_mensual != :newPrice
             `, {
