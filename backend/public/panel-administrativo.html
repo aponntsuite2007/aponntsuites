@@ -3141,6 +3141,7 @@
                         <!-- Información de resultados -->
                         <div id="resultsInfo" class="results-info" style="display: none;"></div>
 
+<!-- Toggle View Button -->                        <div style="margin-bottom: 16px; display: flex; justify-content: flex-end;">                            <button id="viewToggleBtn" onclick="toggleCompanyView()"                                     style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">                                🎨 Vista Grid                            </button>                        </div>
                         <div id="companiesContainer">
                             <!-- Tabla de empresas se carga aquí -->
                         </div>
@@ -6269,51 +6270,38 @@
             if (suspendedCompaniesElement) suspendedCompaniesElement.textContent = suspendedCount;
         }
 
-                function renderCompaniesTable() {
-            console.log('🎨 [ENTERPRISE] renderCompaniesTable iniciado con diseño Bloomberg/SAP Fiori');
-            console.log('🏢 companies variable actual:', companies);
-            console.log('📊 companies.length:', companies.length);
+                        function renderCompaniesTable() {
+            console.log('🎨 [RENDER] renderCompaniesTable iniciado');
+            console.log('🏢 companies:', companies.length);
+            console.log('👁️ Vista actual:', window.currentCompanyView);
 
             const container = document.getElementById('companiesContainer');
-            console.log('📦 container elemento:', container);
-
             if (!container) {
-                console.error('❌ No se encontró el contenedor companiesContainer');
+                console.error('❌ No se encontró companiesContainer');
                 return;
             }
 
-            // Usar el nuevo módulo Enterprise Companies Grid
-            if (typeof EnterpriseCompaniesGrid !== 'undefined') {
-                console.log('✅ Usando EnterpriseCompaniesGrid (Bloomberg/SAP Fiori style)');
-                EnterpriseCompaniesGrid.render(companies, container);
+            // Usar el sistema de toggle entre vistas
+            if (typeof renderCompaniesWithCurrentView === 'function') {
+                renderCompaniesWithCurrentView();
             } else {
-                console.warn('⚠️ EnterpriseCompaniesGrid no disponible, usando fallback');
-                // Fallback a diseño simple si el módulo no carga
+                console.warn('⚠️ renderCompaniesWithCurrentView no disponible, usando fallback');
+                // Fallback simple
                 if (companies.length === 0) {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 3rem; color: #7f8c8d;">
                             <div style="font-size: 3em; margin-bottom: 1rem;">🏢</div>
                             <h3>No hay empresas registradas</h3>
-                            <p>Comienza creando tu primera empresa</p>
                         </div>
                     `;
+                } else if (typeof EnterpriseCompaniesGrid !== 'undefined') {
+                    EnterpriseCompaniesGrid.render(companies, container);
                 } else {
-                    // Render simplificado
-                    let html = '<div style="padding: 20px;">';
-                    companies.forEach(company => {
-                        html += `
-                            <div style="background: #f5f5f5; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
-                                <h3>${company.name}</h3>
-                                <p>Módulos: ${company.modulesSummary ? company.modulesSummary.contractedModules : 'N/A'}</p>
-                                <button onclick="editCompany(${company.company_id})">Editar</button>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                    container.innerHTML = html;
+                    container.innerHTML = '<p>Cargando...</p>';
                 }
             }
         }
+
 
 
         // =============================

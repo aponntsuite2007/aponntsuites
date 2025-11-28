@@ -1,0 +1,31 @@
+        function renderCompaniesTable() {
+            console.log('🎨 [RENDER] renderCompaniesTable iniciado');
+            console.log('🏢 companies:', companies.length);
+            console.log('👁️ Vista actual:', window.currentCompanyView);
+
+            const container = document.getElementById('companiesContainer');
+            if (!container) {
+                console.error('❌ No se encontró companiesContainer');
+                return;
+            }
+
+            // Usar el sistema de toggle entre vistas
+            if (typeof renderCompaniesWithCurrentView === 'function') {
+                renderCompaniesWithCurrentView();
+            } else {
+                console.warn('⚠️ renderCompaniesWithCurrentView no disponible, usando fallback');
+                // Fallback simple
+                if (companies.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; color: #7f8c8d;">
+                            <div style="font-size: 3em; margin-bottom: 1rem;">🏢</div>
+                            <h3>No hay empresas registradas</h3>
+                        </div>
+                    `;
+                } else if (typeof EnterpriseCompaniesGrid !== 'undefined') {
+                    EnterpriseCompaniesGrid.render(companies, container);
+                } else {
+                    container.innerHTML = '<p>Cargando...</p>';
+                }
+            }
+        }
