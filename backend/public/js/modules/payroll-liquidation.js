@@ -1193,7 +1193,7 @@ const PayrollEngine = {
                             </div>
                             <div class="pe-form-group">
                                 <label>Tipo de Liquidacion</label>
-                                <select name="settlement_type">
+                                <select name="pay_frequency">
                                     <option value="MONTHLY">Mensual</option>
                                     <option value="BIWEEKLY">Quincenal</option>
                                     <option value="WEEKLY">Semanal</option>
@@ -1224,13 +1224,18 @@ const PayrollEngine = {
     },
 
     renderConceptFormRow(conceptType, index) {
+        // concept_type_id values: 1=Haber Fijo, 9=Deduccion Jubilacion, 14=Carga Patronal
+        const currentTypeId = conceptType?.concept_type_id || 1;
         return `
             <div class="pe-concept-row" data-index="${index}">
                 <input type="text" name="concept_name_${index}" value="${conceptType?.concept_name || ''}" placeholder="Nombre del concepto">
-                <select name="concept_type_${index}">
-                    <option value="EARNING" ${conceptType?.category === 'EARNING' ? 'selected' : ''}>Haber</option>
-                    <option value="DEDUCTION" ${conceptType?.category === 'DEDUCTION' ? 'selected' : ''}>Deduccion</option>
-                    <option value="EMPLOYER" ${conceptType?.category === 'EMPLOYER' ? 'selected' : ''}>Carga Patronal</option>
+                <select name="concept_type_id_${index}">
+                    <option value="1" ${currentTypeId == 1 ? 'selected' : ''}>Haber Fijo</option>
+                    <option value="2" ${currentTypeId == 2 ? 'selected' : ''}>Haber Variable</option>
+                    <option value="9" ${currentTypeId == 9 ? 'selected' : ''}>Aporte Jubilatorio</option>
+                    <option value="10" ${currentTypeId == 10 ? 'selected' : ''}>Obra Social</option>
+                    <option value="14" ${currentTypeId == 14 ? 'selected' : ''}>Contrib. Patronal Jubilacion</option>
+                    <option value="15" ${currentTypeId == 15 ? 'selected' : ''}>Contrib. Patronal OS</option>
                 </select>
                 <input type="text" name="concept_formula_${index}" placeholder="Formula o % (ej: 11%)">
                 <button type="button" onclick="this.parentElement.remove()" class="pe-btn-icon pe-btn-danger">&times;</button>
@@ -1252,7 +1257,7 @@ const PayrollEngine = {
             template_code: formData.get('template_code'),
             template_name: formData.get('template_name'),
             description: formData.get('description'),
-            settlement_type: formData.get('settlement_type'),
+            pay_frequency: formData.get('pay_frequency').toLowerCase(),
             is_default: formData.get('is_default') === 'on',
             concepts: []
         };
@@ -1261,9 +1266,14 @@ const PayrollEngine = {
         document.querySelectorAll('.pe-concept-row').forEach((row, i) => {
             const name = formData.get(`concept_name_${i}`);
             if (name) {
+                const typeId = parseInt(formData.get(`concept_type_id_${i}`)) || 1;
+                // Auto-generate concept_code from name
+                const code = name.substring(0, 10).toUpperCase().replace(/[^A-Z0-9]/g, '') + '-' + (i + 1);
                 data.concepts.push({
                     concept_name: name,
-                    concept_type: formData.get(`concept_type_${i}`),
+                    concept_code: code,
+                    concept_type_id: typeId,
+                    calculation_type: 'fixed',
                     formula: formData.get(`concept_formula_${i}`)
                 });
             }
@@ -1319,10 +1329,10 @@ const PayrollEngine = {
                                 </div>
                                 <div class="pe-form-group">
                                     <label>Tipo de Liquidacion</label>
-                                    <select name="settlement_type">
-                                        <option value="MONTHLY" ${template.settlement_type === 'MONTHLY' ? 'selected' : ''}>Mensual</option>
-                                        <option value="BIWEEKLY" ${template.settlement_type === 'BIWEEKLY' ? 'selected' : ''}>Quincenal</option>
-                                        <option value="WEEKLY" ${template.settlement_type === 'WEEKLY' ? 'selected' : ''}>Semanal</option>
+                                    <select name="pay_frequency">
+                                        <option value="MONTHLY" ${template.pay_frequency === 'MONTHLY' ? 'selected' : ''}>Mensual</option>
+                                        <option value="BIWEEKLY" ${template.pay_frequency === 'BIWEEKLY' ? 'selected' : ''}>Quincenal</option>
+                                        <option value="WEEKLY" ${template.pay_frequency === 'WEEKLY' ? 'selected' : ''}>Semanal</option>
                                     </select>
                                 </div>
                                 <div class="pe-form-group">
@@ -1339,10 +1349,13 @@ const PayrollEngine = {
                                 ${(template.concepts || []).map((c, i) => `
                                     <div class="pe-concept-row" data-concept-id="${c.id || ''}" data-index="${i}">
                                         <input type="text" name="concept_name_${i}" value="${c.concept_name || ''}" placeholder="Nombre del concepto">
-                                        <select name="concept_type_${i}">
-                                            <option value="EARNING" ${c.concept_type === 'EARNING' ? 'selected' : ''}>Haber</option>
-                                            <option value="DEDUCTION" ${c.concept_type === 'DEDUCTION' ? 'selected' : ''}>Deduccion</option>
-                                            <option value="EMPLOYER" ${c.concept_type === 'EMPLOYER' ? 'selected' : ''}>Carga Patronal</option>
+                                        <select name="concept_type_id_${i}">
+                                            <option value="1" ${c.concept_type_id == 1 ? 'selected' : ''}>Haber Fijo</option>
+                                            <option value="2" ${c.concept_type_id == 2 ? 'selected' : ''}>Haber Variable</option>
+                                            <option value="9" ${c.concept_type_id == 9 ? 'selected' : ''}>Aporte Jubilatorio</option>
+                                            <option value="10" ${c.concept_type_id == 10 ? 'selected' : ''}>Obra Social</option>
+                                            <option value="14" ${c.concept_type_id == 14 ? 'selected' : ''}>Contrib. Patronal Jub.</option>
+                                            <option value="15" ${c.concept_type_id == 15 ? 'selected' : ''}>Contrib. Patronal OS</option>
                                         </select>
                                         <input type="text" name="concept_formula_${i}" value="${c.formula || (c.percentage ? c.percentage + '%' : '')}" placeholder="Formula o %">
                                         <button type="button" onclick="PayrollEngine.removeConceptRow(this, '${c.id || ''}')" class="pe-btn-icon pe-btn-danger">&times;</button>
@@ -1369,10 +1382,13 @@ const PayrollEngine = {
         list.insertAdjacentHTML('beforeend', `
             <div class="pe-concept-row" data-concept-id="" data-index="${index}">
                 <input type="text" name="concept_name_${index}" placeholder="Nombre del concepto">
-                <select name="concept_type_${index}">
-                    <option value="EARNING">Haber</option>
-                    <option value="DEDUCTION">Deduccion</option>
-                    <option value="EMPLOYER">Carga Patronal</option>
+                <select name="concept_type_id_${index}">
+                    <option value="1">Haber Fijo</option>
+                    <option value="2">Haber Variable</option>
+                    <option value="9">Aporte Jubilatorio</option>
+                    <option value="10">Obra Social</option>
+                    <option value="14">Contrib. Patronal Jub.</option>
+                    <option value="15">Contrib. Patronal OS</option>
                 </select>
                 <input type="text" name="concept_formula_${index}" placeholder="Formula o %">
                 <button type="button" onclick="PayrollEngine.removeConceptRow(this, '')" class="pe-btn-icon pe-btn-danger">&times;</button>
@@ -1402,7 +1418,7 @@ const PayrollEngine = {
             template_code: formData.get('template_code'),
             template_name: formData.get('template_name'),
             description: formData.get('description'),
-            settlement_type: formData.get('settlement_type'),
+            pay_frequency: formData.get('pay_frequency').toLowerCase(),
             is_default: formData.get('is_default') === 'on'
         };
 
@@ -1415,9 +1431,15 @@ const PayrollEngine = {
             for (let i = 0; i < conceptRows.length; i++) {
                 const row = conceptRows[i];
                 const conceptId = row.dataset.conceptId;
+                const name = formData.get(`concept_name_${i}`);
+                const typeId = parseInt(formData.get(`concept_type_id_${i}`)) || 1;
+                // Auto-generate concept_code from name
+                const code = name ? name.substring(0, 10).toUpperCase().replace(/[^A-Z0-9]/g, '') + '-' + (i + 1) : '';
                 const conceptData = {
-                    concept_name: formData.get(`concept_name_${i}`),
-                    concept_type: formData.get(`concept_type_${i}`),
+                    concept_name: name,
+                    concept_code: code,
+                    concept_type_id: typeId,
+                    calculation_type: 'fixed',
                     formula: formData.get(`concept_formula_${i}`)
                 };
 
@@ -1494,13 +1516,14 @@ const PayrollEngine = {
                 template_code: newCode,
                 template_name: newName,
                 description: template.description,
-                settlement_type: template.settlement_type,
+                pay_frequency: template.pay_frequency,
                 is_default: false,
-                concepts: (template.concepts || []).map(c => ({
+                concepts: (template.concepts || []).map((c, i) => ({
                     concept_name: c.concept_name,
-                    concept_type: c.concept_type,
+                    concept_code: c.concept_code || (c.concept_name.substring(0, 10).toUpperCase().replace(/[^A-Z0-9]/g, '') + '-' + (i + 1)),
+                    concept_type_id: c.concept_type_id,
+                    calculation_type: c.calculation_type || 'fixed',
                     formula: c.formula,
-                    percentage: c.percentage,
                     display_order: c.display_order
                 }))
             };
@@ -1531,7 +1554,7 @@ const PayrollEngine = {
                         <div class="pe-template-detail">
                             <div class="pe-detail-meta">
                                 <span><strong>Codigo:</strong> ${template.template_code}</span>
-                                <span><strong>Tipo:</strong> ${template.settlement_type || 'MONTHLY'}</span>
+                                <span><strong>Tipo:</strong> ${template.pay_frequency || 'MONTHLY'}</span>
                             </div>
 
                             <h4>Conceptos (${template.concepts?.length || 0})</h4>
@@ -1545,14 +1568,19 @@ const PayrollEngine = {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${(template.concepts || []).map(c => `
+                                    ${(template.concepts || []).map(c => {
+                                        const typeId = c.concept_type_id;
+                                        const isEarning = typeId <= 8;
+                                        const isDeduction = typeId >= 9 && typeId <= 13;
+                                        const typeName = c.conceptType?.type_name || (isEarning ? 'Haber' : isDeduction ? 'Deduccion' : 'Carga Patronal');
+                                        return `
                                         <tr>
                                             <td>${c.concept_name}</td>
-                                            <td><span class="pe-badge pe-badge-${c.concept_type === 'EARNING' ? 'success' : c.concept_type === 'DEDUCTION' ? 'danger' : 'info'}">${c.concept_type}</span></td>
-                                            <td><code>${c.formula || c.percentage ? c.percentage + '%' : '--'}</code></td>
+                                            <td><span class="pe-badge pe-badge-${isEarning ? 'success' : isDeduction ? 'danger' : 'info'}">${typeName}</span></td>
+                                            <td><code>${c.formula || '--'}</code></td>
                                             <td>${c.display_order || '--'}</td>
                                         </tr>
-                                    `).join('') || '<tr><td colspan="4">Sin conceptos</td></tr>'}
+                                    `}).join('') || '<tr><td colspan="4">Sin conceptos</td></tr>'}
                                 </tbody>
                             </table>
                         </div>

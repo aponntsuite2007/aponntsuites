@@ -355,7 +355,7 @@ router.post('/templates', async (req, res) => {
         if (concepts && concepts.length > 0) {
             const conceptsWithTemplateId = concepts.map((c, index) => ({
                 ...c,
-                template_id: template.template_id,
+                template_id: template.id,
                 display_order: c.display_order || (index + 1) * 10
             }));
 
@@ -365,7 +365,7 @@ router.post('/templates', async (req, res) => {
         await transaction.commit();
 
         // Recargar con asociaciones
-        const createdTemplate = await PayrollTemplate.findByPk(template.template_id, {
+        const createdTemplate = await PayrollTemplate.findByPk(template.id, {
             include: [
                 { model: PayrollCountry, as: 'country' },
                 { model: PayrollTemplateConcept, as: 'concepts' }
@@ -387,7 +387,7 @@ router.post('/templates', async (req, res) => {
 router.put('/templates/:id', async (req, res) => {
     try {
         const template = await PayrollTemplate.findOne({
-            where: { template_id: req.params.id, company_id: req.companyId }
+            where: { id: req.params.id, company_id: req.companyId }
         });
 
         if (!template) {
@@ -454,7 +454,7 @@ router.post('/templates/:id/duplicate', async (req, res) => {
 router.post('/templates/:templateId/concepts', async (req, res) => {
     try {
         const template = await PayrollTemplate.findOne({
-            where: { template_id: req.params.templateId, company_id: req.companyId }
+            where: { id: req.params.templateId, company_id: req.companyId }
         });
 
         if (!template) {
@@ -1619,7 +1619,7 @@ router.put('/payslip-templates/:id', async (req, res) => {
     try {
         const { PayrollPayslipTemplate } = require('../config/database');
         const template = await PayrollPayslipTemplate.findOne({
-            where: { template_id: req.params.id, company_id: req.companyId }
+            where: { id: req.params.id, company_id: req.companyId }
         });
         if (!template) {
             return res.status(404).json({ success: false, error: 'Plantilla no encontrada o no pertenece a su empresa' });
