@@ -1,0 +1,367 @@
+/**
+ * ENTERPRISE MODAL STYLES
+ *
+ * Estilos profesionales para modal de edición de empresa
+ * - Letra mediana-chica para mejor visual
+ * - Diseño amplio y aireado
+ * - Profesional pero amigable
+ * - Mantiene 100% funcionalidad
+ */
+
+/* Modal Container - Amplio y Enterprise */
+#companyModal {
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s ease;
+}
+
+#companyModal .modal-content {
+    max-width: 1400px !important;
+    width: 95% !important;
+    max-height: 95vh !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
+    overflow: hidden !important;
+    background: white !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Header - Gradient Enterprise */
+#companyModal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    padding: 20px 32px !important;
+    border-bottom: none !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+#companyModal .modal-title {
+    color: white !important;
+    font-size: 1.4rem !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    letter-spacing: -0.3px !important;
+}
+
+#companyModal .close-btn {
+    background: rgba(255,255,255,0.2) !important;
+    border: none !important;
+    color: white !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 1.5rem !important;
+    transition: all 0.2s ease !important;
+}
+
+#companyModal .close-btn:hover {
+    background: rgba(255,255,255,0.3) !important;
+    transform: rotate(90deg) !important;
+}
+
+/* Body - Amplio con Grid Optimizado */
+#companyModal .modal-body {
+    padding: 24px 32px !important;
+    max-height: calc(95vh - 160px) !important;
+    overflow-y: auto !important;
+    font-size: 0.85rem !important; /* Letra chica pero legible */
+}
+
+/* Scrollbar Personalizado */
+#companyModal .modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+#companyModal .modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#companyModal .modal-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 4px;
+}
+
+#companyModal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #667eea;
+}
+
+/* Form Grid - Más Amplio y Organizado */
+#companyModal .form-grid {
+    display: grid !important;
+    grid-template-columns: 1.2fr 1fr !important; /* Formulario más ancho, sidebar más chico */
+    gap: 24px !important;
+}
+
+/* Form Groups - Compactos pero Legibles */
+#companyModal .form-group {
+    margin-bottom: 14px !important; /* Más compacto */
+}
+
+#companyModal .form-label {
+    font-size: 0.75rem !important; /* Letra chica */
+    font-weight: 600 !important;
+    color: #495057 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 6px !important;
+    display: block !important;
+}
+
+#companyModal .form-input,
+#companyModal .form-select {
+    font-size: 0.85rem !important; /* Letra mediana */
+    padding: 10px 12px !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    width: 100% !important;
+}
+
+#companyModal .form-input:focus,
+#companyModal .form-select:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+    outline: none !important;
+}
+
+/* Secciones - Con Headers Visuales */
+#companyModal .form-group > div[style*="background: #f8f9fa"] {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    margin: 16px 0 !important;
+}
+
+#companyModal .form-group > div h6 {
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    color: #495057 !important;
+    margin-bottom: 12px !important;
+}
+
+/* Grid de Comisiones - Más Compacto */
+#companyModal div[style*="grid-template-columns: 1fr 1fr"] {
+    gap: 12px !important;
+}
+
+#companyModal div[style*="grid-template-columns: 1fr 1fr"] .form-label {
+    font-size: 0.7rem !important; /* Extra chica para comisiones */
+}
+
+#companyModal div[style*="grid-template-columns: 1fr 1fr"] .form-input {
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+}
+
+/* Botones - Enterprise Style */
+#companyModal .btn {
+    font-size: 0.85rem !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+    cursor: pointer !important;
+}
+
+#companyModal .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+}
+
+#companyModal .btn-primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+#companyModal .btn-secondary {
+    background: #6c757d !important;
+    color: white !important;
+}
+
+#companyModal .btn-secondary:hover {
+    background: #5a6268 !important;
+}
+
+#companyModal .btn-sm {
+    font-size: 0.75rem !important;
+    padding: 6px 12px !important;
+}
+
+#companyModal .btn-outline-primary {
+    background: white !important;
+    color: #667eea !important;
+    border: 1px solid #667eea !important;
+}
+
+#companyModal .btn-outline-primary:hover {
+    background: #667eea !important;
+    color: white !important;
+}
+
+#companyModal .btn-outline-success {
+    background: white !important;
+    color: #28a745 !important;
+    border: 1px solid #28a745 !important;
+}
+
+#companyModal .btn-outline-success:hover {
+    background: #28a745 !important;
+    color: white !important;
+}
+
+/* Footer - Alineado y Profesional */
+#companyModal .modal-footer {
+    padding: 20px 32px !important;
+    background: #f8f9fa !important;
+    border-top: 1px solid #e0e0e0 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+}
+
+/* Pricing Sidebar - Más Compacto */
+#companyModal .pricing-sidebar {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+}
+
+#companyModal .pricing-sidebar h4 {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: #495057 !important;
+    margin-bottom: 16px !important;
+}
+
+/* Module Cards - Más Compactos */
+#companyModal .module-card {
+    font-size: 0.8rem !important; /* Letra chica para módulos */
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+}
+
+#companyModal .module-card label {
+    font-size: 0.8rem !important;
+}
+
+#companyModal .module-card .module-price {
+    font-size: 0.75rem !important;
+}
+
+/* Tabs - Si existen */
+#companyModal .tab-btn {
+    font-size: 0.85rem !important;
+    padding: 10px 20px !important;
+}
+
+/* Responsive - Tablet */
+@media (max-width: 1024px) {
+    #companyModal .form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    #companyModal .modal-content {
+        width: 98% !important;
+    }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+    #companyModal .modal-content {
+        width: 100% !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+
+    #companyModal .modal-body {
+        padding: 16px !important;
+        font-size: 0.9rem !important; /* Un poco más grande en mobile */
+    }
+
+    #companyModal .form-label {
+        font-size: 0.8rem !important;
+    }
+
+    #companyModal .form-input {
+        font-size: 0.9rem !important;
+    }
+}
+
+/* Estados de Loading */
+#companyModal .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+#companyModal .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Tooltips Informativos */
+#companyModal .info-tooltip {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 0.7rem;
+    line-height: 16px;
+    margin-left: 6px;
+    cursor: help;
+}
+
+/* Badges de Estado */
+#companyModal .badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#companyModal .badge-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+#companyModal .badge-trial {
+    background: #fff3cd;
+    color: #856404;
+}
+
+#companyModal .badge-suspended {
+    background: #f8d7da;
+    color: #721c24;
+}
