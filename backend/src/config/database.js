@@ -159,6 +159,12 @@ const AuditLog = require('../models/AuditLog')(sequelize);
 // ✅ MODELO - Sistema de Asistente IA (Ollama + Llama 3.1)
 const AssistantKnowledgeBase = require('../models/AssistantKnowledgeBase')(sequelize);
 const AssistantConversation = require('../models/AssistantConversation')(sequelize);
+// ✅ MODELOS - Workflow Alta de Empresa (FASE 1-5)
+// TEMP: const Budget = require('../models/Budget')(sequelize);
+// TEMP: const ContractOnboarding = require('../models/ContractOnboarding')(sequelize);
+// TEMP: const AdministrativeTask = require('../models/AdministrativeTask')(sequelize);
+// TEMP: const CommissionLiquidation = require('../models/CommissionLiquidation')(sequelize);
+// TEMP: const CommissionPayment = require('../models/CommissionPayment')(sequelize);
 
 // ✅ MODELOS - Sistema de Staff Aponnt Multi-País
 const AponntStaffRole = require('../models/AponntStaffRole')(sequelize);
@@ -1226,6 +1232,12 @@ module.exports = {
   // ✅ EXPORT - Sistema de Asistente IA
   AssistantKnowledgeBase,
   AssistantConversation,
+  // ✅ EXPORTS - Workflow Alta de Empresa (FASE 1-5)
+  // TEMP: Budget,
+  // TEMP: ContractOnboarding,
+  // TEMP: AdministrativeTask,
+  // TEMP: CommissionLiquidation,
+  // TEMP: CommissionPayment,
   // ✅ EXPORTS - Sistema de Staff Aponnt Multi-País
   AponntStaffRole,
   AponntStaff,

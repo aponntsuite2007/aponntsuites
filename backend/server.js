@@ -2435,6 +2435,19 @@ app.use('/api/siac/facturacion', siacFacturacionRoutes);
 
 // 📧 FORMULARIO DE CONTACTO PUBLICO (Landing Page)
 const contactRoutes = require('./src/routes/contactRoutes');
+// ✅ ROUTES - Workflow Alta de Empresa
+const budgetOnboardingRoutes = require("./src/routes/budgetOnboardingRoutes");
+const contractOnboardingRoutes = require("./src/routes/contractOnboardingRoutes");
+const commissionOnboardingRoutes = require("./src/routes/commissionOnboardingRoutes");
+app.use('/api/budgets', budgetOnboardingRoutes);
+console.log('💼 [BUDGETS ONBOARDING] Rutas configuradas: /api/budgets/onboarding/*');
+
+app.use('/api/contracts', contractOnboardingRoutes);
+console.log('📄 [CONTRACTS ONBOARDING] Rutas configuradas: /api/contracts/onboarding/*');
+
+app.use('/api/commissions', commissionOnboardingRoutes);
+console.log('💰 [COMMISSIONS ONBOARDING] Rutas configuradas: /api/commissions/onboarding/*');
+
 app.use('/api/contact', contactRoutes);
 console.log('📧 [CONTACT] Ruta de contacto publico configurada: /api/contact');
 

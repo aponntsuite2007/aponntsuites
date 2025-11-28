@@ -433,5 +433,95 @@ router.get('/:slug/stats', auth, async (req, res) => {
     });
   }
 });
+n/**
+ * POST /api/companies/:id/onboarding/activate
+ * Activar empresa al finalizar onboarding (FASE 4)
+ * Crea usuario CORE inmutable "administrador"
+ */
+router.post("/:id/onboarding/activate", async (req, res) => {
+  const { Pool } = require("pg");
+  const pool = new Pool({
+    host: process.env.POSTGRES_HOST || "localhost",
+    user: process.env.POSTGRES_USER || "postgres",
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB || "attendance_system",
+    port: 5432
+  });
+  
+  const client = await pool.connect();
+  
+  try {
+    const { id } = req.params;
+    const { invoice_confirmed } = req.body;
+    
+    if (!invoice_confirmed) {
+      return res.status(400).json({
+        success: false,
+        error: "Debe confirmar el pago de la factura antes de activar"
+      });
+    }
+    
+    await client.query("BEGIN");
+    
+    // Verificar estado de onboarding
+    const companyResult = await client.query(
+      "SELECT * FROM companies WHERE company_id = $1",
+      [id]
+    );
+    
+    if (companyResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        success: false,
+        error: "Empresa no encontrada"
+      });
+    }
+    
+    const company = companyResult.rows[0];
+    
+    // Crear usuario CORE usando la función PostgreSQL
+    const coreUserResult = await client.query(
+      "SELECT create_core_user_for_company($1, $2, $3) AS user_id",
+      [id, company.onboarding_trace_id, req.user?.staff_id || null]
+    );
+    
+    const coreUserId = coreUserResult.rows[0].user_id;
+    
+    // Activar empresa
+    await client.query(
+      `UPDATE companies 
+       SET is_active = TRUE,
+           activated_at = CURRENT_TIMESTAMP,
+           onboarding_status = "ACTIVE"
+       WHERE company_id = $1`,
+      [id]
+    );
+    
+    await client.query("COMMIT");
+    
+    res.json({
+      success: true,
+      message: "Empresa activada exitosamente",
+      core_user_id: coreUserId,
+      credentials: {
+        username: "administrador",
+        password: "admin123",
+        force_change: true
+      }
+    });
+    
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("❌ [COMPANY ACTIVATION] Error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  } finally {
+    client.release();
+    await pool.end();
+  }
+});
+
 
 module.exports = router;
