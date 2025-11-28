@@ -1847,10 +1847,11 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
                 <div class="workflow-meta">
                   <span class="workflow-status">${this.getStatusBadge(workflow.status)}</span>
                   <span class="workflow-implemented">${workflow.implemented ? '✅ Implementado' : '⏸️ No Implementado'}</span>
+                  ${workflow.createdDate ? `<span class="workflow-date" style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">📅 ${workflow.createdDate}</span>` : ''}
                 </div>
               </div>
 
-              <!-- Steps -->
+              <!-- Steps (directo) -->
               ${workflow.steps ? `
                 <div class="workflow-steps">
                   <h4>Pasos del Workflow:</h4>
@@ -1859,10 +1860,35 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
                       <li class="${step.status ? step.status.toLowerCase() : 'pending'}">
                         <span class="step-number">Paso ${step.step}</span>
                         <span class="step-name">${step.name}</span>
+                        ${step.lastModified ? `<span class="step-modified" style="font-size: 0.8em; color: #6b7280; margin-left: 8px;">(Modificado: ${step.lastModified})</span>` : ''}
                         ${step.status ? `<span class="step-status">${this.getStatusBadge(step.status)}</span>` : ''}
                       </li>
                     `).join('')}
                   </ol>
+                </div>
+              ` : ''}
+
+              <!-- Phases (para workflows con fases como altaEmpresa) -->
+              ${workflow.phases ? `
+                <div class="workflow-phases">
+                  <h4>Fases del Workflow:</h4>
+                  ${Object.entries(workflow.phases).map(([phaseKey, phase]) => `
+                    <div class="phase-section" style="margin-bottom: 20px; padding: 15px; background: rgba(59, 130, 246, 0.05); border-left: 3px solid #3b82f6; border-radius: 4px;">
+                      <h5 style="color: #3b82f6; margin-bottom: 10px;">${phase.name}</h5>
+                      ${phase.steps ? `
+                        <ol style="margin: 0; padding-left: 20px;">
+                          ${phase.steps.map(step => `
+                            <li class="${step.status ? step.status.toLowerCase() : 'pending'}" style="margin-bottom: 8px;">
+                              <span class="step-number" style="font-weight: 600;">Paso ${step.step}</span>
+                              <span class="step-name">${step.name}</span>
+                              ${step.lastModified ? `<span class="step-modified" style="font-size: 0.8em; color: #6b7280; margin-left: 8px;">(Modificado: ${step.lastModified})</span>` : ''}
+                              ${step.status ? `<span class="step-status">${this.getStatusBadge(step.status)}</span>` : ''}
+                            </li>
+                          `).join('')}
+                        </ol>
+                      ` : '<p style="color: #6b7280; font-style: italic;">Sin pasos definidos</p>'}
+                    </div>
+                  `).join('')}
                 </div>
               ` : ''}
 
