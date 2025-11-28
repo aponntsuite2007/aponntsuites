@@ -1,49 +1,53 @@
 /**
  * Modelo LaborAgreementV2 - Convenios colectivos de trabajo
  * Sistema de Liquidación Parametrizable v3.0
+ *
+ * ACTUALIZADO: Sincronizado con estructura real de BD (id, code, name, etc)
  */
 
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
     const LaborAgreementV2 = sequelize.define('LaborAgreementV2', {
-        agreement_id: {
+        id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
         country_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
             references: {
                 model: 'payroll_countries',
                 key: 'country_id'
             }
         },
-        agreement_code: {
+        company_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
+        code: {
             type: DataTypes.STRING(50),
-            allowNull: false,
+            allowNull: true,
             comment: 'Ej: CCT-130/75, CCT-501/07'
         },
-        agreement_name: {
+        name: {
             type: DataTypes.STRING(200),
-            allowNull: false
+            allowNull: true
         },
-        legal_citation: {
-            type: DataTypes.TEXT,
-            comment: 'Referencia legal completa'
-        },
-        industry_sector: {
+        short_name: {
             type: DataTypes.STRING(100),
+            allowNull: true
+        },
+        industry: {
+            type: DataTypes.STRING(100),
+            allowNull: true,
             comment: 'Sector/Industria que cubre'
         },
-        union_name: {
-            type: DataTypes.STRING(200),
-            comment: 'Sindicato representante'
-        },
-        employer_association: {
-            type: DataTypes.STRING(200),
-            comment: 'Cámara/Asociación empresarial'
+        legal_references: {
+            type: DataTypes.JSONB,
+            defaultValue: {},
+            comment: 'Referencias legales'
         },
         effective_date: {
             type: DataTypes.DATEONLY,
@@ -53,27 +57,42 @@ module.exports = (sequelize) => {
             type: DataTypes.DATEONLY,
             comment: 'Fecha de vencimiento (null = vigente)'
         },
-        base_salary_calculation: {
-            type: DataTypes.STRING(20),
-            defaultValue: 'monthly',
-            comment: 'hourly, daily, monthly'
-        },
-        work_hours_week: {
+        base_work_hours_weekly: {
             type: DataTypes.DECIMAL(4, 2),
             defaultValue: 40.00
         },
-        vacation_days_formula: {
-            type: DataTypes.TEXT,
-            comment: 'Fórmula para calcular días de vacaciones'
+        base_work_hours_daily: {
+            type: DataTypes.DECIMAL(4, 2),
+            defaultValue: 8.00
         },
-        seniority_bonus_formula: {
-            type: DataTypes.TEXT,
-            comment: 'Fórmula para antigüedad'
+        overtime_threshold_daily: {
+            type: DataTypes.DECIMAL(4, 2),
+            defaultValue: 8.00
         },
-        settings: {
+        overtime_50_multiplier: {
+            type: DataTypes.DECIMAL(4, 2),
+            defaultValue: 1.50
+        },
+        overtime_100_multiplier: {
+            type: DataTypes.DECIMAL(4, 2),
+            defaultValue: 2.00
+        },
+        night_shift_multiplier: {
+            type: DataTypes.DECIMAL(4, 2),
+            defaultValue: 1.00
+        },
+        vacation_days_by_seniority: {
             type: DataTypes.JSONB,
             defaultValue: {},
-            comment: 'Configuraciones específicas del convenio'
+            comment: 'Días de vacaciones por antigüedad'
+        },
+        receipt_legal_text: {
+            type: DataTypes.TEXT,
+            allowNull: true
+        },
+        receipt_footer_text: {
+            type: DataTypes.TEXT,
+            allowNull: true
         },
         is_active: {
             type: DataTypes.BOOLEAN,
@@ -86,8 +105,7 @@ module.exports = (sequelize) => {
         updatedAt: 'updated_at',
         indexes: [
             { fields: ['country_id'] },
-            { fields: ['country_id', 'agreement_code'], unique: true },
-            { fields: ['industry_sector'] },
+            { fields: ['company_id'] },
             { fields: ['is_active'] }
         ]
     });
@@ -99,9 +117,9 @@ module.exports = (sequelize) => {
             as: 'country'
         });
 
-        // Tiene muchas plantillas
+        // Tiene muchas plantillas (FK es labor_agreement_id en payroll_templates)
         LaborAgreementV2.hasMany(models.PayrollTemplate, {
-            foreignKey: 'agreement_id',
+            foreignKey: 'labor_agreement_id',
             as: 'templates'
         });
 

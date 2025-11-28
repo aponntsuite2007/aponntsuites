@@ -1,13 +1,15 @@
 /**
  * Modelo PayrollTemplateConcept - Conceptos de una plantilla de liquidación
  * Sistema de Liquidación Parametrizable v3.0
+ *
+ * ACTUALIZADO: Sincronizado con estructura real de BD (id como PK)
  */
 
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
     const PayrollTemplateConcept = sequelize.define('PayrollTemplateConcept', {
-        concept_id: {
+        id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
@@ -17,12 +19,12 @@ module.exports = (sequelize) => {
             allowNull: false,
             references: {
                 model: 'payroll_templates',
-                key: 'template_id'
+                key: 'id'
             }
         },
         concept_type_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
             references: {
                 model: 'payroll_concept_types',
                 key: 'type_id'
@@ -30,89 +32,112 @@ module.exports = (sequelize) => {
         },
         concept_code: {
             type: DataTypes.STRING(50),
-            allowNull: false,
+            allowNull: true,
             comment: 'Código único dentro de la plantilla'
         },
         concept_name: {
             type: DataTypes.STRING(200),
-            allowNull: false
+            allowNull: true
+        },
+        short_name: {
+            type: DataTypes.STRING(100),
+            allowNull: true
         },
         description: {
-            type: DataTypes.TEXT
+            type: DataTypes.TEXT,
+            allowNull: true
         },
         calculation_type: {
             type: DataTypes.STRING(20),
-            allowNull: false,
+            allowNull: true,
             defaultValue: 'fixed',
             comment: 'fixed, percentage, formula, hours, days'
         },
-        fixed_amount: {
+        default_value: {
             type: DataTypes.DECIMAL(15, 2),
-            comment: 'Monto fijo si calculation_type = fixed'
-        },
-        percentage_value: {
-            type: DataTypes.DECIMAL(8, 4),
-            comment: 'Porcentaje si calculation_type = percentage'
+            allowNull: true,
+            comment: 'Valor por defecto'
         },
         percentage_base: {
             type: DataTypes.STRING(50),
+            allowNull: true,
             comment: 'Base para el porcentaje: GROSS_SALARY, BASE_SALARY, etc.'
         },
         formula: {
             type: DataTypes.TEXT,
+            allowNull: true,
             comment: 'Fórmula JavaScript si calculation_type = formula'
         },
         min_value: {
             type: DataTypes.DECIMAL(15, 2),
+            allowNull: true,
             comment: 'Valor mínimo (tope inferior)'
         },
         max_value: {
             type: DataTypes.DECIMAL(15, 2),
+            allowNull: true,
             comment: 'Valor máximo (tope superior)'
         },
-        applies_to_overtime: {
+        cap_value: {
+            type: DataTypes.DECIMAL(15, 2),
+            allowNull: true,
+            comment: 'Tope máximo aplicable'
+        },
+        applies_to_hourly: {
             type: DataTypes.BOOLEAN,
             defaultValue: false
         },
-        applies_to_holidays: {
+        applies_to_monthly: {
             type: DataTypes.BOOLEAN,
-            defaultValue: false
+            defaultValue: true
         },
-        applies_to_absences: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: false
-        },
-        proportional_to_days: {
+        is_mandatory: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
-            comment: 'Si se calcula proporcional a días trabajados'
+            comment: 'Si es obligatorio por ley'
         },
-        requires_seniority_months: {
-            type: DataTypes.INTEGER,
-            defaultValue: 0,
-            comment: 'Meses de antigüedad requeridos'
+        is_visible_receipt: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true,
+            comment: 'Si aparece en recibo de sueldo'
+        },
+        is_editable_per_user: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+            comment: 'Si se puede personalizar por usuario'
+        },
+        employee_contribution_rate: {
+            type: DataTypes.DECIMAL(8, 4),
+            allowNull: true,
+            comment: 'Tasa de aporte del empleado'
+        },
+        employer_contribution_rate: {
+            type: DataTypes.DECIMAL(8, 4),
+            allowNull: true,
+            comment: 'Tasa de contribución patronal'
         },
         legal_reference: {
-            type: DataTypes.STRING(200),
+            type: DataTypes.TEXT,
+            allowNull: true,
             comment: 'Referencia legal (artículo de ley, CCT, etc.)'
         },
         display_order: {
             type: DataTypes.INTEGER,
             defaultValue: 100
         },
-        show_in_payslip: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: true,
-            comment: 'Si aparece en recibo de sueldo'
-        },
-        is_taxable: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: true,
-            comment: 'Si está sujeto a impuestos'
-        },
         is_active: {
             type: DataTypes.BOOLEAN,
             defaultValue: true
+        },
+        entity_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            comment: 'Entidad receptora (AFIP, Sindicato, etc)'
+        },
+        entity_account_code: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+            comment: 'Código de cuenta de la entidad'
         }
     }, {
         tableName: 'payroll_template_concepts',
@@ -122,7 +147,6 @@ module.exports = (sequelize) => {
         indexes: [
             { fields: ['template_id'] },
             { fields: ['concept_type_id'] },
-            { fields: ['template_id', 'concept_code'], unique: true },
             { fields: ['display_order'] },
             { fields: ['is_active'] }
         ]
