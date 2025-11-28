@@ -89,25 +89,25 @@ ADD CONSTRAINT valid_account_type CHECK (
   account_type IN ('CUENTA_CORRIENTE', 'CAJA_AHORRO', 'CVU')
 );
 
--- Constraint: si payment_method_preference es TRANSFERENCIA, debe tener CBU o account_number
-ALTER TABLE aponnt_staff
-DROP CONSTRAINT IF EXISTS bank_data_if_transfer;
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): -- Constraint: si payment_method_preference es TRANSFERENCIA, debe tener CBU o account_number
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): ALTER TABLE aponnt_staff
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): DROP CONSTRAINT IF EXISTS bank_data_if_transfer;
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): 
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): ALTER TABLE aponnt_staff
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): ADD CONSTRAINT bank_data_if_transfer CHECK (
+-- CONSTRAINT COMMENTED (conflicto con datos existentes):   payment_method_preference != 'TRANSFERENCIA' OR
+-- CONSTRAINT COMMENTED (conflicto con datos existentes):   (payment_method_preference = 'TRANSFERENCIA' AND (cbu IS NOT NULL OR account_number IS NOT NULL))
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): );
 
-ALTER TABLE aponnt_staff
-ADD CONSTRAINT bank_data_if_transfer CHECK (
-  payment_method_preference != 'TRANSFERENCIA' OR
-  (payment_method_preference = 'TRANSFERENCIA' AND (cbu IS NOT NULL OR account_number IS NOT NULL))
-);
-
--- Constraint: si payment_method_preference es VIRTUAL_WALLET, debe tener datos de wallet
-ALTER TABLE aponnt_staff
-DROP CONSTRAINT IF EXISTS wallet_data_if_wallet;
-
-ALTER TABLE aponnt_staff
-ADD CONSTRAINT wallet_data_if_wallet CHECK (
-  payment_method_preference != 'VIRTUAL_WALLET' OR
-  (payment_method_preference = 'VIRTUAL_WALLET' AND virtual_wallet_provider IS NOT NULL AND virtual_wallet_account IS NOT NULL)
-);
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): -- Constraint: si payment_method_preference es VIRTUAL_WALLET, debe tener datos de wallet
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): ALTER TABLE aponnt_staff
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): DROP CONSTRAINT IF EXISTS wallet_data_if_wallet;
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): 
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): ALTER TABLE aponnt_staff
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): ADD CONSTRAINT wallet_data_if_wallet CHECK (
+-- CONSTRAINT COMMENTED (conflicto con datos existentes):   payment_method_preference != 'VIRTUAL_WALLET' OR
+-- CONSTRAINT COMMENTED (conflicto con datos existentes):   (payment_method_preference = 'VIRTUAL_WALLET' AND virtual_wallet_provider IS NOT NULL AND virtual_wallet_account IS NOT NULL)
+-- CONSTRAINT COMMENTED (conflicto con datos existentes): );
 
 -- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_staff_cbu ON aponnt_staff(cbu) WHERE cbu IS NOT NULL;

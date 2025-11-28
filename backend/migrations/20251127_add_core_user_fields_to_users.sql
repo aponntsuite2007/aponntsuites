@@ -34,14 +34,14 @@ CREATE INDEX IF NOT EXISTS idx_users_is_core ON users(is_core_user) WHERE is_cor
 CREATE INDEX IF NOT EXISTS idx_users_force_password_change ON users(force_password_change) WHERE force_password_change = TRUE;
 CREATE INDEX IF NOT EXISTS idx_users_onboarding_trace ON users(onboarding_trace_id);
 
--- Constraint: usuario CORE debe tener username 'administrador'
+-- Constraint: usuario CORE debe tener usuario 'administrador'
 ALTER TABLE users
-DROP CONSTRAINT IF EXISTS core_user_username_must_be_administrador;
+DROP CONSTRAINT IF EXISTS core_user_usuario_must_be_administrador;
 
 ALTER TABLE users
-ADD CONSTRAINT core_user_username_must_be_administrador CHECK (
+ADD CONSTRAINT core_user_usuario_must_be_administrador CHECK (
   (is_core_user = FALSE) OR
-  (is_core_user = TRUE AND username = 'administrador')
+  (is_core_user = TRUE AND usuario = 'administrador')
 );
 
 -- Constraint: usuario CORE debe ser admin
@@ -78,7 +78,7 @@ BEGIN
   -- Crear usuario CORE
   INSERT INTO users (
     company_id,
-    username,
+    usuario,
     password,
     email,
     role,
@@ -87,13 +87,13 @@ BEGIN
     core_user_created_at,
     onboarding_trace_id,
     is_active,
-    created_at
+    "createdAt"
   )
   VALUES (
     p_company_id,
     'administrador',
     v_password_hash,
-    (SELECT contact_email FROM companies WHERE id = p_company_id),
+    (SELECT contact_email FROM companies WHERE company_id = p_company_id),
     'admin',
     TRUE,
     TRUE, -- Debe cambiar password en primer login
@@ -122,7 +122,7 @@ BEGIN
     p_created_by,
     jsonb_build_object(
       'company_id', p_company_id,
-      'username', 'administrador',
+      'usuario', 'administrador',
       'is_core_user', true,
       'force_password_change', true
     ),
@@ -159,8 +159,8 @@ BEGIN
   -- Si es usuario CORE, validar campos inmutables
   IF NEW.is_core_user = TRUE THEN
     -- Username NO puede cambiar
-    IF NEW.username != OLD.username THEN
-      RAISE EXCEPTION 'Cannot change username of CORE user. Username must remain "administrador".';
+    IF NEW.usuario != OLD.usuario THEN
+      RAISE EXCEPTION 'Cannot change usuario of CORE user. Username must remain "administrador".';
     END IF;
 
     -- Role NO puede cambiar (debe ser siempre admin)
@@ -205,9 +205,9 @@ CREATE TRIGGER users_core_immutable
 CREATE OR REPLACE FUNCTION get_core_user(p_company_id UUID)
 RETURNS TABLE(
   user_id UUID,
-  username VARCHAR,
+  usuario VARCHAR,
   email VARCHAR,
-  created_at TIMESTAMP,
+  "createdAt" TIMESTAMP,
   force_password_change BOOLEAN,
   password_changed_at TIMESTAMP,
   onboarding_trace_id VARCHAR
@@ -216,9 +216,9 @@ BEGIN
   RETURN QUERY
   SELECT
     id,
-    users.username,
+    users.usuario,
     users.email,
-    users.created_at,
+    users."createdAt",
     users.force_password_change,
     users.password_changed_at,
     users.onboarding_trace_id
@@ -235,9 +235,9 @@ UPDATE users
 SET
   is_core_user = TRUE,
   force_password_change = FALSE, -- Ya están activos
-  core_user_created_at = created_at
+  core_user_created_at = "createdAt"
 WHERE
-  username = 'administrador'
+  usuario = 'administrador'
   AND role = 'admin'
   AND is_core_user IS NULL
   AND NOT EXISTS (
@@ -248,7 +248,7 @@ WHERE
   );
 
 -- Comentarios de documentación
-COMMENT ON COLUMN users.is_core_user IS 'TRUE si es el usuario CORE inmutable creado automáticamente al alta (username: administrador, role: admin)';
+COMMENT ON COLUMN users.is_core_user IS 'TRUE si es el usuario CORE inmutable creado automáticamente al alta (usuario: administrador, role: admin)';
 COMMENT ON COLUMN users.force_password_change IS 'TRUE si debe cambiar password en próximo login (común en usuario CORE recién creado)';
 COMMENT ON COLUMN users.password_changed_at IS 'Fecha y hora del último cambio de password';
 COMMENT ON COLUMN users.core_user_created_at IS 'Fecha de creación del usuario CORE (solo para is_core_user = TRUE)';

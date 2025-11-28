@@ -288,15 +288,15 @@ SELECT
   cp.commission_type,
   cp.net_amount,
   cp.payment_method,
-  v.name AS vendor_name,
+  CONCAT(v.first_name, ' ', v.last_name) AS vendor_name,
   v.email AS vendor_email,
   c.name AS company_name,
   cl.liquidation_code,
   cp.scheduled_date,
   cp.executed_date
 FROM commission_payments cp
-JOIN aponnt_staff v ON cp.vendor_id = v.id
-JOIN companies c ON cp.company_id = c.id
+JOIN aponnt_staff v ON cp.vendor_id = v.staff_id
+JOIN companies c ON cp.company_id = c.company_id
 JOIN commission_liquidations cl ON cp.liquidation_id = cl.id
 ORDER BY cp.payment_date DESC;
 

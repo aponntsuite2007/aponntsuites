@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS commission_liquidations (
   trace_id VARCHAR(100) UNIQUE NOT NULL, -- COMMISSION-{UUID}
 
   -- Relaciones
-  invoice_id UUID REFERENCES invoices(id) ON DELETE CASCADE,
+  invoice_id UUID, -- FK will be added when invoices table is created
   company_id INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
 
   -- Tipo de liquidación
@@ -251,12 +251,12 @@ SELECT
   cl.total_commission_amount,
   c.name AS company_name,
   c.slug AS company_slug,
-  i.invoice_number,
+  NULL AS invoice_number, -- invoices table not created yet
   cl.payment_scheduled_date,
   jsonb_array_length(cl.commission_breakdown) AS vendor_count
 FROM commission_liquidations cl
-JOIN companies c ON cl.company_id = c.id
-LEFT JOIN invoices i ON cl.invoice_id = i.id
+JOIN companies c ON cl.company_id = c.company_id
+-- LEFT JOIN invoices i ON cl.invoice_id = i.id
 ORDER BY cl.liquidation_date DESC;
 
 -- Comentarios de documentación
