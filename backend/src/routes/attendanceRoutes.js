@@ -1021,6 +1021,181 @@ router.post('/mobile', async (req, res) => {
 });
 
 // ========================================
+// PP-7-IMPL-2: ENDPOINT DE JUSTIFICACIÓN DE AUSENCIAS
+// ========================================
+/**
+ * @route PUT /api/v1/attendance/:id/justify
+ * @desc Justificar una ausencia o tardanza (RRHH/Admin)
+ * @access Private (supervisorOrAdmin)
+ *
+ * DATO ÚNICO: La justificación se guarda en attendance y liquidación lee de aquí.
+ * FALLBACK: Permite justificar manualmente sin módulo médico.
+ */
+router.put('/:id/justify', auth, supervisorOrAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      is_justified,
+      absence_type,
+      absence_reason,
+      medical_certificate_id
+    } = req.body;
+
+    // Validar que se proporcione al menos is_justified
+    if (typeof is_justified !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'is_justified es requerido (true/false)'
+      });
+    }
+
+    // Validar absence_type si se proporciona
+    const validAbsenceTypes = [
+      'medical', 'vacation', 'suspension', 'personal', 'bereavement',
+      'maternity', 'paternity', 'study', 'union', 'other'
+    ];
+
+    if (absence_type && !validAbsenceTypes.includes(absence_type)) {
+      return res.status(400).json({
+        success: false,
+        message: 'absence_type inválido. Valores permitidos: ' + validAbsenceTypes.join(', ')
+      });
+    }
+
+    // Si absence_type es "other", requerir absence_reason
+    if (absence_type === 'other' && !absence_reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'absence_reason es requerido cuando absence_type es "other"'
+      });
+    }
+
+    // Buscar la asistencia
+    const attendance = await Attendance.findOne({
+      where: {
+        id,
+        company_id: req.user.company_id
+      }
+    });
+
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: 'Registro de asistencia no encontrado'
+      });
+    }
+
+    // Preparar datos de actualización
+    const updateData = {
+      is_justified,
+      absence_type: absence_type || null,
+      absence_reason: absence_reason || null,
+      justified_by: req.user.user_id,
+      justified_at: new Date()
+    };
+
+    // Si se proporciona medical_certificate_id (integración con módulo médico)
+    if (medical_certificate_id) {
+      updateData.medical_certificate_id = medical_certificate_id;
+    }
+
+    // Actualizar el registro
+    await attendance.update(updateData);
+
+    // Recargar para obtener datos actualizados
+    await attendance.reload();
+
+    // Log para auditoría
+    console.log(`✅ PP-7: Justificación aplicada a attendance ${id} por ${req.user.usuario || req.user.user_id}`);
+    console.log(`   - is_justified: ${is_justified}, absence_type: ${absence_type || 'N/A'}`);
+
+    res.json({
+      success: true,
+      message: is_justified
+        ? 'Ausencia justificada exitosamente'
+        : 'Justificación removida exitosamente',
+      data: {
+        id: attendance.id,
+        user_id: attendance.user_id,
+        date: attendance.date,
+        status: attendance.status,
+        is_justified: attendance.is_justified,
+        absence_type: attendance.absence_type,
+        absence_reason: attendance.absence_reason,
+        justified_by: attendance.justified_by,
+        justified_at: attendance.justified_at,
+        medical_certificate_id: attendance.medical_certificate_id
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error justificando ausencia:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al justificar ausencia',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route GET /api/v1/attendance/unjustified
+ * @desc Listar ausencias no justificadas (para liquidación)
+ * @access Private (supervisorOrAdmin)
+ */
+router.get('/unjustified', auth, supervisorOrAdmin, async (req, res) => {
+  try {
+    const { start_date, end_date, user_id } = req.query;
+
+    // Construir where
+    const where = {
+      company_id: req.user.company_id,
+      is_justified: false,
+      status: {
+        [Op.in]: ['absent', 'no_show', 'late']
+      }
+    };
+
+    // Filtrar por rango de fechas
+    if (start_date && end_date) {
+      where.date = {
+        [Op.between]: [start_date, end_date]
+      };
+    }
+
+    // Filtrar por usuario
+    if (user_id) {
+      where.user_id = user_id;
+    }
+
+    const unjustified = await Attendance.findAll({
+      where,
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['user_id', 'usuario', 'nombre', 'apellido', 'employee_id']
+      }],
+      order: [['date', 'DESC']],
+      limit: 500
+    });
+
+    res.json({
+      success: true,
+      count: unjustified.length,
+      data: unjustified
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo ausencias no justificadas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener ausencias no justificadas',
+      error: error.message
+    });
+  }
+});
+
+// ========================================
 // 📊 MOUNT ADVANCED STATS ROUTES
 // ========================================
 router.use('/stats', advancedStatsRouter);

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS commission_liquidations (
 
   -- Relaciones
   invoice_id UUID REFERENCES invoices(id) ON DELETE CASCADE,
-  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  company_id INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
 
   -- Tipo de liquidación
   liquidation_type VARCHAR(50) NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS commission_liquidations (
   -- CALCULATED, APPROVED, REJECTED, PAYMENT_PENDING, PAYMENT_IN_PROGRESS, PAID, CANCELLED
 
   -- Aprobación
-  approved_by UUID REFERENCES aponnt_staff(id),
+  approved_by UUID REFERENCES aponnt_staff(staff_id),
   approved_at TIMESTAMP,
   rejection_reason TEXT,
 
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS commission_liquidations (
   source VARCHAR(50) DEFAULT 'SYSTEM', -- SYSTEM, MANUAL
 
   -- Auditoría
-  created_by UUID REFERENCES aponnt_staff(id),
+  created_by UUID REFERENCES aponnt_staff(staff_id),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

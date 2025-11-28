@@ -5,13 +5,13 @@ require('dotenv').config();
 
 console.log('\n🚀 EJECUTANDO MIGRACIONES DE WORKFLOW ALTA EMPRESA\n');
 
-// Configuración de PostgreSQL
+// Configuración de PostgreSQL (misma que database.js)
 const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'attendance_db',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres'
+  host: process.env.POSTGRES_HOST || 'localhost',
+  port: process.env.POSTGRES_PORT || 5432,
+  database: process.env.POSTGRES_DB || 'attendance_system',
+  user: process.env.POSTGRES_USER || 'postgres',
+  password: process.env.POSTGRES_PASSWORD || 'Aedr15150302'
 });
 
 // Lista de migraciones en orden de ejecución

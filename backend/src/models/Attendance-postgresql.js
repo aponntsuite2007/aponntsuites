@@ -245,6 +245,56 @@ module.exports = (sequelize) => {
       allowNull: false,
       defaultValue: 1,
       comment: 'Optimistic locking version'
+    },
+    // ============================================================================
+    // PP-7-IMPL-1: Campos de justificación de ausencias (FALLBACK sin módulo médico)
+    // DATO ÚNICO: La justificación se guarda AQUÍ y liquidación LEE de AQUÍ
+    // ============================================================================
+    is_justified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'is_justified',
+      index: true,
+      comment: 'DATO ÚNICO: Si la ausencia/tardanza está justificada. Usado por liquidación.'
+    },
+    absence_type: {
+      type: DataTypes.ENUM('medical', 'vacation', 'suspension', 'personal', 'bereavement', 'maternity', 'paternity', 'study', 'union', 'other'),
+      allowNull: true,
+      field: 'absence_type',
+      comment: 'Tipo de ausencia: medical, vacation, suspension, personal, etc.'
+    },
+    absence_reason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'absence_reason',
+      comment: 'Descripción/motivo de la ausencia. Requerido si absence_type = other'
+    },
+    justified_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: 'justified_by',
+      references: {
+        model: 'users',
+        key: 'user_id'
+      },
+      comment: 'UUID del usuario (RRHH/admin) que justificó la ausencia'
+    },
+    justified_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'justified_at',
+      comment: 'Timestamp de cuándo se justificó la ausencia'
+    },
+    medical_certificate_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'medical_certificate_id',
+      references: {
+        model: 'medical_certificates',
+        key: 'id'
+      },
+      comment: 'FK al certificado médico (si justificación viene del módulo médico)'
     }
   }, {
     tableName: 'attendances',

@@ -97,6 +97,109 @@ router.get('/check-tables', authenticateMigrationToken, async (req, res) => {
     }
 });
 
+// PP-7-IMPL-1: Agregar campos de justificación a attendance
+router.post('/migrate-attendance-justification', authenticateMigrationToken, async (req, res) => {
+    try {
+        console.log('🔄 PP-7-IMPL-1: Agregando campos de justificación a attendance...');
+
+        const results = [];
+
+        // 1. Verificar si las columnas ya existen
+        const [existingCols] = await database.sequelize.query(`
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'attendances'
+            AND column_name IN ('is_justified', 'absence_type', 'absence_reason', 'justified_by', 'justified_at', 'medical_certificate_id')
+        `);
+
+        if (existingCols.length >= 6) {
+            return res.json({
+                success: true,
+                message: 'PP-7-IMPL-1: Columnas de justificación ya existen',
+                alreadyExists: true,
+                columns: existingCols.map(c => c.column_name)
+            });
+        }
+
+        // 2. Agregar is_justified
+        try {
+            await database.sequelize.query(`
+                ALTER TABLE attendances ADD COLUMN IF NOT EXISTS is_justified BOOLEAN DEFAULT false
+            `);
+            results.push('is_justified OK');
+        } catch(e) { results.push('is_justified: ' + e.message); }
+
+        // 3. Agregar absence_type
+        try {
+            await database.sequelize.query(`
+                ALTER TABLE attendances ADD COLUMN IF NOT EXISTS absence_type VARCHAR(50)
+            `);
+            results.push('absence_type OK');
+        } catch(e) { results.push('absence_type: ' + e.message); }
+
+        // 4. Agregar absence_reason
+        try {
+            await database.sequelize.query(`
+                ALTER TABLE attendances ADD COLUMN IF NOT EXISTS absence_reason TEXT
+            `);
+            results.push('absence_reason OK');
+        } catch(e) { results.push('absence_reason: ' + e.message); }
+
+        // 5. Agregar justified_by
+        try {
+            await database.sequelize.query(`
+                ALTER TABLE attendances ADD COLUMN IF NOT EXISTS justified_by UUID
+            `);
+            results.push('justified_by OK');
+        } catch(e) { results.push('justified_by: ' + e.message); }
+
+        // 6. Agregar justified_at
+        try {
+            await database.sequelize.query(`
+                ALTER TABLE attendances ADD COLUMN IF NOT EXISTS justified_at TIMESTAMP WITH TIME ZONE
+            `);
+            results.push('justified_at OK');
+        } catch(e) { results.push('justified_at: ' + e.message); }
+
+        // 7. Agregar medical_certificate_id
+        try {
+            await database.sequelize.query(`
+                ALTER TABLE attendances ADD COLUMN IF NOT EXISTS medical_certificate_id INTEGER
+            `);
+            results.push('medical_certificate_id OK');
+        } catch(e) { results.push('medical_certificate_id: ' + e.message); }
+
+        // Verificar resultado final
+        const [finalCols] = await database.sequelize.query(`
+            SELECT column_name, data_type
+            FROM information_schema.columns
+            WHERE table_name = 'attendances'
+            AND column_name IN ('is_justified', 'absence_type', 'absence_reason', 'justified_by', 'justified_at', 'medical_certificate_id')
+            ORDER BY column_name
+        `);
+
+        console.log('✅ PP-7-IMPL-1 completado:', finalCols.length + '/6 columnas');
+
+        res.json({
+            success: true,
+            message: 'PP-7-IMPL-1: Campos de justificación agregados',
+            task: 'PP-7-IMPL-1',
+            results: results,
+            columnsCreated: finalCols.map(c => ({ name: c.column_name, type: c.data_type })),
+            totalColumns: finalCols.length,
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('❌ Error PP-7-IMPL-1:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error en PP-7-IMPL-1',
+            error: error.message
+        });
+    }
+});
+
 // Endpoint para ampliar columna de íconos
 router.post('/fix-icon-column', authenticateMigrationToken, async (req, res) => {
     try {

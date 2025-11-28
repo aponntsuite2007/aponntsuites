@@ -22,7 +22,7 @@ ADD COLUMN IF NOT EXISTS onboarding_trace_id VARCHAR(100);
 
 -- Campo 5: vendor_id (vendedor que dio de alta la empresa)
 ALTER TABLE companies
-ADD COLUMN IF NOT EXISTS vendor_id UUID REFERENCES aponnt_staff(id) ON DELETE SET NULL;
+ADD COLUMN IF NOT EXISTS vendor_id UUID REFERENCES aponnt_staff(staff_id) ON DELETE SET NULL;
 
 -- Campo 6: modules_trial (módulos en período de prueba - JSONB)
 ALTER TABLE companies
@@ -125,7 +125,7 @@ $$ LANGUAGE plpgsql;
 -- Función para obtener empresas con trials próximos a expirar
 CREATE OR REPLACE FUNCTION get_expiring_trials(p_days_before INTEGER DEFAULT 3)
 RETURNS TABLE(
-  company_id UUID,
+  company_id INTEGER,
   company_name VARCHAR,
   module_key VARCHAR,
   trial_end DATE,

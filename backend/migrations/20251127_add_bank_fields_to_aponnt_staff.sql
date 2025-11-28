@@ -58,7 +58,7 @@ ADD COLUMN IF NOT EXISTS bank_data_verified_at TIMESTAMP;
 
 -- Campo 14: bank_data_verified_by (Quién verificó)
 ALTER TABLE aponnt_staff
-ADD COLUMN IF NOT EXISTS bank_data_verified_by UUID REFERENCES aponnt_staff(id);
+ADD COLUMN IF NOT EXISTS bank_data_verified_by UUID REFERENCES aponnt_staff(staff_id);
 
 -- Constraint para validar CBU (22 dígitos numéricos)
 ALTER TABLE aponnt_staff

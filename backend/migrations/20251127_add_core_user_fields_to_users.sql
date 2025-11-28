@@ -56,7 +56,7 @@ ADD CONSTRAINT core_user_must_be_admin CHECK (
 
 -- Función para crear usuario CORE automáticamente
 CREATE OR REPLACE FUNCTION create_core_user_for_company(
-  p_company_id UUID,
+  p_company_id INTEGER,
   p_onboarding_trace_id VARCHAR,
   p_created_by UUID DEFAULT NULL
 )

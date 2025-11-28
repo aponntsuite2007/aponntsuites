@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS commission_payments (
 
   -- Relaciones
   liquidation_id UUID NOT NULL REFERENCES commission_liquidations(id) ON DELETE CASCADE,
-  vendor_id UUID NOT NULL REFERENCES aponnt_staff(id) ON DELETE RESTRICT,
-  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  vendor_id UUID NOT NULL REFERENCES aponnt_staff(staff_id) ON DELETE RESTRICT,
+  company_id INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
 
   -- Datos del pago
   payment_code VARCHAR(50) UNIQUE NOT NULL, -- PAY-YYYY-MM-NNNN
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS commission_payments (
   -- Reconciliación
   reconciled BOOLEAN DEFAULT FALSE,
   reconciled_at TIMESTAMP,
-  reconciled_by UUID REFERENCES aponnt_staff(id),
+  reconciled_by UUID REFERENCES aponnt_staff(staff_id),
 
   -- Comprobante
   receipt_url VARCHAR(500), -- URL del comprobante de pago
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS commission_payments (
   payment_batch_id UUID, -- Si se paga en lote con otros pagos
 
   -- Auditoría
-  created_by UUID REFERENCES aponnt_staff(id),
+  created_by UUID REFERENCES aponnt_staff(staff_id),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

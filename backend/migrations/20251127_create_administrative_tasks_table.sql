@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS administrative_tasks (
   -- CRITICAL, HIGH, NORMAL, LOW
 
   -- Relaciones
-  company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
+  company_id INTEGER REFERENCES companies(company_id) ON DELETE CASCADE,
   related_entity_type VARCHAR(50), -- 'invoice', 'contract', 'budget', etc.
   related_entity_id UUID, -- ID de la factura, contrato, etc.
 
@@ -36,9 +36,9 @@ CREATE TABLE IF NOT EXISTS administrative_tasks (
   attachments JSONB, -- Array de { file_url, file_name, file_type }
 
   -- Asignación
-  assigned_to UUID REFERENCES aponnt_staff(id) ON DELETE SET NULL,
+  assigned_to UUID REFERENCES aponnt_staff(staff_id) ON DELETE SET NULL,
   assigned_at TIMESTAMP,
-  assigned_by UUID REFERENCES aponnt_staff(id) ON DELETE SET NULL,
+  assigned_by UUID REFERENCES aponnt_staff(staff_id) ON DELETE SET NULL,
 
   -- Fechas límite
   due_date DATE,
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS administrative_tasks (
   -- Respuesta/Resolución
   resolution VARCHAR(50), -- APPROVED, REJECTED, CANCELLED, INFO_PROVIDED
   resolution_notes TEXT,
-  resolved_by UUID REFERENCES aponnt_staff(id) ON DELETE SET NULL,
+  resolved_by UUID REFERENCES aponnt_staff(staff_id) ON DELETE SET NULL,
   resolved_at TIMESTAMP,
 
   -- Notificaciones
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS administrative_tasks (
 
   -- Metadata
   source VARCHAR(50) DEFAULT 'SYSTEM', -- SYSTEM, MANUAL, API
-  created_by UUID REFERENCES aponnt_staff(id),
+  created_by UUID REFERENCES aponnt_staff(staff_id),
 
   -- Auditoría
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -220,15 +220,15 @@ SELECT
   at.created_at,
   c.name AS company_name,
   c.slug AS company_slug,
-  asf.name AS assigned_to_name,
+  CONCAT(asf.first_name, ' ', asf.last_name) AS assigned_to_name,
   EXTRACT(DAY FROM (CURRENT_TIMESTAMP - at.created_at))::INTEGER AS days_pending,
   CASE
     WHEN at.due_date IS NOT NULL AND at.due_date < CURRENT_DATE THEN true
     ELSE false
   END AS is_overdue
 FROM administrative_tasks at
-LEFT JOIN companies c ON at.company_id = c.id
-LEFT JOIN aponnt_staff asf ON at.assigned_to = asf.id
+LEFT JOIN companies c ON at.company_id = c.company_id
+LEFT JOIN aponnt_staff asf ON at.assigned_to = asf.staff_id
 WHERE at.status NOT IN ('COMPLETED', 'CANCELLED');
 
 -- Comentarios de documentación

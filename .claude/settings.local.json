@@ -128,7 +128,8 @@
       "WebFetch(domain:azure.microsoft.com)",
       "Bash(timeout 120 node:*)",
       "Bash(wait)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(timeout 180 node:*)"
     ],
     "deny": [],
     "ask": []

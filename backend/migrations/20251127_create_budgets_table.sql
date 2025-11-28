@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS budgets (
   trace_id VARCHAR(100) UNIQUE NOT NULL, -- ONBOARDING-{UUID}
 
   -- Relaciones
-  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  vendor_id UUID NOT NULL REFERENCES aponnt_staff(id) ON DELETE RESTRICT,
+  company_id INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
+  vendor_id UUID NOT NULL REFERENCES aponnt_staff(staff_id) ON DELETE RESTRICT,
 
   -- Datos del presupuesto
   budget_code VARCHAR(50) UNIQUE NOT NULL, -- PPTO-YYYY-NNNN
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS budgets (
   payment_method VARCHAR(50) DEFAULT 'TRANSFERENCIA', -- SOLO transferencia
 
   -- Auditoría
-  created_by UUID REFERENCES aponnt_staff(id),
+  created_by UUID REFERENCES aponnt_staff(staff_id),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

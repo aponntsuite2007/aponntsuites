@@ -48,6 +48,29 @@ class PayrollCalculatorService {
             // 3. Obtener datos del usuario (branch, country, shift)
             const userData = await this.getUserData(userId, companyId);
 
+            // =========================================================================
+            // PP-11-IMPL-1: VALIDACIÓN DE TURNO OBLIGATORIO
+            // Sin turno asignado, no se puede calcular correctamente:
+            // - Horas regulares vs extras
+            // - Horas nocturnas
+            // - Ausencias (no sabemos cuándo debía trabajar)
+            // =========================================================================
+            const shiftValidation = await this.validateUserShiftAssignment(userId, companyId, options);
+            if (!shiftValidation.valid) {
+                throw new Error(shiftValidation.error);
+            }
+
+            // =========================================================================
+            // PP-11-IMPL-2: VALIDACIÓN DE CATEGORÍA SALARIAL OBLIGATORIA
+            // Sin categoría no se puede calcular:
+            // - Sueldo base
+            // - Adicionales por categoría
+            // =========================================================================
+            const categoryValidation = await this.validateUserSalaryCategory(userId, assignment, options);
+            if (!categoryValidation.valid) {
+                throw new Error(categoryValidation.error);
+            }
+
             // 4. Calcular período
             const period = this.calculatePeriod(year, month, template.pay_frequency);
 
@@ -241,6 +264,271 @@ class PayrollCalculatorService {
                 isNightShift: user.is_night_shift || false
             }
         };
+    }
+
+    // =========================================================================
+    // PP-11-IMPL-1: VALIDAR ASIGNACIÓN DE TURNO OBLIGATORIA
+    // =========================================================================
+    /**
+     * Valida que el usuario tenga un turno asignado antes de calcular liquidación.
+     *
+     * CRÍTICO: Sin turno asignado no se puede calcular correctamente:
+     * - Horas regulares vs extras (no sabemos horario base)
+     * - Horas nocturnas (no sabemos si trabaja de noche)
+     * - Ausencias (no sabemos cuándo debía trabajar)
+     *
+     * @param {string} userId - UUID del usuario
+     * @param {number} companyId - ID de la empresa
+     * @param {object} options - Opciones de validación
+     * @param {boolean} options.allowMissingShift - Si es true, permite usuarios sin turno (WARNING pero continúa)
+     * @returns {object} { valid: boolean, error?: string, warning?: string, shiftInfo?: object }
+     */
+    async validateUserShiftAssignment(userId, companyId, options = {}) {
+        try {
+            // Buscar asignación de turno activa
+            const query = `
+                SELECT
+                    usa.id as assignment_id,
+                    usa.shift_id,
+                    usa.is_primary,
+                    usa.effective_from,
+                    usa.effective_to,
+                    s.id as shift_table_id,
+                    s.name as shift_name,
+                    s.start_time,
+                    s.end_time,
+                    s.break_minutes,
+                    s.is_night_shift,
+                    s.is_rotative,
+                    s.total_weekly_hours
+                FROM user_shift_assignments usa
+                JOIN shifts s ON usa.shift_id = s.id
+                WHERE usa.user_id = $1
+                AND usa.is_primary = true
+                AND (usa.effective_to IS NULL OR usa.effective_to >= CURRENT_DATE)
+                ORDER BY usa.created_at DESC
+                LIMIT 1
+            `;
+
+            const [result] = await sequelize.query(query, { bind: [userId] });
+
+            if (!result || result.length === 0) {
+                // No tiene turno asignado
+                if (options.allowMissingShift === true) {
+                    // Modo permisivo: WARNING pero continúa
+                    console.log(`⚠️ [PAYROLL] Usuario ${userId} sin turno asignado. Usando valores por defecto.`);
+                    return {
+                        valid: true,
+                        warning: 'Usuario sin turno asignado. Cálculos basados en valores por defecto (8 hs/día, horario diurno).',
+                        shiftInfo: {
+                            name: 'Sin turno (default)',
+                            startTime: '09:00',
+                            endTime: '18:00',
+                            breakMinutes: 60,
+                            isNightShift: false,
+                            isDefault: true
+                        }
+                    };
+                }
+
+                // Modo estricto (default): ERROR
+                console.log(`❌ [PAYROLL] Usuario ${userId} sin turno asignado. Liquidación BLOQUEADA.`);
+                return {
+                    valid: false,
+                    error: `Usuario sin turno asignado. Debe asignar un turno antes de calcular liquidación. ` +
+                           `Vaya a: Gestión de Turnos → Asignar Turnos → Seleccione este usuario.`,
+                    errorCode: 'SHIFT_REQUIRED',
+                    userId
+                };
+            }
+
+            const shift = result[0];
+
+            // Validar que el turno tenga datos mínimos
+            if (!shift.start_time || !shift.end_time) {
+                return {
+                    valid: false,
+                    error: `Turno "${shift.shift_name}" no tiene horarios definidos. ` +
+                           `Configure start_time y end_time en el turno.`,
+                    errorCode: 'SHIFT_INCOMPLETE',
+                    shiftId: shift.shift_id
+                };
+            }
+
+            console.log(`✅ [PAYROLL] Usuario ${userId} tiene turno asignado: ${shift.shift_name}`);
+
+            return {
+                valid: true,
+                shiftInfo: {
+                    assignmentId: shift.assignment_id,
+                    shiftId: shift.shift_id,
+                    name: shift.shift_name,
+                    startTime: shift.start_time,
+                    endTime: shift.end_time,
+                    breakMinutes: shift.break_minutes || 0,
+                    isNightShift: shift.is_night_shift || false,
+                    isRotative: shift.is_rotative || false,
+                    totalWeeklyHours: shift.total_weekly_hours,
+                    effectiveFrom: shift.effective_from,
+                    effectiveTo: shift.effective_to
+                }
+            };
+
+        } catch (error) {
+            // Si falla la query (ej: tabla no existe), permitir pero con warning
+            console.log(`⚠️ [PAYROLL] Error validando turno: ${error.message}`);
+
+            if (options.allowMissingShift === true) {
+                return {
+                    valid: true,
+                    warning: `No se pudo verificar turno: ${error.message}. Usando valores por defecto.`,
+                    shiftInfo: {
+                        name: 'Sin turno (error)',
+                        startTime: '09:00',
+                        endTime: '18:00',
+                        breakMinutes: 60,
+                        isNightShift: false,
+                        isDefault: true
+                    }
+                };
+            }
+
+            return {
+                valid: false,
+                error: `Error verificando turno del usuario: ${error.message}`,
+                errorCode: 'SHIFT_VALIDATION_ERROR'
+            };
+        }
+    }
+
+    // =========================================================================
+    // PP-11-IMPL-2: VALIDAR CATEGORÍA SALARIAL OBLIGATORIA
+    // =========================================================================
+    /**
+     * Valida que el usuario tenga categoría salarial y sueldo base definido.
+     *
+     * CRÍTICO: Sin categoría no se puede calcular:
+     * - Sueldo base (base para todos los cálculos)
+     * - Adicionales por categoría (antigüedad, título, etc.)
+     * - Deducciones porcentuales (dependen del bruto)
+     *
+     * @param {string} userId - UUID del usuario
+     * @param {object} assignment - Asignación de plantilla del usuario
+     * @param {object} options - Opciones de validación
+     * @param {boolean} options.allowMissingCategory - Si es true, permite sin categoría (WARNING)
+     * @returns {object} { valid: boolean, error?: string, warning?: string, categoryInfo?: object }
+     */
+    async validateUserSalaryCategory(userId, assignment, options = {}) {
+        try {
+            // Verificar que tenga asignación de plantilla (ya validado antes, pero por seguridad)
+            if (!assignment) {
+                return {
+                    valid: false,
+                    error: 'Usuario no tiene plantilla remunerativa asignada.',
+                    errorCode: 'TEMPLATE_REQUIRED'
+                };
+            }
+
+            // Verificar categoría salarial
+            const hasCategory = assignment.category_id && assignment.category_name;
+            const hasBaseSalary = assignment.base_salary && parseFloat(assignment.base_salary) > 0;
+            const hasHourlyRate = assignment.hourly_rate && parseFloat(assignment.hourly_rate) > 0;
+
+            if (!hasCategory) {
+                if (options.allowMissingCategory === true) {
+                    console.log(`⚠️ [PAYROLL] Usuario ${userId} sin categoría salarial. Usando sueldo base directo.`);
+
+                    // Sin categoría pero ¿tiene sueldo base?
+                    if (!hasBaseSalary) {
+                        return {
+                            valid: false,
+                            error: `Usuario sin categoría salarial NI sueldo base definido. ` +
+                                   `Vaya a: Liquidaciones → Asignar Plantilla → Configure categoría o sueldo base.`,
+                            errorCode: 'SALARY_REQUIRED'
+                        };
+                    }
+
+                    return {
+                        valid: true,
+                        warning: 'Usuario sin categoría salarial. Usando sueldo base directo sin adicionales de categoría.',
+                        categoryInfo: {
+                            name: 'Sin categoría',
+                            baseSalary: parseFloat(assignment.base_salary),
+                            hourlyRate: hasHourlyRate ? parseFloat(assignment.hourly_rate) : null,
+                            isDefault: true
+                        }
+                    };
+                }
+
+                // Modo estricto (default): ERROR
+                console.log(`❌ [PAYROLL] Usuario ${userId} sin categoría salarial. Liquidación BLOQUEADA.`);
+                return {
+                    valid: false,
+                    error: `Usuario sin categoría salarial asignada. ` +
+                           `Vaya a: Liquidaciones → Asignar Plantilla → Seleccione una categoría para este usuario.`,
+                    errorCode: 'CATEGORY_REQUIRED',
+                    userId
+                };
+            }
+
+            // Tiene categoría, verificar sueldo base
+            if (!hasBaseSalary) {
+                // Usar recommended_base_salary de la categoría si existe
+                if (assignment.recommended_base_salary && parseFloat(assignment.recommended_base_salary) > 0) {
+                    console.log(`✅ [PAYROLL] Usuario ${userId} usando sueldo recomendado de categoría: ${assignment.recommended_base_salary}`);
+                    return {
+                        valid: true,
+                        warning: 'Usuario sin sueldo base específico. Usando sueldo recomendado de la categoría.',
+                        categoryInfo: {
+                            id: assignment.category_id,
+                            name: assignment.category_name,
+                            baseSalary: parseFloat(assignment.recommended_base_salary),
+                            hourlyRate: hasHourlyRate ? parseFloat(assignment.hourly_rate) : null,
+                            usingRecommended: true
+                        }
+                    };
+                }
+
+                // Sin sueldo base ni recomendado
+                return {
+                    valid: false,
+                    error: `Usuario tiene categoría "${assignment.category_name}" pero sin sueldo base definido. ` +
+                           `Configure el sueldo base en la asignación del usuario.`,
+                    errorCode: 'BASE_SALARY_REQUIRED',
+                    categoryId: assignment.category_id
+                };
+            }
+
+            console.log(`✅ [PAYROLL] Usuario ${userId} tiene categoría: ${assignment.category_name} - Base: ${assignment.base_salary}`);
+
+            return {
+                valid: true,
+                categoryInfo: {
+                    id: assignment.category_id,
+                    name: assignment.category_name,
+                    baseSalary: parseFloat(assignment.base_salary),
+                    hourlyRate: hasHourlyRate ? parseFloat(assignment.hourly_rate) : null,
+                    recommendedSalary: assignment.recommended_base_salary ? parseFloat(assignment.recommended_base_salary) : null
+                }
+            };
+
+        } catch (error) {
+            console.log(`⚠️ [PAYROLL] Error validando categoría: ${error.message}`);
+
+            if (options.allowMissingCategory === true) {
+                return {
+                    valid: true,
+                    warning: `No se pudo verificar categoría: ${error.message}`,
+                    categoryInfo: null
+                };
+            }
+
+            return {
+                valid: false,
+                error: `Error verificando categoría salarial: ${error.message}`,
+                errorCode: 'CATEGORY_VALIDATION_ERROR'
+            };
+        }
     }
 
     // =========================================================================
@@ -758,24 +1046,234 @@ class PayrollCalculatorService {
     }
 
     // =========================================================================
-    // EVALUAR FÓRMULA PERSONALIZADA
+    // PP-11-IMPL-3: EVALUAR FÓRMULA PERSONALIZADA (PARSER SEGURO - SIN EVAL)
     // =========================================================================
+    /**
+     * Parser matemático seguro para fórmulas de payroll.
+     * REEMPLAZA eval() para evitar vulnerabilidades de inyección de código.
+     *
+     * Variables soportadas:
+     * - {baseSalary} - Sueldo base del usuario
+     * - {hourlyRate} - Valor por hora
+     * - {workedDays} - Días trabajados en el período
+     * - {workedHours} - Horas trabajadas en el período
+     * - {overtime50Hours} - Horas extras al 50%
+     * - {overtime100Hours} - Horas extras al 100%
+     * - {nightHours} - Horas nocturnas
+     * - {absentDays} - Días de ausencia injustificada
+     *
+     * Operadores soportados: + - * / ( ) %
+     * Funciones soportadas: round(), floor(), ceil(), min(), max(), abs()
+     *
+     * Ejemplo: "{baseSalary} * 0.05 + round({workedHours} * {hourlyRate} * 0.1)"
+     *
+     * @param {string} formula - Fórmula con variables entre llaves
+     * @param {object} context - Contexto con valores de variables
+     * @returns {number} Resultado del cálculo
+     */
     evaluateFormula(formula, context) {
         if (!formula) return 0;
-        try {
-            // Reemplazar variables
-            let evaluated = formula
-                .replace(/\{baseSalary\}/g, context.baseSalary)
-                .replace(/\{hourlyRate\}/g, context.hourlyRate)
-                .replace(/\{workedDays\}/g, context.hoursAnalysis?.workedDays || 0)
-                .replace(/\{workedHours\}/g, context.hoursAnalysis?.totalWorkedHours || 0);
 
-            // Evaluar (cuidado con eval - en producción usar parser seguro)
-            return eval(evaluated);
+        try {
+            // 1. Expandir variables del contexto
+            const variables = {
+                baseSalary: context.baseSalary || 0,
+                hourlyRate: context.hourlyRate || 0,
+                workedDays: context.hoursAnalysis?.workedDays || 0,
+                workedHours: context.hoursAnalysis?.totalWorkedHours || 0,
+                overtime50Hours: context.hoursAnalysis?.overtime50Hours || 0,
+                overtime100Hours: context.hoursAnalysis?.overtime100Hours || 0,
+                nightHours: context.hoursAnalysis?.nightHours || 0,
+                absentDays: context.hoursAnalysis?.absentDays || 0,
+                holidayCount: context.holidayCount || 0
+            };
+
+            // 2. Reemplazar variables
+            let expression = formula;
+            for (const [key, value] of Object.entries(variables)) {
+                expression = expression.replace(new RegExp(`\\{${key}\\}`, 'gi'), String(value));
+            }
+
+            // 3. Evaluar con parser seguro
+            return this.safeEvaluateMathExpression(expression);
+
         } catch (error) {
-            console.log(`⚠️ [PAYROLL] Error evaluando fórmula: ${error.message}`);
+            console.log(`⚠️ [PAYROLL] Error evaluando fórmula "${formula}": ${error.message}`);
             return 0;
         }
+    }
+
+    /**
+     * PP-11-IMPL-3: Parser matemático seguro (sin eval)
+     *
+     * Implementa un parser de descenso recursivo para expresiones matemáticas.
+     * Solo permite números, operadores matemáticos básicos y funciones seguras.
+     *
+     * @param {string} expression - Expresión matemática pura (sin variables)
+     * @returns {number} Resultado
+     */
+    safeEvaluateMathExpression(expression) {
+        // Validar que solo contenga caracteres permitidos
+        const allowedPattern = /^[\d\s+\-*/().,%a-zA-Z]+$/;
+        if (!allowedPattern.test(expression)) {
+            throw new Error(`Caracteres no permitidos en fórmula: ${expression}`);
+        }
+
+        // Tokenizar
+        const tokens = this.tokenizeMathExpression(expression);
+
+        // Parsear con precedencia de operadores
+        let pos = 0;
+
+        const peek = () => tokens[pos];
+        const consume = () => tokens[pos++];
+
+        // Funciones matemáticas seguras
+        const mathFunctions = {
+            round: Math.round,
+            floor: Math.floor,
+            ceil: Math.ceil,
+            abs: Math.abs,
+            min: Math.min,
+            max: Math.max,
+            sqrt: Math.sqrt,
+            pow: Math.pow
+        };
+
+        // Parser de expresiones con precedencia
+        const parseExpression = () => parseAddSub();
+
+        const parseAddSub = () => {
+            let left = parseMulDiv();
+            while (peek() === '+' || peek() === '-') {
+                const op = consume();
+                const right = parseMulDiv();
+                left = op === '+' ? left + right : left - right;
+            }
+            return left;
+        };
+
+        const parseMulDiv = () => {
+            let left = parseUnary();
+            while (peek() === '*' || peek() === '/' || peek() === '%') {
+                const op = consume();
+                const right = parseUnary();
+                if (op === '*') left = left * right;
+                else if (op === '/') left = right !== 0 ? left / right : 0;
+                else left = left % right;
+            }
+            return left;
+        };
+
+        const parseUnary = () => {
+            if (peek() === '-') {
+                consume();
+                return -parsePrimary();
+            }
+            if (peek() === '+') {
+                consume();
+            }
+            return parsePrimary();
+        };
+
+        const parsePrimary = () => {
+            const token = peek();
+
+            // Número
+            if (typeof token === 'number') {
+                consume();
+                return token;
+            }
+
+            // Paréntesis
+            if (token === '(') {
+                consume(); // (
+                const result = parseExpression();
+                if (peek() === ')') consume(); // )
+                return result;
+            }
+
+            // Función matemática: round(x), min(a,b), etc.
+            if (typeof token === 'string' && mathFunctions[token.toLowerCase()]) {
+                const funcName = consume().toLowerCase();
+                if (peek() !== '(') throw new Error(`Se esperaba '(' después de ${funcName}`);
+                consume(); // (
+
+                const args = [];
+                args.push(parseExpression());
+
+                while (peek() === ',') {
+                    consume(); // ,
+                    args.push(parseExpression());
+                }
+
+                if (peek() === ')') consume(); // )
+
+                const func = mathFunctions[funcName];
+                return func(...args);
+            }
+
+            throw new Error(`Token inesperado: ${token}`);
+        };
+
+        const result = parseExpression();
+
+        // Validar resultado
+        if (typeof result !== 'number' || isNaN(result) || !isFinite(result)) {
+            return 0;
+        }
+
+        return result;
+    }
+
+    /**
+     * Tokenizador para expresiones matemáticas
+     */
+    tokenizeMathExpression(expression) {
+        const tokens = [];
+        let i = 0;
+
+        while (i < expression.length) {
+            const char = expression[i];
+
+            // Espacios: ignorar
+            if (/\s/.test(char)) {
+                i++;
+                continue;
+            }
+
+            // Operadores y paréntesis
+            if ('+-*/(),%'.includes(char)) {
+                tokens.push(char);
+                i++;
+                continue;
+            }
+
+            // Números (incluyendo decimales)
+            if (/[\d.]/.test(char)) {
+                let num = '';
+                while (i < expression.length && /[\d.]/.test(expression[i])) {
+                    num += expression[i++];
+                }
+                tokens.push(parseFloat(num));
+                continue;
+            }
+
+            // Identificadores (funciones como round, min, max)
+            if (/[a-zA-Z_]/.test(char)) {
+                let id = '';
+                while (i < expression.length && /[a-zA-Z_\d]/.test(expression[i])) {
+                    id += expression[i++];
+                }
+                tokens.push(id);
+                continue;
+            }
+
+            // Caracter desconocido
+            throw new Error(`Caracter no reconocido: ${char}`);
+        }
+
+        return tokens;
     }
 
     // =========================================================================

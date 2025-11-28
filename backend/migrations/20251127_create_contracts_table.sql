@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS contracts (
 
   -- Relaciones
   budget_id UUID NOT NULL REFERENCES budgets(id) ON DELETE CASCADE,
-  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  company_id INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
 
   -- Datos del contrato
   contract_code VARCHAR(50) UNIQUE NOT NULL, -- CTRCT-YYYY-NNNN
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS contracts (
   legal_representative JSONB, -- { name, dni, role, email, phone }
 
   -- Auditoría
-  created_by UUID REFERENCES aponnt_staff(id),
+  created_by UUID REFERENCES aponnt_staff(staff_id),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
