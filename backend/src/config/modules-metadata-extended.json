@@ -3123,6 +3123,17 @@
       "_db_synced_at": "2025-11-02T21:24:57.337Z"
     },
     "medical": {
+      "name": "Gestión Médica",
+      "icon": "👩‍⚕️",
+      "color": "#4CAF50",
+      "category": "medical",
+      "version": "4.0.0",
+      "frontend_file": "/js/modules/medical-dashboard-professional.js",
+      "init_function": "initMedicalDashboard",
+      "description": {
+        "short": "Certificados médicos, prescripciones, historial clínico",
+        "long": "Sistema completo de gestión médica para empleados incluyendo certificados, prescripciones, historial clínico y comunicación médico-empleado"
+      },
       "commercial": {
         "basePrice": 0,
         "isCore": false,
@@ -3133,7 +3144,12 @@
         "rubro": "General",
         "availableIn": "company"
       },
-      "features": [],
+      "features": [
+        "Gestión de certificados médicos",
+        "Historial clínico de empleados",
+        "Comunicación bidireccional médico-empleado",
+        "Adjuntos de documentos médicos"
+      ],
       "requirements": [
         "users"
       ],
@@ -3497,29 +3513,6 @@
       "providesTo": [
         "payroll-liquidation"
       ],
-      "_db_synced_at": "2025-11-02T21:24:57.338Z"
-    },
-    "legal": {
-      "commercial": {
-        "basePrice": 2.5,
-        "isCore": false,
-        "isActive": true,
-        "minEmployees": null,
-        "maxEmployees": null,
-        "displayOrder": 54,
-        "rubro": "General",
-        "availableIn": "company"
-      },
-      "features": [],
-      "requirements": [
-        "users"
-      ],
-      "bundledModules": [],
-      "integratesWith": [
-        "medical",
-        "attendance"
-      ],
-      "providesTo": [],
       "_db_synced_at": "2025-11-02T21:24:57.338Z"
     },
     "payroll-liquidation": {
@@ -4065,7 +4058,7 @@
       "providesTo": [],
       "_db_synced_at": "2025-11-02T21:24:57.338Z"
     },
-    "terms-conditions": {
+    "company-account": {
       "commercial": {
         "basePrice": 0,
         "isCore": true,
@@ -4074,16 +4067,17 @@
         "maxEmployees": null,
         "displayOrder": 100,
         "rubro": "Sistema Base",
-        "availableIn": "company"
+        "availableIn": "both"
       },
-      "features": [],
+      "features": ["presupuestos", "contratos", "facturas", "comunicaciones"],
       "requirements": [],
       "bundledModules": [],
       "integratesWith": [
         "legal"
       ],
       "providesTo": [],
-      "_db_synced_at": "2025-11-02T21:24:57.338Z"
+      "aliases": ["terms-conditions"],
+      "_db_synced_at": "2025-12-02T00:00:00.000Z"
     },
     "employee-360": {
       "module_key": "employee-360",
@@ -4168,6 +4162,85 @@
       ],
       "providesTo": [],
       "_db_synced_at": "2025-01-25T00:00:00.000Z"
+    },
+    "organizational-structure": {
+      "module_key": "organizational-structure",
+      "name": "Estructura Organizacional",
+      "name_alt": "Gestión de Sectores, Convenios y Categorías",
+      "icon": "🏛️",
+      "color": "#3498db",
+      "category": "rrhh",
+      "version": "1.0.0",
+      "frontend_file": "/js/modules/organizational-structure.js",
+      "init_function": "showOrganizationalStructureContent",
+      "changelog": [
+        {
+          "version": "1.0.0",
+          "date": "2025-12-01",
+          "author": "Claude Code",
+          "type": "feature",
+          "summary": "Implementación inicial del módulo Estructura Organizacional Enterprise",
+          "changes": [
+            "Gestión de Sectores (subdivisiones de departamentos)",
+            "Gestión de Convenios/Acuerdos Laborales",
+            "Gestión de Categorías Salariales con escalas parametrizables",
+            "Gestión de Roles Adicionales",
+            "Vista unificada de estructura organizacional",
+            "API REST completa con CRUD",
+            "UI Enterprise con 6 tabs"
+          ],
+          "files_created": [
+            "src/models/Sector.js",
+            "src/routes/organizationalRoutes.js",
+            "public/js/modules/organizational-structure.js",
+            "scripts/run-sectors-migration.js"
+          ],
+          "files_modified": [
+            "server.js",
+            "src/config/database.js"
+          ]
+        }
+      ],
+      "description": {
+        "short": "Gestión de sectores, convenios laborales, categorías salariales y roles adicionales",
+        "long": "Módulo Enterprise para gestionar la estructura organizacional completa: sectores (subdivisiones de departamentos), convenios colectivos de trabajo con reglas por país, categorías salariales con escalas parametrizables (por hora, día, semana, quincena, mes), y roles adicionales con bonificaciones.",
+        "business_value": "Permite a RRHH gestionar estructuras organizacionales complejas con múltiples niveles jerárquicos, cumpliendo con convenios laborales específicos por país/industria."
+      },
+      "commercial": {
+        "basePrice": 5,
+        "isCore": false,
+        "isActive": true,
+        "isPremium": false,
+        "minEmployees": 5,
+        "maxEmployees": null,
+        "displayOrder": 10,
+        "rubro": "RRHH",
+        "availableIn": "company"
+      },
+      "features": [
+        "Gestión de Sectores por Departamento",
+        "Convenios Laborales multi-país",
+        "Categorías Salariales parametrizables",
+        "Roles Adicionales con bonificaciones",
+        "Vista jerárquica unificada",
+        "Multi-tenant completo"
+      ],
+      "requirements": [
+        "departments",
+        "users"
+      ],
+      "bundledModules": [],
+      "integratesWith": [
+        "departments",
+        "shifts",
+        "payroll-liquidation",
+        "users"
+      ],
+      "providesTo": [
+        "users",
+        "payroll-liquidation"
+      ],
+      "_db_synced_at": "2025-12-01T00:00:00.000Z"
     }
   }
 }

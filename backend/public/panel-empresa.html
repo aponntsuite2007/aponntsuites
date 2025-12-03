@@ -193,6 +193,22 @@
             if (timeElement) timeElement.textContent = now.toLocaleTimeString('es-ES', timeOptions);
         }
 
+        // Función para cerrar sesión
+        function cerrarSesion() {
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                // Limpiar datos de sesión
+                localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('user');
+                localStorage.removeItem('company');
+                localStorage.removeItem('companyId');
+                sessionStorage.clear();
+
+                // Redirigir al login
+                window.location.href = '/panel-empresa.html';
+            }
+        }
+
         // Función para inicializar selector de idiomas
         function initializeLanguageSelector() {
             const container = document.getElementById('languageSelectorContainer');
@@ -438,7 +454,6 @@
                                             switch(moduleId) {
                                                 case 'attendance':
                                                 case 'users':
-                                                case 'departments':
                                                     // Usar el sistema de carga dinámica showModuleContent para todos estos módulos
                                                     if (typeof showModuleContent === 'function') {
                                                         showModuleContent(moduleId, moduleName);
@@ -1990,6 +2005,11 @@
                         <div style="font-size: 8px; color: #2c3e50; margin-bottom: 1px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Villa Mercedes</div>
                         <div style="font-size: 12px; font-weight: 600; color: #1e3c72;">🌤️ 24°</div>
                     </div>
+
+                    <!-- Botón Cerrar Sesión -->
+                    <button onclick="cerrarSesion()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); border: 1px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 90px; backdrop-filter: blur(5px); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <div style="font-size: 11px; font-weight: 600; color: white;">🚪 Salir</div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -2080,7 +2100,7 @@
     <script src="js/modules/emotional-analysis.js"></script>
 
     <!-- Medical & Health Modules -->
-    <!-- <script src="js/modules/medical-dashboard.js"></script> --> <!-- CARGA DINÁMICA -->
+    <script src="js/modules/occupational-health-enterprise.js"></script>
     <script src="js/modules/psychological-assessment.js"></script>
 
     <!-- HR Management Modules -->
@@ -2088,6 +2108,8 @@
     <script src="js/modules/sanctions-management.js"></script>
     <script src="js/modules/vacation-management.js"></script>
     <script src="js/modules/payroll-liquidation.js"></script>
+    <script src="js/modules/positions-management.js"></script>
+    <script src="js/modules/payslip-template-editor.js"></script>
     <script src="js/modules/job-postings.js"></script>
 
     <!-- Notification Systems -->
@@ -3663,16 +3685,17 @@
             'attendance': 'RRHH',
             'facial-biometric': 'SEGURIDAD',
             'users': 'PERSONAL',
-            'departments': 'ORGANIZACIÓN',
-            'shifts': 'HORARIOS',
             'branches': 'UBICACIONES',
             'reports': 'ESTADÍSTICAS',
+            'medical': 'SALUD',
             'medical-dashboard': 'SALUD',
             'legal-dashboard': 'LEGAL',
             'training-management': 'FORMACIÓN',
             'documents': 'ARCHIVOS',
             'job-postings': 'BÚSQUEDAS',
             'payroll-liquidation': 'FINANZAS',
+            'positions-management': 'ORGANIZACIÓN',
+            'payslip-template-editor': 'DISEÑO',
             'art-management': 'RIESGOS',
             'settings': 'SISTEMA',
             'employee-map': 'LOCALIZACIÓN',
@@ -3701,11 +3724,20 @@
         console.log('🔍 [DEBUG] biometric-dashboard encontrado:', biometricDashboard);
 
         // Crear un mapa de módulos contratados para búsqueda rápida
+        // ✅ FIX: Usar window.companyModules (API) en lugar de variable local vacía
+        const modulesSource = window.companyModules || window.activeModules || companyModules || [];
+        console.log('🔧 [MODULES-FIX] Usando fuente de módulos:', {
+            'window.companyModules': window.companyModules?.length || 0,
+            'window.activeModules': window.activeModules?.length || 0,
+            'companyModules (local)': companyModules?.length || 0,
+            'modulesSource final': modulesSource.length
+        });
         const contractedModulesMap = {};
-        if (companyModules && companyModules.length > 0) {
-            companyModules.forEach(module => {
+        if (modulesSource && modulesSource.length > 0) {
+            modulesSource.forEach(module => {
                 contractedModulesMap[module.id || module.module_key] = module;
             });
+            console.log('🔧 [MODULES-FIX] contractedModulesMap keys:', Object.keys(contractedModulesMap));
         }
 
         // FIX FORZADO: Asegurar que biometric-dashboard siempre esté contratado y activo
@@ -3889,7 +3921,14 @@
                 }
 
                 // 🔒 VERIFICAR 2: Si la función de inicialización ya existe
-                const initFunctionName = `show${capitalize(moduleId)}Content`;
+                // Mapeo especial para módulos con guiones
+                const functionMap = {
+                    'legal-dashboard': 'showLegalDashboardContent',
+                    'medical-dashboard': 'showMedicalDashboardContent',
+                    'vacation-management': 'showVacationManagementContent',
+                    'employee-360': 'showEmployee360Content'
+                };
+                const initFunctionName = functionMap[moduleId] || `show${capitalize(moduleId)}Content`;
                 if (typeof window[initFunctionName] === 'function') {
                     console.log(`✅ [DYNAMIC-LOAD] Módulo ya inicializado (función ${initFunctionName} existe): ${moduleId}`);
                     resolve();
@@ -3984,8 +4023,8 @@
 
                 console.log(`✅ [DYNAMIC-LOAD] Metadata encontrada:`, moduleMetadata);
 
-                // Cargar JS file dinámicamente
-                const scriptPath = moduleMetadata.frontend_file;
+                // Cargar JS file dinámicamente (con fallback por convención)
+                const scriptPath = moduleMetadata.frontend_file || `js/modules/${moduleId}.js`;
                 console.log(`📦 [DYNAMIC-LOAD] Cargando script: ${scriptPath}`);
 
                 await loadModuleDynamically(moduleId, scriptPath);
@@ -4011,7 +4050,26 @@
                 }
                 // Intento 3: Legacy pattern (showUsersContent, etc.)
                 else {
-                    const legacyFunctionName = `show${capitalize(moduleId)}Content`;
+                    // Mapeo especial para módulos con guiones
+                    const legacyFunctionMap = {
+                        'legal-dashboard': 'showLegalDashboardContent',
+                        'medical-dashboard': 'showMedicalDashboardContent',
+                        'compliance-dashboard': 'showComplianceDashboardContent',
+                        'vacation-management': 'showVacationManagementContent',
+                        'training-management': 'showTrainingManagementContent',
+                        'document-management': 'showDocumentManagementContent',
+                        'art-management': 'showArtManagementContent',
+                        'employee-map': 'showEmployeeMapContent',
+                        'job-postings': 'showJobPostingsContent',
+                        'notifications-enterprise': 'showNotificationsEnterpriseContent',
+                        'biometric-consent': 'showBiometricConsentContent',
+                        'payroll-liquidation': 'showPayrollLiquidationContent',
+                        'employee-360': 'showEmployee360Content',
+                        'organizational-structure': 'showOrganizationalStructureContent',
+                        'company-account': 'showCompanyAccountContent'
+                    };
+
+                    const legacyFunctionName = legacyFunctionMap[moduleId] || `show${capitalize(moduleId)}Content`;
                     if (typeof window[legacyFunctionName] === 'function') {
                         console.log(`✅ [DYNAMIC-LOAD] Ejecutando window.${legacyFunctionName}() [LEGACY]`);
                         window[legacyFunctionName]();
@@ -4046,11 +4104,20 @@
 
                     case 'medical':
                     case 'medical-dashboard':
-                        if (typeof showMedicalDashboardContent === 'function') {
-                            showMedicalDashboardContent();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'medical-dashboard.js no cargado');
-                        }
+                    case 'occupational-health-enterprise':
+                        // Render container for medical dashboard
+                        moduleContent.innerHTML = `
+                            <div id="medical-dashboard-container" style="height: calc(100vh - 150px);"></div>
+                        `;
+
+                        // Initialize medical dashboard (con delay para asegurar DOM listo)
+                        setTimeout(() => {
+                            if (typeof window.OccupationalHealth === 'object' && typeof window.OccupationalHealth.init === 'function') {
+                                window.OccupationalHealth.init();
+                            } else {
+                                showModuleFallback(moduleId, moduleName, 'occupational-health-enterprise.js no cargado');
+                            }
+                        }, 100);
                         break;
 
                     case 'psychological':
@@ -4258,14 +4325,6 @@
                         }
                         break;
 
-                    case 'departments':
-                        if (typeof showDepartmentsContent === 'function') {
-                            showDepartmentsContent();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'departments.js no cargado');
-                        }
-                        break;
-
                     case 'kiosks':
                         if (typeof showKiosksContent === 'function') {
                             showKiosksContent();
@@ -4381,6 +4440,24 @@
                             showModuleFallback(moduleId, moduleName, 'payroll-liquidation.js no cargado');
                         }
                         break;
+                    case 'positions-management':
+                        // CRUD de Cargos/Posiciones Organizacionales
+                        moduleContainer.innerHTML = '<div id="positions-container" style="padding:20px;"></div>';
+                        if (typeof PositionsManagement !== 'undefined') {
+                            PositionsManagement.init('positions-container');
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'positions-management.js no cargado');
+                        }
+                        break;
+                    case 'payslip-template-editor':
+                        // Editor de Templates de Recibo
+                        moduleContainer.innerHTML = '<div id="payslip-editor-container" style="padding:20px;"></div>';
+                        if (typeof PayslipEditor !== 'undefined') {
+                            PayslipEditor.init('payslip-editor-container');
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'payslip-template-editor.js no cargado');
+                        }
+                        break;
                     case 'art-management':
                         if (typeof showArtManagementContent === 'function') {
                             showArtManagementContent();
@@ -4410,25 +4487,6 @@
                             showModuleFallback(moduleId, moduleName, 'Error cargando auditor: ' + error.message);
                         });
                         break;
-                    case 'shifts':
-                        console.log('🎯 [SHIFTS-CASE] Entrando en case shifts');
-                        console.log('🔍 [SHIFTS-CASE] typeof showShiftsContent:', typeof showShiftsContent);
-                        console.log('🔍 [SHIFTS-CASE] window.showShiftsContent:', window.showShiftsContent);
-
-                        if (typeof showShiftsContent === 'function') {
-                            console.log('✅ [SHIFTS-CASE] showShiftsContent es función, ejecutando...');
-                            try {
-                                showShiftsContent();
-                                console.log('✅ [SHIFTS-CASE] showShiftsContent ejecutada sin errores');
-                            } catch (error) {
-                                console.error('❌ [SHIFTS-CASE] Error ejecutando showShiftsContent:', error);
-                                showModuleFallback(moduleId, moduleName, 'Error: ' + error.message);
-                            }
-                        } else {
-                            console.error('❌ [SHIFTS-CASE] showShiftsContent NO es función');
-                            showModuleFallback(moduleId, moduleName, 'shifts.js no cargado');
-                        }
-                        break;
                     case 'terms-conditions':
                         if (typeof showTermsconditionsContent === 'function') {
                             showTermsconditionsContent();
@@ -4437,8 +4495,13 @@
                         }
                         break;
                     case 'inbox':
-                        console.log('🎯 [INBOX-CASE] Cargando Bandeja de Notificaciones');
-                        loadModuleDynamically('inbox', '/js/modules/inbox.js')
+                        console.log('🎯 [INBOX-CASE] Cargando Bandeja de Notificaciones con IA');
+                        // Primero cargar el indicador de IA, luego el inbox
+                        loadModuleDynamically('inbox-ai-indicator', '/js/modules/inbox-ai-indicator.js')
+                            .then(() => {
+                                console.log('🤖 [INBOX] AI Indicator cargado');
+                                return loadModuleDynamically('inbox', '/js/modules/inbox.js');
+                            })
                             .then(() => {
                                 if (typeof showInboxContent === 'function') {
                                     showInboxContent();
@@ -4453,8 +4516,13 @@
                         break;
                     case 'notifications-complete':  // Alias para notifications-enterprise
                     case 'notifications-enterprise':
-                        console.log('🎯 [NOTIF-ENTERPRISE-CASE] Cargando Notificaciones Enterprise V3.0');
-                        loadModuleDynamically('notifications-enterprise', '/js/modules/notifications-enterprise.js')
+                        console.log('🎯 [NOTIF-ENTERPRISE-CASE] Cargando Centro de Notificaciones con IA');
+                        // Primero cargar el indicador de IA, luego el módulo
+                        loadModuleDynamically('inbox-ai-indicator', '/js/modules/inbox-ai-indicator.js')
+                            .then(() => {
+                                console.log('🤖 [NOTIF-ENTERPRISE] AI Indicator cargado');
+                                return loadModuleDynamically('notifications-enterprise', '/js/modules/notifications-enterprise.js');
+                            })
                             .then(() => {
                                 if (typeof NotificationsEnterprise !== 'undefined' && typeof NotificationsEnterprise.init === 'function') {
                                     NotificationsEnterprise.init();
@@ -4489,10 +4557,13 @@
         }, 500);
     }
 
-    // Helper: Capitalizar primera letra
+    // Helper: Capitalizar y convertir kebab-case a PascalCase
     function capitalize(str) {
         if (!str) return '';
-        return str.charAt(0).toUpperCase() + str.slice(1);
+        // Convertir kebab-case (vacation-management) a PascalCase (VacationManagement)
+        return str.split('-')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join('');
     }
 
     // Fallback para módulos no implementados o con errores
@@ -4525,16 +4596,15 @@
     function generateModuleCardsHTML(company) {
         const modules = [
             { id: 'users', name: 'Usuarios', icon: '👥' },
-            { id: 'departments', name: 'Departamentos', icon: '🏢' },
             { id: 'kiosks', name: 'Kioscos', icon: '📟' },
             { id: 'visitors', name: 'Visitantes', icon: '👥' },
             { id: 'inbox', name: 'Bandeja Notificaciones', icon: '📬' },
-            { id: 'shifts', name: 'Turnos', icon: '🕐' },
+            { id: 'notifications-enterprise', name: '🔔 Notificaciones Enterprise IA', icon: '🤖' },
             { id: 'attendance', name: 'Asistencia', icon: '📋' },
-            { id: 'facial-biometric', name: 'Biometría Analítica', icon: '🎭' },{ id: 'medical-dashboard', name: 'Médico', icon: '👩‍⚕️' },
+            { id: 'facial-biometric', name: 'Biometría Analítica', icon: '🎭' },{ id: 'medical', name: 'Médico', icon: '👩‍⚕️' },
             { id: 'art-management', name: 'ART', icon: '🏥' },
             { id: 'document-management', name: 'Documentos', icon: '📄' },
-            { id: 'legal-dashboard', name: 'Legal', icon: '⚖️' },
+            { id: 'legal-dashboard', name: 'Gestión Legal', icon: '⚖️' },
             { id: 'compliance-dashboard', name: 'Compliance Legal', icon: '⚖️' },
             { id: 'sla-tracking', name: 'SLA Tracking', icon: '⏱️' },
             { id: 'resource-center', name: 'Centro Recursos', icon: '📊' },
@@ -4552,8 +4622,11 @@
         
         return modules.map(module => {
             // Verificar si el módulo está contratado
-            const isActive = (company.activeModules && company.activeModules[module.id] === true) ||
-                           ['settings', 'dashboard'].includes(module.id);
+            const isActive = (company.activeModules && (
+                               Array.isArray(company.activeModules) ?
+                                   company.activeModules.includes(module.id) :
+                                   company.activeModules[module.id] === true
+                           )) || ['settings', 'dashboard'].includes(module.id);
 
             // Debug de módulos no activos
             if (!isActive && !['settings', 'dashboard'].includes(module.id)) {
@@ -4671,7 +4744,7 @@
         const moduleNavMap = {
             'usuarios-departamentos-turnos-asistencia': ['👥 Usuarios', '🏢 Departamentos', '🕐 Turnos', '📋 Asistencia'],
             'dashboard-medico': ['🏥 Dashboard Médico'],
-            'legal': ['⚖️ Legal'],
+            'legal-dashboard': ['⚖️ Gestión Legal'],
             'ubicacion-gps-empleados': ['📍 Mapa GPS'],
             'art': ['🛡️ ART'],
             'liquidacion-sueldos': ['💰 Liquidaciones'],
@@ -4847,7 +4920,6 @@
                 const localModules = [
                     // CORE (5)
                     { id: 'users', name: 'Usuarios', icon: '👥' },
-                    { id: 'departments', name: 'Departamentos', icon: '🏢' },
                     { id: 'attendance', name: 'Asistencia', icon: '📋' },
                     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
                     { id: 'settings', name: 'Configuración', icon: '⚙️' },
@@ -4863,24 +4935,20 @@
                     { id: 'professional-biometric-registration', name: 'Registro Biométrico Profesional', icon: '🔐' },
                     { id: 'access-control', name: 'Control de Acceso', icon: '🔐' },
 
-                    // COMPLIANCE (4)
+                    // COMPLIANCE (3)
                     { id: 'biometric-consent', name: 'Consentimientos Biométricos', icon: '📋' },
-                    { id: 'legal-dashboard', name: 'Legal', icon: '⚖️' },
-                    { id: 'legal', name: 'Gestión Legal', icon: '⚖️' },
+                    { id: 'legal-dashboard', name: 'Gestión Legal', icon: '⚖️' },
                     { id: 'compliance-dashboard', name: 'Compliance Legal', icon: '⚖️' },
-
-                    // SCHEDULING (1)
-                    { id: 'shifts', name: 'Turnos', icon: '🕐' },
 
                     // COMMUNICATION (1)
                     { id: 'notifications-enterprise', name: 'Notificaciones Enterprise V3.0', icon: '🔔' },
 
-                    // MEDICAL (2)
-                    { id: 'medical-dashboard', name: 'Médico', icon: '👩‍⚕️' },
+                    // MEDICAL (3)
+                    { id: 'medical', name: 'Gestión Médica', icon: '👩‍⚕️' },
+                    { id: 'occupational-health-enterprise', name: 'Salud Ocupacional Enterprise', icon: '🏥' },
                     { id: 'art-management', name: 'ART', icon: '🏥' },
 
-                    // RRHH (8)
-                    { id: 'medical', name: 'Gestión Médica', icon: '⚕️' },
+                    // RRHH (7)
                     { id: 'training-management', name: 'Gestión Capacitaciones', icon: '📚' },
                     { id: 'job-postings', name: 'Avisos de Empleo', icon: '💼' },
                     { id: 'vacation-management', name: 'Gestión de Vacaciones', icon: '🏖️' },
@@ -4904,20 +4972,16 @@
                     // ANALYTICS (1)
                     { id: 'employee-map', name: 'Mapa Empleados', icon: '🗺️' },
 
-                    // PAYROLL (1)
+                    // PAYROLL (4)
                     { id: 'payroll-liquidation', name: 'Liquidación Sueldos', icon: '💰' },
+                    { id: 'positions-management', name: 'Gestión de Cargos', icon: '🏢' },
+                    { id: 'payslip-template-editor', name: 'Editor Templates Recibo', icon: '📄' },
 
                     // ADMIN (1)
                     { id: 'licensing-management', name: 'Licencias', icon: '📜' },
 
                     // AI (1)
                     { id: 'emotional-analysis', name: 'Análisis Emocional', icon: '😊' },
-
-                    // SYSTEM (1)
-                    { id: 'network', name: 'Red y Conectividad', icon: '🌐' },
-
-                    // INTEGRATION (1)
-                    { id: 'google-maps-integration', name: 'Integración Google Maps', icon: '🗺️' },
 
                     // SIAC (3)
                     { id: 'clientes', name: 'Clientes SIAC', icon: '👥' },
@@ -5389,8 +5453,26 @@
                     script.src = `js/modules/kiosks-professional.js?v=${cacheBuster}`;
                     console.log(`📦 [PROGRESSIVE] Usando versión PROFESSIONAL para kiosks`);
                 } else if (tabName === 'notifications-enterprise') {
+                    // Para notifications-enterprise, primero cargar AI Indicator
+                    console.log(`📦 [PROGRESSIVE] Cargando AI Indicator primero para Notifications Enterprise...`);
+                    const aiIndicatorScript = document.createElement('script');
+                    aiIndicatorScript.src = `js/modules/inbox-ai-indicator.js?v=${cacheBuster}`;
+                    aiIndicatorScript.onload = () => {
+                        console.log(`🤖 [PROGRESSIVE] AI Indicator cargado, ahora cargando Notifications Enterprise`);
+                    };
+                    document.body.appendChild(aiIndicatorScript);
+
                     script.src = `js/modules/notifications-enterprise.js?v=${cacheBuster}`;
                     console.log(`📦 [PROGRESSIVE] Cargando NOTIFICATIONS ENTERPRISE V3.0`);
+                } else if (tabName === 'medical' || tabName === 'medical-dashboard') {
+                    script.src = `js/modules/medical-dashboard-professional.js?v=${cacheBuster}`;
+                    console.log(`📦 [PROGRESSIVE] Usando versión PROFESSIONAL para medical`);
+                } else if (tabName === 'occupational-health-enterprise') {
+                    script.src = `js/modules/occupational-health-enterprise.js?v=${cacheBuster}`;
+                    console.log(`📦 [PROGRESSIVE] Cargando occupational-health-enterprise`);
+                } else if (tabName === 'legal' || tabName === 'legal-dashboard') {
+                    script.src = `js/modules/legal-dashboard.js?v=${cacheBuster}`;
+                    console.log(`📦 [PROGRESSIVE] Usando LEGAL DASHBOARD ENTERPRISE v3.0`);
                 } else {
                     script.src = `js/modules/${tabName}.js?v=${cacheBuster}`;
                 }
@@ -5464,8 +5546,8 @@
 
     // Load remaining modules progressively
     async function loadRemainingModules() {
-        const modules = ['users', 'departments', 'kiosks', 'visitors', 'shifts', 'attendance', 'settings',
-            'medical-config', 'medical-dashboard', 'fehaciente-consent',
+        const modules = ['users', 'kiosks', 'visitors', 'attendance', 'settings',
+            'medical-config', 'medical', 'fehaciente-consent',
             'terms-conditions', 'absence-notifications', 'document-management',
             'facial-biometric', 'employee-map', 'training-management','job-postings',
             'legal-dashboard', 'art-management', 'payroll-liquidation', 'emotional-analysis'
@@ -5987,22 +6069,6 @@
                     { id: 'delete', name: 'Eliminar usuarios' }
                 ]
             },
-            'departments': {
-                name: 'Departamentos',
-                functions: [
-                    { id: 'view', name: 'Ver departamentos' },
-                    { id: 'create', name: 'Crear departamentos' },
-                    { id: 'edit', name: 'Editar departamentos' }
-                ]
-            },
-            'shifts': {
-                name: 'Turnos',
-                functions: [
-                    { id: 'view', name: 'Ver turnos' },
-                    { id: 'create', name: 'Crear turnos' },
-                    { id: 'edit', name: 'Editar turnos' }
-                ]
-            },
             'attendance': {
                 name: 'Asistencia',
                 functions: [
@@ -6016,7 +6082,7 @@
             'admin': {
                 name: 'Administrador',
                 color: '#dc3545',
-                modules: ['users', 'departments', 'shifts', 'attendance'],
+                modules: ['users', 'attendance'],
                 permissions: 'all' // Acceso total
             },
             'supervisor': {
@@ -7035,6 +7101,7 @@
                         if (modulesData.success) {
                             window.activeModules = modulesData.modules;
                             window.companyModules = modulesData.modules; // Bridge v3.0.0 → rendering
+                            window.allSystemModules = modulesData.modules; // ✅ FIX: También asignar a allSystemModules para el menú
                             console.log(`✅ [DYNAMIC-LOAD] Cargados ${modulesData.modules.length} módulos activos:`, modulesData.modules.map(m => m.module_key));
                             console.log('🔍 [DYNAMIC-LOAD] Módulos disponibles:', window.activeModules);
                         } else {
@@ -7187,6 +7254,9 @@
 
     <!-- ✅ ASISTENTE IA - Ollama + Llama 3.1 (Chat Flotante con Tech Badges) -->
     <script src="js/modules/ai-assistant-chat.js"></script>
+
+    <!-- 🔔 GLOBO FLOTANTE DE NOTIFICACIONES PENDIENTES -->
+    <script src="js/modules/notification-badge-floating.js"></script>
 
     <!-- 🏆 TECH STACK BADGES - Marketing Subliminal Profesional -->
     <!-- DESACTIVADO: No mostrar badges en login -->
