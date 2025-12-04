@@ -574,20 +574,21 @@ router.get('/fix-all-tables', async (req, res) => {
 
     const results = { tables: {}, errors: [] };
 
-    // DEPARTMENTS - columnas necesarias
+    // DEPARTMENTS - TODAS las columnas de LOCAL (16 total)
     const DEPT_COLUMNS = [
+        { col: 'name', type: 'VARCHAR(255)' },
+        { col: 'description', type: 'TEXT' },
+        { col: 'address', type: 'VARCHAR(255)' },
         { col: 'gps_lat', type: 'DECIMAL(10,8)' },
         { col: 'gps_lng', type: 'DECIMAL(11,8)' },
-        { col: 'gps_radius', type: 'INTEGER DEFAULT 100' },
-        { col: 'geofence_enabled', type: 'BOOLEAN DEFAULT false' },
-        { col: 'branch_id', type: 'INTEGER' },
-        { col: 'manager_id', type: 'INTEGER' },
+        { col: 'coverage_radius', type: 'INTEGER DEFAULT 100' },
         { col: 'is_active', type: 'BOOLEAN DEFAULT true' },
-        { col: 'description', type: 'TEXT' },
-        { col: 'code', type: 'VARCHAR(50)' },
-        { col: 'parent_id', type: 'INTEGER' },
-        { col: 'level', type: 'INTEGER DEFAULT 1' },
-        { col: 'path', type: 'TEXT' }
+        { col: 'deleted_at', type: 'TIMESTAMPTZ' },
+        { col: 'company_id', type: 'INTEGER' },
+        { col: 'branch_id', type: 'UUID' },
+        { col: 'default_kiosk_id', type: 'INTEGER' },
+        { col: 'authorized_kiosks', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'allow_gps_attendance', type: 'BOOLEAN DEFAULT false' }
     ];
 
     // BRANCHES - columnas adicionales
