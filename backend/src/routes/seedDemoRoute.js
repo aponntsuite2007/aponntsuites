@@ -709,6 +709,172 @@ router.get('/fix-all-tables', async (req, res) => {
     res.json({ success: true, results });
 });
 
+// GET /api/seed-demo/create-missing-tables?key=SECRET - Crear tablas faltantes para módulos
+router.get('/create-missing-tables', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const results = [];
+    const errors = [];
+
+    // 1. NOTIFICATION_GROUPS - Base para el sistema de notificaciones
+    try {
+        await sequelize.query(`
+            CREATE TABLE IF NOT EXISTS notification_groups (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                company_id INTEGER,
+                created_by INTEGER,
+                is_active BOOLEAN DEFAULT true,
+                requires_sla BOOLEAN DEFAULT true,
+                default_sla_hours INTEGER DEFAULT 24,
+                auto_escalate BOOLEAN DEFAULT true,
+                escalation_chain JSONB DEFAULT '["supervisor", "rrhh", "gerencia"]'::jsonb,
+                total_escalations INTEGER DEFAULT 0,
+                last_activity_at TIMESTAMP,
+                ai_last_analyzed_at TIMESTAMP,
+                ai_resolution_status VARCHAR(50) DEFAULT 'unknown',
+                ai_detected_topic VARCHAR(100),
+                ai_summary TEXT,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
+        results.push('notification_groups: created');
+    } catch (e) {
+        if (!e.message.includes('already exists')) {
+            errors.push(`notification_groups: ${e.message.substring(0, 80)}`);
+        } else {
+            results.push('notification_groups: already exists');
+        }
+    }
+
+    // 2. NOTIFICATION_MESSAGES - Mensajes del inbox
+    try {
+        await sequelize.query(`
+            CREATE TABLE IF NOT EXISTS notification_messages (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                group_id UUID REFERENCES notification_groups(id) ON DELETE CASCADE,
+                sender_id INTEGER,
+                recipient_id INTEGER,
+                company_id INTEGER,
+                subject VARCHAR(500),
+                content TEXT,
+                priority VARCHAR(50) DEFAULT 'normal',
+                status VARCHAR(50) DEFAULT 'unread',
+                type VARCHAR(100) DEFAULT 'general',
+                module_source VARCHAR(100),
+                requires_response BOOLEAN DEFAULT false,
+                deadline_at TIMESTAMP,
+                responded_at TIMESTAMP,
+                escalation_status VARCHAR(50) DEFAULT 'none',
+                escalation_level INTEGER DEFAULT 0,
+                is_deleted BOOLEAN DEFAULT false,
+                metadata JSONB DEFAULT '{}'::jsonb,
+                ai_analyzed BOOLEAN DEFAULT false,
+                ai_auto_generated BOOLEAN DEFAULT false,
+                ai_confidence DECIMAL(5,4),
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
+        results.push('notification_messages: created');
+    } catch (e) {
+        if (!e.message.includes('already exists')) {
+            errors.push(`notification_messages: ${e.message.substring(0, 80)}`);
+        } else {
+            results.push('notification_messages: already exists');
+        }
+    }
+
+    // 3. JOB_POSTINGS - Búsquedas laborales
+    try {
+        await sequelize.query(`
+            CREATE TABLE IF NOT EXISTS job_postings (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                company_id INTEGER,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                requirements TEXT,
+                department_id INTEGER,
+                branch_id UUID,
+                location VARCHAR(255),
+                employment_type VARCHAR(50) DEFAULT 'full_time',
+                salary_min DECIMAL(12,2),
+                salary_max DECIMAL(12,2),
+                salary_currency VARCHAR(10) DEFAULT 'ARS',
+                status VARCHAR(50) DEFAULT 'draft',
+                is_active BOOLEAN DEFAULT true,
+                published_at TIMESTAMP,
+                expires_at TIMESTAMP,
+                positions_available INTEGER DEFAULT 1,
+                positions_filled INTEGER DEFAULT 0,
+                created_by INTEGER,
+                metadata JSONB DEFAULT '{}'::jsonb,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
+        results.push('job_postings: created');
+    } catch (e) {
+        if (!e.message.includes('already exists')) {
+            errors.push(`job_postings: ${e.message.substring(0, 80)}`);
+        } else {
+            results.push('job_postings: already exists');
+        }
+    }
+
+    // 4. JOB_APPLICATIONS - Postulaciones
+    try {
+        await sequelize.query(`
+            CREATE TABLE IF NOT EXISTS job_applications (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                job_posting_id UUID REFERENCES job_postings(id) ON DELETE CASCADE,
+                company_id INTEGER,
+                applicant_name VARCHAR(255),
+                applicant_email VARCHAR(255),
+                applicant_phone VARCHAR(50),
+                applicant_dni VARCHAR(20),
+                resume_url TEXT,
+                cover_letter TEXT,
+                status VARCHAR(50) DEFAULT 'pending',
+                stage VARCHAR(50) DEFAULT 'received',
+                score INTEGER,
+                notes TEXT,
+                interview_date TIMESTAMP,
+                reviewed_by INTEGER,
+                reviewed_at TIMESTAMP,
+                metadata JSONB DEFAULT '{}'::jsonb,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
+        results.push('job_applications: created');
+    } catch (e) {
+        if (!e.message.includes('already exists')) {
+            errors.push(`job_applications: ${e.message.substring(0, 80)}`);
+        } else {
+            results.push('job_applications: already exists');
+        }
+    }
+
+    // 5. Índices básicos
+    try {
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_notif_messages_recipient ON notification_messages(recipient_id)`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_notif_messages_company ON notification_messages(company_id)`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_job_postings_company ON job_postings(company_id)`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_job_applications_posting ON job_applications(job_posting_id)`);
+        results.push('indexes: created');
+    } catch (e) {
+        errors.push(`indexes: ${e.message.substring(0, 50)}`);
+    }
+
+    res.json({ success: true, results, errors: errors.length > 0 ? errors : 'none' });
+});
+
 // GET /api/seed-demo/create-admin?key=SECRET - Crear usuario admin para DEMO
 router.get('/create-admin', async (req, res) => {
     const { key } = req.query;
