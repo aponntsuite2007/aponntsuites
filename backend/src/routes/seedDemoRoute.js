@@ -31,6 +31,128 @@ router.get('/check', async (req, res) => {
     }
 });
 
+// GET /api/seed-demo/create-schema?key=SECRET - Crear tablas básicas
+router.get('/create-schema', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        // Crear tablas básicas necesarias para el seed
+        await sequelize.query(`
+            CREATE TABLE IF NOT EXISTS companies (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                legal_name VARCHAR(255),
+                slug VARCHAR(255) UNIQUE NOT NULL,
+                tax_id VARCHAR(50),
+                contact_email VARCHAR(255),
+                contact_phone VARCHAR(50),
+                address TEXT,
+                city VARCHAR(100),
+                province VARCHAR(100),
+                country VARCHAR(100),
+                license_type VARCHAR(50) DEFAULT 'basic',
+                max_employees INTEGER DEFAULT 100,
+                is_active BOOLEAN DEFAULT true,
+                active_modules JSONB DEFAULT '[]'::jsonb,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS branches (
+                id SERIAL PRIMARY KEY,
+                company_id INTEGER REFERENCES companies(id),
+                name VARCHAR(255) NOT NULL,
+                code VARCHAR(50),
+                address TEXT,
+                city VARCHAR(100),
+                province VARCHAR(100),
+                country VARCHAR(100),
+                phone VARCHAR(50),
+                latitude DECIMAL(10, 8),
+                longitude DECIMAL(11, 8),
+                timezone VARCHAR(100),
+                is_main BOOLEAN DEFAULT false,
+                is_active BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS departments (
+                id SERIAL PRIMARY KEY,
+                company_id INTEGER REFERENCES companies(id),
+                name VARCHAR(255) NOT NULL,
+                code VARCHAR(50),
+                is_active BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS shifts (
+                id SERIAL PRIMARY KEY,
+                company_id INTEGER REFERENCES companies(id),
+                name VARCHAR(255) NOT NULL,
+                code VARCHAR(50),
+                start_time TIME,
+                end_time TIME,
+                color VARCHAR(20),
+                work_days JSONB DEFAULT '[1,2,3,4,5]'::jsonb,
+                is_active BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                company_id INTEGER REFERENCES companies(id),
+                branch_id INTEGER REFERENCES branches(id),
+                department_id INTEGER REFERENCES departments(id),
+                shift_id INTEGER REFERENCES shifts(id),
+                employee_id VARCHAR(50),
+                first_name VARCHAR(100),
+                last_name VARCHAR(100),
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                role VARCHAR(50) DEFAULT 'employee',
+                is_active BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS attendance (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                company_id INTEGER REFERENCES companies(id),
+                date DATE NOT NULL,
+                check_in TIMESTAMP,
+                check_out TIMESTAMP,
+                status VARCHAR(50) DEFAULT 'pending',
+                check_in_method VARCHAR(50),
+                check_out_method VARCHAR(50),
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        `);
+
+        // Verificar tablas creadas
+        const tables = await sequelize.query(`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' ORDER BY table_name
+        `, { type: QueryTypes.SELECT });
+
+        res.json({
+            success: true,
+            message: 'Schema básico creado',
+            tables: tables.map(r => r.table_name),
+            count: tables.length
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message, stack: error.stack });
+    }
+});
+
 // ============================================================
 // DATOS REALISTAS
 // ============================================================
