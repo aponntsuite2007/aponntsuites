@@ -646,12 +646,33 @@ router.get('/fix-all-tables', async (req, res) => {
         { col: 'settings', type: "JSONB DEFAULT '{}'::jsonb" }
     ];
 
+    // SYSTEM_MODULES - columnas críticas para carga de módulos
+    const SYSTEM_MODULE_COLUMNS = [
+        { col: 'is_core', type: 'BOOLEAN DEFAULT false' },
+        { col: 'is_active', type: 'BOOLEAN DEFAULT true' },
+        { col: 'available_in', type: "VARCHAR(50) DEFAULT 'both'" },
+        { col: 'base_price', type: 'DECIMAL(10,2) DEFAULT 0' },
+        { col: 'requirements', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'bundled_modules', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'metadata', type: "JSONB DEFAULT '{}'::jsonb" }
+    ];
+
+    // COMPANY_MODULES - columnas para módulos por empresa
+    const COMPANY_MODULE_COLUMNS = [
+        { col: 'is_active', type: 'BOOLEAN DEFAULT true' },
+        { col: 'contracted_at', type: 'TIMESTAMP' },
+        { col: 'expires_at', type: 'TIMESTAMP' },
+        { col: 'config', type: "JSONB DEFAULT '{}'::jsonb" }
+    ];
+
     const ALL_TABLES = [
         { name: 'departments', columns: DEPT_COLUMNS },
         { name: 'branches', columns: BRANCH_COLUMNS },
         { name: 'attendance', columns: ATTENDANCE_COLUMNS },
         { name: 'shifts', columns: SHIFT_COLUMNS },
-        { name: 'kiosks', columns: KIOSK_COLUMNS }
+        { name: 'kiosks', columns: KIOSK_COLUMNS },
+        { name: 'system_modules', columns: SYSTEM_MODULE_COLUMNS },
+        { name: 'company_modules', columns: COMPANY_MODULE_COLUMNS }
     ];
 
     for (const { name, columns } of ALL_TABLES) {
