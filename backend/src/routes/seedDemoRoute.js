@@ -32,7 +32,7 @@ router.get('/check', async (req, res) => {
 });
 
 // GET /api/seed-demo/sync-all?key=SECRET - Sincronizar TODAS las tablas con los modelos
-// Este endpoint actualiza la BD de Render para que coincida con los modelos Sequelize
+// Este endpoint crea tablas faltantes sin modificar las existentes (seguro para FK)
 // Usar después de cada deploy con cambios en modelos
 router.get('/sync-all', async (req, res) => {
     const { key } = req.query;
@@ -43,24 +43,38 @@ router.get('/sync-all', async (req, res) => {
     try {
         console.log('[SYNC-ALL] Iniciando sincronización de modelos...');
 
-        // alter: true = actualiza tablas existentes (agrega columnas, cambia tipos, etc.)
-        // force: false = NO elimina datos existentes
-        await sequelize.sync({ alter: true, force: false });
+        // Obtener tablas ANTES
+        const tablesBefore = await sequelize.query(`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' ORDER BY table_name
+        `, { type: QueryTypes.SELECT });
+        const beforeCount = tablesBefore.length;
+
+        // sync() sin alter = solo crea tablas faltantes, NO modifica existentes
+        // Esto es seguro porque no toca columnas con FK
+        await sequelize.sync({ force: false });
 
         console.log('[SYNC-ALL] Sincronización completada');
 
-        // Verificar tablas creadas
-        const tables = await sequelize.query(`
+        // Verificar tablas DESPUÉS
+        const tablesAfter = await sequelize.query(`
             SELECT table_name FROM information_schema.tables
             WHERE table_schema = 'public' ORDER BY table_name
         `, { type: QueryTypes.SELECT });
 
+        const newTables = tablesAfter.filter(t =>
+            !tablesBefore.find(tb => tb.table_name === t.table_name)
+        );
+
         res.json({
             success: true,
-            message: 'BD sincronizada con modelos Sequelize (alter: true)',
-            instruction: 'Llamar este endpoint después de cada deploy con cambios en modelos',
-            tables: tables.map(r => r.table_name),
-            count: tables.length
+            message: 'BD sincronizada con modelos Sequelize',
+            tablas_antes: beforeCount,
+            tablas_despues: tablesAfter.length,
+            tablas_nuevas: newTables.map(t => t.table_name),
+            instruction: 'Llamar este endpoint después de cada deploy con nuevos modelos',
+            tables: tablesAfter.map(r => r.table_name),
+            count: tablesAfter.length
         });
     } catch (error) {
         console.error('[SYNC-ALL] Error:', error);
