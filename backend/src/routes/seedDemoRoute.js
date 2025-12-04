@@ -13,6 +13,23 @@ const pool = require('../config/database').pool;
 // Clave secreta para ejecutar el seed
 const SECRET_KEY = 'DEMO_SEED_2024_SECURE';
 
+// GET /api/seed-demo/check - Verificar estado de BD
+router.get('/check', async (req, res) => {
+    try {
+        const tables = await pool.query(`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' ORDER BY table_name
+        `);
+        res.json({
+            success: true,
+            tables: tables.rows.map(r => r.table_name),
+            count: tables.rows.length
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ============================================================
 // DATOS REALISTAS
 // ============================================================
