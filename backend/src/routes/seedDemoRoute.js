@@ -14,6 +14,53 @@ const { QueryTypes } = require('sequelize');
 // Clave secreta para ejecutar el seed
 const SECRET_KEY = 'DEMO_SEED_2024_SECURE';
 
+// Módulos de ISI (copiados de BD local)
+const ISI_MODULES = [
+    "payroll-liquidation", "legal-dashboard", "art-management", "document-management",
+    "employee-map", "job-postings", "attendance", "permissions-test", "biometric-consent",
+    "plantillas-fiscales", "medical", "vacation-management", "licensing-management",
+    "compliance-dashboard", "users", "kiosks", "training-management", "access-control",
+    "clientes", "facturacion", "sanctions-management", "employee-360",
+    "organizational-structure", "company-account", "occupational-health-phase2",
+    "notification-center", "departments", "shifts", "reports", "dashboard",
+    "notifications-enterprise", "payroll", "medical-dashboard", "certifications",
+    "compliance", "kiosk-management", "engineering-dashboard"
+];
+
+// GET /api/seed-demo/update-modules?key=SECRET - Asignar módulos de ISI a DEMO
+router.get('/update-modules', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        // Actualizar active_modules de la empresa DEMO (id=1 o slug=demo-corp)
+        await sequelize.query(`
+            UPDATE companies
+            SET active_modules = :modules::jsonb,
+                updated_at = NOW()
+            WHERE slug = 'demo-corp' OR id = 1
+        `, {
+            replacements: { modules: JSON.stringify(ISI_MODULES) }
+        });
+
+        // Verificar
+        const [company] = await sequelize.query(`
+            SELECT id, name, slug, active_modules FROM companies WHERE slug = 'demo-corp' OR id = 1
+        `);
+
+        res.json({
+            success: true,
+            message: 'Módulos actualizados con los de ISI',
+            modules_count: ISI_MODULES.length,
+            company: company[0]
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message, stack: error.stack });
+    }
+});
+
 // GET /api/seed-demo/check - Verificar estado de BD
 router.get('/check', async (req, res) => {
     try {
