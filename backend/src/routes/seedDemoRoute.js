@@ -680,6 +680,29 @@ router.get('/fix-all-tables', async (req, res) => {
         { col: 'config', type: "JSONB DEFAULT '{}'::jsonb" }
     ];
 
+    // NOTIFICATION_GROUPS - columnas del inbox
+    const NOTIF_GROUP_COLUMNS = [
+        { col: 'group_type', type: "VARCHAR(50) DEFAULT 'general'" },
+        { col: 'initiator_type', type: 'VARCHAR(50)' },
+        { col: 'initiator_id', type: 'INTEGER' },
+        { col: 'subject', type: 'VARCHAR(500)' },
+        { col: 'status', type: "VARCHAR(50) DEFAULT 'open'" },
+        { col: 'priority', type: "VARCHAR(50) DEFAULT 'normal'" },
+        { col: 'closed_at', type: 'TIMESTAMP' },
+        { col: 'closed_by', type: 'INTEGER' },
+        { col: 'metadata', type: "JSONB DEFAULT '{}'::jsonb" }
+    ];
+
+    // NOTIFICATION_MESSAGES - columnas del inbox
+    const NOTIF_MSG_COLUMNS = [
+        { col: 'parent_message_id', type: 'UUID' },
+        { col: 'read_at', type: 'TIMESTAMP' },
+        { col: 'archived_at', type: 'TIMESTAMP' },
+        { col: 'action_required', type: 'BOOLEAN DEFAULT false' },
+        { col: 'action_type', type: 'VARCHAR(100)' },
+        { col: 'action_data', type: "JSONB DEFAULT '{}'::jsonb" }
+    ];
+
     const ALL_TABLES = [
         { name: 'departments', columns: DEPT_COLUMNS },
         { name: 'branches', columns: BRANCH_COLUMNS },
@@ -687,7 +710,9 @@ router.get('/fix-all-tables', async (req, res) => {
         { name: 'shifts', columns: SHIFT_COLUMNS },
         { name: 'kiosks', columns: KIOSK_COLUMNS },
         { name: 'system_modules', columns: SYSTEM_MODULE_COLUMNS },
-        { name: 'company_modules', columns: COMPANY_MODULE_COLUMNS }
+        { name: 'company_modules', columns: COMPANY_MODULE_COLUMNS },
+        { name: 'notification_groups', columns: NOTIF_GROUP_COLUMNS },
+        { name: 'notification_messages', columns: NOTIF_MSG_COLUMNS }
     ];
 
     for (const { name, columns } of ALL_TABLES) {
