@@ -29,7 +29,11 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(timeout /t 90 /nobreak)",
-      "Bash(timeout /t 45 /nobreak)"
+      "Bash(timeout /t 45 /nobreak)",
+      "Bash(git stash:*)",
+      "Bash(for i in 1 2 3 4 5)",
+      "Bash(do echo \"Intento $i...\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

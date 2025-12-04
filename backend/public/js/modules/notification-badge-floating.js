@@ -25,7 +25,10 @@
   // ═══════════════════════════════════════════════════════════
 
   const CONFIG = {
-    apiBaseURL: window.progressiveAdmin?.getApiUrl?.() || '',
+    // En producción usar URLs relativas (vacío), en desarrollo usar la URL configurada
+    apiBaseURL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? (window.progressiveAdmin?.getApiUrl?.() || '')
+      : '',
     endpoints: {
       pendingBadge: '/api/inbox/pending-badge'
     },
