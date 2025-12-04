@@ -31,7 +31,35 @@ router.get('/check', async (req, res) => {
     }
 });
 
-// GET /api/seed-demo/create-schema?key=SECRET - Crear tablas básicas
+// GET /api/seed-demo/sync-all?key=SECRET - Crear TODAS las tablas usando Sequelize sync
+router.get('/sync-all', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        // Usar sequelize.sync() para crear todas las tablas desde los modelos
+        await sequelize.sync({ alter: false }); // alter: false para no modificar tablas existentes
+
+        // Verificar tablas creadas
+        const tables = await sequelize.query(`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' ORDER BY table_name
+        `, { type: QueryTypes.SELECT });
+
+        res.json({
+            success: true,
+            message: 'Todas las tablas sincronizadas desde modelos Sequelize',
+            tables: tables.map(r => r.table_name),
+            count: tables.length
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message, stack: error.stack });
+    }
+});
+
+// GET /api/seed-demo/create-schema?key=SECRET - Crear tablas básicas (método alternativo)
 router.get('/create-schema', async (req, res) => {
     const { key } = req.query;
     if (key !== SECRET_KEY) {
