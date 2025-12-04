@@ -5,7 +5,6 @@ import 'package:camera/camera.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' as http_parser;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 // import 'package:wakelock_plus/wakelock_plus.dart'; // DESACTIVADO TEMPORALMENTE
 import 'dart:async';
@@ -16,6 +15,12 @@ import 'dart:math' as math;
 import '../screens/config_screen.dart';
 import '../screens/password_auth_screen.dart';
 import '../services/config_service.dart';
+import '../services/kiosk_audio_feedback_service.dart';
+import '../services/geofencing_service.dart';
+import '../services/authorization_polling_service.dart';
+import '../services/websocket_service.dart';
+import '../services/offline_queue_service.dart';
+import '../services/face_liveness_service.dart';
 
 /// 🚦 KIOSK BIOMÉTRICO CON GOOGLE ML KIT - STREAMING CONTINUO
 /// ============================================================
@@ -28,10 +33,11 @@ import '../services/config_service.dart';
 /// - Guarda registro de asistencia en BD
 
 /// 🧠 SMART CAPTURE - Evaluador de calidad para captura en movimiento
+/// OPTIMIZADO: Intervalos más cortos para detección ultra-rápida
 class SmartCapture {
   DateTime? _lastCapture;
-  final Duration _minInterval = Duration(milliseconds: 300);
-  final double _qualityThreshold = 0.65;
+  final Duration _minInterval = Duration(milliseconds: 150); // ⚡ Reducido de 300ms
+  final double _qualityThreshold = 0.50; // ⚡ Reducido de 0.65 para captura más rápida
   bool _isProcessing = false;
 
   bool shouldCapture() {
@@ -119,16 +125,47 @@ class _KioskScreenState extends State<KioskScreen> {
   TrafficLightState _trafficLight = TrafficLightState.yellow;
   bool _isProcessing = false;
 
-  // 🔊 TTS para alertas de voz
-  FlutterTts? _flutterTts;
+  // 🔊 TTS para alertas de voz (usando servicio mejorado)
+  // NOTA: TTS manejado por KioskAudioFeedbackService, no crear instancia local
+  final KioskAudioFeedbackService _audioService = KioskAudioFeedbackService();
+  final GeofencingService _geofenceService = GeofencingService();
+  final AuthorizationPollingService _authPollingService = AuthorizationPollingService();
+  final WebSocketService _wsService = WebSocketService();
+  final OfflineQueueService _offlineQueue = OfflineQueueService();
+  final FaceLivenessService _livenessService = FaceLivenessService();
+
+  // 🛡️ Configuración de liveness
+  // ⚡ DESACTIVADO por defecto para velocidad máxima
+  // Puede activarse desde configuración si se requiere anti-spoofing
+  bool _livenessEnabled = false;
+
+  // 📶 Estado de conexión
+  bool _isOfflineMode = false;
 
   @override
   void initState() {
     super.initState();
     // 🔒 Mantener pantalla siempre activa en modo kiosko
     // _enableWakelock(); // DESACTIVADO TEMPORALMENTE
-    _initializeTts();
+    // TTS inicializado por _audioService en _initializeServices()
+    _initializeServices();
     _loadConfiguration();
+  }
+
+  /// 🚀 INICIALIZAR TODOS LOS SERVICIOS DEL KIOSK
+  Future<void> _initializeServices() async {
+    try {
+      // Inicializar audio feedback mejorado
+      await _audioService.initialize(
+        language: 'es-ES',
+        speechRate: 0.5,
+        volume: 1.0,
+        pitch: 1.0,
+      );
+      print('✅ [KIOSK] Audio feedback service initialized');
+    } catch (e) {
+      print('⚠️ [KIOSK] Error initializing audio service: $e');
+    }
   }
 
   /// 🔒 ACTIVAR WAKELOCK DE FORMA SEGURA
@@ -143,15 +180,6 @@ class _KioskScreenState extends State<KioskScreen> {
     }
   }
   */
-
-  /// 🔊 INICIALIZAR TTS
-  Future<void> _initializeTts() async {
-    _flutterTts = FlutterTts();
-    await _flutterTts?.setLanguage("es-ES");
-    await _flutterTts?.setSpeechRate(0.5);
-    await _flutterTts?.setVolume(1.0);
-    await _flutterTts?.setPitch(1.0);
-  }
 
   /// 📡 CARGAR CONFIGURACIÓN DESDE SHARED PREFERENCES
   Future<void> _loadConfiguration() async {
@@ -207,10 +235,72 @@ class _KioskScreenState extends State<KioskScreen> {
 
       print('✅ [KIOSK] Configuración cargada exitosamente');
 
+      // 🌐 Inicializar servicios con configuración del servidor
+      await _initializeConnectedServices();
+
       await _initializeCamera();
       _startContinuousCapture();
     } catch (e) {
       print('❌ [KIOSK] Error configuración: $e');
+    }
+  }
+
+  /// 🌐 INICIALIZAR SERVICIOS QUE REQUIEREN CONEXIÓN AL SERVIDOR
+  Future<void> _initializeConnectedServices() async {
+    if (_serverUrl == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final kioskId = prefs.getString('kiosk_id');
+
+    try {
+      // WebSocket para tiempo real
+      await _wsService.initialize(_serverUrl!, authToken: _authToken);
+      _wsService.connect();
+      print('✅ [KIOSK] WebSocket service initialized');
+
+      // 🔔 Escuchar resultados de autorización en tiempo real
+      _wsService.authorizationRequests.listen((data) {
+        print('📨 [KIOSK] Authorization result received: $data');
+
+        // Verificar si es una respuesta (no una solicitud nueva)
+        if (data['type'] == 'response' || data['status'] != null) {
+          final status = data['status'] ?? data['type'];
+          final approved = status == 'approved';
+          final employeeName = data['employee']?['name'] ??
+              data['employeeName'] ??
+              'Empleado';
+          final approverName = data['authorizer']?['name'] ??
+              data['approverName'];
+          final windowMinutes = data['authorizationWindow']?['windowMinutes'];
+
+          // Mostrar resultado en el kiosk
+          _showAuthorizationResult(
+            approved: approved,
+            employeeName: employeeName,
+            approverName: approverName,
+            windowMinutes: windowMinutes,
+          );
+        }
+      });
+
+      // Geofencing
+      await _geofenceService.initializeWithServer(
+        serverUrl: _serverUrl!,
+        authToken: _authToken,
+        kioskId: kioskId,
+      );
+      print('✅ [KIOSK] Geofence service initialized');
+
+      // Polling de autorizaciones
+      await _authPollingService.initialize(
+        serverUrl: _serverUrl!,
+        authToken: _authToken,
+        kioskId: kioskId,
+      );
+      print('✅ [KIOSK] Authorization polling service initialized');
+
+    } catch (e) {
+      print('⚠️ [KIOSK] Error initializing connected services: $e');
     }
   }
 
@@ -229,10 +319,12 @@ class _KioskScreenState extends State<KioskScreen> {
         orElse: () => _cameras!.first,
       );
 
+      // ⚡ OPTIMIZADO: Resolución media para balance velocidad/calidad
       _cameraController = CameraController(
         frontCamera,
-        ResolutionPreset.high,
+        ResolutionPreset.medium, // ⚡ Reducido de high para velocidad
         enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.yuv420, // ⚡ Formato más rápido para ML Kit
       );
 
       await _cameraController!.initialize();
@@ -251,19 +343,20 @@ class _KioskScreenState extends State<KioskScreen> {
   }
 
   /// 🧠 INICIALIZAR GOOGLE ML KIT FACE DETECTOR
+  /// ⚡ OPTIMIZADO: Modo FAST para detección ultra-rápida
   Future<void> _initializeFaceDetector() async {
     try {
       final options = FaceDetectorOptions(
-        enableClassification: true,
-        enableLandmarks: true,
+        enableClassification: false, // ⚡ Desactivado para velocidad
+        enableLandmarks: false, // ⚡ Desactivado para velocidad
         enableContours: false, // Para performance
         enableTracking: true, // ✅ CLAVE para tracking en movimiento
-        minFaceSize: 0.15,
-        performanceMode: FaceDetectorMode.accurate,
+        minFaceSize: 0.20, // ⚡ Aumentado para detectar solo rostros cercanos
+        performanceMode: FaceDetectorMode.fast, // ⚡ FAST mode para velocidad máxima
       );
 
       _faceDetector = FaceDetector(options: options);
-      print('✅ [ML-KIT] Face Detector inicializado con tracking enabled');
+      print('✅ [ML-KIT] Face Detector inicializado en MODO RÁPIDO');
     } catch (e) {
       print('❌ [ML-KIT] Error: $e');
     }
@@ -331,9 +424,9 @@ class _KioskScreenState extends State<KioskScreen> {
       );
       final quality = _smartCapture.calculateQuality(bestFace, imageSize);
 
-      // Log ocasional para debugging (1 de cada 30 frames ~ cada segundo)
-      if (math.Random().nextDouble() < 0.033) {
-        print('📊 [ML-KIT] Quality: ${quality.toStringAsFixed(2)} | Faces: ${faces.length} | Tracking ID: ${bestFace.trackingId}');
+      // ⚡ Log reducido para no impactar performance (1 de cada 100 frames)
+      if (math.Random().nextDouble() < 0.01) {
+        print('📊 [ML-KIT] Q:${quality.toStringAsFixed(2)} F:${faces.length}');
       }
 
       // Si la calidad es buena, capturar imagen de alta calidad y procesar
@@ -350,8 +443,7 @@ class _KioskScreenState extends State<KioskScreen> {
         // Capturar imagen de alta calidad
         await _captureHighQualityAndProcess();
 
-        // Reiniciar stream después de procesar
-        await Future.delayed(Duration(milliseconds: 100));
+        // ⚡ Reiniciar stream INMEDIATAMENTE después de procesar
         if (mounted && _cameraController != null) {
           _startContinuousCapture();
         }
@@ -421,6 +513,28 @@ class _KioskScreenState extends State<KioskScreen> {
     });
 
     try {
+      // 🛡️ VERIFICACIÓN DE LIVENESS (Anti-Spoofing)
+      if (_livenessEnabled && _cameraController != null) {
+        print('🛡️ [KIOSK] Starting quick liveness check...');
+
+        final livenessResult = await _livenessService.performQuickLivenessCheck(
+          cameraController: _cameraController!,
+          framesToCapture: 15, // Menos frames para ser más rápido
+          captureInterval: const Duration(milliseconds: 80),
+        );
+
+        if (livenessResult != LivenessResult.success) {
+          print('❌ [KIOSK] Liveness check FAILED: $livenessResult');
+          await _handleLivenessFailure(livenessResult);
+          setState(() {
+            _isProcessing = false;
+          });
+          return;
+        }
+
+        print('✅ [KIOSK] Liveness check PASSED');
+      }
+
       // Capturar imagen de alta calidad
       final image = await _cameraController!.takePicture();
       final imageBytes = await image.readAsBytes();
@@ -436,9 +550,56 @@ class _KioskScreenState extends State<KioskScreen> {
     }
   }
 
+  /// 🛡️ MANEJAR FALLO DE LIVENESS
+  Future<void> _handleLivenessFailure(LivenessResult result) async {
+    switch (result) {
+      case LivenessResult.spoofingDetected:
+        await _audioService.provideFeedback(KioskAudioState.spoofingDetected);
+        _showTrafficLight(TrafficLightState.red);
+        print('🚨 [KIOSK] Possible spoofing attempt detected!');
+        break;
+
+      case LivenessResult.noFaceDetected:
+        await _audioService.speakState(KioskAudioState.notRecognized);
+        _showTrafficLight(TrafficLightState.red);
+        break;
+
+      case LivenessResult.multipleFaces:
+        await _audioService.speak('Múltiples rostros detectados. Solo una persona a la vez');
+        _showTrafficLight(TrafficLightState.red);
+        break;
+
+      case LivenessResult.lowQuality:
+        await _audioService.speak('Calidad de imagen insuficiente. Acérquese a la cámara');
+        _showTrafficLight(TrafficLightState.yellow);
+        break;
+
+      case LivenessResult.timeout:
+        await _audioService.speak('Tiempo de verificación agotado. Intente nuevamente');
+        _showTrafficLight(TrafficLightState.yellow);
+        break;
+
+      default:
+        await _audioService.speakState(KioskAudioState.error);
+        _showTrafficLight(TrafficLightState.red);
+    }
+  }
+
   /// 📡 ENVIAR AL BACKEND PARA VERIFICACIÓN
   Future<void> _sendToBackend(List<int> imageBytes) async {
     try {
+      // 🌍 VALIDAR GEOFENCE ANTES DE ENVIAR
+      final geofenceResult = await _geofenceService.validateCurrentLocation();
+      if (!geofenceResult.isValid) {
+        print('❌ [KIOSK] Geofence validation failed: ${geofenceResult.message}');
+        await _audioService.speakState(
+          KioskAudioState.error,
+          employeeName: null,
+        );
+        _showGeofenceError(geofenceResult);
+        return;
+      }
+
       // Enviar a endpoint de verificación biométrica
       final uri = Uri.parse('$_serverUrl/api/v2/biometric-attendance/verify-real');
       final request = http.MultipartRequest('POST', uri);
@@ -474,9 +635,11 @@ class _KioskScreenState extends State<KioskScreen> {
           if (result['needsAuthorization'] == true) {
             final employeeName = result['employee']?['name'] ?? 'Empleado';
             final lateMinutes = result['authorization']?['lateMinutes'] ?? 0;
+            final attendanceId = result['attendance']?['id']?.toString() ?? '';
+            final employeeId = result['employee']?['id']?.toString() ?? '';
 
             print('⚠️ [KIOSK] Fuera de turno - $employeeName ($lateMinutes min tarde)');
-            await _showLateArrivalAlert(employeeName, lateMinutes);
+            await _showLateArrivalAlert(employeeName, lateMinutes, attendanceId, employeeId);
             return;
           }
 
@@ -486,17 +649,158 @@ class _KioskScreenState extends State<KioskScreen> {
           final detectionCount = result['detectionCount'] ?? 1;
 
           print('✅ [KIOSK] Reconocido - $employeeName (Registro: $wasRegistered, Detección #$detectionCount)');
+
+          // Audio feedback con nombre personalizado
+          await _audioService.provideFeedback(
+            KioskAudioState.recognized,
+            employeeName: employeeName,
+          );
           _showTrafficLight(TrafficLightState.green);
+
+          // Notificar por WebSocket
+          _wsService.sendCheckIn({
+            'employeeId': result['employee']?['id'],
+            'employeeName': employeeName,
+            'timestamp': DateTime.now().toIso8601String(),
+          });
         } else {
           // 🔴 ROJO - No reconocido en BD
           print('❌ [KIOSK] No reconocido en BD');
+          await _audioService.provideFeedback(
+            KioskAudioState.notRecognized,
+          );
           _showTrafficLight(TrafficLightState.red);
           await _registerFailedAttempt(imageBytes);
         }
+      } else {
+        // Error de servidor
+        print('❌ [KIOSK] Server error: ${response.statusCode}');
+        await _audioService.speakState(KioskAudioState.error);
       }
     } catch (e) {
       print('❌ [BACKEND] Error: $e');
+
+      // 📴 MODO OFFLINE: Guardar localmente si falla la conexión
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('TimeoutException') ||
+          e.toString().contains('ClientException')) {
+        await _saveAttendanceOffline(imageBytes);
+        await _audioService.speakState(KioskAudioState.offline);
+        _showOfflineSavedNotification();
+      } else {
+        await _audioService.speakState(KioskAudioState.error);
+      }
     }
+  }
+
+  /// 📴 Guardar asistencia en cola offline
+  Future<void> _saveAttendanceOffline(List<int> imageBytes) async {
+    try {
+      final item = AttendanceQueueItem(
+        userId: 0, // Se identificará por face cuando haya conexión
+        type: 'check_in',
+        timestamp: DateTime.now(),
+        gpsLat: null,
+        gpsLng: null,
+        photo: base64Encode(imageBytes),
+        embedding: null,
+        confidence: null,
+        deviceInfo: 'kiosk_${_companyId ?? "unknown"}',
+        hardwareProfile: null,
+        createdAt: DateTime.now(),
+      );
+
+      await _offlineQueue.addToQueue(item);
+
+      setState(() {
+        _isOfflineMode = true;
+      });
+
+      print('💾 [KIOSK] Attendance saved to offline queue');
+    } catch (e) {
+      print('❌ [KIOSK] Failed to save offline: $e');
+    }
+  }
+
+  /// 📴 Mostrar notificación de guardado offline
+  void _showOfflineSavedNotification() {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.cloud_off, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text('Fichaje guardado localmente. Se sincronizará cuando haya conexión.'),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.orange.shade700,
+        duration: Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    // Mostrar semáforo amarillo con ícono offline
+    _showTrafficLight(TrafficLightState.yellow);
+  }
+
+  /// 🌍 MOSTRAR ERROR DE GEOFENCE
+  void _showGeofenceError(GeofenceValidationResult result) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.red.shade700,
+        title: Row(
+          children: [
+            Icon(Icons.location_off, color: Colors.white, size: 32),
+            SizedBox(width: 12),
+            Text(
+              '📍 UBICACIÓN NO VÁLIDA',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              result.userMessage,
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            if (result.distanceOverLimit != null) ...[
+              SizedBox(height: 8),
+              Text(
+                'Distancia extra: ${result.distanceOverLimit!.toInt()} metros',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cerrar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    // Auto-cerrar después de 3 segundos (con verificación segura)
+    Future.delayed(Duration(seconds: 3), () {
+      if (mounted && Navigator.of(context).canPop()) {
+        try {
+          Navigator.of(context, rootNavigator: true).pop();
+        } catch (e) {
+          // Dialog ya fue cerrado manualmente, ignorar
+          print('⚠️ [KIOSK] Geofence dialog already closed');
+        }
+      }
+    });
   }
 
   /// 📝 REGISTRAR INTENTO FALLIDO DE ACCESO
@@ -523,67 +827,168 @@ class _KioskScreenState extends State<KioskScreen> {
     }
   }
 
-  /// 🚨 ALERTA DE LLEGADA TARDÍA - MOSTRAR 3 SEGUNDOS Y LIBERAR KIOSCO
-  Future<void> _showLateArrivalAlert(String employeeName, int lateMinutes) async {
-    // Reproducir alerta de voz
-    await _flutterTts?.speak("Fuera de turno. Aguarde autorización.");
+  /// 🚨 LLEGADA TARDÍA - FLUJO NO BLOQUEANTE
+  /// El kiosk se libera inmediatamente para otros empleados.
+  /// El empleado recibe notificación por email y tiene 5 minutos para volver
+  /// una vez aprobado.
+  Future<void> _showLateArrivalAlert(
+    String employeeName,
+    int lateMinutes,
+    String attendanceId,
+    String employeeId,
+  ) async {
+    print('⏰ [KIOSK] Late arrival detected: $employeeName ($lateMinutes min)');
 
-    // Mostrar dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.orange.shade700,
-        title: Row(
-          children: [
-            Icon(Icons.warning, color: Colors.white, size: 32),
-            SizedBox(width: 12),
-            Text(
-              '⚠️ FUERA DE TURNO',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ],
+    // 🔊 Audio feedback - informar al empleado
+    await _audioService.provideFeedback(
+      KioskAudioState.lateArrival,
+      employeeName: employeeName,
+      lateMinutes: lateMinutes,
+    );
+
+    // 📤 Solicitar autorización (envía emails a supervisores Y al empleado)
+    final authResult = await _authPollingService.requestAuthorization(
+      attendanceId: attendanceId,
+      employeeId: employeeId,
+      employeeName: employeeName,
+      lateMinutes: lateMinutes,
+    );
+
+    if (!authResult.success) {
+      print('❌ [KIOSK] Error solicitando autorización: ${authResult.error}');
+    }
+
+    // 📤 También notificar por WebSocket (para dashboard en tiempo real)
+    _wsService.requestLateArrivalAuthorization(
+      employeeId: employeeId,
+      employeeName: employeeName,
+      lateMinutes: lateMinutes,
+      attendanceId: attendanceId,
+    );
+
+    // 🆕 BANNER NO-BLOQUEANTE (en lugar de dialog)
+    _showNonBlockingBanner(
+      employeeName: employeeName,
+      lateMinutes: lateMinutes,
+      message: 'Solicitud enviada. Revisa tu email. Puedes retirarte.',
+    );
+
+    // 🚦 Mostrar amarillo (esperando)
+    _showTrafficLight(TrafficLightState.yellow);
+
+    // 📝 Log para auditoría
+    print('✅ [KIOSK] Authorization request sent - kiosk freed for other employees');
+  }
+
+  /// 🔔 BANNER NO-BLOQUEANTE
+  /// Muestra mensaje temporal sin bloquear el kiosk
+  void _showNonBlockingBanner({
+    required String employeeName,
+    required int lateMinutes,
+    required String message,
+    Duration duration = const Duration(seconds: 8),
+  }) {
+    // Usar SnackBar con comportamiento flotante
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.access_time, color: Colors.white, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '⏰ $employeeName - $lateMinutes min tarde',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                '📧 Se enviará email con el resultado',
+                style: TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+            ],
+          ),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              employeeName,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Llegó $lateMinutes minutos tarde',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-            SizedBox(height: 16),
-            Text(
-              '🔔 AGUARDE AUTORIZACIÓN',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Espere en la entrada',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-          ],
+        backgroundColor: Colors.orange.shade800,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(
+          bottom: 100,
+          left: 20,
+          right: 20,
+        ),
+        duration: duration,
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
         ),
       ),
     );
+  }
 
-    // Auto-cerrar después de 3 segundos
-    await Future.delayed(Duration(seconds: 3));
-    if (mounted) {
-      Navigator.of(context, rootNavigator: true).pop();
+  /// 🎉 MOSTRAR RESULTADO DE AUTORIZACIÓN (cuando llega por WebSocket)
+  void _showAuthorizationResult({
+    required bool approved,
+    required String employeeName,
+    String? approverName,
+    int? windowMinutes,
+  }) {
+    final message = approved
+        ? '✅ APROBADO por ${approverName ?? "supervisor"}. Tienes ${windowMinutes ?? 5} min para fichar.'
+        : '❌ RECHAZADO por ${approverName ?? "supervisor"}. Contacta a RRHH.';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              approved ? Icons.check_circle : Icons.cancel,
+              color: Colors.white,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: approved ? Colors.green.shade700 : Colors.red.shade700,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(bottom: 100, left: 20, right: 20),
+        duration: const Duration(seconds: 10),
+      ),
+    );
+
+    // Audio feedback
+    if (approved) {
+      _audioService.provideFeedback(
+        KioskAudioState.authorizationApproved,
+        employeeName: employeeName,
+        approverName: approverName,
+      );
+    } else {
+      _audioService.provideFeedback(KioskAudioState.authorizationRejected);
     }
   }
 
@@ -735,7 +1140,7 @@ class _KioskScreenState extends State<KioskScreen> {
                   // Detener captura y cámara
                   _captureTimer?.cancel();
                   _cameraController?.dispose();
-                  _flutterTts?.stop();
+                  _audioService.stop();
 
                   // Cerrar la aplicación
                   exit(0);
@@ -881,7 +1286,13 @@ class _KioskScreenState extends State<KioskScreen> {
 
     _cameraController?.dispose();
     _faceDetector?.close();
-    _flutterTts?.stop();
+
+    // 🧹 Limpiar servicios (audioService.stop() incluido en dispose())
+    _audioService.dispose();
+    _geofenceService.dispose();
+    _wsService.disconnect();
+    _authPollingService.dispose();
+    _livenessService.dispose();
 
     // 🔓 Desactivar wakelock al salir del kiosko
     // _disableWakelock(); // DESACTIVADO TEMPORALMENTE
@@ -899,4 +1310,201 @@ class _KioskScreenState extends State<KioskScreen> {
     }
   }
   */
+}
+
+/// 🕐 DIALOG DE ESPERA DE AUTORIZACIÓN
+class _LateArrivalWaitingDialog extends StatefulWidget {
+  final String employeeName;
+  final int lateMinutes;
+  final String authorizationId;
+  final AuthorizationPollingService authPollingService;
+  final KioskAudioFeedbackService audioService;
+  final Function(bool approved, String? approverName) onResult;
+
+  const _LateArrivalWaitingDialog({
+    required this.employeeName,
+    required this.lateMinutes,
+    required this.authorizationId,
+    required this.authPollingService,
+    required this.audioService,
+    required this.onResult,
+  });
+
+  @override
+  State<_LateArrivalWaitingDialog> createState() => _LateArrivalWaitingDialogState();
+}
+
+class _LateArrivalWaitingDialogState extends State<_LateArrivalWaitingDialog>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  bool _isWaiting = true;
+  bool? _approved;
+  String? _approverName;
+  int _waitSeconds = 0;
+  Timer? _countdownTimer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Animación de pulso para indicador de espera
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+
+    // Contador de tiempo
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _waitSeconds++;
+        });
+      }
+    });
+
+    // Esperar respuesta de autorización
+    _waitForAuthorization();
+  }
+
+  Future<void> _waitForAuthorization() async {
+    final response = await widget.authPollingService.waitForAuthorization(
+      widget.authorizationId,
+      timeout: const Duration(minutes: 5),
+    );
+
+    if (!mounted) return;
+
+    if (response != null) {
+      setState(() {
+        _isWaiting = false;
+        _approved = response.approved;
+        _approverName = response.approverName;
+      });
+
+      // Audio feedback según resultado
+      if (response.approved) {
+        await widget.audioService.provideFeedback(
+          KioskAudioState.authorizationApproved,
+          employeeName: widget.employeeName,
+          approverName: response.approverName,
+        );
+      } else {
+        await widget.audioService.provideFeedback(
+          KioskAudioState.authorizationRejected,
+        );
+      }
+
+      // Cerrar después de 2 segundos
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        widget.onResult(_approved ?? false, _approverName);
+      }
+    } else {
+      // Timeout - cerrar sin resultado
+      if (mounted) {
+        setState(() {
+          _isWaiting = false;
+        });
+        await widget.audioService.speak('Tiempo de espera agotado');
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) {
+          widget.onResult(false, null);
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: _isWaiting
+          ? Colors.orange.shade700
+          : (_approved == true ? Colors.green.shade700 : Colors.red.shade700),
+      title: Row(
+        children: [
+          if (_isWaiting)
+            AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) {
+                return Opacity(
+                  opacity: 0.5 + (_pulseController.value * 0.5),
+                  child: const Icon(Icons.hourglass_top, color: Colors.white, size: 32),
+                );
+              },
+            )
+          else
+            Icon(
+              _approved == true ? Icons.check_circle : Icons.cancel,
+              color: Colors.white,
+              size: 32,
+            ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              _isWaiting
+                  ? '⏳ AGUARDANDO AUTORIZACIÓN'
+                  : (_approved == true ? '✅ AUTORIZADO' : '❌ RECHAZADO'),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.employeeName,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Llegó ${widget.lateMinutes} minutos tarde',
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
+          ),
+          const SizedBox(height: 16),
+          if (_isWaiting) ...[
+            Text(
+              '🔔 Notificando a supervisores...',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tiempo de espera: ${_waitSeconds}s',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+            const SizedBox(height: 16),
+            const LinearProgressIndicator(
+              backgroundColor: Colors.white24,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ] else ...[
+            if (_approverName != null)
+              Text(
+                'Autorizado por: $_approverName',
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
 }

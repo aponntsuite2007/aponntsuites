@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class GeofencingService {
   static final GeofencingService _instance = GeofencingService._internal();
@@ -305,6 +306,161 @@ class GeofencingService {
     stopMonitoring();
     _eventController?.close();
   }
+
+  /// 🎯 VALIDACIÓN PARA KIOSK - Valida ubicación actual contra zonas activas
+  /// Retorna resultado con estado de validación y detalles
+  Future<GeofenceValidationResult> validateCurrentLocation() async {
+    try {
+      // Verificar permisos de ubicación
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return GeofenceValidationResult(
+          isValid: false,
+          message: 'location_permission_denied',
+          userMessage: 'Permisos de ubicación no concedidos',
+          distanceOverLimit: null,
+        );
+      }
+
+      // Verificar servicio de ubicación
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return GeofenceValidationResult(
+          isValid: false,
+          message: 'location_service_disabled',
+          userMessage: 'Servicio de ubicación deshabilitado',
+          distanceOverLimit: null,
+        );
+      }
+
+      // Obtener ubicación actual
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      // Si no hay zonas configuradas, permitir (modo sin restricción)
+      if (_zones.isEmpty) {
+        return GeofenceValidationResult(
+          isValid: true,
+          message: 'no_zones_configured',
+          userMessage: 'Sin restricción de ubicación',
+          distanceOverLimit: null,
+        );
+      }
+
+      // Verificar si está dentro de alguna zona activa
+      for (final zone in _zones.where((z) => z.isActive)) {
+        if (isInsideZone(position, zone)) {
+          return GeofenceValidationResult(
+            isValid: true,
+            message: 'inside_zone',
+            userMessage: 'Ubicación válida: ${zone.name}',
+            distanceOverLimit: null,
+            zoneName: zone.name,
+          );
+        }
+      }
+
+      // No está dentro de ninguna zona - calcular distancia a la más cercana
+      GeofenceZone? nearestZone;
+      double minDistance = double.infinity;
+
+      for (final zone in _zones.where((z) => z.isActive)) {
+        final distance = getDistanceToZone(position, zone);
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestZone = zone;
+        }
+      }
+
+      return GeofenceValidationResult(
+        isValid: false,
+        message: 'outside_all_zones',
+        userMessage: nearestZone != null
+            ? 'Fuera de zona permitida. Distancia a ${nearestZone.name}: ${minDistance.toInt()}m'
+            : 'Fuera de todas las zonas permitidas',
+        distanceOverLimit: minDistance,
+        zoneName: nearestZone?.name,
+      );
+
+    } catch (e) {
+      return GeofenceValidationResult(
+        isValid: false,
+        message: 'location_error',
+        userMessage: 'Error obteniendo ubicación: ${e.toString()}',
+        distanceOverLimit: null,
+      );
+    }
+  }
+
+  /// 🚀 Inicializar con configuración de servidor (para cargar zonas del backend)
+  Future<void> initializeWithServer({
+    required String serverUrl,
+    String? authToken,
+    String? kioskId,
+  }) async {
+    await initialize();
+
+    // Cargar zonas desde el backend
+    if (kioskId != null && authToken != null) {
+      await _loadZonesFromBackend(serverUrl, authToken, kioskId);
+    }
+
+    print('📍 [GEOFENCING] Initialized with server: $serverUrl');
+    print('📍 [GEOFENCING] Active zones: ${_zones.length}');
+  }
+
+  /// 🌐 Cargar zonas desde el backend para el kiosk específico
+  Future<void> _loadZonesFromBackend(String serverUrl, String authToken, String kioskId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$serverUrl/api/v1/kiosks/$kioskId/geofence-zones'),
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> zonesData = data['zones'] ?? [];
+
+        // Convertir y agregar zonas del backend
+        for (final zoneData in zonesData) {
+          final zone = GeofenceZone(
+            id: zoneData['id']?.toString() ?? '',
+            name: zoneData['name'] ?? 'Zona',
+            description: zoneData['description'] ?? '',
+            center: LatLng(
+              (zoneData['latitude'] ?? zoneData['lat'] ?? 0).toDouble(),
+              (zoneData['longitude'] ?? zoneData['lng'] ?? 0).toDouble(),
+            ),
+            radius: (zoneData['radius'] ?? 100).toDouble(),
+            type: GeofenceZoneType.workplace,
+            isActive: zoneData['isActive'] ?? true,
+          );
+
+          // Solo agregar si no existe ya
+          if (!_zones.any((z) => z.id == zone.id)) {
+            _zones.add(zone);
+            _zoneStatuses[zone.id] = GeofenceStatus.outside;
+          }
+        }
+
+        // Guardar en local para uso offline
+        await _saveZones();
+
+        print('✅ [GEOFENCING] Loaded ${zonesData.length} zones from backend');
+      } else {
+        print('⚠️ [GEOFENCING] Could not load zones from backend: ${response.statusCode}');
+        // Usar zonas locales como fallback
+      }
+    } catch (e) {
+      print('⚠️ [GEOFENCING] Error loading zones from backend: $e');
+      // Usar zonas locales como fallback (modo offline)
+    }
+  }
 }
 
 class GeofenceZone {
@@ -449,4 +605,26 @@ enum GeofenceStatus {
   inside,
   outside,
   unknown,
+}
+
+/// 📋 Resultado de validación de geofence para kiosk
+class GeofenceValidationResult {
+  final bool isValid;
+  final String message;
+  final String userMessage;
+  final double? distanceOverLimit;
+  final String? zoneName;
+
+  GeofenceValidationResult({
+    required this.isValid,
+    required this.message,
+    required this.userMessage,
+    required this.distanceOverLimit,
+    this.zoneName,
+  });
+
+  @override
+  String toString() {
+    return 'GeofenceValidationResult(isValid: $isValid, message: $message, distance: $distanceOverLimit)';
+  }
 }

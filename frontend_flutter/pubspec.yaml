@@ -95,8 +95,13 @@ dependencies:
 
   # 🔧 Missing Dependencies for Kiosk
   google_fonts: ^6.1.0
-  # file_picker: ^6.1.1
   socket_io_client: ^2.0.3+1
+
+  # 📱 Employee App Dependencies
+  file_picker: ^8.0.0
+  open_file: ^3.5.10
+  http_parser: ^4.1.0
+  table_calendar: ^3.1.0
 
   # 💾 Offline Storage - SQLite para queue local
   sqflite: ^2.3.0

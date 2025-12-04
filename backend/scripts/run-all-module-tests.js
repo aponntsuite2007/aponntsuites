@@ -48,7 +48,7 @@ async function main() {
     try {
         // Inicializar
         console.log('🚀 Inicializando Phase4TestOrchestrator...\n');
-        await orchestrator.initialize();
+        await orchestrator.start();
 
         let results;
 
@@ -72,12 +72,15 @@ async function main() {
                 case 'payroll':
                     results = await orchestrator.runPayrollCRUDTest(companyId, companySlug);
                     break;
+                case 'medical':
+                    results = await orchestrator.runMedicalCasesCRUDTest(companyId, companySlug);
+                    break;
                 case 'integration':
                     results = await orchestrator.runIntermodularIntegrationTest(companyId, companySlug);
                     break;
                 default:
                     console.error(`❌ Módulo no reconocido: ${specificModule}`);
-                    console.log('\nMódulos disponibles: users, departments, shifts, attendance, payroll, integration');
+                    console.log('\nMódulos disponibles: users, departments, shifts, attendance, payroll, medical, integration');
                     process.exit(1);
             }
         } else {
@@ -94,7 +97,7 @@ async function main() {
         console.log(`\n📁 Resultados guardados en: ${path.basename(resultsPath)}`);
 
         // Cerrar
-        await orchestrator.close();
+        await orchestrator.stop();
 
         // Exit code basado en resultados
         const failed = results.summary?.totalFailed || results.failed || 0;
@@ -105,7 +108,7 @@ async function main() {
         console.error(error.stack);
 
         try {
-            await orchestrator.close();
+            await orchestrator.stop();
         } catch (e) {}
 
         process.exit(1);
