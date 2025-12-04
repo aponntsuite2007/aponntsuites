@@ -646,7 +646,7 @@ router.get('/fix-all-tables', async (req, res) => {
         { col: 'settings', type: "JSONB DEFAULT '{}'::jsonb" }
     ];
 
-    // SYSTEM_MODULES - columnas críticas para carga de módulos
+    // SYSTEM_MODULES - TODAS las columnas usadas por el sistema
     const SYSTEM_MODULE_COLUMNS = [
         { col: 'is_core', type: 'BOOLEAN DEFAULT false' },
         { col: 'is_active', type: 'BOOLEAN DEFAULT true' },
@@ -658,7 +658,15 @@ router.get('/fix-all-tables', async (req, res) => {
         { col: 'display_order', type: 'INTEGER DEFAULT 999' },
         { col: 'features', type: "JSONB DEFAULT '[]'::jsonb" },
         { col: 'version', type: "VARCHAR(50) DEFAULT '1.0.0'" },
-        { col: 'description', type: 'TEXT' }
+        { col: 'description', type: 'TEXT' },
+        { col: 'provides_to', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'integrates_with', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'optional_deps', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'module_key', type: 'VARCHAR(100)' },
+        { col: 'name', type: 'VARCHAR(255)' },
+        { col: 'icon', type: 'VARCHAR(50)' },
+        { col: 'color', type: 'VARCHAR(50)' },
+        { col: 'category', type: 'VARCHAR(50)' }
     ];
 
     // COMPANY_MODULES - columnas para módulos por empresa
