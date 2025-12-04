@@ -288,6 +288,105 @@ router.get('/fix-columns', async (req, res) => {
     res.json({ success: true, fixes, errors });
 });
 
+// GET /api/seed-demo/fix-users-full?key=SECRET - Agregar TODAS las columnas críticas de users
+router.get('/fix-users-full', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const fixes = [];
+    const errors = [];
+
+    // Columnas críticas que necesita users para funcionar
+    const columnsToAdd = [
+        // Identificación
+        { col: '"employeeId"', type: 'VARCHAR(50)' },
+        { col: '"firstName"', type: 'VARCHAR(100)' },
+        { col: '"lastName"', type: 'VARCHAR(100)' },
+        { col: 'dni', type: 'VARCHAR(20)' },
+        { col: 'phone', type: 'VARCHAR(50)' },
+        { col: 'legajo', type: 'VARCHAR(50)' },
+        { col: 'usuario', type: 'VARCHAR(100)' },
+        { col: 'cuil', type: 'VARCHAR(20)' },
+        // Trabajo
+        { col: 'position', type: 'VARCHAR(100)' },
+        { col: 'salary', type: 'DECIMAL(12,2)' },
+        { col: '"hireDate"', type: 'DATE' },
+        { col: '"birthDate"', type: 'DATE' },
+        { col: 'birth_date', type: 'DATE' },
+        { col: 'address', type: 'TEXT' },
+        { col: 'city', type: 'VARCHAR(100)' },
+        { col: 'province', type: 'VARCHAR(100)' },
+        { col: 'postal_code', type: 'VARCHAR(20)' },
+        // Contacto emergencia
+        { col: '"emergencyContact"', type: 'VARCHAR(200)' },
+        { col: '"emergencyPhone"', type: 'VARCHAR(50)' },
+        { col: 'emergency_contact', type: 'JSONB DEFAULT \'{}\'::jsonb' },
+        // Bancarios
+        { col: 'cbu', type: 'VARCHAR(30)' },
+        { col: 'bank_name', type: 'VARCHAR(100)' },
+        // Estados
+        { col: '"isActive"', type: 'BOOLEAN DEFAULT true' },
+        { col: 'email_verified', type: 'BOOLEAN DEFAULT true' },
+        { col: 'account_status', type: 'VARCHAR(50) DEFAULT \'active\'' },
+        { col: 'verification_pending', type: 'BOOLEAN DEFAULT false' },
+        // Biométrico
+        { col: 'has_fingerprint', type: 'BOOLEAN DEFAULT false' },
+        { col: 'has_facial_data', type: 'BOOLEAN DEFAULT false' },
+        { col: 'biometric_enrolled', type: 'BOOLEAN DEFAULT false' },
+        { col: 'biometric_photo_url', type: 'TEXT' },
+        // Permisos
+        { col: 'permissions', type: 'JSONB DEFAULT \'{}\'::jsonb' },
+        { col: 'settings', type: 'JSONB DEFAULT \'{}\'::jsonb' },
+        { col: 'additional_roles', type: 'JSONB DEFAULT \'[]\'::jsonb' },
+        // Relaciones
+        { col: 'department_id', type: 'INTEGER' },
+        { col: 'branch_id', type: 'UUID' },
+        { col: 'default_branch_id', type: 'UUID' },
+        { col: 'sector_id', type: 'INTEGER' },
+        // Timestamps
+        { col: '"createdAt"', type: 'TIMESTAMP DEFAULT NOW()' },
+        { col: '"updatedAt"', type: 'TIMESTAMP DEFAULT NOW()' },
+        { col: 'last_login', type: 'TIMESTAMP' },
+        { col: 'notes', type: 'TEXT' },
+        // Convenio
+        { col: '"convenioColectivo"', type: 'VARCHAR(100)' },
+        // Mobile/Kiosk
+        { col: 'can_use_mobile_app', type: 'BOOLEAN DEFAULT true' },
+        { col: 'can_use_kiosk', type: 'BOOLEAN DEFAULT true' },
+        { col: 'gps_enabled', type: 'BOOLEAN DEFAULT false' },
+        { col: '"allowOutsideRadius"', type: 'BOOLEAN DEFAULT false' }
+    ];
+
+    for (const { col, type } of columnsToAdd) {
+        try {
+            await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+            fixes.push(`users: ${col} OK`);
+        } catch (error) {
+            errors.push(`${col}: ${error.message.substring(0, 50)}`);
+        }
+    }
+
+    // Actualizar datos de usuarios existentes
+    try {
+        await sequelize.query(`
+            UPDATE users SET
+                "employeeId" = COALESCE("employeeId", employee_id),
+                "firstName" = COALESCE("firstName", first_name),
+                "lastName" = COALESCE("lastName", last_name),
+                "isActive" = COALESCE("isActive", is_active, true),
+                email_verified = COALESCE(email_verified, true)
+            WHERE "employeeId" IS NULL OR "firstName" IS NULL
+        `);
+        fixes.push('users: datos sincronizados');
+    } catch (e) {
+        errors.push('sync: ' + e.message.substring(0, 50));
+    }
+
+    res.json({ success: true, fixes_count: fixes.length, errors_count: errors.length, fixes, errors });
+});
+
 // GET /api/seed-demo/fix-users?key=SECRET - Agregar columnas necesarias para login
 router.get('/fix-users', async (req, res) => {
     const { key } = req.query;
