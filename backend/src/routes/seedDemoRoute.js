@@ -17,17 +17,17 @@ const SECRET_KEY = 'DEMO_SEED_2024_SECURE';
 // GET /api/seed-demo/check - Verificar estado de BD
 router.get('/check', async (req, res) => {
     try {
-        const [tables] = await sequelize.query(`
+        const tables = await sequelize.query(`
             SELECT table_name FROM information_schema.tables
             WHERE table_schema = 'public' ORDER BY table_name
-        `);
+        `, { type: QueryTypes.SELECT });
         res.json({
             success: true,
             tables: tables.map(r => r.table_name),
             count: tables.length
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message, stack: error.stack });
     }
 });
 
