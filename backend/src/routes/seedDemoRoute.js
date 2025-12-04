@@ -354,7 +354,7 @@ router.get('/fix-columns', async (req, res) => {
     res.json({ success: true, fixes, errors });
 });
 
-// GET /api/seed-demo/fix-users-full?key=SECRET - Agregar TODAS las columnas críticas de users
+// GET /api/seed-demo/fix-users-full?key=SECRET - Agregar TODAS las 110 columnas de users
 router.get('/fix-users-full', async (req, res) => {
     const { key } = req.query;
     if (key !== SECRET_KEY) {
@@ -364,93 +364,152 @@ router.get('/fix-users-full', async (req, res) => {
     const fixes = [];
     const errors = [];
 
-    // Columnas críticas que necesita users para funcionar
-    const columnsToAdd = [
-        // Identificación
-        { col: '"employeeId"', type: 'VARCHAR(50)' },
-        { col: '"firstName"', type: 'VARCHAR(100)' },
-        { col: '"lastName"', type: 'VARCHAR(100)' },
-        { col: 'dni', type: 'VARCHAR(20)' },
-        { col: 'phone', type: 'VARCHAR(50)' },
-        { col: 'legajo', type: 'VARCHAR(50)' },
-        { col: 'usuario', type: 'VARCHAR(100)' },
-        { col: 'cuil', type: 'VARCHAR(20)' },
-        // Trabajo
-        { col: 'position', type: 'VARCHAR(100)' },
+    // TODAS las 110 columnas de users (extraídas de BD local)
+    const ALL_COLUMNS = [
+        { col: 'user_id', type: 'UUID DEFAULT gen_random_uuid()' },
+        { col: '"employeeId"', type: 'VARCHAR(255)' },
+        { col: '"firstName"', type: 'VARCHAR(255)' },
+        { col: '"lastName"', type: 'VARCHAR(255)' },
+        { col: 'dni', type: 'VARCHAR(255)' },
+        { col: 'phone', type: 'VARCHAR(255)' },
+        { col: 'position', type: 'VARCHAR(255)' },
         { col: 'salary', type: 'DECIMAL(12,2)' },
         { col: '"hireDate"', type: 'DATE' },
         { col: '"birthDate"', type: 'DATE' },
-        { col: 'birth_date', type: 'DATE' },
         { col: 'address', type: 'TEXT' },
+        { col: '"emergencyContact"', type: 'VARCHAR(255)' },
+        { col: '"emergencyPhone"', type: 'VARCHAR(255)' },
+        { col: '"allowOutsideRadius"', type: 'BOOLEAN DEFAULT false' },
+        { col: '"convenioColectivo"', type: 'VARCHAR(255)' },
+        { col: '"createdAt"', type: 'TIMESTAMPTZ DEFAULT NOW()' },
+        { col: '"updatedAt"', type: 'TIMESTAMPTZ DEFAULT NOW()' },
+        { col: 'is_active', type: 'BOOLEAN DEFAULT true' },
+        { col: 'whatsapp_number', type: 'VARCHAR(255)' },
+        { col: 'accepts_support_packages', type: 'BOOLEAN DEFAULT true' },
+        { col: 'accepts_auctions', type: 'BOOLEAN DEFAULT true' },
+        { col: 'accepts_email_notifications', type: 'BOOLEAN DEFAULT true' },
+        { col: 'accepts_whatsapp_notifications', type: 'BOOLEAN DEFAULT true' },
+        { col: 'accepts_sms_notifications', type: 'BOOLEAN DEFAULT true' },
+        { col: 'communication_consent_date', type: 'TIMESTAMPTZ' },
+        { col: 'global_rating', type: 'DECIMAL(5,2)' },
+        { col: 'cbu', type: 'VARCHAR(30)' },
+        { col: 'bank_name', type: 'VARCHAR(100)' },
+        { col: 'notes', type: 'TEXT' },
+        { col: 'usuario', type: 'VARCHAR(100)' },
+        { col: 'department_id', type: 'BIGINT' },
+        { col: 'default_branch_id', type: 'UUID' },
+        { col: 'birth_date', type: 'DATE' },
+        { col: 'cuil', type: 'VARCHAR(20)' },
+        { col: 'emergency_contact', type: "JSONB DEFAULT '{}'::jsonb" },
+        { col: 'work_schedule', type: "JSONB DEFAULT '{}'::jsonb" },
+        { col: 'last_login', type: 'TIMESTAMPTZ' },
+        { col: 'failed_login_attempts', type: 'INTEGER DEFAULT 0' },
+        { col: 'locked_until', type: 'TIMESTAMPTZ' },
+        { col: 'password_reset_token', type: 'VARCHAR(255)' },
+        { col: 'password_reset_expires', type: 'TIMESTAMPTZ' },
+        { col: 'two_factor_enabled', type: 'BOOLEAN DEFAULT false' },
+        { col: 'two_factor_secret', type: 'VARCHAR(255)' },
+        { col: 'permissions', type: "JSONB DEFAULT '{}'::jsonb" },
+        { col: 'settings', type: "JSONB DEFAULT '{}'::jsonb" },
+        { col: 'has_fingerprint', type: 'BOOLEAN DEFAULT false' },
+        { col: 'has_facial_data', type: 'BOOLEAN DEFAULT false' },
+        { col: 'biometric_last_updated', type: 'TIMESTAMPTZ' },
+        { col: 'gps_enabled', type: 'BOOLEAN DEFAULT false' },
+        { col: 'allowed_locations', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'concurrent_sessions', type: 'INTEGER DEFAULT 1' },
+        { col: 'last_activity', type: 'TIMESTAMPTZ' },
+        { col: 'display_name', type: 'VARCHAR(200)' },
+        { col: 'vendor_code', type: 'VARCHAR(50)' },
+        { col: 'version', type: 'INTEGER DEFAULT 1' },
+        { col: 'biometric_enrolled', type: 'BOOLEAN DEFAULT false' },
+        { col: 'biometric_templates_count', type: 'INTEGER DEFAULT 0' },
+        { col: 'last_biometric_scan', type: 'TIMESTAMP' },
+        { col: 'biometric_quality_avg', type: 'DECIMAL(5,2)' },
+        { col: 'ai_analysis_enabled', type: 'BOOLEAN DEFAULT true' },
+        { col: 'fatigue_monitoring', type: 'BOOLEAN DEFAULT false' },
+        { col: 'emotion_monitoring', type: 'BOOLEAN DEFAULT false' },
+        { col: 'biometric_notes', type: 'TEXT' },
+        { col: 'can_authorize_late_arrivals', type: 'BOOLEAN DEFAULT false' },
+        { col: 'authorized_departments', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'notification_preference_late_arrivals', type: "VARCHAR(50) DEFAULT 'email'" },
+        { col: 'can_use_mobile_app', type: 'BOOLEAN DEFAULT true' },
+        { col: 'can_use_kiosk', type: 'BOOLEAN DEFAULT true' },
+        { col: 'can_use_all_kiosks', type: 'BOOLEAN DEFAULT false' },
+        { col: 'authorized_kiosks', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'has_flexible_schedule', type: 'BOOLEAN DEFAULT false' },
+        { col: 'flexible_schedule_notes', type: 'TEXT' },
+        { col: 'legajo', type: 'VARCHAR(50)' },
+        { col: '"isActive"', type: 'BOOLEAN DEFAULT true' },
+        { col: 'biometric_photo_url', type: 'TEXT' },
+        { col: 'biometric_photo_date', type: 'TIMESTAMP' },
+        { col: 'biometric_photo_expiration', type: 'TIMESTAMP' },
+        { col: 'email_verified', type: 'BOOLEAN DEFAULT true' },
+        { col: 'email_verified_at', type: 'TIMESTAMP' },
+        { col: 'pending_consents', type: 'TEXT[]' },
+        { col: 'verification_pending', type: 'BOOLEAN DEFAULT false' },
+        { col: 'account_status', type: "VARCHAR(50) DEFAULT 'active'" },
+        { col: 'secondary_phone', type: 'VARCHAR(50)' },
+        { col: 'home_phone', type: 'VARCHAR(50)' },
         { col: 'city', type: 'VARCHAR(100)' },
         { col: 'province', type: 'VARCHAR(100)' },
         { col: 'postal_code', type: 'VARCHAR(20)' },
-        // Contacto emergencia
-        { col: '"emergencyContact"', type: 'VARCHAR(200)' },
-        { col: '"emergencyPhone"', type: 'VARCHAR(50)' },
-        { col: 'emergency_contact', type: 'JSONB DEFAULT \'{}\'::jsonb' },
-        // Bancarios
-        { col: 'cbu', type: 'VARCHAR(30)' },
-        { col: 'bank_name', type: 'VARCHAR(100)' },
-        // Estados
-        { col: '"isActive"', type: 'BOOLEAN DEFAULT true' },
-        { col: 'email_verified', type: 'BOOLEAN DEFAULT true' },
-        { col: 'account_status', type: 'VARCHAR(50) DEFAULT \'active\'' },
-        { col: 'verification_pending', type: 'BOOLEAN DEFAULT false' },
-        // Biométrico
-        { col: 'has_fingerprint', type: 'BOOLEAN DEFAULT false' },
-        { col: 'has_facial_data', type: 'BOOLEAN DEFAULT false' },
-        { col: 'biometric_enrolled', type: 'BOOLEAN DEFAULT false' },
-        { col: 'biometric_photo_url', type: 'TEXT' },
-        // Permisos
-        { col: 'permissions', type: 'JSONB DEFAULT \'{}\'::jsonb' },
-        { col: 'settings', type: 'JSONB DEFAULT \'{}\'::jsonb' },
-        { col: 'additional_roles', type: 'JSONB DEFAULT \'[]\'::jsonb' },
-        // Relaciones
-        { col: 'department_id', type: 'INTEGER' },
+        { col: 'neighborhood', type: 'VARCHAR(100)' },
+        { col: 'street', type: 'VARCHAR(200)' },
+        { col: 'street_number', type: 'VARCHAR(20)' },
+        { col: 'floor_apt', type: 'VARCHAR(50)' },
+        { col: 'health_insurance_provider', type: 'VARCHAR(100)' },
+        { col: 'health_insurance_plan', type: 'VARCHAR(100)' },
+        { col: 'health_insurance_number', type: 'VARCHAR(50)' },
+        { col: 'health_insurance_expiry', type: 'DATE' },
         { col: 'branch_id', type: 'UUID' },
-        { col: 'default_branch_id', type: 'UUID' },
+        { col: 'additional_roles', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'branch_scope', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'is_core_user', type: 'BOOLEAN DEFAULT false' },
+        { col: 'force_password_change', type: 'BOOLEAN DEFAULT false' },
+        { col: 'password_changed_at', type: 'TIMESTAMP' },
+        { col: 'core_user_created_at', type: 'TIMESTAMP' },
+        { col: 'onboarding_trace_id', type: 'VARCHAR(100)' },
         { col: 'sector_id', type: 'INTEGER' },
-        // Timestamps
-        { col: '"createdAt"', type: 'TIMESTAMP DEFAULT NOW()' },
-        { col: '"updatedAt"', type: 'TIMESTAMP DEFAULT NOW()' },
-        { col: 'last_login', type: 'TIMESTAMP' },
-        { col: 'notes', type: 'TEXT' },
-        // Convenio
-        { col: '"convenioColectivo"', type: 'VARCHAR(100)' },
-        // Mobile/Kiosk
-        { col: 'can_use_mobile_app', type: 'BOOLEAN DEFAULT true' },
-        { col: 'can_use_kiosk', type: 'BOOLEAN DEFAULT true' },
-        { col: 'gps_enabled', type: 'BOOLEAN DEFAULT false' },
-        { col: '"allowOutsideRadius"', type: 'BOOLEAN DEFAULT false' }
+        { col: 'salary_category_id', type: 'INTEGER' },
+        { col: 'organizational_position_id', type: 'INTEGER' },
+        { col: 'deleted_at', type: 'TIMESTAMP' }
     ];
 
-    for (const { col, type } of columnsToAdd) {
+    for (const { col, type } of ALL_COLUMNS) {
         try {
             await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col} ${type}`);
-            fixes.push(`users: ${col} OK`);
+            fixes.push(`${col} OK`);
         } catch (error) {
-            errors.push(`${col}: ${error.message.substring(0, 50)}`);
+            errors.push(`${col}: ${error.message.substring(0, 40)}`);
         }
     }
 
-    // Actualizar datos de usuarios existentes
+    // Sincronizar datos
     try {
         await sequelize.query(`
             UPDATE users SET
-                "employeeId" = COALESCE("employeeId", employee_id),
-                "firstName" = COALESCE("firstName", first_name),
-                "lastName" = COALESCE("lastName", last_name),
-                "isActive" = COALESCE("isActive", is_active, true),
-                email_verified = COALESCE(email_verified, true)
-            WHERE "employeeId" IS NULL OR "firstName" IS NULL
+                email_verified = COALESCE(email_verified, true),
+                account_status = COALESCE(account_status, 'active'),
+                "isActive" = COALESCE("isActive", is_active, true)
         `);
-        fixes.push('users: datos sincronizados');
+        fixes.push('SYNC OK');
     } catch (e) {
-        errors.push('sync: ' + e.message.substring(0, 50));
+        errors.push('sync: ' + e.message.substring(0, 40));
     }
 
-    res.json({ success: true, fixes_count: fixes.length, errors_count: errors.length, fixes, errors });
+    // Contar columnas
+    const [cols] = await sequelize.query(`
+        SELECT COUNT(*) as cnt FROM information_schema.columns
+        WHERE table_name = 'users' AND table_schema = 'public'
+    `);
+
+    res.json({
+        success: true,
+        total_columns: cols[0].cnt,
+        added: fixes.length,
+        errors_count: errors.length,
+        errors: errors.length > 0 ? errors : 'ninguno'
+    });
 });
 
 // GET /api/seed-demo/fix-users?key=SECRET - Agregar columnas necesarias para login
