@@ -747,10 +747,58 @@ router.get('/create-admin', async (req, res) => {
             VALUES ('admin@demo.com', 'admin', '${hashedPassword}', 'Admin', 'Demo', 'admin', ${companyId}, true, true, 'active')
         `);
 
+        // Sincronizar user_id con id para todos los usuarios
+        await sequelize.query(`UPDATE users SET user_id = id::text::uuid WHERE user_id IS NULL`).catch(() => {});
+        await sequelize.query(`UPDATE users SET "employeeId" = 'EMP-ADMIN-' || id WHERE "employeeId" IS NULL AND email = 'admin@demo.com'`).catch(() => {});
+
         res.json({ success: true, message: 'Usuario admin creado', login: { identifier: 'admin', password: 'admin123', companyId } });
     } catch (error) {
         console.error('Error creando admin:', error);
         res.json({ error: error.message, stack: error.stack });
+    }
+});
+
+// GET /api/seed-demo/fix-user-ids?key=SECRET - Sincronizar IDs de usuarios
+router.get('/fix-user-ids', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        // Verificar estructura de la tabla
+        const [cols] = await sequelize.query(`
+            SELECT column_name, data_type FROM information_schema.columns
+            WHERE table_name = 'users' AND column_name IN ('id', 'user_id', 'employeeId')
+        `);
+
+        // Sincronizar user_id y employeeId
+        const results = [];
+
+        // Si user_id es UUID, generar valores
+        try {
+            await sequelize.query(`UPDATE users SET user_id = gen_random_uuid() WHERE user_id IS NULL`);
+            results.push('user_id: UUIDs generados');
+        } catch (e) {
+            results.push(`user_id error: ${e.message.substring(0, 50)}`);
+        }
+
+        // Sincronizar employeeId
+        try {
+            await sequelize.query(`UPDATE users SET "employeeId" = 'EMP-' || LPAD(id::text, 4, '0') WHERE "employeeId" IS NULL`);
+            results.push('employeeId: sincronizados');
+        } catch (e) {
+            results.push(`employeeId error: ${e.message.substring(0, 50)}`);
+        }
+
+        // Verificar usuarios sin ID
+        const [usersNoId] = await sequelize.query(`
+            SELECT id, email, user_id, "employeeId" FROM users WHERE id IS NULL OR user_id IS NULL
+        `);
+
+        res.json({ success: true, columns: cols, results, users_without_id: usersNoId });
+    } catch (error) {
+        res.json({ error: error.message });
     }
 });
 
