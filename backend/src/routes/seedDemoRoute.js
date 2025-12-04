@@ -654,7 +654,11 @@ router.get('/fix-all-tables', async (req, res) => {
         { col: 'base_price', type: 'DECIMAL(10,2) DEFAULT 0' },
         { col: 'requirements', type: "JSONB DEFAULT '[]'::jsonb" },
         { col: 'bundled_modules', type: "JSONB DEFAULT '[]'::jsonb" },
-        { col: 'metadata', type: "JSONB DEFAULT '{}'::jsonb" }
+        { col: 'metadata', type: "JSONB DEFAULT '{}'::jsonb" },
+        { col: 'display_order', type: 'INTEGER DEFAULT 999' },
+        { col: 'features', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'version', type: "VARCHAR(50) DEFAULT '1.0.0'" },
+        { col: 'description', type: 'TEXT' }
     ];
 
     // COMPANY_MODULES - columnas para módulos por empresa
