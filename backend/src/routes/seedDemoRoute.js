@@ -14,17 +14,34 @@ const { QueryTypes } = require('sequelize');
 // Clave secreta para ejecutar el seed
 const SECRET_KEY = 'DEMO_SEED_2024_SECURE';
 
-// Módulos de ISI (copiados de BD local)
-const ISI_MODULES = [
-    "payroll-liquidation", "legal-dashboard", "art-management", "document-management",
-    "employee-map", "job-postings", "attendance", "permissions-test", "biometric-consent",
-    "plantillas-fiscales", "medical", "vacation-management", "licensing-management",
-    "compliance-dashboard", "users", "kiosks", "training-management", "access-control",
-    "clientes", "facturacion", "sanctions-management", "employee-360",
-    "organizational-structure", "company-account", "occupational-health-phase2",
-    "notification-center", "departments", "shifts", "reports", "dashboard",
-    "notifications-enterprise", "payroll", "medical-dashboard", "certifications",
-    "compliance", "kiosk-management", "engineering-dashboard"
+// Módulos REALES de ISI (26 módulos exactos de company_modules + system_modules en BD local)
+const ISI_MODULES_REAL = [
+    { key: "job-postings", name: "Búsquedas Laborales", icon: "💼", color: "#6f42c1", category: "rrhh" },
+    { key: "notification-center", name: "Centro de Notificaciones", icon: "🔔", color: "#667eea", category: "communication" },
+    { key: "clientes", name: "Clientes SIAC", icon: "👥", color: "#3498db", category: "siac" },
+    { key: "biometric-consent", name: "Consentimientos y Privacidad", icon: "📝", color: "#16a085", category: "compliance" },
+    { key: "access-control", name: "Control de Accesos", icon: "🔐", color: "#8B4513", category: "security" },
+    { key: "attendance", name: "Control de Asistencia", icon: "📋", color: "#9C27B0", category: "core" },
+    { key: "company-account", name: "Cuenta Comercial", icon: "📜", color: "#7F8C8D", category: "core" },
+    { key: "organizational-structure", name: "Estructura Organizacional", icon: "🏢", color: "#2c3e50", category: "rrhh" },
+    { key: "employee-360", name: "Expediente 360°", icon: "🎯", color: "#9b59b6", category: "rrhh" },
+    { key: "facturacion", name: "Facturación SIAC", icon: "💵", color: "#e67e22", category: "siac" },
+    { key: "art-management", name: "Gestión de ART", icon: "🏥", color: "#F44336", category: "medical" },
+    { key: "training-management", name: "Gestión de Capacitaciones", icon: "📚", color: "#FF5722", category: "rrhh" },
+    { key: "kiosks", name: "Gestión de Kioscos", icon: "📟", color: "#607d8b", category: "hardware" },
+    { key: "licensing-management", name: "Gestión de Licencias", icon: "📜", color: "#34495E", category: "admin" },
+    { key: "sanctions-management", name: "Gestión de Sanciones", icon: "⚖️", color: "#E67E22", category: "rrhh" },
+    { key: "users", name: "Gestión de Usuarios", icon: "👥", color: "#4CAF50", category: "core" },
+    { key: "vacation-management", name: "Gestión de Vacaciones", icon: "🏖️", color: "#1ABC9C", category: "rrhh" },
+    { key: "document-management", name: "Gestión Documental", icon: "📄", color: "#795548", category: "rrhh" },
+    { key: "legal-dashboard", name: "Gestión Legal", icon: "⚖️", color: "#3F51B5", category: "compliance" },
+    { key: "medical", name: "Gestión Médica", icon: "⚕️", color: "#00bcd4", category: "medical" },
+    { key: "payroll-liquidation", name: "Liquidación de Sueldos", icon: "💰", color: "#4CAF50", category: "payroll" },
+    { key: "employee-map", name: "Mapa de Empleados", icon: "🗺️", color: "#8BC34A", category: "analytics" },
+    { key: "plantillas-fiscales", name: "Plantillas Fiscales", icon: "📋", color: "#9b59b6", category: "siac" },
+    { key: "compliance-dashboard", name: "Risk Intelligence Dashboard", icon: "⚖️", color: "#e94560", category: "compliance" },
+    { key: "occupational-health-phase2", name: "Salud Ocupacional", icon: "🏥", color: "#00897B", category: "medical" },
+    { key: "permissions-test", name: "Test de Permisos", icon: "🧪", color: "#4B0082", category: "testing" }
 ];
 
 // GET /api/seed-demo/update-modules?key=SECRET - Asignar módulos de ISI a DEMO
@@ -61,7 +78,68 @@ router.get('/update-modules', async (req, res) => {
     }
 });
 
-// GET /api/seed-demo/create-module-tables?key=SECRET - Crear tablas de módulos
+// GET /api/seed-demo/fix-modules?key=SECRET - LIMPIAR y recargar módulos correctos de ISI
+router.get('/fix-modules', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        // 1. Limpiar tablas existentes
+        await sequelize.query(`DELETE FROM company_modules`);
+        await sequelize.query(`DELETE FROM system_modules`);
+
+        // 2. Insertar los 26 módulos REALES de ISI
+        for (const mod of ISI_MODULES_REAL) {
+            await sequelize.query(`
+                INSERT INTO system_modules (module_key, name, description, icon, color, category)
+                VALUES (:key, :name, :desc, :icon, :color, :category)
+            `, {
+                replacements: {
+                    key: mod.key,
+                    name: mod.name,
+                    desc: 'Módulo ' + mod.name,
+                    icon: mod.icon,
+                    color: mod.color,
+                    category: mod.category
+                }
+            });
+        }
+
+        // 3. Asignar todos los módulos a DEMO (company_id = 1)
+        const [modules] = await sequelize.query(`SELECT id FROM system_modules`);
+        for (const sm of modules) {
+            await sequelize.query(`
+                INSERT INTO company_modules (company_id, system_module_id, activo)
+                VALUES (1, :smId, true)
+            `, { replacements: { smId: sm.id } });
+        }
+
+        // 4. También actualizar active_modules en companies para consistencia
+        const moduleKeys = ISI_MODULES_REAL.map(m => m.key);
+        await sequelize.query(`
+            UPDATE companies SET active_modules = :modules::jsonb WHERE id = 1
+        `, { replacements: { modules: JSON.stringify(moduleKeys) } });
+
+        // Verificar
+        const [sysCount] = await sequelize.query(`SELECT COUNT(*) as cnt FROM system_modules`);
+        const [compCount] = await sequelize.query(`SELECT COUNT(*) as cnt FROM company_modules WHERE company_id = 1`);
+        const [moduleList] = await sequelize.query(`SELECT module_key, name FROM system_modules ORDER BY name`);
+
+        res.json({
+            success: true,
+            message: 'Módulos limpiados y recargados con los 26 de ISI',
+            system_modules: sysCount[0].cnt,
+            company_modules_demo: compCount[0].cnt,
+            modules: moduleList
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message, stack: error.stack });
+    }
+});
+
+// GET /api/seed-demo/create-module-tables?key=SECRET - Crear tablas de módulos (legacy)
 router.get('/create-module-tables', async (req, res) => {
     const { key } = req.query;
     if (key !== SECRET_KEY) {
@@ -100,41 +178,7 @@ router.get('/create-module-tables', async (req, res) => {
             )
         `);
 
-        // Insertar módulos del sistema (los de ISI)
-        for (const mod of ISI_MODULES) {
-            await sequelize.query(`
-                INSERT INTO system_modules (module_key, name, description, icon, color, category)
-                VALUES (:key, :name, :desc, '📦', '#666666', 'general')
-                ON CONFLICT (module_key) DO NOTHING
-            `, {
-                replacements: {
-                    key: mod,
-                    name: mod.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-                    desc: 'Módulo ' + mod
-                }
-            });
-        }
-
-        // Asignar todos los módulos a DEMO (company_id = 1)
-        const [modules] = await sequelize.query(`SELECT id FROM system_modules`);
-        for (const sm of modules) {
-            await sequelize.query(`
-                INSERT INTO company_modules (company_id, system_module_id, activo)
-                VALUES (1, :smId, true)
-                ON CONFLICT (company_id, system_module_id) DO NOTHING
-            `, { replacements: { smId: sm.id } });
-        }
-
-        // Verificar
-        const [sysCount] = await sequelize.query(`SELECT COUNT(*) as cnt FROM system_modules`);
-        const [compCount] = await sequelize.query(`SELECT COUNT(*) as cnt FROM company_modules WHERE company_id = 1`);
-
-        res.json({
-            success: true,
-            message: 'Tablas de módulos creadas y pobladas',
-            system_modules: sysCount[0].cnt,
-            company_modules_demo: compCount[0].cnt
-        });
+        res.json({ success: true, message: 'Tablas creadas. Ahora usa /fix-modules para cargar los módulos correctos.' });
     } catch (error) {
         res.status(500).json({ error: error.message, stack: error.stack });
     }
