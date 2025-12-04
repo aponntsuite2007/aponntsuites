@@ -8,7 +8,8 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const pool = require('../config/database').pool;
+const { sequelize } = require('../config/database');
+const { QueryTypes } = require('sequelize');
 
 // Clave secreta para ejecutar el seed
 const SECRET_KEY = 'DEMO_SEED_2024_SECURE';
@@ -16,14 +17,14 @@ const SECRET_KEY = 'DEMO_SEED_2024_SECURE';
 // GET /api/seed-demo/check - Verificar estado de BD
 router.get('/check', async (req, res) => {
     try {
-        const tables = await pool.query(`
+        const [tables] = await sequelize.query(`
             SELECT table_name FROM information_schema.tables
             WHERE table_schema = 'public' ORDER BY table_name
         `);
         res.json({
             success: true,
-            tables: tables.rows.map(r => r.table_name),
-            count: tables.rows.length
+            tables: tables.map(r => r.table_name),
+            count: tables.length
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -123,74 +124,98 @@ router.get('/', async (req, res) => {
         return res.status(403).json({ error: 'Invalid key' });
     }
 
-    const client = await pool.connect();
+    const t = await sequelize.transaction();
     const results = { steps: [], errors: [] };
 
     try {
-        await client.query('BEGIN');
-
         // 1. Verificar si ya existe
-        const existing = await client.query("SELECT id FROM companies WHERE slug = 'demo-corp'");
-        if (existing.rows.length > 0) {
-            await client.query('ROLLBACK');
+        const [existing] = await sequelize.query(
+            "SELECT id FROM companies WHERE slug = 'demo-corp'",
+            { transaction: t }
+        );
+        if (existing.length > 0) {
+            await t.rollback();
             return res.json({
                 success: false,
                 message: 'Empresa DEMO ya existe',
-                company_id: existing.rows[0].id
+                company_id: existing[0].id
             });
         }
 
         // 2. Crear empresa
-        const companyResult = await client.query(`
+        const [companyResult] = await sequelize.query(`
             INSERT INTO companies (name, legal_name, slug, tax_id, contact_email, contact_phone,
                                    address, city, province, country, license_type, max_employees,
                                    is_active, active_modules, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, true, $13, NOW(), NOW())
+            VALUES (:name, :legal_name, :slug, :tax_id, :contact_email, :contact_phone,
+                    :address, :city, :province, :country, :license_type, :max_employees,
+                    true, :active_modules, NOW(), NOW())
             RETURNING id
-        `, [EMPRESA.name, EMPRESA.legal_name, EMPRESA.slug, EMPRESA.tax_id, EMPRESA.contact_email,
-            EMPRESA.contact_phone, EMPRESA.address, EMPRESA.city, EMPRESA.province, EMPRESA.country,
-            EMPRESA.license_type, EMPRESA.max_employees, JSON.stringify(ALL_MODULES)]);
+        `, {
+            replacements: {
+                ...EMPRESA,
+                active_modules: JSON.stringify(ALL_MODULES)
+            },
+            transaction: t
+        });
 
-        const companyId = companyResult.rows[0].id;
+        const companyId = companyResult[0].id;
         results.steps.push(`Empresa creada: ID ${companyId}`);
 
         // 3. Crear sucursales
         const branchIds = [];
         for (const suc of SUCURSALES) {
-            const brResult = await client.query(`
+            const [brResult] = await sequelize.query(`
                 INSERT INTO branches (company_id, name, code, address, city, province, country,
                                       phone, latitude, longitude, timezone, is_main, is_active, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, true, NOW(), NOW())
+                VALUES (:company_id, :name, :code, :address, :city, :province, :country,
+                        :phone, :latitude, :longitude, :timezone, :is_main, true, NOW(), NOW())
                 RETURNING id
-            `, [companyId, suc.name, suc.code, suc.address, suc.city, suc.province, suc.country,
-                suc.phone, suc.latitude, suc.longitude, suc.timezone, suc.is_main]);
-            branchIds.push(brResult.rows[0].id);
+            `, {
+                replacements: { company_id: companyId, ...suc },
+                transaction: t
+            });
+            branchIds.push(brResult[0].id);
         }
         results.steps.push(`${branchIds.length} sucursales creadas`);
 
         // 4. Crear departamentos
         const deptIds = [];
         for (const dept of DEPARTAMENTOS) {
-            const deptResult = await client.query(`
+            const [deptResult] = await sequelize.query(`
                 INSERT INTO departments (company_id, name, code, is_active, created_at, updated_at)
-                VALUES ($1, $2, $3, true, NOW(), NOW())
+                VALUES (:company_id, :name, :code, true, NOW(), NOW())
                 RETURNING id
-            `, [companyId, dept.name, dept.code]);
-            deptIds.push(deptResult.rows[0].id);
+            `, {
+                replacements: { company_id: companyId, ...dept },
+                transaction: t
+            });
+            deptIds.push(deptResult[0].id);
         }
         results.steps.push(`${deptIds.length} departamentos creados`);
 
         // 5. Crear turnos
         const shiftIds = [];
         for (const turno of TURNOS) {
-            const shiftResult = await client.query(`
+            const [shiftResult] = await sequelize.query(`
                 INSERT INTO shifts (company_id, name, code, start_time, end_time, color,
                                     work_days, is_active, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, true, NOW(), NOW())
+                VALUES (:company_id, :name, :code, :start_time, :end_time, :color,
+                        :work_days, true, NOW(), NOW())
                 RETURNING id
-            `, [companyId, turno.name, turno.code, turno.start_time, turno.end_time,
-                turno.color, JSON.stringify(turno.work_days)]);
-            shiftIds.push(shiftResult.rows[0].id);
+            `, {
+                replacements: {
+                    company_id: companyId,
+                    name: turno.name,
+                    code: turno.code,
+                    start_time: turno.start_time,
+                    end_time: turno.end_time,
+                    color: turno.color,
+                    work_days: JSON.stringify(turno.work_days)
+                },
+                transaction: t
+            });
+            shiftIds.push(shiftResult[0].id);
         }
         results.steps.push(`${shiftIds.length} turnos creados`);
 
@@ -203,15 +228,30 @@ router.get('/', async (req, res) => {
             const empId = `EMP-DEMO-${String(i + 1).padStart(3, '0')}`;
             const branchId = i < 7 ? branchIds[0] : branchIds[1];
 
-            const userResult = await client.query(`
+            const [userResult] = await sequelize.query(`
                 INSERT INTO users (company_id, branch_id, department_id, shift_id,
                                    employee_id, first_name, last_name, email, password, role,
                                    is_active, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, NOW(), NOW())
+                VALUES (:company_id, :branch_id, :department_id, :shift_id,
+                        :employee_id, :first_name, :last_name, :email, :password, :role,
+                        true, NOW(), NOW())
                 RETURNING id
-            `, [companyId, branchId, deptIds[u.dept], shiftIds[u.shift],
-                empId, u.first_name, u.last_name, u.email, passwordHash, u.role]);
-            userIds.push(userResult.rows[0].id);
+            `, {
+                replacements: {
+                    company_id: companyId,
+                    branch_id: branchId,
+                    department_id: deptIds[u.dept],
+                    shift_id: shiftIds[u.shift],
+                    employee_id: empId,
+                    first_name: u.first_name,
+                    last_name: u.last_name,
+                    email: u.email,
+                    password: passwordHash,
+                    role: u.role
+                },
+                transaction: t
+            });
+            userIds.push(userResult[0].id);
         }
         results.steps.push(`${userIds.length} usuarios creados (password: admin123)`);
 
@@ -222,16 +262,26 @@ router.get('/', async (req, res) => {
 
         // Solo 5 registros de ejemplo
         for (let i = 1; i <= 5 && i < userIds.length; i++) {
-            await client.query(`
+            await sequelize.query(`
                 INSERT INTO attendance (user_id, company_id, date, check_in, check_out,
                                         status, check_in_method, check_out_method, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, 'present', 'biometric', 'biometric', NOW(), NOW())
-            `, [userIds[i], companyId, dateStr, `${dateStr} 08:00:00`, `${dateStr} 17:00:00`]);
+                VALUES (:user_id, :company_id, :date, :check_in, :check_out,
+                        'present', 'biometric', 'biometric', NOW(), NOW())
+            `, {
+                replacements: {
+                    user_id: userIds[i],
+                    company_id: companyId,
+                    date: dateStr,
+                    check_in: `${dateStr} 08:00:00`,
+                    check_out: `${dateStr} 17:00:00`
+                },
+                transaction: t
+            });
             attendanceCount++;
         }
         results.steps.push(`${attendanceCount} registros de asistencia creados`);
 
-        await client.query('COMMIT');
+        await t.commit();
 
         results.success = true;
         results.summary = {
@@ -254,13 +304,11 @@ router.get('/', async (req, res) => {
         res.json(results);
 
     } catch (error) {
-        await client.query('ROLLBACK');
+        await t.rollback();
         console.error('Error en seed:', error);
         results.success = false;
         results.error = error.message;
         res.status(500).json(results);
-    } finally {
-        client.release();
     }
 });
 
