@@ -3,7 +3,7 @@ services:
     name: aponntsuites
     env: node
     buildCommand: cd backend && npm install
-    startCommand: cd backend && npm run db:fix-render && npm run seed:isi && npm start
+    startCommand: cd backend && (npm run db:fix-render || echo "db:fix-render failed, continuing...") && (npm run seed:isi || echo "seed:isi failed, continuing...") && npm start
     envVars:
       - key: NODE_ENV
         value: production
