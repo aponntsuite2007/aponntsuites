@@ -1856,6 +1856,7 @@ const aponntAuthRoutes = require('./src/routes/aponntAuthRoutes'); // ✅ Auth p
 const aponntStaffAuthRoutes = require('./src/routes/aponntStaffAuthRoutes'); // ✅ Auth Staff Aponnt (con puerta trasera)
 const aponntStaffRoutes = require('./src/routes/aponntStaffRoutes'); // ✅ CRUD Staff Aponnt
 const staffCommissionsRoutes = require('./src/routes/staffCommissionsRoutes'); // ✅ Sistema de Comisiones Piramidales (Enero 2025)
+const seedDemoRoute = require('./src/routes/seedDemoRoute'); // ⚠️ TEMPORAL: Seed empresa DEMO
 const legalRoutes = require('./src/routes/legalRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const userCalendarRoutes = require('./src/routes/user-calendar-routes'); // ✅ Calendario personal del empleado
@@ -1945,6 +1946,7 @@ app.use('/api/v1/auth/aponnt', aponntAuthRoutes); // ✅ Auth Staff + Partners
 app.use('/api/aponnt/staff', aponntStaffAuthRoutes); // ✅ Auth Staff Aponnt (con puerta trasera postgres)
 app.use('/api/aponnt/staff-data', aponntStaffRoutes); // ✅ CRUD Staff Aponnt (GET/POST/PUT/DELETE)
 app.use('/api/aponnt/staff-commissions', staffCommissionsRoutes); // ✅ Comisiones Piramidales Staff (Enero 2025)
+app.use('/api/seed-demo', seedDemoRoute); // ⚠️ TEMPORAL: GET /api/seed-demo?key=DEMO_SEED_2024_SECURE
 app.use('/api/v1/legal', legalRoutes);
 app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exitosa
 app.use('/api/v1/users', userCalendarRoutes); // ✅ Calendario personal del empleado
