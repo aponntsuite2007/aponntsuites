@@ -565,6 +565,195 @@ router.get('/fix-users', async (req, res) => {
     res.json({ success: true, fixes, errors });
 });
 
+// GET /api/seed-demo/fix-all-tables?key=SECRET - Agregar TODAS las columnas faltantes a TODAS las tablas clave
+router.get('/fix-all-tables', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const results = { tables: {}, errors: [] };
+
+    // DEPARTMENTS - columnas necesarias
+    const DEPT_COLUMNS = [
+        { col: 'gps_lat', type: 'DECIMAL(10,8)' },
+        { col: 'gps_lng', type: 'DECIMAL(11,8)' },
+        { col: 'gps_radius', type: 'INTEGER DEFAULT 100' },
+        { col: 'geofence_enabled', type: 'BOOLEAN DEFAULT false' },
+        { col: 'branch_id', type: 'INTEGER' },
+        { col: 'manager_id', type: 'INTEGER' },
+        { col: 'is_active', type: 'BOOLEAN DEFAULT true' },
+        { col: 'description', type: 'TEXT' },
+        { col: 'code', type: 'VARCHAR(50)' },
+        { col: 'parent_id', type: 'INTEGER' },
+        { col: 'level', type: 'INTEGER DEFAULT 1' },
+        { col: 'path', type: 'TEXT' }
+    ];
+
+    // BRANCHES - columnas adicionales
+    const BRANCH_COLUMNS = [
+        { col: 'gps_lat', type: 'DECIMAL(10,8)' },
+        { col: 'gps_lng', type: 'DECIMAL(11,8)' },
+        { col: 'gps_radius', type: 'INTEGER DEFAULT 100' },
+        { col: 'geofence_enabled', type: 'BOOLEAN DEFAULT false' },
+        { col: 'is_main', type: 'BOOLEAN DEFAULT false' },
+        { col: 'timezone', type: 'VARCHAR(50)' },
+        { col: 'working_days', type: "JSONB DEFAULT '[]'::jsonb" }
+    ];
+
+    // ATTENDANCE - columnas adicionales
+    const ATTENDANCE_COLUMNS = [
+        { col: 'gps_lat', type: 'DECIMAL(10,8)' },
+        { col: 'gps_lng', type: 'DECIMAL(11,8)' },
+        { col: 'gps_accuracy', type: 'DECIMAL(10,2)' },
+        { col: 'device_id', type: 'VARCHAR(255)' },
+        { col: 'device_info', type: 'TEXT' },
+        { col: 'verification_method', type: 'VARCHAR(50)' },
+        { col: 'branch_id', type: 'INTEGER' },
+        { col: 'kiosk_id', type: 'INTEGER' },
+        { col: 'work_schedule', type: "JSONB DEFAULT '{}'::jsonb" },
+        { col: 'notes', type: 'TEXT' },
+        { col: 'status', type: "VARCHAR(50) DEFAULT 'present'" },
+        { col: 'is_late', type: 'BOOLEAN DEFAULT false' },
+        { col: 'late_minutes', type: 'INTEGER DEFAULT 0' },
+        { col: 'is_early_departure', type: 'BOOLEAN DEFAULT false' },
+        { col: 'early_departure_minutes', type: 'INTEGER DEFAULT 0' },
+        { col: 'overtime_minutes', type: 'INTEGER DEFAULT 0' },
+        { col: 'worked_hours', type: 'DECIMAL(5,2)' }
+    ];
+
+    // SHIFTS - columnas adicionales
+    const SHIFT_COLUMNS = [
+        { col: 'tolerance_late_minutes', type: 'INTEGER DEFAULT 15' },
+        { col: 'tolerance_early_minutes', type: 'INTEGER DEFAULT 15' },
+        { col: 'break_duration_minutes', type: 'INTEGER DEFAULT 60' },
+        { col: 'is_flexible', type: 'BOOLEAN DEFAULT false' },
+        { col: 'min_hours', type: 'DECIMAL(4,2)' },
+        { col: 'max_hours', type: 'DECIMAL(4,2)' },
+        { col: 'applies_to', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'is_active', type: 'BOOLEAN DEFAULT true' }
+    ];
+
+    // KIOSKS - columnas adicionales
+    const KIOSK_COLUMNS = [
+        { col: 'gps_lat', type: 'DECIMAL(10,8)' },
+        { col: 'gps_lng', type: 'DECIMAL(11,8)' },
+        { col: 'gps_radius', type: 'INTEGER DEFAULT 50' },
+        { col: 'device_token', type: 'VARCHAR(255)' },
+        { col: 'last_heartbeat', type: 'TIMESTAMP' },
+        { col: 'is_online', type: 'BOOLEAN DEFAULT false' },
+        { col: 'version', type: 'VARCHAR(50)' },
+        { col: 'settings', type: "JSONB DEFAULT '{}'::jsonb" }
+    ];
+
+    const ALL_TABLES = [
+        { name: 'departments', columns: DEPT_COLUMNS },
+        { name: 'branches', columns: BRANCH_COLUMNS },
+        { name: 'attendance', columns: ATTENDANCE_COLUMNS },
+        { name: 'shifts', columns: SHIFT_COLUMNS },
+        { name: 'kiosks', columns: KIOSK_COLUMNS }
+    ];
+
+    for (const { name, columns } of ALL_TABLES) {
+        results.tables[name] = { added: 0, skipped: 0, errors: [] };
+        for (const { col, type } of columns) {
+            try {
+                await sequelize.query(`ALTER TABLE ${name} ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+                results.tables[name].added++;
+            } catch (e) {
+                if (e.message.includes('already exists')) {
+                    results.tables[name].skipped++;
+                } else {
+                    results.tables[name].errors.push(`${col}: ${e.message.substring(0, 50)}`);
+                }
+            }
+        }
+    }
+
+    res.json({ success: true, results });
+});
+
+// GET /api/seed-demo/create-admin?key=SECRET - Crear usuario admin para DEMO
+router.get('/create-admin', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+
+    try {
+        // Verificar que existe la empresa DEMO
+        const [company] = await sequelize.query(
+            "SELECT company_id, id FROM companies WHERE slug = 'demo-corp' LIMIT 1",
+            { type: sequelize.QueryTypes.SELECT }
+        );
+
+        if (!company) {
+            // Crear empresa DEMO primero
+            await sequelize.query(`
+                INSERT INTO companies (name, slug, legal_name, is_active, active_modules, license_type)
+                VALUES ('DEMO', 'demo-corp', 'Demo Corporación S.A.', true, '${JSON.stringify(ISI_MODULES_REAL)}'::jsonb, 'enterprise')
+                ON CONFLICT (slug) DO UPDATE SET active_modules = '${JSON.stringify(ISI_MODULES_REAL)}'::jsonb
+            `);
+        }
+
+        // Obtener company_id
+        const [comp] = await sequelize.query(
+            "SELECT COALESCE(company_id, id) as cid FROM companies WHERE slug = 'demo-corp' LIMIT 1",
+            { type: sequelize.QueryTypes.SELECT }
+        );
+
+        const companyId = comp?.cid || 1;
+
+        // Crear usuario admin
+        const adminData = {
+            email: 'admin@demo.com',
+            usuario: 'admin',
+            password: hashedPassword,
+            firstName: 'Admin',
+            lastName: 'Demo',
+            role: 'admin',
+            company_id: companyId,
+            is_active: true,
+            email_verified: true,
+            account_status: 'active'
+        };
+
+        // Verificar si ya existe
+        const [existing] = await sequelize.query(
+            `SELECT id FROM users WHERE email = 'admin@demo.com' AND company_id = ${companyId}`,
+            { type: sequelize.QueryTypes.SELECT }
+        );
+
+        if (existing) {
+            // Actualizar
+            await sequelize.query(`
+                UPDATE users SET
+                    password = '${hashedPassword}',
+                    role = 'admin',
+                    is_active = true,
+                    email_verified = true,
+                    account_status = 'active'
+                WHERE email = 'admin@demo.com' AND company_id = ${companyId}
+            `);
+            return res.json({ success: true, message: 'Usuario admin actualizado', login: { identifier: 'admin', password: 'admin123', companyId } });
+        }
+
+        // Insertar nuevo
+        await sequelize.query(`
+            INSERT INTO users (email, usuario, password, "firstName", "lastName", role, company_id, is_active, email_verified, account_status)
+            VALUES ('admin@demo.com', 'admin', '${hashedPassword}', 'Admin', 'Demo', 'admin', ${companyId}, true, true, 'active')
+        `);
+
+        res.json({ success: true, message: 'Usuario admin creado', login: { identifier: 'admin', password: 'admin123', companyId } });
+    } catch (error) {
+        console.error('Error creando admin:', error);
+        res.json({ error: error.message, stack: error.stack });
+    }
+});
+
 // GET /api/seed-demo/create-schema?key=SECRET - Crear tablas básicas (método alternativo)
 router.get('/create-schema', async (req, res) => {
     const { key } = req.query;
