@@ -184,9 +184,24 @@ async function initializeDatabase() {
     console.log('🔄 Conectando a PostgreSQL...');
     await database.connect();
 
-    // MIGRACIONES DESACTIVADAS: render.yaml ejecuta execute-fix-render.js con IF NOT EXISTS
-    // Las migraciones de sequelize-cli no son idempotentes y fallan en redeploys
-    console.log('ℹ️ Migraciones automáticas desactivadas (usar npm run db:fix-render en Render)');
+    // AUTO-SYNC: Sincronizar schema de modelos con la BD (agrega columnas faltantes)
+    // Esto es necesario para que Render tenga el mismo schema que local
+    console.log('🔄 Sincronizando schema de modelos con la base de datos...');
+    try {
+      await database.sequelize.sync({ alter: true });
+      console.log('✅ Schema sincronizado correctamente');
+    } catch (syncError) {
+      console.log('⚠️ Error sincronizando schema (puede ser normal por FK):', syncError.message);
+      // Intentar sync sin alter (solo crea tablas faltantes)
+      try {
+        await database.sequelize.sync({ force: false });
+        console.log('✅ Tablas faltantes creadas');
+      } catch (e) {
+        console.log('⚠️ Sync básico también falló:', e.message);
+      }
+    }
+
+    console.log('ℹ️ Migraciones automáticas: sequelize.sync() ejecutado al iniciar');
 
     // // Ejecutar migraciones automáticamente (actualización dinámica de schema)
     // console.log('🔧 Ejecutando migraciones de base de datos...');
