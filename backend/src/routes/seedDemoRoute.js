@@ -2,13 +2,12 @@
  * Ruta temporal para seedear empresa DEMO desde Render
  * ELIMINAR DESPUÉS DE USAR
  *
- * Uso: GET /api/seed-demo?key=DEMO_SEED_2024
+ * Uso: GET /api/seed-demo?key=DEMO_SEED_2024_SECURE
  */
 
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
 const pool = require('../config/database').pool;
 
 // Clave secreta para ejecutar el seed
@@ -136,7 +135,7 @@ router.get('/', async (req, res) => {
             EMPRESA.license_type, EMPRESA.max_employees, JSON.stringify(ALL_MODULES)]);
 
         const companyId = companyResult.rows[0].id;
-        results.steps.push(`✅ Empresa creada: ID ${companyId}`);
+        results.steps.push(`Empresa creada: ID ${companyId}`);
 
         // 3. Crear sucursales
         const branchIds = [];
@@ -150,7 +149,7 @@ router.get('/', async (req, res) => {
                 suc.phone, suc.latitude, suc.longitude, suc.timezone, suc.is_main]);
             branchIds.push(brResult.rows[0].id);
         }
-        results.steps.push(`✅ ${branchIds.length} sucursales creadas`);
+        results.steps.push(`${branchIds.length} sucursales creadas`);
 
         // 4. Crear departamentos
         const deptIds = [];
@@ -162,7 +161,7 @@ router.get('/', async (req, res) => {
             `, [companyId, dept.name, dept.code]);
             deptIds.push(deptResult.rows[0].id);
         }
-        results.steps.push(`✅ ${deptIds.length} departamentos creados`);
+        results.steps.push(`${deptIds.length} departamentos creados`);
 
         // 5. Crear turnos
         const shiftIds = [];
@@ -176,16 +175,16 @@ router.get('/', async (req, res) => {
                 turno.color, JSON.stringify(turno.work_days)]);
             shiftIds.push(shiftResult.rows[0].id);
         }
-        results.steps.push(`✅ ${shiftIds.length} turnos creados`);
+        results.steps.push(`${shiftIds.length} turnos creados`);
 
-        // 6. Crear usuarios
+        // 6. Crear usuarios - hash password una sola vez
         const passwordHash = await bcrypt.hash('admin123', 10);
         const userIds = [];
 
         for (let i = 0; i < USUARIOS.length; i++) {
             const u = USUARIOS[i];
             const empId = `EMP-DEMO-${String(i + 1).padStart(3, '0')}`;
-            const branchId = i < 7 ? branchIds[0] : branchIds[1]; // 7 en Argentina, 3 en Uruguay
+            const branchId = i < 7 ? branchIds[0] : branchIds[1];
 
             const userResult = await client.query(`
                 INSERT INTO users (company_id, branch_id, department_id, shift_id,
@@ -197,51 +196,23 @@ router.get('/', async (req, res) => {
                 empId, u.first_name, u.last_name, u.email, passwordHash, u.role]);
             userIds.push(userResult.rows[0].id);
         }
-        results.steps.push(`✅ ${userIds.length} usuarios creados (password: admin123)`);
+        results.steps.push(`${userIds.length} usuarios creados (password: admin123)`);
 
-        // 7. Crear registros de asistencia (últimos 30 días)
-        let attendanceCount = 0;
+        // 7. Crear solo 5 registros de asistencia (rápido)
         const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+        let attendanceCount = 0;
 
-        for (let dayOffset = 30; dayOffset >= 0; dayOffset--) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - dayOffset);
-            const dayOfWeek = date.getDay();
-
-            // Solo días laborales (Lun-Vie)
-            if (dayOfWeek === 0 || dayOfWeek === 6) continue;
-
-            const dateStr = date.toISOString().split('T')[0];
-
-            // Cada usuario (excepto admin) tiene asistencia
-            for (let i = 1; i < userIds.length; i++) {
-                const userId = userIds[i];
-                const turnoIdx = USUARIOS[i].shift;
-                const turno = TURNOS[turnoIdx];
-
-                // Variación realista: ±15 min entrada, ±10 min salida
-                const entryVariation = Math.floor(Math.random() * 30) - 15;
-                const exitVariation = Math.floor(Math.random() * 20) - 10;
-
-                const [entryH, entryM] = turno.start_time.split(':').map(Number);
-                const [exitH, exitM] = turno.end_time.split(':').map(Number);
-
-                const entryTime = `${String(entryH).padStart(2,'0')}:${String(Math.max(0, Math.min(59, entryM + entryVariation))).padStart(2,'0')}:00`;
-                const exitTime = `${String(exitH).padStart(2,'0')}:${String(Math.max(0, Math.min(59, exitM + exitVariation))).padStart(2,'0')}:00`;
-
-                // 5% probabilidad de ausencia
-                if (Math.random() < 0.05) continue;
-
-                await client.query(`
-                    INSERT INTO attendance (user_id, company_id, date, check_in, check_out,
-                                            status, check_in_method, check_out_method, created_at, updated_at)
-                    VALUES ($1, $2, $3, $4, $5, 'present', 'biometric', 'biometric', NOW(), NOW())
-                `, [userId, companyId, dateStr, `${dateStr} ${entryTime}`, `${dateStr} ${exitTime}`]);
-
-                attendanceCount++;
-            }
+        // Solo 5 registros de ejemplo
+        for (let i = 1; i <= 5 && i < userIds.length; i++) {
+            await client.query(`
+                INSERT INTO attendance (user_id, company_id, date, check_in, check_out,
+                                        status, check_in_method, check_out_method, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, 'present', 'biometric', 'biometric', NOW(), NOW())
+            `, [userIds[i], companyId, dateStr, `${dateStr} 08:00:00`, `${dateStr} 17:00:00`]);
+            attendanceCount++;
         }
-        results.steps.push(`✅ ${attendanceCount} registros de asistencia creados`);
+        results.steps.push(`${attendanceCount} registros de asistencia creados`);
 
         await client.query('COMMIT');
 
@@ -267,7 +238,7 @@ router.get('/', async (req, res) => {
 
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('❌ Error en seed:', error);
+        console.error('Error en seed:', error);
         results.success = false;
         results.error = error.message;
         res.status(500).json(results);
