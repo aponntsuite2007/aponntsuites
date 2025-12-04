@@ -646,27 +646,29 @@ router.get('/fix-all-tables', async (req, res) => {
         { col: 'settings', type: "JSONB DEFAULT '{}'::jsonb" }
     ];
 
-    // SYSTEM_MODULES - TODAS las columnas usadas por el sistema
+    // SYSTEM_MODULES - TODAS las 24 columnas de LOCAL (copia exacta)
     const SYSTEM_MODULE_COLUMNS = [
-        { col: 'is_core', type: 'BOOLEAN DEFAULT false' },
-        { col: 'is_active', type: 'BOOLEAN DEFAULT true' },
-        { col: 'available_in', type: "VARCHAR(50) DEFAULT 'both'" },
-        { col: 'base_price', type: 'DECIMAL(10,2) DEFAULT 0' },
-        { col: 'requirements', type: "JSONB DEFAULT '[]'::jsonb" },
-        { col: 'bundled_modules', type: "JSONB DEFAULT '[]'::jsonb" },
-        { col: 'metadata', type: "JSONB DEFAULT '{}'::jsonb" },
-        { col: 'display_order', type: 'INTEGER DEFAULT 999' },
-        { col: 'features', type: "JSONB DEFAULT '[]'::jsonb" },
-        { col: 'version', type: "VARCHAR(50) DEFAULT '1.0.0'" },
+        { col: 'module_key', type: 'VARCHAR(255)' },
+        { col: 'name', type: 'VARCHAR(255)' },
         { col: 'description', type: 'TEXT' },
+        { col: 'icon', type: 'VARCHAR(255)' },
+        { col: 'color', type: 'VARCHAR(255)' },
+        { col: 'category', type: "JSONB DEFAULT 'core'" },
+        { col: 'base_price', type: 'DECIMAL(10,2) DEFAULT 0' },
+        { col: 'is_active', type: 'BOOLEAN DEFAULT true' },
+        { col: 'is_core', type: 'BOOLEAN DEFAULT false' },
+        { col: 'display_order', type: 'INTEGER DEFAULT 0' },
+        { col: 'features', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'requirements', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'version', type: "VARCHAR(255) DEFAULT '1.0.0'" },
+        { col: 'min_employees', type: 'INTEGER' },
+        { col: 'max_employees', type: 'INTEGER' },
+        { col: 'rubro', type: "VARCHAR(255) DEFAULT 'General'" },
+        { col: 'bundled_modules', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'available_in', type: "VARCHAR(255) DEFAULT 'both'" },
         { col: 'provides_to', type: "JSONB DEFAULT '[]'::jsonb" },
         { col: 'integrates_with', type: "JSONB DEFAULT '[]'::jsonb" },
-        { col: 'optional_deps', type: "JSONB DEFAULT '[]'::jsonb" },
-        { col: 'module_key', type: 'VARCHAR(100)' },
-        { col: 'name', type: 'VARCHAR(255)' },
-        { col: 'icon', type: 'VARCHAR(50)' },
-        { col: 'color', type: 'VARCHAR(50)' },
-        { col: 'category', type: 'VARCHAR(50)' }
+        { col: 'metadata', type: "JSONB DEFAULT '{}'::jsonb" }
     ];
 
     // COMPANY_MODULES - columnas para módulos por empresa
