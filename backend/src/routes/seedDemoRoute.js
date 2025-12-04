@@ -82,6 +82,42 @@ router.get('/sync-all', async (req, res) => {
     }
 });
 
+// GET /api/seed-demo/fix-columns?key=SECRET - Agregar columnas faltantes (paranoid)
+router.get('/fix-columns', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const fixes = [];
+    const errors = [];
+
+    // Lista de tablas que pueden necesitar deleted_at
+    const tablesToFix = ['departments', 'shifts', 'users', 'branches', 'attendance', 'companies'];
+
+    for (const table of tablesToFix) {
+        try {
+            // Verificar si la columna ya existe
+            const [cols] = await sequelize.query(`
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = '${table}' AND column_name = 'deleted_at'
+            `);
+
+            if (cols.length === 0) {
+                // Agregar columna
+                await sequelize.query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP`);
+                fixes.push(`${table}: added deleted_at`);
+            } else {
+                fixes.push(`${table}: deleted_at already exists`);
+            }
+        } catch (error) {
+            errors.push(`${table}: ${error.message}`);
+        }
+    }
+
+    res.json({ success: true, fixes, errors });
+});
+
 // GET /api/seed-demo/create-schema?key=SECRET - Crear tablas básicas (método alternativo)
 router.get('/create-schema', async (req, res) => {
     const { key } = req.query;
