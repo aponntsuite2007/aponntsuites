@@ -796,12 +796,19 @@ router.get('/fix-user-ids', async (req, res) => {
         // Sincronizar user_id y employeeId
         const results = [];
 
-        // Si user_id es UUID, generar valores
+        // Sincronizar user_id con id (funciona tanto para INT como UUID)
         try {
-            await sequelize.query(`UPDATE users SET user_id = gen_random_uuid() WHERE user_id IS NULL`);
-            results.push('user_id: UUIDs generados');
-        } catch (e) {
-            results.push(`user_id error: ${e.message.substring(0, 50)}`);
+            // Intento 1: user_id = id (para INTEGER)
+            await sequelize.query(`UPDATE users SET user_id = id WHERE user_id IS NULL`);
+            results.push('user_id: sincronizado con id');
+        } catch (e1) {
+            try {
+                // Intento 2: user_id UUID generado
+                await sequelize.query(`UPDATE users SET user_id = gen_random_uuid() WHERE user_id IS NULL`);
+                results.push('user_id: UUIDs generados');
+            } catch (e2) {
+                results.push(`user_id error: ${e2.message.substring(0, 50)}`);
+            }
         }
 
         // Sincronizar employeeId
