@@ -118,6 +118,59 @@ router.get('/fix-columns', async (req, res) => {
     res.json({ success: true, fixes, errors });
 });
 
+// GET /api/seed-demo/fix-users?key=SECRET - Agregar columnas necesarias para login
+router.get('/fix-users', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const fixes = [];
+    const errors = [];
+
+    // Columnas que el login espera y podrían faltar
+    const columnsToAdd = [
+        { col: 'email_verified', type: 'BOOLEAN DEFAULT true' },
+        { col: 'account_status', type: "VARCHAR(50) DEFAULT 'active'" },
+        { col: 'verification_pending', type: 'BOOLEAN DEFAULT false' },
+        { col: 'usuario', type: 'VARCHAR(100)' },
+        { col: 'dni', type: 'VARCHAR(20)' },
+        { col: 'user_id', type: 'INTEGER' },
+        { col: 'company_id', type: 'INTEGER' }
+    ];
+
+    for (const { col, type } of columnsToAdd) {
+        try {
+            await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+            fixes.push(`users: added ${col}`);
+        } catch (error) {
+            if (error.message.includes('already exists')) {
+                fixes.push(`users: ${col} already exists`);
+            } else {
+                errors.push(`users.${col}: ${error.message}`);
+            }
+        }
+    }
+
+    // También actualizar user_id para que sea igual a id si es null
+    try {
+        await sequelize.query(`UPDATE users SET user_id = id WHERE user_id IS NULL`);
+        fixes.push('users: user_id synced with id');
+    } catch (error) {
+        errors.push(`sync user_id: ${error.message}`);
+    }
+
+    // Actualizar email_verified = true para usuarios existentes
+    try {
+        await sequelize.query(`UPDATE users SET email_verified = true WHERE email_verified IS NULL`);
+        fixes.push('users: email_verified set to true');
+    } catch (error) {
+        errors.push(`set email_verified: ${error.message}`);
+    }
+
+    res.json({ success: true, fixes, errors });
+});
+
 // GET /api/seed-demo/create-schema?key=SECRET - Crear tablas básicas (método alternativo)
 router.get('/create-schema', async (req, res) => {
     const { key } = req.query;
