@@ -79,7 +79,6 @@ module.exports = (sequelize) => {
     timestamps: true,
     underscored: true,
     indexes: [
-      { fields: ['plan_name'], unique: true },
       { fields: ['is_active'] }
     ],
     comment: 'SLA plans available for companies'

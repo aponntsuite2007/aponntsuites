@@ -15,6 +15,7 @@ const multer = require('multer');
 const BiometricMatchingService = require('../services/biometric-matching-service');
 const CompanyIsolationMiddleware = require('../middleware/company-isolation');
 const { auth } = require('../middleware/auth');
+const SuspensionBlockingService = require('../services/SuspensionBlockingService');
 
 // Importar sequelize global para operaciones de BD (evita crear múltiples instancias)
 const { sequelize } = require('../config/database-postgresql');
@@ -93,6 +94,34 @@ router.post('/clock-in',
           processingTime: matchingResult.processingTime,
           canRetry: true
         });
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // VERIFICAR BLOQUEO POR SUSPENSIÓN DISCIPLINARIA
+      // ═══════════════════════════════════════════════════════════════
+      const employeeId = matchingResult.matchedUserId || matchingResult.employee?.user_id;
+      if (employeeId) {
+        const suspensionCheck = await SuspensionBlockingService.quickCheck(employeeId, companyId);
+
+        if (suspensionCheck.blocked) {
+          console.log(`🚫 [CLOCK-IN] Empleado ${employeeId} bloqueado por suspensión hasta ${suspensionCheck.endDate}`);
+
+          return res.status(200).json({
+            success: false,
+            blocked: true,
+            blockReason: 'SUSPENSION',
+            reason: 'employee_suspended',
+            message: `Acceso bloqueado por suspensión disciplinaria.\nFecha de finalización: ${new Date(suspensionCheck.endDate).toLocaleDateString('es-AR')}\nDías restantes: ${suspensionCheck.daysRemaining}`,
+            suspensionInfo: {
+              endDate: suspensionCheck.endDate,
+              daysRemaining: suspensionCheck.daysRemaining,
+              sanctionId: suspensionCheck.sanctionId
+            },
+            sessionId: matchingResult.sessionId,
+            processingTime: Date.now() - startTime,
+            canRetry: false
+          });
+        }
       }
 
       // Process attendance record
@@ -183,6 +212,34 @@ router.post('/clock-out',
           processingTime: matchingResult.processingTime,
           canRetry: true
         });
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // VERIFICAR BLOQUEO POR SUSPENSIÓN DISCIPLINARIA (clock-out)
+      // ═══════════════════════════════════════════════════════════════
+      const employeeIdOut = matchingResult.matchedUserId || matchingResult.employee?.user_id;
+      if (employeeIdOut) {
+        const suspensionCheckOut = await SuspensionBlockingService.quickCheck(employeeIdOut, companyId);
+
+        if (suspensionCheckOut.blocked) {
+          console.log(`🚫 [CLOCK-OUT] Empleado ${employeeIdOut} bloqueado por suspensión hasta ${suspensionCheckOut.endDate}`);
+
+          return res.status(200).json({
+            success: false,
+            blocked: true,
+            blockReason: 'SUSPENSION',
+            reason: 'employee_suspended',
+            message: `Acceso bloqueado por suspensión disciplinaria.\nFecha de finalización: ${new Date(suspensionCheckOut.endDate).toLocaleDateString('es-AR')}\nDías restantes: ${suspensionCheckOut.daysRemaining}`,
+            suspensionInfo: {
+              endDate: suspensionCheckOut.endDate,
+              daysRemaining: suspensionCheckOut.daysRemaining,
+              sanctionId: suspensionCheckOut.sanctionId
+            },
+            sessionId: matchingResult.sessionId,
+            processingTime: Date.now() - startTime,
+            canRetry: false
+          });
+        }
       }
 
       // Process attendance record

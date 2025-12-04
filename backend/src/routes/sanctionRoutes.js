@@ -1,7 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { Sanction } = require('../config/database');
-const { auth } = require('../middleware/auth');
+const { auth, authorize } = require('../middleware/auth');
+const SanctionWorkflowService = require('../services/SanctionWorkflowService');
+const SuspensionBlockingService = require('../services/SuspensionBlockingService');
+
+// Middleware para roles que pueden gestionar sanciones
+const canManageSanctions = authorize('admin', 'rrhh', 'supervisor');
+const canReviewLegal = authorize('admin', 'legal');
+const canConfirmHR = authorize('admin', 'rrhh');
 
 /**
  * @route GET /api/v1/sanctions
@@ -46,6 +53,109 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// RUTAS ESPECÍFICAS (DEBEN IR ANTES DE /:id para evitar conflictos)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * @route GET /api/v1/sanctions/stats
+ * @desc Obtener estadísticas de sanciones (workflow v2)
+ * IMPORTANTE: Esta ruta debe estar ANTES de /:id
+ */
+router.get('/stats', auth, canManageSanctions, async (req, res) => {
+    try {
+        const companyId = req.user?.company_id;
+        const periodDays = parseInt(req.query.period) || 30;
+
+        console.log(`📊 [SANCTIONS-STATS] Requesting stats for company ${companyId}, period ${periodDays}`);
+
+        const result = await SanctionWorkflowService.getSanctionStats(companyId, periodDays);
+
+        if (!result.success) {
+            console.error('❌ [SANCTIONS-STATS] Error:', result.error);
+            return res.status(500).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS-STATS] Error getting stats:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route GET /api/v1/sanctions/pending-review
+ * @desc Obtener sanciones pendientes de revisión para el usuario actual
+ * IMPORTANTE: Esta ruta debe estar ANTES de /:id
+ */
+router.get('/pending-review', auth, async (req, res) => {
+    try {
+        const userId = req.user?.user_id;
+        const userRole = req.user?.role;
+        const companyId = req.user?.company_id;
+
+        console.log(`📋 [SANCTIONS] Pending review for user ${userId}, role ${userRole}, company ${companyId}`);
+
+        const result = await SanctionWorkflowService.getPendingReviews(userId, userRole, companyId);
+
+        if (!result.success) {
+            console.error('❌ [SANCTIONS] Error getting pending:', result.error);
+            return res.status(500).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error getting pending reviews:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route GET /api/v1/sanctions/types
+ * @desc Obtener tipos de sanción disponibles
+ * IMPORTANTE: Esta ruta debe estar ANTES de /:id
+ */
+router.get('/types', auth, async (req, res) => {
+    try {
+        const companyId = req.user?.company_id;
+        const result = await SanctionWorkflowService.getSanctionTypes(companyId);
+
+        if (!result.success) {
+            return res.status(500).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error getting types:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route GET /api/v1/sanctions/blocks
+ * @desc Obtener bloqueos de suspensión activos
+ * IMPORTANTE: Esta ruta debe estar ANTES de /:id
+ */
+router.get('/blocks', auth, canManageSanctions, async (req, res) => {
+    try {
+        const companyId = req.user?.company_id;
+        const result = await SuspensionBlockingService.getActiveBlocks(companyId);
+
+        if (!result.success) {
+            return res.status(500).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error getting blocks:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RUTAS CON PARÁMETROS (DEBEN IR DESPUÉS de las rutas específicas)
+// ═══════════════════════════════════════════════════════════════════════════════
+
 /**
  * @route GET /api/v1/sanctions/:id
  * @desc Obtener sanción específica
@@ -53,10 +163,19 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   try {
     const companyId = req.user?.company_id || req.user?.companyId || 1;
+    const sanctionId = req.params.id;
+
+    // Verificar que el ID es un número válido
+    if (isNaN(parseInt(sanctionId))) {
+      return res.status(400).json({
+        error: 'ID de sanción inválido',
+        success: false
+      });
+    }
 
     const sanction = await Sanction.findOne({
       where: {
-        id: req.params.id,
+        id: sanctionId,
         company_id: companyId
       }
     });
@@ -262,6 +381,464 @@ router.delete('/:id', auth, async (req, res) => {
       message: error.message
     });
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WORKFLOW ENDPOINTS v2.0
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * @route GET /api/v1/sanctions/types
+ * @desc Obtener tipos de sanción disponibles
+ */
+router.get('/types', auth, async (req, res) => {
+    try {
+        const companyId = req.user?.company_id;
+        const result = await SanctionWorkflowService.getSanctionTypes(companyId);
+
+        if (!result.success) {
+            return res.status(500).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error getting types:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/v1/sanctions/types
+ * @desc Crear tipo de sanción personalizado
+ */
+router.post('/types', auth, canConfirmHR, async (req, res) => {
+    try {
+        const companyId = req.user?.company_id;
+        const result = await SanctionWorkflowService.createSanctionType(companyId, req.body);
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.status(201).json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error creating type:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/v1/sanctions/request
+ * @desc Crear solicitud de sanción con workflow
+ */
+router.post('/request', auth, canManageSanctions, async (req, res) => {
+    try {
+        const requesterId = req.user?.user_id;
+        const requesterRole = req.user?.role;
+        const ipAddress = req.ip;
+
+        // Agregar company_id al body
+        req.body.company_id = req.user?.company_id;
+
+        const result = await SanctionWorkflowService.createSanctionRequest(
+            req.body,
+            requesterId,
+            requesterRole,
+            ipAddress
+        );
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.status(201).json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error creating request:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/v1/sanctions/:id/submit
+ * @desc Enviar sanción a revisión
+ */
+router.post('/:id/submit', auth, canManageSanctions, async (req, res) => {
+    try {
+        const sanctionId = parseInt(req.params.id);
+        const actorId = req.user?.user_id;
+        const actorRole = req.user?.role;
+        const ipAddress = req.ip;
+
+        // TODO: Verificar si empresa tiene módulo legal
+        const companyHasLegalModule = true;
+
+        const result = await SanctionWorkflowService.submitForReview(
+            sanctionId,
+            actorId,
+            actorRole,
+            companyHasLegalModule,
+            ipAddress
+        );
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error submitting for review:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/v1/sanctions/:id/lawyer-approve
+ * @desc Abogado aprueba sanción
+ */
+router.post('/:id/lawyer-approve', auth, canReviewLegal, async (req, res) => {
+    try {
+        const sanctionId = parseInt(req.params.id);
+        const lawyerId = req.user?.user_id;
+        const { notes, delivery_method } = req.body;
+        const ipAddress = req.ip;
+
+        const result = await SanctionWorkflowService.lawyerApprove(
+            sanctionId,
+            lawyerId,
+            notes,
+            delivery_method || 'system',
+            ipAddress
+        );
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error lawyer approve:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/v1/sanctions/:id/lawyer-reject
+ * @desc Abogado rechaza sanción
+ */
+router.post('/:id/lawyer-reject', auth, canReviewLegal, async (req, res) => {
+    try {
+        const sanctionId = parseInt(req.params.id);
+        const lawyerId = req.user?.user_id;
+        const { rejection_reason } = req.body;
+        const ipAddress = req.ip;
+
+        if (!rejection_reason) {
+            return res.status(400).json({
+                success: false,
+                error: 'Debe proporcionar un motivo de rechazo'
+            });
+        }
+
+        const result = await SanctionWorkflowService.lawyerReject(
+            sanctionId,
+            lawyerId,
+            rejection_reason,
+            ipAddress
+        );
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error lawyer reject:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/v1/sanctions/:id/lawyer-modify
+ * @desc Abogado modifica descripción
+ */
+router.post('/:id/lawyer-modify', auth, canReviewLegal, async (req, res) => {
+    try {
+        const sanctionId = parseInt(req.params.id);
+        const lawyerId = req.user?.user_id;
+        const { new_description, notes } = req.body;
+        const ipAddress = req.ip;
+
+        if (!new_description) {
+            return res.status(400).json({
+                success: false,
+                error: 'Debe proporcionar la nueva descripción'
+            });
+        }
+
+        const result = await SanctionWorkflowService.lawyerModifyDescription(
+            sanctionId,
+            lawyerId,
+            new_description,
+            notes,
+            ipAddress
+        );
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error lawyer modify:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/v1/sanctions/:id/hr-confirm
+ * @desc RRHH confirma y activa sanción
+ */
+router.post('/:id/hr-confirm', auth, canConfirmHR, async (req, res) => {
+    try {
+        const sanctionId = parseInt(req.params.id);
+        const hrUserId = req.user?.user_id;
+        const { suspension_start_date, hr_notes } = req.body;
+        const ipAddress = req.ip;
+
+        const result = await SanctionWorkflowService.hrConfirm(
+            sanctionId,
+            hrUserId,
+            suspension_start_date,
+            hr_notes,
+            ipAddress
+        );
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error HR confirm:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/v1/sanctions/:id/appeal
+ * @desc Empleado registra apelación
+ */
+router.post('/:id/appeal', auth, async (req, res) => {
+    try {
+        const sanctionId = parseInt(req.params.id);
+        const employeeId = req.user?.user_id;
+        const { appeal_notes } = req.body;
+        const ipAddress = req.ip;
+
+        if (!appeal_notes) {
+            return res.status(400).json({
+                success: false,
+                error: 'Debe proporcionar el motivo de la apelación'
+            });
+        }
+
+        const result = await SanctionWorkflowService.registerAppeal(
+            sanctionId,
+            employeeId,
+            appeal_notes,
+            ipAddress
+        );
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error registering appeal:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/v1/sanctions/:id/resolve-appeal
+ * @desc Resolver apelación
+ */
+router.post('/:id/resolve-appeal', auth, canConfirmHR, async (req, res) => {
+    try {
+        const sanctionId = parseInt(req.params.id);
+        const resolverId = req.user?.user_id;
+        const { approved, resolution_notes } = req.body;
+        const ipAddress = req.ip;
+
+        if (approved === undefined) {
+            return res.status(400).json({
+                success: false,
+                error: 'Debe indicar si aprueba o rechaza la apelación'
+            });
+        }
+
+        const result = await SanctionWorkflowService.resolveAppeal(
+            sanctionId,
+            resolverId,
+            approved,
+            resolution_notes,
+            ipAddress
+        );
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error resolving appeal:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route GET /api/v1/sanctions/:id/history
+ * @desc Obtener historial de una sanción
+ */
+router.get('/:id/history', auth, async (req, res) => {
+    try {
+        const sanctionId = parseInt(req.params.id);
+        const result = await SanctionWorkflowService.getSanctionHistory(sanctionId);
+
+        if (!result.success) {
+            return res.status(500).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error getting history:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route GET /api/v1/sanctions/:id/detail
+ * @desc Obtener detalle completo de una sanción
+ */
+router.get('/:id/detail', auth, async (req, res) => {
+    try {
+        const sanctionId = parseInt(req.params.id);
+        const companyId = req.user?.company_id;
+
+        const result = await SanctionWorkflowService.getSanctionDetail(sanctionId, companyId);
+
+        if (!result.success) {
+            return res.status(404).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error getting detail:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route GET /api/v1/sanctions/employee/:userId/disciplinary-history
+ * @desc Obtener historial disciplinario de un empleado
+ */
+router.get('/employee/:userId/disciplinary-history', auth, async (req, res) => {
+    try {
+        const employeeId = req.params.userId;
+        const companyId = req.user?.company_id;
+
+        const result = await SanctionWorkflowService.getEmployeeDisciplinaryHistory(
+            employeeId,
+            companyId
+        );
+
+        if (!result.success) {
+            return res.status(500).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error getting disciplinary history:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUSPENSION BLOCKING ENDPOINTS (Rutas adicionales con :id o específicas)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * @route GET /api/v1/sanctions/blocks/check/:employeeId
+ * @desc Verificar si empleado tiene bloqueo activo
+ */
+router.get('/blocks/check/:employeeId', auth, async (req, res) => {
+    try {
+        const employeeId = req.params.employeeId;
+        const companyId = req.user?.company_id;
+
+        const result = await SuspensionBlockingService.checkActiveBlock(
+            employeeId,
+            companyId
+        );
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error checking block:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route GET /api/v1/sanctions/blocks/employee/:employeeId
+ * @desc Obtener historial de bloqueos de un empleado
+ */
+router.get('/blocks/employee/:employeeId', auth, async (req, res) => {
+    try {
+        const employeeId = req.params.employeeId;
+        const companyId = req.user?.company_id;
+
+        const result = await SuspensionBlockingService.getEmployeeBlockHistory(
+            employeeId,
+            companyId
+        );
+
+        if (!result.success) {
+            return res.status(500).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error getting employee blocks:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/v1/sanctions/blocks/:id/deactivate
+ * @desc Desactivar bloqueo manualmente
+ */
+router.post('/blocks/:id/deactivate', auth, canConfirmHR, async (req, res) => {
+    try {
+        const blockId = parseInt(req.params.id);
+        const userId = req.user?.user_id;
+        const { reason } = req.body;
+
+        const result = await SuspensionBlockingService.deactivateBlock(
+            blockId,
+            userId,
+            reason
+        );
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [SANCTIONS] Error deactivating block:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 module.exports = router;
