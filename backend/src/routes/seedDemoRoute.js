@@ -31,7 +31,9 @@ router.get('/check', async (req, res) => {
     }
 });
 
-// GET /api/seed-demo/sync-all?key=SECRET - Crear TODAS las tablas usando Sequelize sync
+// GET /api/seed-demo/sync-all?key=SECRET - Sincronizar TODAS las tablas con los modelos
+// Este endpoint actualiza la BD de Render para que coincida con los modelos Sequelize
+// Usar después de cada deploy con cambios en modelos
 router.get('/sync-all', async (req, res) => {
     const { key } = req.query;
     if (key !== SECRET_KEY) {
@@ -39,8 +41,13 @@ router.get('/sync-all', async (req, res) => {
     }
 
     try {
-        // Usar sequelize.sync() para crear todas las tablas desde los modelos
-        await sequelize.sync({ alter: false }); // alter: false para no modificar tablas existentes
+        console.log('[SYNC-ALL] Iniciando sincronización de modelos...');
+
+        // alter: true = actualiza tablas existentes (agrega columnas, cambia tipos, etc.)
+        // force: false = NO elimina datos existentes
+        await sequelize.sync({ alter: true, force: false });
+
+        console.log('[SYNC-ALL] Sincronización completada');
 
         // Verificar tablas creadas
         const tables = await sequelize.query(`
@@ -50,11 +57,13 @@ router.get('/sync-all', async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Todas las tablas sincronizadas desde modelos Sequelize',
+            message: 'BD sincronizada con modelos Sequelize (alter: true)',
+            instruction: 'Llamar este endpoint después de cada deploy con cambios en modelos',
             tables: tables.map(r => r.table_name),
             count: tables.length
         });
     } catch (error) {
+        console.error('[SYNC-ALL] Error:', error);
         res.status(500).json({ error: error.message, stack: error.stack });
     }
 });
