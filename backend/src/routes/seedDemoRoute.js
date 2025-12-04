@@ -61,6 +61,85 @@ router.get('/update-modules', async (req, res) => {
     }
 });
 
+// GET /api/seed-demo/create-module-tables?key=SECRET - Crear tablas de módulos
+router.get('/create-module-tables', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    try {
+        // Crear tabla system_modules
+        await sequelize.query(`
+            CREATE TABLE IF NOT EXISTS system_modules (
+                id SERIAL PRIMARY KEY,
+                module_key VARCHAR(100) UNIQUE NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                icon VARCHAR(100) DEFAULT '📦',
+                color VARCHAR(20) DEFAULT '#666666',
+                category VARCHAR(100) DEFAULT 'general',
+                base_price DECIMAL(10,2) DEFAULT 0,
+                metadata JSONB DEFAULT '{}',
+                is_active BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
+
+        // Crear tabla company_modules
+        await sequelize.query(`
+            CREATE TABLE IF NOT EXISTS company_modules (
+                id SERIAL PRIMARY KEY,
+                company_id INTEGER NOT NULL,
+                system_module_id INTEGER NOT NULL,
+                activo BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(company_id, system_module_id)
+            )
+        `);
+
+        // Insertar módulos del sistema (los de ISI)
+        for (const mod of ISI_MODULES) {
+            await sequelize.query(`
+                INSERT INTO system_modules (module_key, name, description, icon, color, category)
+                VALUES (:key, :name, :desc, '📦', '#666666', 'general')
+                ON CONFLICT (module_key) DO NOTHING
+            `, {
+                replacements: {
+                    key: mod,
+                    name: mod.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+                    desc: 'Módulo ' + mod
+                }
+            });
+        }
+
+        // Asignar todos los módulos a DEMO (company_id = 1)
+        const [modules] = await sequelize.query(`SELECT id FROM system_modules`);
+        for (const sm of modules) {
+            await sequelize.query(`
+                INSERT INTO company_modules (company_id, system_module_id, activo)
+                VALUES (1, :smId, true)
+                ON CONFLICT (company_id, system_module_id) DO NOTHING
+            `, { replacements: { smId: sm.id } });
+        }
+
+        // Verificar
+        const [sysCount] = await sequelize.query(`SELECT COUNT(*) as cnt FROM system_modules`);
+        const [compCount] = await sequelize.query(`SELECT COUNT(*) as cnt FROM company_modules WHERE company_id = 1`);
+
+        res.json({
+            success: true,
+            message: 'Tablas de módulos creadas y pobladas',
+            system_modules: sysCount[0].cnt,
+            company_modules_demo: compCount[0].cnt
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message, stack: error.stack });
+    }
+});
+
 // GET /api/seed-demo/check - Verificar estado de BD
 router.get('/check', async (req, res) => {
     try {
