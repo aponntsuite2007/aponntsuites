@@ -53,25 +53,25 @@ router.get('/update-modules', async (req, res) => {
 
     try {
         // Actualizar active_modules de la empresa DEMO (id=1 o slug=demo-corp)
+        // Actualizar TODAS las empresas con los módulos de ISI
         await sequelize.query(`
             UPDATE companies
             SET active_modules = :modules::jsonb,
                 updated_at = NOW()
-            WHERE slug = 'demo-corp' OR id = 1
         `, {
-            replacements: { modules: JSON.stringify(ISI_MODULES) }
+            replacements: { modules: JSON.stringify(ISI_MODULES_REAL) }
         });
 
         // Verificar
-        const [company] = await sequelize.query(`
-            SELECT id, name, slug, active_modules FROM companies WHERE slug = 'demo-corp' OR id = 1
+        const [companies] = await sequelize.query(`
+            SELECT id, name, slug, jsonb_array_length(active_modules) as module_count FROM companies
         `);
 
         res.json({
             success: true,
-            message: 'Módulos actualizados con los de ISI',
-            modules_count: ISI_MODULES.length,
-            company: company[0]
+            message: 'active_modules actualizado en TODAS las empresas',
+            modules_count: ISI_MODULES_REAL.length,
+            companies: companies
         });
     } catch (error) {
         res.status(500).json({ error: error.message, stack: error.stack });
