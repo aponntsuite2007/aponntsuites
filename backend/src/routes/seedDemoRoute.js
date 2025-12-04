@@ -252,6 +252,72 @@ router.get('/sync-all', async (req, res) => {
     }
 });
 
+// GET /api/seed-demo/sync-alter?key=SECRET - FORZAR sync con ALTER (agrega columnas faltantes)
+router.get('/sync-alter', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const logs = [];
+    const errors = [];
+
+    try {
+        logs.push('Iniciando sync con ALTER...');
+
+        // Forzar sync con alter: true
+        await sequelize.sync({ alter: true });
+        logs.push('sequelize.sync({ alter: true }) ejecutado');
+
+        // Verificar columnas de users
+        const [userCols] = await sequelize.query(`
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'users' AND table_schema = 'public'
+            ORDER BY column_name
+        `);
+
+        res.json({
+            success: true,
+            message: 'Sync con ALTER completado',
+            logs,
+            users_columns_count: userCols.length,
+            users_columns: userCols.map(c => c.column_name)
+        });
+    } catch (error) {
+        errors.push(error.message);
+
+        // Si el sync falla, intentar agregar columnas manualmente
+        logs.push('Sync falló, agregando columnas manualmente...');
+
+        const missingColumns = [
+            { col: 'branch_scope', type: "JSONB DEFAULT '[]'::jsonb" },
+            { col: 'is_core_user', type: 'BOOLEAN DEFAULT false' },
+            { col: 'force_password_change', type: 'BOOLEAN DEFAULT false' },
+            { col: 'password_changed_at', type: 'TIMESTAMP' },
+            { col: 'core_user_created_at', type: 'TIMESTAMP' },
+            { col: 'onboarding_trace_id', type: 'VARCHAR(100)' },
+            { col: 'organizational_position_id', type: 'INTEGER' },
+            { col: 'salary_category_id', type: 'INTEGER' }
+        ];
+
+        for (const { col, type } of missingColumns) {
+            try {
+                await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+                logs.push(`${col} agregado`);
+            } catch (e) {
+                errors.push(`${col}: ${e.message.substring(0, 50)}`);
+            }
+        }
+
+        res.json({
+            success: errors.length === 0,
+            message: 'Columnas agregadas manualmente',
+            logs,
+            errors
+        });
+    }
+});
+
 // GET /api/seed-demo/fix-columns?key=SECRET - Agregar columnas faltantes (paranoid)
 router.get('/fix-columns', async (req, res) => {
     const { key } = req.query;
