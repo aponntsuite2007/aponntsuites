@@ -71,7 +71,9 @@ class Employee360Service {
                 vacationsData,
                 trainingData,
                 medicalData,
-                allUserData  // ← NUEVO: Todos los datos adicionales del usuario
+                allUserData,
+                biometricEmotional,  // ← NUEVO: Análisis biométrico emocional con correlaciones
+                taskCompatibilityData  // ← NUEVO: Compatibilidad de tareas y reemplazos
             ] = await Promise.all([
                 this.getAuditHistory(userId, companyId, dateFrom, dateTo),
                 this.getAttendanceAnalysis(userId, companyId, dateFrom, dateTo),
@@ -79,7 +81,9 @@ class Employee360Service {
                 this.getVacationsHistory(userId, companyId, dateFrom, dateTo),
                 this.getTrainingHistory(userId, companyId, dateFrom, dateTo),
                 this.getMedicalHistory(userId, companyId, dateFrom, dateTo),
-                this.getAllUserData(userId, companyId, dateFrom, dateTo)  // ← NUEVO
+                this.getAllUserData(userId, companyId, dateFrom, dateTo),
+                this.getBiometricEmotionalAnalysis(userId, companyId, dateFrom, dateTo),  // ← NUEVO
+                this.getTaskCompatibility(userId, companyId)  // ← NUEVO
             ]);
 
             // 3. Preparar datos consolidados para análisis
@@ -266,7 +270,29 @@ class Employee360Service {
                     consents: allUserData.consents,
 
                     // SOLICITUDES DE PERMISOS
-                    permissionRequests: allUserData.permissionRequests
+                    permissionRequests: allUserData.permissionRequests,
+
+                    // ANÁLISIS BIOMÉTRICO EMOCIONAL (v3.1)
+                    biometricEmotional: biometricEmotional
+                },
+
+                // === ANÁLISIS BIOMÉTRICO CON CORRELACIONES ===
+                biometricAnalysis: {
+                    hasModule: biometricEmotional.hasModule,
+                    emotionalHistory: biometricEmotional.emotionalHistory,
+                    correlatedEvents: biometricEmotional.correlatedEvents,
+                    metrics: biometricEmotional.metrics,
+                    correlations: biometricEmotional.correlations,
+                    alerts: biometricEmotional.alerts
+                },
+
+                // === COMPATIBILIDAD DE TAREAS Y REEMPLAZOS ===
+                taskCompatibility: {
+                    hasModule: taskCompatibilityData.hasModule,
+                    replacements: taskCompatibilityData.replacements,
+                    canReplace: taskCompatibilityData.canReplace,
+                    hasNoReplacement: taskCompatibilityData.hasNoReplacement,
+                    alert: taskCompatibilityData.alert
                 },
 
                 // === TIMELINE DE EVENTOS ===
@@ -277,7 +303,7 @@ class Employee360Service {
 
                 // === METADATA ===
                 metadata: {
-                    version: '3.0',  // ← Expediente 360° COMPLETO
+                    version: '3.1',  // ← Expediente 360° COMPLETO + Biométrico + TaskCompatibility
                     totalEvents: timeline.length,
                     dataCompleteness: this.calculateDataCompleteness({
                         attendanceData,
@@ -302,21 +328,29 @@ class Employee360Service {
                         hasUnionInfo: allUserData.unionAndLegal?.isUnionMember,
                         hasSalaryConfig: allUserData.salary?.hasConfiguredSalary,
                         hasShiftsAssigned: allUserData.assignedShifts?.totalAssigned > 0,
-                        hasTasks: allUserData.tasks?.pendingTasks > 0 || allUserData.tasks?.completedTasks > 0
+                        hasTasks: allUserData.tasks?.pendingTasks > 0 || allUserData.tasks?.completedTasks > 0,
+                        // NUEVO v3.1: Biométrico y Compatibilidad
+                        hasBiometricEmotional: biometricEmotional.hasModule,
+                        hasBiometricCorrelations: biometricEmotional.correlations?.length > 0,
+                        hasTaskCompatibility: taskCompatibilityData.hasModule,
+                        hasNoReplacement: taskCompatibilityData.hasNoReplacement
                     },
                     dataSections: {
                         core: ['attendance', 'sanctions', 'vacations', 'training', 'medical', 'changes'],
                         extended: ['family', 'education', 'medicalComplete', 'documents', 'previousWorkHistory',
                                    'unionAndLegal', 'salary', 'assignedShifts', 'recentAttendance', 'tasks',
-                                   'consents', 'permissionRequests']
+                                   'consents', 'permissionRequests'],
+                        predictive: ['biometricAnalysis', 'taskCompatibility', 'flightRisk', 'behaviorPatterns']
                     }
                 }
             };
 
-            console.log(`✅ [360°] Expediente PREMIUM generado para ${employee.fullName}`);
+            console.log(`✅ [360°] Expediente PREMIUM v3.1 generado para ${employee.fullName}`);
             console.log(`   📊 Score: ${scoring.total}/100 (Grado ${this.getGrade(scoring.total).letter})`);
             console.log(`   🚀 Riesgo de Fuga: ${flightRisk.score}% (${flightRisk.label})`);
             console.log(`   📈 Patrones: ${behaviorPatterns.length} detectados`);
+            console.log(`   🧠 Biométrico: ${biometricEmotional.emotionalHistory?.length || 0} registros, ${biometricEmotional.correlations?.length || 0} correlaciones`);
+            console.log(`   🔄 Reemplazos: ${taskCompatibilityData.replacements?.length || 0} disponibles${taskCompatibilityData.hasNoReplacement ? ' [ALERTA: SIN REEMPLAZO]' : ''}`);
             console.log(`   🤖 AI: ${aiAnalysis?.generated ? 'Ollama' : 'Fallback'}`);
             return report;
 
@@ -2494,6 +2528,7 @@ Sé objetivo, profesional y constructivo.`;
      */
     async getConsents(userId, companyId) {
         try {
+            // Consulta user_consents para consentimientos generales
             const query = `
                 SELECT id, consent_type, is_granted, granted_date, revoked_date,
                        consent_method, ip_address, notes
@@ -2503,14 +2538,50 @@ Sé objetivo, profesional y constructivo.`;
             `;
             const result = await sequelize.query(query, { bind: [userId], type: sequelize.QueryTypes.SELECT });
 
+            // Consulta biometric_consents para fecha de expiración
+            const biometricQuery = `
+                SELECT bc.id, bc.consent_given, bc.consent_date, bc.expires_at, bc.revoked,
+                       bc.consent_version, bc.consent_method,
+                       CASE
+                           WHEN bc.expires_at IS NULL THEN NULL
+                           WHEN bc.expires_at < CURRENT_DATE THEN 'expired'
+                           WHEN bc.expires_at < CURRENT_DATE + INTERVAL '30 days' THEN 'expiring_soon'
+                           ELSE 'valid'
+                       END as expiry_status,
+                       EXTRACT(DAY FROM (bc.expires_at - CURRENT_DATE)) as days_until_expiry,
+                       pc.country_code,
+                       pc.country_name
+                FROM biometric_consents bc
+                LEFT JOIN company_branches cb ON cb.company_id = bc.company_id AND cb.is_active = true
+                LEFT JOIN payroll_countries pc ON pc.id = cb.country_id
+                WHERE bc.user_id = $1 AND bc.company_id = $2
+                ORDER BY bc.consent_date DESC
+                LIMIT 1
+            `;
+            const biometricResult = await sequelize.query(biometricQuery, {
+                bind: [userId, companyId],
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            const biometricConsent = biometricResult?.[0] || null;
+
             return {
                 consents: result || [],
                 hasEmotionalAnalysisConsent: result?.find(c => c.consent_type === 'emotional_analysis' && c.is_granted) || false,
-                hasBiometricConsent: result?.find(c => c.consent_type === 'biometric' && c.is_granted) || false
+                hasBiometricConsent: biometricConsent?.consent_given && !biometricConsent?.revoked,
+                biometricConsentDetails: biometricConsent ? {
+                    consentDate: biometricConsent.consent_date,
+                    expiresAt: biometricConsent.expires_at,
+                    expiryStatus: biometricConsent.expiry_status,
+                    daysUntilExpiry: biometricConsent.days_until_expiry ? parseInt(biometricConsent.days_until_expiry) : null,
+                    consentVersion: biometricConsent.consent_version,
+                    countryCode: biometricConsent.country_code,
+                    countryName: biometricConsent.country_name
+                } : null
             };
         } catch (error) {
             console.log(`⚠️ [360°] getConsents error: ${error.message}`);
-            return { consents: [], hasEmotionalAnalysisConsent: false, hasBiometricConsent: false };
+            return { consents: [], hasEmotionalAnalysisConsent: false, hasBiometricConsent: false, biometricConsentDetails: null };
         }
     }
 
@@ -2593,6 +2664,357 @@ Sé objetivo, profesional y constructivo.`;
             consents: consentsInfo,
             permissionRequests: permissionRequests
         };
+    }
+
+    // =========================================================================
+    // ANÁLISIS BIOMÉTRICO EMOCIONAL CON CORRELACIONES (NUEVO)
+    // =========================================================================
+    async getBiometricEmotionalAnalysis(userId, companyId, dateFrom, dateTo) {
+        console.log(`🧠 [360°] Obteniendo análisis biométrico emocional para usuario ${userId}...`);
+
+        try {
+            // Obtener historial de análisis emocional
+            const emotionalHistory = await sequelize.query(`
+                SELECT
+                    id, scan_timestamp,
+                    emotion_anger, emotion_contempt, emotion_disgust, emotion_fear,
+                    emotion_happiness, emotion_neutral, emotion_sadness, emotion_surprise,
+                    dominant_emotion, emotional_valence, emotional_arousal,
+                    fatigue_score, stress_score, wellness_score,
+                    time_of_day, day_of_week
+                FROM biometric_emotional_analysis
+                WHERE user_id = :userId AND company_id = :companyId
+                    AND scan_timestamp BETWEEN :dateFrom AND :dateTo
+                ORDER BY scan_timestamp DESC
+                LIMIT 100
+            `, {
+                replacements: { userId, companyId, dateFrom, dateTo },
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            // Obtener eventos correlacionables (medical leaves, sanctions, absences)
+            const correlatedEvents = await this.getCorrelatedEvents(userId, companyId, dateFrom, dateTo);
+
+            // Calcular métricas agregadas
+            const metrics = this.calculateBiometricMetrics(emotionalHistory);
+
+            // Detectar correlaciones biométrico-eventos
+            const correlations = this.detectBiometricEventCorrelations(emotionalHistory, correlatedEvents);
+
+            // Generar alertas basadas en patrones biométricos
+            const alerts = this.generateBiometricAlerts(metrics, correlations);
+
+            console.log(`✅ [360°] Análisis biométrico: ${emotionalHistory.length} registros, ${correlations.length} correlaciones detectadas`);
+
+            return {
+                hasModule: emotionalHistory.length > 0 || correlatedEvents.length > 0,
+                emotionalHistory,
+                correlatedEvents,
+                metrics,
+                correlations,
+                alerts
+            };
+
+        } catch (error) {
+            console.log(`⚠️ [360°] Error en getBiometricEmotionalAnalysis: ${error.message}`);
+            return { hasModule: false, emotionalHistory: [], correlatedEvents: [], metrics: {}, correlations: [], alerts: [] };
+        }
+    }
+
+    // Obtener eventos correlacionables
+    async getCorrelatedEvents(userId, companyId, dateFrom, dateTo) {
+        const events = [];
+
+        try {
+            // Licencias médicas
+            const medicalLeaves = await sequelize.query(`
+                SELECT 'medical_leave' as event_type, start_date as event_date,
+                       end_date, diagnosis as description, days_count as days,
+                       diagnosis_category as category
+                FROM medical_certificates
+                WHERE user_id = :userId AND company_id = :companyId
+                    AND start_date BETWEEN :dateFrom AND :dateTo
+                ORDER BY start_date DESC
+            `, { replacements: { userId, companyId, dateFrom, dateTo }, type: sequelize.QueryTypes.SELECT });
+            events.push(...medicalLeaves);
+
+            // Sanciones
+            const sanctions = await sequelize.query(`
+                SELECT 'sanction' as event_type, date as event_date,
+                       description, severity as category, null as days
+                FROM sanctions
+                WHERE user_id = :userId AND company_id = :companyId
+                    AND date BETWEEN :dateFrom AND :dateTo
+                ORDER BY date DESC
+            `, { replacements: { userId, companyId, dateFrom, dateTo }, type: sequelize.QueryTypes.SELECT });
+            events.push(...sanctions);
+
+            // Vacaciones
+            const vacations = await sequelize.query(`
+                SELECT 'vacation' as event_type, date_from as event_date,
+                       date_to as end_date, 'Vacaciones' as description,
+                       days_requested as days, status as category
+                FROM vacation_requests
+                WHERE user_id = :userId AND company_id = :companyId
+                    AND date_from BETWEEN :dateFrom AND :dateTo
+                    AND status = 'approved'
+                ORDER BY date_from DESC
+            `, { replacements: { userId, companyId, dateFrom, dateTo }, type: sequelize.QueryTypes.SELECT });
+            events.push(...vacations);
+
+            // Ausencias injustificadas
+            const absences = await sequelize.query(`
+                SELECT 'absence' as event_type, date as event_date,
+                       'Ausencia injustificada' as description, null as days,
+                       'injustificada' as category
+                FROM attendance
+                WHERE user_id = :userId AND company_id = :companyId
+                    AND date BETWEEN :dateFrom AND :dateTo
+                    AND status = 'absent' AND check_in IS NULL
+                ORDER BY date DESC
+            `, { replacements: { userId, companyId, dateFrom, dateTo }, type: sequelize.QueryTypes.SELECT });
+            events.push(...absences);
+
+        } catch (e) {
+            console.log(`⚠️ Eventos correlacionables parciales: ${e.message}`);
+        }
+
+        return events.sort((a, b) => new Date(b.event_date) - new Date(a.event_date));
+    }
+
+    // Calcular métricas biométricas agregadas
+    calculateBiometricMetrics(emotionalHistory) {
+        if (!emotionalHistory || emotionalHistory.length === 0) {
+            return { totalSamples: 0 };
+        }
+
+        const fatigueScores = emotionalHistory.map(e => parseFloat(e.fatigue_score) || 0);
+        const stressScores = emotionalHistory.map(e => parseFloat(e.stress_score) || 0);
+        const happinessScores = emotionalHistory.map(e => parseFloat(e.emotion_happiness) || 0);
+        const sadnessScores = emotionalHistory.map(e => parseFloat(e.emotion_sadness) || 0);
+        const wellnessScores = emotionalHistory.map(e => parseInt(e.wellness_score) || 50);
+
+        // Contar emociones dominantes
+        const dominantCounts = {};
+        emotionalHistory.forEach(e => {
+            const dom = e.dominant_emotion || 'neutral';
+            dominantCounts[dom] = (dominantCounts[dom] || 0) + 1;
+        });
+        const dominantEmotions = Object.entries(dominantCounts)
+            .map(([emotion, count]) => ({ emotion, count, percent: (count / emotionalHistory.length * 100).toFixed(1) }))
+            .sort((a, b) => b.count - a.count);
+
+        // Detectar tendencia (comparar primera mitad con segunda mitad)
+        const mid = Math.floor(fatigueScores.length / 2);
+        const oldFatigue = fatigueScores.slice(mid).reduce((a, b) => a + b, 0) / (fatigueScores.length - mid || 1);
+        const newFatigue = fatigueScores.slice(0, mid).reduce((a, b) => a + b, 0) / (mid || 1);
+        let trend = 'stable';
+        if (newFatigue - oldFatigue > 0.1) trend = 'increasing_fatigue';
+        else if (oldFatigue - newFatigue > 0.1) trend = 'decreasing_fatigue';
+
+        return {
+            totalSamples: emotionalHistory.length,
+            avgFatigue: fatigueScores.reduce((a, b) => a + b, 0) / fatigueScores.length,
+            maxFatigue: Math.max(...fatigueScores),
+            avgStress: stressScores.reduce((a, b) => a + b, 0) / stressScores.length,
+            avgHappiness: happinessScores.reduce((a, b) => a + b, 0) / happinessScores.length,
+            avgSadness: sadnessScores.reduce((a, b) => a + b, 0) / sadnessScores.length,
+            avgWellness: wellnessScores.reduce((a, b) => a + b, 0) / wellnessScores.length,
+            dominantEmotions,
+            trend,
+            highFatigueRate: (fatigueScores.filter(f => f > 0.6).length / fatigueScores.length * 100).toFixed(1),
+            highStressRate: (stressScores.filter(s => s > 0.6).length / stressScores.length * 100).toFixed(1)
+        };
+    }
+
+    // Detectar correlaciones biométrico-eventos (ALGORITMO PREDICTIVO)
+    detectBiometricEventCorrelations(emotionalHistory, events) {
+        const correlations = [];
+        const WINDOW_DAYS = 7; // Ventana de 7 días antes del evento
+
+        events.forEach(event => {
+            const eventDate = new Date(event.event_date);
+            const windowStart = new Date(eventDate);
+            windowStart.setDate(windowStart.getDate() - WINDOW_DAYS);
+
+            // Buscar registros biométricos en la ventana previa al evento
+            const priorScans = emotionalHistory.filter(scan => {
+                const scanDate = new Date(scan.scan_timestamp);
+                return scanDate >= windowStart && scanDate <= eventDate;
+            });
+
+            if (priorScans.length > 0) {
+                const avgFatigue = priorScans.reduce((a, b) => a + (parseFloat(b.fatigue_score) || 0), 0) / priorScans.length;
+                const avgStress = priorScans.reduce((a, b) => a + (parseFloat(b.stress_score) || 0), 0) / priorScans.length;
+                const avgSadness = priorScans.reduce((a, b) => a + (parseFloat(b.emotion_sadness) || 0), 0) / priorScans.length;
+
+                // Determinar si hay correlación significativa
+                let significance = 'low';
+                let insight = '';
+
+                if (event.event_type === 'medical_leave') {
+                    if (avgFatigue > 0.5 || avgStress > 0.5) {
+                        significance = 'high';
+                        insight = `Fatiga (${(avgFatigue*100).toFixed(0)}%) y estrés (${(avgStress*100).toFixed(0)}%) elevados ${WINDOW_DAYS} días antes de licencia médica. Posible indicador predictivo de agotamiento.`;
+                    } else if (avgSadness > 0.3) {
+                        significance = 'medium';
+                        insight = `Bajo ánimo detectado (${(avgSadness*100).toFixed(0)}%) previo a licencia. Posible correlación emocional-salud.`;
+                    }
+                } else if (event.event_type === 'sanction') {
+                    if (avgStress > 0.6 || avgFatigue > 0.6) {
+                        significance = 'high';
+                        insight = `Estrés/fatiga críticos previos a sanción. El estado emocional pudo influir en el comportamiento sancionado.`;
+                    }
+                } else if (event.event_type === 'absence') {
+                    if (avgFatigue > 0.5) {
+                        significance = 'medium';
+                        insight = `Fatiga elevada (${(avgFatigue*100).toFixed(0)}%) previa a ausencia. Posible agotamiento acumulado.`;
+                    }
+                }
+
+                if (significance !== 'low') {
+                    correlations.push({
+                        event,
+                        priorScansCount: priorScans.length,
+                        avgFatigue,
+                        avgStress,
+                        avgSadness,
+                        significance,
+                        insight,
+                        windowDays: WINDOW_DAYS
+                    });
+                }
+            }
+        });
+
+        return correlations;
+    }
+
+    // Generar alertas biométricas
+    generateBiometricAlerts(metrics, correlations) {
+        const alerts = [];
+
+        if (metrics.avgFatigue > 0.6) {
+            alerts.push({
+                type: 'HIGH_FATIGUE',
+                severity: 'warning',
+                message: `Fatiga promedio elevada: ${(metrics.avgFatigue*100).toFixed(0)}%`,
+                recommendation: 'Considerar evaluación de carga laboral y descanso del empleado.'
+            });
+        }
+
+        if (metrics.avgStress > 0.6) {
+            alerts.push({
+                type: 'HIGH_STRESS',
+                severity: 'warning',
+                message: `Estrés promedio elevado: ${(metrics.avgStress*100).toFixed(0)}%`,
+                recommendation: 'Recomendar evaluación por salud ocupacional.'
+            });
+        }
+
+        if (metrics.trend === 'increasing_fatigue') {
+            alerts.push({
+                type: 'FATIGUE_TREND',
+                severity: 'attention',
+                message: 'Tendencia de fatiga en aumento detectada',
+                recommendation: 'Monitorear de cerca y prevenir agotamiento.'
+            });
+        }
+
+        if (correlations.filter(c => c.significance === 'high').length >= 2) {
+            alerts.push({
+                type: 'MULTIPLE_CORRELATIONS',
+                severity: 'critical',
+                message: `${correlations.filter(c => c.significance === 'high').length} correlaciones críticas biométrico-eventos detectadas`,
+                recommendation: 'Reunión urgente con RRHH y salud ocupacional recomendada.'
+            });
+        }
+
+        return alerts;
+    }
+
+    // =========================================================================
+    // COMPATIBILIDAD DE TAREAS Y REEMPLAZOS
+    // =========================================================================
+    async getTaskCompatibility(userId, companyId) {
+        console.log(`🔄 [360°] Obteniendo compatibilidad de tareas para usuario ${userId}...`);
+
+        try {
+            // Verificar si el módulo está activo para la empresa
+            const moduleCheck = await sequelize.query(`
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.tables
+                    WHERE table_name = 'task_compatibility'
+                ) as exists
+            `, { type: sequelize.QueryTypes.SELECT });
+
+            if (!moduleCheck[0]?.exists) {
+                return { hasModule: false, replacements: [], canReplace: [] };
+            }
+
+            // Quiénes pueden reemplazar a este empleado
+            const replacements = await sequelize.query(`
+                SELECT tc.*,
+                       u."firstName" || ' ' || u."lastName" as cover_name,
+                       u.position as cover_position,
+                       u.email as cover_email
+                FROM task_compatibility tc
+                JOIN users u ON tc.cover_user_id = u.user_id
+                WHERE tc.primary_user_id = :userId
+                    AND tc.company_id = :companyId
+                    AND tc.is_active = true
+                ORDER BY tc.compatibility_score DESC
+                LIMIT 10
+            `, { replacements: { userId, companyId }, type: sequelize.QueryTypes.SELECT });
+
+            // A quiénes puede reemplazar este empleado
+            const canReplace = await sequelize.query(`
+                SELECT tc.*,
+                       u."firstName" || ' ' || u."lastName" as primary_name,
+                       u.position as primary_position
+                FROM task_compatibility tc
+                JOIN users u ON tc.primary_user_id = u.user_id
+                WHERE tc.cover_user_id = :userId
+                    AND tc.company_id = :companyId
+                    AND tc.is_active = true
+                ORDER BY tc.compatibility_score DESC
+                LIMIT 10
+            `, { replacements: { userId, companyId }, type: sequelize.QueryTypes.SELECT });
+
+            const formattedReplacements = replacements.map(r => ({
+                coverUserId: r.cover_user_id,
+                coverName: r.cover_name,
+                position: r.cover_position,
+                email: r.cover_email,
+                compatibilityScore: parseFloat(r.compatibility_score) || 0,
+                coverableTasks: r.coverable_tasks || [],
+                successfulCoverages: r.successful_coverages || 0,
+                totalCoverageHours: r.total_coverage_hours || 0
+            }));
+
+            const formattedCanReplace = canReplace.map(r => ({
+                primaryUserId: r.primary_user_id,
+                primaryName: r.primary_name,
+                position: r.primary_position,
+                compatibilityScore: parseFloat(r.compatibility_score) || 0,
+                coverableTasks: r.coverable_tasks || []
+            }));
+
+            console.log(`✅ [360°] Compatibilidad: ${formattedReplacements.length} pueden reemplazarlo, puede reemplazar a ${formattedCanReplace.length}`);
+
+            return {
+                hasModule: true,
+                replacements: formattedReplacements,
+                canReplace: formattedCanReplace,
+                hasNoReplacement: formattedReplacements.length === 0,
+                alert: formattedReplacements.length === 0 ?
+                    'ALERTA: Este puesto NO tiene reemplazos configurados. Si el empleado se ausenta, no hay quien cubra sus tareas.' : null
+            };
+
+        } catch (error) {
+            console.log(`⚠️ [360°] Error en getTaskCompatibility: ${error.message}`);
+            return { hasModule: false, replacements: [], canReplace: [] };
+        }
     }
 }
 

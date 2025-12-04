@@ -1339,7 +1339,7 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
 
     const authRequestId = authRequest[0].id;
 
-    // Enviar notificaciones multi-canal
+    // Enviar notificaciones multi-canal a SUPERVISORES
     const notificationResult = await authorizationService.sendAuthorizationRequest({
       employeeData,
       attendanceId: authRequestId,
@@ -1352,7 +1352,20 @@ async function checkLateArrivalAuthorization(employeeId, companyId) {
       companyId: companyId
     });
 
-    console.log(`📧 [LATE-CHECK] Notifications sent: ${notificationResult.success ? 'SUCCESS' : 'FAILED'}`);
+    console.log(`📧 [LATE-CHECK] Supervisor notifications sent: ${notificationResult.success ? 'SUCCESS' : 'FAILED'}`);
+
+    // 🆕 Enviar email al EMPLEADO informándole que puede retirarse del kiosk
+    await authorizationService.sendEmployeeNotificationEmail({
+      employeeData,
+      lateMinutes,
+      shiftData: {
+        name: employeeData.shift_name,
+        startTime: employeeData.starttime
+      },
+      authorizationToken
+    });
+
+    console.log(`📧 [LATE-CHECK] Employee notification sent to ${employeeData.email || 'N/A'}`);
 
     // Retornar que necesita autorización
     return {

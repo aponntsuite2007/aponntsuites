@@ -1,6 +1,11 @@
 /**
  * Modelo: PayrollEntity
- * Entidades receptoras de deducciones (AFIP, Obras Sociales, Sindicatos, etc.)
+ * Entidades receptoras de deducciones/contribuciones
+ *
+ * 100% PARAMETRIZABLE:
+ * - company_id = NULL → Entidad global (visible para todas las empresas)
+ * - company_id = X → Entidad privada de la empresa X
+ * - category_id → Tipo de entidad (parametrizable, no hardcodeado)
  */
 const { DataTypes } = require('sequelize');
 
@@ -21,6 +26,13 @@ module.exports = (sequelize) => {
             allowNull: true,
             references: { model: 'payroll_countries', key: 'id' }
         },
+        // NUEVO: FK a categoría parametrizable
+        category_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: { model: 'payroll_entity_categories', key: 'id' },
+            comment: 'Categoría parametrizable (reemplaza entity_type)'
+        },
         entity_code: {
             type: DataTypes.STRING(30),
             allowNull: false
@@ -29,14 +41,20 @@ module.exports = (sequelize) => {
             type: DataTypes.STRING(200),
             allowNull: false
         },
+        // NUEVO: nombre corto para UI compacta
+        entity_short_name: {
+            type: DataTypes.STRING(50),
+            allowNull: true
+        },
+        // LEGACY: mantener para compatibilidad, pero usar category_id
         entity_type: {
             type: DataTypes.STRING(50),
-            allowNull: false,
-            comment: 'TAX_AUTHORITY, SOCIAL_SECURITY, UNION, HEALTH_INSURANCE, PENSION_FUND, BANK, OTHER'
+            allowNull: true,
+            comment: 'LEGACY - Usar category_id. TAX_AUTHORITY, SOCIAL_SECURITY, UNION, etc.'
         },
         tax_id: {
             type: DataTypes.STRING(30),
-            comment: 'CUIT de la entidad'
+            comment: 'Identificación fiscal de la entidad (CUIT, RFC, RUT, etc.)'
         },
         legal_name: DataTypes.STRING(200),
         address: DataTypes.TEXT,
@@ -51,10 +69,10 @@ module.exports = (sequelize) => {
         bank_cbu: DataTypes.STRING(30),
         bank_alias: DataTypes.STRING(100),
 
-        // Configuracion de presentacion
+        // Configuración de presentación
         presentation_format: {
             type: DataTypes.STRING(50),
-            comment: 'AFIP_SICOSS, AFIP_F931, CUSTOM, EXCEL, TXT'
+            comment: 'Formato de archivo para presentación'
         },
         presentation_frequency: {
             type: DataTypes.STRING(20),
@@ -62,9 +80,34 @@ module.exports = (sequelize) => {
         },
         presentation_deadline_day: DataTypes.INTEGER,
 
+        // NUEVO: campos para afiliación
+        requires_employee_affiliation: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+            comment: 'Si requiere número de afiliación del empleado'
+        },
+        affiliation_id_name: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+            comment: 'Nombre del campo de afiliación (ej: N° Afiliado, CUIL)'
+        },
+
+        // NUEVO: documentación
+        calculation_notes: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            comment: 'Notas sobre cómo se calcula (ayuda al usuario)'
+        },
+        legal_reference: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            comment: 'Referencia legal (ley, artículo, decreto)'
+        },
+
         settings: {
             type: DataTypes.JSONB,
-            defaultValue: {}
+            defaultValue: {},
+            comment: 'Configuración adicional flexible'
         },
 
         is_government: {
@@ -95,9 +138,19 @@ module.exports = (sequelize) => {
             foreignKey: 'country_id',
             as: 'country'
         });
+        // NUEVA ASOCIACIÓN: con categoría
+        PayrollEntity.belongsTo(models.PayrollEntityCategory, {
+            foreignKey: 'category_id',
+            as: 'category'
+        });
         PayrollEntity.hasMany(models.PayrollEntitySettlement, {
             foreignKey: 'entity_id',
             as: 'settlements'
+        });
+        // Conceptos que tienen esta entidad como destino
+        PayrollEntity.hasMany(models.PayrollTemplateConcept, {
+            foreignKey: 'entity_id',
+            as: 'concepts'
         });
     };
 

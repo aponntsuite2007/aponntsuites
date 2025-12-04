@@ -1,12 +1,12 @@
 /**
  * Modelo: PayrollPayslipTemplate
- * Plantillas HTML/CSS para generacion de recibos de sueldo
+ * Sistema de diseño visual de recibos con bloques arrastrables
  */
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
     const PayrollPayslipTemplate = sequelize.define('PayrollPayslipTemplate', {
-        template_id: {
+        id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
@@ -22,89 +22,74 @@ module.exports = (sequelize) => {
             references: { model: 'payroll_countries', key: 'id' }
         },
         template_code: {
-            type: DataTypes.STRING(50),
+            type: DataTypes.STRING(30),
             allowNull: false
         },
         template_name: {
-            type: DataTypes.STRING(200),
+            type: DataTypes.STRING(100),
             allowNull: false
         },
-        template_type: {
-            type: DataTypes.STRING(30),
-            defaultValue: 'standard',
-            comment: 'standard, detailed, summary, legal'
-        },
-        output_format: {
-            type: DataTypes.STRING(20),
-            defaultValue: 'pdf',
-            comment: 'pdf, html, both'
+        description: {
+            type: DataTypes.TEXT,
+            allowNull: true
         },
 
-        // Contenido HTML
-        header_html: DataTypes.TEXT,
-        body_html: DataTypes.TEXT,
-        footer_html: DataTypes.TEXT,
-
-        // Estilos CSS
-        styles_css: DataTypes.TEXT,
-
-        // Configuracion de pagina
-        page_size: {
-            type: DataTypes.STRING(10),
-            defaultValue: 'A4'
-        },
-        page_orientation: {
-            type: DataTypes.STRING(10),
-            defaultValue: 'portrait'
-        },
-        margins: {
-            type: DataTypes.JSONB,
-            defaultValue: { top: 20, right: 15, bottom: 20, left: 15 }
-        },
-
-        // Opciones de visualizacion
-        show_company_logo: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: true
-        },
-        show_employee_signature: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: true
-        },
-        show_employer_signature: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: true
-        },
-
-        sections_config: {
+        // Layout visual con bloques configurables
+        layout_config: {
             type: DataTypes.JSONB,
             defaultValue: {
-                header: true,
-                employee_info: true,
-                earnings: true,
-                deductions: true,
-                non_remunerative: true,
-                employer_contributions: false,
-                totals: true,
-                footer: true,
-                legal_text: true
+                blocks: [],
+                style: {
+                    font_family: 'Arial',
+                    font_size: 10,
+                    primary_color: '#1a1a2e',
+                    secondary_color: '#4a5568',
+                    paper_size: 'A4',
+                    orientation: 'portrait',
+                    margins: { top: 20, right: 15, bottom: 20, left: 15 }
+                }
             }
         },
 
-        legal_disclaimer: DataTypes.TEXT,
+        // Campos obligatorios por ley del pais
+        required_fields: {
+            type: DataTypes.JSONB,
+            defaultValue: []
+        },
+
+        // Leyendas legales obligatorias
+        legal_disclaimers: {
+            type: DataTypes.JSONB,
+            defaultValue: []
+        },
+
+        // Logo de empresa
+        logo_url: {
+            type: DataTypes.STRING(500),
+            allowNull: true
+        },
+
+        // Configuracion de firmas
+        signature_config: {
+            type: DataTypes.JSONB,
+            defaultValue: {
+                employer_signature: true,
+                employee_signature: true,
+                digital_signature_enabled: false
+            }
+        },
 
         is_default: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        },
+        is_system: {
             type: DataTypes.BOOLEAN,
             defaultValue: false
         },
         is_active: {
             type: DataTypes.BOOLEAN,
             defaultValue: true
-        },
-
-        created_by: {
-            type: DataTypes.UUID,
-            references: { model: 'users', key: 'user_id' }
         }
     }, {
         tableName: 'payroll_payslip_templates',
@@ -114,14 +99,18 @@ module.exports = (sequelize) => {
     });
 
     PayrollPayslipTemplate.associate = (models) => {
-        PayrollPayslipTemplate.belongsTo(models.Company, {
-            foreignKey: 'company_id',
-            as: 'company'
-        });
-        PayrollPayslipTemplate.belongsTo(models.PayrollCountry, {
-            foreignKey: 'country_id',
-            as: 'country'
-        });
+        if (models.Company) {
+            PayrollPayslipTemplate.belongsTo(models.Company, {
+                foreignKey: 'company_id',
+                as: 'company'
+            });
+        }
+        if (models.PayrollCountry) {
+            PayrollPayslipTemplate.belongsTo(models.PayrollCountry, {
+                foreignKey: 'country_id',
+                as: 'country'
+            });
+        }
     };
 
     return PayrollPayslipTemplate;

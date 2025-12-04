@@ -19,20 +19,20 @@ async function getInbox(employeeId, companyId, filters = {}) {
     try {
         const { status = 'all', priority = 'all', limit = 50, offset = 0 } = filters;
 
-        let whereClause = `company_id = $1`;
+        let whereClause = `ng.company_id = $1`;
         const params = [companyId];
         let paramIndex = 2;
 
         // Filtros de estado
         if (status !== 'all') {
-            whereClause += ` AND status = $${paramIndex}`;
+            whereClause += ` AND ng.status = $${paramIndex}`;
             params.push(status);
             paramIndex++;
         }
 
         // Filtros de prioridad
         if (priority !== 'all') {
-            whereClause += ` AND priority = $${paramIndex}`;
+            whereClause += ` AND ng.priority = $${paramIndex}`;
             params.push(priority);
             paramIndex++;
         }
@@ -80,7 +80,7 @@ async function getInbox(employeeId, companyId, filters = {}) {
 
         // Contar total
         const [countResult] = await sequelize.query(
-            `SELECT COUNT(DISTINCT id) as total FROM notification_groups WHERE ${whereClause}`,
+            `SELECT COUNT(DISTINCT ng.id) as total FROM notification_groups ng WHERE ${whereClause}`,
             { bind: params.slice(0, paramIndex - 1) }
         );
 
@@ -362,6 +362,151 @@ async function getInboxStats(employeeId, companyId) {
     }
 }
 
+/**
+ * Obtener notificaciones de un empleado específico
+ * Busca en grupos y mensajes donde el empleado es:
+ * - Destinatario (recipient_id)
+ * - Iniciador (initiator_id)
+ * - Mencionado en metadata
+ */
+async function getEmployeeNotifications(employeeId, companyId) {
+    try {
+        const query = `
+            SELECT DISTINCT
+                ng.id,
+                ng.group_type,
+                ng.initiator_type,
+                ng.initiator_id,
+                ng.subject,
+                ng.status,
+                ng.priority,
+                ng.created_at,
+                ng.metadata,
+                COUNT(nm.id) as message_count,
+                MAX(nm.created_at) as last_message_at,
+                (
+                    SELECT content
+                    FROM notification_messages
+                    WHERE group_id = ng.id
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                ) as last_message,
+                (
+                    SELECT COUNT(*)
+                    FROM notification_messages
+                    WHERE group_id = ng.id
+                    AND read_at IS NULL
+                    AND recipient_id = $1
+                ) as unread_count
+            FROM notification_groups ng
+            LEFT JOIN notification_messages nm ON nm.group_id = ng.id
+            WHERE ng.company_id = $2
+              AND (
+                  -- Empleado es el iniciador del grupo
+                  ng.initiator_id = $1
+                  OR ng.initiator_id = $3
+                  -- O es destinatario de algún mensaje en el grupo
+                  OR EXISTS (
+                      SELECT 1 FROM notification_messages m
+                      WHERE m.group_id = ng.id
+                      AND (m.recipient_id = $1 OR m.recipient_id = $3)
+                  )
+                  -- O es el remitente de algún mensaje
+                  OR EXISTS (
+                      SELECT 1 FROM notification_messages m
+                      WHERE m.group_id = ng.id
+                      AND (m.sender_id = $1 OR m.sender_id = $3)
+                  )
+                  -- O está mencionado en el metadata del grupo
+                  OR ng.metadata::text ILIKE '%' || $1 || '%'
+              )
+            GROUP BY ng.id
+            ORDER BY MAX(nm.created_at) DESC NULLS LAST, ng.created_at DESC
+            LIMIT 100
+        `;
+
+        // Pasamos el employeeId tanto como user_id como employee_id (EMP-XXX)
+        const [groups] = await sequelize.query(query, {
+            bind: [employeeId, companyId, employeeId]
+        });
+
+        return groups;
+
+    } catch (error) {
+        console.error('❌ Error obteniendo notificaciones de empleado:', error);
+        throw error;
+    }
+}
+
+/**
+ * Obtener resumen de pendientes para globo flotante
+ * Incluye: recibidos sin responder, enviados sin respuesta, vencidos
+ */
+async function getPendingBadgeSummary(employeeId, companyId) {
+    try {
+        // Notificaciones RECIBIDAS que requieren respuesta
+        const [received] = await sequelize.query(`
+            SELECT
+                COUNT(*) FILTER (WHERE requires_response = TRUE AND responded_at IS NULL) as pending_responses,
+                COUNT(*) FILTER (WHERE requires_response = TRUE AND responded_at IS NULL AND deadline_at < NOW()) as overdue_responses,
+                COUNT(*) FILTER (WHERE read_at IS NULL) as unread_messages
+            FROM notification_messages
+            WHERE recipient_id = $1
+              AND company_id = $2
+              AND is_deleted = FALSE
+        `, { bind: [employeeId, companyId] });
+
+        // Notificaciones ENVIADAS que esperan respuesta
+        const [sent] = await sequelize.query(`
+            SELECT
+                COUNT(*) FILTER (WHERE requires_response = TRUE AND responded_at IS NULL) as awaiting_response,
+                COUNT(*) FILTER (WHERE requires_response = TRUE AND responded_at IS NULL AND deadline_at < NOW()) as overdue_no_response
+            FROM notification_messages
+            WHERE sender_id = $1
+              AND company_id = $2
+              AND is_deleted = FALSE
+        `, { bind: [employeeId, companyId] });
+
+        // Notificaciones escaladas (donde el empleado está involucrado)
+        const [escalated] = await sequelize.query(`
+            SELECT COUNT(*) as escalated_count
+            FROM notification_messages
+            WHERE (recipient_id = $1 OR sender_id = $1)
+              AND company_id = $2
+              AND escalation_status = 'escalated'
+              AND is_deleted = FALSE
+        `, { bind: [employeeId, companyId] });
+
+        const receivedData = received[0] || { pending_responses: 0, overdue_responses: 0, unread_messages: 0 };
+        const sentData = sent[0] || { awaiting_response: 0, overdue_no_response: 0 };
+        const escalatedData = escalated[0] || { escalated_count: 0 };
+
+        const total_attention_required =
+            parseInt(receivedData.pending_responses || 0) +
+            parseInt(sentData.overdue_no_response || 0);
+
+        return {
+            // Recibidas
+            received_pending: parseInt(receivedData.pending_responses || 0),
+            received_overdue: parseInt(receivedData.overdue_responses || 0),
+            received_unread: parseInt(receivedData.unread_messages || 0),
+            // Enviadas
+            sent_awaiting: parseInt(sentData.awaiting_response || 0),
+            sent_overdue: parseInt(sentData.overdue_no_response || 0),
+            // Escaladas
+            escalated: parseInt(escalatedData.escalated_count || 0),
+            // Total que requiere atención
+            total_attention_required,
+            // Si hay algo que mostrar
+            has_notifications: total_attention_required > 0 || parseInt(receivedData.unread_messages || 0) > 0
+        };
+
+    } catch (error) {
+        console.error('❌ Error obteniendo badge summary:', error);
+        throw error;
+    }
+}
+
 module.exports = {
     getInbox,
     getGroupMessages,
@@ -369,5 +514,7 @@ module.exports = {
     sendMessage,
     markAsRead,
     closeGroup,
-    getInboxStats
+    getInboxStats,
+    getEmployeeNotifications,
+    getPendingBadgeSummary
 };

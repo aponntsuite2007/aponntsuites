@@ -10,29 +10,14 @@
 const express = require('express');
 const router = express.Router();
 const complianceService = require('../services/complianceService');
+const RiskIntelligenceService = require('../services/RiskIntelligenceService');
+const { auth, authorize } = require('../middleware/auth');
 
-// Middleware de autenticación
-const authenticate = (req, res, next) => {
-    req.user = {
-        employee_id: req.headers['x-employee-id'] || 'EMP-ISI-001',
-        company_id: parseInt(req.headers['x-company-id']) || 11,
-        role: req.headers['x-role'] || 'employee'
-    };
-    next();
-};
+// Usar autenticación JWT real del sistema
+router.use(auth);
 
 // Middleware para verificar rol de RRHH o admin
-const requireRRHH = (req, res, next) => {
-    if (req.user.role !== 'rrhh' && req.user.role !== 'admin') {
-        return res.status(403).json({
-            success: false,
-            error: 'Acceso denegado. Se requiere rol de RRHH o administrador'
-        });
-    }
-    next();
-};
-
-router.use(authenticate);
+const requireRRHH = authorize('admin', 'rrhh', 'medical');
 
 // ═══════════════════════════════════════════════════════════════
 // ENDPOINTS DE COMPLIANCE
@@ -254,6 +239,152 @@ router.get('/metrics/:type', requireRRHH, async (req, res) => {
             success: false,
             error: error.message
         });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// RISK INTELLIGENCE ENDPOINTS (Análisis de Riesgo Laboral)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/compliance/risk-dashboard
+ * Dashboard completo de Risk Intelligence
+ */
+router.get('/risk-dashboard', requireRRHH, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const period = parseInt(req.query.period) || 30;
+
+        console.log(`[RISK-API] Dashboard empresa ${companyId}, período ${period}d`);
+
+        const dashboard = await RiskIntelligenceService.getDashboard(companyId, period);
+
+        res.json(dashboard);
+
+    } catch (error) {
+        console.error('[RISK-API] Error dashboard:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener dashboard de riesgos',
+            details: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/compliance/employee/:id/risk-analysis
+ * Análisis de riesgo de empleado específico
+ */
+router.get('/employee/:id/risk-analysis', requireRRHH, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const userId = req.params.id;
+        const period = parseInt(req.query.period) || 30;
+
+        const analysis = await RiskIntelligenceService.getEmployeeRiskAnalysis(
+            userId, companyId, period
+        );
+
+        res.json(analysis);
+
+    } catch (error) {
+        console.error('[RISK-API] Error análisis empleado:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al analizar empleado',
+            details: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/compliance/indices-config
+ * Configuración de índices de riesgo
+ */
+router.get('/indices-config', requireRRHH, async (req, res) => {
+    try {
+        const config = RiskIntelligenceService.getIndicesConfig();
+        res.json({ success: true, config });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * PUT /api/compliance/indices-config/:id
+ * Actualizar configuración de índice
+ */
+router.put('/indices-config/:id', requireRRHH, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Solo admins' });
+        }
+        const result = RiskIntelligenceService.updateIndexConfig(req.params.id, req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/compliance/departments
+ * Departamentos con estadísticas
+ */
+router.get('/departments', requireRRHH, async (req, res) => {
+    try {
+        const result = await RiskIntelligenceService.getDepartmentsWithRisk(req.user.company_id);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/compliance/analyze/:id
+ * Re-analizar empleado
+ */
+router.post('/analyze/:id', requireRRHH, async (req, res) => {
+    try {
+        const analysis = await RiskIntelligenceService.getEmployeeRiskAnalysis(
+            req.params.id, req.user.company_id, 30
+        );
+        res.json({ success: true, data: analysis });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/compliance/analyze-all
+ * Re-analizar todos los empleados
+ */
+router.post('/analyze-all', requireRRHH, async (req, res) => {
+    try {
+        const period = parseInt(req.body.period) || 30;
+        const employees = await RiskIntelligenceService.getEmployeesWithRisk(
+            req.user.company_id, period
+        );
+        res.json({
+            success: true,
+            message: `Análisis completado para ${employees.length} empleados`,
+            count: employees.length,
+            employees
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/compliance/trends
+ * Tendencias históricas
+ */
+router.get('/trends', requireRRHH, async (req, res) => {
+    try {
+        // TODO: Implementar tendencias históricas
+        res.json({ success: true, trends: [], message: 'Tendencias pendientes' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 

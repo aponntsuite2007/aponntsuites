@@ -114,6 +114,30 @@ router.post('/config', async (req, res) => {
 
 // ======== ESCALAS DE VACACIONES ========
 
+// Listar escalas de vacaciones
+router.get('/scales', async (req, res) => {
+  try {
+    const companyId = req.user?.company_id || 1;
+    const scales = await VacationScale.findAll({
+      where: { isActive: true },
+      order: [['yearsFrom', 'ASC']]
+    });
+
+    res.json({
+      success: true,
+      data: scales,
+      message: 'Escalas de vacaciones obtenidas exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo escalas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo escalas de vacaciones',
+      error: error.message
+    });
+  }
+});
+
 // Crear nueva escala de vacaciones
 router.post('/scales', async (req, res) => {
   try {
@@ -185,6 +209,30 @@ router.put('/scales/:id', async (req, res) => {
 });
 
 // ======== LICENCIAS EXTRAORDINARIAS ========
+
+// Listar licencias extraordinarias
+router.get('/extraordinary-licenses', async (req, res) => {
+  try {
+    const companyId = req.user?.company_id || 1;
+    const licenses = await ExtraordinaryLicense.findAll({
+      where: { isActive: true },
+      order: [['type', 'ASC']]
+    });
+
+    res.json({
+      success: true,
+      data: licenses,
+      message: 'Licencias extraordinarias obtenidas exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo licencias:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo licencias extraordinarias',
+      error: error.message
+    });
+  }
+});
 
 // Crear nueva licencia extraordinaria
 router.post('/extraordinary-licenses', async (req, res) => {

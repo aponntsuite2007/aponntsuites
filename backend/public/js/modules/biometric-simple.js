@@ -18,6 +18,8 @@ let currentStream = null;
 let captureInProgress = false;
 let feedbackLoop = null;
 let currentEmployeeId = null;
+let currentUserId = null;
+let captureCallbacks = { onSuccess: null, onError: null };
 
 /**
  * 🌐 Detectar navegador del usuario
@@ -130,7 +132,17 @@ async function startProfessionalFaceCapture(employeeData) {
         }
 
         captureInProgress = true;
-        currentEmployeeId = employeeData; // Guardar para uso posterior
+
+        // Extraer datos del objeto recibido desde users.js
+        if (typeof employeeData === 'object' && employeeData !== null) {
+            currentEmployeeId = employeeData.employeeId || employeeData;
+            currentUserId = employeeData.userId || null;
+            captureCallbacks.onSuccess = employeeData.onSuccess || null;
+            captureCallbacks.onError = employeeData.onError || null;
+            console.log('📋 [AUTO-CAPTURE] Extraído - userId:', currentUserId, 'employeeId:', currentEmployeeId);
+        } else {
+            currentEmployeeId = employeeData; // Compatibilidad con llamadas antiguas
+        }
 
         // Crear modal con guía visual (SIN botón de captura)
         const modal = createAutoCaptureModal();
@@ -639,7 +651,12 @@ async function performFinalCapture(modal, canvas, imageBlob) {
         const formData = new FormData();
         formData.append('faceImage', imageBlob, 'face-capture.jpg');
         formData.append('employeeId', currentEmployeeId);
+        if (currentUserId) {
+            formData.append('userId', currentUserId);
+        }
         formData.append('quality', '0.8');
+
+        console.log('📤 [AUTO-CAPTURE] Enviando - employeeId:', currentEmployeeId, 'userId:', currentUserId);
 
         const response = await fetch('/api/v2/biometric-enterprise/enroll-face', {
             method: 'POST',
@@ -658,12 +675,34 @@ async function performFinalCapture(modal, canvas, imageBlob) {
 
             console.log('✅ [AUTO-CAPTURE] Registro exitoso:', result.data);
 
-            setTimeout(() => {
-                closeAutoCaptureModal(modal);
-                if (typeof refreshEmployeeData === 'function') {
-                    refreshEmployeeData();
-                }
-            }, 2500);
+            // Convertir blob a data URL para el callback
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const photoDataUrl = reader.result;
+
+                // Cerrar modal inmediatamente después de mostrar éxito (500ms)
+                setTimeout(() => {
+                    closeAutoCaptureModal(modal);
+
+                    // Llamar callback onSuccess si existe
+                    if (captureCallbacks.onSuccess && typeof captureCallbacks.onSuccess === 'function') {
+                        console.log('📞 [CALLBACK] Llamando onSuccess con foto...');
+                        captureCallbacks.onSuccess({
+                            photo: photoDataUrl,
+                            templateId: result.data.templateId,
+                            confidenceScore: result.data.confidenceScore,
+                            accuracy: result.data.accuracy
+                        });
+                    } else {
+                        console.log('⚠️ [CALLBACK] No hay callback onSuccess definido');
+                    }
+
+                    if (typeof refreshEmployeeData === 'function') {
+                        refreshEmployeeData();
+                    }
+                }, 500); // Reducido de 2500ms a 500ms
+            };
+            reader.readAsDataURL(imageBlob);
 
         } else {
             throw new Error(result.message || 'Error al guardar');
@@ -674,6 +713,11 @@ async function performFinalCapture(modal, canvas, imageBlob) {
         statusElement.className = 'status-error';
         statusElement.textContent = '❌ Error al guardar';
         feedbackMessage.textContent = error.message;
+
+        // Llamar callback onError si existe
+        if (captureCallbacks.onError && typeof captureCallbacks.onError === 'function') {
+            captureCallbacks.onError(error);
+        }
 
         // Reiniciar loop después de error
         setTimeout(() => {
@@ -730,22 +774,22 @@ function createAutoCaptureModal() {
                     <video id="capture-video" autoplay playsinline></video>
 
                     <!-- Óvalo guía (SVG overlay) - CAMBIA DE COLOR SEGÚN FEEDBACK -->
-                    <svg class="face-guide-oval" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <svg class="face-guide-oval" viewBox="0 0 320 380" preserveAspectRatio="none">
                         <!-- Fondo oscurecido -->
                         <defs>
                             <mask id="oval-mask">
-                                <rect width="100" height="100" fill="white"/>
-                                <ellipse cx="50" cy="45" rx="28" ry="38" fill="black"/>
+                                <rect width="320" height="380" fill="white"/>
+                                <ellipse cx="160" cy="170" rx="85" ry="120" fill="black"/>
                             </mask>
                         </defs>
-                        <rect width="100" height="100" fill="rgba(0,0,0,0.5)" mask="url(#oval-mask)"/>
+                        <rect width="320" height="380" fill="rgba(0,0,0,0.5)" mask="url(#oval-mask)"/>
 
-                        <!-- Óvalo guía -->
-                        <ellipse cx="50" cy="45" rx="28" ry="38"
+                        <!-- Óvalo guía VERTICAL para rostro -->
+                        <ellipse cx="160" cy="170" rx="85" ry="120"
                                  fill="none"
                                  stroke="#4CAF50"
-                                 stroke-width="0.5"
-                                 stroke-dasharray="2,1"
+                                 stroke-width="2"
+                                 stroke-dasharray="8,4"
                                  class="guide-oval"/>
                     </svg>
 
@@ -812,8 +856,11 @@ function createAutoCaptureModal() {
                 </div>
             </div>
 
-            <!-- Solo botón cancelar - NO HAY BOTÓN DE CAPTURA -->
+            <!-- Botones: Manual + Cancelar -->
             <div class="capture-actions">
+                <button id="btn-manual-capture" class="btn-capture">
+                    📸 Capturar Ahora
+                </button>
                 <button id="btn-cancel" class="btn-cancel">
                     ✕ Cancelar
                 </button>
@@ -839,10 +886,10 @@ function createAutoCaptureModal() {
 
             .capture-container {
                 background: white;
-                border-radius: 16px;
-                max-width: 1100px;
+                border-radius: 12px;
+                max-width: 700px;
                 width: 95%;
-                max-height: 90vh;
+                max-height: 95vh;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.3);
                 display: flex;
                 flex-direction: column;
@@ -850,30 +897,33 @@ function createAutoCaptureModal() {
             }
 
             .capture-header {
-                padding: 15px 20px;
+                padding: 8px 15px;
                 text-align: center;
                 border-bottom: 1px solid #eee;
             }
 
             .capture-header h3 {
-                margin: 0 0 5px 0;
+                margin: 0;
                 color: #1976d2;
-                font-size: 20px;
+                font-size: 16px;
             }
 
             .capture-instructions {
-                margin: 0;
-                color: #666;
-                font-size: 12px;
+                display: none; /* Ocultar para ahorrar espacio */
             }
 
             .device-selectors {
                 background: #f8f9fa;
-                padding: 10px 15px;
-                display: grid;
-                grid-template-columns: 1fr 1fr;
+                padding: 6px 15px;
+                display: flex;
                 gap: 10px;
                 border-bottom: 1px solid #eee;
+                justify-content: center;
+            }
+
+            /* Ocultar selector de huella que no se usa */
+            .device-selectors .selector-group:nth-child(2) {
+                display: none;
             }
 
             .selector-group {
@@ -912,7 +962,7 @@ function createAutoCaptureModal() {
             /* BARRA DE PROGRESO */
             .progress-bar-container {
                 position: relative;
-                height: 40px;
+                height: 28px;
                 background: linear-gradient(135deg, #1976d2 0%, #2196F3 100%);
                 display: flex;
                 align-items: center;
@@ -934,7 +984,7 @@ function createAutoCaptureModal() {
                 position: relative;
                 z-index: 1;
                 color: white;
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: 600;
                 text-shadow: 0 1px 3px rgba(0,0,0,0.3);
             }
@@ -947,11 +997,13 @@ function createAutoCaptureModal() {
 
             .video-container {
                 position: relative;
-                flex: 1;
-                max-width: 640px;
-                height: 450px;
+                width: 320px;
+                height: 380px;
                 background: #000;
                 flex-shrink: 0;
+                margin: 0 auto;
+                border-radius: 8px;
+                overflow: hidden;
             }
 
             #capture-video {
@@ -991,16 +1043,16 @@ function createAutoCaptureModal() {
 
             .capture-guidance {
                 background: #f5f5f5;
-                padding: 12px 15px;
+                padding: 8px 15px;
                 border-top: 1px solid #eee;
                 flex-shrink: 0;
             }
 
             #capture-status {
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 600;
-                margin-bottom: 8px;
-                padding: 6px;
+                margin-bottom: 4px;
+                padding: 4px;
                 border-radius: 4px;
                 text-align: center;
             }
@@ -1043,40 +1095,41 @@ function createAutoCaptureModal() {
             }
 
             .feedback-message {
-                margin-top: 6px;
-                padding: 8px;
+                margin-top: 4px;
+                padding: 4px 8px;
                 background: white;
                 border-left: 3px solid #2196F3;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 11px;
                 color: #333;
                 text-align: center;
             }
 
             .capture-actions {
-                padding: 12px 15px;
+                padding: 8px 15px;
                 background: white;
                 border-top: 1px solid #eee;
-                text-align: center;
+                display: flex;
+                justify-content: center;
+                gap: 10px;
                 flex-shrink: 0;
             }
 
             .btn-capture {
-                flex: 1;
-                padding: 14px 24px;
+                padding: 10px 20px;
                 background: linear-gradient(135deg, #4CAF50, #45a049);
                 color: white;
                 border: none;
-                border-radius: 8px;
-                font-size: 16px;
+                border-radius: 6px;
+                font-size: 14px;
                 font-weight: 600;
                 cursor: pointer;
-                transition: all 0.3s ease;
+                transition: all 0.2s ease;
             }
 
             .btn-capture:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+                transform: translateY(-1px);
+                box-shadow: 0 3px 8px rgba(76, 175, 80, 0.4);
             }
 
             .btn-capture:active {
@@ -1084,19 +1137,19 @@ function createAutoCaptureModal() {
             }
 
             .btn-cancel {
-                padding: 8px 30px;
-                background: #dc3545;
+                padding: 10px 20px;
+                background: #6c757d;
                 color: white;
                 border: none;
                 border-radius: 6px;
-                font-size: 13px;
+                font-size: 14px;
                 font-weight: 600;
                 cursor: pointer;
                 transition: all 0.2s ease;
             }
 
             .btn-cancel:hover {
-                background: #c82333;
+                background: #5a6268;
             }
 
             .processing-indicator {
@@ -1133,24 +1186,16 @@ function createAutoCaptureModal() {
 
             .capture-main-content {
                 display: flex;
-                gap: 15px;
-                padding: 15px;
+                gap: 10px;
+                padding: 10px;
                 background: #f8f9fa;
                 flex: 1;
                 overflow: hidden;
+                justify-content: center;
             }
 
             .accessories-checklist {
-                min-width: 280px;
-                max-width: 320px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border-radius: 12px;
-                padding: 15px;
-                color: white;
-                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
+                display: none !important; /* Ocultar para ahorrar espacio vertical */
             }
 
             .checklist-header {
@@ -1286,13 +1331,30 @@ function createAutoCaptureModal() {
         </style>
     `;
 
-    // Event listener solo para cancelar (NO hay botón de captura)
+    // Event listeners para botones
     const btnCancel = modal.querySelector('#btn-cancel');
+    const btnManualCapture = modal.querySelector('#btn-manual-capture');
 
     if (btnCancel) {
         btnCancel.addEventListener('click', () => {
-            console.log('🖱️ [BTN-CLICK] Cancelando captura automática...');
+            console.log('🖱️ [BTN-CLICK] Cancelando captura...');
             closeAutoCaptureModal(modal);
+        });
+    }
+
+    if (btnManualCapture) {
+        btnManualCapture.addEventListener('click', async () => {
+            console.log('📸 [BTN-CLICK] Captura manual iniciada...');
+            const canvas = modal.querySelector('#capture-canvas');
+            const video = modal.querySelector('#capture-video');
+
+            if (canvas && video) {
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+                await performFinalCapture(modal, canvas, blob);
+            }
         });
     }
 
@@ -1418,7 +1480,7 @@ function showError(message) {
     document.body.appendChild(errorModal);
 }
 
-// Exportar funciones públicas
+// Exportar a window para compatibilidad con script regular
 window.BiometricSimple = {
     startProfessionalFaceCapture
 };

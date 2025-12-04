@@ -11,7 +11,17 @@ module.exports = (sequelize) => {
       primaryKey: true,
       autoIncrement: true
     },
-    
+
+    // Multi-tenant
+    company_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'companies',
+        key: 'id'
+      }
+    },
+
     // Configuración general
     vacationInterruptible: {
       type: DataTypes.BOOLEAN,

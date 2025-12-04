@@ -15,6 +15,7 @@ const router = express.Router();
 const { sequelize } = require('../config/database');
 const { auth, authorize, adminOnly } = require('../middleware/auth');
 const biometricConsentService = require('../services/biometricConsentService');
+const ConsentRegionService = require('../services/ConsentRegionService');
 
 // ========================================
 // GET /api/v1/biometric/consents
@@ -706,7 +707,15 @@ router.post('/consents/accept', async (req, res) => {
 
         const ipAddress = req.ip || req.headers['x-forwarded-for'] || 'unknown';
 
-        // Actualizar consentimiento
+        // Obtener período de renovación usando servicio híbrido (BD + auto-detección por región)
+        const renewalInfo = await ConsentRegionService.getRenewalPeriodForUser(sequelize, consent.user_id);
+        const renewalMonths = renewalInfo.months;
+
+        console.log(`📍 [CONSENT] ${renewalInfo.countryName || 'País desconocido'} (${renewalInfo.countryCode || 'N/A'})`);
+        console.log(`   → Período: ${renewalMonths} meses | Fuente: ${renewalInfo.source} | Región: ${renewalInfo.region}`);
+        console.log(`   → Regulación: ${renewalInfo.regulation}`);
+
+        // Actualizar consentimiento con fecha de expiración basada en país
         await sequelize.query(`
             UPDATE biometric_consents
             SET consent_given = true,
@@ -717,7 +726,7 @@ router.post('/consents/accept', async (req, res) => {
                 user_agent = :userAgent,
                 acceptance_method = :acceptanceMethod,
                 immutable_signature = :signature,
-                expires_at = NOW() + INTERVAL '1 year',
+                expires_at = NOW() + INTERVAL '1 month' * :renewalMonths,
                 updated_at = NOW()
             WHERE consent_token = :token
         `, {
@@ -727,6 +736,7 @@ router.post('/consents/accept', async (req, res) => {
                 userAgent,
                 acceptanceMethod: acceptanceMethod || 'email',
                 signature,
+                renewalMonths,
                 token
             },
             type: sequelize.QueryTypes.UPDATE

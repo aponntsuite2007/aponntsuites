@@ -274,10 +274,32 @@ const PayrollRunDetail = require('../models/PayrollRunDetail')(sequelize);
 const PayrollRunConceptDetail = require('../models/PayrollRunConceptDetail')(sequelize);
 
 // Modelos de Entidades y Liquidaciones Consolidadas
+const PayrollEntityCategory = require('../models/PayrollEntityCategory')(sequelize);
 const PayrollEntity = require('../models/PayrollEntity')(sequelize);
 const PayrollEntitySettlement = require('../models/PayrollEntitySettlement')(sequelize);
 const PayrollEntitySettlementDetail = require('../models/PayrollEntitySettlementDetail')(sequelize);
 const PayrollPayslipTemplate = require('../models/PayrollPayslipTemplate')(sequelize);
+const OrganizationalPosition = require('../models/OrganizationalPosition')(sequelize);
+
+// ✅ MODELO - Sistema de Estructura Organizacional Enterprise
+const Sector = require('../models/Sector')(sequelize);
+
+// ✅ MODELOS - Sistema de Dependencias de Conceptos (Benefits Engine Multi-Tenant)
+const DependencyType = require('../models/DependencyType')(sequelize);
+const CompanyDependency = require('../models/CompanyDependency')(sequelize);
+const ConceptDependency = require('../models/ConceptDependency')(sequelize);
+const EmployeeDependencyDocument = require('../models/EmployeeDependencyDocument')(sequelize);
+const DependencyEvaluation = require('../models/DependencyEvaluation')(sequelize);
+
+// ✅ MODELOS - Sistema Médico Profesional con Inmutabilidad (Ley 19.587, SRT)
+const MedicalExamTemplate = require('../models/MedicalExamTemplate')(sequelize);
+const MedicalRecord = require('../models/MedicalRecord')(sequelize);
+const MedicalEditAuthorization = require('../models/MedicalEditAuthorization')(sequelize);
+const MedicalRecordAuditLog = require('../models/MedicalRecordAuditLog')(sequelize);
+
+// ✅ MODELOS - Sistema de Postulaciones Laborales (RRHH → Médico → Alta)
+const JobPosting = require('../models/JobPosting')(sequelize);
+const JobApplication = require('../models/JobApplication')(sequelize);
 
 // SuperUser eliminado - se unificó con tabla User
 
@@ -312,6 +334,12 @@ UserShiftAssignment.belongsTo(User, { foreignKey: 'assigned_by', targetKey: 'use
 // Deactivated by (User) <-> UserShiftAssignment
 User.hasMany(UserShiftAssignment, { foreignKey: 'deactivated_by', sourceKey: 'user_id', as: 'deactivatedShifts' });
 UserShiftAssignment.belongsTo(User, { foreignKey: 'deactivated_by', targetKey: 'user_id', as: 'deactivator' });
+
+// =========================================================================
+// ✅ ASOCIACIONES - Shift <-> Branch (Sistema de Feriados por Sucursal)
+// =========================================================================
+Shift.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
+Branch.hasMany(Shift, { foreignKey: 'branch_id', as: 'shifts' });
 
 // Asociaciones con Branch comentadas temporalmente para PostgreSQL
 // User.belongsTo(Branch, { as: 'defaultBranch', foreignKey: 'defaultBranchId' });
@@ -525,6 +553,15 @@ PayrollRunDetail.hasMany(PayrollRunConceptDetail, { foreignKey: 'detail_id', as:
 PayrollRunConceptDetail.belongsTo(PayrollRunDetail, { foreignKey: 'detail_id', as: 'runDetail' });
 
 // =========================================================================
+// PayrollEntityCategory associations (Categorías de entidades parametrizables)
+// =========================================================================
+PayrollCountry.hasMany(PayrollEntityCategory, { foreignKey: 'country_id', as: 'entityCategories' });
+PayrollEntityCategory.belongsTo(PayrollCountry, { foreignKey: 'country_id', as: 'country' });
+
+Company.hasMany(PayrollEntityCategory, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'customEntityCategories' });
+PayrollEntityCategory.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// =========================================================================
 // PayrollEntity associations (Entidades para consolidacion de deducciones)
 // =========================================================================
 Company.hasMany(PayrollEntity, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'payrollEntities' });
@@ -533,12 +570,82 @@ PayrollEntity.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company
 PayrollCountry.hasMany(PayrollEntity, { foreignKey: 'country_id', as: 'entities' });
 PayrollEntity.belongsTo(PayrollCountry, { foreignKey: 'country_id', as: 'country' });
 
+// PayrollEntity -> PayrollEntityCategory (categoría parametrizable)
+PayrollEntityCategory.hasMany(PayrollEntity, { foreignKey: 'category_id', as: 'entities' });
+PayrollEntity.belongsTo(PayrollEntityCategory, { foreignKey: 'category_id', as: 'category' });
+
 PayrollEntity.hasMany(PayrollEntitySettlement, { foreignKey: 'entity_id', as: 'settlements' });
 PayrollEntitySettlement.belongsTo(PayrollEntity, { foreignKey: 'entity_id', as: 'entity' });
 
 // PayrollTemplateConcept -> PayrollEntity (campo entity_id agregado)
 PayrollEntity.hasMany(PayrollTemplateConcept, { foreignKey: 'entity_id', as: 'concepts' });
 PayrollTemplateConcept.belongsTo(PayrollEntity, { foreignKey: 'entity_id', as: 'entity' });
+
+// =========================================================================
+// ✅ ASOCIACIONES - Sistema de Dependencias de Conceptos (Benefits Engine)
+// =========================================================================
+
+// DependencyType -> CompanyDependency
+DependencyType.hasMany(CompanyDependency, { foreignKey: 'dependency_type_id', as: 'companyDependencies' });
+CompanyDependency.belongsTo(DependencyType, { foreignKey: 'dependency_type_id', as: 'dependencyType' });
+
+// Company -> CompanyDependency
+Company.hasMany(CompanyDependency, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'dependencies' });
+CompanyDependency.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// User (created_by) -> CompanyDependency
+User.hasMany(CompanyDependency, { foreignKey: 'created_by', sourceKey: 'user_id', as: 'createdDependencies' });
+CompanyDependency.belongsTo(User, { foreignKey: 'created_by', targetKey: 'user_id', as: 'creator' });
+
+// PayrollTemplateConcept -> ConceptDependency
+PayrollTemplateConcept.hasMany(ConceptDependency, { foreignKey: 'concept_id', as: 'dependencies' });
+ConceptDependency.belongsTo(PayrollTemplateConcept, { foreignKey: 'concept_id', as: 'concept' });
+
+// CompanyDependency -> ConceptDependency
+CompanyDependency.hasMany(ConceptDependency, { foreignKey: 'dependency_id', as: 'conceptDependencies' });
+ConceptDependency.belongsTo(CompanyDependency, { foreignKey: 'dependency_id', as: 'dependency' });
+
+// Company -> ConceptDependency
+Company.hasMany(ConceptDependency, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'conceptDependencies' });
+ConceptDependency.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// Company -> EmployeeDependencyDocument
+Company.hasMany(EmployeeDependencyDocument, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'dependencyDocuments' });
+EmployeeDependencyDocument.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// User -> EmployeeDependencyDocument
+User.hasMany(EmployeeDependencyDocument, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'dependencyDocuments' });
+EmployeeDependencyDocument.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'employee' });
+
+// CompanyDependency -> EmployeeDependencyDocument
+CompanyDependency.hasMany(EmployeeDependencyDocument, { foreignKey: 'dependency_id', as: 'documents' });
+EmployeeDependencyDocument.belongsTo(CompanyDependency, { foreignKey: 'dependency_id', as: 'dependency' });
+
+// User (uploaded_by, reviewed_by) -> EmployeeDependencyDocument
+User.hasMany(EmployeeDependencyDocument, { foreignKey: 'uploaded_by', sourceKey: 'user_id', as: 'uploadedDocuments' });
+EmployeeDependencyDocument.belongsTo(User, { foreignKey: 'uploaded_by', targetKey: 'user_id', as: 'uploader' });
+User.hasMany(EmployeeDependencyDocument, { foreignKey: 'reviewed_by', sourceKey: 'user_id', as: 'reviewedDocuments' });
+EmployeeDependencyDocument.belongsTo(User, { foreignKey: 'reviewed_by', targetKey: 'user_id', as: 'reviewer' });
+
+// EmployeeDependencyDocument (self-reference: replaced_by_id)
+EmployeeDependencyDocument.belongsTo(EmployeeDependencyDocument, { foreignKey: 'replaced_by_id', as: 'replacement' });
+EmployeeDependencyDocument.hasOne(EmployeeDependencyDocument, { foreignKey: 'replaced_by_id', as: 'replacedDocument' });
+
+// Company -> DependencyEvaluation
+Company.hasMany(DependencyEvaluation, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'dependencyEvaluations' });
+DependencyEvaluation.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// User -> DependencyEvaluation
+User.hasMany(DependencyEvaluation, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'dependencyEvaluations' });
+DependencyEvaluation.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'employee' });
+
+// PayrollTemplateConcept -> DependencyEvaluation
+PayrollTemplateConcept.hasMany(DependencyEvaluation, { foreignKey: 'concept_id', as: 'evaluations' });
+DependencyEvaluation.belongsTo(PayrollTemplateConcept, { foreignKey: 'concept_id', as: 'concept' });
+
+// CompanyDependency -> DependencyEvaluation
+CompanyDependency.hasMany(DependencyEvaluation, { foreignKey: 'dependency_id', as: 'evaluations' });
+DependencyEvaluation.belongsTo(CompanyDependency, { foreignKey: 'dependency_id', as: 'dependency' });
 
 // PayrollEntitySettlement associations
 Company.hasMany(PayrollEntitySettlement, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'entitySettlements' });
@@ -561,9 +668,38 @@ PayrollPayslipTemplate.belongsTo(Company, { foreignKey: 'company_id', targetKey:
 PayrollCountry.hasMany(PayrollPayslipTemplate, { foreignKey: 'country_id', as: 'payslipTemplates' });
 PayrollPayslipTemplate.belongsTo(PayrollCountry, { foreignKey: 'country_id', as: 'country' });
 
+// OrganizationalPosition associations
+Company.hasMany(OrganizationalPosition, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'positions' });
+OrganizationalPosition.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+OrganizationalPosition.belongsTo(PayrollPayslipTemplate, { foreignKey: 'payslip_template_id', as: 'payslipTemplate' });
+PayrollPayslipTemplate.hasMany(OrganizationalPosition, { foreignKey: 'payslip_template_id', as: 'positions' });
+
+OrganizationalPosition.belongsTo(PayrollTemplate, { foreignKey: 'payroll_template_id', as: 'payrollTemplate' });
+PayrollTemplate.hasMany(OrganizationalPosition, { foreignKey: 'payroll_template_id', as: 'positions' });
+
+// Self-reference for hierarchy
+OrganizationalPosition.belongsTo(OrganizationalPosition, { foreignKey: 'parent_position_id', as: 'parentPosition' });
+OrganizationalPosition.hasMany(OrganizationalPosition, { foreignKey: 'parent_position_id', as: 'childPositions' });
+
+// User -> OrganizationalPosition
+User.belongsTo(OrganizationalPosition, { foreignKey: 'organizational_position_id', as: 'organizationalPosition' });
+OrganizationalPosition.hasMany(User, { foreignKey: 'organizational_position_id', sourceKey: 'id', as: 'employees' });
+
 // Department relations (ajustadas para PostgreSQL)
 Department.hasMany(User, { foreignKey: 'departmentId', as: 'employees' });
 User.belongsTo(Department, { foreignKey: 'departmentId', as: 'department' });
+
+// ✅ Sector relations (Subdivisiones de Departamentos)
+Company.hasMany(Sector, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'sectors' });
+Sector.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+Department.hasMany(Sector, { foreignKey: 'department_id', as: 'sectors' });
+Sector.belongsTo(Department, { foreignKey: 'department_id', as: 'department' });
+
+Sector.belongsTo(User, { foreignKey: 'supervisor_id', targetKey: 'user_id', as: 'supervisor' });
+Sector.hasMany(User, { foreignKey: 'sector_id', as: 'employees' });
+User.belongsTo(Sector, { foreignKey: 'sector_id', as: 'sector' });
 
 // Kiosk relations
 // IMPORTANTE: Company tiene 'company_id' como PK, NO 'id' - siempre especificar sourceKey
@@ -1160,6 +1296,111 @@ AttendanceAnalyticsCache.belongsTo(Company, { foreignKey: 'company_id', targetKe
 Company.hasMany(ComparativeAnalytics, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'comparativeAnalytics' });
 ComparativeAnalytics.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
 
+// =====================================================
+// ASOCIACIONES - Sistema Médico Profesional con Inmutabilidad
+// =====================================================
+
+// MedicalExamTemplate associations
+Company.hasMany(MedicalExamTemplate, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'medicalTemplates' });
+MedicalExamTemplate.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(MedicalExamTemplate, { foreignKey: 'created_by', sourceKey: 'user_id', as: 'createdTemplates' });
+MedicalExamTemplate.belongsTo(User, { foreignKey: 'created_by', targetKey: 'user_id', as: 'creator' });
+
+// MedicalRecord associations
+Company.hasMany(MedicalRecord, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'medicalRecords' });
+MedicalRecord.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(MedicalRecord, { foreignKey: 'employee_id', sourceKey: 'user_id', as: 'medicalRecordsAsEmployee' });
+MedicalRecord.belongsTo(User, { foreignKey: 'employee_id', targetKey: 'user_id', as: 'employee' });
+
+User.hasMany(MedicalRecord, { foreignKey: 'created_by', sourceKey: 'user_id', as: 'medicalRecordsCreated' });
+MedicalRecord.belongsTo(User, { foreignKey: 'created_by', targetKey: 'user_id', as: 'creator' });
+
+User.hasMany(MedicalRecord, { foreignKey: 'signed_by', sourceKey: 'user_id', as: 'medicalRecordsSigned' });
+MedicalRecord.belongsTo(User, { foreignKey: 'signed_by', targetKey: 'user_id', as: 'signer' });
+
+MedicalExamTemplate.hasMany(MedicalRecord, { foreignKey: 'template_id', as: 'records' });
+MedicalRecord.belongsTo(MedicalExamTemplate, { foreignKey: 'template_id', as: 'template' });
+
+// MedicalEditAuthorization associations
+Company.hasMany(MedicalEditAuthorization, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'medicalAuthorizations' });
+MedicalEditAuthorization.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+MedicalRecord.hasMany(MedicalEditAuthorization, { foreignKey: 'record_id', as: 'authorizations' });
+MedicalEditAuthorization.belongsTo(MedicalRecord, { foreignKey: 'record_id', as: 'record' });
+
+User.hasMany(MedicalEditAuthorization, { foreignKey: 'requested_by', sourceKey: 'user_id', as: 'authorizationRequests' });
+MedicalEditAuthorization.belongsTo(User, { foreignKey: 'requested_by', targetKey: 'user_id', as: 'requestor' });
+
+User.hasMany(MedicalEditAuthorization, { foreignKey: 'authorized_by', sourceKey: 'user_id', as: 'authorizationsGranted' });
+MedicalEditAuthorization.belongsTo(User, { foreignKey: 'authorized_by', targetKey: 'user_id', as: 'authorizer' });
+
+// MedicalRecordAuditLog - NO tiene FK associations para mantener inmutabilidad
+// Los IDs se guardan pero no hay CASCADE para evitar problemas legales
+
+// =========================================================================
+// ✅ ASOCIACIONES - Sistema de Postulaciones Laborales
+// =========================================================================
+
+// JobPosting - Ofertas laborales por empresa
+Company.hasMany(JobPosting, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'jobPostings' });
+JobPosting.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+Department.hasMany(JobPosting, { foreignKey: 'department_id', as: 'jobPostings' });
+JobPosting.belongsTo(Department, { foreignKey: 'department_id', as: 'department' });
+
+User.hasMany(JobPosting, { foreignKey: 'hiring_manager_id', sourceKey: 'user_id', as: 'jobPostingsAsHiringManager' });
+JobPosting.belongsTo(User, { foreignKey: 'hiring_manager_id', targetKey: 'user_id', as: 'hiringManager' });
+
+User.hasMany(JobPosting, { foreignKey: 'recruiter_id', sourceKey: 'user_id', as: 'jobPostingsAsRecruiter' });
+JobPosting.belongsTo(User, { foreignKey: 'recruiter_id', targetKey: 'user_id', as: 'recruiter' });
+
+User.hasMany(JobPosting, { foreignKey: 'created_by', sourceKey: 'user_id', as: 'jobPostingsCreated' });
+JobPosting.belongsTo(User, { foreignKey: 'created_by', targetKey: 'user_id', as: 'creator' });
+
+// JobApplication - Postulaciones con flujo completo
+Company.hasMany(JobApplication, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'jobApplications' });
+JobApplication.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+JobPosting.hasMany(JobApplication, { foreignKey: 'job_posting_id', as: 'applications' });
+JobApplication.belongsTo(JobPosting, { foreignKey: 'job_posting_id', as: 'jobPosting' });
+
+// Usuarios involucrados en el proceso
+User.hasMany(JobApplication, { foreignKey: 'reviewed_by', sourceKey: 'user_id', as: 'applicationsReviewed' });
+JobApplication.belongsTo(User, { foreignKey: 'reviewed_by', targetKey: 'user_id', as: 'reviewer' });
+
+User.hasMany(JobApplication, { foreignKey: 'interviewer_id', sourceKey: 'user_id', as: 'applicationsInterviewed' });
+JobApplication.belongsTo(User, { foreignKey: 'interviewer_id', targetKey: 'user_id', as: 'interviewer' });
+
+User.hasMany(JobApplication, { foreignKey: 'admin_approved_by', sourceKey: 'user_id', as: 'applicationsAdminApproved' });
+JobApplication.belongsTo(User, { foreignKey: 'admin_approved_by', targetKey: 'user_id', as: 'adminApprover' });
+
+User.hasMany(JobApplication, { foreignKey: 'medical_approved_by', sourceKey: 'user_id', as: 'applicationsMedicalApproved' });
+JobApplication.belongsTo(User, { foreignKey: 'medical_approved_by', targetKey: 'user_id', as: 'medicalApprover' });
+
+User.hasMany(JobApplication, { foreignKey: 'hired_by', sourceKey: 'user_id', as: 'applicationsHired' });
+JobApplication.belongsTo(User, { foreignKey: 'hired_by', targetKey: 'user_id', as: 'hirer' });
+
+User.hasMany(JobApplication, { foreignKey: 'rejected_by', sourceKey: 'user_id', as: 'applicationsRejected' });
+JobApplication.belongsTo(User, { foreignKey: 'rejected_by', targetKey: 'user_id', as: 'rejecter' });
+
+// Empleado creado a partir de la postulación
+User.hasOne(JobApplication, { foreignKey: 'employee_user_id', sourceKey: 'user_id', as: 'originApplication' });
+JobApplication.belongsTo(User, { foreignKey: 'employee_user_id', targetKey: 'user_id', as: 'employeeCreated' });
+
+// Referido por empleado existente
+User.hasMany(JobApplication, { foreignKey: 'referrer_employee_id', sourceKey: 'user_id', as: 'applicationsReferred' });
+JobApplication.belongsTo(User, { foreignKey: 'referrer_employee_id', targetKey: 'user_id', as: 'referrer' });
+
+// Departamento asignado al contratar
+Department.hasMany(JobApplication, { foreignKey: 'assigned_department_id', as: 'hiredApplications' });
+JobApplication.belongsTo(Department, { foreignKey: 'assigned_department_id', as: 'assignedDepartment' });
+
+// Integración con sistema médico
+MedicalRecord.hasOne(JobApplication, { foreignKey: 'medical_record_id', as: 'originatingApplication' });
+JobApplication.belongsTo(MedicalRecord, { foreignKey: 'medical_record_id', as: 'medicalRecord' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -1323,10 +1564,32 @@ module.exports = {
   PayrollRunConceptDetail,
 
   // Entidades y Liquidaciones Consolidadas
+  PayrollEntityCategory,
   PayrollEntity,
   PayrollEntitySettlement,
   PayrollEntitySettlementDetail,
   PayrollPayslipTemplate,
+  OrganizationalPosition,
+
+  // ✅ EXPORT - Sistema de Estructura Organizacional Enterprise
+  Sector,
+
+  // ✅ EXPORTS - Sistema de Dependencias de Conceptos (Benefits Engine Multi-Tenant)
+  DependencyType,
+  CompanyDependency,
+  ConceptDependency,
+  EmployeeDependencyDocument,
+  DependencyEvaluation,
+
+  // ✅ EXPORTS - Sistema Médico Profesional con Inmutabilidad (Ley 19.587, SRT)
+  MedicalExamTemplate,
+  MedicalRecord,
+  MedicalEditAuthorization,
+  MedicalRecordAuditLog,
+
+  // ✅ EXPORTS - Sistema de Postulaciones Laborales
+  JobPosting,
+  JobApplication,
 
   connect: async () => {
     try {

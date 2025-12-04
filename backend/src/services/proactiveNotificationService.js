@@ -11,8 +11,52 @@
  */
 
 const { sequelize } = require('../config/database');
+const inboxService = require('./inboxService');
+const crypto = require('crypto');
 
 class ProactiveNotificationService {
+
+    /**
+     * Mapa de tipos de regla a configuración de hilos
+     */
+    static RULE_THREAD_CONFIG = {
+        vacation_expiry: {
+            group_type: 'proactive_vacation_expiry',
+            icon: '🏖️',
+            priority: 'high',
+            subject_template: 'Vacaciones por vencer - {count} empleados'
+        },
+        overtime_limit: {
+            group_type: 'proactive_overtime_limit',
+            icon: '⏰',
+            priority: 'critical',
+            subject_template: 'Límite de horas extra - {count} alertas'
+        },
+        rest_violation: {
+            group_type: 'proactive_rest_violation',
+            icon: '😴',
+            priority: 'critical',
+            subject_template: 'Riesgo violación descanso - {count} empleados'
+        },
+        document_expiry: {
+            group_type: 'proactive_document_expiry',
+            icon: '📄',
+            priority: 'high',
+            subject_template: 'Documentos por vencer - {count} alertas'
+        },
+        certificate_expiry: {
+            group_type: 'proactive_certificate_expiry',
+            icon: '🏥',
+            priority: 'medium',
+            subject_template: 'Certificados médicos por vencer - {count}'
+        },
+        consent_renewal: {
+            group_type: 'proactive_consent_renewal',
+            icon: '🔐',
+            priority: 'high',
+            subject_template: 'Consentimientos biométricos por renovar - {count}'
+        }
+    };
 
     /**
      * Ejecuta todas las reglas proactivas activas de una empresa
@@ -101,6 +145,10 @@ class ProactiveNotificationService {
 
                 case 'certificate_expiry':
                     matches = await this.checkCertificateExpiry(companyId, rule);
+                    break;
+
+                case 'consent_renewal':
+                    matches = await this.checkConsentRenewal(companyId, rule);
                     break;
 
                 default:
@@ -346,6 +394,61 @@ class ProactiveNotificationService {
     }
 
     /**
+     * Verifica consentimientos biométricos próximos a vencer
+     * Busca en biometric_consents donde expires_at está por vencer
+     */
+    async checkConsentRenewal(companyId, rule) {
+        try {
+            const threshold = rule.trigger_threshold?.days_before_expiry || 30;
+
+            // Consulta consentimientos activos cuya fecha de expiración está próxima
+            const result = await sequelize.query(`
+                SELECT
+                    bc.user_id as employee_id,
+                    bc.id as consent_id,
+                    bc.consent_date,
+                    bc.expires_at,
+                    bc.consent_version,
+                    u."firstName" as first_name,
+                    u."lastName" as last_name,
+                    u.email,
+                    EXTRACT(DAY FROM (bc.expires_at - CURRENT_DATE)) as days_until_expiry
+                FROM biometric_consents bc
+                JOIN users u ON bc.user_id = u.user_id
+                WHERE bc.company_id = :companyId
+                AND bc.revoked = false
+                AND bc.consent_given = true
+                AND bc.expires_at IS NOT NULL
+                AND bc.expires_at BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '1 day' * :threshold
+                ORDER BY bc.expires_at ASC
+            `, {
+                replacements: { companyId, threshold },
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            return result.map(row => ({
+                employee_id: row.employee_id,
+                type: 'consent_renewal',
+                severity: this.calculateSeverityByDays(parseInt(row.days_until_expiry)),
+                details: {
+                    consent_id: row.consent_id,
+                    consent_date: row.consent_date,
+                    expiry_date: row.expires_at,
+                    consent_version: row.consent_version,
+                    days_until_expiry: parseInt(row.days_until_expiry),
+                    employee_name: `${row.first_name || ''} ${row.last_name || ''}`.trim(),
+                    employee_email: row.email
+                },
+                message: `Consentimiento biométrico de ${row.first_name || ''} ${row.last_name || ''} vence en ${row.days_until_expiry} días. Requiere renovación.`
+            }));
+
+        } catch (error) {
+            console.error('❌ Error verificando renovación de consentimientos:', error);
+            return [];
+        }
+    }
+
+    /**
      * Calcula severidad según días restantes
      */
     calculateSeverityByDays(days) {
@@ -388,24 +491,176 @@ class ProactiveNotificationService {
     }
 
     /**
-     * Crea notificaciones en el sistema
+     * Crea notificaciones reales en el sistema de inbox con hilos
+     * Agrupa las detecciones por tipo de regla en un solo hilo
      */
     async createNotifications(companyId, rule, matches) {
         try {
-            const recipients = rule.notification_recipients || ['employee', 'rrhh'];
-            let created = 0;
+            if (matches.length === 0) return 0;
 
+            const recipients = rule.notification_recipients || ['employee', 'rrhh'];
+            const config = ProactiveNotificationService.RULE_THREAD_CONFIG[rule.rule_type] || {
+                group_type: `proactive_${rule.rule_type}`,
+                icon: '🔔',
+                priority: 'medium',
+                subject_template: 'Alerta proactiva - {count} detecciones'
+            };
+
+            // Buscar o crear hilo existente para esta regla (mismo día)
+            const today = new Date().toISOString().split('T')[0];
+            const existingGroup = await this.findExistingThread(companyId, config.group_type, today);
+
+            let groupId;
+            if (existingGroup) {
+                groupId = existingGroup.id;
+                console.log(`📬 [PROACTIVE] Usando hilo existente: ${groupId}`);
+            } else {
+                // Crear nuevo hilo/grupo
+                const subject = config.subject_template.replace('{count}', matches.length);
+                const group = await inboxService.createNotificationGroup(companyId, {
+                    group_type: config.group_type,
+                    initiator_type: 'system',
+                    initiator_id: 'proactive-engine',
+                    subject: `${config.icon} ${subject}`,
+                    priority: config.priority,
+                    metadata: {
+                        rule_id: rule.id,
+                        rule_name: rule.rule_name,
+                        rule_type: rule.rule_type,
+                        detection_date: today,
+                        recipients: recipients,
+                        total_detections: matches.length
+                    }
+                });
+                groupId = group.id;
+                console.log(`📬 [PROACTIVE] Nuevo hilo creado: ${groupId}`);
+            }
+
+            // Crear mensajes para cada detección
+            let created = 0;
             for (const match of matches) {
-                // TODO: Integrar con notification system para crear notificación real
-                console.log(`📨 [PROACTIVE] Notificación creada para ${match.employee_id}: ${match.message}`);
+                const messageContent = this.formatDetectionMessage(match, config);
+
+                await inboxService.sendMessage(groupId, companyId, {
+                    sender_type: 'system',
+                    sender_id: 'proactive-engine',
+                    sender_name: `Sistema Proactivo ${config.icon}`,
+                    recipient_type: this.mapRecipientType(recipients),
+                    recipient_id: match.employee_id || 'all',
+                    recipient_name: match.details?.employee_name || 'Destinatarios',
+                    message_type: 'proactive_detection',
+                    subject: match.type,
+                    content: messageContent,
+                    deadline_at: this.calculateDeadline(match),
+                    requires_response: match.severity === 'critical',
+                    channels: ['web', 'email']
+                });
+
                 created++;
             }
 
+            // Actualizar metadata del grupo con el conteo final
+            await this.updateGroupMetadata(groupId, matches.length);
+
+            console.log(`✅ [PROACTIVE] ${created} notificaciones creadas en hilo ${groupId}`);
             return created;
 
         } catch (error) {
-            console.error('❌ Error creando notificaciones:', error);
+            console.error('❌ Error creando notificaciones en inbox:', error);
             return 0;
+        }
+    }
+
+    /**
+     * Busca un hilo existente para la misma regla del mismo día
+     */
+    async findExistingThread(companyId, groupType, date) {
+        try {
+            const [result] = await sequelize.query(`
+                SELECT id, metadata
+                FROM notification_groups
+                WHERE company_id = $1
+                AND group_type = $2
+                AND status = 'open'
+                AND DATE(created_at) = $3
+                ORDER BY created_at DESC
+                LIMIT 1
+            `, { bind: [companyId, groupType, date] });
+
+            return result.length > 0 ? result[0] : null;
+        } catch (error) {
+            console.error('❌ Error buscando hilo existente:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Formatea el mensaje de detección para el inbox
+     */
+    formatDetectionMessage(match, config) {
+        const severityIcon = {
+            critical: '🔴',
+            high: '🟠',
+            medium: '🟡',
+            low: '🟢'
+        }[match.severity] || '⚪';
+
+        let message = `${severityIcon} **Severidad: ${match.severity.toUpperCase()}**\n\n`;
+        message += `${match.message}\n\n`;
+
+        if (match.details) {
+            message += `**Detalles:**\n`;
+            for (const [key, value] of Object.entries(match.details)) {
+                const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                message += `- ${formattedKey}: ${value}\n`;
+            }
+        }
+
+        message += `\n📅 Detectado: ${new Date().toLocaleString('es-AR')}`;
+        return message;
+    }
+
+    /**
+     * Mapea los recipients de la regla al tipo de recipient del inbox
+     */
+    mapRecipientType(recipients) {
+        if (recipients.includes('all') || recipients.includes('broadcast')) return 'broadcast';
+        if (recipients.includes('rrhh')) return 'role';
+        if (recipients.includes('supervisor')) return 'role';
+        return 'employee';
+    }
+
+    /**
+     * Calcula el deadline basado en la severidad
+     */
+    calculateDeadline(match) {
+        const now = new Date();
+        const hoursToAdd = {
+            critical: 4,
+            high: 24,
+            medium: 72,
+            low: 168 // 1 semana
+        }[match.severity] || 48;
+
+        return new Date(now.getTime() + hoursToAdd * 60 * 60 * 1000);
+    }
+
+    /**
+     * Actualiza el metadata del grupo con el conteo total
+     */
+    async updateGroupMetadata(groupId, newCount) {
+        try {
+            await sequelize.query(`
+                UPDATE notification_groups
+                SET metadata = jsonb_set(
+                    COALESCE(metadata, '{}'),
+                    '{total_detections}',
+                    to_jsonb(COALESCE((metadata->>'total_detections')::int, 0) + $1)
+                )
+                WHERE id = $2
+            `, { bind: [newCount, groupId] });
+        } catch (error) {
+            console.error('❌ Error actualizando metadata del grupo:', error);
         }
     }
 

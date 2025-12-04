@@ -16,8 +16,11 @@
  * - Comparación entre empleados
  * - Exportación PDF profesional
  *
- * @version 1.0.0
- * @date 2025-01-25
+ * @version 2.0.0 Enterprise
+ * @date 2025-01-29
+ * @changelog
+ *   - 2.0.0: Agregadas tabs Enterprise: Biométrico Emocional y Compatibilidad/Reemplazos
+ *   - 1.0.0: Versión inicial con tabs estándar
  * ============================================================================
  */
 
@@ -661,6 +664,79 @@
                     grid-template-columns: 1fr;
                 }
             }
+            /* === ENTERPRISE TABS: BIOMETRICO Y REEMPLAZOS === */
+            .e360-biometric-card {
+                background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+                border: 1px solid rgba(139, 92, 246, 0.3);
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 16px;
+            }
+            .e360-correlation-card {
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(249, 115, 22, 0.1));
+                border: 1px solid rgba(239, 68, 68, 0.3);
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+            .e360-correlation-significance {
+                display: inline-block;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
+            .e360-correlation-high { background: #ef4444; color: white; }
+            .e360-correlation-medium { background: #f59e0b; color: black; }
+            .e360-metric-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 16px;
+                margin-bottom: 20px;
+            }
+            .e360-metric-box {
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 8px;
+                padding: 16px;
+                text-align: center;
+            }
+            .e360-metric-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+            .e360-metric-label { font-size: 12px; opacity: 0.7; }
+            .e360-replacement-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 16px;
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 8px;
+                margin-bottom: 8px;
+            }
+            .e360-replacement-score {
+                padding: 6px 14px;
+                border-radius: 20px;
+                font-weight: 700;
+                font-size: 14px;
+            }
+            .e360-score-high { background: #22c55e; color: white; }
+            .e360-score-medium { background: #f59e0b; color: black; }
+            .e360-score-low { background: #6b7280; color: white; }
+            .e360-alert-danger {
+                background: rgba(239, 68, 68, 0.15);
+                border-left: 4px solid #ef4444;
+                padding: 16px;
+                border-radius: 8px;
+                margin-bottom: 16px;
+            }
+            .e360-no-data {
+                text-align: center;
+                padding: 40px;
+                color: #9ca3af;
+                font-style: italic;
+            }
+
         `;
         document.head.appendChild(style);
         console.log('✅ [360°] Estilos inyectados en head');
@@ -832,6 +908,8 @@
 
                     <!-- Tab: Análisis IA -->
                     <div id="tab-ai-analysis" class="e360-tab-content" style="display: none;"></div>
+                <div id="tab-biometric" class="e360-tab-content" style="display: none;"></div>
+                <div id="tab-compatibility" class="e360-tab-content" style="display: none;"></div>
                 </div>
             </div>
         `;
@@ -952,6 +1030,12 @@
                     <div class="e360-tab" data-tab="ai-analysis">
                         <i class="fas fa-robot"></i> IA
                     </div>
+                    <div class="e360-tab" data-tab="biometric">
+                        <i class="fas fa-brain"></i> Biométrico
+                    </div>
+                    <div class="e360-tab" data-tab="compatibility">
+                        <i class="fas fa-people-arrows"></i> Reemplazos
+                    </div>
                 </div>
 
                 <!-- Contenido de tabs - EXPEDIENTE 360° COMPLETO -->
@@ -965,6 +1049,8 @@
                 <div id="tab-documents" class="e360-tab-content" style="display: none;"></div>
                 <div id="tab-timeline" class="e360-tab-content" style="display: none;"></div>
                 <div id="tab-ai-analysis" class="e360-tab-content" style="display: none;"></div>
+                <div id="tab-biometric" class="e360-tab-content" style="display: none;"></div>
+                <div id="tab-compatibility" class="e360-tab-content" style="display: none;"></div>
             `;
 
             // Reasignar event listeners a las tabs
@@ -986,6 +1072,8 @@
         renderDocumentsTab(report);     // NUEVO: Tab Documentos
         renderTimelineTab(report);
         renderAIAnalysisTab(report);
+        renderBiometricTab(report);        // ENTERPRISE: Análisis Biométrico Emocional
+        renderCompatibilityTab(report);    // ENTERPRISE: Compatibilidad y Reemplazos
 
         // Mostrar tab activa
         showTab('overview');
@@ -1773,11 +1861,38 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4 text-center">
-                            <div class="p-3 ${consents.hasBiometricConsent ? 'bg-success' : 'bg-danger'} text-white rounded">
-                                <i class="fas fa-fingerprint fa-2x mb-2"></i>
-                                <h6>Biométrico</h6>
-                                <span>${consents.hasBiometricConsent ? 'Autorizado' : 'No autorizado'}</span>
-                            </div>
+                            ${(() => {
+                                const details = consents.biometricConsentDetails;
+                                const hasConsent = consents.hasBiometricConsent;
+                                let bgClass = hasConsent ? 'bg-success' : 'bg-danger';
+                                let expiryBadge = '';
+                                let expiryInfo = '';
+
+                                if (hasConsent && details) {
+                                    if (details.expiryStatus === 'expired') {
+                                        bgClass = 'bg-danger';
+                                        expiryBadge = '<span class="badge bg-dark mt-1">VENCIDO</span>';
+                                    } else if (details.expiryStatus === 'expiring_soon') {
+                                        bgClass = 'bg-warning';
+                                        expiryBadge = `<span class="badge bg-danger mt-1">Vence en ${details.daysUntilExpiry} días</span>`;
+                                    }
+
+                                    if (details.expiresAt) {
+                                        const expiryDate = new Date(details.expiresAt).toLocaleDateString('es-AR');
+                                        expiryInfo = `<small class="d-block mt-1 opacity-75">Vence: ${expiryDate}</small>`;
+                                    }
+                                }
+
+                                return `
+                                    <div class="p-3 ${bgClass} text-white rounded">
+                                        <i class="fas fa-fingerprint fa-2x mb-2"></i>
+                                        <h6>Biométrico</h6>
+                                        <span>${hasConsent ? 'Autorizado' : 'No autorizado'}</span>
+                                        ${expiryBadge}
+                                        ${expiryInfo}
+                                    </div>
+                                `;
+                            })()}
                         </div>
                         <div class="col-md-4 text-center">
                             <div class="p-3 ${consents.hasEmotionalAnalysisConsent ? 'bg-success' : 'bg-warning'} text-white rounded">
@@ -2302,6 +2417,388 @@
     function formatNumber(num) {
         if (!num) return '0';
         return new Intl.NumberFormat('es-AR').format(num);
+    }
+
+    // =========================================================================
+    // ENTERPRISE: TAB BIOMÉTRICO EMOCIONAL
+    // =========================================================================
+
+    function renderBiometricTab(report) {
+        const container = document.getElementById('tab-biometric');
+        if (!container) return;
+
+        const biometric = report.biometricAnalysis || {};
+        const hasModule = biometric.hasModule;
+        const emotionalHistory = biometric.emotionalHistory || [];
+        const correlations = biometric.correlations || [];
+        const correlatedEvents = biometric.correlatedEvents || [];
+        const alerts = biometric.alerts || [];
+
+        if (!hasModule) {
+            container.innerHTML = `
+                <div class="alert alert-info" style="margin: 20px; padding: 30px; text-align: center;">
+                    <i class="fas fa-brain fa-3x mb-3" style="color: #6c757d;"></i>
+                    <h4>Módulo Biométrico Emocional No Activado</h4>
+                    <p>Este módulo enterprise permite analizar patrones emocionales y correlacionarlos con eventos laborales.</p>
+                    <p class="text-muted">Contacte a su administrador para activar esta funcionalidad.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Agrupar historial emocional por emoción
+        const emotionSummary = {};
+        emotionalHistory.forEach(record => {
+            const emotion = record.emotion || record.primary_emotion || 'neutral';
+            if (!emotionSummary[emotion]) {
+                emotionSummary[emotion] = { count: 0, avgConfidence: 0, confidences: [] };
+            }
+            emotionSummary[emotion].count++;
+            emotionSummary[emotion].confidences.push(record.confidence || record.emotion_confidence || 0.5);
+        });
+        Object.keys(emotionSummary).forEach(emotion => {
+            const data = emotionSummary[emotion];
+            data.avgConfidence = data.confidences.length > 0
+                ? (data.confidences.reduce((a, b) => a + b, 0) / data.confidences.length * 100).toFixed(1)
+                : 0;
+        });
+
+        const emotionColors = {
+            'happy': '#27ae60', 'feliz': '#27ae60',
+            'neutral': '#95a5a6', 'neutro': '#95a5a6',
+            'sad': '#3498db', 'triste': '#3498db',
+            'angry': '#e74c3c', 'enojado': '#e74c3c',
+            'surprised': '#f39c12', 'sorprendido': '#f39c12',
+            'fearful': '#9b59b6', 'temeroso': '#9b59b6',
+            'disgusted': '#1abc9c', 'disgustado': '#1abc9c'
+        };
+
+        const getEmotionIcon = (emotion) => {
+            const icons = {
+                'happy': 'fa-smile', 'feliz': 'fa-smile',
+                'neutral': 'fa-meh', 'neutro': 'fa-meh',
+                'sad': 'fa-frown', 'triste': 'fa-frown',
+                'angry': 'fa-angry', 'enojado': 'fa-angry',
+                'surprised': 'fa-surprise', 'sorprendido': 'fa-surprise',
+                'fearful': 'fa-grimace', 'temeroso': 'fa-grimace',
+                'disgusted': 'fa-dizzy', 'disgustado': 'fa-dizzy'
+            };
+            return icons[emotion.toLowerCase()] || 'fa-meh';
+        };
+
+        container.innerHTML = `
+            <div style="padding: 20px;">
+                <!-- Header Enterprise -->
+                <div style="background: linear-gradient(135deg, #2c3e50 0%, #9b59b6 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3><i class="fas fa-brain"></i> Análisis Biométrico Emocional</h3>
+                    <p style="margin: 0; opacity: 0.9;">Correlación de estados emocionales con eventos laborales - Datos reales del sistema biométrico</p>
+                </div>
+
+                <!-- Alertas de Patrones -->
+                ${alerts.length > 0 ? `
+                    <div class="card mb-4" style="border-left: 4px solid #e74c3c;">
+                        <div class="card-header" style="background: #fdf2f2; color: #c0392b;">
+                            <i class="fas fa-exclamation-triangle"></i> Alertas de Patrones Detectados
+                        </div>
+                        <div class="card-body">
+                            ${alerts.map(alert => `
+                                <div class="alert alert-${alert.severity === 'high' ? 'danger' : alert.severity === 'medium' ? 'warning' : 'info'}" style="margin-bottom: 10px;">
+                                    <strong><i class="fas fa-bell"></i> ${alert.type || 'Alerta'}:</strong> ${alert.message || alert.description}
+                                    ${alert.recommendation ? `<br><small class="text-muted"><i class="fas fa-lightbulb"></i> ${alert.recommendation}</small>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- Resumen Emocional -->
+                <div class="card mb-4">
+                    <div class="card-header" style="background: #8e44ad; color: white;">
+                        <i class="fas fa-chart-pie"></i> Distribución Emocional (${emotionalHistory.length} registros)
+                    </div>
+                    <div class="card-body">
+                        ${Object.keys(emotionSummary).length > 0 ? `
+                            <div class="row">
+                                ${Object.entries(emotionSummary).map(([emotion, data]) => `
+                                    <div class="col-md-3 col-sm-6 mb-3">
+                                        <div style="background: ${emotionColors[emotion.toLowerCase()] || '#95a5a6'}; color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                            <i class="fas ${getEmotionIcon(emotion)} fa-2x mb-2"></i>
+                                            <h5 style="margin: 0; text-transform: capitalize;">${emotion}</h5>
+                                            <p style="margin: 5px 0 0 0; font-size: 1.5rem; font-weight: bold;">${data.count}</p>
+                                            <small>Confianza: ${data.avgConfidence}%</small>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : `
+                            <p class="text-muted text-center">Sin registros emocionales disponibles</p>
+                        `}
+                    </div>
+                </div>
+
+                <!-- Correlaciones con Eventos -->
+                <div class="card mb-4">
+                    <div class="card-header" style="background: #2980b9; color: white;">
+                        <i class="fas fa-link"></i> Correlaciones Detectadas (Emoción ↔ Eventos)
+                    </div>
+                    <div class="card-body">
+                        ${correlations.length > 0 ? `
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Patrón</th>
+                                            <th>Correlación</th>
+                                            <th>Eventos Asociados</th>
+                                            <th>Confianza</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${correlations.map(corr => `
+                                            <tr>
+                                                <td>
+                                                    <i class="fas ${getEmotionIcon(corr.emotion || 'neutral')}" style="color: ${emotionColors[(corr.emotion || 'neutral').toLowerCase()] || '#95a5a6'};"></i>
+                                                    ${corr.emotion || 'N/A'} → ${corr.pattern || corr.event_type || 'N/A'}
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-${corr.strength === 'strong' ? 'danger' : corr.strength === 'moderate' ? 'warning' : 'info'}">
+                                                        ${corr.strength || 'N/A'}
+                                                    </span>
+                                                </td>
+                                                <td>${corr.event_count || corr.occurrences || 0} eventos</td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div class="progress-bar bg-success" style="width: ${(corr.confidence || 0) * 100}%">
+                                                            ${((corr.confidence || 0) * 100).toFixed(0)}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : `
+                            <p class="text-muted text-center py-3">No se detectaron correlaciones significativas aún</p>
+                        `}
+                    </div>
+                </div>
+
+                <!-- Eventos Correlacionados -->
+                <div class="card mb-4">
+                    <div class="card-header" style="background: #16a085; color: white;">
+                        <i class="fas fa-calendar-check"></i> Timeline de Eventos Correlacionados
+                    </div>
+                    <div class="card-body">
+                        ${correlatedEvents.length > 0 ? `
+                            <div class="timeline" style="position: relative; padding-left: 30px;">
+                                ${correlatedEvents.slice(0, 10).map(event => `
+                                    <div style="border-left: 3px solid ${emotionColors[(event.emotion || 'neutral').toLowerCase()] || '#95a5a6'}; padding: 10px 0 10px 20px; margin-bottom: 15px; position: relative;">
+                                        <div style="position: absolute; left: -8px; top: 12px; width: 12px; height: 12px; background: ${emotionColors[(event.emotion || 'neutral').toLowerCase()] || '#95a5a6'}; border-radius: 50%;"></div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <strong>${event.event_type || event.type || 'Evento'}:</strong> ${event.description || event.details || 'Sin descripción'}
+                                                <br><small class="text-muted">${formatDate(event.event_date || event.date)}</small>
+                                            </div>
+                                            <span class="badge" style="background: ${emotionColors[(event.emotion || 'neutral').toLowerCase()] || '#95a5a6'}; color: white;">
+                                                <i class="fas ${getEmotionIcon(event.emotion || 'neutral')}"></i> ${event.emotion || 'N/A'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${correlatedEvents.length > 10 ? `<p class="text-muted text-center">... y ${correlatedEvents.length - 10} eventos más</p>` : ''}
+                        ` : `
+                            <p class="text-muted text-center py-3">Sin eventos correlacionados disponibles</p>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // =========================================================================
+    // ENTERPRISE: TAB COMPATIBILIDAD Y REEMPLAZOS
+    // =========================================================================
+
+    function renderCompatibilityTab(report) {
+        const container = document.getElementById('tab-compatibility');
+        if (!container) return;
+
+        const compatibility = report.taskCompatibility || {};
+        const hasModule = compatibility.hasModule;
+        const replacements = compatibility.replacements || [];
+        const canReplace = compatibility.canReplace || [];
+        const hasNoReplacement = compatibility.hasNoReplacement;
+        const alert = compatibility.alert;
+
+        if (!hasModule) {
+            container.innerHTML = `
+                <div class="alert alert-info" style="margin: 20px; padding: 30px; text-align: center;">
+                    <i class="fas fa-people-arrows fa-3x mb-3" style="color: #6c757d;"></i>
+                    <h4>Módulo de Compatibilidad No Activado</h4>
+                    <p>Este módulo enterprise permite analizar quién puede reemplazar a quién basado en skills y tareas.</p>
+                    <p class="text-muted">Contacte a su administrador para activar esta funcionalidad.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const emp = report.employee || {};
+
+        container.innerHTML = `
+            <div style="padding: 20px;">
+                <!-- Header Enterprise -->
+                <div style="background: linear-gradient(135deg, #2c3e50 0%, #e67e22 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3><i class="fas fa-people-arrows"></i> Análisis de Compatibilidad y Reemplazos</h3>
+                    <p style="margin: 0; opacity: 0.9;">Quién puede reemplazar a ${emp.first_name || ''} ${emp.last_name || ''} y a quién puede reemplazar</p>
+                </div>
+
+                <!-- Alerta de Riesgo -->
+                ${hasNoReplacement && alert ? `
+                    <div class="alert alert-danger" style="border-left: 5px solid #c0392b; margin-bottom: 20px;">
+                        <h5><i class="fas fa-exclamation-circle"></i> Alerta de Riesgo Operativo</h5>
+                        <p style="margin: 0;">${alert}</p>
+                        <hr>
+                        <small><i class="fas fa-lightbulb"></i> Recomendación: Identificar y capacitar personal para cubrir este rol crítico.</small>
+                    </div>
+                ` : ''}
+
+                <!-- Quién puede reemplazar a este empleado -->
+                <div class="card mb-4">
+                    <div class="card-header" style="background: #27ae60; color: white;">
+                        <i class="fas fa-user-friends"></i> Quién Puede Reemplazar a Este Empleado (${replacements.length})
+                    </div>
+                    <div class="card-body">
+                        ${replacements.length > 0 ? `
+                            <div class="row">
+                                ${replacements.map(rep => `
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card h-100" style="border-left: 4px solid #27ae60;">
+                                            <div class="card-body">
+                                                <h6><i class="fas fa-user"></i> ${rep.name || rep.full_name || 'Empleado'}</h6>
+                                                <p class="text-muted mb-2">${rep.position || rep.job_title || 'Sin cargo'}</p>
+                                                <div class="mb-2">
+                                                    <small><strong>Compatibilidad:</strong></small>
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div class="progress-bar bg-success" style="width: ${rep.compatibility_score || rep.score || 0}%">
+                                                            ${rep.compatibility_score || rep.score || 0}%
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                ${rep.matching_skills && rep.matching_skills.length > 0 ? `
+                                                    <small><strong>Skills compartidos:</strong></small>
+                                                    <div>
+                                                        ${rep.matching_skills.slice(0, 3).map(skill => `
+                                                            <span class="badge badge-success mr-1">${skill}</span>
+                                                        `).join('')}
+                                                        ${rep.matching_skills.length > 3 ? `<span class="badge badge-secondary">+${rep.matching_skills.length - 3}</span>` : ''}
+                                                    </div>
+                                                ` : ''}
+                                                ${rep.training_needed ? `
+                                                    <div class="mt-2">
+                                                        <small class="text-warning"><i class="fas fa-graduation-cap"></i> Requiere capacitación</small>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : `
+                            <div class="text-center py-4">
+                                <i class="fas fa-user-slash fa-3x mb-3" style="color: #e74c3c;"></i>
+                                <h5>Sin Reemplazos Identificados</h5>
+                                <p class="text-muted">No hay empleados con skills compatibles para reemplazar este rol.</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+
+                <!-- A quién puede reemplazar este empleado -->
+                <div class="card mb-4">
+                    <div class="card-header" style="background: #3498db; color: white;">
+                        <i class="fas fa-user-check"></i> A Quién Puede Reemplazar Este Empleado (${canReplace.length})
+                    </div>
+                    <div class="card-body">
+                        ${canReplace.length > 0 ? `
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Empleado</th>
+                                            <th>Cargo</th>
+                                            <th>Departamento</th>
+                                            <th>Compatibilidad</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${canReplace.map(emp => `
+                                            <tr>
+                                                <td><i class="fas fa-user"></i> ${emp.name || emp.full_name || 'N/A'}</td>
+                                                <td>${emp.position || emp.job_title || 'N/A'}</td>
+                                                <td>${emp.department || 'N/A'}</td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px; min-width: 100px;">
+                                                        <div class="progress-bar ${(emp.compatibility_score || emp.score || 0) >= 80 ? 'bg-success' : (emp.compatibility_score || emp.score || 0) >= 60 ? 'bg-warning' : 'bg-danger'}" style="width: ${emp.compatibility_score || emp.score || 0}%">
+                                                            ${emp.compatibility_score || emp.score || 0}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    ${emp.ready ?
+                                                        '<span class="badge badge-success"><i class="fas fa-check"></i> Listo</span>' :
+                                                        '<span class="badge badge-warning"><i class="fas fa-clock"></i> Requiere prep.</span>'
+                                                    }
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : `
+                            <div class="text-center py-4">
+                                <i class="fas fa-user-times fa-3x mb-3" style="color: #95a5a6;"></i>
+                                <h5>Sin Capacidad de Reemplazo</h5>
+                                <p class="text-muted">Este empleado no tiene skills registrados para reemplazar otros roles.</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+
+                <!-- Resumen de Skills -->
+                ${compatibility.skillsAnalysis ? `
+                    <div class="card">
+                        <div class="card-header" style="background: #9b59b6; color: white;">
+                            <i class="fas fa-cogs"></i> Análisis de Skills
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Skills Principales</h6>
+                                    ${compatibility.skillsAnalysis.primary && compatibility.skillsAnalysis.primary.length > 0 ?
+                                        compatibility.skillsAnalysis.primary.map(skill => `
+                                            <span class="badge badge-primary mr-1 mb-1">${skill}</span>
+                                        `).join('') :
+                                        '<span class="text-muted">Sin skills registrados</span>'
+                                    }
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Skills Secundarios</h6>
+                                    ${compatibility.skillsAnalysis.secondary && compatibility.skillsAnalysis.secondary.length > 0 ?
+                                        compatibility.skillsAnalysis.secondary.map(skill => `
+                                            <span class="badge badge-secondary mr-1 mb-1">${skill}</span>
+                                        `).join('') :
+                                        '<span class="text-muted">Sin skills secundarios</span>'
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
     }
 
     // =========================================================================
@@ -3171,6 +3668,7 @@
 
     // Alias para sistema de carga dinámica (patrón estándar del sistema)
     window.showEmployee360Content = init;
+    window['showEmployee-360Content'] = init;  // Para DYNAMIC-LOAD
 
     // Auto-inicialización removida - el sistema de carga dinámica llama a init()
     // La función showEmployee360Content se encarga de la inicialización

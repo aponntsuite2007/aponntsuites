@@ -125,6 +125,39 @@ module.exports = (sequelize) => {
       type: DataTypes.INET,
       allowNull: true
     },
+    // ============================================================================
+    // GPS: Coordenadas simples del fichaje (más fácil de usar que GEOMETRY)
+    // ============================================================================
+    check_in_latitude: {
+      type: DataTypes.DECIMAL(10, 8),
+      allowNull: true,
+      comment: 'Latitud GPS al momento del fichaje de entrada'
+    },
+    check_in_longitude: {
+      type: DataTypes.DECIMAL(11, 8),
+      allowNull: true,
+      comment: 'Longitud GPS al momento del fichaje de entrada'
+    },
+    check_in_accuracy: {
+      type: DataTypes.DECIMAL(6, 2),
+      allowNull: true,
+      comment: 'Precisión del GPS en metros al fichar entrada'
+    },
+    check_out_latitude: {
+      type: DataTypes.DECIMAL(10, 8),
+      allowNull: true,
+      comment: 'Latitud GPS al momento del fichaje de salida'
+    },
+    check_out_longitude: {
+      type: DataTypes.DECIMAL(11, 8),
+      allowNull: true,
+      comment: 'Longitud GPS al momento del fichaje de salida'
+    },
+    check_out_accuracy: {
+      type: DataTypes.DECIMAL(6, 2),
+      allowNull: true,
+      comment: 'Precisión del GPS en metros al fichar salida'
+    },
     checkInMethod: {
       type: DataTypes.STRING(50),
       allowNull: true,

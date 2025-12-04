@@ -120,17 +120,17 @@ module.exports = (database) => {
             is_core: m.isCore,
             version: m.version,
             description: m.description,
-            frontend_file: `/js/modules/${m.moduleKey}.js`,
-            init_function: `show${capitalize(m.moduleKey)}Content`,
+            frontend_file: (m.metadata?.frontend_file) || `/js/modules/${m.moduleKey}.js`,
+            init_function: (m.metadata?.init_function) || `show${capitalize(m.moduleKey)}Content`,
             available_in: m.availableIn
           })),
           source: 'fallback_system_module'
         });
       }
 
-      // Obtener active_modules de la empresa
+      // ✅ UNIFICACIÓN: Obtener módulos contratados desde company_modules (ÚNICA FUENTE DE VERDAD)
       const companies = await sequelize.query(
-        'SELECT company_id, name, active_modules FROM companies WHERE company_id = ?',
+        'SELECT company_id, name FROM companies WHERE company_id = ?',
         {
           replacements: [company_id],
           type: sequelize.QueryTypes.SELECT
@@ -146,20 +146,19 @@ module.exports = (database) => {
 
       const company = companies[0];
 
-      // ⚠️ IMPORTANTE: active_modules puede venir como string JSON o como array JSONB
-      let activeModulesKeys = [];
-      if (company.active_modules) {
-        if (typeof company.active_modules === 'string') {
-          try {
-            activeModulesKeys = JSON.parse(company.active_modules);
-          } catch (parseError) {
-            console.error('❌ [DYNAMIC-MODULES] Error parseando active_modules:', parseError);
-            activeModulesKeys = [];
-          }
-        } else if (Array.isArray(company.active_modules)) {
-          activeModulesKeys = company.active_modules;
-        }
-      }
+      // ✅ SSOT: Obtener módulos contratados desde tabla company_modules
+      const contractedModules = await sequelize.query(`
+        SELECT sm.module_key
+        FROM company_modules cm
+        INNER JOIN system_modules sm ON cm.system_module_id = sm.id
+        WHERE cm.company_id = ? AND cm.activo = true
+      `, {
+        replacements: [company_id],
+        type: sequelize.QueryTypes.SELECT
+      });
+
+      const activeModulesKeys = contractedModules.map(m => m.module_key);
+      console.log(`✅ [SSOT] Empresa ${company_id}: ${activeModulesKeys.length} módulos desde company_modules`);
 
       // Filtrar módulos desde UnifiedKnowledgeService
       const availableModules = [];
@@ -186,6 +185,30 @@ module.exports = (database) => {
 
         // Construir objeto de módulo para frontend
         // Prioridad: campos directos > objeto frontend > fallback generado
+        // ⚠️ IMPORTANTE: Para frontend_file, verificar BD primero
+        let frontendFile = metadata.frontend_file || metadata.frontend?.file;
+        let initFunction = metadata.init_function || metadata.frontend?.init_function;
+
+        // Si no tiene frontend_file definido, buscar en BD
+        if (!frontendFile || frontendFile === `/js/modules/${moduleKey}.js`) {
+          try {
+            const dbModule = await SystemModule.findOne({
+              where: { moduleKey: moduleKey }
+            });
+            if (dbModule && dbModule.metadata) {
+              if (dbModule.metadata.frontend_file) {
+                frontendFile = dbModule.metadata.frontend_file;
+                console.log(`🔧 [DYNAMIC-MODULES] Usando frontend_file de BD para "${moduleKey}": ${frontendFile}`);
+              }
+              if (dbModule.metadata.init_function) {
+                initFunction = dbModule.metadata.init_function;
+              }
+            }
+          } catch (dbError) {
+            console.warn(`⚠️  [DYNAMIC-MODULES] Error consultando BD para "${moduleKey}":`, dbError.message);
+          }
+        }
+
         availableModules.push({
           module_key: moduleKey,
           name: metadata.name || moduleKey,
@@ -195,11 +218,55 @@ module.exports = (database) => {
           is_core: isCore,
           version: metadata.version || '1.0.0',
           description: metadata.description?.short || '',
-          frontend_file: metadata.frontend_file || metadata.frontend?.file || `/js/modules/${moduleKey}.js`,
-          init_function: metadata.init_function || metadata.frontend?.init_function || `show${capitalize(moduleKey)}Content`,
+          frontend_file: frontendFile || `/js/modules/${moduleKey}.js`,
+          init_function: initFunction || `show${capitalize(moduleKey)}Content`,
           submódulos: metadata.submódulos || [],
-          available_in: availableIn
+          available_in: availableIn,
+          // ✅ Propiedades para que el frontend los muestre como ACTIVOS
+          isOperational: true,
+          activo: true,
+          isContracted: true,
+          isActive: true
         });
+      }
+
+      // ⚠️ IMPORTANTE: Buscar módulos contratados que NO estén en knowledgeService
+      // Estos módulos se obtienen de SystemModule (base de datos)
+      const addedModuleKeys = new Set(availableModules.map(m => m.module_key));
+      const missingModules = activeModulesKeys.filter(key => !addedModuleKeys.has(key));
+
+      if (missingModules.length > 0) {
+        console.log(`🔍 [DYNAMIC-MODULES] Módulos contratados NO en registry: ${missingModules.join(', ')}`);
+
+        const dbModules = await SystemModule.findAll({
+          where: {
+            moduleKey: missingModules,
+            isActive: true
+          }
+        });
+
+        for (const m of dbModules) {
+          console.log(`✅ [DYNAMIC-MODULES] Agregando "${m.moduleKey}" desde BD con metadata:`, m.metadata);
+          availableModules.push({
+            module_key: m.moduleKey,
+            name: m.name,
+            icon: m.icon || '📦',
+            color: m.color || '#666',
+            category: m.category || 'general',
+            is_core: m.isCore,
+            version: m.version || '1.0.0',
+            description: m.description || '',
+            frontend_file: (m.metadata?.frontend_file) || `/js/modules/${m.moduleKey}.js`,
+            init_function: (m.metadata?.init_function) || `show${capitalize(m.moduleKey)}Content`,
+            submódulos: [],
+            available_in: m.availableIn,
+            // ✅ Propiedades para que el frontend los muestre como ACTIVOS
+            isOperational: true,
+            activo: true,
+            isContracted: true,
+            isActive: true
+          });
+        }
       }
 
       // Ordenar por categoría y nombre

@@ -458,8 +458,10 @@ app.get(`${API_PREFIX}/health`, (req, res) => {
   });
 });
 
-// === DEPARTAMENTOS ENDPOINTS - PostgreSQL Integration ===
-
+// === DEPARTAMENTOS ENDPOINTS - COMENTADOS ===
+// MOTIVO: Estos handlers NO tienen auth middleware y usan company_id=1 hardcodeado
+// Las peticiones ahora se manejan por departmentRoutes.js que tiene auth y multi-tenant
+/*
 // Endpoint para obtener departamentos
 app.get(`${API_PREFIX}/departments`, async (req, res) => {
   console.log(`🏢 === SOLICITUD DEPARTAMENTOS ===`);
@@ -919,6 +921,8 @@ app.delete(`${API_PREFIX}/departments/:id`, async (req, res) => {
     });
   }
 });
+*/
+// FIN COMENTARIOS: Departamentos handlers ahora se manejan por departmentRoutes.js
 
 // === SUCURSALES ENDPOINTS - PostgreSQL Integration ===
 
@@ -1693,41 +1697,14 @@ app.get(`${API_PREFIX}/shifts`, auth, async (req, res) => {
   }
 });
 
-// Endpoint para crear turnos
+// COMENTADO: Este handler mock interceptaba las peticiones antes que shiftRoutes
+// Ahora /api/v1/shifts se maneja por shiftRoutes.js que tiene persistencia real en BD
+/*
 app.post(`${API_PREFIX}/shifts`, (req, res) => {
   console.log(`🕐 === CREAR TURNO ===`);
-  console.log(`👤 Usuario: ${req.headers.authorization}`);
-  console.log(`📋 Datos:`, req.body);
-  console.log(`🌐 IP: ${req.ip}`);
-  console.log(`=====================`);
-  
-  const shiftData = req.body;
-  
-  // Validaciones básicas
-  if (!shiftData.name || !shiftData.startTime || !shiftData.endTime) {
-    return res.status(400).json({
-      error: 'Nombre, hora de inicio y fin son requeridos'
-    });
-  }
-  
-  // Simular creación exitosa
-  const newShift = {
-    id: `shift_${Date.now()}`,
-    ...shiftData,
-    employees: 0, // Inicialmente sin empleados asignados
-    createdAt: new Date().toISOString()
-  };
-  
-  // Agregar el turno al array
-  createdShifts.push(newShift);
-  
-  console.log(`✅ Turno "${shiftData.name}" agregado. Total turnos creados: ${createdShifts.length}`);
-  
-  res.status(201).json({
-    message: 'Turno creado exitosamente',
-    shift: newShift
-  });
+  // ... handler mock removido - usar shiftRoutes.js
 });
+*/
 
 // Endpoint para obtener turno por ID
 app.get(`${API_PREFIX}/shifts/:id`, (req, res) => {
@@ -1884,6 +1861,7 @@ const userRoutes = require('./src/routes/userRoutes');
 const userCalendarRoutes = require('./src/routes/user-calendar-routes'); // ✅ Calendario personal del empleado
 const shiftRoutes = require('./src/routes/shiftRoutes');
 const shiftCalendarRoutes = require('./src/routes/shift-calendar-routes'); // ✅ Calendario visual de turnos rotativos
+const departmentRoutes = require('./src/routes/departmentRoutes'); // ✅ Rutas de departamentos con auth multi-tenant
 const usersSimpleRoutes = require('./src/routes/usersSimple');
 const authorizationRoutes = require('./src/routes/authorizationRoutes');
 const diagnosticRoutes = require('./src/routes/diagnostic');
@@ -1908,8 +1886,17 @@ const userAssignedTaskRoutes = require('./src/routes/userAssignedTaskRoutes'); /
 const userSalaryConfigRoutes = require('./src/routes/userSalaryConfigRoutes'); // Configuración salarial
 // 🆕 Sistema Médico Avanzado y Salarial V2 (Noviembre 2025)
 const medicalAdvancedRoutes = require('./src/routes/medicalAdvancedRoutes'); // Antropométricos, Cirugías, Psiquiatría, Deportes
+const medicalCaseRoutes = require('./src/routes/medicalCaseRoutes'); // Sistema Completo de Gestión Médica (Enero 2025)
+const occupationalHealthRoutes = require('./src/routes/occupationalHealthRoutes'); // ✨ Occupational Health Enterprise v5.0 (Enero 2025)
+// 🏥 Sistema Médico Profesional con Inmutabilidad (Diciembre 2025) - Ley 19.587, SRT
+const medicalRecordsRoutes = require('./src/routes/medicalRecordsRoutes'); // Registros con firma digital y bloqueo
+const medicalTemplatesRoutes = require('./src/routes/medicalTemplatesRoutes'); // Plantillas de exámenes por empresa
+const medicalAuthorizationsRoutes = require('./src/routes/medicalAuthorizationsRoutes'); // Workflow autorizaciones
+// ELIMINADO: occupationalHealthPhase2Routes - Módulo redundante, funcionalidad integrada en medicalCaseRoutes
 const salaryAdvancedRoutes = require('./src/routes/salaryAdvancedRoutes'); // Convenios, Categorías, Payroll
 const payrollRoutes = require('./src/routes/payrollRoutes'); // Sistema Liquidación Parametrizable v3.0
+const organizationalRoutes = require('./src/routes/organizationalRoutes'); // ✅ Estructura Organizacional Enterprise
+const holidayApiRoutes = require('./src/routes/holidayApiRoutes'); // ✅ API Externa de Feriados (Nager.Date)
 // 🆕 Sistema de Upload de Archivos (Enero 2025)
 const uploadRoutes = require('./src/routes/uploadRoutes'); // Upload de documentos, fotos, licencias, etc.
 
@@ -1924,13 +1911,16 @@ const vendorRoutes = require('./src/routes/vendorRoutes');
 const vendorAutomationRoutes = require('./src/routes/vendorAutomationRoutes');
 const vendorCommissionsRoutes = require('./src/routes/vendorCommissionsRoutes'); // Sistema de Roles y Comisiones (Enero 2025)
 const pricingRoutes = require('./src/routes/pricingRoutes');
+const companyAccountRoutes = require('./src/routes/companyAccountRoutes'); // 💼 Cuenta Comercial APONNT <-> Empresa
 
 // 💼 IMPORTAR RUTAS DE POSTULACIONES LABORALES
 const jobPostingsRoutes = require('./src/routes/jobPostingsRoutes');
 
-// 🔬 IMPORTAR API BIOMÉTRICA NEXT-GEN
-const biometricApiRoutes = require('./src/routes/biometric-api');
-const biometricHubRoutes = require('./src/routes/biometric-hub');
+// 📋 IMPORTAR RUTAS DE DEPENDENCIAS DE CONCEPTOS (Benefits Engine Multi-Tenant)
+const conceptDependenciesRoutes = require('./src/routes/conceptDependenciesRoutes');
+
+// 📅 IMPORTAR RUTAS DE NOTIFICACIONES DE VENCIMIENTO DE DOCUMENTOS (con escalamiento)
+const documentExpirationRoutes = require('./src/routes/documentExpirationRoutes');
 
 // 🖥️ IMPORTAR RUTAS DE KIOSKS BIOMÉTRICOS
 const kiosksRoutes = require('./src/routes/kiosks')(database);
@@ -1960,6 +1950,7 @@ app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exit
 app.use('/api/v1/users', userCalendarRoutes); // ✅ Calendario personal del empleado
 app.use('/api/v1/shifts', shiftRoutes);
 app.use('/api/v1/shifts', shiftCalendarRoutes); // ✅ Calendario visual de turnos rotativos
+app.use('/api/v1/departments', departmentRoutes); // ✅ Rutas de departamentos con auth multi-tenant
 app.use('/api/v1/authorization', authorizationRoutes); // Sistema de autorizaciones de llegadas tardías
 app.use('/api/v1/diagnostic', diagnosticRoutes); // Endpoint de diagnóstico para verificar schema
 app.use('/api/v1/admin/migrations', adminMigrationsRoutes); // Endpoints administrativos de migraciones
@@ -1992,6 +1983,10 @@ app.use('/api/v1/users', userSalaryConfigRoutes); // GET/POST/PUT/DELETE /:userI
 app.use('/api/medical-advanced', medicalAdvancedRoutes); // Antropométricos, Cirugías, Psiquiatría, Deportes, Hábitos
 app.use('/api/salary-advanced', salaryAdvancedRoutes); // Convenios, Categorías, Config V2, Payroll
 app.use('/api/payroll', payrollRoutes); // ✅ Sistema Liquidación Parametrizable v3.0 (Multi-País, Multi-Sucursal)
+app.use('/api/v1/concept-dependencies', conceptDependenciesRoutes); // ✅ Benefits Engine Multi-Tenant (Dependencias de Conceptos)
+app.use('/api/v1/document-expiration', documentExpirationRoutes); // ✅ Notificaciones Vencimiento Documentos con Escalamiento
+app.use('/api/v1/organizational', organizationalRoutes); // ✅ Estructura Organizacional Enterprise
+app.use('/api/v1/holidays-api', holidayApiRoutes); // ✅ API Externa de Feriados (Nager.Date - FREE, Sin límite)
 
 // 🆕 Sistema de Upload de Archivos (Enero 2025)
 app.use('/api/v1/upload', uploadRoutes); // POST /single, POST /multiple, DELETE /:filename, GET /info/:filename
@@ -2005,6 +2000,7 @@ app.use('/api/aponnt/dashboard', aponntDashboardRoutes);
 // app.use('/api/v1', aponntDashboardRoutes); // ❌ DESACTIVADO: intercepta userRoutes
 app.use('/api/v1/company-modules', companyModuleRoutes);
 app.use('/api/company-panel', companyPanelRoutes);
+app.use('/api/company-account', companyAccountRoutes); // 💼 Cuenta Comercial (Presupuestos, Contratos, Facturas, Comunicaciones)
 app.use('/api/vendor-automation', vendorRoutes);
 app.use('/api/vendor-automation-advanced', vendorAutomationRoutes);
 app.use('/api/vendors', vendorCommissionsRoutes); // Sistema de Roles y Comisiones (Enero 2025)
@@ -2013,20 +2009,12 @@ app.use('/api', pricingRoutes);
 // 💼 CONFIGURAR RUTAS DE POSTULACIONES LABORALES
 app.use('/api/job-postings', jobPostingsRoutes);
 
-// 🔬 CONFIGURAR API BIOMÉTRICA NEXT-GEN
-app.use('/api/v2/biometric', biometricApiRoutes);
-app.use('/api/biometric', biometricHubRoutes);
-
 // 🖥️ CONFIGURAR RUTAS DE KIOSKS BIOMÉTRICOS
 app.use('/api/kiosks', kiosksRoutes);
 
 // 🐘 CONFIGURAR API POSTGRESQL PARTICIONADO PROFESIONAL
 const postgresqlPartitioningRoutes = require('./src/routes/postgresql-partitioning');
 app.use('/api/v2/postgresql/partitioning', postgresqlPartitioningRoutes);
-
-// 🎯 CONFIGURAR REAL BIOMETRIC ANALYSIS ENGINE (VERIFIED TECHNOLOGIES)
-const realBiometricRoutes = require('./src/routes/real-biometric-api');
-app.use('/api/v2/biometric-real', realBiometricRoutes);
 
 // ⏰ CONFIGURAR BIOMETRIC ATTENDANCE API (CLOCK IN/OUT)
 const biometricAttendanceRoutes = require('./src/routes/biometric-attendance-api');
@@ -2053,15 +2041,15 @@ const emotionalAnalysisRoutes = require('./src/routes/emotionalAnalysisRoutes');
 app.use('/api/v1/emotional-analysis', emotionalAnalysisRoutes);
 console.log('🧠 [EMOTIONAL-ANALYSIS] Rutas profesionales configuradas');
 
-// ⚖️ GESTIÓN DE CONSENTIMIENTOS (Ley 25.326)
-const consentRoutes = require('./src/routes/consentRoutes');
-app.use('/api/v1/consent', consentRoutes);
-console.log('⚖️ [CONSENT] Sistema legal configurado');
-
 // 🔐 GESTIÓN DE CONSENTIMIENTOS BIOMÉTRICOS (Análisis Emocional)
 const biometricConsentRoutes = require('./src/routes/biometricConsentRoutes');
 app.use('/api/v1/biometric', biometricConsentRoutes);
 console.log('🔐 [BIOMETRIC-CONSENT] Sistema de consentimientos biométricos configurado');
+
+// 🌍 REGULACIONES DE PRIVACIDAD MULTI-PAÍS (Workday/SAP Style)
+const privacyRegulationRoutes = require('./src/routes/privacyRegulationRoutes');
+app.use('/api/privacy', privacyRegulationRoutes);
+console.log('🌍 [PRIVACY-REGULATION] Sistema de regulaciones multi-país configurado');
 
 // 🏖️ CONFIGURAR API DE VACACIONES Y PERMISOS
 const vacationRoutes = require('./src/routes/vacationRoutes');
@@ -2078,6 +2066,16 @@ app.use('/api/v1/attendance', attendanceRoutes);
 // 📊 CONFIGURAR API DE ATTENDANCE ANALYTICS (Scoring + Patrones + OLAP)
 const attendanceAnalyticsRoutes = require('./src/routes/attendanceAnalyticsRoutes');
 app.use('/api/attendance-analytics', attendanceAnalyticsRoutes);
+
+// 📈 CONFIGURAR API DE ESTADÍSTICAS AVANZADAS DE ASISTENCIA
+// Media acotada, desviación estándar, zonificación climática, comparativas regionales
+const attendanceAdvancedStatsRoutes = require('./src/routes/attendanceAdvancedStatsRoutes');
+app.use('/api/attendance-stats', attendanceAdvancedStatsRoutes);
+
+// 📊 CONFIGURAR API DE CUBO DE HORAS (Analytics Avanzado)
+// Cubo multidimensional, costos de reposición, optimizador de vacaciones
+const hoursCubeRoutes = require('./src/routes/hoursCubeRoutes');
+app.use('/api/hours-cube', hoursCubeRoutes);
 
 // 🎯 CONFIGURAR API DE EXPEDIENTE 360° (Análisis Integral de Empleados)
 app.use('/api/employee-360', employee360Routes);
@@ -2133,6 +2131,19 @@ console.log('   🔄 /api/v1/enterprise/notifications/workflows - Workflows mult
 console.log('   📝 /api/v1/enterprise/notifications/templates - Templates reutilizables');
 console.log('   ⚙️ /api/v1/enterprise/notifications/preferences - Preferencias usuario');
 console.log('   🔥 Características: Workflows automáticos, escalamiento, multi-canal');
+
+// ✅ SISTEMA DE NOTIFICACIONES UNIFICADO v3.0 (REEMPLAZA ENTERPRISE Y COMPLETE)
+const notificationUnifiedRoutes = require('./src/routes/notificationUnifiedRoutes');
+app.use('/api/v2/notifications', notificationUnifiedRoutes);
+
+console.log('🔔 [NOTIFICATIONS-UNIFIED] Sistema de Notificaciones UNIFICADO v3.0 ACTIVO:');
+console.log('   📬 /api/v2/notifications - API unificada');
+console.log('   💬 /api/v2/notifications/threads - Conversaciones');
+console.log('   📊 /api/v2/notifications/stats - Estadisticas');
+console.log('   🤖 /api/v2/notifications/ai/* - Integracion IA');
+console.log('   📱 /api/v2/notifications/mobile/* - Endpoints APK');
+console.log('   🏢 /api/v2/notifications/aponnt/* - Comunicacion Aponnt<->Empresa');
+console.log('   🔥 Ecosistema completo: Admin + Empresa + APK');
 
 // ✅ CONFIGURAR SISTEMA DE GESTIÓN DE MÓDULOS (Bundling + Auto-Conocimiento)
 const modulesRoutes = require('./src/routes/modulesRoutes')(database);
@@ -2272,25 +2283,14 @@ console.log('   🔥 Auto-diagnóstico, Auto-reparación híbrida, Análisis de 
 
 // ✅ CONFIGURAR EMAIL VERIFICATION & CONSENT MANAGEMENT SYSTEM
 const emailVerificationRoutes = require('./src/routes/emailVerificationRoutes');
-const consentManagementRoutes = require('./src/routes/consentManagementRoutes');
 
 app.use('/api/email-verification', emailVerificationRoutes);
-app.use('/api/consents', consentManagementRoutes);
 
 console.log('📧 [EMAIL VERIFICATION] Sistema de Verificación de Email ACTIVO:');
 console.log('   ✉️  POST /api/email-verification/send - Enviar email de verificación');
 console.log('   ✅ GET  /api/email-verification/verify/:token - Verificar token');
 console.log('   🔄 POST /api/email-verification/resend - Reenviar email');
 console.log('   🏥 GET  /api/email-verification/health - Estado del sistema');
-
-console.log('📜 [CONSENTS] Sistema de Gestión de Consentimientos ACTIVO:');
-console.log('   📋 GET  /api/consents/definitions - Listar definiciones de consentimientos');
-console.log('   ➕ POST /api/consents/definitions - Crear nueva definición');
-console.log('   📝 GET  /api/consents/user/:userId - Obtener consentimientos de usuario');
-console.log('   ✅ POST /api/consents/accept - Aceptar consentimiento');
-console.log('   ❌ POST /api/consents/revoke - Revocar consentimiento');
-console.log('   📊 GET  /api/consents/stats - Estadísticas de consentimientos');
-console.log('   🏥 GET  /api/consents/health - Estado del sistema');
 
 // ✅ CONFIGURAR SISTEMA DE TESTING VISIBLE - PHASE 4 (Legacy - usar /api/phase4 en su lugar)
 const visibleTestingRoutes = require('./src/routes/visibleTestingRoutes');
@@ -2395,14 +2395,16 @@ console.log('   🔄 Worker procesando cola cada 5 segundos');
 const facialBiometricRoutes = require('./src/routes/facialBiometricRoutes');
 app.use('/api/v1/facial-biometric', facialBiometricRoutes);
 
-// 🏥 CONFIGURAR API MÉDICA
-const { medicalRouter, adminRouter } = require('./src/routes/medicalRoutes-simple');
-app.use('/api/v1/medical', medicalRouter);
-app.use('/api/admin', adminRouter);
+// 🏥 CONFIGURAR API MÉDICA (eliminado medicalRoutes-simple - mockup)
+app.use('/api/medical-cases', medicalCaseRoutes); // Sistema completo de gestión médica
+app.use('/api/occupational-health', occupationalHealthRoutes); // ✨ Occupational Health Enterprise v5.0 - International Standards
+// ELIMINADO: occupationalHealthPhase2Routes - Funcionalidad ahora en /api/medical-cases
 
-// 🛠️ CONFIGURAR API DE GESTIÓN BIOMÉTRICA
-const biometricManagementRouter = require('./src/routes/biometric-management-routes');
-app.use('/api/v1/biometric-management', biometricManagementRouter);
+// 🏥 Sistema Médico Profesional con Inmutabilidad (Diciembre 2025)
+// Cumple Ley 19.587, Decreto 351/79, Res. SRT 37/10, 43/97, 905/15
+app.use('/api/medical-records', medicalRecordsRoutes); // CRUD con firma digital, ventanas de edición, bloqueo automático
+app.use('/api/medical-templates', medicalTemplatesRoutes); // Plantillas de exámenes por empresa (preocupacional, periódico, etc.)
+app.use('/api/medical-authorizations', medicalAuthorizationsRoutes); // Workflow de autorizaciones RRHH→Supervisor
 
 // 📚 CONFIGURAR API DE CAPACITACIONES
 const trainingRoutes = require('./src/routes/trainingRoutes');
@@ -2667,6 +2669,69 @@ async function startServer() {
     } catch (schedulerError) {
       console.warn('⚠️  [SCHEDULER] Error iniciando scheduler de exámenes médicos:', schedulerError.message);
       console.warn('⚠️  [SCHEDULER] El servidor continuará sin scheduler de exámenes médicos.\n');
+    }
+
+    
+    // ✅ INICIALIZAR CERTIFICATION ALERT SERVICE (OH-V6-9)
+    console.log('📜 [CERT ALERTS] Inicializando Certification Alert Service...');
+    try {
+      const CertificationAlertService = require('./src/services/CertificationAlertService');
+      const { Pool } = require('pg');
+
+      // Crear pool de PostgreSQL para el servicio
+      const certAlertPool = new Pool({
+        host: process.env.POSTGRES_HOST || 'localhost',
+        port: process.env.POSTGRES_PORT || 5432,
+        database: process.env.POSTGRES_DB || 'attendance_system',
+        user: process.env.POSTGRES_USER || 'postgres',
+        password: process.env.POSTGRES_PASSWORD
+      });
+
+      const certAlertService = new CertificationAlertService(certAlertPool);
+      certAlertService.startCronJob();
+
+      // Hacer disponible en toda la aplicación
+      app.locals.certAlertService = certAlertService;
+      global.certAlertService = certAlertService;
+
+      console.log('✅ [CERT ALERTS] Certification Alert Service iniciado correctamente');
+      console.log('   • Frecuencia: Diario a las 9:00 AM');
+      console.log('   • Alertas multi-idioma: EN, ES');
+      console.log('   • Destinatarios: Empleados, Supervisores, RRHH');
+      console.log('   • Zona horaria: America/Buenos_Aires\n');
+    } catch (certAlertError) {
+      console.warn('⚠️  [CERT ALERTS] Error iniciando Certification Alert Service:', certAlertError.message);
+      console.warn('⚠️  [CERT ALERTS] El servidor continuará sin alertas automáticas de certificaciones.\n');
+    }
+
+    // ✅ INICIALIZAR SERVICIO DE ESCALAMIENTO AUTOMÁTICO SLA
+    console.log('⏱️ [SLA-ESCALATION] Inicializando servicio de escalamiento automático...');
+    try {
+      const slaEscalationService = require('./src/services/SLAEscalationService');
+      slaEscalationService.start();
+      console.log('✅ [SLA-ESCALATION] Servicio de escalamiento SLA iniciado correctamente');
+      console.log('   • Frecuencia: Cada hora');
+      console.log('   • Warning antes de SLA: 4 horas');
+      console.log('   • Cadena de escalamiento: empleado → supervisor → RRHH → gerencia');
+      console.log('   • Impacto en evaluación: Automático\n');
+    } catch (slaError) {
+      console.warn('⚠️  [SLA-ESCALATION] Error iniciando servicio de escalamiento:', slaError.message);
+      console.warn('⚠️  [SLA-ESCALATION] El servidor continuará sin escalamiento automático.\n');
+    }
+
+    // ✅ INICIALIZAR SERVICIO DE ANÁLISIS INTELIGENTE OLLAMA
+    console.log('🧠 [OLLAMA-ANALYZER] Inicializando servicio de análisis inteligente...');
+    try {
+      const ollamaAnalyzer = require('./src/services/OllamaNotificationAnalyzer');
+      ollamaAnalyzer.start();
+      console.log('✅ [OLLAMA-ANALYZER] Servicio de IA iniciado correctamente');
+      console.log('   • Modelo: llama3.1:8b (Ollama)');
+      console.log('   • Análisis automático: Cada 5 minutos');
+      console.log('   • Funciones: Detección de preguntas similares, auto-respuestas, aprendizaje');
+      console.log('   • API: /api/inbox/ai/*\n');
+    } catch (ollamaError) {
+      console.warn('⚠️  [OLLAMA-ANALYZER] Error iniciando servicio de IA:', ollamaError.message);
+      console.warn('⚠️  [OLLAMA-ANALYZER] El servidor continuará sin análisis inteligente.\n');
     }
 
     // Iniciar servidor HTTP

@@ -19,6 +19,7 @@
 
 const { sequelize } = require('../config/database');
 const { Op } = require('sequelize');
+const conceptDependencyService = require('./ConceptDependencyService');
 
 class PayrollCalculatorService {
     constructor() {
@@ -113,14 +114,20 @@ class PayrollCalculatorService {
             // 9. Obtener bonos activos del usuario
             const userBonuses = await this.getActiveBonuses(userId, companyId, period.startDate);
 
-            // 10. Calcular cada concepto
-            const calculatedConcepts = this.calculateAllConcepts(
+            // 10. Calcular cada concepto (con evaluación de dependencias)
+            const payrollPeriod = `${year}-${String(month).padStart(2, '0')}`;
+            const calculatedConcepts = await this.calculateAllConcepts(
                 template.concepts,
                 assignment,
                 hoursAnalysis,
                 userOverrides,
                 userBonuses,
-                holidays.length
+                holidays.length,
+                {
+                    userId,
+                    companyId,
+                    payrollPeriod
+                }
             );
 
             // 11. Calcular totales
@@ -157,6 +164,13 @@ class PayrollCalculatorService {
                 },
                 concepts: calculatedConcepts,
                 totals,
+                // Información de evaluación de dependencias (Benefits Engine)
+                dependencyAnalysis: calculatedConcepts.dependencyAnalysis || {
+                    skippedConcepts: [],
+                    warnings: [],
+                    totalEvaluated: 0,
+                    totalApplied: 0
+                },
                 calculatedAt: new Date(),
                 status: 'calculated'
             };
@@ -913,22 +927,26 @@ class PayrollCalculatorService {
     }
 
     // =========================================================================
-    // CALCULAR TODOS LOS CONCEPTOS
+    // CALCULAR TODOS LOS CONCEPTOS (con evaluación de dependencias)
     // =========================================================================
-    calculateAllConcepts(templateConcepts, assignment, hoursAnalysis, userOverrides, userBonuses, holidayCount) {
+    async calculateAllConcepts(templateConcepts, assignment, hoursAnalysis, userOverrides, userBonuses, holidayCount, context = {}) {
         const earnings = [];
         const deductions = [];
         const nonRemunerative = [];
         const employerCosts = [];
+        const skippedConcepts = [];  // Conceptos omitidos por dependencias no cumplidas
+        const dependencyWarnings = [];  // Advertencias de dependencias
 
         const baseSalary = parseFloat(assignment.base_salary) || 0;
         const hourlyRate = parseFloat(assignment.hourly_rate) || (baseSalary / (assignment.work_hours_per_month || 200));
+        const { userId, companyId, payrollPeriod } = context;
 
         // Procesar conceptos de la plantilla
-        templateConcepts.forEach(concept => {
+        for (const concept of templateConcepts) {
             // Verificar override
             const override = userOverrides.find(o => o.template_concept_id === concept.id);
 
+            // Calcular monto base
             let amount = this.calculateConceptAmount(concept, {
                 baseSalary,
                 hourlyRate,
@@ -936,6 +954,55 @@ class PayrollCalculatorService {
                 override,
                 holidayCount
             });
+
+            // =====================================================================
+            // EVALUACIÓN DE DEPENDENCIAS (Benefits Engine Integration)
+            // =====================================================================
+            let dependencyResult = { applies: true, amount, reason: null, evaluations: [] };
+
+            if (userId && companyId && amount > 0) {
+                try {
+                    dependencyResult = await conceptDependencyService.evaluateConceptDependencies(
+                        companyId,
+                        userId,
+                        concept.id,
+                        amount,
+                        payrollPeriod
+                    );
+
+                    // Aplicar resultado de evaluación
+                    if (!dependencyResult.applies) {
+                        // Concepto NO aplica - omitir
+                        skippedConcepts.push({
+                            conceptId: concept.id,
+                            conceptCode: concept.concept_code,
+                            conceptName: concept.concept_name,
+                            originalAmount: amount,
+                            reason: dependencyResult.reason,
+                            evaluations: dependencyResult.evaluations
+                        });
+                        console.log(`⏭️ [PAYROLL] Concepto ${concept.concept_code} OMITIDO: ${dependencyResult.reason}`);
+                        continue;  // Saltar este concepto
+                    }
+
+                    // Aplicar monto ajustado (puede ser reducido proporcionalmente)
+                    if (dependencyResult.amount !== amount) {
+                        console.log(`📉 [PAYROLL] Concepto ${concept.concept_code} REDUCIDO: ${amount} → ${dependencyResult.amount}`);
+                        amount = dependencyResult.amount;
+                    }
+
+                    // Registrar advertencias si hay
+                    if (dependencyResult.reason && dependencyResult.reason.startsWith('Advertencia:')) {
+                        dependencyWarnings.push({
+                            conceptCode: concept.concept_code,
+                            warning: dependencyResult.reason
+                        });
+                    }
+                } catch (depError) {
+                    // Si falla la evaluación de dependencias, aplicar concepto normalmente
+                    console.log(`⚠️ [PAYROLL] Error evaluando dependencias para ${concept.concept_code}: ${depError.message}`);
+                }
+            }
 
             const calculatedConcept = {
                 id: concept.id,
@@ -948,7 +1015,16 @@ class PayrollCalculatorService {
                 isOverride: !!override,
                 isTaxable: concept.is_taxable,
                 affectsGross: concept.affects_gross,
-                displayOrder: concept.display_order
+                displayOrder: concept.display_order,
+                // Entidad de destino para consolidación
+                entityId: concept.entity_id || null,
+                entityLabel: concept.entity_label || null,
+                // Info de dependencias evaluadas
+                dependencyInfo: dependencyResult.evaluations.length > 0 ? {
+                    evaluated: true,
+                    passed: dependencyResult.applies,
+                    evaluations: dependencyResult.evaluations
+                } : null
             };
 
             // Clasificar
@@ -961,10 +1037,10 @@ class PayrollCalculatorService {
             } else {
                 earnings.push(calculatedConcept);
             }
-        });
+        }
 
         // Procesar bonos del usuario
-        userBonuses.forEach(bonus => {
+        for (const bonus of userBonuses) {
             const amount = bonus.is_percentage ?
                 (baseSalary * (parseFloat(bonus.percentage) / 100)) :
                 parseFloat(bonus.amount) || 0;
@@ -986,9 +1062,26 @@ class PayrollCalculatorService {
             } else {
                 nonRemunerative.push(bonusConcept);
             }
-        });
+        }
 
-        return { earnings, deductions, nonRemunerative, employerCosts };
+        // Log resumen de dependencias
+        if (skippedConcepts.length > 0) {
+            console.log(`📋 [PAYROLL] Resumen dependencias: ${skippedConcepts.length} conceptos omitidos por no cumplir requisitos`);
+        }
+
+        return {
+            earnings,
+            deductions,
+            nonRemunerative,
+            employerCosts,
+            // Información adicional de dependencias (para transparencia en recibo)
+            dependencyAnalysis: {
+                skippedConcepts,
+                warnings: dependencyWarnings,
+                totalEvaluated: templateConcepts.length,
+                totalApplied: templateConcepts.length - skippedConcepts.length
+            }
+        };
     }
 
     // =========================================================================

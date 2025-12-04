@@ -565,6 +565,144 @@ router.get('/history', async (req, res) => {
 });
 
 // ============================================
+// ENDPOINT: POST /api/testing/run-consent-ssot
+// ============================================
+/**
+ * Ejecuta test SSOT completo del módulo de Consentimientos
+ * No requiere Playwright, usa validaciones directas de BD
+ */
+router.post('/run-consent-ssot', async (req, res) => {
+    try {
+        const { spawn } = require('child_process');
+        const path = require('path');
+
+        const executionId = uuidv4();
+        const startTime = new Date();
+
+        // Crear entrada en el Map
+        const execution = {
+            executionId,
+            environment: 'local',
+            module: 'consent',
+            status: 'running',
+            logs: [],
+            startTime,
+            updatedAt: new Date(),
+            results: null
+        };
+
+        activeExecutions.set(executionId, execution);
+
+        addLog(executionId, 'info', '📋 Iniciando test SSOT de Consentimientos...');
+        addLog(executionId, 'info', 'Este test valida CRUD y Single Source of Truth (SSOT)');
+
+        // Ejecutar el script de test
+        const scriptPath = path.join(__dirname, '../../scripts/test-consent-module-deep.js');
+        const testProcess = spawn('node', [scriptPath], {
+            cwd: path.join(__dirname, '../..'),
+            env: { ...process.env }
+        });
+
+        let output = '';
+        let errorOutput = '';
+
+        testProcess.stdout.on('data', (data) => {
+            const text = data.toString();
+            output += text;
+            // Parsear líneas individuales para logs
+            const lines = text.split('\n').filter(l => l.trim());
+            lines.forEach(line => {
+                // Detectar tipo de log por contenido
+                if (line.includes('✓') || line.includes('✅')) {
+                    addLog(executionId, 'success', line.replace(/\x1b\[[0-9;]*m/g, ''));
+                } else if (line.includes('✗') || line.includes('❌')) {
+                    addLog(executionId, 'error', line.replace(/\x1b\[[0-9;]*m/g, ''));
+                } else if (line.includes('⚠') || line.includes('WARNING')) {
+                    addLog(executionId, 'warning', line.replace(/\x1b\[[0-9;]*m/g, ''));
+                } else if (line.includes('═══') || line.includes('╔') || line.includes('╚')) {
+                    addLog(executionId, 'info', line.replace(/\x1b\[[0-9;]*m/g, ''));
+                } else if (line.trim()) {
+                    addLog(executionId, 'info', line.replace(/\x1b\[[0-9;]*m/g, ''));
+                }
+            });
+        });
+
+        testProcess.stderr.on('data', (data) => {
+            errorOutput += data.toString();
+            addLog(executionId, 'error', data.toString().replace(/\x1b\[[0-9;]*m/g, ''));
+        });
+
+        testProcess.on('close', (code) => {
+            const duration = ((new Date() - startTime) / 1000).toFixed(2);
+
+            // Parsear resultados del output (formato específico del test consent)
+            // Formato: "✓ Pasados:    41", "⚠ Warnings:   0", "✗ Fallados:   0"
+            const cleanOutput = output.replace(/\x1b\[[0-9;]*m/g, ''); // Remover códigos ANSI
+
+            let passed = 0, failed = 0, warnings = 0;
+
+            // Formato tabular del test consent
+            const passedMatch = cleanOutput.match(/Pasados?:\s*(\d+)/i);
+            const warningsMatch = cleanOutput.match(/Warnings?:\s*(\d+)/i);
+            const failedMatch = cleanOutput.match(/Fallados?:\s*(\d+)/i);
+
+            if (passedMatch) passed = parseInt(passedMatch[1]) || 0;
+            if (warningsMatch) warnings = parseInt(warningsMatch[1]) || 0;
+            if (failedMatch) failed = parseInt(failedMatch[1]) || 0;
+
+            // Fallback: contar por símbolos de éxito/error
+            if (passed === 0 && failed === 0 && warnings === 0) {
+                // Contar líneas que contienen ✓ o ✅
+                passed = (cleanOutput.match(/[✓✅]/g) || []).length;
+                failed = (cleanOutput.match(/[✗❌]/g) || []).length;
+                warnings = (cleanOutput.match(/[⚠]/g) || []).length;
+            }
+
+            const total = passed + failed + warnings;
+            const successRate = total > 0 ? ((passed / total) * 100).toFixed(2) : 0;
+
+            const results = {
+                total,
+                passed,
+                failed,
+                warnings,
+                successRate,
+                duration,
+                exitCode: code,
+                testType: 'SSOT',
+                module: 'consent'
+            };
+
+            if (code === 0) {
+                addLog(executionId, 'success', `✅ Test SSOT completado exitosamente`);
+                updateExecutionStatus(executionId, 'completed', { results });
+            } else {
+                addLog(executionId, 'error', `❌ Test SSOT terminó con errores (exit code: ${code})`);
+                updateExecutionStatus(executionId, 'failed', { results });
+            }
+
+            addLog(executionId, 'info', `📊 Resumen: ${passed} passed, ${warnings} warnings, ${failed} failed`);
+            addLog(executionId, 'info', `⏱️ Duración: ${duration}s`);
+        });
+
+        // Responder inmediatamente
+        res.json({
+            success: true,
+            executionId,
+            message: 'Test SSOT de Consentimientos iniciado. Usa /execution-status/:executionId para ver el progreso.'
+        });
+
+    } catch (error) {
+        console.error('❌ [VISIBLE-TESTING] Error al iniciar test consent SSOT:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al iniciar test SSOT de consent',
+            error: error.message
+        });
+    }
+});
+
+// ============================================
 // LIMPIEZA PERIÓDICA
 // ============================================
 // Cada 10 minutos, limpiar ejecuciones completas de más de 30 minutos
@@ -587,6 +725,7 @@ setInterval(() => {
 // ============================================
 console.log('👁️ [VISIBLE-TESTING-ROUTES] Rutas cargadas:');
 console.log('   POST   /api/testing/run-visible');
+console.log('   POST   /api/testing/run-consent-ssot - Test SSOT Consentimientos');
 console.log('   GET    /api/testing/execution-status/:executionId');
 console.log('   GET    /api/testing/active-executions');
 console.log('   POST   /api/testing/kill-execution/:executionId');

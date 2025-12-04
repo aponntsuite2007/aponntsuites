@@ -11,7 +11,7 @@ const express = require('express');
 const router = express.Router();
 const { auth: authenticateToken } = require('../middleware/auth');
 const UserDocuments = require('../models/UserDocuments');
-const User = require('../models/User-postgresql');
+const { User } = require('../config/database');
 const { Op } = require('sequelize');
 
 /**

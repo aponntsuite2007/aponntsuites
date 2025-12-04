@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { Branch, User, Attendance } = require('../config/database');
+const { Branch, User, Attendance, Holiday } = require('../config/database');
 const { Op } = require('sequelize');
 const { auth, supervisorOrAdmin } = require('../middleware/auth');
+const holidayApiService = require('../services/HolidayApiService');
 
 /**
  * @route GET /api/v1/branches
@@ -140,6 +141,14 @@ router.put('/:id', auth, supervisorOrAdmin, async (req, res) => {
       });
     }
 
+    // PROTECCIÓN: Si es sucursal principal (is_main), no permitir cambiar el nombre
+    if (branch.is_main === true && req.body.name && req.body.name.toUpperCase() !== 'CENTRAL') {
+      return res.status(403).json({
+        error: 'No se puede cambiar el nombre de la sucursal CENTRAL. Esta es la sucursal principal de la empresa.',
+        code: 'MAIN_BRANCH_NAME_PROTECTED'
+      });
+    }
+
     // Si se está cambiando el código, verificar unicidad
     if (req.body.code && req.body.code !== branch.code) {
       const existingBranch = await Branch.findOne({
@@ -153,11 +162,42 @@ router.put('/:id', auth, supervisorOrAdmin, async (req, res) => {
       }
     }
 
+    // Detectar si cambió el país
+    const oldCountry = branch.country;
+    const newCountry = req.body.country;
+
     await branch.update(req.body);
+
+    // Si cambió el país, sincronizar feriados automáticamente
+    let holidaySyncResult = null;
+    if (newCountry && newCountry !== oldCountry) {
+      try {
+        const isSupported = await holidayApiService.isCountrySupported(newCountry);
+        if (isSupported) {
+          const currentYear = new Date().getFullYear();
+          // Sincronizar año actual y siguiente
+          holidaySyncResult = await holidayApiService.syncMultipleYears(
+            Holiday,
+            newCountry,
+            currentYear,
+            currentYear + 1,
+            { onlyNational: true }
+          );
+          console.log(`🌎 [BRANCH] Feriados sincronizados automáticamente para ${newCountry}`);
+        }
+      } catch (syncError) {
+        console.warn(`⚠️ [BRANCH] Error sincronizando feriados:`, syncError.message);
+      }
+    }
 
     res.json({
       message: 'Sucursal actualizada exitosamente',
-      branch
+      branch,
+      holidaySync: holidaySyncResult ? {
+        synced: true,
+        country: newCountry,
+        results: holidaySyncResult
+      } : null
     });
 
   } catch (error) {
@@ -177,6 +217,14 @@ router.delete('/:id', auth, supervisorOrAdmin, async (req, res) => {
     if (!branch) {
       return res.status(404).json({
         error: 'Sucursal no encontrada'
+      });
+    }
+
+    // PROTECCIÓN: La sucursal principal (is_main) NO puede ser eliminada
+    if (branch.is_main === true) {
+      return res.status(403).json({
+        error: 'No se puede eliminar la sucursal CENTRAL. Esta es la sucursal principal de la empresa y es necesaria para el sistema de feriados.',
+        code: 'MAIN_BRANCH_DELETE_PROTECTED'
       });
     }
 

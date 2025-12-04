@@ -77,7 +77,7 @@ router.post('/enroll-face',
     const sessionId = generateSessionId();
 
     try {
-      const { employeeId, quality = 0.8 } = req.body;
+      const { employeeId, userId, quality = 0.8 } = req.body;
       const companyId = req.companyContext?.companyId;
 
       if (!companyId) {
@@ -236,50 +236,72 @@ router.post('/enroll-face',
 
       const savedTemplate = { id: results[0]?.id || 'generated-id' };
 
-      // 5. SAVE VISIBLE PHOTO and UPDATE USER RECORD with biometric photo fields
+      // 5. OPTIONAL: SAVE VISIBLE PHOTO (configurable via BIOMETRIC_SAVE_VISIBLE_PHOTO)
       let photoUrl = null;
-      try {
-        const fs = require('fs');
-        const path = require('path');
+      const saveVisiblePhoto = process.env.BIOMETRIC_SAVE_VISIBLE_PHOTO === 'true';
 
-        // Create uploads directory if it doesn't exist
-        const uploadsDir = path.join(__dirname, '../../public/uploads/biometric-photos');
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
+      if (saveVisiblePhoto) {
+        console.log('📸 [BIOMETRIC-PHOTO] Guardado de foto visible HABILITADO');
+        try {
+          const fs = require('fs');
+          const path = require('path');
 
-        // Generate unique filename: companyId_employeeId_timestamp.jpg
-        const timestamp = Date.now();
-        const filename = `${companyId}_${employeeId}_${timestamp}.jpg`;
-        const filepath = path.join(uploadsDir, filename);
-
-        // Save the image file
-        fs.writeFileSync(filepath, req.file.buffer);
-
-        // Photo URL for database (relative path from public/)
-        photoUrl = `/uploads/biometric-photos/${filename}`;
-
-        console.log(`📸 [BIOMETRIC-PHOTO] Visible photo saved: ${photoUrl}`);
-
-        // Update user record with biometric photo fields using SQL function
-        const captureDate = new Date();
-        await database.sequelize.query(
-          `SELECT update_biometric_photo(:userId, :photoUrl, :captureDate)`,
-          {
-            replacements: {
-              userId: employeeId, // UUID from users table
-              photoUrl: photoUrl,
-              captureDate: captureDate
-            },
-            type: database.sequelize.QueryTypes.SELECT
+          // Create uploads directory if it doesn't exist
+          const uploadsDir = path.join(__dirname, '../../public/uploads/biometric-photos');
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
           }
-        );
 
-        console.log(`✅ [BIOMETRIC-PHOTO] User record updated with photo URL and expiration date`);
+          // Generate unique filename: companyId_employeeId_timestamp.jpg
+          const timestamp = Date.now();
+          const filename = `${companyId}_${employeeId}_${timestamp}.jpg`;
+          const filepath = path.join(uploadsDir, filename);
 
-      } catch (photoError) {
-        console.error(`⚠️ [BIOMETRIC-PHOTO] Failed to save photo, but template saved successfully:`, photoError.message);
-        // Don't fail the whole enrollment if photo save fails, just log it
+          // Save the image file
+          fs.writeFileSync(filepath, req.file.buffer);
+
+          // Photo URL for database (relative path from public/)
+          photoUrl = `/uploads/biometric-photos/${filename}`;
+
+          console.log(`📸 [BIOMETRIC-PHOTO] Visible photo saved: ${photoUrl}`);
+
+          // Update user record with biometric photo fields using SQL function
+          const captureDate = new Date();
+
+          // Get user_id UUID from employeeId if userId not provided
+          let userUUID = userId;
+          if (!userUUID && employeeId) {
+            const [userRecords] = await database.sequelize.query(
+              `SELECT user_id FROM users WHERE "employeeId" = :employeeId AND company_id = :companyId LIMIT 1`,
+              { replacements: { employeeId, companyId }, type: database.sequelize.QueryTypes.SELECT }
+            );
+            userUUID = userRecords?.[0]?.user_id;
+            console.log(`🔍 [BIOMETRIC-PHOTO] Looked up user_id: ${userUUID} from employeeId: ${employeeId}`);
+          }
+
+          if (userUUID) {
+            await database.sequelize.query(
+              `SELECT update_biometric_photo(:userId, :photoUrl, :captureDate)`,
+              {
+                replacements: {
+                  userId: userUUID,
+                  photoUrl: photoUrl,
+                  captureDate: captureDate
+                },
+                type: database.sequelize.QueryTypes.SELECT
+              }
+            );
+            console.log(`✅ [BIOMETRIC-PHOTO] User record updated with photo URL and expiration date`);
+          } else {
+            console.log(`⚠️ [BIOMETRIC-PHOTO] Could not find user_id for employee: ${employeeId}`);
+          }
+
+        } catch (photoError) {
+          console.error(`⚠️ [BIOMETRIC-PHOTO] Failed to save photo, but template saved successfully:`, photoError.message);
+          // Don't fail the whole enrollment if photo save fails, just log it
+        }
+      } else {
+        console.log('🔒 [BIOMETRIC-PHOTO] Guardado de foto visible DESHABILITADO (solo template encriptado)');
       }
 
       const processingTime = Date.now() - startTime;

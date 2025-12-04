@@ -33,6 +33,8 @@ const {
     PayrollRunConceptDetail,
     Company,
     User,
+    OrganizationalPosition,
+    PayrollPayslipTemplate,
     sequelize
 } = require('../config/database');
 
@@ -237,17 +239,175 @@ router.post('/agreements', async (req, res) => {
 
 /**
  * GET /api/payroll/concept-types
- * Lista todos los tipos de conceptos de nómina
+ * Lista todos los tipos de conceptos de nómina con clasificación y ayuda contextual
+ *
+ * Query params:
+ *   - locale: Idioma para nombres localizados (es, en, pt) default: es
+ *   - country_id: Filtrar por país
+ *   - classification: Filtrar por clasificación (GROSS_EARNING, EMPLOYEE_DEDUCTION, etc.)
+ *   - include_rates: Incluir tasas por país (true/false)
  */
 router.get('/concept-types', async (req, res) => {
     try {
-        const conceptTypes = await PayrollConceptType.findAll({
-            order: [['display_order', 'ASC']]
+        const { locale = 'es', country_id, classification, include_rates } = req.query;
+
+        // Query con clasificación y toda la info de ayuda
+        const conceptTypes = await sequelize.query(`
+            SELECT
+                pct.id,
+                pct.type_code,
+                pct.type_name,
+                COALESCE(pct.names_by_locale->>:locale, pct.type_name) as display_name,
+                pct.description,
+                pct.classification_id,
+                pcc.classification_code,
+                pcc.classification_name,
+                COALESCE(pcc.descriptions->>:locale, pcc.descriptions->>'en') as classification_description,
+                pcc.sign as monetary_sign,
+                pcc.affects_employee_net,
+                pcc.affects_employer_cost,
+
+                -- Comportamiento
+                pct.is_remunerative,
+                pct.is_taxable,
+                pct.is_pre_tax,
+                pct.is_mandatory,
+                pct.is_social_security_base,
+                pct.is_proportional_to_time,
+                pct.is_one_time,
+
+                -- Legacy (para compatibilidad)
+                pct.is_deduction,
+                pct.is_employer_cost,
+                pct.affects_gross,
+                pct.affects_net,
+
+                -- Tasas por defecto
+                pct.default_employee_rate,
+                pct.default_employer_rate,
+                pct.rate_ceiling,
+                pct.calculation_base_type,
+
+                -- Ayuda contextual
+                pct.help_tooltip,
+                pct.help_detailed,
+                pct.legal_reference,
+                pct.examples_by_country,
+
+                -- UI
+                pct.icon_name,
+                pct.color_hex,
+                pct.names_by_locale,
+                pct.display_order,
+                pct.is_active
+
+            FROM payroll_concept_types pct
+            LEFT JOIN payroll_concept_classifications pcc ON pct.classification_id = pcc.id
+            WHERE pct.is_active = true
+            ${country_id ? 'AND (pct.country_id IS NULL OR pct.country_id = :countryId)' : ''}
+            ${classification ? 'AND pcc.classification_code = :classification' : ''}
+            ORDER BY pcc.calculation_order, pct.display_order
+        `, {
+            replacements: { locale, countryId: country_id, classification },
+            type: sequelize.QueryTypes.SELECT
         });
 
-        res.json({ success: true, data: conceptTypes });
+        // Si se piden tasas por país, agregarlas
+        let ratesByCountry = null;
+        if (include_rates === 'true' && country_id) {
+            const rates = await sequelize.query(`
+                SELECT
+                    pctr.concept_type_id,
+                    pctr.employee_rate,
+                    pctr.employer_rate,
+                    pctr.rate_ceiling,
+                    pctr.calculation_base,
+                    pctr.help_text as country_help,
+                    pctr.legal_reference as country_legal_reference
+                FROM payroll_concept_type_rates pctr
+                WHERE pctr.country_id = :countryId
+                AND pctr.is_active = true
+                AND CURRENT_DATE BETWEEN pctr.effective_from AND COALESCE(pctr.effective_to, '9999-12-31')
+            `, {
+                replacements: { countryId: country_id },
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            ratesByCountry = {};
+            rates.forEach(r => {
+                ratesByCountry[r.concept_type_id] = r;
+            });
+        }
+
+        // Enriquecer con tasas si están disponibles
+        const enrichedTypes = conceptTypes.map(ct => {
+            const type = { ...ct };
+            if (ratesByCountry && ratesByCountry[ct.id]) {
+                const countryRate = ratesByCountry[ct.id];
+                type.employee_rate = countryRate.employee_rate || type.default_employee_rate;
+                type.employer_rate = countryRate.employer_rate || type.default_employer_rate;
+                type.country_help = countryRate.country_help;
+                type.country_legal_reference = countryRate.country_legal_reference;
+            } else {
+                type.employee_rate = type.default_employee_rate;
+                type.employer_rate = type.default_employer_rate;
+            }
+            return type;
+        });
+
+        res.json({
+            success: true,
+            data: enrichedTypes,
+            meta: {
+                locale,
+                country_id: country_id || null,
+                total: enrichedTypes.length
+            }
+        });
     } catch (error) {
         console.error('Error fetching concept types:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/payroll/concept-classifications
+ * Lista las 4 clasificaciones base universales
+ */
+router.get('/concept-classifications', async (req, res) => {
+    try {
+        const { locale = 'es' } = req.query;
+
+        const classifications = await sequelize.query(`
+            SELECT
+                id,
+                classification_code,
+                classification_name,
+                COALESCE(descriptions->>:locale, descriptions->>'en') as description,
+                sign,
+                affects_employee_net,
+                affects_employer_cost,
+                calculation_order,
+                is_system
+            FROM payroll_concept_classifications
+            ORDER BY calculation_order
+        `, {
+            replacements: { locale },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        res.json({
+            success: true,
+            data: classifications,
+            help: {
+                GROSS_EARNING: 'Conceptos que suman al bruto del empleado (salario, bonos, etc.)',
+                EMPLOYEE_DEDUCTION: 'Descuentos del sueldo del empleado (jubilación, salud, impuestos)',
+                EMPLOYER_CONTRIBUTION: 'Aportes del empleador (no afectan el sueldo del empleado)',
+                INFORMATIVE: 'Conceptos informativos sin efecto monetario'
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching classifications:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -1307,25 +1467,240 @@ router.get('/reports/by-concept', async (req, res) => {
 });
 
 // ============================================================================
-// ENTIDADES Y LIQUIDACIONES CONSOLIDADAS
+// CATEGORÍAS DE ENTIDADES (Parametrizable)
 // ============================================================================
 
-// GET /entities - Listar entidades (por pais o company)
-router.get('/entities', async (req, res) => {
+// GET /entity-categories - Listar categorías disponibles
+router.get('/entity-categories', async (req, res) => {
     try {
-        const { country_id, entity_type, include_global = 'true' } = req.query;
+        const { country_id, flow_direction, include_global = 'true' } = req.query;
 
-        let whereClause = 'WHERE 1=1';
+        let whereClause = 'WHERE is_active = true';
         const replacements = { companyId: req.companyId };
 
-        if (country_id) {
-            whereClause += ' AND pe.country_id = :countryId';
-            replacements.countryId = country_id;
+        // Incluir categorías globales, del país y de la empresa
+        if (include_global === 'true') {
+            whereClause += ` AND (
+                (country_id IS NULL AND company_id IS NULL)
+                OR country_id = :countryId
+                OR company_id = :companyId
+            )`;
+            if (country_id) {
+                replacements.countryId = parseInt(country_id);
+            } else {
+                replacements.countryId = null;
+            }
+        } else {
+            whereClause += ' AND company_id = :companyId';
         }
 
-        if (entity_type) {
-            whereClause += ' AND pe.entity_type = :entityType';
-            replacements.entityType = entity_type;
+        if (flow_direction) {
+            whereClause += ' AND flow_direction = :flowDirection';
+            replacements.flowDirection = flow_direction;
+        }
+
+        const categories = await sequelize.query(`
+            SELECT
+                id,
+                country_id,
+                company_id,
+                category_code,
+                category_name,
+                category_name_short,
+                description,
+                flow_direction,
+                icon_name,
+                color_hex,
+                consolidation_group,
+                requires_tax_id,
+                requires_bank_info,
+                default_presentation_format,
+                display_order,
+                is_system,
+                (company_id IS NULL AND country_id IS NULL) as is_global
+            FROM payroll_entity_categories
+            ${whereClause}
+            ORDER BY display_order, category_name
+        `, {
+            replacements,
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        res.json({ success: true, data: categories });
+    } catch (error) {
+        console.error('Error fetching entity categories:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /entity-categories/:id - Obtener categoría por ID
+router.get('/entity-categories/:id', async (req, res) => {
+    try {
+        const { PayrollEntityCategory } = require('../config/database');
+        const category = await PayrollEntityCategory.findByPk(req.params.id);
+        if (!category) {
+            return res.status(404).json({ success: false, error: 'Categoría no encontrada' });
+        }
+        res.json({ success: true, data: category });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /entity-categories - Crear categoría custom de la empresa
+router.post('/entity-categories', async (req, res) => {
+    try {
+        const { PayrollEntityCategory } = require('../config/database');
+        const category = await PayrollEntityCategory.create({
+            ...req.body,
+            company_id: req.companyId,
+            is_system: false  // Las categorías creadas por empresa no son del sistema
+        });
+        res.status(201).json({ success: true, data: category });
+    } catch (error) {
+        console.error('Error creating entity category:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// PUT /entity-categories/:id - Actualizar categoría
+router.put('/entity-categories/:id', async (req, res) => {
+    try {
+        const { PayrollEntityCategory } = require('../config/database');
+        const category = await PayrollEntityCategory.findOne({
+            where: {
+                id: req.params.id,
+                company_id: req.companyId,
+                is_system: false  // Solo se pueden editar categorías no del sistema
+            }
+        });
+        if (!category) {
+            return res.status(404).json({
+                success: false,
+                error: 'Categoría no encontrada o no editable (categorías del sistema no se pueden modificar)'
+            });
+        }
+        await category.update(req.body);
+        res.json({ success: true, data: category });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// DELETE /entity-categories/:id - Eliminar categoría
+router.delete('/entity-categories/:id', async (req, res) => {
+    try {
+        const { PayrollEntityCategory, PayrollEntity } = require('../config/database');
+
+        // Verificar que la categoría existe y es de la empresa
+        const category = await PayrollEntityCategory.findOne({
+            where: {
+                id: req.params.id,
+                company_id: req.companyId,
+                is_system: false
+            }
+        });
+
+        if (!category) {
+            return res.status(404).json({
+                success: false,
+                error: 'Categoría no encontrada o no eliminable'
+            });
+        }
+
+        // Verificar que no hay entidades usando esta categoría
+        const entitiesCount = await PayrollEntity.count({ where: { category_id: req.params.id } });
+        if (entitiesCount > 0) {
+            return res.status(400).json({
+                success: false,
+                error: `No se puede eliminar: ${entitiesCount} entidades usan esta categoría`
+            });
+        }
+
+        await category.destroy();
+        res.json({ success: true, message: 'Categoría eliminada' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================================
+// ENTIDADES DE DESTINO (100% Parametrizable)
+// ============================================================================
+
+// GET /entities - Listar entidades filtradas por país de SUCURSAL (con fallback a empresa)
+router.get('/entities', async (req, res) => {
+    try {
+        const { branch_id, country_id, category_id, flow_direction, include_global = 'true' } = req.query;
+
+        let whereClause = 'WHERE pe.is_active = true';
+        const replacements = { companyId: req.companyId };
+
+        // PRIORIDAD DE PAÍS:
+        // 1. Si se pasa branch_id → obtener country_id de la sucursal
+        // 2. Si se pasa country_id directamente → usar ese
+        // 3. Si no hay ninguno → fallback al país de la empresa (si tiene)
+        let effectiveCountryId = null;
+
+        if (branch_id) {
+            // Obtener país de la sucursal
+            const [branchData] = await sequelize.query(`
+                SELECT cb.country_id, pc.country_name
+                FROM company_branches cb
+                LEFT JOIN payroll_countries pc ON cb.country_id = pc.id
+                WHERE cb.id = :branchId AND cb.company_id = :companyId
+            `, {
+                replacements: { branchId: parseInt(branch_id), companyId: req.companyId },
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            if (branchData && branchData.country_id) {
+                effectiveCountryId = branchData.country_id;
+                console.log(`🌍 [ENTITIES] Usando país de sucursal ${branch_id}: ${branchData.country_name}`);
+            }
+        }
+
+        if (!effectiveCountryId && country_id) {
+            effectiveCountryId = parseInt(country_id);
+        }
+
+        // Fallback: país de la empresa (si tiene configurado)
+        // Nota: companies tiene 'country' (texto) no 'country_id', así que hacemos join
+        if (!effectiveCountryId) {
+            const [companyData] = await sequelize.query(`
+                SELECT pc.id as country_id, pc.country_name
+                FROM companies c
+                LEFT JOIN payroll_countries pc ON (
+                    LOWER(c.country) = LOWER(pc.country_name)
+                    OR LOWER(c.country) = LOWER(pc.country_code)
+                )
+                WHERE c.company_id = :companyId AND pc.id IS NOT NULL
+            `, {
+                replacements: { companyId: req.companyId },
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            if (companyData && companyData.country_id) {
+                effectiveCountryId = companyData.country_id;
+                console.log(`🌍 [ENTITIES] Fallback a país de empresa: ${companyData.country_name}`);
+            }
+        }
+
+        // Filtrar por país efectivo (si se determinó uno)
+        if (effectiveCountryId) {
+            // Incluir entidades del país + entidades sin país (globales)
+            whereClause += ' AND (pe.country_id = :countryId OR pe.country_id IS NULL)';
+            replacements.countryId = effectiveCountryId;
+        }
+
+        if (category_id) {
+            whereClause += ' AND pe.category_id = :categoryId';
+            replacements.categoryId = parseInt(category_id);
+        }
+
+        if (flow_direction) {
+            whereClause += ' AND pec.flow_direction = :flowDirection';
+            replacements.flowDirection = flow_direction;
         }
 
         if (include_global === 'true') {
@@ -1334,14 +1709,49 @@ router.get('/entities', async (req, res) => {
             whereClause += ' AND pe.company_id = :companyId';
         }
 
-        whereClause += ' AND pe.is_active = true';
-
         const entities = await sequelize.query(`
-            SELECT pe.*, pc.country_code, pc.country_name
+            SELECT
+                pe.entity_id,
+                pe.company_id,
+                pe.country_id,
+                pe.category_id,
+                pe.entity_code,
+                pe.entity_name,
+                pe.entity_short_name,
+                pe.entity_type,
+                pe.tax_id,
+                pe.legal_name,
+                pe.address,
+                pe.phone,
+                pe.email,
+                pe.website,
+                pe.bank_name,
+                pe.bank_cbu,
+                pe.bank_alias,
+                pe.presentation_format,
+                pe.is_government,
+                pe.is_mandatory,
+                pe.requires_employee_affiliation,
+                pe.affiliation_id_name,
+                pe.calculation_notes,
+                pe.legal_reference,
+                pe.settings,
+                pe.is_active,
+                pc.country_code,
+                pc.country_name,
+                pec.category_code,
+                pec.category_name,
+                pec.category_name_short,
+                pec.flow_direction,
+                pec.icon_name,
+                pec.color_hex,
+                pec.consolidation_group,
+                (pe.company_id IS NULL) as is_global
             FROM payroll_entities pe
             LEFT JOIN payroll_countries pc ON pe.country_id = pc.id
+            LEFT JOIN payroll_entity_categories pec ON pe.category_id = pec.id
             ${whereClause}
-            ORDER BY pc.country_code, pe.entity_type, pe.entity_name
+            ORDER BY pec.display_order, pc.country_code, pe.entity_name
         `, {
             replacements,
             type: sequelize.QueryTypes.SELECT
@@ -1561,6 +1971,23 @@ router.put('/entity-settlements/:id/status', async (req, res) => {
 // ============================================================================
 // PLANTILLAS DE RECIBOS DE SUELDO
 // ============================================================================
+
+// GET /payslip-block-types - Tipos de bloques disponibles para el editor
+router.get('/payslip-block-types', async (req, res) => {
+    try {
+        const result = await sequelize.query(`
+            SELECT id, block_type, block_name, description, icon,
+                   configurable_fields, html_template, suggested_order
+            FROM payroll_payslip_block_types
+            WHERE is_active = true
+            ORDER BY suggested_order ASC
+        `, { type: sequelize.QueryTypes.SELECT });
+
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // GET /payslip-templates - Listar plantillas
 router.get('/payslip-templates', async (req, res) => {
@@ -1842,6 +2269,1271 @@ router.post('/payslip/generate', async (req, res) => {
         }});
     } catch (error) {
         console.error('Error generating payslip:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /payslip/generate-pdf - Generar recibo de sueldo en PDF usando Puppeteer
+router.post('/payslip/generate-pdf', async (req, res) => {
+    try {
+        const { run_detail_id, template_id } = req.body;
+        const payslipPDFService = require('../services/PayslipPDFService');
+        const { PayrollPayslipTemplate } = require('../config/database');
+
+        // Obtener datos del detalle
+        const [runDetails] = await sequelize.query(`
+            SELECT
+                prd.*,
+                pr.period_year, pr.period_month, pr.period_start, pr.period_end, pr.payment_date,
+                u."firstName", u."lastName", u.dni, u.employee_code, u.hire_date, u.position,
+                u.bank_name, u.bank_account, u.cbu,
+                d.name as department_name,
+                c.name as company_name, c.legal_name as company_legal_name, c.tax_id as company_tax_id,
+                c.address as company_address, c.logo as company_logo, c.currency
+            FROM payroll_run_details prd
+            JOIN payroll_runs pr ON prd.run_id = pr.id
+            JOIN users u ON prd.user_id = u.user_id
+            LEFT JOIN departments d ON u."departmentId" = d.id
+            JOIN companies c ON pr.company_id = c.company_id
+            WHERE prd.id = :runDetailId AND pr.company_id = :companyId
+        `, {
+            replacements: { runDetailId: run_detail_id, companyId: req.companyId },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!runDetails || runDetails.length === 0) {
+            return res.status(404).json({ success: false, error: 'Detalle de nomina no encontrado' });
+        }
+
+        const detail = runDetails[0];
+
+        // Obtener plantilla
+        let template;
+        if (template_id) {
+            template = await PayrollPayslipTemplate.findByPk(template_id);
+        } else {
+            template = await PayrollPayslipTemplate.findOne({ where: { is_default: true, is_active: true } });
+        }
+
+        if (!template) {
+            return res.status(404).json({ success: false, error: 'Plantilla no encontrada' });
+        }
+
+        // Obtener tipos de bloques para renderizar
+        const blockTypes = await sequelize.query(`
+            SELECT * FROM payroll_payslip_block_types WHERE is_active = true
+        `, { type: sequelize.QueryTypes.SELECT });
+
+        // Obtener conceptos
+        const concepts = await sequelize.query(`
+            SELECT prcd.*, pct.affects_gross, pct.is_deduction, pct.is_employer_cost
+            FROM payroll_run_concept_details prcd
+            JOIN payroll_concept_types pct ON prcd.concept_type_id = pct.id
+            WHERE prcd.run_detail_id = :runDetailId
+            ORDER BY pct.display_order, prcd.concept_name
+        `, {
+            replacements: { runDetailId: run_detail_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        // Preparar datos para el servicio de PDF
+        const payslipData = {
+            company: {
+                name: detail.company_name,
+                display_name: detail.company_name,
+                legal_name: detail.company_legal_name,
+                tax_id: detail.company_tax_id,
+                tax_id_label: 'CUIT',
+                address: detail.company_address,
+                logo: detail.company_logo
+            },
+            period: {
+                year: detail.period_year,
+                month: detail.period_month
+            },
+            employee: {
+                full_name: `${detail.firstName} ${detail.lastName}`,
+                tax_id: detail.dni,
+                hire_date: detail.hire_date,
+                position: detail.position || 'Sin cargo',
+                department: detail.department_name || 'Sin departamento',
+                bank_name: detail.bank_name,
+                bank_account: detail.bank_account,
+                cbu: detail.cbu
+            },
+            concepts: concepts.map(c => ({
+                concept_code: c.concept_code,
+                concept_name: c.concept_name,
+                quantity: c.quantity,
+                rate: c.unit_value,
+                amount: parseFloat(c.calculated_amount || 0),
+                is_deduction: c.is_deduction,
+                classification: c.is_deduction ? 'deduction' : 'earning'
+            })),
+            totals: {
+                gross: parseFloat(detail.gross_earnings || 0),
+                deductions: parseFloat(detail.total_deductions || 0),
+                net: parseFloat(detail.net_salary || 0)
+            },
+            currency: detail.currency || 'ARS'
+        };
+
+        // Agregar blockTypes al template
+        const templateWithTypes = { ...template.toJSON(), blockTypes };
+
+        // Generar PDF
+        const pdfBuffer = await payslipPDFService.generatePayslip(templateWithTypes, payslipData);
+
+        // Enviar PDF
+        const fileName = `recibo_${detail.firstName}_${detail.lastName}_${detail.period_year}_${detail.period_month}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Length', pdfBuffer.length);
+        res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error('Error generating payslip PDF:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /payslip/preview-pdf - Vista previa de un template con datos de ejemplo
+router.post('/payslip/preview-pdf', async (req, res) => {
+    try {
+        const { template_id } = req.body;
+        const payslipPDFService = require('../services/PayslipPDFService');
+        const { PayrollPayslipTemplate } = require('../config/database');
+
+        // Obtener plantilla
+        const template = await PayrollPayslipTemplate.findByPk(template_id);
+        if (!template) {
+            return res.status(404).json({ success: false, error: 'Plantilla no encontrada' });
+        }
+
+        // Obtener tipos de bloques
+        const blockTypes = await sequelize.query(`
+            SELECT * FROM payroll_payslip_block_types WHERE is_active = true
+        `, { type: sequelize.QueryTypes.SELECT });
+
+        // Datos de ejemplo para vista previa
+        const previewData = {
+            company: {
+                name: 'Empresa Demo S.A.',
+                display_name: 'Empresa Demo S.A.',
+                tax_id: '30-12345678-9',
+                tax_id_label: 'CUIT',
+                address: 'Av. Ejemplo 1234, Buenos Aires'
+            },
+            period: {
+                year: new Date().getFullYear(),
+                month: new Date().getMonth() + 1
+            },
+            employee: {
+                full_name: 'Juan Pérez García',
+                tax_id: '20-12345678-9',
+                hire_date: '2020-03-15',
+                position: 'Analista Senior',
+                department: 'Sistemas',
+                category: 'Fuera de convenio',
+                bank_name: 'Banco Nación',
+                bank_account: '1234567890',
+                cbu: '0110012340000012345678'
+            },
+            concepts: [
+                { concept_code: '001', concept_name: 'Sueldo Básico', amount: 500000, is_deduction: false },
+                { concept_code: '002', concept_name: 'Antigüedad', amount: 25000, is_deduction: false },
+                { concept_code: '003', concept_name: 'Presentismo', amount: 40000, is_deduction: false },
+                { concept_code: '101', concept_name: 'Jubilación 11%', amount: 62150, is_deduction: true },
+                { concept_code: '102', concept_name: 'Obra Social 3%', amount: 16950, is_deduction: true },
+                { concept_code: '103', concept_name: 'Ley 19032 3%', amount: 16950, is_deduction: true },
+                { concept_code: '104', concept_name: 'Sindicato 2%', amount: 11300, is_deduction: true }
+            ],
+            totals: {
+                gross: 565000,
+                deductions: 107350,
+                net: 457650
+            },
+            currency: 'ARS'
+        };
+
+        // Agregar blockTypes al template
+        const templateWithTypes = { ...template.toJSON(), blockTypes };
+
+        // Generar PDF
+        const pdfBuffer = await payslipPDFService.generatePayslip(templateWithTypes, previewData);
+
+        // Enviar PDF
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="preview.pdf"');
+        res.setHeader('Content-Length', pdfBuffer.length);
+        res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error('Error generating preview PDF:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================================
+// HISTORIAL DE LIQUIDACIONES POR USUARIO - /api/payroll/user/:userId/history
+// ============================================================================
+
+/**
+ * GET /api/payroll/user/:userId/history
+ * Obtiene historial completo de liquidaciones de un empleado
+ * Usado en el módulo Usuarios → Antecedentes Laborales
+ */
+router.get('/user/:userId/history', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { limit = 24, offset = 0 } = req.query; // Default: últimos 2 años
+
+        // Verificar que el usuario pertenece a la empresa
+        const user = await User.findOne({
+            where: { user_id: userId, company_id: req.companyId },
+            attributes: ['user_id', 'firstName', 'lastName', 'dni']
+        });
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+        }
+
+        // Obtener todas las liquidaciones del usuario ordenadas por fecha (más reciente primero)
+        const history = await sequelize.query(`
+            SELECT
+                prd.id as detail_id,
+                pr.id as run_id,
+                pr.period_year,
+                pr.period_month,
+                pr.period_start,
+                pr.period_end,
+                pr.status as run_status,
+                pr.approved_at,
+                pr.pay_date,
+                pt.template_name,
+                pt.template_code,
+                pc.currency_code,
+                pc.currency_symbol,
+                prd.gross_earnings,
+                prd.non_remunerative,
+                prd.total_deductions,
+                prd.net_salary,
+                prd.employer_contributions,
+                prd.worked_days,
+                prd.worked_hours,
+                prd.overtime_50_hours,
+                prd.overtime_100_hours
+            FROM payroll_run_details prd
+            INNER JOIN payroll_runs pr ON prd.run_id = pr.id
+            LEFT JOIN payroll_templates pt ON pr.template_id = pt.id
+            LEFT JOIN payroll_countries pc ON pt.country_id = pc.id
+            WHERE prd.user_id = :userId
+            AND pr.company_id = :companyId
+            AND pr.status IN ('completed', 'approved', 'paid')
+            ORDER BY pr.period_year DESC, pr.period_month DESC
+            LIMIT :limit OFFSET :offset
+        `, {
+            replacements: {
+                userId: parseInt(userId),
+                companyId: req.companyId,
+                limit: parseInt(limit),
+                offset: parseInt(offset)
+            },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        // Obtener totales acumulados (año actual)
+        const currentYear = new Date().getFullYear();
+        const [ytdTotals] = await sequelize.query(`
+            SELECT
+                COALESCE(SUM(prd.gross_earnings), 0) as ytd_gross,
+                COALESCE(SUM(prd.net_salary), 0) as ytd_net,
+                COALESCE(SUM(prd.total_deductions), 0) as ytd_deductions,
+                COUNT(*) as months_processed
+            FROM payroll_run_details prd
+            INNER JOIN payroll_runs pr ON prd.run_id = pr.id
+            WHERE prd.user_id = :userId
+            AND pr.company_id = :companyId
+            AND pr.period_year = :year
+            AND pr.status IN ('completed', 'approved', 'paid')
+        `, {
+            replacements: {
+                userId: parseInt(userId),
+                companyId: req.companyId,
+                year: currentYear
+            },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        // Obtener total de registros para paginación
+        const [countResult] = await sequelize.query(`
+            SELECT COUNT(*) as total
+            FROM payroll_run_details prd
+            INNER JOIN payroll_runs pr ON prd.run_id = pr.id
+            WHERE prd.user_id = :userId
+            AND pr.company_id = :companyId
+            AND pr.status IN ('completed', 'approved', 'paid')
+        `, {
+            replacements: { userId: parseInt(userId), companyId: req.companyId },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        res.json({
+            success: true,
+            data: {
+                employee: {
+                    id: user.user_id,
+                    full_name: `${user.firstName} ${user.lastName}`,
+                    dni: user.dni
+                },
+                history: history.map(h => ({
+                    detail_id: h.detail_id,
+                    run_id: h.run_id,
+                    period: {
+                        year: h.period_year,
+                        month: h.period_month,
+                        month_name: monthNames[h.period_month - 1],
+                        label: `${monthNames[h.period_month - 1]} ${h.period_year}`,
+                        start: h.period_start,
+                        end: h.period_end
+                    },
+                    template: {
+                        name: h.template_name,
+                        code: h.template_code
+                    },
+                    currency: {
+                        code: h.currency_code || 'ARS',
+                        symbol: h.currency_symbol || '$'
+                    },
+                    amounts: {
+                        gross: parseFloat(h.gross_earnings || 0),
+                        non_remunerative: parseFloat(h.non_remunerative || 0),
+                        deductions: parseFloat(h.total_deductions || 0),
+                        net: parseFloat(h.net_salary || 0),
+                        employer_cost: parseFloat(h.employer_contributions || 0)
+                    },
+                    hours: {
+                        worked_days: h.worked_days,
+                        worked_hours: parseFloat(h.worked_hours || 0),
+                        overtime_50: parseFloat(h.overtime_50_hours || 0),
+                        overtime_100: parseFloat(h.overtime_100_hours || 0)
+                    },
+                    status: h.run_status,
+                    approved_at: h.approved_at,
+                    pay_date: h.pay_date
+                })),
+                ytd: {
+                    year: currentYear,
+                    gross: parseFloat(ytdTotals?.ytd_gross || 0),
+                    net: parseFloat(ytdTotals?.ytd_net || 0),
+                    deductions: parseFloat(ytdTotals?.ytd_deductions || 0),
+                    months_processed: parseInt(ytdTotals?.months_processed || 0)
+                },
+                pagination: {
+                    total: parseInt(countResult?.total || 0),
+                    limit: parseInt(limit),
+                    offset: parseInt(offset)
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching user payroll history:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/payroll/user/:userId/history/:detailId/concepts
+ * Obtiene los conceptos detallados de una liquidación específica
+ * Para mostrar en modal o generar PDF
+ */
+router.get('/user/:userId/history/:detailId/concepts', async (req, res) => {
+    try {
+        const { userId, detailId } = req.params;
+
+        // Verificar permisos
+        const detail = await sequelize.query(`
+            SELECT
+                prd.*,
+                pr.period_year, pr.period_month, pr.period_start, pr.period_end,
+                pr.status as run_status, pr.approved_at, pr.pay_date,
+                pt.template_name, pt.template_code,
+                pt.receipt_header, pt.receipt_footer,
+                pc.currency_code, pc.currency_symbol, pc.country_name,
+                u."firstName", u."lastName", u.dni, u.email,
+                d.name as department_name,
+                cb.branch_name
+            FROM payroll_run_details prd
+            INNER JOIN payroll_runs pr ON prd.run_id = pr.id
+            LEFT JOIN payroll_templates pt ON pr.template_id = pt.id
+            LEFT JOIN payroll_countries pc ON pt.country_id = pc.id
+            LEFT JOIN users u ON prd.user_id = u.user_id
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN company_branches cb ON pr.branch_id = cb.id
+            WHERE prd.id = :detailId
+            AND prd.user_id = :userId
+            AND pr.company_id = :companyId
+        `, {
+            replacements: {
+                detailId: parseInt(detailId),
+                userId: parseInt(userId),
+                companyId: req.companyId
+            },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!detail || detail.length === 0) {
+            return res.status(404).json({ success: false, error: 'Liquidación no encontrada' });
+        }
+
+        const liquidacion = detail[0];
+
+        // Obtener conceptos detallados
+        const concepts = await sequelize.query(`
+            SELECT
+                prcd.concept_code,
+                prcd.concept_name,
+                prcd.calculation_type,
+                prcd.base_value,
+                prcd.applied_rate,
+                prcd.quantity,
+                prcd.calculated_amount,
+                prcd.is_deduction,
+                prcd.is_employer_cost,
+                prcd.entity_name,
+                pcc.classification_code,
+                pcc.classification_name,
+                pcc.sign
+            FROM payroll_run_concept_details prcd
+            LEFT JOIN payroll_concept_classifications pcc ON prcd.classification_id = pcc.id
+            WHERE prcd.detail_id = :detailId
+            ORDER BY
+                CASE
+                    WHEN prcd.is_employer_cost THEN 3
+                    WHEN prcd.is_deduction THEN 2
+                    ELSE 1
+                END,
+                prcd.concept_code
+        `, {
+            replacements: { detailId: parseInt(detailId) },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        // Agrupar conceptos por clasificación
+        const groupedConcepts = {
+            earnings: concepts.filter(c => !c.is_deduction && !c.is_employer_cost),
+            deductions: concepts.filter(c => c.is_deduction && !c.is_employer_cost),
+            employer_contributions: concepts.filter(c => c.is_employer_cost)
+        };
+
+        res.json({
+            success: true,
+            data: {
+                header: {
+                    period: {
+                        year: liquidacion.period_year,
+                        month: liquidacion.period_month,
+                        month_name: monthNames[liquidacion.period_month - 1],
+                        label: `${monthNames[liquidacion.period_month - 1]} ${liquidacion.period_year}`,
+                        start: liquidacion.period_start,
+                        end: liquidacion.period_end
+                    },
+                    employee: {
+                        full_name: `${liquidacion.firstName} ${liquidacion.lastName}`,
+                        dni: liquidacion.dni,
+                        email: liquidacion.email,
+                        department: liquidacion.department_name
+                    },
+                    template: {
+                        name: liquidacion.template_name,
+                        code: liquidacion.template_code
+                    },
+                    branch: liquidacion.branch_name,
+                    country: liquidacion.country_name,
+                    currency: {
+                        code: liquidacion.currency_code || 'ARS',
+                        symbol: liquidacion.currency_symbol || '$'
+                    },
+                    status: liquidacion.run_status,
+                    approved_at: liquidacion.approved_at,
+                    pay_date: liquidacion.pay_date,
+                    receipt_header: liquidacion.receipt_header,
+                    receipt_footer: liquidacion.receipt_footer
+                },
+                concepts: {
+                    earnings: groupedConcepts.earnings.map(c => ({
+                        code: c.concept_code,
+                        name: c.concept_name,
+                        calculation_type: c.calculation_type,
+                        base: parseFloat(c.base_value || 0),
+                        rate: c.applied_rate,
+                        quantity: c.quantity,
+                        amount: parseFloat(c.calculated_amount || 0)
+                    })),
+                    deductions: groupedConcepts.deductions.map(c => ({
+                        code: c.concept_code,
+                        name: c.concept_name,
+                        calculation_type: c.calculation_type,
+                        base: parseFloat(c.base_value || 0),
+                        rate: c.applied_rate,
+                        quantity: c.quantity,
+                        amount: parseFloat(c.calculated_amount || 0),
+                        entity: c.entity_name
+                    })),
+                    employer_contributions: groupedConcepts.employer_contributions.map(c => ({
+                        code: c.concept_code,
+                        name: c.concept_name,
+                        calculation_type: c.calculation_type,
+                        base: parseFloat(c.base_value || 0),
+                        rate: c.applied_rate,
+                        amount: parseFloat(c.calculated_amount || 0),
+                        entity: c.entity_name
+                    }))
+                },
+                totals: {
+                    gross: parseFloat(liquidacion.gross_earnings || 0),
+                    non_remunerative: parseFloat(liquidacion.non_remunerative || 0),
+                    deductions: parseFloat(liquidacion.total_deductions || 0),
+                    net: parseFloat(liquidacion.net_salary || 0),
+                    employer_cost: parseFloat(liquidacion.employer_contributions || 0)
+                },
+                hours: {
+                    worked_days: liquidacion.worked_days,
+                    worked_hours: parseFloat(liquidacion.worked_hours || 0),
+                    overtime_50: parseFloat(liquidacion.overtime_50_hours || 0),
+                    overtime_100: parseFloat(liquidacion.overtime_100_hours || 0)
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching payroll detail concepts:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================================
+// POSICIONES ORGANIZACIONALES - /api/payroll/positions
+// Empleado → Posición → Template de Recibo
+// ============================================================================
+
+/**
+ * GET /api/payroll/positions
+ * Lista posiciones de la empresa con sus templates asignados
+ */
+router.get('/positions', async (req, res) => {
+    try {
+        const positions = await OrganizationalPosition.findAll({
+            where: {
+                company_id: req.companyId,
+                is_active: true
+            },
+            include: [
+                {
+                    model: PayrollPayslipTemplate,
+                    as: 'payslipTemplate',
+                    attributes: ['id', 'template_code', 'template_name']
+                },
+                {
+                    model: PayrollTemplate,
+                    as: 'payrollTemplate',
+                    attributes: ['id', 'template_code', 'template_name']
+                },
+                {
+                    model: OrganizationalPosition,
+                    as: 'parentPosition',
+                    attributes: ['id', 'position_code', 'position_name']
+                }
+            ],
+            order: [['level_order', 'DESC'], ['position_name', 'ASC']]
+        });
+
+        // Contar empleados por posición
+        const positionsWithCount = await Promise.all(positions.map(async (pos) => {
+            const employeeCount = await User.count({
+                where: { organizational_position_id: pos.id }
+            });
+            return {
+                ...pos.toJSON(),
+                employee_count: employeeCount
+            };
+        }));
+
+        res.json({
+            success: true,
+            data: positionsWithCount
+        });
+    } catch (error) {
+        console.error('Error fetching positions:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/payroll/positions/:id
+ * Obtiene una posición con sus empleados
+ */
+router.get('/positions/:id', async (req, res) => {
+    try {
+        const position = await OrganizationalPosition.findOne({
+            where: {
+                id: req.params.id,
+                company_id: req.companyId
+            },
+            include: [
+                {
+                    model: PayrollPayslipTemplate,
+                    as: 'payslipTemplate'
+                },
+                {
+                    model: PayrollTemplate,
+                    as: 'payrollTemplate'
+                },
+                {
+                    model: OrganizationalPosition,
+                    as: 'parentPosition'
+                },
+                {
+                    model: OrganizationalPosition,
+                    as: 'childPositions'
+                },
+                {
+                    model: User,
+                    as: 'employees',
+                    attributes: ['user_id', 'firstName', 'lastName', 'email', 'employeeId']
+                }
+            ]
+        });
+
+        if (!position) {
+            return res.status(404).json({ success: false, error: 'Posición no encontrada' });
+        }
+
+        res.json({
+            success: true,
+            data: position
+        });
+    } catch (error) {
+        console.error('Error fetching position:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/payroll/positions
+ * Crea una nueva posición organizacional
+ */
+router.post('/positions', async (req, res) => {
+    try {
+        const {
+            position_code,
+            position_name,
+            description,
+            parent_position_id,
+            level_order,
+            salary_category_id,
+            payslip_template_id,
+            payroll_template_id,
+            department_id
+        } = req.body;
+
+        // Verificar código único
+        const existing = await OrganizationalPosition.findOne({
+            where: {
+                company_id: req.companyId,
+                position_code
+            }
+        });
+
+        if (existing) {
+            return res.status(400).json({
+                success: false,
+                error: `Ya existe una posición con código ${position_code}`
+            });
+        }
+
+        const position = await OrganizationalPosition.create({
+            company_id: req.companyId,
+            position_code,
+            position_name,
+            description,
+            parent_position_id,
+            level_order: level_order || 1,
+            salary_category_id,
+            payslip_template_id,
+            payroll_template_id,
+            department_id
+        });
+
+        res.status(201).json({
+            success: true,
+            data: position,
+            message: 'Posición creada exitosamente'
+        });
+    } catch (error) {
+        console.error('Error creating position:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * PUT /api/payroll/positions/:id
+ * Actualiza una posición organizacional
+ */
+router.put('/positions/:id', async (req, res) => {
+    try {
+        const position = await OrganizationalPosition.findOne({
+            where: {
+                id: req.params.id,
+                company_id: req.companyId
+            }
+        });
+
+        if (!position) {
+            return res.status(404).json({ success: false, error: 'Posición no encontrada' });
+        }
+
+        const {
+            position_code,
+            position_name,
+            description,
+            parent_position_id,
+            level_order,
+            salary_category_id,
+            payslip_template_id,
+            payroll_template_id,
+            department_id,
+            is_active
+        } = req.body;
+
+        // Verificar código único si cambió
+        if (position_code && position_code !== position.position_code) {
+            const existing = await OrganizationalPosition.findOne({
+                where: {
+                    company_id: req.companyId,
+                    position_code,
+                    id: { [Op.ne]: position.id }
+                }
+            });
+
+            if (existing) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Ya existe una posición con código ${position_code}`
+                });
+            }
+        }
+
+        // Obtener conteo de empleados afectados ANTES de actualizar
+        const affectedEmployees = await User.findAll({
+            where: { organizational_position_id: position.id },
+            attributes: ['user_id', 'firstName', 'lastName', 'email', 'employeeId']
+        });
+
+        // Obtener posiciones subordinadas
+        const childPositions = await OrganizationalPosition.findAll({
+            where: { parent_position_id: position.id, is_active: true },
+            attributes: ['id', 'position_code', 'position_name']
+        });
+
+        await position.update({
+            position_code: position_code || position.position_code,
+            position_name: position_name || position.position_name,
+            description: description !== undefined ? description : position.description,
+            parent_position_id: parent_position_id !== undefined ? parent_position_id : position.parent_position_id,
+            level_order: level_order || position.level_order,
+            salary_category_id: salary_category_id !== undefined ? salary_category_id : position.salary_category_id,
+            payslip_template_id: payslip_template_id !== undefined ? payslip_template_id : position.payslip_template_id,
+            payroll_template_id: payroll_template_id !== undefined ? payroll_template_id : position.payroll_template_id,
+            department_id: department_id !== undefined ? department_id : position.department_id,
+            is_active: is_active !== undefined ? is_active : position.is_active
+        });
+
+        res.json({
+            success: true,
+            data: position,
+            message: 'Posición actualizada exitosamente',
+            impact: {
+                employees_affected: affectedEmployees.length,
+                employees: affectedEmployees.map(e => ({
+                    user_id: e.user_id,
+                    name: `${e.firstName} ${e.lastName}`,
+                    email: e.email
+                })),
+                child_positions_affected: childPositions.length,
+                child_positions: childPositions.map(p => ({
+                    id: p.id,
+                    code: p.position_code,
+                    name: p.position_name
+                }))
+            }
+        });
+    } catch (error) {
+        console.error('Error updating position:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/payroll/positions/:id/impact
+ * Consulta el impacto de modificar/eliminar una posición
+ */
+router.get('/positions/:id/impact', async (req, res) => {
+    try {
+        const position = await OrganizationalPosition.findOne({
+            where: {
+                id: req.params.id,
+                company_id: req.companyId
+            }
+        });
+
+        if (!position) {
+            return res.status(404).json({ success: false, error: 'Posición no encontrada' });
+        }
+
+        // Empleados asignados
+        const employees = await User.findAll({
+            where: { organizational_position_id: position.id },
+            attributes: ['user_id', 'firstName', 'lastName', 'email', 'employeeId']
+        });
+
+        // Posiciones subordinadas
+        const childPositions = await OrganizationalPosition.findAll({
+            where: { parent_position_id: position.id, is_active: true },
+            attributes: ['id', 'position_code', 'position_name']
+        });
+
+        // Otras posiciones disponibles para reasignación
+        const alternativePositions = await OrganizationalPosition.findAll({
+            where: {
+                company_id: req.companyId,
+                is_active: true,
+                id: { [Op.ne]: position.id }
+            },
+            attributes: ['id', 'position_code', 'position_name', 'level_order'],
+            order: [['level_order', 'DESC'], ['position_name', 'ASC']]
+        });
+
+        res.json({
+            success: true,
+            data: {
+                position: {
+                    id: position.id,
+                    code: position.position_code,
+                    name: position.position_name
+                },
+                impact: {
+                    employees_count: employees.length,
+                    employees: employees.map(e => ({
+                        user_id: e.user_id,
+                        name: `${e.firstName} ${e.lastName}`,
+                        email: e.email,
+                        employee_id: e.employeeId
+                    })),
+                    child_positions_count: childPositions.length,
+                    child_positions: childPositions.map(p => ({
+                        id: p.id,
+                        code: p.position_code,
+                        name: p.position_name
+                    })),
+                    can_delete_directly: employees.length === 0 && childPositions.length === 0
+                },
+                alternatives: alternativePositions.map(p => ({
+                    id: p.id,
+                    code: p.position_code,
+                    name: p.position_name,
+                    level: p.level_order
+                }))
+            }
+        });
+    } catch (error) {
+        console.error('Error getting position impact:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/payroll/positions/:id/reassign-all
+ * Reasigna TODOS los empleados de una posición a otra
+ */
+router.post('/positions/:id/reassign-all', async (req, res) => {
+    try {
+        const { target_position_id, include_subordinates } = req.body;
+
+        if (!target_position_id) {
+            return res.status(400).json({ success: false, error: 'Se requiere target_position_id' });
+        }
+
+        const sourcePosition = await OrganizationalPosition.findOne({
+            where: { id: req.params.id, company_id: req.companyId }
+        });
+
+        if (!sourcePosition) {
+            return res.status(404).json({ success: false, error: 'Posición origen no encontrada' });
+        }
+
+        const targetPosition = await OrganizationalPosition.findOne({
+            where: { id: target_position_id, company_id: req.companyId, is_active: true }
+        });
+
+        if (!targetPosition) {
+            return res.status(404).json({ success: false, error: 'Posición destino no encontrada o inactiva' });
+        }
+
+        // Reasignar empleados
+        const [employeesUpdated] = await User.update(
+            { organizational_position_id: target_position_id },
+            { where: { organizational_position_id: sourcePosition.id, company_id: req.companyId } }
+        );
+
+        let childPositionsUpdated = 0;
+        if (include_subordinates) {
+            // Reasignar posiciones subordinadas al nuevo padre
+            const [updated] = await OrganizationalPosition.update(
+                { parent_position_id: target_position_id },
+                { where: { parent_position_id: sourcePosition.id, company_id: req.companyId } }
+            );
+            childPositionsUpdated = updated;
+        }
+
+        res.json({
+            success: true,
+            message: `Reasignación completada`,
+            data: {
+                employees_reassigned: employeesUpdated,
+                child_positions_reassigned: childPositionsUpdated,
+                from_position: { id: sourcePosition.id, name: sourcePosition.position_name },
+                to_position: { id: targetPosition.id, name: targetPosition.position_name }
+            }
+        });
+    } catch (error) {
+        console.error('Error reassigning from position:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * DELETE /api/payroll/positions/:id
+ * Elimina (soft delete) una posición organizacional
+ * Requiere: force=true si hay empleados/subordinados, o reasignarlos primero
+ */
+router.delete('/positions/:id', async (req, res) => {
+    try {
+        const { force } = req.query;
+
+        const position = await OrganizationalPosition.findOne({
+            where: {
+                id: req.params.id,
+                company_id: req.companyId
+            }
+        });
+
+        if (!position) {
+            return res.status(404).json({ success: false, error: 'Posición no encontrada' });
+        }
+
+        // Verificar si hay empleados asignados
+        const employees = await User.findAll({
+            where: { organizational_position_id: position.id },
+            attributes: ['user_id', 'firstName', 'lastName', 'email']
+        });
+
+        // Verificar si hay posiciones hijas
+        const childPositions = await OrganizationalPosition.findAll({
+            where: { parent_position_id: position.id, is_active: true },
+            attributes: ['id', 'position_code', 'position_name']
+        });
+
+        // Si hay dependencias y no se forzó
+        if ((employees.length > 0 || childPositions.length > 0) && force !== 'true') {
+            return res.status(409).json({
+                success: false,
+                error: 'La posición tiene dependencias. Use force=true o reasigne primero.',
+                requires_action: true,
+                impact: {
+                    employees_count: employees.length,
+                    employees: employees.map(e => ({
+                        user_id: e.user_id,
+                        name: `${e.firstName} ${e.lastName}`,
+                        email: e.email
+                    })),
+                    child_positions_count: childPositions.length,
+                    child_positions: childPositions.map(p => ({
+                        id: p.id,
+                        code: p.position_code,
+                        name: p.position_name
+                    }))
+                },
+                actions: {
+                    reassign_url: `/api/payroll/positions/${position.id}/reassign-all`,
+                    force_delete_url: `/api/payroll/positions/${position.id}?force=true`,
+                    message: 'Reasigne los empleados/subordinados o use force=true para desvincular'
+                }
+            });
+        }
+
+        // Si forzamos, desvinculamos empleados y subordinados
+        if (force === 'true') {
+            // Desasignar empleados (poner position_id en null)
+            await User.update(
+                { organizational_position_id: null },
+                { where: { organizational_position_id: position.id } }
+            );
+            // Desasignar subordinados
+            await OrganizationalPosition.update(
+                { parent_position_id: null },
+                { where: { parent_position_id: position.id } }
+            );
+        }
+
+        // Soft delete
+        await position.update({ is_active: false });
+
+        res.json({
+            success: true,
+            message: 'Posición eliminada exitosamente',
+            data: {
+                position_id: position.id,
+                position_name: position.position_name,
+                employees_unassigned: force === 'true' ? employees.length : 0,
+                subordinates_unassigned: force === 'true' ? childPositions.length : 0
+            }
+        });
+    } catch (error) {
+        console.error('Error deleting position:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/payroll/positions/:id/assign-user
+ * Asigna una posición a un usuario
+ */
+router.post('/positions/:id/assign-user', async (req, res) => {
+    try {
+        const { user_id } = req.body;
+
+        const position = await OrganizationalPosition.findOne({
+            where: {
+                id: req.params.id,
+                company_id: req.companyId,
+                is_active: true
+            }
+        });
+
+        if (!position) {
+            return res.status(404).json({ success: false, error: 'Posición no encontrada' });
+        }
+
+        const user = await User.findOne({
+            where: {
+                user_id,
+                company_id: req.companyId
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+        }
+
+        await user.update({ organizational_position_id: position.id });
+
+        res.json({
+            success: true,
+            message: `Usuario ${user.firstName} ${user.lastName} asignado a ${position.position_name}`,
+            data: {
+                user_id: user.user_id,
+                position_id: position.id,
+                position_name: position.position_name,
+                payslip_template_id: position.payslip_template_id,
+                payroll_template_id: position.payroll_template_id
+            }
+        });
+    } catch (error) {
+        console.error('Error assigning user to position:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/payroll/positions/:id/assign-users
+ * Asigna una posición a múltiples usuarios
+ */
+router.post('/positions/:id/assign-users', async (req, res) => {
+    try {
+        const { user_ids } = req.body;
+
+        if (!Array.isArray(user_ids) || user_ids.length === 0) {
+            return res.status(400).json({ success: false, error: 'Se requiere un array de user_ids' });
+        }
+
+        const position = await OrganizationalPosition.findOne({
+            where: {
+                id: req.params.id,
+                company_id: req.companyId,
+                is_active: true
+            }
+        });
+
+        if (!position) {
+            return res.status(404).json({ success: false, error: 'Posición no encontrada' });
+        }
+
+        const [updatedCount] = await User.update(
+            { organizational_position_id: position.id },
+            {
+                where: {
+                    user_id: { [Op.in]: user_ids },
+                    company_id: req.companyId
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: `${updatedCount} usuario(s) asignado(s) a ${position.position_name}`,
+            data: {
+                position_id: position.id,
+                assigned_count: updatedCount
+            }
+        });
+    } catch (error) {
+        console.error('Error bulk assigning users to position:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * DELETE /api/payroll/positions/:id/unassign-user/:userId
+ * Quita la posición de un usuario
+ */
+router.delete('/positions/:id/unassign-user/:userId', async (req, res) => {
+    try {
+        const user = await User.findOne({
+            where: {
+                user_id: req.params.userId,
+                company_id: req.companyId,
+                organizational_position_id: req.params.id
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'Usuario no encontrado o no está asignado a esta posición'
+            });
+        }
+
+        await user.update({ organizational_position_id: null });
+
+        res.json({
+            success: true,
+            message: `Usuario ${user.firstName} ${user.lastName} removido de la posición`
+        });
+    } catch (error) {
+        console.error('Error unassigning user from position:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/payroll/positions/hierarchy
+ * Obtiene la jerarquía completa de posiciones
+ */
+router.get('/positions-hierarchy', async (req, res) => {
+    try {
+        const positions = await OrganizationalPosition.findAll({
+            where: {
+                company_id: req.companyId,
+                is_active: true
+            },
+            include: [
+                {
+                    model: PayrollPayslipTemplate,
+                    as: 'payslipTemplate',
+                    attributes: ['id', 'template_code', 'template_name']
+                }
+            ],
+            order: [['level_order', 'DESC'], ['position_name', 'ASC']]
+        });
+
+        // Construir árbol jerárquico
+        const buildTree = (items, parentId = null) => {
+            return items
+                .filter(item => item.parent_position_id === parentId)
+                .map(item => ({
+                    ...item.toJSON(),
+                    children: buildTree(items, item.id)
+                }));
+        };
+
+        const hierarchy = buildTree(positions);
+
+        res.json({
+            success: true,
+            data: hierarchy
+        });
+    } catch (error) {
+        console.error('Error fetching positions hierarchy:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/payroll/user/:userId/position
+ * Obtiene la posición y templates de un usuario
+ */
+router.get('/user/:userId/position', async (req, res) => {
+    try {
+        const user = await User.findOne({
+            where: {
+                user_id: req.params.userId,
+                company_id: req.companyId
+            },
+            attributes: ['user_id', 'firstName', 'lastName', 'email', 'organizational_position_id'],
+            include: [{
+                model: OrganizationalPosition,
+                as: 'organizationalPosition',
+                include: [
+                    {
+                        model: PayrollPayslipTemplate,
+                        as: 'payslipTemplate'
+                    },
+                    {
+                        model: PayrollTemplate,
+                        as: 'payrollTemplate'
+                    }
+                ]
+            }]
+        });
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                user_id: user.user_id,
+                name: `${user.firstName} ${user.lastName}`,
+                email: user.email,
+                position: user.organizationalPosition ? {
+                    id: user.organizationalPosition.id,
+                    code: user.organizationalPosition.position_code,
+                    name: user.organizationalPosition.position_name,
+                    level: user.organizationalPosition.level_order,
+                    payslip_template: user.organizationalPosition.payslipTemplate,
+                    payroll_template: user.organizationalPosition.payrollTemplate
+                } : null
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching user position:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

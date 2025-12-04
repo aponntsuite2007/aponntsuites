@@ -45,11 +45,11 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Buscar usuario por email o usuario
+    // Buscar usuario por email, usuario o DNI
     const user = await sequelize.query(
-      'SELECT * FROM users WHERE (email = ? OR usuario = ?) AND "isActive" = true AND company_id = ?',
+      `SELECT * FROM users WHERE (email = :identifier OR usuario = :identifier OR dni = :identifier) AND is_active = true AND company_id = :companyId`,
       {
-        replacements: [identifier, identifier, companyId],
+        replacements: { identifier, companyId },
         type: sequelize.QueryTypes.SELECT,
         plain: true
       }

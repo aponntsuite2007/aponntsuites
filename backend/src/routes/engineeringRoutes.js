@@ -5,13 +5,28 @@
  *
  * Endpoints para acceder a engineering-metadata.js desde el frontend
  *
+ * METADATA & TECHNICAL MODULES:
  * GET  /api/engineering/metadata         - Metadata completo
- * GET  /api/engineering/modules          - Solo módulos
+ * GET  /api/engineering/modules          - Solo módulos técnicos
  * GET  /api/engineering/roadmap          - Solo roadmap
  * GET  /api/engineering/workflows        - Solo workflows
  * GET  /api/engineering/database         - Solo database schema
  * GET  /api/engineering/applications     - Solo aplicaciones
+ * GET  /api/engineering/stats            - Estadísticas agregadas
  * POST /api/engineering/update           - Actualizar metadata (wrapper del script)
+ * POST /api/engineering/reload           - Recargar metadata desde disco
+ *
+ * ⭐ COMMERCIAL MODULES (SINGLE SOURCE OF TRUTH):
+ * GET  /api/engineering/commercial-modules              - Todos los módulos comerciales
+ * GET  /api/engineering/commercial-modules/:moduleKey   - Módulo específico por key
+ * GET  /api/engineering/commercial-modules/category/:category - Filtrar por categoría
+ * GET  /api/engineering/bundles                         - Bundles comerciales
+ * POST /api/engineering/sync-commercial-modules         - Sincronizar desde registry
+ *
+ * UTILITIES:
+ * GET  /api/engineering/health           - Health check
+ * GET  /api/engineering/scan-files       - Escanear archivos del proyecto
+ * POST /api/engineering/read-file        - Leer archivo específico
  *
  * ============================================================================
  */
@@ -60,13 +75,190 @@ router.get('/metadata', (req, res) => {
 
 /**
  * GET /api/engineering/modules
- * Retorna solo sección de módulos
+ * Retorna solo sección de módulos técnicos
  */
 router.get('/modules', (req, res) => {
   try {
     res.json({
       success: true,
       data: metadata.modules
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/engineering/commercial-modules
+ * Retorna TODOS los módulos comerciales contratables (SINGLE SOURCE OF TRUTH)
+ * Esta es la API que deben usar: panel-administrativo, panel-empresa, index.html
+ */
+router.get('/commercial-modules', (req, res) => {
+  try {
+    const commercialModules = metadata.commercialModules;
+
+    if (!commercialModules) {
+      return res.status(404).json({
+        success: false,
+        error: 'commercialModules no encontrado en metadata. Ejecutar: node scripts/consolidate-modules-simple.js'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        modules: commercialModules.modules,
+        bundles: commercialModules.bundles,
+        licensesTiers: commercialModules.licensesTiers,
+        stats: commercialModules._stats,
+        version: commercialModules._version,
+        lastSync: commercialModules._lastSync
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/engineering/commercial-modules/:moduleKey
+ * Retorna UN módulo comercial específico por key
+ */
+router.get('/commercial-modules/:moduleKey', (req, res) => {
+  try {
+    const { moduleKey } = req.params;
+    const commercialModules = metadata.commercialModules;
+
+    if (!commercialModules || !commercialModules.modules) {
+      return res.status(404).json({
+        success: false,
+        error: 'commercialModules no encontrado'
+      });
+    }
+
+    const module = commercialModules.modules[moduleKey];
+
+    if (!module) {
+      return res.status(404).json({
+        success: false,
+        error: `Módulo "${moduleKey}" no encontrado`,
+        availableModules: Object.keys(commercialModules.modules)
+      });
+    }
+
+    res.json({
+      success: true,
+      data: module
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/engineering/bundles
+ * Retorna todos los bundles comerciales (paquetes con descuento)
+ */
+router.get('/bundles', (req, res) => {
+  try {
+    const bundles = metadata.commercialModules?.bundles;
+
+    if (!bundles) {
+      return res.status(404).json({
+        success: false,
+        error: 'bundles no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: bundles
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/engineering/commercial-modules/category/:category
+ * Retorna módulos comerciales filtrados por categoría
+ * Categorías: core, rrhh, operations, sales, analytics, integrations, advanced
+ */
+router.get('/commercial-modules/category/:category', (req, res) => {
+  try {
+    const { category } = req.params;
+    const commercialModules = metadata.commercialModules?.modules;
+
+    if (!commercialModules) {
+      return res.status(404).json({
+        success: false,
+        error: 'commercialModules no encontrado'
+      });
+    }
+
+    // Filtrar por categoría
+    const filtered = Object.entries(commercialModules)
+      .filter(([key, module]) => module.category === category)
+      .reduce((acc, [key, module]) => {
+        acc[key] = module;
+        return acc;
+      }, {});
+
+    res.json({
+      success: true,
+      data: {
+        category,
+        count: Object.keys(filtered).length,
+        modules: filtered
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/engineering/sync-commercial-modules
+ * Ejecuta el script de consolidación para sincronizar módulos comerciales
+ */
+router.post('/sync-commercial-modules', (req, res) => {
+  try {
+    const command = 'node scripts/consolidate-modules-simple.js';
+
+    exec(command, { cwd: path.join(__dirname, '..', '..') }, (error, stdout, stderr) => {
+      if (error) {
+        console.error('❌ [ENGINEERING] Error ejecutando consolidación:', error);
+        return res.status(500).json({
+          success: false,
+          error: error.message,
+          stderr
+        });
+      }
+
+      // Recargar metadata después de sincronizar
+      reloadMetadata();
+
+      res.json({
+        success: true,
+        message: 'Módulos comerciales sincronizados correctamente',
+        output: stdout,
+        stats: metadata.commercialModules?._stats
+      });
     });
   } catch (error) {
     res.status(500).json({

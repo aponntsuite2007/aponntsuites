@@ -129,15 +129,32 @@ module.exports = (sequelize) => {
             type: DataTypes.BOOLEAN,
             defaultValue: true
         },
+        // ENTIDAD DESTINO (parametrizable)
         entity_id: {
             type: DataTypes.INTEGER,
             allowNull: true,
-            comment: 'Entidad receptora (AFIP, Sindicato, etc)'
+            references: {
+                model: 'payroll_entities',
+                key: 'entity_id'
+            },
+            comment: 'Entidad de destino para este concepto (jubilación, sindicato, etc.)'
         },
         entity_account_code: {
             type: DataTypes.STRING(50),
             allowNull: true,
-            comment: 'Código de cuenta de la entidad'
+            comment: 'Código de cuenta dentro de la entidad'
+        },
+        // NUEVO: etiqueta personalizada para recibo
+        entity_label: {
+            type: DataTypes.STRING(100),
+            allowNull: true,
+            comment: 'Etiqueta personalizada para el recibo (ej: "Aporte Jub. ANSES")'
+        },
+        // NUEVO: nota para el recibo
+        receipt_note: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            comment: 'Nota adicional que aparece en el recibo'
         }
     }, {
         tableName: 'payroll_template_concepts',
@@ -163,6 +180,12 @@ module.exports = (sequelize) => {
         PayrollTemplateConcept.belongsTo(models.PayrollConceptType, {
             foreignKey: 'concept_type_id',
             as: 'conceptType'
+        });
+
+        // NUEVO: Pertenece a una entidad de destino
+        PayrollTemplateConcept.belongsTo(models.PayrollEntity, {
+            foreignKey: 'entity_id',
+            as: 'entity'
         });
 
         // Tiene muchos overrides de usuario

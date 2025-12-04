@@ -809,15 +809,21 @@
     document.getElementById('ai-assistant-send-button').disabled = true;
 
     try {
+      // Obtener datos de usuario y empresa desde variables globales/localStorage
+      const companyData = JSON.parse(localStorage.getItem('selectedCompany') || localStorage.getItem('currentCompany') || '{}');
+      const companyId = companyData.id || companyData.company_id || '';
+      const userId = window.currentUser?.id || window.currentUser?.userId || window.currentUser?.user_id || '';
+      const userRole = window.currentUser?.role || 'employee';
+
       // Enviar a API
       const response = await fetch(CONFIG.apiBaseURL + CONFIG.endpoints.chat, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || ''),
-          'X-User-Id': localStorage.getItem('userId') || '',
-          'X-Company-Id': localStorage.getItem('companyId') || '',
-          'X-User-Role': localStorage.getItem('userRole') || 'employee'
+          'X-User-Id': String(userId),
+          'X-Company-Id': String(companyId),
+          'X-User-Role': userRole
         },
         body: JSON.stringify({
           question,

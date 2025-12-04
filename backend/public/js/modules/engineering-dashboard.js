@@ -354,8 +354,9 @@ const EngineeringDashboard = {
   renderNavigation() {
     const tabs = [
       { id: 'overview', icon: '🌍', label: 'Vista General' },
+      { id: 'commercial-modules', icon: '💰', label: 'Módulos Comerciales' },
       { id: 'applications', icon: '📱', label: 'Aplicaciones' },
-      { id: 'modules', icon: '📦', label: 'Módulos' },
+      { id: 'modules', icon: '📦', label: 'Módulos Técnicos' },
       { id: 'backend-files', icon: '⚙️', label: 'Archivos Backend' },
       { id: 'frontend-files', icon: '🎨', label: 'Archivos Frontend' },
       { id: 'roadmap', icon: '🗺️', label: 'Roadmap' },
@@ -387,6 +388,18 @@ const EngineeringDashboard = {
     switch (this.currentView) {
       case 'overview':
         return this.renderOverview();
+      case 'commercial-modules':
+        // Cargar módulos comerciales dinámicamente
+        setTimeout(() => this.loadCommercialModulesView(), 100);
+        return `
+          <div id="commercial-modules-dynamic" style="padding: 20px;">
+            <div style="text-align: center; padding: 50px;">
+              <div style="font-size: 64px; margin-bottom: 20px;">💰</div>
+              <h2 style="color: #1f2937;">Cargando Módulos Comerciales...</h2>
+              <p style="color: #6b7280;">Obteniendo datos del Single Source of Truth</p>
+            </div>
+          </div>
+        `;
       case 'applications':
         return this.renderApplications();
       case 'modules':
@@ -3672,6 +3685,354 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
   formatPhaseName(phaseName) {
     return phaseName.replace(/_/g, ' ').replace(/phase\d+\s*/i, 'Fase ');
+  },
+
+  /**
+   * VISTA: Módulos Comerciales - Single Source of Truth
+   */
+  async loadCommercialModulesView() {
+    console.log('💰 [COMMERCIAL] Cargando vista de módulos comerciales...');
+
+    const container = document.getElementById('commercial-modules-dynamic');
+    if (!container) {
+      console.error('❌ [COMMERCIAL] Container no encontrado');
+      return;
+    }
+
+    try {
+      // Fetch módulos comerciales desde API
+      const response = await fetch('/api/engineering/commercial-modules');
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Error cargando módulos comerciales');
+      }
+
+      const { modules, bundles, stats, version, lastSync } = result.data;
+      const modulesArray = Object.values(modules);
+
+            // Mapeo de categorías con iconos y colores
+      const categoryConfig = {
+        core: { icon: '⚙️', color: '#3b82f6', label: 'Core' },
+        rrhh: { icon: '👥', color: '#8b5cf6', label: 'RRHH' },
+        security: { icon: '🔒', color: '#ef4444', label: 'Seguridad' },
+        compliance: { icon: '📋', color: '#f59e0b', label: 'Cumplimiento' },
+        communication: { icon: '📬', color: '#10b981', label: 'Comunicación' },
+        medical: { icon: '🏥', color: '#ec4899', label: 'Médico' },
+        payroll: { icon: '💰', color: '#14b8a6', label: 'Nómina' },
+        analytics: { icon: '📊', color: '#6366f1', label: 'Analytics' },
+        admin: { icon: '🛠️', color: '#64748b', label: 'Admin' },
+        support: { icon: '🆘', color: '#06b6d4', label: 'Soporte' },
+        ai: { icon: '🤖', color: '#a855f7', label: 'IA' },
+        legal: { icon: '⚖️', color: '#eab308', label: 'Legal' },
+        reports: { icon: '📈', color: '#22c55e', label: 'Reportes' },
+        hardware: { icon: '🖥️', color: '#84cc16', label: 'Hardware' },
+        integration: { icon: '🔗', color: '#06b6d4', label: 'Integración' },
+        siac: { icon: '🏢', color: '#f97316', label: 'SIAC' },
+        monitoring: { icon: '👁️', color: '#6366f1', label: 'Monitoreo' },
+        system: { icon: '⚡', color: '#71717a', label: 'Sistema' },
+        testing: { icon: '🧪', color: '#94a3b8', label: 'Testing' },
+        scheduling: { icon: '📅', color: '#0ea5e9', label: 'Turnos' }
+      };
+
+      // Detectar categorías dinámicamente desde los datos
+      const categoriesSet = new Set();
+      modulesArray.forEach(m => {
+        if (m.category) categoriesSet.add(m.category);
+      });
+
+      console.log('📋 [COMMERCIAL] Categorías detectadas:', Array.from(categoriesSet));
+
+      // Orden de prioridad para categorías
+      const categoryOrder = [
+        'core', 'rrhh', 'security', 'compliance', 'communication',
+        'medical', 'payroll', 'analytics', 'admin', 'support',
+        'ai', 'legal', 'reports', 'hardware', 'integration',
+        'siac', 'monitoring', 'system', 'testing', 'scheduling'
+      ];
+
+      // Agrupar por categoría (dinámico)
+      const categories = {};
+
+      // Primero agregar categorías en orden de prioridad
+      categoryOrder.forEach(catKey => {
+        if (categoriesSet.has(catKey)) {
+          categories[catKey] = modulesArray.filter(m => m.category === catKey);
+          console.log(`  ✓ ${catKey}: ${categories[catKey].length} módulos`);
+        }
+      });
+
+      // Luego agregar cualquier categoría no mapeada (alfabético)
+      Array.from(categoriesSet)
+        .filter(cat => !categoryOrder.includes(cat))
+        .sort()
+        .forEach(catKey => {
+          categories[catKey] = modulesArray.filter(m => m.category === catKey);
+          console.log(`  ✓ ${catKey} (no mapeada): ${categories[catKey].length} módulos`);
+
+          // Asignar config por defecto para categorías no mapeadas
+          if (!categoryConfig[catKey]) {
+            categoryConfig[catKey] = {
+              icon: '📦',
+              color: '#9ca3af',
+              label: catKey.charAt(0).toUpperCase() + catKey.slice(1)
+            };
+          }
+        });
+
+      console.log(`📊 [COMMERCIAL] Total categorías: ${Object.keys(categories).length}`);
+      console.log(`📊 [COMMERCIAL] Total módulos: ${modulesArray.length}`);
+
+      // Renderizar vista
+      container.innerHTML = `
+        <div style="max-width: 1400px; margin: 0 auto;">
+          <!-- Header con stats -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <h1 style="margin: 0 0 10px 0; font-size: 32px; display: flex; align-items: center; gap: 15px;">
+              <span>💰</span>
+              <span>Módulos Comerciales</span>
+              <span style="background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 14px;">v${version}</span>
+            </h1>
+            <p style="margin: 0; opacity: 0.95; font-size: 16px;">Single Source of Truth - engineering-metadata.js</p>
+            <p style="margin: 8px 0 0 0; opacity: 0.8; font-size: 13px;">Última sincronización: ${new Date(lastSync).toLocaleString('es-AR')}</p>
+          </div>
+
+          <!-- Stats Cards -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+            <div style="background: white; padding: 25px; border-radius: 12px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+              <div style="font-size: 36px; font-weight: bold; color: #3b82f6; margin-bottom: 8px;">${stats.total}</div>
+              <div style="color: #6b7280; font-size: 14px; font-weight: 600;">TOTAL MÓDULOS</div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 12px; border-left: 4px solid #10b981; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+              <div style="font-size: 36px; font-weight: bold; color: #10b981; margin-bottom: 8px;">${stats.core}</div>
+              <div style="color: #6b7280; font-size: 14px; font-weight: 600;">MÓDULOS CORE</div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 12px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+              <div style="font-size: 36px; font-weight: bold; color: #f59e0b; margin-bottom: 8px;">${stats.premium}</div>
+              <div style="color: #6b7280; font-size: 14px; font-weight: 600;">MÓDULOS PREMIUM</div>
+            </div>
+          </div>
+
+          <!-- Botón sincronizar -->
+          <div style="margin-bottom: 30px; text-align: right;">
+            <button
+              onclick="EngineeringDashboard.syncCommercialModules()"
+              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); transition: all 0.3s;"
+              onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
+              onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'"
+            >
+              🔄 Sincronizar con Registry
+            </button>
+          </div>
+
+          <!-- Tabs por categoría -->
+          <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
+            <div style="border-bottom: 2px solid #f3f4f6; padding: 20px 25px;">
+              <div class="commercial-category-tabs" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                ${Object.entries(categories).map(([catKey, catModules], index) => {
+                  const config = categoryConfig[catKey] || { icon: '📦', color: '#9ca3af', label: catKey };
+                  const isFirst = index === 0;
+
+                  return `
+                    <button
+                      class="commercial-cat-btn ${isFirst ? 'active' : ''}"
+                      data-category="${catKey}"
+                      style="
+                        padding: 10px 20px;
+                        border: 2px solid ${isFirst ? config.color : '#e5e7eb'};
+                        background: ${isFirst ? `linear-gradient(135deg, ${config.color} 0%, ${config.color}dd 100%)` : 'white'};
+                        color: ${isFirst ? 'white' : '#6b7280'};
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        font-weight: 600;
+                        transition: all 0.3s;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                      "
+                    >
+                      <span>${config.icon}</span>
+                      <span>${config.label}</span>
+                      <span style="background: ${isFirst ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)'}; padding: 2px 8px; border-radius: 10px; font-size: 12px;">${catModules.length}</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            ${Object.entries(categories).map(([catKey, catModules]) => `
+              <div
+                class="commercial-category-content"
+                data-category="${catKey}"
+                style="padding: 25px; display: ${catKey === 'core' ? 'block' : 'none'};"
+              >
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                  ${catModules.map(module => `
+                    <div style="
+                      border: 2px solid #e5e7eb;
+                      border-radius: 10px;
+                      padding: 20px;
+                      transition: all 0.3s;
+                      background: white;
+                      cursor: pointer;
+                    "
+                    onmouseover="this.style.borderColor='#667eea'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.15)'"
+                    onmouseout="this.style.borderColor='#e5e7eb'; this.style.boxShadow=''"
+                    >
+                      <!-- Header del módulo -->
+                      <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 15px;">
+                        <div>
+                          <div style="font-size: 32px; margin-bottom: 8px;">${module.icon}</div>
+                          <h3 style="margin: 0; font-size: 18px; color: #1f2937; font-weight: 700;">${module.name}</h3>
+                          ${module.nameAlt ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 2px;">${module.nameAlt}</div>` : ''}
+                        </div>
+                        ${module.isCore ? '<span style="background: #10b981; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">CORE</span>' : ''}
+                      </div>
+
+                      <!-- Descripción -->
+                      <p style="margin: 0 0 15px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">${module.description || 'Sin descripción'}</p>
+
+                      <!-- Precio -->
+                      <div style="background: #f9fafb; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                        <div style="font-size: 24px; font-weight: 800; color: #3b82f6;">$${module.basePrice.toLocaleString()}</div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Precio base mensual</div>
+                      </div>
+
+                      <!-- Estado técnico -->
+                      ${module.technicalModule.hasImplementation ? `
+                        <div style="margin-bottom: 15px;">
+                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-size: 12px; color: #6b7280; font-weight: 600;">Implementación</span>
+                            <span style="font-size: 12px; font-weight: 700; color: ${module.technicalModule.progress === 100 ? '#10b981' : '#f59e0b'};">${module.technicalModule.progress}%</span>
+                          </div>
+                          <div style="background: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: ${module.technicalModule.progress === 100 ? '#10b981' : '#f59e0b'}; height: 100%; width: ${module.technicalModule.progress}%;"></div>
+                          </div>
+                          <div style="margin-top: 6px;">
+                            <span style="background: ${module.technicalModule.status === 'PRODUCTION' ? '#10b981' : module.technicalModule.status === 'IN_PROGRESS' ? '#f59e0b' : '#6b7280'}; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: 700;">${module.technicalModule.status}</span>
+                          </div>
+                        </div>
+                      ` : `
+                        <div style="margin-bottom: 15px;">
+                          <span style="background: #ef4444; color: white; padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 700;">⚠️ NO IMPLEMENTADO</span>
+                        </div>
+                      `}
+
+                      <!-- Dependencies -->
+                      ${module.dependencies.required.length > 0 ? `
+                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                          <div style="font-size: 11px; color: #9ca3af; margin-bottom: 6px; font-weight: 600;">DEPENDE DE:</div>
+                          <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            ${module.dependencies.required.map(dep => `
+                              <span style="background: #e5e7eb; padding: 3px 8px; border-radius: 8px; font-size: 10px; color: #6b7280;">${dep}</span>
+                            `).join('')}
+                          </div>
+                        </div>
+                      ` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Bundles section (si existen) -->
+          ${Object.keys(bundles || {}).length > 0 ? `
+            <div style="margin-top: 40px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #78350f; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);">
+              <h2 style="margin: 0 0 20px 0; font-size: 24px; display: flex; align-items: center; gap: 10px;">
+                <span>🎁</span>
+                <span>Bundles Disponibles (${Object.keys(bundles).length})</span>
+              </h2>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                ${Object.entries(bundles).map(([bundleKey, bundle]) => `
+                  <div style="background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 10px; border: 2px solid rgba(120, 53, 15, 0.2);">
+                    <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #78350f;">${bundle.name || bundleKey}</h3>
+                    ${bundle.description ? `<p style="margin: 0 0 12px 0; font-size: 13px; color: #92400e;">${bundle.description}</p>` : ''}
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <span style="text-decoration: line-through; color: #9ca3af;">$${bundle.regular_price?.toLocaleString() || 'N/A'}</span>
+                      <span style="background: #10b981; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">-${bundle.discount_percentage || 0}%</span>
+                    </div>
+                    <div style="font-size: 28px; font-weight: 800; color: #10b981;">$${bundle.bundle_price?.toLocaleString() || 'N/A'}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      // Event listeners para tabs de categorías
+      const catButtons = container.querySelectorAll('.commercial-cat-btn');
+      const catContents = container.querySelectorAll('.commercial-category-content');
+
+      catButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const category = btn.dataset.category;
+
+          // Actualizar botones
+          catButtons.forEach(b => {
+            const isActive = b.dataset.category === category;
+            b.style.border = isActive ? '2px solid #667eea' : '2px solid #e5e7eb';
+            b.style.background = isActive ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'white';
+            b.style.color = isActive ? 'white' : '#6b7280';
+            if (isActive) {
+              b.classList.add('active');
+            } else {
+              b.classList.remove('active');
+            }
+          });
+
+          // Actualizar contenidos
+          catContents.forEach(content => {
+            content.style.display = content.dataset.category === category ? 'block' : 'none';
+          });
+        });
+      });
+
+      console.log('✅ [COMMERCIAL] Vista renderizada con', modulesArray.length, 'módulos');
+
+    } catch (error) {
+      console.error('❌ [COMMERCIAL] Error cargando módulos:', error);
+      container.innerHTML = `
+        <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 20px; margin: 20px; border-radius: 8px;">
+          <h3 style="color: #991b1b; margin: 0 0 10px 0;">❌ Error cargando módulos comerciales</h3>
+          <p style="color: #7f1d1d; margin: 0;">${error.message}</p>
+          <button
+            onclick="EngineeringDashboard.loadCommercialModulesView()"
+            style="margin-top: 15px; padding: 10px 20px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;"
+          >
+            🔄 Reintentar
+          </button>
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * Sincronizar módulos comerciales desde registry
+   */
+  async syncCommercialModules() {
+    console.log('🔄 [COMMERCIAL] Sincronizando módulos...');
+
+    try {
+      const response = await fetch('/api/engineering/sync-commercial-modules', {
+        method: 'POST'
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`✅ Sincronización completada\n\nTotal: ${result.stats?.total || 0} módulos\nCore: ${result.stats?.core || 0}\nPremium: ${result.stats?.premium || 0}`);
+
+        // Recargar vista
+        this.loadCommercialModulesView();
+      } else {
+        throw new Error(result.error || 'Error en sincronización');
+      }
+    } catch (error) {
+      console.error('❌ [COMMERCIAL] Error sincronizando:', error);
+      alert('❌ Error sincronizando módulos: ' + error.message);
+    }
   },
 
   /**

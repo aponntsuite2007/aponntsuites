@@ -262,8 +262,8 @@ BEGIN
         INTO default_agreement_id, default_category_id, default_salary
         FROM labor_agreements_catalog lac
         LEFT JOIN salary_categories sc ON sc.labor_agreement_id = lac.id AND sc.is_active = true
-        WHERE lac.company_id = NEW.company_id
-        AND lac.is_active = true
+        WHERE lac.is_active = true  -- FIXED: lac no tiene company_id
+        -- (linea removida porque el WHERE ya tiene is_active)
         ORDER BY lac.id
         LIMIT 1;
 

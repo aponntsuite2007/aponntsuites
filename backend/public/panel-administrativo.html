@@ -36,6 +36,9 @@
     <!-- 🏢 MODAL ENTERPRISE STYLES - Professional Edit Modal -->
     <link rel="stylesheet" href="css/modal-enterprise-styles.css">
 
+    <!-- 📑 MODAL COMPANY EDIT TABS - Tab-Based Enterprise Redesign -->
+    <link rel="stylesheet" href="css/modal-company-edit-tabs.css">
+
     <style>
         :root {
             --primary-color: #667eea;
@@ -1372,7 +1375,7 @@
             max-height: 98vh;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow: hidden;
         }
 
         .modal-header {
@@ -1406,6 +1409,11 @@
             padding: 2rem;
             flex: 1;
             overflow: auto;
+        }
+
+        .modal-footer {
+            flex-shrink: 0;
+            margin-top: auto;
         }
 
         .form-grid {
@@ -3929,6 +3937,8 @@
                                                     <option value="permissions">🔒 Permisos</option>
                                                     <option value="vacations">🏖️ Vacaciones</option>
                                                     <option value="medical">🏥 Médico</option>
+                                                    <option value="organizational">🏗️ Organizacional (CRUD+SSOT)</option>
+                                                    <option value="consent">📋 Consentimientos (SSOT)</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -9971,9 +9981,10 @@
                     return;
                 } else {
                     // Como último recurso, insertar la sección completa en el modal
-                    console.log('🚨 Última opción: insertando sección de sucursales completa en el modal');
+                    // PERO SOLO si NO está activo el sistema de tabs
                     const modal = document.getElementById('companyModal');
-                    if (modal) {
+                    if (modal && !modal.classList.contains('tabs-redesign')) {
+                        console.log('🚨 Última opción: insertando sección de sucursales completa en el modal');
                         const modalBody = modal.querySelector('.modal-body');
                         if (modalBody) {
                             const branchesHTML = `
@@ -9991,6 +10002,10 @@
                             modalBody.insertAdjacentHTML('beforeend', branchesHTML);
                             container = document.getElementById('branchesContainer');
                         }
+                    } else if (modal && modal.classList.contains('tabs-redesign')) {
+                        console.log('✅ Sistema de tabs activo, usando branchesTableBody en Tab Sucursales');
+                        // Con tabs, buscar el container específico del tab de sucursales
+                        container = document.getElementById('branchesTableBody');
                     }
 
                     if (!container) {
@@ -10002,47 +10017,85 @@
 
             console.log('🏢 Container encontrado/creado, renderizando...');
 
+            // Detectar si estamos usando el sistema de tabs (tabla) o el modal clásico (cards)
+            const isTabsMode = container.id === 'branchesTableBody';
+
             if (currentCompanyBranches.length === 0) {
-                container.innerHTML = `
-                    <div class="no-branches" style="text-align: center; color: #666; padding: 1rem;">
-                        No hay sucursales registradas
-                    </div>
-                `;
+                if (isTabsMode) {
+                    // Formato tabla para tabs
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: #95a5a6;">
+                                No hay sucursales registradas
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    // Formato card para modal clásico
+                    container.innerHTML = `
+                        <div class="no-branches" style="text-align: center; color: #666; padding: 1rem;">
+                            No hay sucursales registradas
+                        </div>
+                    `;
+                }
                 return;
             }
 
-            const html = currentCompanyBranches.map(branch => `
-                <div class="branch-item" style="
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: space-between; 
-                    padding: 0.75rem; 
-                    border: 1px solid #ddd; 
-                    border-radius: 6px; 
-                    margin-bottom: 0.5rem;
-                    background: white;
-                ">
-                    <div style="flex: 1;">
-                        <div style="font-weight: 500; color: #333;">${branch.name}</div>
-                        <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
-                            📍 ${branch.address}, ${branch.city}, ${branch.province}, ${branch.country}
+            let html;
+
+            if (isTabsMode) {
+                // Formato TABLA para sistema de tabs
+                html = currentCompanyBranches.map(branch => `
+                    <tr>
+                        <td>${branch.name}</td>
+                        <td>${branch.address}</td>
+                        <td>${branch.city}, ${branch.province}</td>
+                        <td><span class="badge badge-success">Activa</span></td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="editBranch(${branch.id})">
+                                ✏️ Editar
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteBranch(${branch.id})">
+                                🗑️ Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                // Formato CARD para modal clásico
+                html = currentCompanyBranches.map(branch => `
+                    <div class="branch-item" style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 0.75rem;
+                        border: 1px solid #ddd;
+                        border-radius: 6px;
+                        margin-bottom: 0.5rem;
+                        background: white;
+                    ">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; color: #333;">${branch.name}</div>
+                            <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
+                                📍 ${branch.address}, ${branch.city}, ${branch.province}, ${branch.country}
+                            </div>
+                            ${branch.latitude && branch.longitude ?
+                                `<div style="font-size: 0.7rem; color: #999; margin-top: 0.25rem;">
+                                    🌐 ${branch.latitude.toFixed(6)}, ${branch.longitude.toFixed(6)}
+                                </div>` : ''
+                            }
                         </div>
-                        ${branch.latitude && branch.longitude ? 
-                            `<div style="font-size: 0.7rem; color: #999; margin-top: 0.25rem;">
-                                🌐 ${branch.latitude.toFixed(6)}, ${branch.longitude.toFixed(6)}
-                            </div>` : ''
-                        }
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="editBranch(${branch.id})" style="font-size: 0.7rem;">
+                                ✏️ Editar
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteBranch(${branch.id})" style="font-size: 0.7rem;">
+                                🗑️ Eliminar
+                            </button>
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editBranch(${branch.id})" style="font-size: 0.7rem;">
-                            ✏️ Editar
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteBranch(${branch.id})" style="font-size: 0.7rem;">
-                            🗑️ Eliminar
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
+            }
 
             container.innerHTML = html;
         }
@@ -15519,5 +15572,8 @@ ${vendor.notes || 'Sin notas adicionales'}
 
     <!-- 🔄 VIEW TOGGLE & READ-ONLY VIEWER - Grid/Table Toggle + View Button -->
     <script src="/js/modules/view-toggle-and-readonly.js"></script>
+
+    <!-- 📑 COMPANY MODAL TABS REDESIGN - Enterprise Tab System -->
+    <script src="/js/modules/company-modal-tabs-redesign.js"></script>
 </body>
 </html><!-- Version: 1763816963 -->

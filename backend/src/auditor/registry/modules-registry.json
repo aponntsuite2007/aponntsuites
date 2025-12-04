@@ -22,7 +22,7 @@
         ],
         "integrates_with": [
           "attendance",
-          "notifications-enterprise",
+          "notification-center",
           "medical",
           "vacation"
         ],
@@ -68,7 +68,7 @@
           "kiosks-professional",
           "real-biometric-enterprise",
           "shifts",
-          "notifications-enterprise"
+          "notification-center"
         ],
         "integrates_with": [
           "medical",
@@ -335,7 +335,7 @@
           "companies"
         ],
         "optional": [
-          "notifications-enterprise",
+          "notification-center",
           "document-management",
           "art-management"
         ],
@@ -366,7 +366,7 @@
           "companies"
         ],
         "optional": [
-          "notifications-enterprise",
+          "notification-center",
           "dashboard"
         ],
         "integrates_with": [
@@ -393,7 +393,7 @@
           "companies"
         ],
         "optional": [
-          "notifications-enterprise",
+          "notification-center",
           "document-management"
         ],
         "integrates_with": [
@@ -420,7 +420,7 @@
         ],
         "optional": [
           "legal",
-          "notifications-enterprise"
+          "notification-center"
         ],
         "integrates_with": [
           "legal",
@@ -428,35 +428,6 @@
         ],
         "provides_to": [
           "legal"
-        ]
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
-    },
-    {
-      "id": "notifications-enterprise",
-      "name": "Notificaciones Enterprise V3.0",
-      "category": "communication",
-      "version": "3.0.0",
-      "description": "Workflows multi-nivel, escalamiento automático, templates reutilizables, multi-canal",
-      "dependencies": {
-        "required": [
-          "users",
-          "companies"
-        ],
-        "optional": [],
-        "integrates_with": [
-          "attendance",
-          "medical",
-          "vacation",
-          "legal",
-          "kiosks-professional",
-          "ALL"
-        ],
-        "provides_to": [
-          "ALL"
         ]
       },
       "commercial": {
@@ -481,7 +452,7 @@
         "integrates_with": [
           "legal",
           "attendance",
-          "notifications-enterprise"
+          "notification-center"
         ],
         "provides_to": []
       },
@@ -502,7 +473,7 @@
         ],
         "optional": [],
         "integrates_with": [
-          "notifications-enterprise"
+          "notification-center"
         ],
         "provides_to": []
       },
@@ -525,7 +496,7 @@
           "document-management"
         ],
         "integrates_with": [
-          "notifications-enterprise"
+          "notification-center"
         ],
         "provides_to": []
       },
@@ -891,11 +862,11 @@
       }
     },
     {
-      "id": "terms-conditions",
-      "name": "Términos y Condiciones",
-      "category": "legal",
+      "id": "company-account",
+      "name": "Cuenta Comercial",
+      "category": "core",
       "version": "1.0.0",
-      "description": "Gestión de términos, condiciones y políticas",
+      "description": "Relacion comercial APONNT-Empresa: Presupuestos, Contratos, Facturas, Comunicaciones",
       "dependencies": {
         "required": [
           "companies"
@@ -910,9 +881,12 @@
         "provides_to": []
       },
       "commercial": {
-        "is_core": false,
+        "is_core": true,
         "standalone": true
-      }
+      },
+      "aliases": [
+        "terms-conditions"
+      ]
     },
     {
       "id": "authentication",
@@ -1310,6 +1284,39 @@
         "is_core": false,
         "can_work_standalone": false,
         "base_price_usd": 0
+      }
+    },
+    {
+      "id": "notification-center",
+      "key": "notification-center",
+      "name": "Centro de Notificaciones Unificado",
+      "icon": "🔔",
+      "category": "communication",
+      "is_core": true,
+      "base_price": 0,
+      "description": "Sistema unificado de notificaciones con IA, threads, workflows y multi-canal (Aponnt ↔ Empresa ↔ APKs)",
+      "isCommercial": true,
+      "isAdministrative": false,
+      "hasImplementation": true,
+      "frontend_file": "/js/modules/notification-center.js",
+      "init_function": "showNotificationCenterContent",
+      "status": "COMPLETE",
+      "progress": 100,
+      "aliases": [
+        "notifications-enterprise",
+        "notifications-complete",
+        "inbox"
+      ],
+      "dependencies": {
+        "required": [
+          "users"
+        ],
+        "optional": [
+          "ai-assistant"
+        ],
+        "provides_to": [
+          "ALL"
+        ]
       }
     }
   ],

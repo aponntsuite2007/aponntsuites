@@ -1,0 +1,353 @@
+/**
+ * OH-V6-14: ANALYTICS DASHBOARD STYLES
+ * Dark theme glassmorphism design para dashboard de analytics
+ */
+
+.oh-analytics-dashboard {
+    width: 100%;
+    padding: 2rem;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    min-height: 100vh;
+}
+
+/* ============= HEADER CON STATS CARDS ============= */
+
+.oh-analytics-header {
+    margin-bottom: 3rem;
+}
+
+.oh-stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.oh-stat-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(71, 85, 105, 0.3);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.oh-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(71, 85, 105, 0.5);
+}
+
+.oh-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.oh-stat-icon svg {
+    width: 28px;
+    height: 28px;
+    stroke: white;
+    stroke-width: 2.5;
+}
+
+.oh-stat-content {
+    flex: 1;
+}
+
+.oh-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+}
+
+.oh-stat-label {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+/* ============= CHARTS GRID ============= */
+
+.oh-charts-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.oh-chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 1.5rem;
+}
+
+.oh-chart-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(71, 85, 105, 0.3);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.oh-chart-card:hover {
+    border-color: rgba(71, 85, 105, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.oh-chart-full {
+    grid-column: 1 / -1;
+}
+
+.oh-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.oh-chart-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.oh-chart-export {
+    background: rgba(71, 85, 105, 0.4);
+    border: 1px solid rgba(71, 85, 105, 0.5);
+    border-radius: 8px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.oh-chart-export:hover {
+    background: rgba(71, 85, 105, 0.6);
+    transform: scale(1.05);
+}
+
+.oh-chart-export svg {
+    stroke: #cbd5e1;
+    stroke-width: 2;
+}
+
+/* Chart containers */
+.oh-chart-card canvas {
+    max-height: 350px;
+}
+
+.oh-chart-full canvas {
+    max-height: 300px;
+}
+
+/* ============= UPCOMING EXPIRATIONS TABLE ============= */
+
+.oh-upcoming-table {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.oh-upcoming-table-el {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.875rem;
+}
+
+.oh-upcoming-table-el thead {
+    background: rgba(15, 23, 42, 0.6);
+}
+
+.oh-upcoming-table-el thead th {
+    padding: 1rem;
+    text-align: left;
+    color: #cbd5e1;
+    font-weight: 600;
+    border-bottom: 2px solid rgba(71, 85, 105, 0.4);
+    white-space: nowrap;
+}
+
+.oh-upcoming-table-el tbody tr {
+    transition: all 0.2s ease;
+}
+
+.oh-upcoming-table-el tbody tr:hover {
+    background: rgba(71, 85, 105, 0.2);
+}
+
+.oh-upcoming-table-el tbody td {
+    padding: 1rem;
+    color: #e2e8f0;
+    border-bottom: 1px solid rgba(71, 85, 105, 0.2);
+}
+
+.oh-employee-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.oh-employee-cell strong {
+    color: #f1f5f9;
+    font-weight: 600;
+}
+
+.oh-employee-id {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* Urgency badges */
+.oh-urgency-badge {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.oh-urgency-badge-critical {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.oh-urgency-badge-warning {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.oh-urgency-badge-normal {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+/* Row urgency highlighting */
+.oh-urgency-critical {
+    border-left: 3px solid #ef4444;
+}
+
+.oh-urgency-warning {
+    border-left: 3px solid #fbbf24;
+}
+
+.oh-urgency-normal {
+    border-left: 3px solid #10b981;
+}
+
+.oh-no-data {
+    text-align: center;
+    padding: 3rem;
+    color: #94a3b8;
+    font-size: 1rem;
+}
+
+/* ============= RESPONSIVE DESIGN ============= */
+
+@media (max-width: 1280px) {
+    .oh-chart-row {
+        grid-template-columns: 1fr;
+    }
+
+    .oh-stats-cards {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .oh-analytics-dashboard {
+        padding: 1rem;
+    }
+
+    .oh-stats-cards {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .oh-chart-card {
+        padding: 1rem;
+    }
+
+    .oh-stat-value {
+        font-size: 1.75rem;
+    }
+
+    .oh-chart-header h3 {
+        font-size: 1rem;
+    }
+
+    .oh-upcoming-table-el {
+        font-size: 0.75rem;
+    }
+
+    .oh-upcoming-table-el thead th,
+    .oh-upcoming-table-el tbody td {
+        padding: 0.75rem;
+    }
+}
+
+/* ============= ANIMATIONS ============= */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.oh-stat-card,
+.oh-chart-card {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.oh-stat-card:nth-child(1) { animation-delay: 0.05s; }
+.oh-stat-card:nth-child(2) { animation-delay: 0.1s; }
+.oh-stat-card:nth-child(3) { animation-delay: 0.15s; }
+.oh-stat-card:nth-child(4) { animation-delay: 0.2s; }
+.oh-stat-card:nth-child(5) { animation-delay: 0.25s; }
+
+/* ============= SCROLLBAR STYLING ============= */
+
+.oh-upcoming-table::-webkit-scrollbar {
+    height: 8px;
+}
+
+.oh-upcoming-table::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 4px;
+}
+
+.oh-upcoming-table::-webkit-scrollbar-thumb {
+    background: rgba(71, 85, 105, 0.6);
+    border-radius: 4px;
+}
+
+.oh-upcoming-table::-webkit-scrollbar-thumb:hover {
+    background: rgba(71, 85, 105, 0.8);
+}

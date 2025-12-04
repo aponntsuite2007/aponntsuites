@@ -1,6 +1,9 @@
 const { sequelize } = require('../config/database');
 const jwt = require('jsonwebtoken');
 
+// Usar el mismo secreto que el resto del sistema
+const JWT_SECRET = process.env.JWT_SECRET || 'tu_secreto_jwt_aqui';
+
 // Middleware para verificar permisos granulares
 const checkPermission = (moduleId, action = 'view') => {
     return async (req, res, next) => {
@@ -14,7 +17,7 @@ const checkPermission = (moduleId, action = 'view') => {
             // Verificar token válido
             let decoded;
             try {
-                decoded = jwt.verify(token, process.env.JWT_SECRET);
+                decoded = jwt.verify(token, JWT_SECRET);
             } catch (error) {
                 return res.status(401).json({ error: 'Token inválido' });
             }
@@ -28,10 +31,11 @@ const checkPermission = (moduleId, action = 'view') => {
             // Super admin tiene acceso a todo
             if (userRole === 'admin' && userId) {
                 // Verificar que el usuario existe y es admin
+                // NOTA: "isActive" es boolean en PostgreSQL, usar true no 1
                 const [adminCheck] = await sequelize.query(`
-                    SELECT user_id FROM users WHERE user_id = ? AND role = 'admin' AND isActive = 1
+                    SELECT user_id FROM users WHERE user_id = ? AND role = 'admin' AND "isActive" = true
                 `, { replacements: [userId] });
-                
+
                 if (adminCheck.length > 0) {
                     req.user = decoded;
                     await logAuditAttempt(req, userId, moduleId, action, 'access_granted', true, 'super_admin');
@@ -267,7 +271,7 @@ const checkMultiplePermissions = (permissions) => {
                 return res.status(401).json({ error: 'Token de acceso requerido' });
             }
             
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const decoded = jwt.verify(token, JWT_SECRET);
             const userId = decoded.id;
             
             // Verificar si tiene al menos uno de los permisos requeridos

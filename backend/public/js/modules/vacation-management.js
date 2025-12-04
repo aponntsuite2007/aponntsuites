@@ -1,1961 +1,1730 @@
-// Vacation Management Module - Sistema Integral de Gestión de Vacaciones
-console.log('🏖️ [VACATION-MANAGEMENT] Módulo de gestión de vacaciones cargado');
+/**
+ * ENTERPRISE VACATION MANAGEMENT SYSTEM v2.0
+ * Sistema de Gestion de Vacaciones y Permisos - Nivel Enterprise
+ *
+ * Tecnologias: Node.js + PostgreSQL + Sequelize
+ * Arquitectura: Multi-tenant, LCT Argentina Compatible
+ *
+ * @author Sistema Biometrico Enterprise
+ * @version 2.0.0
+ */
 
-// Main function to show vacation management content
+// Evitar re-declaracion si ya fue cargado
+if (typeof window.VacationState !== 'undefined') {
+    console.log('%c VACATION ENGINE v2.0 (already loaded) ', 'background: #1a5a4a; color: #00e676; font-size: 12px; padding: 4px 8px; border-radius: 4px;');
+} else {
+
+console.log('%c VACATION ENGINE v2.0 ', 'background: linear-gradient(90deg, #0f4c3a 0%, #1a5a4a 100%); color: #00e676; font-size: 14px; padding: 8px 12px; border-radius: 4px; font-weight: bold;');
+
+// ============================================================================
+// STATE MANAGEMENT - Redux-like pattern
+// ============================================================================
+const VacationState = window.VacationState = {
+    currentView: 'requests',
+    requests: [],
+    scales: [],
+    licenses: [],
+    config: null,
+    selectedYear: new Date().getFullYear(),
+    isLoading: false,
+    filters: {
+        type: 'all',
+        status: 'all',
+        source: 'all',
+        search: ''
+    },
+    stats: {
+        approved: 0,
+        pending: 0,
+        rejected: 0,
+        fromMobile: 0
+    }
+};
+
+// ============================================================================
+// API SERVICE - Centralized fetch handler
+// ============================================================================
+const VacationAPI = window.VacationAPI = {
+    baseUrl: '/api/v1/vacation',
+
+    async request(endpoint, options = {}) {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const config = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            ...options
+        };
+
+        try {
+            const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || data.message || 'API Error');
+            return data;
+        } catch (error) {
+            console.error(`[VacationAPI] ${endpoint}:`, error);
+            throw error;
+        }
+    },
+
+    // Configuration
+    getConfig: () => VacationAPI.request('/config'),
+    updateConfig: (data) => VacationAPI.request('/config', { method: 'PUT', body: JSON.stringify(data) }),
+
+    // Scales - usando /config que incluye scales
+    getScales: function() {
+        return VacationAPI.request('/config').then(function(config) {
+            return { success: true, data: (config.data && config.data.vacationScales) || [] };
+        });
+    },
+    createScale: (data) => VacationAPI.request('/scales', { method: 'POST', body: JSON.stringify(data) }),
+    updateScale: (id, data) => VacationAPI.request(`/scales/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteScale: (id) => VacationAPI.request(`/scales/${id}`, { method: 'DELETE' }),
+
+    // Extraordinary Licenses - usando /config que incluye licenses
+    getLicenses: function() {
+        return VacationAPI.request('/config').then(function(config) {
+            return { success: true, data: (config.data && config.data.extraordinaryLicenses) || [] };
+        });
+    },
+    createLicense: (data) => VacationAPI.request('/extraordinary-licenses', { method: 'POST', body: JSON.stringify(data) }),
+    updateLicense: (id, data) => VacationAPI.request(`/extraordinary-licenses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteLicense: (id) => VacationAPI.request(`/extraordinary-licenses/${id}`, { method: 'DELETE' }),
+
+    // Requests
+    getRequests: (params = '') => VacationAPI.request(`/requests${params}`),
+    getRequest: (id) => VacationAPI.request(`/requests/${id}`),
+    createRequest: (data) => VacationAPI.request('/requests', { method: 'POST', body: JSON.stringify(data) }),
+    updateRequest: (id, data) => VacationAPI.request(`/requests/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    approveRequest: (id, data) => VacationAPI.request(`/requests/${id}/approve`, { method: 'PUT', body: JSON.stringify(data) }),
+    rejectRequest: (id, data) => VacationAPI.request(`/requests/${id}/reject`, { method: 'PUT', body: JSON.stringify(data) }),
+
+    // Balance
+    calculateDays: (userId) => VacationAPI.request(`/calculate-days/${userId}`),
+    getBalance: (userId) => VacationAPI.request(`/balance/${userId}`)
+};
+
+// ============================================================================
+// MAIN RENDER FUNCTION
+// ============================================================================
 function showVacationManagementContent() {
-    console.log('🏖️ [VACATION-MANAGEMENT] Ejecutando showVacationManagementContent()');
+    console.log('[VACATION] Rendering Enterprise Vacation Management...');
 
     const content = document.getElementById('mainContent');
     if (!content) {
-        console.error('❌ [VACATION-MANAGEMENT] mainContent no encontrado');
+        console.error('[VACATION] mainContent not found');
         return;
     }
 
     content.style.setProperty('display', 'block', 'important');
 
     content.innerHTML = `
-        <div class="tab-content active">
-            <div class="card" style="padding: 0; overflow: hidden;">
-                <!-- Header del módulo -->
-                <div style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; padding: 25px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h2 style="margin: 0; font-size: 28px;">🏖️ Gestión de Vacaciones y Permisos</h2>
-                            <p style="margin: 5px 0 0 0; opacity: 0.9;">Sistema completo de solicitudes desde APK y web</p>
-                        </div>
-                        <button onclick="showNewVacationModal()"
-                                style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                            ➕ Nueva Solicitud
-                        </button>
+        <div class="vacation-enterprise" id="vacation-app">
+            <!-- Header -->
+            <header class="ve-header">
+                <div class="ve-header-left">
+                    <div class="ve-logo">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <div class="ve-title-block">
+                        <h1 class="ve-title">VACATION ENGINE</h1>
+                        <span class="ve-subtitle">Enterprise Leave Management</span>
                     </div>
                 </div>
-
-                <!-- Tabs de navegación -->
-                <div style="background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
-                    <div style="display: flex; padding: 0 25px;">
-                        <button onclick="switchVacationTab('requests')" id="tab-requests"
-                                class="vacation-tab active-vacation-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid #27ae60;">
-                            📋 Solicitudes
-                        </button>
-                        <button onclick="switchVacationTab('calendar')" id="tab-calendar"
-                                class="vacation-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
-                            📅 Calendario
-                        </button>
-                        <button onclick="switchVacationTab('policies')" id="tab-policies"
-                                class="vacation-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
-                            📜 Políticas
-                        </button>
-                        <button onclick="switchVacationTab('balance')" id="tab-balance"
-                                class="vacation-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
-                            💰 Balance
-                        </button>
-                        <button onclick="switchVacationTab('analytics')" id="tab-analytics"
-                                class="vacation-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
-                            📊 Análisis
-                        </button>
-                        <button onclick="switchVacationTab('compatibility')" id="tab-compatibility"
-                                class="vacation-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
-                            🔄 Matriz Compatibilidad
-                        </button>
-                        <button onclick="switchVacationTab('scheduler')" id="tab-scheduler"
-                                class="vacation-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
-                            🤖 Programación Auto
-                        </button>
-                        <button onclick="switchVacationTab('config')" id="tab-config"
-                                class="vacation-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
-                            ⚙️ Configuración
-                        </button>
+                <div class="ve-header-center">
+                    <div class="ve-tech-badges">
+                        <span class="ve-badge ve-badge-lct" title="LCT Argentina">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            LCT Argentina
+                        </span>
+                        <span class="ve-badge ve-badge-db" title="PostgreSQL Database">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.58 3 4 4.79 4 7v10c0 2.21 3.58 4 8 4s8-1.79 8-4V7c0-2.21-3.58-4-8-4z"/></svg>
+                            PostgreSQL
+                        </span>
+                        <span class="ve-badge ve-badge-mobile" title="Mobile App Integration">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                            APK Ready
+                        </span>
                     </div>
                 </div>
-
-                <!-- Contenido de las pestañas -->
-                <div style="padding: 25px;" id="vacationTabContent">
-                    ${getVacationRequestsContent()}
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para nueva solicitud -->
-        <div id="newVacationModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
-            <div class="modal-content" style="position: relative; margin: 1% auto; width: 95%; max-width: 1000px; background: white; border-radius: 12px; max-height: 95vh; overflow-y: auto;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0;">🏖️ Nueva Solicitud de Vacaciones/Permiso</h3>
-                    <button onclick="closeNewVacationModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-                </div>
-                <div class="modal-body" style="padding: 30px;">
-                    ${getNewVacationForm()}
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para detalles de solicitud -->
-        <div id="vacationDetailsModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9997;">
-            <div class="modal-content" style="position: relative; margin: 2% auto; width: 90%; max-width: 800px; background: white; border-radius: 12px; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0;">📋 Detalles de Solicitud</h3>
-                    <button onclick="closeVacationDetailsModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-                </div>
-                <div class="modal-body" style="padding: 30px;" id="vacationDetailsContent">
-                    <!-- Content will be populated when opening -->
-                </div>
-            </div>
-        </div>
-    `;
-
-    console.log('✅ [VACATION-MANAGEMENT] Contenido renderizado exitosamente');
-
-    // FORCE HIDE ALL MODALS (fix for Render cache issue)
-    setTimeout(() => {
-        const modals = document.querySelectorAll('#newVacationModal, #vacationDetailsModal, #editVacationModal');
-        modals.forEach(modal => {
-            if (modal) {
-                modal.style.setProperty('display', 'none', 'important');
-                console.log('🔒 [FORCE-HIDE] Modal ocultado:', modal.id);
-            }
-        });
-    }, 100);
-
-    // Initialize vacation data
-    loadVacationRequests();
-}
-
-// Switch between vacation tabs
-function switchVacationTab(tabName) {
-    // Update tab styles
-    document.querySelectorAll('.vacation-tab').forEach(tab => {
-        tab.style.borderBottom = '3px solid transparent';
-        tab.classList.remove('active-vacation-tab');
-    });
-
-    const activeTab = document.getElementById(`tab-${tabName}`);
-    if (activeTab) {
-        activeTab.style.borderBottom = '3px solid #27ae60';
-        activeTab.classList.add('active-vacation-tab');
-    }
-
-    // Update content
-    const contentDiv = document.getElementById('vacationTabContent');
-    if (!contentDiv) return;
-
-    switch(tabName) {
-        case 'requests':
-            contentDiv.innerHTML = getVacationRequestsContent();
-            loadVacationRequests();
-            break;
-        case 'calendar':
-            contentDiv.innerHTML = getVacationCalendarContent();
-            loadVacationCalendar();
-            break;
-        case 'policies':
-            contentDiv.innerHTML = getVacationPoliciesContent();
-            loadVacationPolicies();
-            break;
-        case 'balance':
-            contentDiv.innerHTML = getVacationBalanceContent();
-            loadVacationBalance();
-            break;
-        case 'analytics':
-            contentDiv.innerHTML = getVacationAnalyticsContent();
-            loadVacationAnalytics();
-            break;
-        case 'compatibility':
-            contentDiv.innerHTML = getCompatibilityMatrixContent();
-            loadCompatibilityMatrix();
-            break;
-        case 'scheduler':
-            contentDiv.innerHTML = getAutoSchedulerContent();
-            break;
-        case 'config':
-            contentDiv.innerHTML = getVacationConfigContent();
-            loadVacationConfig();
-            break;
-    }
-}
-
-// Get vacation requests content
-function getVacationRequestsContent() {
-    return `
-        <div class="vacation-requests-container">
-            <!-- Filtros y búsqueda -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 15px; flex-wrap: wrap;">
-                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <select id="requestTypeFilter" onchange="filterVacationRequests()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;">
-                        <option value="all">Todos los tipos</option>
-                        <option value="vacation">Vacaciones</option>
-                        <option value="personal_leave">Permiso Personal</option>
-                        <option value="sick_leave">Licencia Médica</option>
-                        <option value="maternity">Licencia Maternidad</option>
-                        <option value="study_leave">Permiso Estudio</option>
-                        <option value="compensatory">Compensatorio</option>
-                    </select>
-
-                    <select id="requestStatusFilter" onchange="filterVacationRequests()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;">
-                        <option value="all">Todos los estados</option>
-                        <option value="pending">Pendiente</option>
-                        <option value="approved">Aprobada</option>
-                        <option value="rejected">Rechazada</option>
-                        <option value="cancelled">Cancelada</option>
-                    </select>
-
-                    <select id="requestSourceFilter" onchange="filterVacationRequests()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;">
-                        <option value="all">Todas las fuentes</option>
-                        <option value="web">Web</option>
-                        <option value="mobile">APK Móvil</option>
-                        <option value="system">Sistema</option>
-                    </select>
-                </div>
-
-                <input type="text" id="vacationSearch" placeholder="Buscar empleado..."
-                       onkeyup="searchVacationRequests()"
-                       style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; min-width: 200px;">
-            </div>
-
-            <!-- Resumen estadísticas -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
-                <div style="background: #e8f5e8; padding: 20px; border-radius: 10px; text-align: center; border-left: 4px solid #27ae60;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #27ae60;">28</div>
-                    <div style="color: #155724; font-weight: 600;">Solicitudes Aprobadas</div>
-                </div>
-                <div style="background: #fff3cd; padding: 20px; border-radius: 10px; text-align: center; border-left: 4px solid #f39c12;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #f39c12;">12</div>
-                    <div style="color: #8d6e08; font-weight: 600;">Pendientes de Aprobación</div>
-                </div>
-                <div style="background: #f8d7da; padding: 20px; border-radius: 10px; text-align: center; border-left: 4px solid #e74c3c;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #e74c3c;">3</div>
-                    <div style="color: #a12622; font-weight: 600;">Rechazadas</div>
-                </div>
-                <div style="background: #d1ecf1; padding: 20px; border-radius: 10px; text-align: center; border-left: 4px solid #17a2b8;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #17a2b8;">15</div>
-                    <div style="color: #105a68; font-weight: 600;">Desde APK Móvil</div>
-                </div>
-            </div>
-
-            <!-- Lista de solicitudes -->
-            <div id="vacation-requests-list">
-                <div style="text-align: center; padding: 40px;">
-                    🔄 Cargando solicitudes de vacaciones...
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Get vacation calendar content
-function getVacationCalendarContent() {
-    return `
-        <div class="vacation-calendar-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <h3 style="margin: 0;">📅 Calendario de Vacaciones</h3>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="changeCalendarMonth(-1)" style="background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">◀ Anterior</button>
-                    <span id="currentMonth" style="padding: 8px 16px; font-weight: 600;">Septiembre 2025</span>
-                    <button onclick="changeCalendarMonth(1)" style="background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Siguiente ▶</button>
-                </div>
-            </div>
-
-            <div id="vacation-calendar">
-                <div style="text-align: center; padding: 40px;">
-                    📅 Generando calendario...
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Get vacation policies content
-function getVacationPoliciesContent() {
-    return `
-        <div class="vacation-policies-container">
-            <h3 style="margin: 0 0 20px 0;">📜 Políticas de Vacaciones y Permisos</h3>
-
-            <!-- Escalas de Vacaciones por Antigüedad -->
-            <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 25px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h4 style="margin: 0; color: #27ae60;">📊 Escalas de Vacaciones por Antigüedad</h4>
-                    <button onclick="addVacationScale()" style="background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                        ➕ Agregar Escala
-                    </button>
-                </div>
-                <div id="vacation-scales-list">
-                    <div style="text-align: center; padding: 20px; color: #666;">
-                        🔄 Cargando escalas...
-                    </div>
-                </div>
-            </div>
-
-            <!-- Licencias Extraordinarias -->
-            <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h4 style="margin: 0; color: #f39c12;">📋 Licencias Extraordinarias</h4>
-                    <button onclick="addExtraordinaryLicense()" style="background: #f39c12; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                        ➕ Agregar Licencia
-                    </button>
-                </div>
-                <div id="extraordinary-licenses-list">
-                    <div style="text-align: center; padding: 20px; color: #666;">
-                        🔄 Cargando licencias...
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Get vacation balance content
-function getVacationBalanceContent() {
-    return `
-        <div class="vacation-balance-container">
-            <h3 style="margin: 0 0 20px 0;">💰 Balance de Vacaciones por Empleado</h3>
-
-            <div style="margin-bottom: 20px;">
-                <input type="text" id="balanceSearch" placeholder="Buscar empleado..." onkeyup="searchEmployeeBalance()"
-                       style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 300px;">
-            </div>
-
-            <div id="vacation-balance-list">
-                <div style="text-align: center; padding: 40px;">
-                    🔄 Cargando balances de vacaciones...
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Get vacation analytics content
-function getVacationAnalyticsContent() {
-    return `
-        <div class="vacation-analytics-container">
-            <h3 style="margin: 0 0 20px 0;">📊 Análisis de Vacaciones y Ausentismo</h3>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
-                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                    <h4 style="margin: 0 0 15px 0; color: #27ae60;">📈 Tendencia de Solicitudes</h4>
-                    <div id="vacation-trend-chart" style="height: 300px; display: flex; align-items: center; justify-content: center; color: #666;">
-                        Gráfico de tendencias de solicitudes
-                    </div>
-                </div>
-
-                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                    <h4 style="margin: 0 0 15px 0; color: #f39c12;">🎯 Tipos de Permisos</h4>
-                    <div id="vacation-types-chart" style="height: 300px; display: flex; align-items: center; justify-content: center; color: #666;">
-                        Gráfico por tipos de permisos
-                    </div>
-                </div>
-
-                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                    <h4 style="margin: 0 0 15px 0; color: #8e44ad;">👥 Por Departamento</h4>
-                    <div id="vacation-department-chart" style="height: 300px; display: flex; align-items: center; justify-content: center; color: #666;">
-                        Análisis por departamentos
-                    </div>
-                </div>
-
-                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                    <h4 style="margin: 0 0 15px 0; color: #17a2b8;">📱 Fuente de Solicitudes</h4>
-                    <div id="vacation-source-chart" style="height: 300px; display: flex; align-items: center; justify-content: center; color: #666;">
-                        Web vs APK Móvil
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Get new vacation form
-function getNewVacationForm() {
-    return `
-        <form onsubmit="submitVacationRequest(event)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
-                <div>
-                    <h4 style="margin: 0 0 15px 0; color: #27ae60;">👤 Información del Empleado</h4>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Empleado:</label>
-                        <select name="employeeId" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                            <option value="">Seleccionar empleado...</option>
-                            <option value="1">Juan Pérez - EMP001</option>
-                            <option value="2">María González - EMP002</option>
-                            <option value="3">Carlos Rodriguez - EMP003</option>
-                            <option value="4">Ana Martínez - EMP004</option>
-                            <option value="5">Luis López - EMP005</option>
+                <div class="ve-header-right">
+                    <div class="ve-year-selector">
+                        <select id="ve-year" class="ve-select" onchange="VacationEngine.changeYear(this.value)">
+                            ${[2025, 2024, 2023].map(y => `<option value="${y}" ${y === VacationState.selectedYear ? 'selected' : ''}>${y}</option>`).join('')}
                         </select>
                     </div>
+                    <button onclick="VacationEngine.refresh()" class="ve-btn ve-btn-icon" title="Actualizar datos">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                    </button>
+                    <button onclick="VacationEngine.showNewRequestModal()" class="ve-btn ve-btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Nueva Solicitud
+                    </button>
+                </div>
+            </header>
 
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tipo de Solicitud:</label>
-                        <select name="requestType" required onchange="updateVacationFields(this.value)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                            <option value="">Seleccionar tipo...</option>
+            <!-- Navigation Tabs -->
+            <nav class="ve-nav">
+                <button class="ve-nav-item active" data-view="requests" onclick="VacationEngine.showView('requests')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                    Solicitudes
+                </button>
+                <button class="ve-nav-item" data-view="calendar" onclick="VacationEngine.showView('calendar')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Calendario
+                </button>
+                <button class="ve-nav-item" data-view="policies" onclick="VacationEngine.showView('policies')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Politicas LCT
+                </button>
+                <button class="ve-nav-item" data-view="balance" onclick="VacationEngine.showView('balance')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    Balance
+                </button>
+                <button class="ve-nav-item" data-view="analytics" onclick="VacationEngine.showView('analytics')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                    Analytics
+                </button>
+                <button class="ve-nav-item" data-view="config" onclick="VacationEngine.showView('config')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                    Config
+                </button>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="ve-main" id="ve-content">
+                <div class="ve-loading">
+                    <div class="ve-spinner"></div>
+                    <span>Cargando datos...</span>
+                </div>
+            </main>
+        </div>
+    `;
+
+    injectVacationStyles();
+    VacationEngine.init();
+}
+
+// ============================================================================
+// VACATION ENGINE - Main Controller
+// ============================================================================
+const VacationEngine = window.VacationEngine = {
+    async init() {
+        await this.showView('requests');
+    },
+
+    changeYear(year) {
+        VacationState.selectedYear = parseInt(year);
+        this.refresh();
+    },
+
+    async refresh() {
+        await this.showView(VacationState.currentView);
+    },
+
+    async showView(view) {
+        VacationState.currentView = view;
+
+        // Update nav active state
+        document.querySelectorAll('.ve-nav-item').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.view === view);
+        });
+
+        const content = document.getElementById('ve-content');
+        if (!content) return;
+
+        content.innerHTML = '<div class="ve-loading"><div class="ve-spinner"></div><span>Cargando...</span></div>';
+
+        try {
+            switch(view) {
+                case 'requests': await this.renderRequests(); break;
+                case 'calendar': await this.renderCalendar(); break;
+                case 'policies': await this.renderPolicies(); break;
+                case 'balance': await this.renderBalance(); break;
+                case 'analytics': await this.renderAnalytics(); break;
+                case 'config': await this.renderConfig(); break;
+            }
+        } catch (error) {
+            content.innerHTML = `<div class="ve-error"><span>Error: ${error.message}</span></div>`;
+        }
+    },
+
+    // ========================================================================
+    // REQUESTS VIEW
+    // ========================================================================
+    async renderRequests() {
+        const content = document.getElementById('ve-content');
+
+        let requests = [];
+        let stats = { approved: 0, pending: 0, rejected: 0, fromMobile: 0 };
+
+        try {
+            const result = await VacationAPI.getRequests();
+            requests = result.data || result || [];
+
+            // Calculate stats
+            requests.forEach(r => {
+                if (r.status === 'approved') stats.approved++;
+                if (r.status === 'pending') stats.pending++;
+                if (r.status === 'rejected') stats.rejected++;
+                if (r.source === 'mobile-apk' || r.source === 'mobile_app') stats.fromMobile++;
+            });
+            VacationState.requests = requests;
+            VacationState.stats = stats;
+        } catch (e) {
+            console.log('[VACATION] No requests data:', e.message);
+        }
+
+        content.innerHTML = `
+            <div class="ve-dashboard">
+                <!-- KPI Cards -->
+                <div class="ve-kpi-grid">
+                    <div class="ve-kpi-card">
+                        <div class="ve-kpi-icon" style="background: var(--accent-green);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        </div>
+                        <div class="ve-kpi-data">
+                            <span class="ve-kpi-value">${stats.approved}</span>
+                            <span class="ve-kpi-label">Aprobadas</span>
+                        </div>
+                    </div>
+                    <div class="ve-kpi-card">
+                        <div class="ve-kpi-icon" style="background: var(--accent-yellow);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <div class="ve-kpi-data">
+                            <span class="ve-kpi-value">${stats.pending}</span>
+                            <span class="ve-kpi-label">Pendientes</span>
+                        </div>
+                    </div>
+                    <div class="ve-kpi-card">
+                        <div class="ve-kpi-icon" style="background: var(--accent-red);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        </div>
+                        <div class="ve-kpi-data">
+                            <span class="ve-kpi-value">${stats.rejected}</span>
+                            <span class="ve-kpi-label">Rechazadas</span>
+                        </div>
+                    </div>
+                    <div class="ve-kpi-card">
+                        <div class="ve-kpi-icon" style="background: var(--accent-purple);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        </div>
+                        <div class="ve-kpi-data">
+                            <span class="ve-kpi-value">${stats.fromMobile}</span>
+                            <span class="ve-kpi-label">Desde APK</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters Toolbar -->
+                <div class="ve-toolbar">
+                    <div class="ve-filters">
+                        <select class="ve-select" id="filter-type" onchange="VacationEngine.filterRequests()">
+                            <option value="all">Todos los tipos</option>
                             <option value="vacation">Vacaciones</option>
                             <option value="personal_leave">Permiso Personal</option>
-                            <option value="sick_leave">Licencia Médica</option>
-                            <option value="maternity">Licencia Maternidad</option>
-                            <option value="study_leave">Permiso Estudio</option>
-                            <option value="compensatory">Compensatorio</option>
+                            <option value="sick_leave">Licencia Medica</option>
+                            <option value="maternity">Maternidad</option>
+                            <option value="study_leave">Estudio</option>
+                        </select>
+                        <select class="ve-select" id="filter-status" onchange="VacationEngine.filterRequests()">
+                            <option value="all">Todos los estados</option>
+                            <option value="pending">Pendiente</option>
+                            <option value="approved">Aprobada</option>
+                            <option value="rejected">Rechazada</option>
+                        </select>
+                        <select class="ve-select" id="filter-source" onchange="VacationEngine.filterRequests()">
+                            <option value="all">Todas las fuentes</option>
+                            <option value="web">Web</option>
+                            <option value="mobile-apk">APK Movil</option>
                         </select>
                     </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Fuente de Solicitud:</label>
-                        <select name="source" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                            <option value="web">Web (Panel Empresa)</option>
-                            <option value="mobile">APK Móvil</option>
-                            <option value="system">Sistema Automático</option>
-                        </select>
+                    <div class="ve-search-box">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <input type="text" placeholder="Buscar empleado..." id="search-requests" onkeyup="VacationEngine.filterRequests()">
                     </div>
                 </div>
 
-                <div>
-                    <h4 style="margin: 0 0 15px 0; color: #27ae60;">📅 Fechas y Detalles</h4>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Fecha de Inicio:</label>
-                        <input type="date" name="startDate" required
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Fecha de Fin:</label>
-                        <input type="date" name="endDate" required
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Motivo/Observaciones:</label>
-                        <textarea name="reason" required placeholder="Describe el motivo de la solicitud..."
-                                  style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; height: 100px; resize: vertical;"></textarea>
-                    </div>
-
-                    <div style="margin-bottom: 15px;" id="certificateField" style="display: none;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Certificado Médico:</label>
-                        <input type="file" name="medicalCertificate" accept=".pdf,.jpg,.png"
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                        <small style="color: #666;">Requerido para licencias médicas</small>
-                    </div>
+                <!-- Requests Table -->
+                <div class="ve-table-container">
+                    <table class="ve-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Empleado</th>
+                                <th>Tipo</th>
+                                <th>Fechas</th>
+                                <th>Dias</th>
+                                <th>Fuente</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requests-tbody">
+                            ${requests.length === 0 ? `
+                                <tr><td colspan="8" class="ve-empty-cell">
+                                    <div class="ve-empty-state">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                                        <h4>No hay solicitudes</h4>
+                                        <p>Las solicitudes de vacaciones apareceran aqui</p>
+                                    </div>
+                                </td></tr>
+                            ` : requests.map(r => `
+                                <tr>
+                                    <td><code>#${r.id}</code></td>
+                                    <td>${r.user?.firstName || ''} ${r.user?.lastName || ''}</td>
+                                    <td>${this.getRequestTypeBadge(r.request_type)}</td>
+                                    <td>${this.formatDate(r.start_date)} - ${this.formatDate(r.end_date)}</td>
+                                    <td><strong>${r.days_requested || '-'}</strong></td>
+                                    <td>${this.getSourceBadge(r.source)}</td>
+                                    <td>${this.getStatusBadge(r.status)}</td>
+                                    <td>
+                                        <div class="ve-actions">
+                                            <button class="ve-btn ve-btn-icon-sm" onclick="VacationEngine.viewRequest(${r.id})" title="Ver detalles">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            </button>
+                                            ${r.status === 'pending' ? `
+                                                <button class="ve-btn ve-btn-icon-sm ve-btn-success" onclick="VacationEngine.approveRequest(${r.id})" title="Aprobar">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                                </button>
+                                                <button class="ve-btn ve-btn-icon-sm ve-btn-danger" onclick="VacationEngine.rejectRequest(${r.id})" title="Rechazar">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        `;
+    },
 
-            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 25px; text-align: right;">
-                <button type="button" onclick="closeNewVacationModal()"
-                        style="background: #95a5a6; color: white; border: none; padding: 12px 24px; margin-right: 10px; border-radius: 6px; cursor: pointer;">
-                    Cancelar
-                </button>
-                <button type="submit"
-                        style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">
-                    🏖️ Enviar Solicitud
-                </button>
-            </div>
-        </form>
-    `;
-}
+    // ========================================================================
+    // POLICIES VIEW - LCT Argentina
+    // ========================================================================
+    async renderPolicies() {
+        const content = document.getElementById('ve-content');
 
-// Modal functions
-function showNewVacationModal() {
-    const modal = document.getElementById('newVacationModal');
-    modal.style.setProperty('display', 'block', 'important');
-}
+        let scales = [];
+        let licenses = [];
 
-function closeNewVacationModal() {
-    const modal = document.getElementById('newVacationModal');
-    modal.style.setProperty('display', 'none', 'important');
-}
-
-function showVacationDetails(requestId) {
-    const modal = document.getElementById('vacationDetailsModal');
-    const content = document.getElementById('vacationDetailsContent');
-
-    // Mock vacation request data
-    const request = {
-        id: requestId,
-        employee: 'Juan Pérez',
-        legajo: 'EMP001',
-        type: 'vacation',
-        startDate: '2025-10-01',
-        endDate: '2025-10-05',
-        reason: 'Vacaciones familiares - viaje al exterior',
-        status: 'approved',
-        source: 'mobile',
-        submittedDate: '2025-09-15',
-        approvedBy: 'Supervisor RRHH',
-        approvedDate: '2025-09-16',
-        daysRequested: 5,
-        balanceAfter: 16
-    };
-
-    content.innerHTML = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
-            <div>
-                <h4 style="margin: 0 0 15px 0; color: #27ae60;">👤 Información del Empleado</h4>
-                <p><strong>Nombre:</strong> ${request.employee}</p>
-                <p><strong>Legajo:</strong> ${request.legajo}</p>
-                <p><strong>Tipo:</strong> ${getVacationTypeText(request.type)}</p>
-                <p><strong>Estado:</strong> ${getVacationStatusBadge(request.status)}</p>
-
-                <h4 style="margin: 20px 0 15px 0; color: #27ae60;">📅 Detalles de Fechas</h4>
-                <p><strong>Fecha Inicio:</strong> ${request.startDate}</p>
-                <p><strong>Fecha Fin:</strong> ${request.endDate}</p>
-                <p><strong>Días Solicitados:</strong> ${request.daysRequested}</p>
-                <p><strong>Balance Restante:</strong> ${request.balanceAfter} días</p>
-            </div>
-
-            <div>
-                <h4 style="margin: 0 0 15px 0; color: #27ae60;">📋 Información de Proceso</h4>
-                <p><strong>Fuente:</strong> ${getSourceText(request.source)}</p>
-                <p><strong>Fecha Solicitud:</strong> ${request.submittedDate}</p>
-                <p><strong>Aprobado por:</strong> ${request.approvedBy}</p>
-                <p><strong>Fecha Aprobación:</strong> ${request.approvedDate}</p>
-
-                <h4 style="margin: 20px 0 15px 0; color: #27ae60;">📝 Motivo</h4>
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 6px;">
-                    ${request.reason}
-                </div>
-
-                <h4 style="margin: 20px 0 15px 0; color: #27ae60;">⚡ Acciones</h4>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    ${request.status === 'pending' ? `
-                        <button onclick="approveVacationRequest('${request.id}')" style="background: #27ae60; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">
-                            ✅ Aprobar Solicitud
-                        </button>
-                        <button onclick="rejectVacationRequest('${request.id}')" style="background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">
-                            ❌ Rechazar Solicitud
-                        </button>
-                    ` : ''}
-                    <button onclick="generateVacationReport('${request.id}')" style="background: #3498db; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">
-                        📄 Generar Reporte
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    modal.style.setProperty('display', 'block', 'important');
-}
-
-function closeVacationDetailsModal() {
-    const modal = document.getElementById('vacationDetailsModal');
-    modal.style.setProperty('display', 'none', 'important');
-}
-
-// Load functions
-async function loadVacationRequests() {
-    console.log('🏖️ [VACATION-MANAGEMENT] Cargando solicitudes de vacaciones...');
-
-    const container = document.getElementById('vacation-requests-list');
-    if (!container) return;
-
-    try {
-        // 📱 Cargar solicitudes desde API - Incluye tanto web como APK
-        const response = await fetch('/api/v1/vacation/requests');
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
-            // Formatear datos para compatibilidad con el frontend
-            const formattedRequests = result.data.map(request => ({
-                id: request.id,
-                employee: request.employee?.name || 'N/A',
-                legajo: request.employee?.legajo || 'N/A',
-                type: request.requestType,
-                startDate: request.startDate,
-                endDate: request.endDate,
-                status: request.status,
-                source: request.source || 'unknown',
-                submittedDate: request.createdAt ? new Date(request.createdAt).toISOString().split('T')[0] : '',
-                daysRequested: request.totalDays || 0,
-                reason: request.reason || '',
-                approvedBy: request.approver?.name || null,
-                approvalDate: request.approvalDate || null,
-                approvalComments: request.approvalComments || null
-            }));
-
-            displayVacationRequests(formattedRequests);
-        } else {
-            throw new Error(result.message || 'Error cargando solicitudes');
-        }
-
-    } catch (error) {
-        console.error('❌ [VACATION-MANAGEMENT] Error cargando solicitudes:', error);
-
-        // Fallback a datos mock si falla la API
-        const mockRequests = [
-            {
-                id: 1,
-                employee: 'Juan Pérez (APK)',
-                legajo: 'EMP001',
-                type: 'vacation',
-                startDate: '2025-10-01',
-                endDate: '2025-10-05',
-                status: 'approved',
-                source: 'mobile-apk',
-                submittedDate: '2025-09-15',
-                daysRequested: 5
-            },
-            {
-                id: 2,
-                employee: 'María González (Web)',
-                legajo: 'EMP002',
-                type: 'sick_leave',
-                startDate: '2025-09-25',
-                endDate: '2025-09-25',
-                status: 'pending',
-                source: 'panel-empresa',
-                submittedDate: '2025-09-24',
-                daysRequested: 1
-            }
-        ];
-
-        displayVacationRequests(mockRequests);
-        console.log('🔄 [VACATION-MANAGEMENT] Usando datos mock de respaldo');
-    }
-}
-
-function displayVacationRequests(requests) {
-    const container = document.getElementById('vacation-requests-list');
-    if (!container || !requests.length) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No hay solicitudes para mostrar</div>';
-        return;
-    }
-
-    container.innerHTML = requests.map(request => `
-        <div class="vacation-card" style="border: 2px solid ${getVacationStatusColor(request.status)}; padding: 20px; margin-bottom: 15px; border-radius: 10px; background: white;">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-                <div>
-                    <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${request.employee} (${request.legajo})</h4>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <span style="background: ${getVacationTypeColor(request.type)}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
-                            ${getVacationTypeText(request.type)}
-                        </span>
-                        <span style="background: ${getVacationStatusColor(request.status)}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
-                            ${getVacationStatusText(request.status)}
-                        </span>
-                        <span style="background: ${getSourceColor(request.source)}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
-                            ${getSourceText(request.source)}
-                        </span>
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <div style="font-size: 18px; font-weight: bold; color: #27ae60;">${request.daysRequested} días</div>
-                    <div style="font-size: 12px; color: #666;">${request.startDate} - ${request.endDate}</div>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 15px;">
-                <strong>Fecha Solicitud:</strong> ${request.submittedDate}
-            </div>
-
-            <div style="text-align: right;">
-                <button onclick="showVacationDetails(${request.id})"
-                        style="background: #3498db; color: white; border: none; padding: 8px 16px; margin-right: 10px; border-radius: 4px; cursor: pointer;">
-                    👁️ Ver Detalles
-                </button>
-                ${request.status === 'pending' ? `
-                    <button onclick="approveVacationRequest(${request.id})"
-                            style="background: #27ae60; color: white; border: none; padding: 8px 16px; margin-right: 5px; border-radius: 4px; cursor: pointer;">
-                        ✅ Aprobar
-                    </button>
-                    <button onclick="rejectVacationRequest(${request.id})"
-                            style="background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
-                        ❌ Rechazar
-                    </button>
-                ` : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-// Utility functions
-function getVacationTypeColor(type) {
-    switch(type) {
-        case 'vacation': return '#27ae60';
-        case 'personal_leave': return '#f39c12';
-        case 'sick_leave': return '#e74c3c';
-        case 'maternity': return '#8e44ad';
-        case 'study_leave': return '#3498db';
-        case 'compensatory': return '#17a2b8';
-        default: return '#95a5a6';
-    }
-}
-
-function getVacationTypeText(type) {
-    switch(type) {
-        case 'vacation': return 'Vacaciones';
-        case 'personal_leave': return 'Permiso Personal';
-        case 'sick_leave': return 'Licencia Médica';
-        case 'maternity': return 'Licencia Maternidad';
-        case 'study_leave': return 'Permiso Estudio';
-        case 'compensatory': return 'Compensatorio';
-        default: return 'Otro';
-    }
-}
-
-function getVacationStatusColor(status) {
-    switch(status) {
-        case 'pending': return '#f39c12';
-        case 'approved': return '#27ae60';
-        case 'rejected': return '#e74c3c';
-        case 'cancelled': return '#95a5a6';
-        default: return '#95a5a6';
-    }
-}
-
-function getVacationStatusText(status) {
-    switch(status) {
-        case 'pending': return 'Pendiente';
-        case 'approved': return 'Aprobada';
-        case 'rejected': return 'Rechazada';
-        case 'cancelled': return 'Cancelada';
-        default: return 'No Definido';
-    }
-}
-
-function getVacationStatusBadge(status) {
-    const color = getVacationStatusColor(status);
-    const text = getVacationStatusText(status);
-    return `<span style="background: ${color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${text}</span>`;
-}
-
-function getSourceColor(source) {
-    switch(source) {
-        case 'web': return '#3498db';
-        case 'mobile': return '#27ae60';
-        case 'system': return '#8e44ad';
-        default: return '#95a5a6';
-    }
-}
-
-function getSourceText(source) {
-    switch(source) {
-        case 'web': return 'Web';
-        case 'mobile': return 'APK Móvil';
-        case 'system': return 'Sistema';
-        default: return 'No Definido';
-    }
-}
-
-// Action functions
-async function submitVacationRequest(event) {
-    event.preventDefault();
-
-    console.log('🏖️ [VACATION-MANAGEMENT] Enviando nueva solicitud...');
-
-    const formData = new FormData(event.target);
-    const requestData = Object.fromEntries(formData.entries());
-
-    try {
-        // 📱 API integrada con Flutter APK - Comunicación bidireccional
-        const response = await fetch('/api/v1/vacation/requests', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                userId: requestData.employeeId,
-                requestType: requestData.requestType,
-                extraordinaryLicenseId: requestData.licenseType !== 'vacation' ? requestData.licenseType : null,
-                startDate: requestData.startDate,
-                endDate: requestData.endDate,
-                reason: requestData.reason,
-                source: 'panel-empresa' // Distinguir origen: 'panel-empresa' vs 'mobile-apk'
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
-            // Integrar con sistema de notificaciones
-            if (typeof addNotificationToQueue === 'function') {
-                const notification = {
-                    id: `VACATION-REQ-${Date.now()}`,
-                    type: 'vacation_request',
-                    priority: 'medium',
-                    title: `📋 Nueva Solicitud de ${getVacationTypeText(requestData.requestType)}`,
-                    message: `Solicitud de ${requestData.requestType} del ${requestData.startDate} al ${requestData.endDate}`,
-                    fromUserId: requestData.employeeId,
-                    toUserId: 'hr-team',
-                    status: 'pending',
-                    createdAt: new Date(),
-                    requestData: result.data
-                };
-
-                addNotificationToQueue(notification);
-            }
-
-            alert('✅ Solicitud enviada exitosamente');
-            closeNewVacationModal();
-            loadVacationRequests();
-        } else {
-            throw new Error(result.message || 'Error en la solicitud');
-        }
-
-    } catch (error) {
-        console.error('❌ [VACATION-MANAGEMENT] Error enviando solicitud:', error);
-        alert('❌ Error enviando solicitud: ' + error.message);
-    }
-}
-
-async function approveVacationRequest(requestId) {
-    console.log('✅ [VACATION-MANAGEMENT] Aprobando solicitud:', requestId);
-
-    if (confirm('¿Aprobar esta solicitud de vacaciones?')) {
         try {
-            const response = await fetch(`/api/v1/vacation/requests/${requestId}/approval`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    status: 'approved',
-                    approvedBy: 'admin', // TODO: Obtener usuario actual
-                    approvalComments: 'Aprobado desde panel-empresa'
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert('✅ Solicitud aprobada exitosamente');
-                loadVacationRequests();
-            } else {
-                throw new Error(result.message || 'Error aprobando solicitud');
-            }
-
-        } catch (error) {
-            console.error('❌ [VACATION-MANAGEMENT] Error aprobando:', error);
-            alert('❌ Error aprobando solicitud: ' + error.message);
-        }
-    }
-}
-
-async function rejectVacationRequest(requestId) {
-    console.log('❌ [VACATION-MANAGEMENT] Rechazando solicitud:', requestId);
-
-    const reason = prompt('Motivo del rechazo:');
-    if (reason) {
-        try {
-            const response = await fetch(`/api/v1/vacation/requests/${requestId}/approval`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    status: 'rejected',
-                    approvedBy: 'admin', // TODO: Obtener usuario actual
-                    approvalComments: reason
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert('❌ Solicitud rechazada exitosamente');
-                loadVacationRequests();
-            } else {
-                throw new Error(result.message || 'Error rechazando solicitud');
-            }
-
-        } catch (error) {
-            console.error('❌ [VACATION-MANAGEMENT] Error rechazando:', error);
-            alert('❌ Error rechazando solicitud: ' + error.message);
-        }
-    }
-}
-
-function updateVacationFields(type) {
-    const certificateField = document.getElementById('certificateField');
-    if (certificateField) {
-        certificateField.style.display = type === 'sick_leave' ? 'block' : 'none';
-    }
-}
-
-// Export functions for global access
-window.showVacationManagementContent = showVacationManagementContent;
-window.switchVacationTab = switchVacationTab;
-window.showNewVacationModal = showNewVacationModal;
-window.closeNewVacationModal = closeNewVacationModal;
-window.showVacationDetails = showVacationDetails;
-window.closeVacationDetailsModal = closeVacationDetailsModal;
-window.submitVacationRequest = submitVacationRequest;
-window.approveVacationRequest = approveVacationRequest;
-window.rejectVacationRequest = rejectVacationRequest;
-window.updateVacationFields = updateVacationFields;
-window.loadCompatibilityMatrix = loadCompatibilityMatrix;
-window.generateAutoSchedule = generateAutoSchedule;
-window.addCompatibilityRule = addCompatibilityRule;
-
-console.log('✅ [VACATION-MANAGEMENT] Módulo completamente cargado y funcional');
-// ==================== FUNCIONALIDADES REALES CON BACKEND ====================
-
-// Stub functions placeholder
-function loadVacationCalendar() {
-    console.log('📅 Cargando calendario');
-}
-
-function loadVacationPolicies() {
-    console.log('📜 Cargando políticas');
-}
-
-function loadVacationBalance() {
-    console.log('💰 Cargando balance');
-    loadRealEmployeeBalance();
-}
-
-function loadVacationAnalytics() {
-    console.log('📊 Cargando analytics');
-}
-
-function filterVacationRequests() {
-    loadVacationRequests();
-}
-
-function searchVacationRequests() {
-    loadVacationRequests();
-}
-
-function searchEmployeeBalance() {
-    loadRealEmployeeBalance();
-}
-
-function generateVacationReport(id) {
-    alert(`Generar reporte ${id} (próximamente)`);
-}
-
-function changeCalendarMonth(dir) {
-    console.log('Cambiar mes:', dir);
-}
-
-// ==================== MATRIZ DE COMPATIBILIDAD ====================
-function getCompatibilityMatrixContent() {
-    return `
-        <div class="compatibility-matrix-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <div>
-                    <h3 style="margin: 0;">🔄 Matriz de Compatibilidad de Tareas</h3>
-                    <p style="margin: 5px 0 0 0; color: #666;">Sistema de cobertura entre empleados basado en habilidades y roles</p>
-                </div>
-                <button onclick="addCompatibilityRule()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                    ➕ Agregar Regla
-                </button>
-            </div>
-
-            <div id="compatibility-matrix-list">
-                <div style="text-align: center; padding: 40px;">
-                    🔄 Cargando matriz de compatibilidad...
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-async function loadCompatibilityMatrix() {
-    const container = document.getElementById('compatibility-matrix-list');
-    if (!container) return;
-
-    try {
-        const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
-
-        const response = await fetch(`/api/v1/vacation/compatibility-matrix?company_id=${companyId}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-
-        if (!response.ok) throw new Error('Error cargando matriz');
-
-        const result = await response.json();
-        const matrix = result.data || [];
-
-        if (matrix.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 10px;">
-                    <h4>No hay reglas de compatibilidad configuradas</h4>
-                    <p style="color: #666;">Agrega reglas para definir qué empleados pueden cubrir a otros durante vacaciones</p>
-                    <p style="color: #999; margin-top: 10px;">Usa el botón "➕ Agregar Regla" en la parte superior</p>
-                </div>
-            `;
-            return;
+            const configResult = await VacationAPI.getConfig();
+            scales = configResult.data?.scales || [];
+            licenses = configResult.data?.licenses || [];
+        } catch (e) {
+            console.log('[VACATION] No policies data');
         }
 
-        // Agrupar por usuario primario
-        const grouped = {};
-        matrix.forEach(item => {
-            const primaryId = item.primaryUserId;
-            if (!grouped[primaryId]) {
-                grouped[primaryId] = {
-                    user: item.primaryUser,
-                    covers: []
-                };
-            }
-            grouped[primaryId].covers.push({
-                id: item.id,
-                coverUser: item.coverUser,
-                score: item.compatibilityScore,
-                tasks: item.coverableTasks || [],
-                maxHours: item.maxCoverageHours
-            });
-        });
+        content.innerHTML = `
+            <div class="ve-policies">
+                <!-- Vacation Scales Section -->
+                <div class="ve-section">
+                    <div class="ve-section-header">
+                        <div>
+                            <h3 class="ve-section-title">Escalas de Vacaciones por Antiguedad</h3>
+                            <p class="ve-section-desc">Configuracion segun Ley de Contrato de Trabajo (LCT) Argentina</p>
+                        </div>
+                        <button onclick="VacationEngine.showScaleModal()" class="ve-btn ve-btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Nueva Escala
+                        </button>
+                    </div>
 
-        container.innerHTML = Object.values(grouped).map(group => `
-            <div style="background: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #27ae60;">
-                <h4 style="margin: 0 0 15px 0; color: #2c3e50;">
-                    👤 ${group.user.firstName} ${group.user.lastName} <span style="color: #666; font-size: 14px;">(${group.user.email})</span>
-                </h4>
-
-                <div style="margin-top: 10px;">
-                    <strong>Puede ser cubierto por:</strong>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 10px;">
-                        ${group.covers.map(cover => `
-                            <div style="background: ${getScoreColor(cover.score)}20; padding: 15px; border-radius: 8px; border-left: 3px solid ${getScoreColor(cover.score)}; position: relative;">
-                                <button onclick="deleteCompatibilityRule(${cover.id})"
-                                        style="position: absolute; top: 8px; right: 8px; background: #e74c3c; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 16px; line-height: 1; padding: 0;"
-                                        title="Eliminar regla">
-                                    ×
-                                </button>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-right: 30px;">
-                                    <strong>${cover.coverUser.firstName} ${cover.coverUser.lastName}</strong>
-                                    <span style="background: ${getScoreColor(cover.score)}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">
-                                        ${cover.score}%
-                                    </span>
+                    <div class="ve-cards-grid">
+                        ${scales.length === 0 ? `
+                            <div class="ve-empty-card">
+                                <p>No hay escalas configuradas</p>
+                            </div>
+                        ` : scales.map(s => `
+                            <div class="ve-policy-card">
+                                <div class="ve-policy-header">
+                                    <span class="ve-policy-range">${s.min_years} - ${s.max_years || '+'} anos</span>
+                                    <span class="ve-policy-days">${s.vacation_days} dias</span>
                                 </div>
-                                <div style="font-size: 12px; color: #666;">
-                                    ${cover.coverUser.email}
+                                <div class="ve-policy-body">
+                                    <p>${s.description || 'Sin descripcion'}</p>
                                 </div>
-                                ${cover.maxHours ? `<div style="font-size: 11px; color: #888; margin-top: 5px;">Máx: ${cover.maxHours}h/día</div>` : ''}
+                                <div class="ve-policy-footer">
+                                    <button onclick="VacationEngine.editScale(${s.id})" class="ve-btn ve-btn-sm">Editar</button>
+                                    <button onclick="VacationEngine.deleteScale(${s.id})" class="ve-btn ve-btn-sm ve-btn-outline">Eliminar</button>
+                                </div>
                             </div>
                         `).join('')}
                     </div>
                 </div>
-            </div>
-        `).join('');
 
-    } catch (error) {
-        console.error('❌ Error:', error);
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error cargando matriz. Verifica tu conexión.</div>';
-    }
-}
+                <!-- Extraordinary Licenses Section -->
+                <div class="ve-section">
+                    <div class="ve-section-header">
+                        <div>
+                            <h3 class="ve-section-title">Licencias Extraordinarias</h3>
+                            <p class="ve-section-desc">Licencias especiales segun LCT Art. 158-161</p>
+                        </div>
+                        <button onclick="VacationEngine.showLicenseModal()" class="ve-btn ve-btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Nueva Licencia
+                        </button>
+                    </div>
 
-function getScoreColor(score) {
-    if (score >= 80) return '#27ae60';
-    if (score >= 60) return '#f39c12';
-    if (score >= 40) return '#e67e22';
-    return '#e74c3c';
-}
-
-async function addCompatibilityRule() {
-    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-    const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
-
-    // Obtener lista de empleados
-    const response = await fetch(`/api/v1/users?company_id=${companyId}`, {
-        headers: { 'Authorization': `Bearer ${authToken}` }
-    });
-    const usersResult = await response.json();
-    const users = usersResult.users || usersResult.data || [];
-
-    const modalHTML = `
-        <div id="compatibilityRuleModal" class="modal" style="display: flex !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9998; align-items: center; justify-content: center;">
-            <div class="modal-content" style="background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0;">➕ Nueva Regla de Compatibilidad</h3>
-                    <button onclick="closeCompatibilityRuleModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                    <div class="ve-table-container">
+                        <table class="ve-table">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Dias</th>
+                                    <th>Remunerada</th>
+                                    <th>Requiere Certificado</th>
+                                    <th>Articulo LCT</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${licenses.length === 0 ? `
+                                    <tr><td colspan="6" class="ve-empty-cell">No hay licencias configuradas</td></tr>
+                                ` : licenses.map(l => `
+                                    <tr>
+                                        <td><strong>${l.license_type}</strong></td>
+                                        <td><span class="ve-badge ve-badge-info">${l.days_allowed} dias</span></td>
+                                        <td>${l.is_paid ? '<span class="ve-status ve-status-success">Si</span>' : '<span class="ve-status ve-status-warning">No</span>'}</td>
+                                        <td>${l.requires_certificate ? '<span class="ve-status ve-status-info">Si</span>' : 'No'}</td>
+                                        <td><code>Art. ${l.lct_article || '-'}</code></td>
+                                        <td>
+                                            <button onclick="VacationEngine.editLicense(${l.id})" class="ve-btn ve-btn-icon-sm" title="Editar">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                            </button>
+                                            <button onclick="VacationEngine.deleteLicense(${l.id})" class="ve-btn ve-btn-icon-sm" title="Eliminar">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="modal-body" style="padding: 30px;">
-                    <form id="compatibilityRuleForm">
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Empleado Principal (que se ausenta):</label>
-                            <select id="primaryUserId" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                                <option value="">Seleccionar empleado...</option>
-                                ${users.map(u => `<option value="${u.id}">${u.firstName} ${u.lastName} (${u.email})</option>`).join('')}
-                            </select>
+            </div>
+        `;
+    },
+
+    // ========================================================================
+    // CALENDAR VIEW
+    // ========================================================================
+    async renderCalendar() {
+        const content = document.getElementById('ve-content');
+        const now = new Date();
+        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        content.innerHTML = `
+            <div class="ve-calendar-view">
+                <div class="ve-calendar-header">
+                    <button onclick="VacationEngine.changeCalendarMonth(-1)" class="ve-btn ve-btn-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <h3 id="calendar-month-title">${monthNames[now.getMonth()]} ${now.getFullYear()}</h3>
+                    <button onclick="VacationEngine.changeCalendarMonth(1)" class="ve-btn ve-btn-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+
+                <div class="ve-calendar-grid" id="calendar-grid">
+                    <div class="ve-calendar-day-header">Dom</div>
+                    <div class="ve-calendar-day-header">Lun</div>
+                    <div class="ve-calendar-day-header">Mar</div>
+                    <div class="ve-calendar-day-header">Mie</div>
+                    <div class="ve-calendar-day-header">Jue</div>
+                    <div class="ve-calendar-day-header">Vie</div>
+                    <div class="ve-calendar-day-header">Sab</div>
+                    ${this.generateCalendarDays(now.getFullYear(), now.getMonth())}
+                </div>
+
+                <div class="ve-calendar-legend">
+                    <span><span class="ve-legend-dot ve-legend-approved"></span> Aprobadas</span>
+                    <span><span class="ve-legend-dot ve-legend-pending"></span> Pendientes</span>
+                    <span><span class="ve-legend-dot ve-legend-today"></span> Hoy</span>
+                </div>
+            </div>
+        `;
+    },
+
+    generateCalendarDays(year, month) {
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+
+        let html = '';
+
+        // Empty cells for days before the first day
+        for (let i = 0; i < firstDay; i++) {
+            html += '<div class="ve-calendar-day ve-calendar-day-empty"></div>';
+        }
+
+        // Days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+            html += `<div class="ve-calendar-day ${isToday ? 've-calendar-day-today' : ''}">${day}</div>`;
+        }
+
+        return html;
+    },
+
+    // ========================================================================
+    // BALANCE VIEW
+    // ========================================================================
+    async renderBalance() {
+        const content = document.getElementById('ve-content');
+
+        content.innerHTML = `
+            <div class="ve-balance-view">
+                <div class="ve-section-header">
+                    <div>
+                        <h3 class="ve-section-title">Balance de Vacaciones</h3>
+                        <p class="ve-section-desc">Dias disponibles y utilizados por empleado</p>
+                    </div>
+                    <div class="ve-search-box">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <input type="text" placeholder="Buscar empleado..." id="search-balance">
+                    </div>
+                </div>
+
+                <div class="ve-balance-info">
+                    <div class="ve-ai-panel">
+                        <div class="ve-ai-header">
+                            <div class="ve-ai-title">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/></svg>
+                                Calculo Automatico LCT
+                            </div>
+                            <span class="ve-ai-status">Activo</span>
+                        </div>
+                        <div class="ve-ai-content">
+                            <p>El sistema calcula automaticamente los dias de vacaciones segun la antiguedad del empleado y la Ley de Contrato de Trabajo Argentina.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ve-empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    <h4>Seleccione un empleado</h4>
+                    <p>Use el buscador para ver el balance de vacaciones de un empleado</p>
+                </div>
+            </div>
+        `;
+    },
+
+    // ========================================================================
+    // ANALYTICS VIEW
+    // ========================================================================
+    async renderAnalytics() {
+        const content = document.getElementById('ve-content');
+        const stats = VacationState.stats;
+        const total = stats.approved + stats.pending + stats.rejected || 1;
+
+        content.innerHTML = `
+            <div class="ve-analytics">
+                <div class="ve-section-title">Analisis de Solicitudes ${VacationState.selectedYear}</div>
+
+                <div class="ve-analytics-grid">
+                    <!-- Distribution Chart -->
+                    <div class="ve-chart-card">
+                        <h4>Distribucion por Estado</h4>
+                        <div class="ve-chart-bars">
+                            <div class="ve-bar-item">
+                                <span class="ve-bar-label">Aprobadas</span>
+                                <div class="ve-bar-container">
+                                    <div class="ve-bar ve-bar-success" style="width: ${(stats.approved/total*100).toFixed(0)}%"></div>
+                                </div>
+                                <span class="ve-bar-value">${stats.approved}</span>
+                            </div>
+                            <div class="ve-bar-item">
+                                <span class="ve-bar-label">Pendientes</span>
+                                <div class="ve-bar-container">
+                                    <div class="ve-bar ve-bar-warning" style="width: ${(stats.pending/total*100).toFixed(0)}%"></div>
+                                </div>
+                                <span class="ve-bar-value">${stats.pending}</span>
+                            </div>
+                            <div class="ve-bar-item">
+                                <span class="ve-bar-label">Rechazadas</span>
+                                <div class="ve-bar-container">
+                                    <div class="ve-bar ve-bar-danger" style="width: ${(stats.rejected/total*100).toFixed(0)}%"></div>
+                                </div>
+                                <span class="ve-bar-value">${stats.rejected}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Source Chart -->
+                    <div class="ve-chart-card">
+                        <h4>Fuente de Solicitudes</h4>
+                        <div class="ve-source-stats">
+                            <div class="ve-source-item">
+                                <div class="ve-source-icon" style="background: var(--accent-blue);">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                </div>
+                                <div>
+                                    <span class="ve-source-value">${total - stats.fromMobile}</span>
+                                    <span class="ve-source-label">Web</span>
+                                </div>
+                            </div>
+                            <div class="ve-source-item">
+                                <div class="ve-source-icon" style="background: var(--accent-purple);">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                                </div>
+                                <div>
+                                    <span class="ve-source-value">${stats.fromMobile}</span>
+                                    <span class="ve-source-label">APK Movil</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    // ========================================================================
+    // CONFIG VIEW
+    // ========================================================================
+    async renderConfig() {
+        const content = document.getElementById('ve-content');
+
+        let config = {};
+        try {
+            const result = await VacationAPI.getConfig();
+            config = result.data || {};
+        } catch (e) {
+            console.log('[VACATION] No config data');
+        }
+
+        content.innerHTML = `
+            <div class="ve-config">
+                <div class="ve-section-title">Configuracion del Sistema</div>
+
+                <div class="ve-config-card">
+                    <h4>Parametros Generales</h4>
+                    <form id="config-form" onsubmit="VacationEngine.saveConfig(event)">
+                        <div class="ve-form-grid">
+                            <div class="ve-form-group">
+                                <label>Dias minimos continuos</label>
+                                <input type="number" name="minContinuousDays" value="${config.minContinuousDays || 7}" class="ve-input">
+                                <small>Periodo minimo de vacaciones continuas</small>
+                            </div>
+                            <div class="ve-form-group">
+                                <label>Maximo fraccionamientos</label>
+                                <input type="number" name="maxFractions" value="${config.maxFractions || 3}" class="ve-input">
+                                <small>Numero maximo de divisiones permitidas</small>
+                            </div>
+                            <div class="ve-form-group">
+                                <label>Dias de aviso minimo</label>
+                                <input type="number" name="minAdvanceNoticeDays" value="${config.minAdvanceNoticeDays || 15}" class="ve-input">
+                                <small>Antelacion para solicitar vacaciones</small>
+                            </div>
+                            <div class="ve-form-group">
+                                <label>% Maximo simultaneos</label>
+                                <input type="number" name="maxSimultaneousPercentage" value="${config.maxSimultaneousPercentage || 30}" class="ve-input">
+                                <small>Porcentaje de empleados en vacaciones</small>
+                            </div>
                         </div>
 
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Empleado que Cubre:</label>
-                            <select id="coverUserId" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                                <option value="">Seleccionar empleado...</option>
-                                ${users.map(u => `<option value="${u.id}">${u.firstName} ${u.lastName} (${u.email})</option>`).join('')}
-                            </select>
+                        <div class="ve-form-toggles">
+                            <label class="ve-toggle">
+                                <input type="checkbox" name="vacationInterruptible" ${config.vacationInterruptible ? 'checked' : ''}>
+                                <span>Vacaciones interrumpibles por enfermedad</span>
+                            </label>
+                            <label class="ve-toggle">
+                                <input type="checkbox" name="autoSchedulingEnabled" ${config.autoSchedulingEnabled ? 'checked' : ''}>
+                                <span>Programacion automatica habilitada</span>
+                            </label>
                         </div>
 
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Puntuación de Compatibilidad (0-100%):</label>
-                            <input type="number" id="compatibilityScore" min="0" max="100" value="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                            <small style="color: #666;">Mayor puntuación = Mayor compatibilidad</small>
-                        </div>
-
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Máximo de Horas de Cobertura por Día:</label>
-                            <input type="number" id="maxCoverageHours" min="1" max="24" placeholder="Opcional" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                        </div>
-
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Máximo de Tareas Simultáneas:</label>
-                            <input type="number" id="maxConcurrentTasks" min="1" value="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                        </div>
-
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Notas:</label>
-                            <textarea id="manualNotes" rows="3" placeholder="Notas adicionales sobre esta compatibilidad..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;"></textarea>
-                        </div>
-
-                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                            <button type="button" onclick="closeCompatibilityRuleModal()" style="padding: 10px 20px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer;">
-                                Cancelar
-                            </button>
-                            <button type="submit" style="padding: 10px 20px; border: none; background: #27ae60; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                                ✓ Crear Regla
-                            </button>
+                        <div class="ve-form-actions">
+                            <button type="submit" class="ve-btn ve-btn-primary">Guardar Configuracion</button>
                         </div>
                     </form>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    },
 
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    // ========================================================================
+    // HELPER FUNCTIONS
+    // ========================================================================
+    formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+    },
 
-    document.getElementById('compatibilityRuleForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const data = {
-            company_id: companyId,
-            primaryUserId: document.getElementById('primaryUserId').value,
-            coverUserId: document.getElementById('coverUserId').value,
-            compatibilityScore: parseFloat(document.getElementById('compatibilityScore').value),
-            maxCoverageHours: document.getElementById('maxCoverageHours').value ? parseInt(document.getElementById('maxCoverageHours').value) : null,
-            maxConcurrentTasks: parseInt(document.getElementById('maxConcurrentTasks').value),
-            manualNotes: document.getElementById('manualNotes').value || null
+    getRequestTypeBadge(type) {
+        const types = {
+            'vacation': { label: 'Vacaciones', class: 'success' },
+            'personal_leave': { label: 'Personal', class: 'info' },
+            'sick_leave': { label: 'Medica', class: 'warning' },
+            'maternity': { label: 'Maternidad', class: 'info' },
+            'study_leave': { label: 'Estudio', class: 'info' }
         };
+        const t = types[type] || { label: type, class: 'info' };
+        return `<span class="ve-badge ve-badge-${t.class}">${t.label}</span>`;
+    },
 
-        try {
-            const response = await fetch('/api/v1/vacation/compatibility-matrix', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert('✓ Regla de compatibilidad creada exitosamente');
-                closeCompatibilityRuleModal();
-                loadCompatibilityMatrix();
-            } else {
-                alert('Error: ' + result.message);
-            }
-        } catch (error) {
-            console.error('Error creando regla:', error);
-            alert('Error creando regla de compatibilidad');
-        }
-    });
-}
-
-function closeCompatibilityRuleModal() {
-    const modal = document.getElementById('compatibilityRuleModal');
-    if (modal) modal.remove();
-}
-
-async function deleteCompatibilityRule(ruleId) {
-    if (!confirm('¿Está seguro de eliminar esta regla de compatibilidad?')) return;
-
-    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-    const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
-
-    try {
-        const response = await fetch(`/api/v1/vacation/compatibility-matrix/${ruleId}?company_id=${companyId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert('✓ Regla eliminada exitosamente');
-            loadCompatibilityMatrix();
-        } else {
-            alert('Error: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error eliminando regla:', error);
-        alert('Error eliminando regla de compatibilidad');
-    }
-}
-
-// ==================== POLÍTICAS DE VACACIONES ====================
-
-async function loadVacationPolicies() {
-    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-    const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
-
-    try {
-        const response = await fetch(`/api/v1/vacation/config?company_id=${companyId}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            displayVacationScales(result.data.vacationScales || []);
-            displayExtraordinaryLicenses(result.data.extraordinaryLicenses || []);
-        }
-    } catch (error) {
-        console.error('Error cargando políticas:', error);
-    }
-}
-
-function displayVacationScales(scales) {
-    const container = document.getElementById('vacation-scales-list');
-    if (!container) return;
-
-    if (scales.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: #666;">
-                No hay escalas de vacaciones configuradas. Haga clic en "Agregar Escala" para crear una.
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = `
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                    <th style="padding: 12px; text-align: left;">Rango de Antigüedad</th>
-                    <th style="padding: 12px; text-align: center;">Días de Vacaciones</th>
-                    <th style="padding: 12px; text-align: center;">Prioridad</th>
-                    <th style="padding: 12px; text-align: center;">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${scales.map(scale => `
-                    <tr style="border-bottom: 1px solid #dee2e6;">
-                        <td style="padding: 12px;">${scale.rangeDescription || `${scale.yearsFrom} - ${scale.yearsTo || '∞'} años`}</td>
-                        <td style="padding: 12px; text-align: center; font-weight: 600; color: #27ae60;">${scale.vacationDays} días</td>
-                        <td style="padding: 12px; text-align: center;">${scale.priority}</td>
-                        <td style="padding: 12px; text-align: center;">
-                            <button onclick="deleteVacationScale(${scale.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
-                                🗑️ Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-}
-
-function displayExtraordinaryLicenses(licenses) {
-    const container = document.getElementById('extraordinary-licenses-list');
-    if (!container) return;
-
-    if (licenses.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: #666;">
-                No hay licencias extraordinarias configuradas. Haga clic en "Agregar Licencia" para crear una.
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = `
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                    <th style="padding: 12px; text-align: left;">Tipo</th>
-                    <th style="padding: 12px; text-align: left;">Descripción</th>
-                    <th style="padding: 12px; text-align: center;">Días</th>
-                    <th style="padding: 12px; text-align: center;">Tipo de Día</th>
-                    <th style="padding: 12px; text-align: center;">Requiere Aprobación</th>
-                    <th style="padding: 12px; text-align: center;">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${licenses.map(license => `
-                    <tr style="border-bottom: 1px solid #dee2e6;">
-                        <td style="padding: 12px; font-weight: 600;">${license.type}</td>
-                        <td style="padding: 12px;">${license.description || '-'}</td>
-                        <td style="padding: 12px; text-align: center; font-weight: 600; color: #f39c12;">${license.days} días</td>
-                        <td style="padding: 12px; text-align: center;">${license.dayType === 'habil' ? 'Hábiles' : 'Corridos'}</td>
-                        <td style="padding: 12px; text-align: center;">${license.requiresApproval ? '✓ Sí' : '✗ No'}</td>
-                        <td style="padding: 12px; text-align: center;">
-                            <button onclick="deleteExtraordinaryLicense(${license.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
-                                🗑️ Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-}
-
-async function addVacationScale() {
-    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-
-    const modalHTML = `
-        <div id="vacationScaleModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
-            <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                <h3 style="margin: 0 0 20px 0; color: #27ae60;">📊 Agregar Escala de Vacaciones</h3>
-
-                <form id="vacationScaleForm">
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Años desde:</label>
-                        <input type="number" id="yearsFrom" step="0.01" required
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                               placeholder="Ej: 0 (para inicio), 5, 10...">
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Años hasta (dejar vacío para sin límite):</label>
-                        <input type="number" id="yearsTo" step="0.01"
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                               placeholder="Ej: 5, 10, 20... (vacío = sin límite)">
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Descripción del rango:</label>
-                        <input type="text" id="rangeDescription" required
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                               placeholder="Ej: '0 - 5 años', '5 - 10 años', 'Más de 20 años'">
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Días de vacaciones:</label>
-                        <input type="number" id="vacationDays" required min="1"
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                               placeholder="Ej: 14, 21, 28...">
-                    </div>
-
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Prioridad (menor = mayor prioridad):</label>
-                        <input type="number" id="priority" value="0"
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                    </div>
-
-                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                        <button type="button" onclick="closeVacationScaleModal()"
-                                style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-                            Cancelar
-                        </button>
-                        <button type="submit"
-                                style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                            💾 Guardar Escala
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    document.getElementById('vacationScaleForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
-
-        const data = {
-            company_id: companyId,
-            yearsFrom: parseFloat(document.getElementById('yearsFrom').value),
-            yearsTo: document.getElementById('yearsTo').value ? parseFloat(document.getElementById('yearsTo').value) : null,
-            rangeDescription: document.getElementById('rangeDescription').value,
-            vacationDays: parseInt(document.getElementById('vacationDays').value),
-            priority: parseInt(document.getElementById('priority').value)
+    getStatusBadge(status) {
+        const statuses = {
+            'pending': { label: 'Pendiente', class: 'warning' },
+            'approved': { label: 'Aprobada', class: 'success' },
+            'rejected': { label: 'Rechazada', class: 'danger' },
+            'cancelled': { label: 'Cancelada', class: 'info' }
         };
+        const s = statuses[status] || { label: status, class: 'info' };
+        return `<span class="ve-status ve-status-${s.class}">${s.label}</span>`;
+    },
 
-        try {
-            const response = await fetch('/api/v1/vacation/scales', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert('✓ Escala de vacaciones creada exitosamente');
-                closeVacationScaleModal();
-                loadVacationPolicies();
-            } else {
-                alert('Error: ' + result.message);
-            }
-        } catch (error) {
-            console.error('Error creando escala:', error);
-            alert('Error creando escala de vacaciones');
+    getSourceBadge(source) {
+        if (source === 'mobile-apk' || source === 'mobile_app') {
+            return `<span class="ve-badge ve-badge-mobile">APK</span>`;
         }
-    });
-}
-
-function closeVacationScaleModal() {
-    const modal = document.getElementById('vacationScaleModal');
-    if (modal) modal.remove();
-}
-
-async function deleteVacationScale(scaleId) {
-    if (!confirm('¿Está seguro de eliminar esta escala de vacaciones?')) return;
-
-    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-
-    try {
-        const response = await fetch(`/api/v1/vacation/scales/${scaleId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`
-            },
-            body: JSON.stringify({ isActive: false })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert('✓ Escala eliminada exitosamente');
-            loadVacationPolicies();
-        } else {
-            alert('Error: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error eliminando escala:', error);
-        alert('Error eliminando escala de vacaciones');
-    }
-}
-
-async function addExtraordinaryLicense() {
-    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-
-    const modalHTML = `
-        <div id="extraordinaryLicenseModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
-            <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                <h3 style="margin: 0 0 20px 0; color: #f39c12;">📋 Agregar Licencia Extraordinaria</h3>
-
-                <form id="extraordinaryLicenseForm">
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tipo de Licencia:</label>
-                        <input type="text" id="licenseType" required
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                               placeholder="Ej: Matrimonio, Paternidad, Mudanza...">
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Descripción:</label>
-                        <textarea id="licenseDescription" rows="3"
-                                  style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                                  placeholder="Descripción detallada de la licencia..."></textarea>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Días otorgados:</label>
-                        <input type="number" id="licenseDays" required min="1"
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                               placeholder="Ej: 1, 3, 10...">
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tipo de días:</label>
-                        <select id="licenseDayType" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                            <option value="habil">Días Hábiles</option>
-                            <option value="corrido">Días Corridos</option>
-                        </select>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" id="requiresApproval" checked>
-                            <span style="font-weight: 600;">Requiere aprobación previa</span>
-                        </label>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" id="requiresDocumentation">
-                            <span style="font-weight: 600;">Requiere documentación de respaldo</span>
-                        </label>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Máximo por año (dejar vacío para sin límite):</label>
-                        <input type="number" id="maxPerYear" min="1"
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                               placeholder="Ej: 1, 2, 3... (vacío = sin límite)">
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Días de antelación requeridos:</label>
-                        <input type="number" id="advanceNoticeDays" value="0" min="0"
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                    </div>
-
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Base legal (opcional):</label>
-                        <textarea id="legalBasis" rows="2"
-                                  style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                                  placeholder="Ej: Art. 158 LCT, CCT 130/75..."></textarea>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                        <button type="button" onclick="closeExtraordinaryLicenseModal()"
-                                style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-                            Cancelar
-                        </button>
-                        <button type="submit"
-                                style="background: #f39c12; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                            💾 Guardar Licencia
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    document.getElementById('extraordinaryLicenseForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
-
-        const data = {
-            company_id: companyId,
-            type: document.getElementById('licenseType').value,
-            description: document.getElementById('licenseDescription').value,
-            days: parseInt(document.getElementById('licenseDays').value),
-            dayType: document.getElementById('licenseDayType').value,
-            requiresApproval: document.getElementById('requiresApproval').checked,
-            requiresDocumentation: document.getElementById('requiresDocumentation').checked,
-            maxPerYear: document.getElementById('maxPerYear').value ? parseInt(document.getElementById('maxPerYear').value) : null,
-            advanceNoticeDays: parseInt(document.getElementById('advanceNoticeDays').value),
-            legalBasis: document.getElementById('legalBasis').value
-        };
-
-        try {
-            const response = await fetch('/api/v1/vacation/extraordinary-licenses', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert('✓ Licencia extraordinaria creada exitosamente');
-                closeExtraordinaryLicenseModal();
-                loadVacationPolicies();
-            } else {
-                alert('Error: ' + result.message);
-            }
-        } catch (error) {
-            console.error('Error creando licencia:', error);
-            alert('Error creando licencia extraordinaria');
-        }
-    });
-}
-
-function closeExtraordinaryLicenseModal() {
-    const modal = document.getElementById('extraordinaryLicenseModal');
-    if (modal) modal.remove();
-}
-
-async function deleteExtraordinaryLicense(licenseId) {
-    if (!confirm('¿Está seguro de eliminar esta licencia extraordinaria?')) return;
-
-    const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-
-    try {
-        // Soft delete by setting isActive to false
-        const response = await fetch(`/api/v1/vacation/extraordinary-licenses/${licenseId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`
-            },
-            body: JSON.stringify({ isActive: false })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert('✓ Licencia eliminada exitosamente');
-            loadVacationPolicies();
-        } else {
-            alert('Error: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error eliminando licencia:', error);
-        alert('Error eliminando licencia extraordinaria');
-    }
-}
-
-// ==================== PROGRAMACIÓN AUTOMÁTICA ====================
-function getAutoSchedulerContent() {
-    return `
-        <div class="auto-scheduler-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <div>
-                    <h3 style="margin: 0;">🤖 Programación Automática de Vacaciones</h3>
-                    <p style="margin: 5px 0 0 0; color: #666;">Genera cronogramas óptimos considerando antigüedad, roles y cobertura</p>
-                </div>
-            </div>
-
-            <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 25px;">
-                <h4 style="margin: 0 0 15px 0;">⚙️ Generar Nuevo Cronograma</h4>
-
-                <div style="display: flex; gap: 15px; align-items: end;">
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Año:</label>
-                        <select id="scheduleYear" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 150px;">
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
-                        </select>
-                    </div>
-
-                    <button onclick="generateAutoSchedule()" style="background: #27ae60; color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                        🚀 Generar Cronograma
-                    </button>
-                </div>
-            </div>
-
-            <div id="auto-schedule-result">
-                <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 10px;">
-                    <h4>Selecciona un año y genera el cronograma automático</h4>
-                    <p style="color: #666;">El sistema considerará antigüedad, compatibilidad de tareas y dotación mínima</p>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-async function generateAutoSchedule() {
-    const yearSelect = document.getElementById('scheduleYear');
-    const resultDiv = document.getElementById('auto-schedule-result');
-
-    if (!yearSelect || !resultDiv) return;
-
-    const year = yearSelect.value;
-
-    resultDiv.innerHTML = '<div style="text-align: center; padding: 40px;">🔄 Generando cronograma automático...</div>';
-
-    try {
-        const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
-
-        const response = await fetch(`/api/v1/vacation/generate-schedule`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`
-            },
-            body: JSON.stringify({ year: parseInt(year), company_id: companyId })
-        });
-
-        if (!response.ok) throw new Error('Error generando cronograma');
-
-        const result = await response.json();
-        const schedule = result.data.schedule || [];
-
-        resultDiv.innerHTML = `
-            <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                <h4 style="margin: 0 0 20px 0;">📊 Cronograma ${year} - ${result.data.totalEmployees} Empleados</h4>
-
-                ${schedule.map(item => `
-                    <div style="background: #f8f9fa; padding: 20px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid ${getScoreColor(item.compatibilityScore)};">
-                        <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 15px;">
-                            <div style="flex: 1;">
-                                <h5 style="margin: 0 0 5px 0;">${item.userName}</h5>
-                                <div style="font-size: 13px; color: #666;">
-                                    Antigüedad: ${item.yearsOfService} años |
-                                    Días asignados: ${item.vacationDays} |
-                                    Score: <strong style="color: ${getScoreColor(item.compatibilityScore)};">${Math.round(item.compatibilityScore)}%</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="margin-top: 10px;">
-                            <strong>Períodos sugeridos:</strong>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
-                                ${item.suggestedPeriods.map(period => `
-                                    <div style="background: white; padding: 10px 15px; border-radius: 6px; border: 1px solid #ddd;">
-                                        <div style="font-weight: 600; color: #27ae60;">${period.days} días</div>
-                                        <div style="font-size: 12px; color: #666;">${period.startDate} → ${period.endDate}</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-
-    } catch (error) {
-        console.error('❌ Error:', error);
-        resultDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error generando cronograma. Verifica tu conexión.</div>';
-    }
-}
-
-// ==================== CONFIGURACIÓN ====================
-function getVacationConfigContent() {
-    return `
-        <div class="vacation-config-container">
-            <h3 style="margin: 0 0 20px 0;">⚙️ Configuración de Vacaciones</h3>
-
-            <div id="vacation-config-form">
-                <div style="text-align: center; padding: 40px;">
-                    🔄 Cargando configuración...
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-async function loadVacationConfig() {
-    const container = document.getElementById('vacation-config-form');
-    if (!container) return;
-
-    try {
-        const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
-
-        const response = await fetch(`/api/v1/vacation/config?company_id=${companyId}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-
-        if (!response.ok) throw new Error('Error cargando configuración');
-
-        const result = await response.json();
-        const config = result.data.configuration || {};
-        const scales = result.data.vacationScales || [];
-        const licenses = result.data.extraordinaryLicenses || [];
-
-        container.innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
-                <!-- Configuración General -->
-                <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <h4 style="margin: 0 0 20px 0; color: #27ae60;">📋 Configuración General</h4>
-
-                    <div style="margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
-                            <span><strong>Vacaciones Interrumpibles:</strong></span>
-                            <span style="color: ${config.vacationInterruptible ? '#27ae60' : '#e74c3c'}; font-weight: 700;">
-                                ${config.vacationInterruptible ? '✅ Sí' : '❌ No'}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
-                            <span><strong>Días Continuos Mínimos:</strong></span>
-                            <span style="color: #27ae60; font-weight: 700;">${config.minContinuousDays || 7} días</span>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
-                            <span><strong>Máximo de Fracciones:</strong></span>
-                            <span style="color: #27ae60; font-weight: 700;">${config.maxFractions || 3}</span>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
-                            <span><strong>Días de Anticipación:</strong></span>
-                            <span style="color: #27ae60; font-weight: 700;">${config.minAdvanceNoticeDays || 15} días</span>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 15px; padding: 15px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #f39c12;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <strong>🎯 Dotación Mínima</strong>
-                                <div style="font-size: 12px; color: #666; margin-top: 3px;">Máximo % simultáneo de vacaciones</div>
-                            </div>
-                            <span style="color: #f39c12; font-weight: 700; font-size: 24px;">${config.maxSimultaneousPercentage || 30}%</span>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
-                            <span><strong>Programación Automática:</strong></span>
-                            <span style="color: ${config.autoSchedulingEnabled ? '#27ae60' : '#e74c3c'}; font-weight: 700;">
-                                ${config.autoSchedulingEnabled ? '✅ Habilitada' : '❌ Deshabilitada'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Escalas de Vacaciones -->
-                <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <h4 style="margin: 0 0 20px 0; color: #27ae60;">📈 Escalas de Vacaciones por Antigüedad</h4>
-
-                    ${scales.length > 0 ? scales.map(scale => `
-                        <div style="padding: 12px; background: #e8f5e8; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #27ae60;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <strong>${scale.rangeDescription || `${scale.yearsFrom}-${scale.yearsTo || '∞'} años`}</strong>
-                                    <div style="font-size: 12px; color: #666;">Prioridad: ${scale.priority}</div>
-                                </div>
-                                <span style="background: #27ae60; color: white; padding: 6px 12px; border-radius: 12px; font-weight: 700;">
-                                    ${scale.vacationDays} días
-                                </span>
-                            </div>
-                        </div>
-                    `).join('') : '<div style="text-align: center; color: #666;">No hay escalas configuradas</div>'}
-                </div>
-
-                <!-- Licencias Extraordinarias -->
-                <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <h4 style="margin: 0 0 20px 0; color: #27ae60;">📝 Licencias Extraordinarias</h4>
-
-                    ${licenses.length > 0 ? licenses.map(license => `
-                        <div style="padding: 12px; background: #f8f9fa; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #3498db;">
-                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <div style="flex: 1;">
-                                    <strong>${license.type}</strong>
-                                    <div style="font-size: 12px; color: #666; margin-top: 3px;">${license.description}</div>
-                                    ${license.legalBasis ? `<div style="font-size: 11px; color: #888; margin-top: 3px;">Base legal: ${license.legalBasis}</div>` : ''}
-                                </div>
-                                <span style="background: #3498db; color: white; padding: 6px 12px; border-radius: 12px; font-weight: 700; white-space: nowrap; margin-left: 10px;">
-                                    ${license.days} días
-                                </span>
-                            </div>
-                        </div>
-                    `).join('') : '<div style="text-align: center; color: #666;">No hay licencias extraordinarias configuradas</div>'}
-                </div>
-            </div>
-        `;
-
-    } catch (error) {
-        console.error('❌ Error:', error);
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error cargando configuración. Verifica tu conexión.</div>';
-    }
-}
-
-// ==================== BALANCE REAL POR EMPLEADO ====================
-async function loadRealEmployeeBalance() {
-    const container = document.getElementById('vacation-balance-list');
-    if (!container) return;
-
-    try {
-        const authToken = localStorage.getItem('token') || sessionStorage.getItem('authToken');
-        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-        const companyId = userStr ? JSON.parse(userStr).company_id || 1 : 1;
-
-        // Obtener usuarios de la empresa
-        const usersRes = await fetch(`/api/v1/users?company_id=${companyId}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-
-        if (!usersRes.ok) throw new Error('Error cargando usuarios');
-
-        const usersData = await usersRes.json();
-        const users = usersData.users || usersData.data || [];
-
-        // Calcular balance para cada usuario
-        const balancePromises = users.map(async (user) => {
+        return `<span class="ve-badge ve-badge-db">Web</span>`;
+    },
+
+    // ========================================================================
+    // ACTIONS
+    // ========================================================================
+    async filterRequests() {
+        // TODO: Implement filtering
+        console.log('[VACATION] Filtering requests...');
+    },
+
+    async viewRequest(id) {
+        alert(`Ver solicitud #${id}`);
+    },
+
+    async approveRequest(id) {
+        if (confirm('Aprobar esta solicitud?')) {
             try {
-                const balanceRes = await fetch(`/api/v1/vacation/calculate-days/${user.id}?company_id=${companyId}`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                if (balanceRes.ok) {
-                    const balanceData = await balanceRes.json();
-                    return {
-                        user,
-                        balance: balanceData.data || {}
-                    };
-                }
-            } catch (err) {
-                console.error(`Error calculando balance para ${user.name}:`, err);
+                await VacationAPI.approveRequest(id, { approved_by: 'admin' });
+                this.refresh();
+            } catch (e) {
+                alert('Error: ' + e.message);
             }
-            return null;
-        });
+        }
+    },
 
-        const balances = (await Promise.all(balancePromises)).filter(b => b !== null);
+    async rejectRequest(id) {
+        const reason = prompt('Motivo del rechazo:');
+        if (reason) {
+            try {
+                await VacationAPI.rejectRequest(id, { reason });
+                this.refresh();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+    },
 
-        // Mostrar balances
-        container.innerHTML = balances.map(item => `
-            <div style="background: white; padding: 20px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid ${item.balance.remainingDays > 10 ? '#27ae60' : item.balance.remainingDays > 5 ? '#f39c12' : '#e74c3c'};">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
-                    <div style="flex: 1;">
-                        <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${item.user.firstName} ${item.user.lastName}</h4>
-                        <div style="font-size: 13px; color: #666; margin-bottom: 10px;">
-                            ${item.user.email} | Legajo: ${item.user.employeeId || 'N/A'}
-                        </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;">
-                            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="font-size: 11px; color: #999; margin-bottom: 3px;">Antigüedad</div>
-                                <div style="font-weight: 700; font-size: 16px; color: #3498db;">${item.balance.yearsOfService || 0} años</div>
-                            </div>
-                            <div style="background: #e8f5e8; padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="font-size: 11px; color: #999; margin-bottom: 3px;">Total Anual</div>
-                                <div style="font-weight: 700; font-size: 16px; color: #27ae60;">${item.balance.totalVacationDays || 0} días</div>
-                            </div>
-                            <div style="background: #fff3cd; padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="font-size: 11px; color: #999; margin-bottom: 3px;">Usados</div>
-                                <div style="font-weight: 700; font-size: 16px; color: #f39c12;">${item.balance.usedDays || 0} días</div>
-                            </div>
-                            <div style="background: #d1ecf1; padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="font-size: 11px; color: #999; margin-bottom: 3px;">Disponibles</div>
-                                <div style="font-weight: 700; font-size: 16px; color: #17a2b8;">${item.balance.remainingDays || 0} días</div>
-                            </div>
-                        </div>
-                        ${item.balance.applicableScale ? `
-                            <div style="margin-top: 10px; padding: 8px; background: #f0f0f0; border-radius: 4px; font-size: 12px;">
-                                <strong>Escala:</strong> ${item.balance.applicableScale.rangeDescription} 
-                                (${item.balance.applicableScale.yearsFrom}-${item.balance.applicableScale.yearsTo || '∞'} años → ${item.balance.applicableScale.vacationDays} días)
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            </div>
-        `).join('');
+    showNewRequestModal() {
+        alert('Modal de nueva solicitud - TODO');
+    },
 
-    } catch (error) {
-        console.error('❌ Error:', error);
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error cargando balances. Verifica tu conexión.</div>';
+    showScaleModal() {
+        alert('Modal de nueva escala - TODO');
+    },
+
+    showLicenseModal() {
+        alert('Modal de nueva licencia - TODO');
+    },
+
+    async saveConfig(event) {
+        event.preventDefault();
+        const form = event.target;
+        const data = {
+            minContinuousDays: parseInt(form.minContinuousDays.value),
+            maxFractions: parseInt(form.maxFractions.value),
+            minAdvanceNoticeDays: parseInt(form.minAdvanceNoticeDays.value),
+            maxSimultaneousPercentage: parseInt(form.maxSimultaneousPercentage.value),
+            vacationInterruptible: form.vacationInterruptible.checked,
+            autoSchedulingEnabled: form.autoSchedulingEnabled.checked
+        };
+
+        try {
+            await VacationAPI.updateConfig(data);
+            alert('Configuracion guardada');
+        } catch (e) {
+            alert('Error: ' + e.message);
+        }
+    },
+
+    changeCalendarMonth(delta) {
+        console.log('Change month:', delta);
     }
-}
-
-// ============================================================================
-// EXPORTACIÓN DE MÓDULO
-// ============================================================================
-
-// Registro en window.Modules para sistema moderno
-window.Modules = window.Modules || {};
-window.Modules['vacation-management'] = {
-    init: showVacationManagementContent
 };
 
-// Mantener compatibilidad legacy
+// ============================================================================
+// INJECT ENTERPRISE STYLES
+// ============================================================================
+function injectVacationStyles() {
+    if (document.getElementById('ve-styles')) return;
+
+    const styles = document.createElement('style');
+    styles.id = 've-styles';
+    styles.textContent = `
+        /* CSS Variables - Dark Enterprise Theme (Vacation) */
+        :root {
+            --ve-bg-primary: #0a1a15;
+            --ve-bg-secondary: #122a22;
+            --ve-bg-tertiary: #1a3a30;
+            --ve-bg-card: #162e25;
+            --ve-border: #2d4a40;
+            --ve-text-primary: #e8f0ed;
+            --ve-text-secondary: #a0b8b0;
+            --ve-text-muted: #6b8078;
+            --accent-green: #00e676;
+            --accent-blue: #00d4ff;
+            --accent-yellow: #ffc107;
+            --accent-red: #ff5252;
+            --accent-purple: #b388ff;
+        }
+
+        .vacation-enterprise {
+            background: var(--ve-bg-primary);
+            min-height: 100vh;
+            color: var(--ve-text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* Header */
+        .ve-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--ve-bg-secondary);
+            border-bottom: 1px solid var(--ve-border);
+        }
+
+        .ve-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ve-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-green), #00b860);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .ve-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin: 0;
+            background: linear-gradient(90deg, var(--accent-green), #00b860);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ve-subtitle {
+            font-size: 11px;
+            color: var(--ve-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ve-tech-badges {
+            display: flex;
+            gap: 8px;
+        }
+
+        .ve-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .ve-badge-lct {
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+
+        .ve-badge-db {
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--accent-blue);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .ve-badge-mobile {
+            background: rgba(179, 136, 255, 0.15);
+            color: var(--accent-purple);
+            border: 1px solid rgba(179, 136, 255, 0.3);
+        }
+
+        .ve-badge-info { background: rgba(0, 212, 255, 0.2); color: var(--accent-blue); }
+        .ve-badge-success { background: rgba(0, 230, 118, 0.2); color: var(--accent-green); }
+        .ve-badge-warning { background: rgba(255, 193, 7, 0.2); color: var(--accent-yellow); }
+        .ve-badge-danger { background: rgba(255, 82, 82, 0.2); color: var(--accent-red); }
+
+        .ve-header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ve-select {
+            background: var(--ve-bg-tertiary);
+            border: 1px solid var(--ve-border);
+            color: var(--ve-text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .ve-select:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+
+        /* Navigation */
+        .ve-nav {
+            display: flex;
+            gap: 4px;
+            padding: 8px 24px;
+            background: var(--ve-bg-secondary);
+            border-bottom: 1px solid var(--ve-border);
+            overflow-x: auto;
+        }
+
+        .ve-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            color: var(--ve-text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .ve-nav-item:hover {
+            background: var(--ve-bg-tertiary);
+            color: var(--ve-text-primary);
+        }
+
+        .ve-nav-item.active {
+            background: linear-gradient(135deg, rgba(0, 230, 118, 0.2), rgba(0, 184, 96, 0.2));
+            color: var(--accent-green);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+
+        /* Main Content */
+        .ve-main {
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Loading */
+        .ve-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            color: var(--ve-text-muted);
+        }
+
+        .ve-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--ve-border);
+            border-top-color: var(--accent-green);
+            border-radius: 50%;
+            animation: ve-spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes ve-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* KPI Cards */
+        .ve-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .ve-kpi-card {
+            background: var(--ve-bg-card);
+            border: 1px solid var(--ve-border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .ve-kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .ve-kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .ve-kpi-label {
+            font-size: 12px;
+            color: var(--ve-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Toolbar */
+        .ve-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .ve-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .ve-search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--ve-bg-tertiary);
+            border: 1px solid var(--ve-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+        }
+
+        .ve-search-box input {
+            background: transparent;
+            border: none;
+            color: var(--ve-text-primary);
+            font-size: 13px;
+            outline: none;
+            width: 200px;
+        }
+
+        .ve-search-box svg {
+            color: var(--ve-text-muted);
+        }
+
+        /* Tables */
+        .ve-table-container {
+            background: var(--ve-bg-card);
+            border: 1px solid var(--ve-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .ve-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ve-table th {
+            background: var(--ve-bg-secondary);
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--ve-text-muted);
+            border-bottom: 1px solid var(--ve-border);
+        }
+
+        .ve-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ve-border);
+            color: var(--ve-text-primary);
+        }
+
+        .ve-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .ve-table code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--accent-green);
+        }
+
+        .ve-empty-cell {
+            text-align: center;
+            padding: 40px !important;
+        }
+
+        /* Status badges */
+        .ve-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .ve-status-success { background: rgba(0, 230, 118, 0.2); color: var(--accent-green); }
+        .ve-status-warning { background: rgba(255, 193, 7, 0.2); color: var(--accent-yellow); }
+        .ve-status-danger { background: rgba(255, 82, 82, 0.2); color: var(--accent-red); }
+        .ve-status-info { background: rgba(0, 212, 255, 0.2); color: var(--accent-blue); }
+
+        /* Buttons */
+        .ve-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ve-btn-primary {
+            background: linear-gradient(135deg, var(--accent-green), #00b860);
+            color: white;
+        }
+
+        .ve-btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .ve-btn-secondary {
+            background: var(--ve-bg-tertiary);
+            color: var(--ve-text-primary);
+            border: 1px solid var(--ve-border);
+        }
+
+        .ve-btn-outline {
+            background: transparent;
+            color: var(--ve-text-primary);
+            border: 1px solid var(--ve-border);
+        }
+
+        .ve-btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .ve-btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            background: var(--ve-bg-tertiary);
+            border: 1px solid var(--ve-border);
+            border-radius: 6px;
+            color: var(--ve-text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ve-btn-icon:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .ve-btn-icon-sm {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            background: transparent;
+            border: 1px solid var(--ve-border);
+            border-radius: 4px;
+            color: var(--ve-text-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ve-btn-icon-sm:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .ve-btn-success:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .ve-btn-danger:hover {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .ve-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Sections */
+        .ve-section {
+            margin-bottom: 32px;
+        }
+
+        .ve-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .ve-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--ve-text-primary);
+        }
+
+        .ve-section-desc {
+            font-size: 12px;
+            color: var(--ve-text-muted);
+            margin: 4px 0 0;
+        }
+
+        /* Policy Cards */
+        .ve-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .ve-policy-card {
+            background: var(--ve-bg-card);
+            border: 1px solid var(--ve-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .ve-policy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--ve-bg-secondary);
+            border-bottom: 1px solid var(--ve-border);
+        }
+
+        .ve-policy-range {
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        .ve-policy-days {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .ve-policy-body {
+            padding: 16px;
+        }
+
+        .ve-policy-body p {
+            margin: 0;
+            color: var(--ve-text-secondary);
+            font-size: 13px;
+        }
+
+        .ve-policy-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--ve-border);
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Empty State */
+        .ve-empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ve-text-muted);
+        }
+
+        .ve-empty-state svg {
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .ve-empty-state h4 {
+            margin: 0 0 8px;
+            color: var(--ve-text-secondary);
+        }
+
+        .ve-empty-state p {
+            margin: 0;
+        }
+
+        .ve-empty-card {
+            background: var(--ve-bg-card);
+            border: 1px solid var(--ve-border);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            color: var(--ve-text-muted);
+        }
+
+        /* AI Panel */
+        .ve-ai-panel {
+            background: linear-gradient(135deg, rgba(0, 230, 118, 0.1), rgba(0, 184, 96, 0.1));
+            border: 1px solid rgba(0, 230, 118, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .ve-ai-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .ve-ai-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        .ve-ai-status {
+            font-size: 11px;
+            padding: 4px 8px;
+            background: rgba(0, 230, 118, 0.2);
+            color: var(--accent-green);
+            border-radius: 10px;
+        }
+
+        .ve-ai-content {
+            padding: 16px;
+        }
+
+        .ve-ai-content p {
+            margin: 0;
+            color: var(--ve-text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Calendar */
+        .ve-calendar-view {
+            background: var(--ve-bg-card);
+            border: 1px solid var(--ve-border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .ve-calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .ve-calendar-header h3 {
+            margin: 0;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .ve-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .ve-calendar-day-header {
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ve-text-muted);
+            text-transform: uppercase;
+        }
+
+        .ve-calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--ve-bg-secondary);
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ve-calendar-day:hover {
+            background: var(--ve-bg-tertiary);
+        }
+
+        .ve-calendar-day-empty {
+            background: transparent;
+        }
+
+        .ve-calendar-day-today {
+            background: var(--accent-green);
+            color: #000;
+            font-weight: 700;
+        }
+
+        .ve-calendar-legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--ve-border);
+        }
+
+        .ve-legend-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .ve-legend-approved { background: var(--accent-green); }
+        .ve-legend-pending { background: var(--accent-yellow); }
+        .ve-legend-today { background: var(--accent-blue); }
+
+        /* Analytics */
+        .ve-analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+
+        .ve-chart-card {
+            background: var(--ve-bg-card);
+            border: 1px solid var(--ve-border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .ve-chart-card h4 {
+            margin: 0 0 20px;
+            font-size: 14px;
+            color: var(--ve-text-secondary);
+        }
+
+        .ve-chart-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .ve-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ve-bar-label {
+            width: 100px;
+            font-size: 13px;
+            color: var(--ve-text-secondary);
+        }
+
+        .ve-bar-container {
+            flex: 1;
+            height: 24px;
+            background: var(--ve-bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .ve-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .ve-bar-success { background: var(--accent-green); }
+        .ve-bar-warning { background: var(--accent-yellow); }
+        .ve-bar-danger { background: var(--accent-red); }
+
+        .ve-bar-value {
+            width: 40px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .ve-source-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .ve-source-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            padding: 16px;
+            background: var(--ve-bg-secondary);
+            border-radius: 8px;
+        }
+
+        .ve-source-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .ve-source-value {
+            display: block;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .ve-source-label {
+            font-size: 12px;
+            color: var(--ve-text-muted);
+        }
+
+        /* Config */
+        .ve-config-card {
+            background: var(--ve-bg-card);
+            border: 1px solid var(--ve-border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .ve-config-card h4 {
+            margin: 0 0 24px;
+            color: var(--ve-text-secondary);
+        }
+
+        .ve-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .ve-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ve-form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ve-text-primary);
+        }
+
+        .ve-form-group small {
+            font-size: 11px;
+            color: var(--ve-text-muted);
+        }
+
+        .ve-input {
+            background: var(--ve-bg-tertiary);
+            border: 1px solid var(--ve-border);
+            color: var(--ve-text-primary);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .ve-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+
+        .ve-form-toggles {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: var(--ve-bg-secondary);
+            border-radius: 8px;
+        }
+
+        .ve-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .ve-toggle input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-green);
+        }
+
+        .ve-form-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Error */
+        .ve-error {
+            text-align: center;
+            padding: 40px;
+            color: var(--accent-red);
+        }
+    `;
+    document.head.appendChild(styles);
+}
+
+// Make functions globally available
 window.showVacationManagementContent = showVacationManagementContent;
 
-console.log('✅ [VACATION-MANAGEMENT] Módulo registrado y listo');
-
+} // End of if (typeof window.VacationState !== 'undefined') check

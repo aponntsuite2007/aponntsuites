@@ -766,6 +766,23 @@ router.post('/companies', async (req, res) => {
 
     console.log(`✅ Nueva empresa creada: ${newCompany.name} (ID: ${newCompany.id})`);
 
+    // 🏢 CREAR SUCURSAL CENTRAL AUTOMÁTICAMENTE (OBLIGATORIA)
+    // Esta sucursal es necesaria para el sistema de feriados y no puede ser eliminada
+    try {
+      const centralBranch = await Branch.create({
+        name: 'CENTRAL',
+        code: `CENTRAL-${newCompany.id}`,
+        address: newCompany.address || '',
+        company_id: newCompany.id,
+        is_main: true, // Marca como sucursal principal (no borrable)
+        isActive: true
+      });
+      console.log(`🏢 Sucursal CENTRAL creada automáticamente (ID: ${centralBranch.id})`);
+    } catch (branchError) {
+      // Si falla la creación de la sucursal, NO fallar la creación de empresa
+      console.error('⚠️ Error creando sucursal CENTRAL (empresa creada exitosamente):', branchError.message);
+    }
+
     // 🔔 ENVIAR NOTIFICACIONES AUTOMÁTICAS (APONNT → EMPRESA)
     try {
       const notificationData = {
@@ -1516,6 +1533,23 @@ router.post('/companies', async (req, res) => {
       locale: 'es-AR',
       currency: 'ARS'
     });
+
+    // 🏢 CREAR SUCURSAL CENTRAL AUTOMÁTICAMENTE (OBLIGATORIA)
+    // Esta sucursal es necesaria para el sistema de feriados y no puede ser eliminada
+    try {
+      const centralBranch = await Branch.create({
+        name: 'CENTRAL',
+        code: `CENTRAL-${newCompany.id}`,
+        address: companyData.address || '',
+        company_id: newCompany.id,
+        is_main: true, // Marca como sucursal principal (no borrable)
+        isActive: true
+      });
+      console.log(`🏢 Sucursal CENTRAL creada automáticamente (ID: ${centralBranch.id})`);
+    } catch (branchError) {
+      // Si falla la creación de la sucursal, NO fallar la creación de empresa
+      console.error('⚠️ Error creando sucursal CENTRAL (empresa creada exitosamente):', branchError.message);
+    }
 
     // Crear usuario administrador automáticamente
     try {

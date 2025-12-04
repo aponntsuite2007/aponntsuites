@@ -22,6 +22,11 @@ class ShiftCalculatorService {
   /**
    * Calcula en qué turno debería estar un usuario en una fecha dada
    *
+   * FUENTE ÚNICA DE VERDAD: user_shift_assignments
+   * - Los turnos se gestionan desde Estructura Organizacional
+   * - El empleado se "acopla" al turno en marcha (join_date)
+   * - El turno tiene un reloj global (global_cycle_start_date)
+   *
    * @param {UUID} userId - ID del usuario
    * @param {String|Date} date - Fecha a consultar (YYYY-MM-DD o Date object)
    * @returns {Object} Información del turno calculado
@@ -32,13 +37,14 @@ class ShiftCalculatorService {
       const queryDate = typeof date === 'string' ? new Date(date) : date;
       const dateString = queryDate.toISOString().split('T')[0];
 
-      // 2. Obtener asignación activa del usuario
+      // 2. Obtener asignación activa del usuario desde user_shift_assignments
+      // Esta es la ÚNICA fuente de verdad para turnos (gestionada desde Estructura Organizacional)
       const assignment = await UserShiftAssignment.findOne({
         where: {
           user_id: userId,
           is_active: true,
           join_date: {
-            [Op.lte]: dateString // La asignación debe haber empezado
+            [Op.lte]: dateString // La asignación debe haber empezado (acoplamiento)
           }
         },
         include: [{
@@ -52,10 +58,11 @@ class ShiftCalculatorService {
       });
 
       if (!assignment) {
+        console.log(`⚠️ [ShiftCalculator] Usuario ${userId} sin turno asignado en user_shift_assignments`);
         return {
           hasAssignment: false,
           shouldWork: false,
-          reason: 'No tiene turno asignado para esta fecha'
+          reason: 'No tiene turno asignado. Asignar desde la ficha del empleado en el módulo Usuarios.'
         };
       }
 

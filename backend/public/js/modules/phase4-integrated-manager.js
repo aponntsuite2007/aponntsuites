@@ -341,7 +341,13 @@ const Phase4IntegratedManager = (function() {
             updateUIForRunningTest();
             updateStatusCard(environment, 'running', 0);
 
-            const response = await fetch('/api/testing/run-visible', {
+            // Determinar endpoint según módulo
+            // 'consent' usa endpoint SSOT sin Playwright (test backend directo)
+            const endpoint = module === 'consent'
+                ? '/api/testing/run-consent-ssot'
+                : '/api/testing/run-visible';
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -367,8 +373,13 @@ const Phase4IntegratedManager = (function() {
             state.currentExecutionId = currentExecutionId;
 
             addLog('success', `✅ Test iniciado con ID: ${currentExecutionId}`);
-            addLog('info', '👀 El navegador debe abrirse de forma visible. Observa la ejecución.');
-            addLog('warning', '⚠️ NO cierres el navegador manualmente');
+            if (module === 'consent') {
+                addLog('info', '📋 Ejecutando test SSOT de Consentimientos (sin navegador)');
+                addLog('info', '🔍 Validando CRUD, integridad de datos, huérfanos y duplicados...');
+            } else {
+                addLog('info', '👀 El navegador debe abrirse de forma visible. Observa la ejecución.');
+                addLog('warning', '⚠️ NO cierres el navegador manualmente');
+            }
 
             // Iniciar polling de logs
             startLogPolling();

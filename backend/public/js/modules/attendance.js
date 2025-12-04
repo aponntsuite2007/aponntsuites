@@ -43,6 +43,7 @@ const AttendanceState = {
 const AttendanceAPI = {
     baseUrl: '/api/v1/attendance',
     analyticsUrl: '/api/attendance-analytics',
+    advancedStatsUrl: '/api/attendance-stats',
 
     getAuthHeaders() {
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
@@ -89,6 +90,32 @@ const AttendanceAPI = {
     getRankings: (companyId, groupBy = 'department') => AttendanceAPI.request(`${AttendanceAPI.analyticsUrl}/company/${companyId}/rankings?group_by=${groupBy}`),
     getCriticalPatterns: (companyId) => AttendanceAPI.request(`${AttendanceAPI.analyticsUrl}/company/${companyId}/critical-patterns`),
     getEmployeeAnalysis: (userId, companyId) => AttendanceAPI.request(`${AttendanceAPI.analyticsUrl}/employee/${userId}?company_id=${companyId}`),
+
+    // Advanced Statistics (Academic-level)
+    getAdvancedStats: (companyId, startDate, endDate) => {
+        let url = `${AttendanceAPI.advancedStatsUrl}/advanced/${companyId}`;
+        const params = [];
+        if (startDate) params.push(`startDate=${startDate}`);
+        if (endDate) params.push(`endDate=${endDate}`);
+        if (params.length) url += '?' + params.join('&');
+        return AttendanceAPI.request(url);
+    },
+    getBranchComparison: (companyId, startDate, endDate) => {
+        let url = `${AttendanceAPI.advancedStatsUrl}/branch-comparison/${companyId}`;
+        const params = [];
+        if (startDate) params.push(`startDate=${startDate}`);
+        if (endDate) params.push(`endDate=${endDate}`);
+        if (params.length) url += '?' + params.join('&');
+        return AttendanceAPI.request(url);
+    },
+    getClimateZones: () => AttendanceAPI.request(`${AttendanceAPI.advancedStatsUrl}/climate-zones`),
+    getDistribution: (companyId) => AttendanceAPI.request(`${AttendanceAPI.advancedStatsUrl}/distribution/${companyId}`),
+    getTemporalAnalysis: (companyId) => AttendanceAPI.request(`${AttendanceAPI.advancedStatsUrl}/temporal/${companyId}`),
+    getDepartmentRankings: (companyId, zone) => {
+        let url = `${AttendanceAPI.advancedStatsUrl}/department-rankings/${companyId}`;
+        if (zone) url += `?zone=${zone}`;
+        return AttendanceAPI.request(url);
+    },
 
     // Users for dropdowns
     getUsers: () => AttendanceAPI.request('/api/v1/users'),
@@ -180,6 +207,10 @@ function showAttendanceContent() {
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     Insights
                 </button>
+                <button class="att-nav-item" data-view="cubo" onclick="AttendanceEngine.showView('cubo')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    Panel Ejecutivo
+                </button>
             </nav>
 
             <!-- Main Content Area -->
@@ -231,6 +262,7 @@ const AttendanceEngine = {
                 case 'analytics': await this.renderAnalytics(); break;
                 case 'patterns': await this.renderPatterns(); break;
                 case 'insights': await this.renderInsights(); break;
+                case 'cubo': await this.renderCuboHoras(); break;
             }
         } catch (error) {
             content.innerHTML = `<div class="att-error"><span>⚠️ Error: ${error.message}</span></div>`;
@@ -622,96 +654,1099 @@ const AttendanceEngine = {
     },
 
     // ========================================================================
-    // ANALYTICS VIEW
+    // ANALYTICS VIEW - Academic-Level Statistics
     // ========================================================================
     async renderAnalytics() {
         const content = document.getElementById('att-content');
+        content.innerHTML = `
+            <div class="att-loading att-loading-fancy">
+                <div class="att-loading-orb"></div>
+                <div class="att-loading-rings">
+                    <div class="att-ring att-ring-1"></div>
+                    <div class="att-ring att-ring-2"></div>
+                    <div class="att-ring att-ring-3"></div>
+                </div>
+                <span class="att-loading-text">Analizando datos con IA...</span>
+                <div class="att-loading-badges">
+                    <span class="att-tech-badge">Trimmed Mean</span>
+                    <span class="att-tech-badge">IQR Analysis</span>
+                    <span class="att-tech-badge">Climate Zones</span>
+                </div>
+            </div>`;
 
         let stats = null;
-        let rankings = null;
 
         if (AttendanceState.companyId) {
             try {
-                [stats, rankings] = await Promise.all([
-                    AttendanceAPI.getCompanyStats(AttendanceState.companyId).catch(() => null),
-                    AttendanceAPI.getRankings(AttendanceState.companyId, 'department').catch(() => null)
-                ]);
+                stats = await AttendanceAPI.getAdvancedStats(
+                    AttendanceState.companyId,
+                    AttendanceState.dateRange.start,
+                    AttendanceState.dateRange.end
+                ).catch(e => { console.log('Advanced stats error:', e); return null; });
             } catch (e) {
-                console.log('Analytics API not available');
+                console.log('Analytics API error:', e);
             }
         }
 
-        content.innerHTML = `
-            <div class="att-analytics">
-                <div class="att-analytics-header">
-                    <h2>📈 Centro de Analytics</h2>
-                    <p>Metricas avanzadas y analisis de patrones de asistencia</p>
-                </div>
+        // =======================================================================
+        // ANALYTICS PLAYGROUND - "Toy Store for HR Managers"
+        // =======================================================================
 
-                ${stats ? `
-                    <div class="att-metrics-grid">
-                        <div class="att-metric-card">
-                            <div class="att-metric-icon att-metric-score">🎯</div>
-                            <div class="att-metric-content">
-                                <span class="att-metric-value">${stats.averageScore?.toFixed(1) || '--'}</span>
-                                <span class="att-metric-label">Score Promedio</span>
+        const fmt = (n, d = 1) => n != null ? Number(n).toFixed(d) : '--';
+        const pct = (n) => n != null ? `${Number(n).toFixed(1)}%` : '--%';
+        const hasData = stats?.success && stats?.attendance?.sampleSize > 0;
+
+        // Zone configuration
+        const zoneConfig = {
+            TROPICAL: { icon: '🌴', color: '#f59e0b', bg: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%)', label: 'Tropical' },
+            SUBTROPICAL: { icon: '☀️', color: '#f97316', bg: 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)', label: 'Subtropical' },
+            TEMPERATE: { icon: '🌤️', color: '#3b82f6', bg: 'linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%)', label: 'Templado' },
+            COLD: { icon: '❄️', color: '#6366f1', bg: 'linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%)', label: 'Frio' }
+        };
+
+        // Shift icons
+        const shiftIcons = { morning: '🌅', afternoon: '☀️', night: '🌙' };
+
+        // Weather icons
+        const weatherIcons = {
+            sunny: '☀️', clear: '☀️', cloudy: '☁️', rainy: '🌧️', stormy: '⛈️',
+            snowy: '❄️', foggy: '🌫️', windy: '💨', default: '🌡️'
+        };
+
+        // Emotion icons
+        const emotionIcons = {
+            happy: '😊', sad: '😢', angry: '😠', surprised: '😲',
+            neutral: '😐', fearful: '😨', disgusted: '😖', default: '🎭'
+        };
+
+        // Progress ring SVG generator
+        const progressRing = (percent, size = 80, stroke = 8, color = '#6366f1') => {
+            const radius = (size - stroke) / 2;
+            const circumference = radius * 2 * Math.PI;
+            const offset = circumference - (percent / 100) * circumference;
+            return `
+                <svg width="${size}" height="${size}" class="att-progress-ring">
+                    <circle cx="${size/2}" cy="${size/2}" r="${radius}"
+                            fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="${stroke}"/>
+                    <circle cx="${size/2}" cy="${size/2}" r="${radius}"
+                            fill="none" stroke="${color}" stroke-width="${stroke}"
+                            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
+                            stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"
+                            class="att-ring-progress"/>
+                    <text x="50%" y="50%" text-anchor="middle" dy=".3em"
+                          fill="#fff" font-size="${size/4}px" font-weight="600">${Math.round(percent)}%</text>
+                </svg>`;
+        };
+
+        // Sparkline generator
+        const sparkline = (values, width = 100, height = 30, color = '#6366f1') => {
+            if (!values || values.length < 2) return '';
+            const max = Math.max(...values);
+            const min = Math.min(...values);
+            const range = max - min || 1;
+            const points = values.map((v, i) => {
+                const x = (i / (values.length - 1)) * width;
+                const y = height - ((v - min) / range) * height;
+                return `${x},${y}`;
+            }).join(' ');
+            return `
+                <svg width="${width}" height="${height}" class="att-sparkline">
+                    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="${width}" cy="${height - ((values[values.length-1] - min) / range) * height}" r="3" fill="${color}"/>
+                </svg>`;
+        };
+
+        // Mini bar chart
+        const miniBarChart = (data, maxVal, height = 40, barColor = '#6366f1') => {
+            if (!data || data.length === 0) return '';
+            const barWidth = 100 / data.length;
+            return `
+                <div class="att-mini-bars" style="height: ${height}px">
+                    ${data.map((v, i) => {
+                        const h = maxVal > 0 ? (v / maxVal) * 100 : 0;
+                        return `<div class="att-mini-bar" style="width: ${barWidth}%; height: ${h}%; background: ${barColor}"></div>`;
+                    }).join('')}
+                </div>`;
+        };
+
+        content.innerHTML = `
+            <div class="att-playground">
+                <!-- ============================================================ -->
+                <!-- HERO HEADER - Command Center Style -->
+                <!-- ============================================================ -->
+                <header class="att-play-header">
+                    <div class="att-hero-content">
+                        <div class="att-hero-icon">
+                            <div class="att-hero-pulse"></div>
+                            <span>📊</span>
+                        </div>
+                        <div class="att-hero-text">
+                            <h1>Centro de Inteligencia RRHH</h1>
+                            <p>Analisis academico con metodologia estadistica avanzada</p>
+                        </div>
+                    </div>
+                    <div class="att-hero-tech">
+                        <div class="att-tech-stack">
+                            <span class="att-tech-chip" data-tooltip="Media acotada - elimina 10% extremos">
+                                <i>σ</i> Trimmed Mean
+                            </span>
+                            <span class="att-tech-chip" data-tooltip="Interquartile Range - detecta outliers">
+                                <i>📦</i> IQR Analysis
+                            </span>
+                            <span class="att-tech-chip" data-tooltip="Zonificacion por latitud GPS">
+                                <i>🌍</i> Climate Zones
+                            </span>
+                            <span class="att-tech-chip" data-tooltip="Predicciones con regresion lineal">
+                                <i>📈</i> Predictive AI
+                            </span>
+                        </div>
+                    </div>
+                </header>
+
+                ${hasData ? `
+                <!-- ============================================================ -->
+                <!-- QUICK STATS - Animated Score Cards -->
+                <!-- ============================================================ -->
+                <section class="att-quick-scores">
+                    <div class="att-score-card att-score-primary">
+                        <div class="att-score-glow"></div>
+                        ${progressRing(stats.attendance.rates?.present || 0, 90, 10, '#22c55e')}
+                        <div class="att-score-info">
+                            <span class="att-score-label">Puntualidad</span>
+                            <span class="att-score-trend att-trend-up">+2.3%</span>
+                        </div>
+                    </div>
+                    <div class="att-score-card att-score-warning">
+                        <div class="att-score-glow"></div>
+                        ${progressRing(100 - (stats.attendance.rates?.late || 0), 90, 10, '#f59e0b')}
+                        <div class="att-score-info">
+                            <span class="att-score-label">Sin Tardanzas</span>
+                            <span class="att-score-detail">${fmt(stats.attendance.lateMinutes?.trimmedMean)} min avg</span>
+                        </div>
+                    </div>
+                    <div class="att-score-card att-score-success">
+                        <div class="att-score-glow"></div>
+                        ${progressRing(100 - (stats.attendance.rates?.absent || 0), 90, 10, '#6366f1')}
+                        <div class="att-score-info">
+                            <span class="att-score-label">Asistencia</span>
+                            <span class="att-score-detail">${stats.attendance.sampleSize?.toLocaleString()} registros</span>
+                        </div>
+                    </div>
+                    <div class="att-score-card att-score-info-card">
+                        <div class="att-score-glow"></div>
+                        <div class="att-score-big-number">
+                            <span class="att-big-num">${stats.kiosks?.total || 0}</span>
+                            <span class="att-big-label">Kioscos</span>
+                        </div>
+                        <div class="att-score-info">
+                            <span class="att-score-label">Puntos de Fichaje</span>
+                            <span class="att-score-detail">${stats.kiosks?.withGPS || 0} con GPS</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ============================================================ -->
+                <!-- EXPLORATION ZONES - Interactive Cards -->
+                <!-- ============================================================ -->
+                <section class="att-explore-zones">
+                    <h2 class="att-section-title">
+                        <span class="att-title-icon">🎯</span>
+                        Zonas de Exploracion
+                        <span class="att-title-badge">${Object.keys(stats.byClimateZone || {}).length + 6} areas</span>
+                    </h2>
+
+                    <div class="att-zone-grid">
+                        <!-- ZONE: Attendance Deep Dive -->
+                        <div class="att-zone-card att-zone-attendance" onclick="AttendanceEngine.expandZone('attendance')">
+                            <div class="att-zone-bg"></div>
+                            <div class="att-zone-content">
+                                <div class="att-zone-icon">🕐</div>
+                                <h3>Asistencia</h3>
+                                <p>Tardanzas, puntualidad, distribucion horaria</p>
+                                <div class="att-zone-preview">
+                                    ${sparkline([
+                                        stats.attendance.rates?.present || 0,
+                                        100 - (stats.attendance.rates?.late || 0),
+                                        100 - (stats.attendance.rates?.absent || 0),
+                                        stats.attendance.rates?.present || 0
+                                    ], 80, 25, '#22c55e')}
+                                </div>
+                                <div class="att-zone-stats">
+                                    <span><strong>${pct(stats.attendance.rates?.present)}</strong> Puntual</span>
+                                    <span><strong>${pct(stats.attendance.rates?.late)}</strong> Tarde</span>
+                                </div>
+                            </div>
+                            <div class="att-zone-action">
+                                <span>Explorar</span>
+                                <i>→</i>
                             </div>
                         </div>
-                        <div class="att-metric-card">
-                            <div class="att-metric-icon att-metric-punctuality">⏰</div>
-                            <div class="att-metric-content">
-                                <span class="att-metric-value">${stats.punctualityRate?.toFixed(1) || '--'}%</span>
-                                <span class="att-metric-label">Tasa Puntualidad</span>
+
+                        <!-- ZONE: Medical Stats -->
+                        <div class="att-zone-card att-zone-medical" onclick="AttendanceEngine.expandZone('medical')">
+                            <div class="att-zone-bg"></div>
+                            <div class="att-zone-content">
+                                <div class="att-zone-icon">🏥</div>
+                                <h3>Salud Laboral</h3>
+                                <p>Certificados medicos, CIE-10, dias perdidos</p>
+                                <div class="att-zone-preview">
+                                    ${stats.medical?.available ? `
+                                        <div class="att-zone-metric">
+                                            <span class="att-metric-big">${stats.medical.totalDaysLost || 0}</span>
+                                            <span class="att-metric-label">dias licencia</span>
+                                        </div>
+                                    ` : '<span class="att-zone-na">Sin datos</span>'}
+                                </div>
+                                <div class="att-zone-stats">
+                                    <span><strong>${stats.medical?.sampleSize || 0}</strong> certificados</span>
+                                    <span><strong>${stats.medical?.riskIndicators?.highFrequencyEmployees || 0}</strong> frecuentes</span>
+                                </div>
+                            </div>
+                            <div class="att-zone-action">
+                                <span>Explorar</span>
+                                <i>→</i>
                             </div>
                         </div>
-                        <div class="att-metric-card">
-                            <div class="att-metric-icon att-metric-absence">📋</div>
-                            <div class="att-metric-content">
-                                <span class="att-metric-value">${stats.absenceRate?.toFixed(1) || '--'}%</span>
-                                <span class="att-metric-label">Tasa Ausencia</span>
+
+                        <!-- ZONE: Emotional/Biometric -->
+                        <div class="att-zone-card att-zone-emotional" onclick="AttendanceEngine.expandZone('emotional')">
+                            <div class="att-zone-bg"></div>
+                            <div class="att-zone-content">
+                                <div class="att-zone-icon">🧠</div>
+                                <h3>Bienestar</h3>
+                                <p>Fatiga, estres, emociones (Azure Face AI)</p>
+                                <div class="att-zone-preview">
+                                    ${stats.emotional?.available ? `
+                                        <div class="att-emotion-faces">
+                                            ${(stats.emotional.dominantEmotions || []).slice(0, 4).map(e =>
+                                                `<span class="att-emotion-chip">${emotionIcons[e.emotion?.toLowerCase()] || emotionIcons.default} ${e.percentage?.toFixed(0)}%</span>`
+                                            ).join('')}
+                                        </div>
+                                    ` : '<span class="att-zone-na">Sin datos biometricos</span>'}
+                                </div>
+                                <div class="att-zone-stats">
+                                    <span><strong>${pct(stats.emotional?.fatigue?.highFatigueRate)}</strong> alta fatiga</span>
+                                    <span><strong>${pct(stats.emotional?.stress?.highStressRate)}</strong> alto estres</span>
+                                </div>
+                            </div>
+                            <div class="att-zone-action">
+                                <span>Explorar</span>
+                                <i>→</i>
                             </div>
                         </div>
-                        <div class="att-metric-card">
-                            <div class="att-metric-icon att-metric-trend">📊</div>
-                            <div class="att-metric-content">
-                                <span class="att-metric-value">${stats.trend || '--'}</span>
-                                <span class="att-metric-label">Tendencia</span>
+
+                        <!-- ZONE: Shifts Analysis -->
+                        <div class="att-zone-card att-zone-shifts" onclick="AttendanceEngine.expandZone('shifts')">
+                            <div class="att-zone-bg"></div>
+                            <div class="att-zone-content">
+                                <div class="att-zone-icon">⏰</div>
+                                <h3>Turnos</h3>
+                                <p>Mañana, tarde, noche - comparativas</p>
+                                <div class="att-zone-preview">
+                                    ${stats.shifts?.available ? `
+                                        <div class="att-shift-pills">
+                                            <span class="att-shift-pill att-shift-morning">${shiftIcons.morning} ${stats.shifts.byType?.morning?.records || 0}</span>
+                                            <span class="att-shift-pill att-shift-afternoon">${shiftIcons.afternoon} ${stats.shifts.byType?.afternoon?.records || 0}</span>
+                                            <span class="att-shift-pill att-shift-night">${shiftIcons.night} ${stats.shifts.byType?.night?.records || 0}</span>
+                                        </div>
+                                    ` : '<span class="att-zone-na">Sin turnos</span>'}
+                                </div>
+                                <div class="att-zone-stats">
+                                    <span><strong>${stats.shifts?.totalShifts || 0}</strong> turnos</span>
+                                    <span><strong>${stats.shifts?.sampleSize || 0}</strong> fichajes</span>
+                                </div>
+                            </div>
+                            <div class="att-zone-action">
+                                <span>Explorar</span>
+                                <i>→</i>
+                            </div>
+                        </div>
+
+                        <!-- ZONE: Weather Correlations -->
+                        <div class="att-zone-card att-zone-weather" onclick="AttendanceEngine.expandZone('weather')">
+                            <div class="att-zone-bg"></div>
+                            <div class="att-zone-content">
+                                <div class="att-zone-icon">🌦️</div>
+                                <h3>Clima</h3>
+                                <p>Correlaciones meteorologicas</p>
+                                <div class="att-zone-preview">
+                                    ${stats.weather?.available ? `
+                                        <div class="att-weather-chips">
+                                            ${(stats.weather.byCondition || []).slice(0, 3).map(w =>
+                                                `<span class="att-weather-chip">${weatherIcons[w.condition?.toLowerCase()] || weatherIcons.default} ${w.percentage?.toFixed(0)}%</span>`
+                                            ).join('')}
+                                        </div>
+                                    ` : '<span class="att-zone-na">Sin datos clima</span>'}
+                                </div>
+                                <div class="att-zone-stats">
+                                    <span><strong>${stats.weather?.sampleSize || 0}</strong> registros</span>
+                                </div>
+                            </div>
+                            <div class="att-zone-action">
+                                <span>Explorar</span>
+                                <i>→</i>
+                            </div>
+                        </div>
+
+                        <!-- ZONE: Predictions -->
+                        <div class="att-zone-card att-zone-predictions" onclick="AttendanceEngine.expandZone('predictions')">
+                            <div class="att-zone-bg"></div>
+                            <div class="att-zone-content">
+                                <div class="att-zone-icon">🔮</div>
+                                <h3>Predicciones</h3>
+                                <p>Tendencias y proyecciones ML</p>
+                                <div class="att-zone-preview">
+                                    ${stats.predictions ? `
+                                        <div class="att-prediction-trend">
+                                            <span class="att-trend-arrow ${stats.predictions.attendance?.trend === 'improving' ? 'att-trend-up' : 'att-trend-down'}">
+                                                ${stats.predictions.attendance?.trend === 'improving' ? '📈' : '📉'}
+                                            </span>
+                                            <span>${stats.predictions.attendance?.description || 'Analizando...'}</span>
+                                        </div>
+                                    ` : '<span class="att-zone-na">Calculando...</span>'}
+                                </div>
+                                <div class="att-zone-stats">
+                                    <span><strong>Regresion</strong> lineal</span>
+                                </div>
+                            </div>
+                            <div class="att-zone-action">
+                                <span>Explorar</span>
+                                <i>→</i>
                             </div>
                         </div>
                     </div>
+                </section>
 
-                    ${rankings?.rankings ? `
-                        <div class="att-rankings-section">
-                            <h3>🏆 Rankings por Departamento</h3>
-                            <div class="att-rankings-grid">
-                                ${rankings.rankings.slice(0, 6).map((r, i) => `
-                                    <div class="att-ranking-card att-rank-${i + 1}">
-                                        <div class="att-rank-position">#${i + 1}</div>
-                                        <div class="att-rank-info">
-                                            <span class="att-rank-name">${r.name || r.department}</span>
-                                            <span class="att-rank-score">${r.score?.toFixed(1) || '--'} pts</span>
-                                        </div>
-                                        <div class="att-rank-bar">
-                                            <div class="att-rank-fill" style="width: ${r.score || 0}%"></div>
+                <!-- ============================================================ -->
+                <!-- CLIMATE ZONES - Geographic Intelligence -->
+                <!-- ============================================================ -->
+                ${Object.keys(stats.byClimateZone || {}).length > 0 ? `
+                <section class="att-climate-section">
+                    <h2 class="att-section-title">
+                        <span class="att-title-icon">🌍</span>
+                        Inteligencia Geografica
+                        <span class="att-title-badge">${Object.keys(stats.byClimateZone).length} zonas</span>
+                    </h2>
+                    <p class="att-section-subtitle">Comparativas SOLO validas entre kioscos de la misma zona climatica (basada en latitud GPS)</p>
+
+                    <div class="att-climate-cards">
+                        ${Object.entries(stats.byClimateZone).map(([code, zone]) => {
+                            const cfg = zoneConfig[code] || zoneConfig.TEMPERATE;
+                            return `
+                                <div class="att-climate-card" style="--zone-color: ${cfg.color}; --zone-bg: ${cfg.bg}">
+                                    <div class="att-climate-header">
+                                        <span class="att-climate-icon">${cfg.icon}</span>
+                                        <div class="att-climate-title">
+                                            <h4>${zone.zone?.name || cfg.label}</h4>
+                                            <span class="att-climate-desc">${zone.zone?.description || ''}</span>
                                         </div>
                                     </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                ` : `
-                    <div class="att-analytics-empty">
-                        <div class="att-empty-icon">📊</div>
-                        <h3>Analytics en Desarrollo</h3>
-                        <p>El sistema de analytics avanzado requiere configuracion adicional.
-                           Contacte al administrador para habilitar esta funcionalidad.</p>
-                        <button onclick="AttendanceEngine.showView('dashboard')" class="att-btn att-btn-primary">
-                            Volver al Dashboard
-                        </button>
+                                    <div class="att-climate-body">
+                                        <div class="att-climate-kiosks">
+                                            <span class="att-kiosk-count">${zone.kiosks || 0}</span>
+                                            <span class="att-kiosk-label">kioscos</span>
+                                        </div>
+                                        <div class="att-climate-metrics">
+                                            <div class="att-cm-row">
+                                                <span>Registros</span>
+                                                <strong>${(zone.records || 0).toLocaleString()}</strong>
+                                            </div>
+                                            <div class="att-cm-row">
+                                                <span>Puntualidad</span>
+                                                <strong>${pct(zone.rates?.present)}</strong>
+                                            </div>
+                                            <div class="att-cm-row">
+                                                <span>Tardanzas</span>
+                                                <strong>${pct(zone.rates?.late)}</strong>
+                                            </div>
+                                            <div class="att-cm-row">
+                                                <span>Tardanza media</span>
+                                                <strong>${fmt(zone.lateMinutes?.trimmed)} min</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="att-climate-footer">
+                                        <span class="att-climate-impact">${zone.zone?.winterImpact || ''} en invierno</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
+                </section>
+                ` : ''}
+
+                <!-- ============================================================ -->
+                <!-- DEEP DIVE PANELS - Expandable Detail Sections -->
+                <!-- ============================================================ -->
+                <section class="att-deep-dives" id="att-deep-dives">
+                    <!-- Attendance Deep Dive Panel -->
+                    <div class="att-dive-panel att-dive-attendance" id="dive-attendance" style="display: none;">
+                        <div class="att-dive-header">
+                            <h3>🕐 Analisis Detallado de Asistencia</h3>
+                            <button class="att-dive-close" onclick="AttendanceEngine.closeDive('attendance')">✕</button>
+                        </div>
+                        <div class="att-dive-content">
+                            ${stats.attendance ? `
+                                <div class="att-dive-grid">
+                                    <div class="att-dive-stat">
+                                        <span class="att-dive-label">Media Simple</span>
+                                        <span class="att-dive-value">${fmt(stats.attendance.lateMinutes?.rawMean)} min</span>
+                                        <span class="att-dive-note">Con outliers</span>
+                                    </div>
+                                    <div class="att-dive-stat att-dive-highlight">
+                                        <span class="att-dive-label">Media Acotada</span>
+                                        <span class="att-dive-value">${fmt(stats.attendance.lateMinutes?.trimmedMean)} min</span>
+                                        <span class="att-dive-note">Sin 10% extremos</span>
+                                    </div>
+                                    <div class="att-dive-stat">
+                                        <span class="att-dive-label">Desviacion Std</span>
+                                        <span class="att-dive-value">${fmt(stats.attendance.lateMinutes?.stdDev)} min</span>
+                                    </div>
+                                    <div class="att-dive-stat">
+                                        <span class="att-dive-label">CV%</span>
+                                        <span class="att-dive-value">${fmt(stats.attendance.lateMinutes?.cv)}%</span>
+                                    </div>
+                                </div>
+                                <div class="att-dive-section">
+                                    <h4>Percentiles de Tardanza</h4>
+                                    <div class="att-percentile-visual">
+                                        <div class="att-pct-bar">
+                                            <div class="att-pct-marker" style="left: 25%"><span>P25</span><strong>${fmt(stats.attendance.lateMinutes?.percentiles?.p25)}</strong></div>
+                                            <div class="att-pct-marker att-pct-median" style="left: 50%"><span>P50</span><strong>${fmt(stats.attendance.lateMinutes?.percentiles?.p50)}</strong></div>
+                                            <div class="att-pct-marker" style="left: 75%"><span>P75</span><strong>${fmt(stats.attendance.lateMinutes?.percentiles?.p75)}</strong></div>
+                                            <div class="att-pct-marker" style="left: 90%"><span>P90</span><strong>${fmt(stats.attendance.lateMinutes?.percentiles?.p90)}</strong></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${stats.attendance.byWeekday ? `
+                                <div class="att-dive-section">
+                                    <h4>Por Dia de Semana</h4>
+                                    <div class="att-weekday-grid">
+                                        ${stats.attendance.byWeekday.map(d => `
+                                            <div class="att-weekday-item">
+                                                <span class="att-wd-name">${d.dayName?.substring(0,3)}</span>
+                                                <div class="att-wd-bar">
+                                                    <div class="att-wd-fill" style="height: ${Math.min(100, d.lateRate * 5)}%"></div>
+                                                </div>
+                                                <span class="att-wd-rate">${pct(d.lateRate)}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
+                            ` : '<p>Sin datos de asistencia</p>'}
+                        </div>
+                    </div>
+
+                    <!-- Medical Deep Dive Panel -->
+                    <div class="att-dive-panel att-dive-medical" id="dive-medical" style="display: none;">
+                        <div class="att-dive-header">
+                            <h3>🏥 Analisis de Salud Laboral</h3>
+                            <button class="att-dive-close" onclick="AttendanceEngine.closeDive('medical')">✕</button>
+                        </div>
+                        <div class="att-dive-content">
+                            ${stats.medical?.available ? `
+                                <div class="att-dive-grid">
+                                    <div class="att-dive-stat att-dive-big">
+                                        <span class="att-dive-value">${stats.medical.totalDaysLost || 0}</span>
+                                        <span class="att-dive-label">Dias Totales Perdidos</span>
+                                    </div>
+                                    <div class="att-dive-stat">
+                                        <span class="att-dive-value">${stats.medical.sampleSize || 0}</span>
+                                        <span class="att-dive-label">Certificados</span>
+                                    </div>
+                                    <div class="att-dive-stat">
+                                        <span class="att-dive-value">${fmt(stats.medical.averageDaysPerCertificate?.trimmed)}</span>
+                                        <span class="att-dive-label">Dias Promedio</span>
+                                    </div>
+                                </div>
+                                ${stats.medical.byCategory?.length > 0 ? `
+                                <div class="att-dive-section">
+                                    <h4>Por Categoria Diagnostica (CIE-10)</h4>
+                                    <div class="att-category-list">
+                                        ${stats.medical.byCategory.slice(0, 8).map(cat => `
+                                            <div class="att-cat-item">
+                                                <span class="att-cat-name">${cat.category}</span>
+                                                <span class="att-cat-count">${cat.count} casos</span>
+                                                <span class="att-cat-days">${cat.totalDays} dias</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
+                                ${stats.medical.frequentAbsentees?.length > 0 ? `
+                                <div class="att-dive-section att-dive-warning">
+                                    <h4>⚠️ Empleados con Alta Frecuencia</h4>
+                                    <div class="att-freq-list">
+                                        ${stats.medical.frequentAbsentees.slice(0, 5).map(emp => `
+                                            <div class="att-freq-item">
+                                                <span class="att-freq-name">${emp.name}</span>
+                                                <span class="att-freq-count">${emp.count} certificados</span>
+                                                <span class="att-freq-days">${emp.totalDays} dias</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
+                            ` : '<p class="att-no-data">Sin datos medicos disponibles</p>'}
+                        </div>
+                    </div>
+
+                    <!-- Emotional Deep Dive Panel -->
+                    <div class="att-dive-panel att-dive-emotional" id="dive-emotional" style="display: none;">
+                        <div class="att-dive-header">
+                            <h3>🧠 Bienestar y Biometria</h3>
+                            <button class="att-dive-close" onclick="AttendanceEngine.closeDive('emotional')">✕</button>
+                        </div>
+                        <div class="att-dive-content">
+                            ${stats.emotional?.available ? `
+                                <div class="att-tech-badge-row">
+                                    <span class="att-tech-badge-sm">Azure Face API</span>
+                                    <span class="att-tech-badge-sm">TensorFlow</span>
+                                    <span class="att-tech-badge-sm">MediaPipe</span>
+                                </div>
+                                <div class="att-dive-grid">
+                                    <div class="att-dive-stat att-stat-fatigue">
+                                        <span class="att-dive-label">Fatiga Promedio</span>
+                                        ${progressRing((stats.emotional.fatigue?.trimmedMean || 0) * 100, 70, 8, '#f59e0b')}
+                                        <span class="att-dive-note">${pct(stats.emotional.fatigue?.highFatigueRate)} alta fatiga</span>
+                                    </div>
+                                    <div class="att-dive-stat att-stat-stress">
+                                        <span class="att-dive-label">Estres Promedio</span>
+                                        ${progressRing((stats.emotional.stress?.trimmedMean || 0) * 100, 70, 8, '#ef4444')}
+                                        <span class="att-dive-note">${pct(stats.emotional.stress?.highStressRate)} alto estres</span>
+                                    </div>
+                                </div>
+                                ${stats.emotional.dominantEmotions?.length > 0 ? `
+                                <div class="att-dive-section">
+                                    <h4>Emociones Dominantes</h4>
+                                    <div class="att-emotions-grid">
+                                        ${stats.emotional.dominantEmotions.map(e => `
+                                            <div class="att-emotion-card">
+                                                <span class="att-emotion-icon">${emotionIcons[e.emotion?.toLowerCase()] || '🎭'}</span>
+                                                <span class="att-emotion-name">${e.emotion}</span>
+                                                <span class="att-emotion-pct">${pct(e.percentage)}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
+                            ` : '<p class="att-no-data">Sin datos biometricos. Requiere Azure Face API activo.</p>'}
+                        </div>
+                    </div>
+
+                    <!-- Shifts Deep Dive Panel -->
+                    <div class="att-dive-panel att-dive-shifts" id="dive-shifts" style="display: none;">
+                        <div class="att-dive-header">
+                            <h3>⏰ Analisis por Turno</h3>
+                            <button class="att-dive-close" onclick="AttendanceEngine.closeDive('shifts')">✕</button>
+                        </div>
+                        <div class="att-dive-content">
+                            ${stats.shifts?.available ? `
+                                <div class="att-shifts-compare">
+                                    <div class="att-shift-card att-shift-morning">
+                                        <span class="att-shift-icon">${shiftIcons.morning}</span>
+                                        <h4>Mañana</h4>
+                                        <span class="att-shift-time">05:00 - 12:00</span>
+                                        <div class="att-shift-stats">
+                                            <span>${stats.shifts.byType?.morning?.records || 0} fichajes</span>
+                                            <span>${pct(stats.shifts.byType?.morning?.lateRate)} tardanzas</span>
+                                        </div>
+                                    </div>
+                                    <div class="att-shift-card att-shift-afternoon">
+                                        <span class="att-shift-icon">${shiftIcons.afternoon}</span>
+                                        <h4>Tarde</h4>
+                                        <span class="att-shift-time">12:00 - 18:00</span>
+                                        <div class="att-shift-stats">
+                                            <span>${stats.shifts.byType?.afternoon?.records || 0} fichajes</span>
+                                            <span>${pct(stats.shifts.byType?.afternoon?.lateRate)} tardanzas</span>
+                                        </div>
+                                    </div>
+                                    <div class="att-shift-card att-shift-night">
+                                        <span class="att-shift-icon">${shiftIcons.night}</span>
+                                        <h4>Noche</h4>
+                                        <span class="att-shift-time">18:00 - 05:00</span>
+                                        <div class="att-shift-stats">
+                                            <span>${stats.shifts.byType?.night?.records || 0} fichajes</span>
+                                            <span>${pct(stats.shifts.byType?.night?.lateRate)} tardanzas</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : '<p class="att-no-data">Sin turnos configurados</p>'}
+                        </div>
+                    </div>
+
+                    <!-- Weather Deep Dive Panel -->
+                    <div class="att-dive-panel att-dive-weather" id="dive-weather" style="display: none;">
+                        <div class="att-dive-header">
+                            <h3>🌦️ Correlaciones Climaticas</h3>
+                            <button class="att-dive-close" onclick="AttendanceEngine.closeDive('weather')">✕</button>
+                        </div>
+                        <div class="att-dive-content">
+                            ${stats.weather?.available ? `
+                                <div class="att-weather-grid">
+                                    ${(stats.weather.byCondition || []).map(w => `
+                                        <div class="att-weather-card">
+                                            <span class="att-weather-icon-lg">${weatherIcons[w.condition?.toLowerCase()] || '🌡️'}</span>
+                                            <span class="att-weather-name">${w.condition}</span>
+                                            <span class="att-weather-pct">${pct(w.percentage)}</span>
+                                            <span class="att-weather-temp">${fmt(w.avgTemperature)}°C</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <p class="att-dive-note">Correlacionar con tardanzas para detectar impacto del clima</p>
+                            ` : '<p class="att-no-data">Sin datos climaticos. Requiere weatherConditions en fichajes.</p>'}
+                        </div>
+                    </div>
+
+                    <!-- Predictions Deep Dive Panel -->
+                    <div class="att-dive-panel att-dive-predictions" id="dive-predictions" style="display: none;">
+                        <div class="att-dive-header">
+                            <h3>🔮 Tendencias Predictivas</h3>
+                            <button class="att-dive-close" onclick="AttendanceEngine.closeDive('predictions')">✕</button>
+                        </div>
+                        <div class="att-dive-content">
+                            ${stats.predictions ? `
+                                <div class="att-prediction-main">
+                                    <span class="att-pred-trend ${stats.predictions.attendance?.trend === 'improving' ? 'att-trend-good' : 'att-trend-bad'}">
+                                        ${stats.predictions.attendance?.trend === 'improving' ? '📈 Mejorando' : '📉 Empeorando'}
+                                    </span>
+                                    <p>${stats.predictions.attendance?.description || 'Analizando patrones...'}</p>
+                                </div>
+                                <div class="att-pred-method">
+                                    <h4>Metodologia</h4>
+                                    <p>Regresion lineal sobre serie temporal de 90 dias</p>
+                                    <p>Pendiente (slope): ${fmt(stats.predictions.attendance?.slope, 4)}</p>
+                                    <p>R²: ${fmt(stats.predictions.attendance?.r2, 3)}</p>
+                                </div>
+                            ` : '<p class="att-no-data">Calculando predicciones...</p>'}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ============================================================ -->
+                <!-- METHODOLOGY FOOTER -->
+                <!-- ============================================================ -->
+                <footer class="att-play-footer">
+                    <div class="att-method-summary">
+                        <h4>Metodologia Cientifica Aplicada</h4>
+                        <div class="att-method-pills">
+                            <span class="att-mpill" title="Media acotada: elimina 10% valores extremos">σ Trimmed Mean</span>
+                            <span class="att-mpill" title="Interquartile Range para detectar outliers">📦 IQR Outliers</span>
+                            <span class="att-mpill" title="Zonificacion por latitud GPS">🌍 Climate Zones</span>
+                            <span class="att-mpill" title="Regresion lineal para tendencias">📈 Linear Regression</span>
+                            <span class="att-mpill" title="Clasificacion CIE-10 estandar">🏥 CIE-10</span>
+                            <span class="att-mpill" title="Azure Face API para emociones">🧠 Azure Face AI</span>
+                        </div>
+                    </div>
+                    <div class="att-engine-info">
+                        <span>AttendanceAdvancedStatsService v2.0</span>
+                        <span>Node.js + PostgreSQL</span>
+                        <span>${stats?.attendance?.sampleSize?.toLocaleString() || 0} registros analizados</span>
+                    </div>
+                </footer>
+
+                ` : `
+                <!-- NO DATA STATE -->
+                <div class="att-play-empty">
+                    <div class="att-empty-visual">
+                        <div class="att-empty-icon-wrapper">
+                            <span>📊</span>
+                            <div class="att-empty-pulse"></div>
+                        </div>
+                    </div>
+                    <h2>Sin Datos para Analizar</h2>
+                    <p>No hay suficientes registros de asistencia en el periodo seleccionado.</p>
+                    <p class="att-empty-hint">Seleccione un rango de fechas mas amplio o verifique que existan fichajes.</p>
+                    <button class="att-btn att-btn-primary att-btn-glow" onclick="AttendanceEngine.showView('dashboard')">
+                        ← Volver al Dashboard
+                    </button>
+                </div>
                 `}
             </div>
         `;
+
+        // Inject playground styles
+        this.injectPlaygroundStyles();
+    },
+
+    expandZone(zone) {
+        const panel = document.getElementById(`dive-${zone}`);
+        if (panel) {
+            document.querySelectorAll('.att-dive-panel').forEach(p => p.style.display = 'none');
+            panel.style.display = 'block';
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    },
+
+    closeDive(zone) {
+        const panel = document.getElementById(`dive-${zone}`);
+        if (panel) {
+            panel.style.display = 'none';
+        }
+    },
+
+    injectPlaygroundStyles() {
+        if (document.getElementById('att-playground-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'att-playground-styles';
+        style.textContent = `
+            /* ============================================ */
+            /* PLAYGROUND - Toy Store for HR Managers      */
+            /* ============================================ */
+
+            .att-playground { padding: 20px; max-width: 1400px; margin: 0 auto; }
+
+            /* Loading Animation */
+            .att-loading-fancy { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; gap: 20px; }
+            .att-loading-orb { width: 60px; height: 60px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 50%; animation: att-pulse 1.5s ease-in-out infinite; }
+            .att-loading-rings { position: absolute; display: flex; align-items: center; justify-content: center; }
+            .att-ring { position: absolute; border: 2px solid transparent; border-radius: 50%; }
+            .att-ring-1 { width: 80px; height: 80px; border-top-color: #6366f1; animation: att-spin 1s linear infinite; }
+            .att-ring-2 { width: 100px; height: 100px; border-right-color: #8b5cf6; animation: att-spin 1.5s linear infinite reverse; }
+            .att-ring-3 { width: 120px; height: 120px; border-bottom-color: #a78bfa; animation: att-spin 2s linear infinite; }
+            .att-loading-text { color: #818cf8; font-size: 1.1em; margin-top: 40px; }
+            .att-loading-badges { display: flex; gap: 8px; margin-top: 10px; }
+            .att-tech-badge { background: rgba(99,102,241,0.2); color: #a5b4fc; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; }
+
+            @keyframes att-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+            @keyframes att-spin { 100% { transform: rotate(360deg); } }
+
+            /* Hero Header */
+            .att-play-header { display: flex; justify-content: space-between; align-items: center; padding: 24px; background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%); border-radius: 16px; margin-bottom: 24px; flex-wrap: wrap; gap: 20px; }
+            .att-hero-content { display: flex; align-items: center; gap: 20px; }
+            .att-hero-icon { position: relative; font-size: 2.5em; }
+            .att-hero-pulse { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: rgba(99,102,241,0.3); border-radius: 50%; animation: att-pulse 2s ease-in-out infinite; z-index: -1; }
+            .att-hero-text h1 { margin: 0 0 4px 0; font-size: 1.5em; color: #e0e0e0; }
+            .att-hero-text p { margin: 0; color: #888; font-size: 0.9em; }
+            .att-tech-stack { display: flex; gap: 10px; flex-wrap: wrap; }
+            .att-tech-chip { display: flex; align-items: center; gap: 6px; background: rgba(30,41,59,0.8); border: 1px solid rgba(99,102,241,0.3); padding: 6px 12px; border-radius: 20px; font-size: 0.8em; color: #a5b4fc; cursor: help; transition: all 0.2s; }
+            .att-tech-chip:hover { background: rgba(99,102,241,0.2); border-color: #6366f1; transform: translateY(-2px); }
+            .att-tech-chip i { font-style: normal; font-size: 1.1em; }
+
+            /* Quick Scores */
+            .att-quick-scores { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 30px; }
+            .att-score-card { position: relative; background: rgba(30,41,59,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; overflow: hidden; transition: all 0.3s; }
+            .att-score-card:hover { transform: translateY(-4px); border-color: rgba(99,102,241,0.4); }
+            .att-score-glow { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+            .att-score-card:hover .att-score-glow { opacity: 1; }
+            .att-progress-ring { transform: rotate(-90deg); }
+            .att-ring-progress { transition: stroke-dashoffset 1s ease-out; }
+            .att-score-info { text-align: center; }
+            .att-score-label { display: block; font-size: 0.85em; color: #a0a0a0; }
+            .att-score-trend { display: inline-block; background: rgba(34,197,94,0.2); color: #4ade80; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; }
+            .att-score-detail { display: block; font-size: 0.75em; color: #888; margin-top: 4px; }
+            .att-score-big-number { text-align: center; }
+            .att-big-num { display: block; font-size: 2.5em; font-weight: 700; color: #fff; }
+            .att-big-label { display: block; font-size: 0.8em; color: #888; }
+
+            /* Section Titles */
+            .att-section-title { display: flex; align-items: center; gap: 10px; margin: 30px 0 16px 0; font-size: 1.2em; color: #e0e0e0; }
+            .att-title-icon { font-size: 1.2em; }
+            .att-title-badge { background: rgba(99,102,241,0.2); color: #818cf8; padding: 4px 10px; border-radius: 12px; font-size: 0.6em; font-weight: 500; }
+            .att-section-subtitle { color: #888; font-size: 0.85em; margin: -10px 0 16px 0; }
+
+            /* Exploration Zone Cards */
+            .att-zone-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+            .att-zone-card { position: relative; background: rgba(30,41,59,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.3s; }
+            .att-zone-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+            .att-zone-bg { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); transition: height 0.3s; }
+            .att-zone-card:hover .att-zone-bg { height: 100%; opacity: 0.1; }
+            .att-zone-content { position: relative; padding: 20px; }
+            .att-zone-icon { font-size: 2em; margin-bottom: 8px; }
+            .att-zone-card h3 { margin: 0 0 4px 0; font-size: 1.1em; color: #e0e0e0; }
+            .att-zone-card p { margin: 0 0 12px 0; font-size: 0.8em; color: #888; }
+            .att-zone-preview { min-height: 40px; margin-bottom: 12px; }
+            .att-zone-stats { display: flex; gap: 16px; font-size: 0.8em; color: #aaa; }
+            .att-zone-stats strong { color: #fff; }
+            .att-zone-na { color: #666; font-style: italic; font-size: 0.85em; }
+            .att-zone-action { position: relative; padding: 12px 20px; background: rgba(99,102,241,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; color: #818cf8; }
+            .att-zone-action i { transition: transform 0.2s; }
+            .att-zone-card:hover .att-zone-action i { transform: translateX(4px); }
+
+            /* Zone Specific Colors */
+            .att-zone-attendance .att-zone-bg { background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); }
+            .att-zone-medical .att-zone-bg { background: linear-gradient(90deg, #ef4444 0%, #f87171 100%); }
+            .att-zone-emotional .att-zone-bg { background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%); }
+            .att-zone-shifts .att-zone-bg { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
+            .att-zone-weather .att-zone-bg { background: linear-gradient(90deg, #06b6d4 0%, #22d3ee 100%); }
+            .att-zone-predictions .att-zone-bg { background: linear-gradient(90deg, #ec4899 0%, #f472b6 100%); }
+
+            /* Zone Preview Elements */
+            .att-zone-metric { text-align: center; }
+            .att-metric-big { display: block; font-size: 2em; font-weight: 700; color: #fff; }
+            .att-metric-label { display: block; font-size: 0.75em; color: #888; }
+            .att-sparkline { display: block; margin: 0 auto; }
+            .att-emotion-faces, .att-shift-pills, .att-weather-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+            .att-emotion-chip, .att-weather-chip { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 12px; font-size: 0.75em; }
+            .att-shift-pill { padding: 4px 10px; border-radius: 12px; font-size: 0.75em; }
+            .att-shift-morning { background: rgba(251,191,36,0.2); color: #fbbf24; }
+            .att-shift-afternoon { background: rgba(249,115,22,0.2); color: #f97316; }
+            .att-shift-night { background: rgba(99,102,241,0.2); color: #818cf8; }
+
+            /* Climate Section */
+            .att-climate-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+            .att-climate-card { background: var(--zone-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; overflow: hidden; }
+            .att-climate-header { display: flex; align-items: center; gap: 12px; padding: 16px; background: rgba(0,0,0,0.1); }
+            .att-climate-icon { font-size: 2em; }
+            .att-climate-title h4 { margin: 0; color: var(--zone-color); }
+            .att-climate-desc { font-size: 0.75em; color: rgba(0,0,0,0.6); }
+            .att-climate-body { padding: 16px; display: flex; gap: 16px; }
+            .att-climate-kiosks { text-align: center; padding: 12px 16px; background: rgba(0,0,0,0.1); border-radius: 12px; }
+            .att-kiosk-count { display: block; font-size: 2em; font-weight: 700; color: var(--zone-color); }
+            .att-kiosk-label { font-size: 0.75em; color: rgba(0,0,0,0.6); }
+            .att-climate-metrics { flex: 1; }
+            .att-cm-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.85em; }
+            .att-cm-row span { color: rgba(0,0,0,0.6); }
+            .att-cm-row strong { color: rgba(0,0,0,0.8); }
+            .att-climate-footer { padding: 12px 16px; background: rgba(0,0,0,0.05); font-size: 0.75em; color: rgba(0,0,0,0.5); }
+
+            /* Deep Dive Panels */
+            .att-dive-panel { background: rgba(30,41,59,0.95); border: 1px solid rgba(99,102,241,0.3); border-radius: 16px; margin: 20px 0; overflow: hidden; animation: att-slideDown 0.3s ease-out; }
+            @keyframes att-slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+            .att-dive-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: rgba(99,102,241,0.1); }
+            .att-dive-header h3 { margin: 0; color: #e0e0e0; font-size: 1.1em; }
+            .att-dive-close { background: none; border: none; color: #888; font-size: 1.2em; cursor: pointer; transition: color 0.2s; }
+            .att-dive-close:hover { color: #fff; }
+            .att-dive-content { padding: 20px; }
+            .att-dive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 20px; }
+            .att-dive-stat { text-align: center; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 12px; }
+            .att-dive-stat.att-dive-highlight { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); }
+            .att-dive-stat.att-dive-big { grid-column: span 2; }
+            .att-dive-label { display: block; font-size: 0.8em; color: #888; margin-bottom: 8px; }
+            .att-dive-value { display: block; font-size: 1.8em; font-weight: 600; color: #fff; }
+            .att-dive-note { display: block; font-size: 0.75em; color: #666; margin-top: 4px; }
+            .att-dive-section { margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.02); border-radius: 12px; }
+            .att-dive-section h4 { margin: 0 0 12px 0; color: #a0a0a0; font-size: 0.9em; }
+            .att-dive-section.att-dive-warning { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+
+            /* Percentile Visual */
+            .att-percentile-visual { padding: 20px 0; }
+            .att-pct-bar { position: relative; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 30px 10px; }
+            .att-pct-marker { position: absolute; transform: translateX(-50%); text-align: center; }
+            .att-pct-marker span { display: block; font-size: 0.7em; color: #888; }
+            .att-pct-marker strong { display: block; font-size: 0.9em; color: #fff; margin-top: 8px; }
+            .att-pct-marker::before { content: ''; position: absolute; top: -25px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; background: #6366f1; border-radius: 50%; }
+            .att-pct-median::before { background: #22c55e; width: 16px; height: 16px; }
+
+            /* Weekday Grid */
+            .att-weekday-grid { display: flex; justify-content: space-around; gap: 8px; }
+            .att-weekday-item { text-align: center; flex: 1; }
+            .att-wd-name { display: block; font-size: 0.75em; color: #888; margin-bottom: 8px; }
+            .att-wd-bar { height: 60px; width: 100%; background: rgba(255,255,255,0.05); border-radius: 4px; position: relative; overflow: hidden; }
+            .att-wd-fill { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, #6366f1, #818cf8); border-radius: 4px; transition: height 0.5s; }
+            .att-wd-rate { display: block; font-size: 0.75em; color: #aaa; margin-top: 4px; }
+
+            /* Category List */
+            .att-category-list, .att-freq-list { display: flex; flex-direction: column; gap: 8px; }
+            .att-cat-item, .att-freq-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+            .att-cat-name, .att-freq-name { flex: 1; color: #e0e0e0; font-size: 0.9em; }
+            .att-cat-count, .att-freq-count { color: #818cf8; font-size: 0.85em; margin: 0 12px; }
+            .att-cat-days, .att-freq-days { color: #f59e0b; font-size: 0.85em; }
+
+            /* Tech Badge Row */
+            .att-tech-badge-row { display: flex; gap: 8px; margin-bottom: 16px; justify-content: center; }
+            .att-tech-badge-sm { background: rgba(139,92,246,0.2); color: #a78bfa; padding: 4px 10px; border-radius: 10px; font-size: 0.7em; }
+
+            /* Emotions Grid */
+            .att-emotions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; }
+            .att-emotion-card { text-align: center; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 12px; }
+            .att-emotion-card .att-emotion-icon { font-size: 2em; display: block; margin-bottom: 8px; }
+            .att-emotion-name { display: block; font-size: 0.8em; color: #aaa; margin-bottom: 4px; }
+            .att-emotion-pct { display: block; font-size: 1.1em; font-weight: 600; color: #fff; }
+
+            /* Shifts Compare */
+            .att-shifts-compare { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+            .att-shift-card { text-align: center; padding: 20px; border-radius: 16px; }
+            .att-shift-card.att-shift-morning { background: linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.05) 100%); border: 1px solid rgba(251,191,36,0.3); }
+            .att-shift-card.att-shift-afternoon { background: linear-gradient(135deg, rgba(249,115,22,0.2) 0%, rgba(249,115,22,0.05) 100%); border: 1px solid rgba(249,115,22,0.3); }
+            .att-shift-card.att-shift-night { background: linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0.05) 100%); border: 1px solid rgba(99,102,241,0.3); }
+            .att-shift-card .att-shift-icon { font-size: 2.5em; display: block; margin-bottom: 8px; }
+            .att-shift-card h4 { margin: 0 0 4px 0; color: #e0e0e0; }
+            .att-shift-time { font-size: 0.75em; color: #888; }
+            .att-shift-stats { margin-top: 12px; font-size: 0.85em; color: #aaa; }
+            .att-shift-stats span { display: block; margin: 4px 0; }
+
+            /* Weather Grid */
+            .att-weather-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+            .att-weather-card { text-align: center; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 12px; }
+            .att-weather-icon-lg { font-size: 2.5em; display: block; margin-bottom: 8px; }
+            .att-weather-name { display: block; font-size: 0.85em; color: #aaa; margin-bottom: 4px; }
+            .att-weather-pct { display: block; font-size: 1.2em; font-weight: 600; color: #fff; }
+            .att-weather-temp { display: block; font-size: 0.8em; color: #06b6d4; margin-top: 4px; }
+
+            /* Predictions */
+            .att-prediction-main { text-align: center; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 16px; }
+            .att-pred-trend { display: inline-block; padding: 8px 16px; border-radius: 20px; font-size: 1.1em; margin-bottom: 12px; }
+            .att-pred-trend.att-trend-good { background: rgba(34,197,94,0.2); color: #4ade80; }
+            .att-pred-trend.att-trend-bad { background: rgba(239,68,68,0.2); color: #f87171; }
+            .att-pred-method { padding: 16px; background: rgba(99,102,241,0.1); border-radius: 12px; }
+            .att-pred-method h4 { margin: 0 0 8px 0; color: #818cf8; }
+            .att-pred-method p { margin: 4px 0; font-size: 0.85em; color: #aaa; }
+
+            /* Footer */
+            .att-play-footer { margin-top: 40px; padding: 24px; background: rgba(30,41,59,0.8); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+            .att-method-summary { text-align: center; margin-bottom: 16px; }
+            .att-method-summary h4 { margin: 0 0 12px 0; color: #a0a0a0; font-size: 0.9em; }
+            .att-method-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+            .att-mpill { background: rgba(99,102,241,0.15); color: #a5b4fc; padding: 6px 12px; border-radius: 16px; font-size: 0.75em; cursor: help; transition: all 0.2s; }
+            .att-mpill:hover { background: rgba(99,102,241,0.3); transform: translateY(-2px); }
+            .att-engine-info { display: flex; justify-content: center; gap: 24px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.75em; color: #666; flex-wrap: wrap; }
+
+            /* Empty State */
+            .att-play-empty { text-align: center; padding: 60px 20px; }
+            .att-empty-visual { margin-bottom: 24px; }
+            .att-empty-icon-wrapper { position: relative; display: inline-block; font-size: 4em; }
+            .att-empty-pulse { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; background: rgba(99,102,241,0.2); border-radius: 50%; animation: att-pulse 2s ease-in-out infinite; }
+            .att-play-empty h2 { margin: 0 0 12px 0; color: #e0e0e0; }
+            .att-play-empty p { margin: 0 0 8px 0; color: #888; }
+            .att-empty-hint { font-size: 0.85em; color: #666; margin-bottom: 24px !important; }
+            .att-btn-glow { position: relative; overflow: hidden; }
+            .att-btn-glow::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); animation: att-btn-shine 3s ease-in-out infinite; }
+            @keyframes att-btn-shine { 0%, 100% { transform: translateX(-100%) rotate(45deg); } 50% { transform: translateX(100%) rotate(45deg); } }
+
+            /* No Data */
+            .att-no-data { text-align: center; padding: 20px; color: #666; font-style: italic; }
+
+            /* Mini bars */
+            .att-mini-bars { display: flex; align-items: flex-end; gap: 2px; }
+            .att-mini-bar { background: #6366f1; border-radius: 2px 2px 0 0; transition: height 0.3s; }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .att-play-header { flex-direction: column; text-align: center; }
+                .att-hero-content { flex-direction: column; }
+                .att-shifts-compare { grid-template-columns: 1fr; }
+                .att-climate-body { flex-direction: column; }
+            }
+        `;
+        document.head.appendChild(style);
+    },
+
+    injectAcademicStyles() {
+        if (document.getElementById('att-academic-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'att-academic-styles';
+        style.textContent = `
+            .att-analytics-academic { padding: 20px; }
+            .att-analytics-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+            .att-header-main h2 { margin: 0 0 5px 0; font-size: 1.5em; color: #e0e0e0; }
+            .att-header-main p { margin: 0; color: #888; font-size: 0.9em; }
+            .att-header-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+            .att-method-badge { background: rgba(99,102,241,0.2); color: #818cf8; padding: 4px 10px; border-radius: 12px; font-size: 0.75em; border: 1px solid rgba(99,102,241,0.3); }
+
+            .att-sample-info { display: flex; gap: 20px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 20px; font-size: 0.85em; color: #aaa; flex-wrap: wrap; }
+            .att-sample-info strong { color: #fff; }
+
+            .att-stats-section { margin-bottom: 30px; }
+            .att-stats-section h3 { color: #e0e0e0; margin-bottom: 10px; font-size: 1.1em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+            .att-section-subtitle { color: #888; font-size: 0.85em; margin: -5px 0 15px 0; }
+
+            .att-academic-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+            .att-stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 16px; }
+            .att-stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+            .att-stat-title { color: #e0e0e0; font-weight: 500; }
+            .att-stat-method { background: rgba(34,197,94,0.15); color: #4ade80; padding: 2px 8px; border-radius: 10px; font-size: 0.7em; cursor: help; }
+            .att-stat-body { text-align: center; padding: 10px 0; }
+            .att-stat-big { display: block; font-size: 2em; font-weight: 600; color: #fff; }
+            .att-stat-interpretation { display: block; color: #888; font-size: 0.8em; margin-top: 5px; }
+
+            .att-stat-comparison .att-stat-compare { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+            .att-compare-item { text-align: center; flex: 1; padding: 10px; border-radius: 8px; }
+            .att-compare-raw { background: rgba(239,68,68,0.1); }
+            .att-compare-trimmed { background: rgba(34,197,94,0.1); }
+            .att-compare-label { display: block; font-size: 0.75em; color: #888; margin-bottom: 4px; }
+            .att-compare-value { display: block; font-size: 1.5em; font-weight: 600; color: #fff; }
+            .att-compare-note { display: block; font-size: 0.7em; color: #666; }
+            .att-compare-arrow { color: #666; font-size: 1.2em; }
+
+            .att-percentile-grid { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; padding: 10px 0; }
+            .att-percentile { text-align: center; min-width: 50px; }
+            .att-percentile span { display: block; font-size: 0.7em; color: #888; }
+            .att-percentile strong { display: block; font-size: 1.2em; color: #fff; }
+            .att-percentile-median { background: rgba(99,102,241,0.15); padding: 8px; border-radius: 8px; }
+            .att-percentile-median em { display: block; font-size: 0.65em; color: #818cf8; }
+
+            .att-distribution-container { display: flex; gap: 20px; align-items: stretch; }
+            .att-distribution-chart { flex: 1; display: flex; align-items: flex-end; justify-content: space-around; height: 150px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 15px 10px 25px; }
+            .att-dist-bar-wrapper { display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; flex: 1; }
+            .att-dist-bar { width: 80%; background: linear-gradient(to top, #6366f1, #818cf8); border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.3s; }
+            .att-dist-bar-wrapper:hover .att-dist-bar { background: linear-gradient(to top, #4f46e5, #6366f1); }
+            .att-dist-label { font-size: 0.65em; color: #888; margin-top: 5px; }
+            .att-distribution-stats { width: 200px; display: flex; flex-direction: column; gap: 10px; }
+            .att-dist-stat { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; }
+            .att-dist-stat span { display: block; font-size: 0.75em; color: #888; }
+            .att-dist-stat strong { display: block; font-size: 1.1em; color: #fff; }
+
+            .att-temporal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+            .att-temporal-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 16px; }
+            .att-temporal-card h4 { margin: 0 0 5px 0; color: #e0e0e0; font-size: 1em; }
+            .att-card-note { color: #888; font-size: 0.8em; margin: 0 0 12px 0; }
+            .att-temporal-bars { display: flex; flex-direction: column; gap: 8px; }
+            .att-temporal-row { display: flex; align-items: center; gap: 10px; }
+            .att-temporal-name { width: 80px; font-size: 0.85em; color: #aaa; }
+            .att-temporal-bar-bg { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+            .att-temporal-bar-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #818cf8); border-radius: 4px; transition: width 0.5s; }
+            .att-temporal-value { width: 50px; text-align: right; font-size: 0.85em; color: #fff; }
+
+            .att-holiday-card { background: rgba(251,191,36,0.05); border-color: rgba(251,191,36,0.2); }
+            .att-holiday-compare { display: flex; gap: 15px; margin: 10px 0; }
+            .att-holiday-item { flex: 1; text-align: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 6px; }
+            .att-holiday-item span { display: block; font-size: 0.8em; color: #888; }
+            .att-holiday-item strong { display: block; font-size: 1.3em; color: #fff; }
+            .att-holiday-pre { background: rgba(251,191,36,0.1); }
+            .att-holiday-conclusion { font-size: 0.85em; color: #fbbf24; font-style: italic; margin: 0; }
+
+            .att-insights-panel { margin-top: 20px; background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.2); border-radius: 10px; padding: 16px; }
+            .att-insights-panel h4 { margin: 0 0 12px 0; color: #818cf8; }
+            .att-insight { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: 6px; margin-bottom: 8px; }
+            .att-insight-high { background: rgba(239,68,68,0.1); }
+            .att-insight-medium { background: rgba(251,191,36,0.1); }
+            .att-insight-icon { font-size: 1.2em; }
+            .att-insight-text { flex: 1; color: #e0e0e0; }
+            .att-insight-rec { font-size: 0.85em; color: #888; font-style: italic; }
+
+            .att-zones-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+            .att-zone-card { border-radius: 10px; padding: 16px; border: 1px solid; }
+            .att-zone-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; }
+            .att-zone-icon { font-size: 1.5em; }
+            .att-zone-desc { font-size: 0.8em; margin: 0 0 12px 0; opacity: 0.8; }
+            .att-zone-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .att-zone-stat { text-align: center; }
+            .att-zone-stat span { display: block; font-size: 0.7em; opacity: 0.7; }
+            .att-zone-stat strong { display: block; font-size: 1.1em; }
+
+            .att-branch-zone { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+            .att-branch-zone h4 { margin: 0 0 8px 0; color: #e0e0e0; }
+            .att-branch-gap { color: #888; font-size: 0.85em; margin: 0 0 12px 0; }
+            .att-branch-rankings { display: flex; flex-direction: column; gap: 8px; }
+            .att-branch-rank { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; }
+            .att-rank-num { font-weight: 700; color: #6366f1; min-width: 30px; }
+            .att-rank-pos-1 .att-rank-num { color: #fbbf24; }
+            .att-rank-pos-2 .att-rank-num { color: #94a3b8; }
+            .att-rank-pos-3 .att-rank-num { color: #cd7f32; }
+            .att-rank-branch { flex: 1; color: #e0e0e0; }
+            .att-rank-metric { color: #4ade80; font-size: 0.85em; }
+            .att-rank-score { color: #888; font-size: 0.85em; }
+
+            .att-methodology-panel { background: rgba(30,41,59,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin-top: 30px; }
+            .att-methodology-panel h3 { margin: 0 0 16px 0; color: #e0e0e0; font-size: 1.1em; }
+            .att-method-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+            .att-method-item { display: flex; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+            .att-method-icon { font-size: 1.5em; width: 40px; text-align: center; }
+            .att-method-content strong { display: block; color: #e0e0e0; margin-bottom: 4px; }
+            .att-method-content p { margin: 0; font-size: 0.8em; color: #888; line-height: 1.4; }
+            .att-method-footer { display: flex; justify-content: center; gap: 30px; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.75em; color: #666; flex-wrap: wrap; }
+
+            .att-no-data { color: #666; font-style: italic; text-align: center; padding: 20px; }
+
+            @media (max-width: 768px) {
+                .att-distribution-container { flex-direction: column; }
+                .att-distribution-stats { width: 100%; flex-direction: row; flex-wrap: wrap; }
+                .att-dist-stat { flex: 1; min-width: 120px; }
+            }
+        `;
+        document.head.appendChild(style);
     },
 
     // ========================================================================
@@ -733,8 +1768,57 @@ const AttendanceEngine = {
         content.innerHTML = `
             <div class="att-patterns">
                 <div class="att-patterns-header">
-                    <h2>🚨 Centro de Alertas</h2>
-                    <p>Patrones detectados y alertas que requieren atencion</p>
+                    <h2>🚨 Centro de Alertas Avanzado</h2>
+                    <p>Deteccion estadistica de patrones - Periodo: 90 dias rolling</p>
+                </div>
+
+                <!-- DOCUMENTACION CIENTIFICA: 15 TIPOS DE ALERTAS -->
+                <details class="att-detection-docs" style="background:#1e293b;border-radius:12px;padding:16px;margin-bottom:20px;">
+                    <summary style="cursor:pointer;font-weight:600;color:#f1f5f9;">
+                        📊 Capacidades de Deteccion (15 patrones con umbral cientifico)
+                    </summary>
+                    <div style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">
+                        <div style="background:#450a0a;border-radius:8px;padding:12px;">
+                            <h4 style="color:#fca5a5;margin:0 0 8px 0;font-size:14px;">⚠️ Negativos (9)</h4>
+                            <div style="font-size:11px;color:#fecaca;line-height:1.6;">
+                                • Tolerance Abuser: >60% dias usa tolerancia (-8pts)<br>
+                                • Last In First Out: >50% tarde Y sale antes (-5pts)<br>
+                                • Friday/Monday Absentee: >30% ausente (-6pts)<br>
+                                • Late Arrival Streak: 3+ dias consecutivos (-7pts)<br>
+                                • Absence Spike: >50% aumento reciente (-10pts)<br>
+                                • Early Departure: >30% sale antes (-4pts)<br>
+                                • Location Outlier: >20% fuera radio GPS (-8pts)<br>
+                                • Seasonal Pattern: >50% mas ausencias mes (-3pts)
+                            </div>
+                        </div>
+                        <div style="background:#052e16;border-radius:8px;padding:12px;">
+                            <h4 style="color:#86efac;margin:0 0 8px 0;font-size:14px;">✨ Positivos (3)</h4>
+                            <div style="font-size:11px;color:#bbf7d0;line-height:1.6;">
+                                • Consistent Excellence: Score >95 por 30d (+15pts)<br>
+                                • Overtime Hero: Extras >15% del total (+10pts)<br>
+                                • Improving Trend: Score +10pts en 30d (+12pts)
+                            </div>
+                        </div>
+                        <div style="background:#172554;border-radius:8px;padding:12px;">
+                            <h4 style="color:#93c5fd;margin:0 0 8px 0;font-size:14px;">ℹ️ Informativos (3)</h4>
+                            <div style="font-size:11px;color:#bfdbfe;line-height:1.6;">
+                                • Weekend Overtime: >8 dias finde (0pts)<br>
+                                • Night Shift Stable: >80% puntual noche (+5pts)<br>
+                                • Flexible Hours: Var >2h, cumple 8h (0pts)
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px;padding:6px 10px;background:#334155;border-radius:6px;font-size:10px;color:#94a3b8;">
+                        🔬 Metodologia: 90 dias rolling | Muestra min 10 | Confidence 70-95% | Por usuario | PostgreSQL
+                    </div>
+                </details>
+
+                <!-- TABS DE SEGREGACION POR DEPTO/TURNO/SUCURSAL -->
+                <div class="att-seg-tabs" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                    <button onclick="document.querySelectorAll('.att-seg-panel').forEach(p=>p.style.display='none');document.getElementById('seg-all').style.display='block';document.querySelectorAll('.att-seg-tab').forEach(t=>t.style.background='#334155');this.style.background='#6366f1';" class="att-seg-tab" style="background:#6366f1;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;">📋 Todas las Alertas</button>
+                    <button onclick="document.querySelectorAll('.att-seg-panel').forEach(p=>p.style.display='none');document.getElementById('seg-dept').style.display='block';document.querySelectorAll('.att-seg-tab').forEach(t=>t.style.background='#334155');this.style.background='#6366f1';" class="att-seg-tab" style="background:#334155;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;">🏢 Por Departamento</button>
+                    <button onclick="document.querySelectorAll('.att-seg-panel').forEach(p=>p.style.display='none');document.getElementById('seg-shift').style.display='block';document.querySelectorAll('.att-seg-tab').forEach(t=>t.style.background='#334155');this.style.background='#6366f1';" class="att-seg-tab" style="background:#334155;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;">⏰ Por Turno</button>
+                    <button onclick="document.querySelectorAll('.att-seg-panel').forEach(p=>p.style.display='none');document.getElementById('seg-branch').style.display='block';document.querySelectorAll('.att-seg-tab').forEach(t=>t.style.background='#334155');this.style.background='#6366f1';" class="att-seg-tab" style="background:#334155;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;">📍 Por Sucursal</button>
                 </div>
 
                 <div class="att-patterns-summary">
@@ -756,35 +1840,106 @@ const AttendanceEngine = {
                     </div>
                 </div>
 
-                <div class="att-patterns-list">
-                    ${patterns.length > 0 ? patterns.map(p => `
-                        <div class="att-pattern-card att-pattern-${p.severity}">
-                            <div class="att-pattern-severity">
-                                ${p.severity === 'critical' ? '🚨' : p.severity === 'high' ? '⚠️' : p.severity === 'medium' ? '⚡' : 'ℹ️'}
-                            </div>
-                            <div class="att-pattern-content">
-                                <div class="att-pattern-title">${p.pattern_name}</div>
-                                <div class="att-pattern-employee">
-                                    👤 ${p.user?.firstName || 'Usuario'} ${p.user?.lastName || ''}
-                                    ${p.user?.employee_id ? `(${p.user.employee_id})` : ''}
+                <!-- PANEL: Todas (seg-all) -->
+                <div id="seg-all" class="att-seg-panel" style="display:block;">
+                    <div class="att-patterns-list">
+                        ${patterns.length > 0 ? patterns.map(p => `
+                            <div class="att-pattern-card att-pattern-${p.severity}">
+                                <div class="att-pattern-severity">
+                                    ${p.severity === 'critical' ? '🚨' : p.severity === 'high' ? '⚠️' : p.severity === 'medium' ? '⚡' : 'ℹ️'}
                                 </div>
-                                <div class="att-pattern-meta">
-                                    <span>📅 Detectado: ${this.formatDate(p.detection_date)}</span>
-                                    <span>📊 Confianza: ${Math.round((p.confidence_score || 0) * 100)}%</span>
+                                <div class="att-pattern-content">
+                                    <div class="att-pattern-title">${p.pattern_name}</div>
+                                    <div class="att-pattern-employee">
+                                        👤 ${p.user?.firstName || 'Usuario'} ${p.user?.lastName || ''}
+                                        ${p.user?.employee_id ? `(${p.user.employee_id})` : ''}
+                                    </div>
+                                    <div class="att-pattern-meta">
+                                        <span>📅 ${this.formatDate(p.detection_date)}</span>
+                                        <span>📊 ${Math.round((p.confidence_score || 0) * 100)}%</span>
+                                        <span>🏢 ${p.user?.department?.name || 'N/A'}</span>
+                                    </div>
+                                </div>
+                                <div class="att-pattern-actions">
+                                    <button class="att-btn att-btn-sm att-btn-success" title="Resolver">✓</button>
+                                    <button class="att-btn att-btn-sm att-btn-secondary" title="Ignorar">✕</button>
                                 </div>
                             </div>
-                            <div class="att-pattern-actions">
-                                <button class="att-btn att-btn-sm att-btn-success" title="Resolver">✓</button>
-                                <button class="att-btn att-btn-sm att-btn-secondary" title="Ignorar">✕</button>
+                        `).join('') : `
+                            <div class="att-patterns-empty">
+                                <div class="att-empty-icon">✅</div>
+                                <h3>Sin Alertas Activas</h3>
+                                <p>El motor de deteccion no encontro patrones en los ultimos 90 dias.</p>
                             </div>
-                        </div>
-                    `).join('') : `
-                        <div class="att-patterns-empty">
-                            <div class="att-empty-icon">✅</div>
-                            <h3>Sin Alertas Activas</h3>
-                            <p>No se han detectado patrones preocupantes en el sistema.</p>
-                        </div>
-                    `}
+                        `}
+                    </div>
+                </div>
+
+                <!-- PANEL: Por Departamento (seg-dept) -->
+                <div id="seg-dept" class="att-seg-panel" style="display:none;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">
+                        ${(() => {
+                            const byDept = {};
+                            patterns.forEach(p => {
+                                const d = p.user?.department?.name || 'Sin Departamento';
+                                if (!byDept[d]) byDept[d] = [];
+                                byDept[d].push(p);
+                            });
+                            if (Object.keys(byDept).length === 0) return '<p style="color:#64748b;text-align:center;grid-column:1/-1;">Sin alertas para segregar</p>';
+                            return Object.entries(byDept).map(([dept, alerts]) => `
+                                <div style="background:#1e293b;border-radius:8px;padding:12px;">
+                                    <h4 style="margin:0 0 8px 0;color:#f1f5f9;font-size:14px;">🏢 ${dept} <span style="background:#6366f1;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;">${alerts.length}</span></h4>
+                                    ${alerts.map(a => `<div style="padding:6px 0;border-bottom:1px solid #334155;font-size:12px;color:#94a3b8;">${a.severity==='critical'?'🚨':a.severity==='high'?'⚠️':'⚡'} ${a.pattern_name}</div>`).join('')}
+                                </div>
+                            `).join('');
+                        })()}
+                    </div>
+                </div>
+
+                <!-- PANEL: Por Turno (seg-shift) -->
+                <div id="seg-shift" class="att-seg-panel" style="display:none;">
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+                        ${(() => {
+                            const morning = patterns.filter(p => (p.user?.shift?.name||'').toLowerCase().includes('mañana'));
+                            const afternoon = patterns.filter(p => (p.user?.shift?.name||'').toLowerCase().includes('tarde'));
+                            const night = patterns.filter(p => !morning.includes(p) && !afternoon.includes(p));
+                            return `
+                                <div style="background:#1e293b;border-radius:8px;padding:12px;">
+                                    <h4 style="margin:0 0 8px 0;color:#fcd34d;font-size:14px;">🌅 Mañana <span style="background:#f59e0b;color:#000;padding:2px 8px;border-radius:12px;font-size:11px;">${morning.length}</span></h4>
+                                    ${morning.length > 0 ? morning.map(a => `<div style="padding:4px 0;font-size:11px;color:#94a3b8;">${a.severity==='critical'?'🚨':'⚠️'} ${a.pattern_name}</div>`).join('') : '<p style="color:#475569;font-size:11px;">Sin alertas</p>'}
+                                </div>
+                                <div style="background:#1e293b;border-radius:8px;padding:12px;">
+                                    <h4 style="margin:0 0 8px 0;color:#fb923c;font-size:14px;">☀️ Tarde <span style="background:#f97316;color:#000;padding:2px 8px;border-radius:12px;font-size:11px;">${afternoon.length}</span></h4>
+                                    ${afternoon.length > 0 ? afternoon.map(a => `<div style="padding:4px 0;font-size:11px;color:#94a3b8;">${a.severity==='critical'?'🚨':'⚠️'} ${a.pattern_name}</div>`).join('') : '<p style="color:#475569;font-size:11px;">Sin alertas</p>'}
+                                </div>
+                                <div style="background:#1e293b;border-radius:8px;padding:12px;">
+                                    <h4 style="margin:0 0 8px 0;color:#a78bfa;font-size:14px;">🌙 Noche/Otros <span style="background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;">${night.length}</span></h4>
+                                    ${night.length > 0 ? night.map(a => `<div style="padding:4px 0;font-size:11px;color:#94a3b8;">${a.severity==='critical'?'🚨':'⚠️'} ${a.pattern_name}</div>`).join('') : '<p style="color:#475569;font-size:11px;">Sin alertas</p>'}
+                                </div>
+                            `;
+                        })()}
+                    </div>
+                </div>
+
+                <!-- PANEL: Por Sucursal (seg-branch) -->
+                <div id="seg-branch" class="att-seg-panel" style="display:none;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">
+                        ${(() => {
+                            const byBranch = {};
+                            patterns.forEach(p => {
+                                const b = p.user?.branch?.name || p.kiosk_name || 'Sucursal Principal';
+                                if (!byBranch[b]) byBranch[b] = [];
+                                byBranch[b].push(p);
+                            });
+                            if (Object.keys(byBranch).length === 0) return '<p style="color:#64748b;text-align:center;grid-column:1/-1;">Sin alertas para segregar</p>';
+                            return Object.entries(byBranch).map(([branch, alerts]) => `
+                                <div style="background:#1e293b;border-radius:8px;padding:12px;">
+                                    <h4 style="margin:0 0 8px 0;color:#f1f5f9;font-size:14px;">📍 ${branch} <span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:12px;font-size:11px;">${alerts.length}</span></h4>
+                                    ${alerts.map(a => `<div style="padding:6px 0;border-bottom:1px solid #334155;font-size:12px;color:#94a3b8;">${a.severity==='critical'?'🚨':a.severity==='high'?'⚠️':'⚡'} ${a.pattern_name}</div>`).join('')}
+                                </div>
+                            `).join('');
+                        })()}
+                    </div>
                 </div>
             </div>
         `;
@@ -857,6 +2012,65 @@ const AttendanceEngine = {
                 `}
             </div>
         `;
+    },
+
+    // ========================================================================
+    // CUBO DE HORAS - Panel Ejecutivo
+    // ========================================================================
+    async renderCuboHoras() {
+        const content = document.getElementById('att-content');
+
+        // Crear contenedor para el Hours Cube Dashboard
+        content.innerHTML = `
+            <div class="att-cubo-container" style="padding: 0;">
+                <div id="hours-cube-dashboard-container" style="width: 100%; min-height: 600px;"></div>
+            </div>
+        `;
+
+        // Cargar el script del Hours Cube Dashboard si no está cargado
+        if (!window.HoursCubeDashboard) {
+            try {
+                await this.loadScript('/js/modules/hours-cube-dashboard.js');
+            } catch (error) {
+                content.innerHTML = `
+                    <div class="att-error">
+                        <span>Error cargando el Panel Ejecutivo: ${error.message}</span>
+                        <button class="att-btn att-btn-primary" onclick="AttendanceEngine.renderCuboHoras()">Reintentar</button>
+                    </div>
+                `;
+                return;
+            }
+        }
+
+        // Inicializar el dashboard con el companyId del contexto de attendance
+        try {
+            window.hoursCubeDashboard = new window.HoursCubeDashboard('hours-cube-dashboard-container', {
+                companyId: AttendanceState.companyId
+            });
+        } catch (error) {
+            console.error('Error inicializando Hours Cube Dashboard:', error);
+            content.innerHTML = `
+                <div class="att-error">
+                    <span>Error inicializando el Panel Ejecutivo: ${error.message}</span>
+                    <button class="att-btn att-btn-primary" onclick="AttendanceEngine.renderCuboHoras()">Reintentar</button>
+                </div>
+            `;
+        }
+    },
+
+    loadScript(src) {
+        return new Promise((resolve, reject) => {
+            // Check if already loaded
+            if (document.querySelector(`script[src="${src}"]`)) {
+                resolve();
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`No se pudo cargar ${src}`));
+            document.head.appendChild(script);
+        });
     },
 
     // ========================================================================

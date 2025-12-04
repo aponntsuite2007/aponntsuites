@@ -1,1153 +1,2090 @@
-// Job Postings Module - Sistema de Postulaciones Laborales
-console.log('💼 [JOB-POSTINGS] Módulo de postulaciones laborales cargado');
+/**
+ * TALENT ACQUISITION ENTERPRISE v2.0
+ * Sistema Integral de Reclutamiento y Selección
+ *
+ * Flujo: Oferta → Postulación → Entrevista → Médico → Legal → Alta Automática
+ *
+ * Tecnologías: Node.js + PostgreSQL + Notificaciones Proactivas
+ * Arquitectura: Multi-tenant, Integrado con 360, Dark Theme Enterprise
+ *
+ * @author Sistema Biométrico Enterprise
+ * @version 2.0.0
+ */
 
-// Main function to show job postings content
-function showJobPostingsContent() {
-    console.log('💼 [JOB-POSTINGS] Ejecutando showJobPostingsContent()');
-    
-    const content = document.getElementById('mainContent');
-    if (!content) {
-        console.error('❌ [JOB-POSTINGS] mainContent no encontrado');
-        return;
+// Evitar doble carga del módulo
+if (window.TalentEngine) {
+    console.log('[TALENT] Módulo ya cargado');
+}
+
+console.log('%c TALENT ACQUISITION v2.0 ', 'background: linear-gradient(90deg, #1a1a2e 0%, #4a1a6b 100%); color: #ff6b9d; font-size: 14px; padding: 8px 12px; border-radius: 4px; font-weight: bold;');
+
+// ============================================================================
+// STATE MANAGEMENT - Redux-like pattern
+// ============================================================================
+const TalentState = {
+    currentView: 'dashboard',
+    offers: [],
+    applications: [],
+    interviews: [],
+    pipeline: [],
+    stats: {},
+    selectedOffer: null,
+    selectedApplication: null,
+    filters: {
+        status: 'all',
+        department: 'all',
+        branch: 'all'
+    },
+    isLoading: false,
+    departments: [],
+    branches: []
+};
+
+// ============================================================================
+// CONSTANTS - Estados y configuración
+// ============================================================================
+const TALENT_CONSTANTS = {
+    APPLICATION_STATUSES: {
+        nuevo: { label: 'Nuevo', color: '#17a2b8', icon: '🆕' },
+        revision: { label: 'En Revisión', color: '#6c757d', icon: '👁️' },
+        entrevista_pendiente: { label: 'Entrevista Pendiente', color: '#fd7e14', icon: '📅' },
+        entrevista_realizada: { label: 'Entrevista Realizada', color: '#6f42c1', icon: '✅' },
+        aprobado_administrativo: { label: 'Aprobado RRHH', color: '#20c997', icon: '👔' },
+        examen_pendiente: { label: 'Examen Médico Pendiente', color: '#e83e8c', icon: '🏥' },
+        examen_realizado: { label: 'Examen Realizado', color: '#6610f2', icon: '📋' },
+        apto: { label: 'Apto Médico', color: '#28a745', icon: '💚' },
+        apto_con_observaciones: { label: 'Apto con Obs.', color: '#ffc107', icon: '⚠️' },
+        no_apto: { label: 'No Apto', color: '#dc3545', icon: '❌' },
+        revision_legal: { label: 'Revisión Legal', color: '#795548', icon: '⚖️' },
+        aprobado_legal: { label: 'Aprobado Legal', color: '#4caf50', icon: '✔️' },
+        contratado: { label: 'Contratado', color: '#28a745', icon: '🎉' },
+        rechazado: { label: 'Rechazado', color: '#dc3545', icon: '🚫' },
+        desistio: { label: 'Desistió', color: '#6c757d', icon: '👋' }
+    },
+    OFFER_STATUSES: {
+        draft: { label: 'Borrador', color: '#6c757d' },
+        active: { label: 'Activa', color: '#28a745' },
+        paused: { label: 'Pausada', color: '#ffc107' },
+        closed: { label: 'Cerrada', color: '#dc3545' },
+        filled: { label: 'Cubierta', color: '#17a2b8' }
+    },
+    JOB_TYPES: {
+        'full-time': 'Tiempo Completo',
+        'part-time': 'Medio Tiempo',
+        'contract': 'Contrato',
+        'temporary': 'Temporal',
+        'internship': 'Pasantía'
+    },
+    PUBLICATION_CHANNELS: [
+        { id: 'portal', name: 'Portal Público', icon: '🌐', enabled: true },
+        { id: 'internal', name: 'Promoción Interna', icon: '👥', enabled: true },
+        { id: 'email', name: 'Email a Candidatos', icon: '📧', enabled: true },
+        { id: 'instagram', name: 'Instagram', icon: '📸', enabled: false, coming: true },
+        { id: 'linkedin', name: 'LinkedIn', icon: '💼', enabled: false, coming: true },
+        { id: 'whatsapp', name: 'WhatsApp', icon: '💬', enabled: false, coming: true }
+    ],
+    REQUIRED_DOCUMENTS: [
+        { id: 'cv', name: 'Curriculum Vitae', required: true },
+        { id: 'dni', name: 'DNI/Documento', required: true },
+        { id: 'titulo', name: 'Título/Certificado', required: false },
+        { id: 'antecedentes', name: 'Cert. Antecedentes', required: false },
+        { id: 'referencias', name: 'Referencias Laborales', required: false },
+        { id: 'analitico', name: 'Analítico', required: false }
+    ]
+};
+
+// ============================================================================
+// API SERVICE - Centralized fetch handler
+// ============================================================================
+const TalentAPI = {
+    baseUrl: '/api/job-postings',
+
+    async request(endpoint, options = {}) {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const config = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            ...options
+        };
+
+        try {
+            TalentState.isLoading = true;
+            const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'API Error');
+            return data;
+        } catch (error) {
+            console.error(`[TalentAPI] ${endpoint}:`, error);
+            throw error;
+        } finally {
+            TalentState.isLoading = false;
+        }
+    },
+
+    // === OFERTAS ===
+    getOffers: (params = '') => TalentAPI.request(`/offers${params}`),
+    getOffer: (id) => TalentAPI.request(`/offers/${id}`),
+    createOffer: (data) => TalentAPI.request('/offers', { method: 'POST', body: JSON.stringify(data) }),
+    updateOffer: (id, data) => TalentAPI.request(`/offers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    publishOffer: (id, channels) => TalentAPI.request(`/offers/${id}/publish`, { method: 'POST', body: JSON.stringify({ channels }) }),
+    pauseOffer: (id) => TalentAPI.request(`/offers/${id}/pause`, { method: 'POST' }),
+    closeOffer: (id) => TalentAPI.request(`/offers/${id}/close`, { method: 'POST' }),
+
+    // === POSTULACIONES ===
+    getApplications: (params = '') => TalentAPI.request(`/applications${params}`),
+    getApplication: (id) => TalentAPI.request(`/applications/${id}`),
+    createApplication: (data) => TalentAPI.request('/applications', { method: 'POST', body: JSON.stringify(data) }),
+    updateApplicationStatus: (id, status, notes) => TalentAPI.request(`/applications/${id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status, notes })
+    }),
+
+    // === FLUJO DE APROBACIÓN ===
+    approveAdmin: (id, notes) => TalentAPI.request(`/applications/${id}/approve-admin`, {
+        method: 'POST',
+        body: JSON.stringify({ notes })
+    }),
+    scheduleInterview: (id, data) => TalentAPI.request(`/applications/${id}/schedule-interview`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    completeInterview: (id, data) => TalentAPI.request(`/applications/${id}/complete-interview`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    setMedicalResult: (id, data) => TalentAPI.request(`/applications/${id}/medical-result`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    setLegalResult: (id, data) => TalentAPI.request(`/applications/${id}/legal-result`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    hire: (id, data) => TalentAPI.request(`/applications/${id}/hire`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    reject: (id, reason, notes) => TalentAPI.request(`/applications/${id}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ reason, notes })
+    }),
+
+    // === ESTADÍSTICAS ===
+    getStats: () => TalentAPI.request('/stats'),
+    getPipeline: () => TalentAPI.request('/pipeline'),
+
+    // === CANDIDATOS PENDIENTES (para médico/legal) ===
+    getPendingMedical: () => TalentAPI.request('/pending-medical'),
+    getPendingLegal: () => TalentAPI.request('/pending-legal'),
+
+    // === AUXILIARES ===
+    getDepartments: () => fetch('/api/v1/departments', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}` }
+    }).then(r => r.json()),
+    getBranches: () => fetch('/api/v1/branches', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}` }
+    }).then(r => r.json())
+};
+
+// ============================================================================
+// UI COMPONENTS - Dark Theme Enterprise
+// ============================================================================
+const TalentUI = {
+    // CSS Variables for dark theme
+    styles: `
+        .talent-container {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e4e4e4;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .talent-header {
+            background: linear-gradient(90deg, #4a1a6b 0%, #6b1a5c 50%, #1a4a6b 100%);
+            padding: 25px 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .talent-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .talent-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        .talent-tabs {
+            display: flex;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 0 20px;
+            overflow-x: auto;
+        }
+        .talent-tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .talent-tab:hover {
+            color: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.05);
+        }
+        .talent-tab.active {
+            color: #ff6b9d;
+            border-bottom-color: #ff6b9d;
+        }
+        .talent-content {
+            padding: 25px;
+        }
+        .talent-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .talent-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .talent-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .talent-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .talent-stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .talent-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        .talent-stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c850c0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .talent-stat-label {
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .talent-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .talent-btn-primary {
+            background: linear-gradient(135deg, #ff6b9d 0%, #c850c0 100%);
+            color: white;
+        }
+        .talent-btn-primary:hover {
+            box-shadow: 0 4px 15px rgba(255,107,157,0.4);
+            transform: translateY(-1px);
+        }
+        .talent-btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #e4e4e4;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .talent-btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        .talent-btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        .talent-btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: #212529;
+        }
+        .talent-btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        .talent-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .talent-table th {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .talent-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            vertical-align: middle;
+        }
+        .talent-table tr:hover td {
+            background: rgba(255,255,255,0.03);
+        }
+        .talent-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .talent-input {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #e4e4e4;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+        .talent-input:focus {
+            outline: none;
+            border-color: #ff6b9d;
+        }
+        .talent-input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+        .talent-select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #e4e4e4;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 100%;
+            cursor: pointer;
+        }
+        .talent-select option {
+            background: #1a1a2e;
+            color: #e4e4e4;
+        }
+        .talent-textarea {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #e4e4e4;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 100%;
+            min-height: 100px;
+            resize: vertical;
+        }
+        .talent-form-group {
+            margin-bottom: 20px;
+        }
+        .talent-form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+        .talent-form-label span {
+            color: #ff6b9d;
+        }
+        .talent-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+        .talent-modal {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            width: 95%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .talent-modal-header {
+            background: linear-gradient(90deg, #4a1a6b 0%, #6b1a5c 100%);
+            padding: 20px 25px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .talent-modal-header h3 {
+            margin: 0;
+            color: #fff;
+            font-size: 20px;
+        }
+        .talent-modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 28px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        .talent-modal-close:hover {
+            opacity: 1;
+        }
+        .talent-modal-body {
+            padding: 25px;
+        }
+        .talent-modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        .talent-pipeline {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        .talent-pipeline-stage {
+            min-width: 280px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .talent-pipeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .talent-pipeline-count {
+            background: rgba(255,107,157,0.2);
+            color: #ff6b9d;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .talent-candidate-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .talent-candidate-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: #ff6b9d;
+        }
+        .talent-candidate-name {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        .talent-candidate-position {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+        .talent-empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.5);
+        }
+        .talent-empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        .talent-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        .talent-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #ff6b9d;
+            border-radius: 50%;
+            animation: talent-spin 1s linear infinite;
+        }
+        @keyframes talent-spin {
+            to { transform: rotate(360deg); }
+        }
+        .talent-channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .talent-channel-card {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .talent-channel-card:hover:not(.disabled) {
+            border-color: #ff6b9d;
+        }
+        .talent-channel-card.selected {
+            border-color: #ff6b9d;
+            background: rgba(255,107,157,0.1);
+        }
+        .talent-channel-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .talent-channel-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .talent-channel-name {
+            font-weight: 600;
+            color: #fff;
+        }
+        .talent-channel-badge {
+            font-size: 10px;
+            background: #ffc107;
+            color: #212529;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+        .talent-doc-checklist {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .talent-doc-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+        }
+        .talent-doc-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #ff6b9d;
+        }
+        .talent-timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .talent-timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(255,255,255,0.1);
+        }
+        .talent-timeline-item {
+            position: relative;
+            padding-bottom: 25px;
+        }
+        .talent-timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff6b9d;
+            border: 2px solid #1a1a2e;
+        }
+        .talent-timeline-date {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 5px;
+        }
+        .talent-timeline-content {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 12px;
+        }
+    `,
+
+    // Inject styles
+    injectStyles() {
+        if (!document.getElementById('talent-styles')) {
+            const styleEl = document.createElement('style');
+            styleEl.id = 'talent-styles';
+            styleEl.textContent = this.styles;
+            document.head.appendChild(styleEl);
+        }
+    },
+
+    // Format date
+    formatDate(dateStr) {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    },
+
+    // Format datetime
+    formatDateTime(dateStr) {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    },
+
+    // Get status badge
+    getStatusBadge(status) {
+        const config = TALENT_CONSTANTS.APPLICATION_STATUSES[status] || { label: status, color: '#6c757d', icon: '❓' };
+        return `<span class="talent-badge" style="background: ${config.color}20; color: ${config.color}; border: 1px solid ${config.color}40;">
+            ${config.icon} ${config.label}
+        </span>`;
+    },
+
+    // Get offer status badge
+    getOfferStatusBadge(status) {
+        const config = TALENT_CONSTANTS.OFFER_STATUSES[status] || { label: status, color: '#6c757d' };
+        return `<span class="talent-badge" style="background: ${config.color}20; color: ${config.color}; border: 1px solid ${config.color}40;">
+            ${config.label}
+        </span>`;
+    },
+
+    // Show loading
+    showLoading(container) {
+        container.innerHTML = `
+            <div class="talent-loader">
+                <div class="talent-spinner"></div>
+            </div>
+        `;
+    },
+
+    // Show empty state
+    showEmptyState(container, icon, message) {
+        container.innerHTML = `
+            <div class="talent-empty-state">
+                <div class="talent-empty-state-icon">${icon}</div>
+                <p>${message}</p>
+            </div>
+        `;
+    },
+
+    // Show toast notification
+    showToast(message, type = 'info') {
+        const colors = {
+            success: '#28a745',
+            error: '#dc3545',
+            warning: '#ffc107',
+            info: '#17a2b8'
+        };
+
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: ${colors[type]};
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 100000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
-    
-    content.style.setProperty('display', 'block', 'important');
-    
-    content.innerHTML = `
-        <div class="tab-content active">
-            <div class="card" style="padding: 0; overflow: hidden;">
-                <!-- Header del módulo -->
-                <div style="background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%); color: white; padding: 25px;">
+};
+
+// ============================================================================
+// TALENT ENGINE - Main Controller
+// ============================================================================
+const TalentEngine = {
+    // Initialize module
+    async init() {
+        console.log('[TALENT] Inicializando módulo...');
+        TalentUI.injectStyles();
+
+        const content = document.getElementById('mainContent');
+        if (!content) {
+            console.error('[TALENT] mainContent no encontrado');
+            return;
+        }
+
+        content.style.setProperty('display', 'block', 'important');
+        this.render(content);
+
+        // Load initial data
+        await this.loadData();
+    },
+
+    // Load all data
+    async loadData() {
+        try {
+            // Load departments and branches for filters
+            const [deptResponse, branchResponse] = await Promise.all([
+                TalentAPI.getDepartments(),
+                TalentAPI.getBranches()
+            ]);
+
+            TalentState.departments = deptResponse.data || deptResponse || [];
+            TalentState.branches = branchResponse.data || branchResponse || [];
+
+            // Load view-specific data
+            await this.loadViewData();
+        } catch (error) {
+            console.error('[TALENT] Error loading data:', error);
+            TalentUI.showToast('Error cargando datos', 'error');
+        }
+    },
+
+    // Load data for current view
+    async loadViewData() {
+        const contentDiv = document.getElementById('talent-view-content');
+        if (!contentDiv) return;
+
+        TalentUI.showLoading(contentDiv);
+
+        try {
+            switch (TalentState.currentView) {
+                case 'dashboard':
+                    const stats = await TalentAPI.getStats();
+                    TalentState.stats = stats;
+                    this.renderDashboard(contentDiv);
+                    break;
+                case 'offers':
+                    const offers = await TalentAPI.getOffers();
+                    TalentState.offers = offers.data || offers || [];
+                    this.renderOffers(contentDiv);
+                    break;
+                case 'applications':
+                    const apps = await TalentAPI.getApplications();
+                    TalentState.applications = apps.data || apps || [];
+                    this.renderApplications(contentDiv);
+                    break;
+                case 'pipeline':
+                    const pipeline = await TalentAPI.getPipeline();
+                    TalentState.pipeline = pipeline.data || pipeline || [];
+                    this.renderPipeline(contentDiv);
+                    break;
+                case 'interviews':
+                    const interviews = await TalentAPI.getApplications('?status=entrevista_pendiente,entrevista_realizada');
+                    TalentState.interviews = interviews.data || interviews || [];
+                    this.renderInterviews(contentDiv);
+                    break;
+            }
+        } catch (error) {
+            console.error('[TALENT] Error loading view data:', error);
+            TalentUI.showEmptyState(contentDiv, '❌', 'Error cargando datos. Intente nuevamente.');
+        }
+    },
+
+    // Main render
+    render(container) {
+        container.innerHTML = `
+            <div class="talent-container">
+                <div class="talent-header">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h2 style="margin: 0; font-size: 28px;">💼 Sistema de Postulaciones</h2>
-                            <p style="margin: 5px 0 0 0; opacity: 0.9;">Gestión integral de ofertas laborales y candidatos</p>
+                            <h1>💼 Talent Acquisition</h1>
+                            <p>Sistema Integral de Reclutamiento y Selección</p>
                         </div>
-                        <button onclick="showCreateJobModal()" 
-                                style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                            ➕ Nueva Oferta
+                        <button class="talent-btn talent-btn-primary" onclick="TalentEngine.showCreateOfferModal()">
+                            ➕ Nueva Oferta Laboral
                         </button>
                     </div>
                 </div>
 
-                <!-- Tabs de navegación -->
-                <div style="background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
-                    <div style="display: flex; padding: 0 25px;">
-                        <button onclick="switchJobTab('offers')" id="tab-offers" 
-                                class="job-tab active-job-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid #6f42c1;">
-                            📋 Ofertas Activas
-                        </button>
-                        <button onclick="switchJobTab('applications')" id="tab-applications" 
-                                class="job-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
-                            👥 Postulaciones
-                        </button>
-                        <button onclick="switchJobTab('candidates')" id="tab-candidates" 
-                                class="job-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
-                            🎯 Candidatos
-                        </button>
-                        <button onclick="switchJobTab('analytics')" id="tab-analytics" 
-                                class="job-tab"
-                                style="padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent;">
-                            📊 Analytics
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Contenido de las pestañas -->
-                <div style="padding: 25px;" id="jobTabContent">
-                    ${getJobOffersContent()}
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para crear oferta laboral -->
-        <div id="createJobModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
-            <div class="modal-content" style="position: relative; margin: 2% auto; width: 95%; max-width: 1200px; background: white; border-radius: 12px; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0;">💼 Crear Nueva Oferta Laboral</h3>
-                    <button onclick="closeCreateJobModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-                </div>
-                <div class="modal-body" style="padding: 30px;">
-                    ${getCreateJobForm()}
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para postularse -->
-        <div id="applyJobModal" class="modal" style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997;">
-            <div class="modal-content" style="position: relative; margin: 2% auto; width: 95%; max-width: 800px; background: white; border-radius: 12px; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0;">🎯 Postularme a Oferta</h3>
-                    <button onclick="closeApplyJobModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-                </div>
-                <div class="modal-body" style="padding: 30px;" id="applyJobContent">
-                    <!-- Content will be populated when opening -->
-                </div>
-            </div>
-        </div>
-    `;
-    
-    console.log('✅ [JOB-POSTINGS] Contenido renderizado exitosamente');
-}
-
-// Switch between job tabs
-function switchJobTab(tabName) {
-    // Update tab styles
-    document.querySelectorAll('.job-tab').forEach(tab => {
-        tab.style.borderBottom = '3px solid transparent';
-        tab.classList.remove('active-job-tab');
-    });
-    
-    const activeTab = document.getElementById(`tab-${tabName}`);
-    if (activeTab) {
-        activeTab.style.borderBottom = '3px solid #6f42c1';
-        activeTab.classList.add('active-job-tab');
-    }
-    
-    // Update content
-    const contentDiv = document.getElementById('jobTabContent');
-    if (contentDiv) {
-        switch(tabName) {
-            case 'offers':
-                contentDiv.innerHTML = getJobOffersContent();
-                break;
-            case 'applications':
-                contentDiv.innerHTML = getApplicationsContent();
-                break;
-            case 'candidates':
-                contentDiv.innerHTML = getCandidatesContent();
-                break;
-            case 'analytics':
-                contentDiv.innerHTML = getAnalyticsContent();
-                break;
-        }
-    }
-}
-
-// Get job offers content
-function getJobOffersContent() {
-    return `
-        <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <div>
-                    <h3 style="margin: 0; color: #333;">Ofertas Laborales Activas</h3>
-                    <p style="color: #666; margin: 5px 0 0 0;">Gestiona las ofertas de trabajo publicadas</p>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <select style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;">
-                        <option>Todas las áreas</option>
-                        <option>Tecnología</option>
-                        <option>Recursos Humanos</option>
-                        <option>Ventas</option>
-                        <option>Marketing</option>
-                        <option>Administración</option>
-                    </select>
-                    <select style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;">
-                        <option>Estado: Todos</option>
-                        <option>Activa</option>
-                        <option>Pausada</option>
-                        <option>Cerrada</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Lista de ofertas -->
-            <div style="display: grid; gap: 20px;">
-                ${generateJobOfferCards()}
-            </div>
-        </div>
-    `;
-}
-
-// Generate job offer cards
-function generateJobOfferCards() {
-    const sampleJobs = [
-        {
-            id: 1,
-            title: 'Desarrollador Full Stack Senior',
-            department: 'Tecnología',
-            type: 'Tiempo completo',
-            location: 'Buenos Aires / Remoto',
-            salary: '$180.000 - $220.000',
-            posted: '2024-01-15',
-            applications: 23,
-            status: 'active',
-            requirements: ['React', 'Node.js', '+3 años experiencia'],
-            description: 'Buscamos desarrollador con experiencia en tecnologías modernas para liderar proyectos innovadores.'
-        },
-        {
-            id: 2,
-            title: 'Analista de Recursos Humanos',
-            department: 'Recursos Humanos',
-            type: 'Tiempo completo',
-            location: 'Buenos Aires',
-            salary: '$120.000 - $140.000',
-            posted: '2024-01-12',
-            applications: 15,
-            status: 'active',
-            requirements: ['Psicología/RR.HH.', 'Excel avanzado', '+2 años experiencia'],
-            description: 'Únete a nuestro equipo de RRHH para gestionar procesos de selección y desarrollo organizacional.'
-        },
-        {
-            id: 3,
-            title: 'Especialista en Marketing Digital',
-            department: 'Marketing',
-            type: 'Medio tiempo',
-            location: 'Remoto',
-            salary: '$80.000 - $100.000',
-            posted: '2024-01-10',
-            applications: 31,
-            status: 'active',
-            requirements: ['Google Ads', 'Facebook Ads', 'Analytics'],
-            description: 'Oportunidad para especialista en marketing digital con enfoque en performance y ROI.'
-        }
-    ];
-
-    return sampleJobs.map(job => `
-        <div style="border: 1px solid #e9ecef; border-radius: 12px; padding: 20px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-            <div style="display: flex; justify-content: between; margin-bottom: 15px;">
-                <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-                        <h4 style="margin: 0; color: #333; font-size: 20px;">${job.title}</h4>
-                        <span style="background: ${job.status === 'active' ? '#28a745' : '#6c757d'}; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px;">
-                            ${job.status === 'active' ? 'Activa' : 'Pausada'}
-                        </span>
-                    </div>
-                    <div style="color: #666; font-size: 14px; margin-bottom: 10px;">
-                        📍 ${job.location} • 💼 ${job.type} • 🏢 ${job.department}
-                    </div>
-                    <div style="color: #28a745; font-weight: 600; margin-bottom: 10px;">
-                        💰 ${job.salary}
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <p style="margin: 0; color: #555; line-height: 1.5;">${job.description}</p>
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <strong style="color: #333;">Requisitos:</strong>
-                        <div style="display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap;">
-                            ${job.requirements.map(req => `
-                                <span style="background: #f8f9fa; color: #495057; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-                                    ${req}
-                                </span>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px; margin-left: 20px;">
-                    <div style="text-align: right;">
-                        <div style="color: #666; font-size: 12px;">Postulaciones</div>
-                        <div style="font-size: 24px; font-weight: bold; color: #6f42c1;">${job.applications}</div>
-                    </div>
-                    <div style="color: #666; font-size: 12px;">
-                        Publicada: ${job.posted}
-                    </div>
-                </div>
-            </div>
-            
-            <div style="border-top: 1px solid #e9ecef; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="viewJobApplications(${job.id})" 
-                            style="background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                        👥 Ver Postulaciones (${job.applications})
+                <div class="talent-tabs">
+                    <button class="talent-tab ${TalentState.currentView === 'dashboard' ? 'active' : ''}"
+                            onclick="TalentEngine.switchView('dashboard')">
+                        📊 Dashboard
                     </button>
-                    <button onclick="editJobOffer(${job.id})" 
-                            style="background: #ffc107; color: #212529; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                        ✏️ Editar
+                    <button class="talent-tab ${TalentState.currentView === 'offers' ? 'active' : ''}"
+                            onclick="TalentEngine.switchView('offers')">
+                        📋 Ofertas Laborales
+                    </button>
+                    <button class="talent-tab ${TalentState.currentView === 'applications' ? 'active' : ''}"
+                            onclick="TalentEngine.switchView('applications')">
+                        👥 Postulaciones
+                    </button>
+                    <button class="talent-tab ${TalentState.currentView === 'pipeline' ? 'active' : ''}"
+                            onclick="TalentEngine.switchView('pipeline')">
+                        🔄 Pipeline
+                    </button>
+                    <button class="talent-tab ${TalentState.currentView === 'interviews' ? 'active' : ''}"
+                            onclick="TalentEngine.switchView('interviews')">
+                        🗣️ Entrevistas
                     </button>
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="toggleJobStatus(${job.id})" 
-                            style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                        ${job.status === 'active' ? '⏸️ Pausar' : '▶️ Activar'}
-                    </button>
-                    <button onclick="simulateJobApplication(${job.id})" 
-                            style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                        🎯 Simular Postulación
-                    </button>
+
+                <div class="talent-content" id="talent-view-content">
+                    <div class="talent-loader">
+                        <div class="talent-spinner"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
-}
+        `;
+    },
 
-// Get applications content
-function getApplicationsContent() {
-    return `
-        <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <div>
-                    <h3 style="margin: 0; color: #333;">Postulaciones Recibidas</h3>
-                    <p style="color: #666; margin: 5px 0 0 0;">Gestiona las postulaciones de candidatos</p>
+    // Switch view
+    async switchView(view) {
+        TalentState.currentView = view;
+
+        // Update tabs
+        document.querySelectorAll('.talent-tab').forEach(tab => tab.classList.remove('active'));
+        event.target.classList.add('active');
+
+        await this.loadViewData();
+    },
+
+    // ========================================================================
+    // DASHBOARD VIEW
+    // ========================================================================
+    renderDashboard(container) {
+        const stats = TalentState.stats || {};
+
+        container.innerHTML = `
+            <div class="talent-stat-grid">
+                <div class="talent-stat-card">
+                    <div class="talent-stat-value">${stats.active_offers || 0}</div>
+                    <div class="talent-stat-label">Ofertas Activas</div>
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <select style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;">
-                        <option>Todas las ofertas</option>
-                        <option>Desarrollador Full Stack Senior</option>
-                        <option>Analista de Recursos Humanos</option>
-                        <option>Especialista en Marketing Digital</option>
-                    </select>
-                    <select style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;">
-                        <option>Estado: Todos</option>
-                        <option>Nuevo</option>
-                        <option>En revisión</option>
-                        <option>Entrevista</option>
-                        <option>Contratado</option>
-                        <option>Rechazado</option>
-                    </select>
+                <div class="talent-stat-card">
+                    <div class="talent-stat-value">${stats.total_applications || 0}</div>
+                    <div class="talent-stat-label">Postulaciones Totales</div>
                 </div>
-            </div>
-
-            <!-- Lista de postulaciones -->
-            <div style="background: white; border: 1px solid #e9ecef; border-radius: 8px;">
-                <div style="display: grid; grid-template-columns: 200px 1fr 120px 120px 100px 120px; gap: 20px; padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; font-weight: 600; color: #495057;">
-                    <div>Candidato</div>
-                    <div>Oferta</div>
-                    <div>Fecha</div>
-                    <div>Score</div>
-                    <div>Estado</div>
-                    <div>Acciones</div>
+                <div class="talent-stat-card">
+                    <div class="talent-stat-value">${stats.pending_interviews || 0}</div>
+                    <div class="talent-stat-label">Entrevistas Pendientes</div>
                 </div>
-                ${generateApplicationRows()}
-            </div>
-        </div>
-    `;
-}
-
-// Generate application rows
-function generateApplicationRows() {
-    const applications = [
-        {
-            id: 1,
-            candidate: 'María González',
-            email: 'maria.gonzalez@email.com',
-            job: 'Desarrollador Full Stack Senior',
-            date: '2024-01-16',
-            score: 95,
-            status: 'nuevo',
-            cv: 'cv_maria_gonzalez.pdf'
-        },
-        {
-            id: 2,
-            candidate: 'Carlos Ruiz',
-            email: 'carlos.ruiz@email.com',
-            job: 'Desarrollador Full Stack Senior',
-            date: '2024-01-15',
-            score: 87,
-            status: 'revision',
-            cv: 'cv_carlos_ruiz.pdf'
-        },
-        {
-            id: 3,
-            candidate: 'Ana Martínez',
-            email: 'ana.martinez@email.com',
-            job: 'Analista de Recursos Humanos',
-            date: '2024-01-14',
-            score: 92,
-            status: 'entrevista',
-            cv: 'cv_ana_martinez.pdf'
-        }
-    ];
-
-    return applications.map(app => `
-        <div style="display: grid; grid-template-columns: 200px 1fr 120px 120px 100px 120px; gap: 20px; padding: 15px 20px; border-bottom: 1px solid #e9ecef; align-items: center;">
-            <div>
-                <div style="font-weight: 600; color: #333;">${app.candidate}</div>
-                <div style="font-size: 12px; color: #666;">${app.email}</div>
-            </div>
-            <div style="color: #555;">${app.job}</div>
-            <div style="color: #666; font-size: 14px;">${app.date}</div>
-            <div>
-                <div style="background: ${app.score >= 90 ? '#28a745' : app.score >= 70 ? '#ffc107' : '#dc3545'}; color: white; padding: 4px 8px; border-radius: 20px; text-align: center; font-size: 12px; font-weight: 600;">
-                    ${app.score}%
-                </div>
-            </div>
-            <div>
-                <span style="background: ${getStatusColor(app.status)}; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px;">
-                    ${getStatusText(app.status)}
-                </span>
-            </div>
-            <div style="display: flex; gap: 5px;">
-                <button onclick="viewCandidate(${app.id})" title="Ver detalles" 
-                        style="background: #007bff; color: white; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">
-                    👁️
-                </button>
-                <button onclick="downloadCV('${app.cv}', ${app.id})" title="Descargar CV" 
-                        style="background: #28a745; color: white; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">
-                    📄
-                </button>
-                <button onclick="updateApplicationStatus(${app.id}, 'revision')" title="Marcar en revisión" 
-                        style="background: #ffc107; color: #212529; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">
-                    📋
-                </button>
-                <button onclick="updateApplicationStatus(${app.id}, 'entrevista')" title="Citar a entrevista" 
-                        style="background: #fd7e14; color: white; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">
-                    🗣️
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Get status color
-function getStatusColor(status) {
-    const colors = {
-        'nuevo': '#17a2b8',
-        'revision': '#ffc107', 
-        'entrevista': '#fd7e14',
-        'contratado': '#28a745',
-        'rechazado': '#dc3545'
-    };
-    return colors[status] || '#6c757d';
-}
-
-// Get status text
-function getStatusText(status) {
-    const texts = {
-        'nuevo': 'Nuevo',
-        'revision': 'Revisión',
-        'entrevista': 'Entrevista', 
-        'contratado': 'Contratado',
-        'rechazado': 'Rechazado'
-    };
-    return texts[status] || 'Desconocido';
-}
-
-// Get candidates content
-function getCandidatesContent() {
-    return `
-        <div>
-            <h3 style="color: #333; margin-bottom: 20px;">🎯 Base de Candidatos</h3>
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
-                <div style="font-size: 3em; margin-bottom: 10px;">👥</div>
-                <h4>Base de Candidatos</h4>
-                <p style="color: #666;">Gestiona tu base de datos de candidatos registrados</p>
-                <button onclick="alert('Funcionalidad en desarrollo')" 
-                        style="background: #6f42c1; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-                    Ver Candidatos Registrados
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-// Get analytics content  
-function getAnalyticsContent() {
-    return `
-        <div>
-            <h3 style="color: #333; margin-bottom: 20px;">📊 Analytics y Reportes</h3>
-            
-            <!-- Métricas principales -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
-                    <div style="font-size: 32px; color: #6f42c1; font-weight: bold;">47</div>
-                    <div style="color: #666; font-size: 14px;">Ofertas Publicadas</div>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
-                    <div style="font-size: 32px; color: #28a745; font-weight: bold;">189</div>
-                    <div style="color: #666; font-size: 14px;">Postulaciones Recibidas</div>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
-                    <div style="font-size: 32px; color: #007bff; font-weight: bold;">23</div>
-                    <div style="color: #666; font-size: 14px;">Contrataciones</div>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
-                    <div style="font-size: 32px; color: #ffc107; font-weight: bold;">4.2</div>
-                    <div style="color: #666; font-size: 14px;">Calificación Promedio</div>
+                <div class="talent-stat-card">
+                    <div class="talent-stat-value">${stats.hired_this_month || 0}</div>
+                    <div class="talent-stat-label">Contratados (Mes)</div>
                 </div>
             </div>
 
-            <!-- Gráficos placeholder -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <h4 style="margin-top: 0;">📈 Postulaciones por Mes</h4>
-                    <div style="height: 200px; background: #f8f9fa; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #666;">
-                        Gráfico de tendencias
+                <div class="talent-card">
+                    <div class="talent-card-header">
+                        <div class="talent-card-title">📈 Postulaciones Recientes</div>
+                        <button class="talent-btn talent-btn-secondary" onclick="TalentEngine.switchView('applications')">
+                            Ver Todas
+                        </button>
+                    </div>
+                    <div id="recent-applications">
+                        ${this.renderRecentApplications(stats.recent_applications || [])}
                     </div>
                 </div>
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <h4 style="margin-top: 0;">🎯 Áreas Más Demandadas</h4>
-                    <div style="height: 200px; background: #f8f9fa; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #666;">
-                        Gráfico circular
+
+                <div class="talent-card">
+                    <div class="talent-card-header">
+                        <div class="talent-card-title">⏳ Acciones Pendientes</div>
+                    </div>
+                    <div id="pending-actions">
+                        ${this.renderPendingActions(stats)}
                     </div>
                 </div>
             </div>
-        </div>
-    `;
-}
+        `;
+    },
 
-// Get create job form
-function getCreateJobForm() {
-    return `
-        <form id="createJobForm" onsubmit="createJobOffer(event)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                <!-- Información básica -->
-                <div>
-                    <h4 style="color: #333; margin-bottom: 15px;">📋 Información Básica</h4>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Título del Puesto *</label>
-                        <input type="text" id="jobTitle" required 
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                               placeholder="Ej: Desarrollador Full Stack Senior">
-                    </div>
+    renderRecentApplications(applications) {
+        if (!applications.length) {
+            return '<p style="color: rgba(255,255,255,0.5); text-align: center; padding: 20px;">No hay postulaciones recientes</p>';
+        }
 
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Departamento *</label>
-                        <select id="jobDepartment" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                            <option value="">Seleccionar departamento</option>
-                            <option value="tecnologia">Tecnología</option>
-                            <option value="rrhh">Recursos Humanos</option>
-                            <option value="ventas">Ventas</option>
-                            <option value="marketing">Marketing</option>
-                            <option value="administracion">Administración</option>
-                            <option value="operaciones">Operaciones</option>
+        return applications.slice(0, 5).map(app => `
+            <div class="talent-candidate-card" onclick="TalentEngine.viewApplication(${app.id})">
+                <div class="talent-candidate-name">${app.candidate_first_name} ${app.candidate_last_name}</div>
+                <div class="talent-candidate-position">${app.job_title || 'Sin puesto'}</div>
+                <div style="margin-top: 8px;">
+                    ${TalentUI.getStatusBadge(app.status)}
+                </div>
+            </div>
+        `).join('');
+    },
+
+    renderPendingActions(stats) {
+        const actions = [];
+
+        if (stats.nuevas > 0) {
+            actions.push(`<div style="padding: 10px; background: rgba(23,162,184,0.1); border-radius: 8px; margin-bottom: 10px;">
+                🆕 <strong>${stats.nuevas}</strong> postulaciones nuevas por revisar
+            </div>`);
+        }
+        if (stats.pending_interviews > 0) {
+            actions.push(`<div style="padding: 10px; background: rgba(253,126,20,0.1); border-radius: 8px; margin-bottom: 10px;">
+                📅 <strong>${stats.pending_interviews}</strong> entrevistas por agendar
+            </div>`);
+        }
+        if (stats.pending_medical > 0) {
+            actions.push(`<div style="padding: 10px; background: rgba(232,62,140,0.1); border-radius: 8px; margin-bottom: 10px;">
+                🏥 <strong>${stats.pending_medical}</strong> exámenes médicos pendientes
+            </div>`);
+        }
+        if (stats.ready_to_hire > 0) {
+            actions.push(`<div style="padding: 10px; background: rgba(40,167,69,0.1); border-radius: 8px; margin-bottom: 10px;">
+                ✅ <strong>${stats.ready_to_hire}</strong> candidatos listos para contratar
+            </div>`);
+        }
+
+        return actions.length ? actions.join('') : '<p style="color: rgba(255,255,255,0.5); text-align: center; padding: 20px;">No hay acciones pendientes</p>';
+    },
+
+    // ========================================================================
+    // OFFERS VIEW
+    // ========================================================================
+    renderOffers(container) {
+        const offers = TalentState.offers;
+
+        container.innerHTML = `
+            <div class="talent-card">
+                <div class="talent-card-header">
+                    <div class="talent-card-title">📋 Ofertas Laborales</div>
+                    <div style="display: flex; gap: 10px;">
+                        <select class="talent-select" style="width: auto;" onchange="TalentEngine.filterOffers(this.value)">
+                            <option value="all">Todos los estados</option>
+                            <option value="active">Activas</option>
+                            <option value="draft">Borradores</option>
+                            <option value="paused">Pausadas</option>
+                            <option value="closed">Cerradas</option>
                         </select>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tipo de Empleo *</label>
-                        <select id="jobType" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                            <option value="">Seleccionar tipo</option>
-                            <option value="tiempo-completo">Tiempo Completo</option>
-                            <option value="medio-tiempo">Medio Tiempo</option>
-                            <option value="contrato">Por Contrato</option>
-                            <option value="freelance">Freelance</option>
-                            <option value="practicas">Prácticas</option>
-                        </select>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Ubicación *</label>
-                        <input type="text" id="jobLocation" required 
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                               placeholder="Ej: Buenos Aires / Remoto">
                     </div>
                 </div>
 
-                <!-- Compensación y requisitos -->
-                <div>
-                    <h4 style="color: #333; margin-bottom: 15px;">💰 Compensación y Requisitos</h4>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Salario Mínimo</label>
-                            <input type="number" id="salaryMin" 
-                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                                   placeholder="120000">
+                ${offers.length ? `
+                    <table class="talent-table">
+                        <thead>
+                            <tr>
+                                <th>Puesto</th>
+                                <th>Departamento</th>
+                                <th>Ubicación</th>
+                                <th>Postulaciones</th>
+                                <th>Estado</th>
+                                <th>Publicada</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${offers.map(offer => `
+                                <tr>
+                                    <td>
+                                        <strong style="color: #fff;">${offer.title}</strong>
+                                        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">
+                                            ${TALENT_CONSTANTS.JOB_TYPES[offer.job_type] || offer.job_type}
+                                        </div>
+                                    </td>
+                                    <td>${offer.department_name || '-'}</td>
+                                    <td>${offer.location || '-'}</td>
+                                    <td>
+                                        <span style="font-size: 20px; font-weight: 600; color: #ff6b9d;">
+                                            ${offer.applications_count || 0}
+                                        </span>
+                                    </td>
+                                    <td>${TalentUI.getOfferStatusBadge(offer.status)}</td>
+                                    <td>${TalentUI.formatDate(offer.posted_at)}</td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <button class="talent-btn talent-btn-secondary" style="padding: 6px 10px;"
+                                                    onclick="TalentEngine.viewOffer(${offer.id})" title="Ver">
+                                                👁️
+                                            </button>
+                                            <button class="talent-btn talent-btn-secondary" style="padding: 6px 10px;"
+                                                    onclick="TalentEngine.editOffer(${offer.id})" title="Editar">
+                                                ✏️
+                                            </button>
+                                            ${offer.status === 'active' ? `
+                                                <button class="talent-btn talent-btn-warning" style="padding: 6px 10px;"
+                                                        onclick="TalentEngine.pauseOffer(${offer.id})" title="Pausar">
+                                                    ⏸️
+                                                </button>
+                                            ` : offer.status === 'paused' ? `
+                                                <button class="talent-btn talent-btn-success" style="padding: 6px 10px;"
+                                                        onclick="TalentEngine.publishOffer(${offer.id})" title="Reactivar">
+                                                    ▶️
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                ` : `
+                    <div class="talent-empty-state">
+                        <div class="talent-empty-state-icon">📋</div>
+                        <p>No hay ofertas laborales</p>
+                        <button class="talent-btn talent-btn-primary" onclick="TalentEngine.showCreateOfferModal()">
+                            ➕ Crear Primera Oferta
+                        </button>
+                    </div>
+                `}
+            </div>
+        `;
+    },
+
+    // ========================================================================
+    // APPLICATIONS VIEW
+    // ========================================================================
+    renderApplications(container) {
+        const applications = TalentState.applications;
+
+        container.innerHTML = `
+            <div class="talent-card">
+                <div class="talent-card-header">
+                    <div class="talent-card-title">👥 Postulaciones</div>
+                    <div style="display: flex; gap: 10px;">
+                        <select class="talent-select" style="width: auto;" id="filter-status" onchange="TalentEngine.filterApplications()">
+                            <option value="all">Todos los estados</option>
+                            ${Object.entries(TALENT_CONSTANTS.APPLICATION_STATUSES).map(([key, val]) =>
+                                `<option value="${key}">${val.icon} ${val.label}</option>`
+                            ).join('')}
+                        </select>
+                        <input type="text" class="talent-input" style="width: 200px;"
+                               placeholder="🔍 Buscar candidato..."
+                               onkeyup="TalentEngine.searchApplications(this.value)">
+                    </div>
+                </div>
+
+                ${applications.length ? `
+                    <table class="talent-table">
+                        <thead>
+                            <tr>
+                                <th>Candidato</th>
+                                <th>Puesto</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applications-tbody">
+                            ${this.renderApplicationRows(applications)}
+                        </tbody>
+                    </table>
+                ` : `
+                    <div class="talent-empty-state">
+                        <div class="talent-empty-state-icon">👥</div>
+                        <p>No hay postulaciones</p>
+                    </div>
+                `}
+            </div>
+        `;
+    },
+
+    renderApplicationRows(applications) {
+        return applications.map(app => `
+            <tr data-id="${app.id}" data-status="${app.status}" data-name="${app.candidate_first_name} ${app.candidate_last_name}">
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #ff6b9d 0%, #c850c0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white;">
+                            ${app.candidate_first_name?.[0] || ''}${app.candidate_last_name?.[0] || ''}
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Salario Máximo</label>
-                            <input type="number" id="salaryMax" 
-                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
-                                   placeholder="180000">
+                            <div style="font-weight: 600; color: #fff;">
+                                ${app.candidate_first_name} ${app.candidate_last_name}
+                            </div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.5);">
+                                ${app.candidate_email || '-'}
+                            </div>
                         </div>
                     </div>
+                </td>
+                <td>${app.job_title || 'Sin puesto'}</td>
+                <td>${TalentUI.getStatusBadge(app.status)}</td>
+                <td>${TalentUI.formatDate(app.applied_at)}</td>
+                <td>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="talent-btn talent-btn-secondary" style="padding: 6px 10px;"
+                                onclick="TalentEngine.viewApplication(${app.id})" title="Ver Ficha">
+                            👁️
+                        </button>
+                        ${this.getApplicationActions(app)}
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    },
 
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Experiencia Requerida *</label>
-                        <select id="experienceLevel" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                            <option value="">Seleccionar nivel</option>
-                            <option value="sin-experiencia">Sin experiencia</option>
-                            <option value="junior">Junior (1-2 años)</option>
-                            <option value="semi-senior">Semi Senior (2-4 años)</option>
-                            <option value="senior">Senior (4-7 años)</option>
-                            <option value="lead">Lead (+7 años)</option>
-                        </select>
+    getApplicationActions(app) {
+        const actions = [];
+
+        switch(app.status) {
+            case 'nuevo':
+                actions.push(`<button class="talent-btn talent-btn-primary" style="padding: 6px 10px;"
+                              onclick="TalentEngine.startReview(${app.id})" title="Iniciar Revisión">📋</button>`);
+                break;
+            case 'revision':
+                actions.push(`<button class="talent-btn talent-btn-success" style="padding: 6px 10px;"
+                              onclick="TalentEngine.showScheduleInterviewModal(${app.id})" title="Agendar Entrevista">📅</button>`);
+                actions.push(`<button class="talent-btn talent-btn-warning" style="padding: 6px 10px;"
+                              onclick="TalentEngine.approveDirectly(${app.id})" title="Aprobar sin Entrevista">⏭️</button>`);
+                break;
+            case 'entrevista_pendiente':
+                actions.push(`<button class="talent-btn talent-btn-primary" style="padding: 6px 10px;"
+                              onclick="TalentEngine.showCompleteInterviewModal(${app.id})" title="Completar Entrevista">✅</button>`);
+                break;
+            case 'entrevista_realizada':
+                actions.push(`<button class="talent-btn talent-btn-success" style="padding: 6px 10px;"
+                              onclick="TalentEngine.approveAdmin(${app.id})" title="Aprobar RRHH">👔</button>`);
+                break;
+            case 'apto':
+            case 'apto_con_observaciones':
+                actions.push(`<button class="talent-btn talent-btn-success" style="padding: 6px 10px;"
+                              onclick="TalentEngine.showHireModal(${app.id})" title="Contratar">🎉</button>`);
+                break;
+        }
+
+        // Siempre mostrar opción de rechazar excepto en estados finales
+        if (!['contratado', 'rechazado', 'desistio', 'no_apto'].includes(app.status)) {
+            actions.push(`<button class="talent-btn talent-btn-danger" style="padding: 6px 10px;"
+                          onclick="TalentEngine.showRejectModal(${app.id})" title="Rechazar">🚫</button>`);
+        }
+
+        return actions.join('');
+    },
+
+    // ========================================================================
+    // PIPELINE VIEW
+    // ========================================================================
+    renderPipeline(container) {
+        const stages = [
+            { key: 'nuevo', label: '🆕 Nuevos', filter: ['nuevo'] },
+            { key: 'revision', label: '👁️ En Revisión', filter: ['revision'] },
+            { key: 'entrevista', label: '🗣️ Entrevista', filter: ['entrevista_pendiente', 'entrevista_realizada'] },
+            { key: 'aprobado', label: '👔 Aprobado RRHH', filter: ['aprobado_administrativo'] },
+            { key: 'medico', label: '🏥 Examen Médico', filter: ['examen_pendiente', 'examen_realizado', 'apto', 'apto_con_observaciones'] },
+            { key: 'contratar', label: '🎉 Por Contratar', filter: ['apto', 'apto_con_observaciones'] }
+        ];
+
+        const pipeline = TalentState.pipeline || TalentState.applications;
+
+        container.innerHTML = `
+            <div class="talent-card" style="overflow-x: auto;">
+                <div class="talent-card-header">
+                    <div class="talent-card-title">🔄 Pipeline de Reclutamiento</div>
+                </div>
+                <div class="talent-pipeline">
+                    ${stages.map(stage => {
+                        const candidates = pipeline.filter(p => stage.filter.includes(p.status));
+                        return `
+                            <div class="talent-pipeline-stage">
+                                <div class="talent-pipeline-header">
+                                    <span>${stage.label}</span>
+                                    <span class="talent-pipeline-count">${candidates.length}</span>
+                                </div>
+                                <div>
+                                    ${candidates.length ? candidates.map(c => `
+                                        <div class="talent-candidate-card" onclick="TalentEngine.viewApplication(${c.id})">
+                                            <div class="talent-candidate-name">${c.candidate_first_name} ${c.candidate_last_name}</div>
+                                            <div class="talent-candidate-position">${c.job_title || 'Sin puesto'}</div>
+                                        </div>
+                                    `).join('') : `
+                                        <p style="text-align: center; color: rgba(255,255,255,0.3); font-size: 12px; padding: 20px;">
+                                            Sin candidatos
+                                        </p>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    },
+
+    // ========================================================================
+    // INTERVIEWS VIEW
+    // ========================================================================
+    renderInterviews(container) {
+        const interviews = TalentState.interviews;
+
+        container.innerHTML = `
+            <div class="talent-card">
+                <div class="talent-card-header">
+                    <div class="talent-card-title">🗣️ Gestión de Entrevistas</div>
+                </div>
+
+                ${interviews.length ? `
+                    <table class="talent-table">
+                        <thead>
+                            <tr>
+                                <th>Candidato</th>
+                                <th>Puesto</th>
+                                <th>Fecha/Hora</th>
+                                <th>Lugar</th>
+                                <th>Entrevistador</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${interviews.map(int => `
+                                <tr>
+                                    <td>
+                                        <strong style="color: #fff;">${int.candidate_first_name} ${int.candidate_last_name}</strong>
+                                    </td>
+                                    <td>${int.job_title || '-'}</td>
+                                    <td>${TalentUI.formatDateTime(int.interview_scheduled_at) || 'Por agendar'}</td>
+                                    <td>${int.interview_location || '-'}</td>
+                                    <td>${int.interviewer_name || 'Por asignar'}</td>
+                                    <td>${TalentUI.getStatusBadge(int.status)}</td>
+                                    <td>
+                                        ${int.status === 'entrevista_pendiente' ? `
+                                            <button class="talent-btn talent-btn-primary" style="padding: 6px 10px;"
+                                                    onclick="TalentEngine.showCompleteInterviewModal(${int.id})">
+                                                ✅ Completar
+                                            </button>
+                                        ` : `
+                                            <button class="talent-btn talent-btn-secondary" style="padding: 6px 10px;"
+                                                    onclick="TalentEngine.viewApplication(${int.id})">
+                                                👁️ Ver
+                                            </button>
+                                        `}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                ` : `
+                    <div class="talent-empty-state">
+                        <div class="talent-empty-state-icon">🗣️</div>
+                        <p>No hay entrevistas pendientes</p>
+                    </div>
+                `}
+            </div>
+        `;
+    },
+
+    // ========================================================================
+    // MODALS
+    // ========================================================================
+
+    // Create Offer Modal
+    showCreateOfferModal() {
+        const modal = document.createElement('div');
+        modal.className = 'talent-modal-overlay';
+        modal.id = 'create-offer-modal';
+
+        modal.innerHTML = `
+            <div class="talent-modal">
+                <div class="talent-modal-header">
+                    <h3>💼 Nueva Oferta Laboral</h3>
+                    <button class="talent-modal-close" onclick="TalentEngine.closeModal('create-offer-modal')">&times;</button>
+                </div>
+                <div class="talent-modal-body">
+                    <form id="create-offer-form">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="talent-form-group">
+                                <label class="talent-form-label">Título del Puesto <span>*</span></label>
+                                <input type="text" class="talent-input" name="title" required
+                                       placeholder="Ej: Desarrollador Full Stack Senior">
+                            </div>
+                            <div class="talent-form-group">
+                                <label class="talent-form-label">Departamento</label>
+                                <select class="talent-select" name="department_id">
+                                    <option value="">Seleccionar...</option>
+                                    ${TalentState.departments.map(d =>
+                                        `<option value="${d.id}">${d.name}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            <div class="talent-form-group">
+                                <label class="talent-form-label">Tipo de Empleo</label>
+                                <select class="talent-select" name="job_type">
+                                    ${Object.entries(TALENT_CONSTANTS.JOB_TYPES).map(([k, v]) =>
+                                        `<option value="${k}">${v}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            <div class="talent-form-group">
+                                <label class="talent-form-label">Ubicación</label>
+                                <input type="text" class="talent-input" name="location"
+                                       placeholder="Ej: Buenos Aires / Remoto">
+                            </div>
+                            <div class="talent-form-group">
+                                <label class="talent-form-label">Salario Mínimo</label>
+                                <input type="number" class="talent-input" name="salary_min" placeholder="150000">
+                            </div>
+                            <div class="talent-form-group">
+                                <label class="talent-form-label">Salario Máximo</label>
+                                <input type="number" class="talent-input" name="salary_max" placeholder="250000">
+                            </div>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Descripción del Puesto <span>*</span></label>
+                            <textarea class="talent-textarea" name="description" required
+                                      placeholder="Describe las responsabilidades y objetivos del puesto..."></textarea>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Requisitos</label>
+                            <textarea class="talent-textarea" name="requirements"
+                                      placeholder="Lista los requisitos técnicos y experiencia necesaria..."></textarea>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">📄 Documentación Requerida</label>
+                            <div class="talent-doc-checklist">
+                                ${TALENT_CONSTANTS.REQUIRED_DOCUMENTS.map(doc => `
+                                    <div class="talent-doc-item">
+                                        <input type="checkbox" name="required_docs" value="${doc.id}"
+                                               ${doc.required ? 'checked' : ''}>
+                                        <span>${doc.name}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">📢 Canales de Publicación</label>
+                            <div class="talent-channel-grid">
+                                ${TALENT_CONSTANTS.PUBLICATION_CHANNELS.map(ch => `
+                                    <div class="talent-channel-card ${ch.enabled ? '' : 'disabled'}"
+                                         onclick="${ch.enabled ? `TalentEngine.toggleChannel(this, '${ch.id}')` : ''}"
+                                         data-channel="${ch.id}">
+                                        <div class="talent-channel-icon">${ch.icon}</div>
+                                        <div class="talent-channel-name">${ch.name}</div>
+                                        ${ch.coming ? '<span class="talent-channel-badge">Próximamente</span>' : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="talent-modal-footer">
+                    <button class="talent-btn talent-btn-secondary" onclick="TalentEngine.closeModal('create-offer-modal')">
+                        Cancelar
+                    </button>
+                    <button class="talent-btn talent-btn-secondary" onclick="TalentEngine.saveOfferDraft()">
+                        💾 Guardar Borrador
+                    </button>
+                    <button class="talent-btn talent-btn-primary" onclick="TalentEngine.publishNewOffer()">
+                        🚀 Publicar Oferta
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    },
+
+    toggleChannel(element, channelId) {
+        element.classList.toggle('selected');
+    },
+
+    async saveOfferDraft() {
+        const form = document.getElementById('create-offer-form');
+        const formData = new FormData(form);
+
+        const data = {
+            title: formData.get('title'),
+            department_id: formData.get('department_id') || null,
+            job_type: formData.get('job_type'),
+            location: formData.get('location'),
+            salary_min: formData.get('salary_min') || null,
+            salary_max: formData.get('salary_max') || null,
+            description: formData.get('description'),
+            requirements: formData.get('requirements'),
+            status: 'draft'
+        };
+
+        try {
+            await TalentAPI.createOffer(data);
+            TalentUI.showToast('Borrador guardado exitosamente', 'success');
+            this.closeModal('create-offer-modal');
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error guardando borrador', 'error');
+        }
+    },
+
+    async publishNewOffer() {
+        const form = document.getElementById('create-offer-form');
+        const formData = new FormData(form);
+
+        // Get selected channels
+        const selectedChannels = Array.from(document.querySelectorAll('.talent-channel-card.selected'))
+            .map(el => el.dataset.channel);
+
+        // Get required docs
+        const requiredDocs = Array.from(form.querySelectorAll('input[name="required_docs"]:checked'))
+            .map(cb => cb.value);
+
+        const data = {
+            title: formData.get('title'),
+            department_id: formData.get('department_id') || null,
+            job_type: formData.get('job_type'),
+            location: formData.get('location'),
+            salary_min: formData.get('salary_min') || null,
+            salary_max: formData.get('salary_max') || null,
+            description: formData.get('description'),
+            requirements: formData.get('requirements'),
+            required_documents: requiredDocs,
+            publication_channels: selectedChannels,
+            status: 'active'
+        };
+
+        if (!data.title || !data.description) {
+            TalentUI.showToast('Complete los campos requeridos', 'warning');
+            return;
+        }
+
+        try {
+            await TalentAPI.createOffer(data);
+            TalentUI.showToast('¡Oferta publicada exitosamente!', 'success');
+            this.closeModal('create-offer-modal');
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error publicando oferta', 'error');
+        }
+    },
+
+    // View Application Modal
+    async viewApplication(id) {
+        try {
+            const app = await TalentAPI.getApplication(id);
+            TalentState.selectedApplication = app;
+
+            const modal = document.createElement('div');
+            modal.className = 'talent-modal-overlay';
+            modal.id = 'view-application-modal';
+
+            modal.innerHTML = `
+                <div class="talent-modal" style="max-width: 1000px;">
+                    <div class="talent-modal-header">
+                        <h3>👤 Ficha del Candidato</h3>
+                        <button class="talent-modal-close" onclick="TalentEngine.closeModal('view-application-modal')">&times;</button>
+                    </div>
+                    <div class="talent-modal-body">
+                        <div style="display: grid; grid-template-columns: 300px 1fr; gap: 25px;">
+                            <!-- Sidebar con info básica -->
+                            <div>
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #ff6b9d 0%, #c850c0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 600; color: white; margin: 0 auto 15px;">
+                                        ${app.candidate_first_name?.[0] || ''}${app.candidate_last_name?.[0] || ''}
+                                    </div>
+                                    <h3 style="margin: 0; color: #fff;">${app.candidate_first_name} ${app.candidate_last_name}</h3>
+                                    <p style="color: rgba(255,255,255,0.6); margin: 5px 0;">${app.candidate_email}</p>
+                                    <div style="margin-top: 10px;">
+                                        ${TalentUI.getStatusBadge(app.status)}
+                                    </div>
+                                </div>
+
+                                <div class="talent-card" style="padding: 15px;">
+                                    <h4 style="margin: 0 0 15px 0; color: #ff6b9d;">📋 Información</h4>
+                                    <div style="font-size: 14px;">
+                                        <p><strong>📞 Teléfono:</strong> ${app.candidate_phone || '-'}</p>
+                                        <p><strong>🪪 DNI:</strong> ${app.candidate_dni || '-'}</p>
+                                        <p><strong>📍 Ubicación:</strong> ${app.candidate_city || '-'}, ${app.candidate_province || '-'}</p>
+                                        <p><strong>📅 Postulación:</strong> ${TalentUI.formatDate(app.applied_at)}</p>
+                                    </div>
+                                </div>
+
+                                <div class="talent-card" style="padding: 15px; margin-top: 15px;">
+                                    <h4 style="margin: 0 0 15px 0; color: #ff6b9d;">💼 Puesto</h4>
+                                    <div style="font-size: 14px;">
+                                        <p><strong>${app.job_title || 'Sin especificar'}</strong></p>
+                                        <p>Expectativa: $${app.salary_expectation || '-'}</p>
+                                        <p>Disponibilidad: ${app.availability || '-'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contenido principal -->
+                            <div>
+                                <!-- Timeline -->
+                                <div class="talent-card">
+                                    <h4 style="margin: 0 0 20px 0; color: #fff;">📜 Historial del Proceso</h4>
+                                    <div class="talent-timeline">
+                                        ${(app.status_history || []).map(h => `
+                                            <div class="talent-timeline-item">
+                                                <div class="talent-timeline-date">${TalentUI.formatDateTime(h.changed_at)}</div>
+                                                <div class="talent-timeline-content">
+                                                    <strong>${TALENT_CONSTANTS.APPLICATION_STATUSES[h.to_status]?.label || h.to_status}</strong>
+                                                    ${h.notes ? `<p style="margin: 5px 0 0 0; font-size: 13px; color: rgba(255,255,255,0.6);">${h.notes}</p>` : ''}
+                                                </div>
+                                            </div>
+                                        `).join('') || '<p style="color: rgba(255,255,255,0.5);">Sin historial</p>'}
+                                    </div>
+                                </div>
+
+                                <!-- Notas de entrevista si existen -->
+                                ${app.interview_notes ? `
+                                    <div class="talent-card" style="margin-top: 15px;">
+                                        <h4 style="margin: 0 0 15px 0; color: #fff;">🗣️ Notas de Entrevista</h4>
+                                        <p style="color: rgba(255,255,255,0.8);">${app.interview_notes}</p>
+                                        ${app.interview_score ? `
+                                            <div style="margin-top: 10px;">
+                                                <strong>Puntuación:</strong>
+                                                <span style="color: #ff6b9d; font-size: 20px;">${app.interview_score}/10</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                ` : ''}
+
+                                <!-- Carta de presentación -->
+                                ${app.cover_letter ? `
+                                    <div class="talent-card" style="margin-top: 15px;">
+                                        <h4 style="margin: 0 0 15px 0; color: #fff;">💬 Carta de Presentación</h4>
+                                        <p style="color: rgba(255,255,255,0.8); line-height: 1.6;">${app.cover_letter}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="talent-modal-footer">
+                        <button class="talent-btn talent-btn-secondary" onclick="TalentEngine.closeModal('view-application-modal')">
+                            Cerrar
+                        </button>
+                        ${this.getApplicationActions(app).replace(/style="padding: 6px 10px;"/g, '')}
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        } catch (error) {
+            TalentUI.showToast('Error cargando candidato', 'error');
+        }
+    },
+
+    // Schedule Interview Modal
+    showScheduleInterviewModal(appId) {
+        const modal = document.createElement('div');
+        modal.className = 'talent-modal-overlay';
+        modal.id = 'schedule-interview-modal';
+
+        modal.innerHTML = `
+            <div class="talent-modal" style="max-width: 600px;">
+                <div class="talent-modal-header">
+                    <h3>📅 Agendar Entrevista</h3>
+                    <button class="talent-modal-close" onclick="TalentEngine.closeModal('schedule-interview-modal')">&times;</button>
+                </div>
+                <div class="talent-modal-body">
+                    <form id="schedule-interview-form">
+                        <input type="hidden" name="application_id" value="${appId}">
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Fecha y Hora <span>*</span></label>
+                            <input type="datetime-local" class="talent-input" name="scheduled_at" required>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Tipo de Entrevista</label>
+                            <select class="talent-select" name="interview_type">
+                                <option value="presencial">Presencial</option>
+                                <option value="virtual">Virtual (Videollamada)</option>
+                                <option value="telefonica">Telefónica</option>
+                            </select>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Lugar / Link</label>
+                            <input type="text" class="talent-input" name="location"
+                                   placeholder="Ej: Oficina Central, Piso 3 / Link de Meet">
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Entrevistador</label>
+                            <input type="text" class="talent-input" name="interviewer_name"
+                                   placeholder="Nombre del entrevistador">
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Documentación a Traer</label>
+                            <textarea class="talent-textarea" name="bring_documents"
+                                      placeholder="Ej: DNI original, Certificados de estudios..."></textarea>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Notas Adicionales</label>
+                            <textarea class="talent-textarea" name="notes"
+                                      placeholder="Instrucciones especiales para el candidato..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="talent-modal-footer">
+                    <button class="talent-btn talent-btn-secondary" onclick="TalentEngine.closeModal('schedule-interview-modal')">
+                        Cancelar
+                    </button>
+                    <button class="talent-btn talent-btn-primary" onclick="TalentEngine.submitScheduleInterview()">
+                        📅 Agendar y Notificar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    },
+
+    async submitScheduleInterview() {
+        const form = document.getElementById('schedule-interview-form');
+        const formData = new FormData(form);
+
+        const appId = formData.get('application_id');
+        const data = {
+            scheduled_at: formData.get('scheduled_at'),
+            interview_type: formData.get('interview_type'),
+            location: formData.get('location'),
+            interviewer_name: formData.get('interviewer_name'),
+            bring_documents: formData.get('bring_documents'),
+            notes: formData.get('notes')
+        };
+
+        try {
+            await TalentAPI.scheduleInterview(appId, data);
+            TalentUI.showToast('Entrevista agendada. Se enviaron notificaciones.', 'success');
+            this.closeModal('schedule-interview-modal');
+            this.closeModal('view-application-modal');
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error agendando entrevista', 'error');
+        }
+    },
+
+    // Hire Modal
+    showHireModal(appId) {
+        const app = TalentState.selectedApplication || TalentState.applications.find(a => a.id === appId);
+
+        const modal = document.createElement('div');
+        modal.className = 'talent-modal-overlay';
+        modal.id = 'hire-modal';
+
+        modal.innerHTML = `
+            <div class="talent-modal" style="max-width: 600px;">
+                <div class="talent-modal-header" style="background: linear-gradient(90deg, #28a745 0%, #20c997 100%);">
+                    <h3>🎉 Contratar Candidato</h3>
+                    <button class="talent-modal-close" onclick="TalentEngine.closeModal('hire-modal')">&times;</button>
+                </div>
+                <div class="talent-modal-body">
+                    <div style="text-align: center; margin-bottom: 25px; padding: 20px; background: rgba(40,167,69,0.1); border-radius: 12px;">
+                        <h3 style="margin: 0; color: #28a745;">
+                            ${app?.candidate_first_name || ''} ${app?.candidate_last_name || ''}
+                        </h3>
+                        <p style="color: rgba(255,255,255,0.6); margin: 5px 0;">${app?.job_title || 'Sin puesto'}</p>
                     </div>
 
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Educación Mínima</label>
-                        <select id="educationLevel" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                            <option value="">No especificado</option>
-                            <option value="secundaria">Secundaria Completa</option>
-                            <option value="terciario">Terciario</option>
-                            <option value="universitario">Universitario</option>
-                            <option value="posgrado">Posgrado</option>
-                        </select>
-                    </div>
+                    <form id="hire-form">
+                        <input type="hidden" name="application_id" value="${appId}">
 
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Fecha de Cierre</label>
-                        <input type="date" id="closingDate" 
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                    </div>
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Fecha de Ingreso <span>*</span></label>
+                            <input type="date" class="talent-input" name="start_date" required>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Puesto Asignado</label>
+                            <input type="text" class="talent-input" name="position"
+                                   value="${app?.job_title || ''}" placeholder="Puesto oficial">
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Salario Acordado</label>
+                            <input type="number" class="talent-input" name="salary"
+                                   value="${app?.salary_expectation || ''}" placeholder="Salario mensual">
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Tipo de Contrato</label>
+                            <select class="talent-select" name="contract_type">
+                                <option value="indefinido">Indefinido</option>
+                                <option value="temporal">Temporal</option>
+                                <option value="prueba">Período de Prueba</option>
+                            </select>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 14px;">
+                                ℹ️ <strong>Alta Automática:</strong> Al confirmar, el sistema creará automáticamente
+                                el usuario del empleado con los datos de la postulación. Se generará una contraseña
+                                temporal que deberá cambiar en su primer ingreso.
+                            </p>
+                        </div>
+                    </form>
+                </div>
+                <div class="talent-modal-footer">
+                    <button class="talent-btn talent-btn-secondary" onclick="TalentEngine.closeModal('hire-modal')">
+                        Cancelar
+                    </button>
+                    <button class="talent-btn talent-btn-success" onclick="TalentEngine.submitHire()">
+                        🎉 Confirmar Contratación
+                    </button>
                 </div>
             </div>
+        `;
 
-            <!-- Descripción -->
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #333; margin-bottom: 15px;">📝 Descripción del Puesto</h4>
-                <textarea id="jobDescription" required 
-                          style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; min-height: 120px;"
-                          placeholder="Describe las responsabilidades, objetivos y características del puesto..."></textarea>
-            </div>
+        document.body.appendChild(modal);
+    },
 
-            <!-- Requisitos -->
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #333; margin-bottom: 15px;">✅ Requisitos y Habilidades</h4>
-                <textarea id="jobRequirements" required 
-                          style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; min-height: 100px;"
-                          placeholder="Lista los requisitos técnicos y habilidades necesarias (uno por línea)..."></textarea>
-            </div>
+    async submitHire() {
+        const form = document.getElementById('hire-form');
+        const formData = new FormData(form);
 
-            <!-- Formulario dinámico -->
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #333; margin-bottom: 15px;">📋 Formulario de Postulación Personalizado</h4>
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
-                    <p style="color: #666; margin: 0;">Define campos adicionales que los candidatos deberán completar al postularse</p>
+        const appId = formData.get('application_id');
+        const data = {
+            start_date: formData.get('start_date'),
+            position: formData.get('position'),
+            salary: formData.get('salary'),
+            contract_type: formData.get('contract_type')
+        };
+
+        try {
+            const result = await TalentAPI.hire(appId, data);
+
+            let message = '¡Candidato contratado exitosamente!';
+            if (result.newEmployee) {
+                message += `\n\nUsuario creado: ${result.newEmployee.username}\nContraseña temporal: ${result.newEmployee.temporaryPassword}`;
+            }
+
+            TalentUI.showToast(message, 'success');
+            this.closeModal('hire-modal');
+            this.closeModal('view-application-modal');
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error contratando candidato: ' + error.message, 'error');
+        }
+    },
+
+    // ========================================================================
+    // ACTIONS
+    // ========================================================================
+
+    async startReview(appId) {
+        try {
+            await TalentAPI.updateApplicationStatus(appId, 'revision', 'Iniciada revisión de documentación');
+            TalentUI.showToast('Postulación en revisión', 'success');
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error actualizando estado', 'error');
+        }
+    },
+
+    async approveAdmin(appId) {
+        try {
+            await TalentAPI.approveAdmin(appId, 'Aprobado por RRHH');
+            TalentUI.showToast('Candidato aprobado. Se notificó al área médica.', 'success');
+            this.closeModal('view-application-modal');
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error aprobando candidato', 'error');
+        }
+    },
+
+    async approveDirectly(appId) {
+        if (!confirm('¿Aprobar directamente sin entrevista?')) return;
+        await this.approveAdmin(appId);
+    },
+
+    showRejectModal(appId) {
+        const modal = document.createElement('div');
+        modal.className = 'talent-modal-overlay';
+        modal.id = 'reject-modal';
+
+        modal.innerHTML = `
+            <div class="talent-modal" style="max-width: 500px;">
+                <div class="talent-modal-header" style="background: linear-gradient(90deg, #dc3545 0%, #c82333 100%);">
+                    <h3>🚫 Rechazar Candidato</h3>
+                    <button class="talent-modal-close" onclick="TalentEngine.closeModal('reject-modal')">&times;</button>
                 </div>
-                
-                <div id="customFields">
-                    <!-- Los campos personalizados se agregarán aquí -->
+                <div class="talent-modal-body">
+                    <form id="reject-form">
+                        <input type="hidden" name="application_id" value="${appId}">
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Motivo del Rechazo <span>*</span></label>
+                            <select class="talent-select" name="reason" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="perfil_no_adecuado">Perfil no adecuado</option>
+                                <option value="experiencia_insuficiente">Experiencia insuficiente</option>
+                                <option value="expectativa_salarial">Expectativa salarial fuera de rango</option>
+                                <option value="documentacion_incompleta">Documentación incompleta</option>
+                                <option value="no_supero_entrevista">No superó entrevista</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Notas Adicionales</label>
+                            <textarea class="talent-textarea" name="notes"
+                                      placeholder="Detalles adicionales del rechazo..."></textarea>
+                        </div>
+                    </form>
                 </div>
-                
-                <button type="button" onclick="addCustomField()" 
-                        style="background: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; margin-top: 10px;">
-                    ➕ Agregar Campo Personalizado
-                </button>
-            </div>
-
-            <!-- Botones -->
-            <div style="display: flex; gap: 15px; justify-content: flex-end; border-top: 1px solid #e9ecef; padding-top: 20px;">
-                <button type="button" onclick="closeCreateJobModal()" 
-                        style="background: #6c757d; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer;">
-                    Cancelar
-                </button>
-                <button type="submit" 
-                        style="background: #6f42c1; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                    🚀 Publicar Oferta
-                </button>
-            </div>
-        </form>
-    `;
-}
-
-// Modal functions
-function showCreateJobModal() {
-    document.getElementById('createJobModal').style.setProperty('display', 'block', 'important');
-}
-
-function closeCreateJobModal() {
-    document.getElementById('createJobModal').style.setProperty('display', 'none', 'important');
-}
-
-function showApplyJobModal(jobId) {
-    const modal = document.getElementById('applyJobModal');
-    const content = document.getElementById('applyJobContent');
-    
-    content.innerHTML = getApplicationForm(jobId);
-    modal.style.setProperty('display', 'block', 'important');
-}
-
-function closeApplyJobModal() {
-    document.getElementById('applyJobModal').style.setProperty('display', 'none', 'important');
-}
-
-// Get application form for candidates
-function getApplicationForm(jobId) {
-    return `
-        <form id="applyJobForm" onsubmit="submitApplication(event, ${jobId})">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <div style="font-size: 3em; margin-bottom: 10px;">🎯</div>
-                <h4>Postulación para: Desarrollador Full Stack Senior</h4>
-                <p style="color: #666;">Complete el formulario para enviar su postulación</p>
-            </div>
-
-            <!-- Datos personales -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Nombre Completo *</label>
-                    <input type="text" name="candidateName" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email *</label>
-                    <input type="email" name="candidateEmail" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Teléfono *</label>
-                    <input type="tel" name="candidatePhone" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Ubicación *</label>
-                    <input type="text" name="candidateLocation" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" placeholder="Ciudad, País">
-                </div>
-            </div>
-
-            <!-- CV Upload -->
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Curriculum Vitae (PDF) *</label>
-                <div style="border: 2px dashed #ddd; padding: 20px; text-align: center; border-radius: 6px; cursor: pointer;" onclick="document.getElementById('cvFile').click()">
-                    <input type="file" id="cvFile" accept=".pdf,.doc,.docx" required style="display: none;">
-                    <div style="font-size: 2em; margin-bottom: 10px;">📄</div>
-                    <div>Click para subir tu CV (PDF, DOC, DOCX)</div>
-                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Tamaño máximo: 5MB</div>
+                <div class="talent-modal-footer">
+                    <button class="talent-btn talent-btn-secondary" onclick="TalentEngine.closeModal('reject-modal')">
+                        Cancelar
+                    </button>
+                    <button class="talent-btn talent-btn-danger" onclick="TalentEngine.submitReject()">
+                        🚫 Confirmar Rechazo
+                    </button>
                 </div>
             </div>
+        `;
 
-            <!-- Experiencia -->
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Años de Experiencia en Desarrollo *</label>
-                <select name="experienceYears" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                    <option value="">Seleccionar experiencia</option>
-                    <option value="0-1">Menos de 1 año</option>
-                    <option value="1-2">1-2 años</option>
-                    <option value="2-4">2-4 años</option>
-                    <option value="4-7">4-7 años</option>
-                    <option value="7+">Más de 7 años</option>
-                </select>
-            </div>
+        document.body.appendChild(modal);
+    },
 
-            <!-- Tecnologías -->
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tecnologías que Dominas *</label>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                    <label style="display: flex; align-items: center;">
-                        <input type="checkbox" value="react" style="margin-right: 8px;"> React
-                    </label>
-                    <label style="display: flex; align-items: center;">
-                        <input type="checkbox" value="nodejs" style="margin-right: 8px;"> Node.js
-                    </label>
-                    <label style="display: flex; align-items: center;">
-                        <input type="checkbox" value="javascript" style="margin-right: 8px;"> JavaScript
-                    </label>
-                    <label style="display: flex; align-items: center;">
-                        <input type="checkbox" value="typescript" style="margin-right: 8px;"> TypeScript
-                    </label>
-                    <label style="display: flex; align-items: center;">
-                        <input type="checkbox" value="postgresql" style="margin-right: 8px;"> PostgreSQL
-                    </label>
-                    <label style="display: flex; align-items: center;">
-                        <input type="checkbox" value="mongodb" style="margin-right: 8px;"> MongoDB
-                    </label>
+    async submitReject() {
+        const form = document.getElementById('reject-form');
+        const formData = new FormData(form);
+
+        const appId = formData.get('application_id');
+        const reason = formData.get('reason');
+        const notes = formData.get('notes');
+
+        if (!reason) {
+            TalentUI.showToast('Seleccione un motivo', 'warning');
+            return;
+        }
+
+        try {
+            await TalentAPI.reject(appId, reason, notes);
+            TalentUI.showToast('Candidato rechazado', 'info');
+            this.closeModal('reject-modal');
+            this.closeModal('view-application-modal');
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error rechazando candidato', 'error');
+        }
+    },
+
+    // ========================================================================
+    // UTILITIES
+    // ========================================================================
+
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.remove();
+    },
+
+    filterApplications() {
+        const status = document.getElementById('filter-status')?.value || 'all';
+        const rows = document.querySelectorAll('#applications-tbody tr');
+
+        rows.forEach(row => {
+            if (status === 'all' || row.dataset.status === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    },
+
+    searchApplications(query) {
+        const rows = document.querySelectorAll('#applications-tbody tr');
+        const lowerQuery = query.toLowerCase();
+
+        rows.forEach(row => {
+            const name = row.dataset.name?.toLowerCase() || '';
+            if (name.includes(lowerQuery)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    },
+
+    async filterOffers(status) {
+        const params = status !== 'all' ? `?status=${status}` : '';
+        const offers = await TalentAPI.getOffers(params);
+        TalentState.offers = offers.data || offers || [];
+        this.renderOffers(document.getElementById('talent-view-content'));
+    },
+
+    async viewOffer(id) {
+        // TODO: Implement offer detail view
+        alert(`Ver oferta ${id} - En desarrollo`);
+    },
+
+    async editOffer(id) {
+        // TODO: Implement offer edit
+        alert(`Editar oferta ${id} - En desarrollo`);
+    },
+
+    async pauseOffer(id) {
+        if (!confirm('¿Pausar esta oferta?')) return;
+        try {
+            await TalentAPI.pauseOffer(id);
+            TalentUI.showToast('Oferta pausada', 'info');
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error pausando oferta', 'error');
+        }
+    },
+
+    async publishOffer(id) {
+        try {
+            await TalentAPI.publishOffer(id, ['portal']);
+            TalentUI.showToast('Oferta reactivada', 'success');
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error reactivando oferta', 'error');
+        }
+    },
+
+    showCompleteInterviewModal(appId) {
+        const modal = document.createElement('div');
+        modal.className = 'talent-modal-overlay';
+        modal.id = 'complete-interview-modal';
+
+        modal.innerHTML = `
+            <div class="talent-modal" style="max-width: 600px;">
+                <div class="talent-modal-header">
+                    <h3>✅ Completar Entrevista</h3>
+                    <button class="talent-modal-close" onclick="TalentEngine.closeModal('complete-interview-modal')">&times;</button>
+                </div>
+                <div class="talent-modal-body">
+                    <form id="complete-interview-form">
+                        <input type="hidden" name="application_id" value="${appId}">
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Puntuación (1-10) <span>*</span></label>
+                            <input type="number" class="talent-input" name="score" min="1" max="10" required>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Recomendación <span>*</span></label>
+                            <select class="talent-select" name="recommendation" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="highly_recommended">Altamente Recomendado ⭐⭐⭐</option>
+                                <option value="recommended">Recomendado ⭐⭐</option>
+                                <option value="acceptable">Aceptable ⭐</option>
+                                <option value="not_recommended">No Recomendado ❌</option>
+                            </select>
+                        </div>
+
+                        <div class="talent-form-group">
+                            <label class="talent-form-label">Notas de la Entrevista <span>*</span></label>
+                            <textarea class="talent-textarea" name="notes" required
+                                      placeholder="Observaciones sobre el candidato, fortalezas, debilidades, impresión general..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="talent-modal-footer">
+                    <button class="talent-btn talent-btn-secondary" onclick="TalentEngine.closeModal('complete-interview-modal')">
+                        Cancelar
+                    </button>
+                    <button class="talent-btn talent-btn-primary" onclick="TalentEngine.submitCompleteInterview()">
+                        ✅ Guardar y Notificar
+                    </button>
                 </div>
             </div>
+        `;
 
-            <!-- Disponibilidad -->
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Disponibilidad *</label>
-                <select name="availability" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                    <option value="">Seleccionar disponibilidad</option>
-                    <option value="inmediata">Inmediata</option>
-                    <option value="2-semanas">2 semanas</option>
-                    <option value="1-mes">1 mes</option>
-                    <option value="2-meses">2 meses</option>
-                    <option value="a-convenir">A convenir</option>
-                </select>
-            </div>
+        document.body.appendChild(modal);
+    },
 
-            <!-- Pretensión salarial -->
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Pretensión Salarial (ARS)</label>
-                <input type="number" name="salaryExpectation" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" placeholder="150000">
-            </div>
+    async submitCompleteInterview() {
+        const form = document.getElementById('complete-interview-form');
+        const formData = new FormData(form);
 
-            <!-- Carta de presentación -->
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Carta de Presentación</label>
-                <textarea name="coverLetter" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; min-height: 120px;" 
-                          placeholder="Cuéntanos por qué eres el candidato ideal para este puesto..."></textarea>
-            </div>
+        const appId = formData.get('application_id');
+        const data = {
+            score: parseInt(formData.get('score')),
+            recommendation: formData.get('recommendation'),
+            notes: formData.get('notes')
+        };
 
-            <!-- Botones -->
-            <div style="display: flex; gap: 15px; justify-content: flex-end; border-top: 1px solid #e9ecef; padding-top: 20px;">
-                <button type="button" onclick="closeApplyJobModal()" 
-                        style="background: #6c757d; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer;">
-                    Cancelar
-                </button>
-                <button type="submit" 
-                        style="background: #28a745; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                    🚀 Enviar Postulación
-                </button>
-            </div>
-        </form>
-    `;
-}
-
-// Form functions
-let customFieldCounter = 0;
-
-function addCustomField() {
-    customFieldCounter++;
-    const fieldsContainer = document.getElementById('customFields');
-    
-    const fieldDiv = document.createElement('div');
-    fieldDiv.id = `customField${customFieldCounter}`;
-    fieldDiv.style.cssText = 'border: 1px solid #e9ecef; padding: 15px; border-radius: 6px; margin-bottom: 10px; background: white;';
-    
-    fieldDiv.innerHTML = `
-        <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
-            <h5 style="margin: 0; color: #333;">Campo Personalizado #${customFieldCounter}</h5>
-            <button type="button" onclick="removeCustomField(${customFieldCounter})" 
-                    style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                ✕ Eliminar
-            </button>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-            <div>
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Etiqueta del Campo</label>
-                <input type="text" placeholder="Ej: Nivel de inglés" 
-                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div>
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tipo de Campo</label>
-                <select style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                    <option value="text">Texto</option>
-                    <option value="textarea">Área de Texto</option>
-                    <option value="select">Lista Desplegable</option>
-                    <option value="radio">Opción Múltiple</option>
-                    <option value="checkbox">Casilla de Verificación</option>
-                    <option value="number">Número</option>
-                    <option value="date">Fecha</option>
-                </select>
-            </div>
-            <div>
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Obligatorio</label>
-                <select style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                    <option value="no">No</option>
-                    <option value="yes">Sí</option>
-                </select>
-            </div>
-        </div>
-        
-        <div style="margin-top: 10px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Opciones (para listas/radio - separadas por coma)</label>
-            <input type="text" placeholder="Básico, Intermedio, Avanzado, Nativo" 
-                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-    `;
-    
-    fieldsContainer.appendChild(fieldDiv);
-}
-
-function removeCustomField(fieldId) {
-    const field = document.getElementById(`customField${fieldId}`);
-    if (field) {
-        field.remove();
+        try {
+            await TalentAPI.completeInterview(appId, data);
+            TalentUI.showToast('Entrevista completada. Se notificó a RRHH.', 'success');
+            this.closeModal('complete-interview-modal');
+            this.closeModal('view-application-modal');
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error guardando entrevista', 'error');
+        }
     }
+};
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+// Main entry point - called by panel-empresa.html
+function showJobPostingsContent() {
+    console.log('💼 [TALENT] Ejecutando showJobPostingsContent()');
+    TalentEngine.init();
 }
 
-// Action functions
-function createJobOffer(event) {
-    event.preventDefault();
-    
-    // Get form data
-    const formData = new FormData(event.target);
-    const currentCompany = getCurrentCompany();
-    
-    const jobData = {
-        company_id: currentCompany.id,
-        title: formData.get('jobTitle') || document.getElementById('jobTitle').value,
-        department: formData.get('jobDepartment') || document.getElementById('jobDepartment').value,
-        type: formData.get('jobType') || document.getElementById('jobType').value,
-        location: formData.get('jobLocation') || document.getElementById('jobLocation').value,
-        salary_min: formData.get('salaryMin') || document.getElementById('salaryMin').value,
-        salary_max: formData.get('salaryMax') || document.getElementById('salaryMax').value,
-        experience_level: formData.get('experienceLevel') || document.getElementById('experienceLevel').value,
-        education_level: formData.get('educationLevel') || document.getElementById('educationLevel').value,
-        closing_date: formData.get('closingDate') || document.getElementById('closingDate').value,
-        description: formData.get('jobDescription') || document.getElementById('jobDescription').value,
-        requirements: formData.get('jobRequirements') || document.getElementById('jobRequirements').value,
-        status: 'active',
-        created_date: new Date().toISOString().split('T')[0]
-    };
-    
-    console.log('💼 [JOB-POSTINGS] Creando oferta para empresa:', currentCompany.name);
-    console.log('💼 [JOB-POSTINGS] Datos de la oferta:', jobData);
-    
-    // API call to save job offer
-    fetch('/api/job-postings/offers', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`,
-            'Company-ID': currentCompany.id
-        },
-        body: JSON.stringify(jobData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('✅ [JOB-POSTINGS] Oferta creada:', data);
-        alert('✅ Oferta laboral creada exitosamente!\n\nLa oferta ha sido publicada y estará visible para los candidatos.');
-        closeCreateJobModal();
-        switchJobTab('offers');
-    })
-    .catch(error => {
-        console.error('❌ [JOB-POSTINGS] Error creando oferta:', error);
-        alert('⚠️ Error al crear la oferta. Inténtelo nuevamente.');
-    });
-}
-
-function submitApplication(event, jobId) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const currentCompany = getCurrentCompany();
-    
-    const applicationData = {
-        job_id: jobId,
-        company_id: currentCompany.id,
-        candidate_name: formData.get('candidateName') || event.target.querySelector('input[type="text"]').value,
-        candidate_email: formData.get('candidateEmail') || event.target.querySelector('input[type="email"]').value,
-        candidate_phone: formData.get('candidatePhone') || event.target.querySelector('input[type="tel"]').value,
-        candidate_location: formData.get('candidateLocation') || event.target.querySelectorAll('input[type="text"]')[1].value,
-        experience_years: formData.get('experienceYears') || event.target.querySelector('select').value,
-        technologies: Array.from(event.target.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value),
-        availability: formData.get('availability'),
-        salary_expectation: formData.get('salaryExpectation'),
-        cover_letter: formData.get('coverLetter') || event.target.querySelector('textarea').value,
-        application_date: new Date().toISOString().split('T')[0],
-        status: 'nuevo'
-    };
-    
-    console.log('🎯 [JOB-POSTINGS] Enviando postulación para empresa:', currentCompany.name);
-    console.log('🎯 [JOB-POSTINGS] Datos de postulación:', applicationData);
-    
-    // API call to save application
-    fetch('/api/job-postings/applications', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`,
-            'Company-ID': currentCompany.id
-        },
-        body: JSON.stringify(applicationData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('✅ [JOB-POSTINGS] Postulación enviada:', data);
-        alert('✅ ¡Postulación enviada exitosamente!\n\nHemos recibido tu postulación. Te contactaremos pronto si cumples con el perfil buscado.');
-        closeApplyJobModal();
-    })
-    .catch(error => {
-        console.error('❌ [JOB-POSTINGS] Error enviando postulación:', error);
-        alert('⚠️ Error al enviar la postulación. Inténtelo nuevamente.');
-    });
-}
-
-function simulateJobApplication(jobId) {
-    showApplyJobModal(jobId);
-}
-
-function editJobOffer(jobId) {
-    const currentCompany = getCurrentCompany();
-    console.log(`✏️ [JOB-POSTINGS] Editando oferta ${jobId} de empresa ${currentCompany.name}`);
-    
-    // This would load the job offer data and populate the edit form
-    alert(`✏️ Editar oferta laboral #${jobId}\n\nEmpresa: ${currentCompany.name}\nEsta funcionalidad abriría un formulario con los datos actuales de la oferta para su modificación.`);
-}
-
-function viewJobApplications(jobId) {
-    const currentCompany = getCurrentCompany();
-    console.log(`👥 [JOB-POSTINGS] Viendo postulaciones para oferta ${jobId} de empresa ${currentCompany.name}`);
-    
-    // Switch to applications tab and filter by job
-    switchJobTab('applications');
-    // Here we would filter applications by jobId and company_id
-    alert(`👥 Mostrando postulaciones para oferta #${jobId}\nEmpresa: ${currentCompany.name}`);
-}
-
-function toggleJobStatus(jobId) {
-    const currentCompany = getCurrentCompany();
-    console.log(`⚠️ [JOB-POSTINGS] Cambiando estado de oferta ${jobId} de empresa ${currentCompany.name}`);
-    
-    // API call to toggle offer status
-    fetch(`/api/job-postings/offers/${jobId}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`,
-            'Company-ID': currentCompany.id
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('✅ [JOB-POSTINGS] Estado cambiado:', data);
-        alert(`⚠️ Estado de oferta #${jobId} cambiado\nEmpresa: ${currentCompany.name}\nNuevo estado: ${data.status}`);
-        switchJobTab('offers'); // Refresh the offers view
-    })
-    .catch(error => {
-        console.error('❌ [JOB-POSTINGS] Error cambiando estado:', error);
-        alert('⚠️ Error al cambiar el estado de la oferta.');
-    });
-}
-
-function viewCandidate(applicationId) {
-    const currentCompany = getCurrentCompany();
-    console.log(`👁️ [JOB-POSTINGS] Viendo candidato de postulación ${applicationId} para empresa ${currentCompany.name}`);
-    
-    // Fetch candidate details for this specific company
-    fetch(`/api/job-postings/applications/${applicationId}`, {
-        headers: {
-            'Authorization': `Bearer ${getAuthToken()}`,
-            'Company-ID': currentCompany.id
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('👁️ [JOB-POSTINGS] Datos del candidato:', data);
-        showCandidateModal(data);
-    })
-    .catch(error => {
-        console.error('❌ [JOB-POSTINGS] Error cargando candidato:', error);
-        alert(`👁️ Ver detalles del candidato (Postulación #${applicationId})\nEmpresa: ${currentCompany.name}\nEsta funcionalidad mostraría el perfil completo del candidato.`);
-    });
-}
-
-function downloadCV(filename, applicationId) {
-    const currentCompany = getCurrentCompany();
-    console.log(`📄 [JOB-POSTINGS] Descargando CV ${filename} de empresa ${currentCompany.name}`);
-    
-    // Secure download with company verification
-    const downloadUrl = `/api/job-applications/${applicationId}/cv?company_id=${currentCompany.id}&token=${getAuthToken()}`;
-    
-    // Create a temporary link to download
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = filename;
-    link.style.setProperty('display', 'none', 'important');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    console.log('📄 [JOB-POSTINGS] Descarga iniciada para:', filename);
-}
-
-function updateApplicationStatus(applicationId, newStatus) {
-    const currentCompany = getCurrentCompany();
-    console.log(`🔄 [JOB-POSTINGS] Actualizando estado de postulación ${applicationId} a ${newStatus} para empresa ${currentCompany.name}`);
-    
-    fetch(`/api/job-postings/applications/${applicationId}/status`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`,
-            'Company-ID': currentCompany.id
-        },
-        body: JSON.stringify({ status: newStatus })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('✅ [JOB-POSTINGS] Estado actualizado:', data);
-        alert(`✅ Estado actualizado a: ${getStatusText(newStatus)}\nEmpresa: ${currentCompany.name}`);
-        switchJobTab('applications'); // Refresh applications view
-    })
-    .catch(error => {
-        console.error('❌ [JOB-POSTINGS] Error actualizando estado:', error);
-        alert('⚠️ Error al actualizar el estado de la postulación.');
-    });
-}
-
-function showCandidateModal(candidateData) {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.cssText = 'display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000;';
-    
-    modal.innerHTML = `
-        <div class="modal-content" style="position: relative; margin: 3% auto; width: 90%; max-width: 800px; background: white; border-radius: 12px; max-height: 85vh; overflow-y: auto;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0;">👤 Perfil del Candidato</h3>
-                <button onclick="this.closest('.modal').remove()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-            </div>
-            <div class="modal-body" style="padding: 30px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                        <h4>📋 Información Personal</h4>
-                        <p><strong>Nombre:</strong> ${candidateData.candidate_name || 'N/A'}</p>
-                        <p><strong>Email:</strong> ${candidateData.candidate_email || 'N/A'}</p>
-                        <p><strong>Teléfono:</strong> ${candidateData.candidate_phone || 'N/A'}</p>
-                        <p><strong>Ubicación:</strong> ${candidateData.candidate_location || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <h4>💼 Información Profesional</h4>
-                        <p><strong>Experiencia:</strong> ${candidateData.experience_years || 'N/A'}</p>
-                        <p><strong>Disponibilidad:</strong> ${candidateData.availability || 'N/A'}</p>
-                        <p><strong>Pretensión Salarial:</strong> $${candidateData.salary_expectation || 'No especificada'}</p>
-                        <p><strong>Tecnologías:</strong> ${candidateData.technologies ? candidateData.technologies.join(', ') : 'N/A'}</p>
-                    </div>
-                </div>
-                
-                ${candidateData.cover_letter ? `
-                    <div style="margin-top: 20px;">
-                        <h4>💬 Carta de Presentación</h4>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #007bff;">
-                            ${candidateData.cover_letter}
-                        </div>
-                    </div>
-                ` : ''}
-                
-                <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
-                    <button onclick="updateApplicationStatus(${candidateData.id}, 'revision')" 
-                            style="background: #ffc107; color: #212529; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-                        📋 Pasar a Revisión
-                    </button>
-                    <button onclick="updateApplicationStatus(${candidateData.id}, 'entrevista')" 
-                            style="background: #fd7e14; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-                        🗣️ Citar a Entrevista
-                    </button>
-                    <button onclick="updateApplicationStatus(${candidateData.id}, 'contratado')" 
-                            style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-                        ✅ Contratar
-                    </button>
-                    <button onclick="updateApplicationStatus(${candidateData.id}, 'rechazado')" 
-                            style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-                        ❌ Rechazar
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-// Utility functions for company context
-function getCurrentCompany() {
-    // This should get the current company context from the main app
-    // For now, simulating with sample data
-    return {
-        id: window.currentCompanyId || 1,
-        name: window.currentCompanyName || 'Empresa Demo',
-        slug: window.currentCompanySlug || 'empresa-demo'
-    };
-}
-
-function getAuthToken() {
-    // This should get the auth token from the main app
-    return window.authToken || localStorage.getItem('auth_token') || 'demo-token';
-}
-
-// Export function to window
+// Export to window
+window.TalentEngine = TalentEngine;
+window.TalentAPI = TalentAPI;
+window.TalentUI = TalentUI;
+window.TalentState = TalentState;
 window.showJobPostingsContent = showJobPostingsContent;
-window.switchJobTab = switchJobTab;
-window.showCreateJobModal = showCreateJobModal;
-window.closeCreateJobModal = closeCreateJobModal;
-window.showApplyJobModal = showApplyJobModal;
-window.closeApplyJobModal = closeApplyJobModal;
-window.addCustomField = addCustomField;
-window.removeCustomField = removeCustomField;
-window.createJobOffer = createJobOffer;
-window.submitApplication = submitApplication;
-window.simulateJobApplication = simulateJobApplication;
-window.editJobOffer = editJobOffer;
-window.viewJobApplications = viewJobApplications;
-window.toggleJobStatus = toggleJobStatus;
-window.viewCandidate = viewCandidate;
-window.downloadCV = downloadCV;
-window.updateApplicationStatus = updateApplicationStatus;
-window.showCandidateModal = showCandidateModal;
 
-// Registro en window.Modules para sistema moderno
+// Register in Modules system
 window.Modules = window.Modules || {};
 window.Modules['job-postings'] = {
     init: showJobPostingsContent
 };
 
-console.log('✅ [JOB-POSTINGS] Todas las funciones exportadas a window');
-console.log('✅ [JOB-POSTINGS] typeof window.showJobPostingsContent:', typeof window.showJobPostingsContent);
+console.log('✅ [TALENT] Módulo Talent Acquisition v2.0 cargado');

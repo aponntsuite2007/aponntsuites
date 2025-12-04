@@ -7,7 +7,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'tu_secreto_jwt_aqui';
+const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
 
 async function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];

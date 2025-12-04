@@ -71,6 +71,29 @@ module.exports = (sequelize) => {
       set(value) {
         this.setDataValue('company_id', value);
       }
+    },
+    // CAMPOS PARA SISTEMA DE FERIADOS POR PAÍS/PROVINCIA
+    country: {
+      type: DataTypes.STRING(5),
+      allowNull: true,
+      comment: 'Código de país ISO 3166-1 alpha-2 (AR, CL, BO, etc.)'
+    },
+    state_province: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Provincia/Estado para feriados provinciales'
+    },
+    city: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Ciudad de la sucursal'
+    },
+    // SUCURSAL PRINCIPAL (NO BORRABLE)
+    is_main: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      field: 'is_main',
+      comment: 'Si es TRUE, es la sucursal principal y NO puede ser borrada ni renombrada'
     }
   }, {
     tableName: 'branches',

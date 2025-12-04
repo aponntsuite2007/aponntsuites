@@ -1,22 +1,39 @@
 const express = require('express');
 const router = express.Router();
-const { Shift, Branch, User } = require('../config/database');
+const { Shift, Branch, User, UserShiftAssignment } = require('../config/database');
 const { auth, supervisorOrAdmin } = require('../middleware/auth');
 
 /**
  * @route GET /api/v1/shifts
- * @desc Obtener turnos
+ * @desc Obtener turnos filtrados por empresa y opcionalmente por sucursal
+ * @query branchId - Filtrar por sucursal
+ * @query isActive - Filtrar por estado activo
  */
 router.get('/', auth, async (req, res) => {
   try {
     const { branchId, isActive } = req.query;
-    
+    const companyId = req.user.company_id;
+
     const where = {};
+
+    // Filtro multi-tenant obligatorio
+    if (companyId) {
+      where.company_id = companyId;
+    }
+
+    // Filtros opcionales
     if (branchId) where.BranchId = branchId;
-    if (isActive !== undefined) where.isActive = isActive === 'true';
+    if (isActive !== undefined) {
+      where.isActive = isActive === 'true';
+    } else {
+      where.isActive = true; // Por defecto solo activos
+    }
 
     const shifts = await Shift.findAll({
       where,
+      include: [
+        { model: Branch, attributes: ['id', 'name'] }
+      ],
       order: [['name', 'ASC']]
     });
 
@@ -104,8 +121,30 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       
       // Metadata
       color = '#007bff',
-      notes
+      notes,
+
+      // Sucursal asociada
+      branch_id
     } = req.body;
+
+    // Si no se proporciona branch_id, asignar automáticamente la sucursal CENTRAL
+    let finalBranchId = branch_id;
+    if (!finalBranchId && req.user.company_id) {
+      try {
+        const centralBranch = await Branch.findOne({
+          where: {
+            company_id: req.user.company_id,
+            is_main: true
+          }
+        });
+        if (centralBranch) {
+          finalBranchId = centralBranch.id;
+          console.log(`🏢 [SHIFT-API] Asignando sucursal CENTRAL automáticamente: ${centralBranch.id}`);
+        }
+      } catch (branchErr) {
+        console.warn('⚠️ [SHIFT-API] No se pudo obtener sucursal CENTRAL:', branchErr.message);
+      }
+    }
 
     // Validaciones básicas
     if (!name || !startTime || !endTime) {
@@ -155,7 +194,9 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
       permanentPriority,
       hourlyRates,
       color,
-      notes
+      notes,
+      company_id: req.user.company_id, // Multi-tenant: asociar turno a empresa del usuario
+      branch_id: finalBranchId // Sucursal asociada (auto-asignada a CENTRAL si no se especifica)
     };
 
     console.log('🕐 [SHIFT-API] Datos para crear:', shiftData);
@@ -321,94 +362,111 @@ router.get('/:id/users', auth, supervisorOrAdmin, async (req, res) => {
 
 /**
  * @route POST /api/shifts/bulk-assign
- * @desc Asignar múltiples turnos a múltiples usuarios (bulk assignment)
- * @body { userIds: [userId1, userId2], shiftIds: [shiftId1, shiftId2] }
+ * @desc Asignar usuario(s) a turno(s) usando user_shift_assignments (fuente única de verdad)
+ * @body {
+ *   userIds: [userId1, userId2],
+ *   shiftIds: [shiftId1, shiftId2],
+ *   joinDate: "YYYY-MM-DD" (fecha de acoplamiento al turno),
+ *   assignedPhase: "mañana|tarde|noche|..." (fase del ciclo),
+ *   groupName: "Nombre del grupo" (opcional),
+ *   sector: "Sector" (opcional)
+ * }
  */
 router.post('/bulk-assign', auth, supervisorOrAdmin, async (req, res) => {
   try {
-    const { userIds, shiftIds } = req.body;
+    const { userIds, shiftIds, joinDate, assignedPhase, groupName, sector } = req.body;
+    const companyId = req.user.company_id;
+    const assignedBy = req.user.user_id;
 
-    console.log('[USERS] Asignación bulk de turnos:', { userIds, shiftIds });
+    console.log('[SHIFTS] Asignación a user_shift_assignments:', { userIds, shiftIds, joinDate, assignedPhase, companyId });
 
     // Validaciones
     if (!Array.isArray(userIds) || userIds.length === 0) {
-      return res.status(400).json({
-        error: 'userIds debe ser un array no vacío'
-      });
+      return res.status(400).json({ error: 'userIds debe ser un array no vacío' });
     }
 
     if (!Array.isArray(shiftIds) || shiftIds.length === 0) {
-      return res.status(400).json({
-        error: 'shiftIds debe ser un array no vacío'
-      });
+      return res.status(400).json({ error: 'shiftIds debe ser un array no vacío' });
     }
 
-    // Verificar que usuarios existen
-    const users = await User.findAll({
-      where: { user_id: userIds }
-    });
+    // Obtener el primer turno para extraer info de fase si no se especifica
+    const shift = await Shift.findByPk(shiftIds[0]);
+    if (!shift) {
+      return res.status(400).json({ error: 'Turno no encontrado' });
+    }
 
+    // Fase por defecto: primera fase del turno o 'default'
+    let phase = assignedPhase;
+    if (!phase && shift.phases && Array.isArray(shift.phases) && shift.phases.length > 0) {
+      phase = shift.phases.find(p => p.name !== 'descanso' && p.name !== 'franco')?.name || shift.phases[0].name;
+    }
+    if (!phase) {
+      phase = 'default';
+    }
+
+    // Fecha de acoplamiento: hoy si no se especifica
+    const effectiveJoinDate = joinDate || new Date().toISOString().split('T')[0];
+
+    // Verificar usuarios
+    const users = await User.findAll({ where: { user_id: userIds } });
     if (users.length !== userIds.length) {
-      return res.status(400).json({
-        error: 'Algunos usuarios no fueron encontrados'
-      });
+      return res.status(400).json({ error: 'Algunos usuarios no fueron encontrados' });
     }
 
-    // Verificar que turnos existen
-    const shifts = await Shift.findAll({
-      where: { id: shiftIds }
-    });
-
+    // Verificar turnos
+    const shifts = await Shift.findAll({ where: { id: shiftIds } });
     if (shifts.length !== shiftIds.length) {
-      return res.status(400).json({
-        error: 'Algunos turnos no fueron encontrados'
-      });
+      return res.status(400).json({ error: 'Algunos turnos no fueron encontrados' });
     }
 
-    // ⚠️ FIX: Usar tabla user_shifts directamente (no hay asociación en modelo)
-    const { Pool } = require('pg');
-    const pool = new Pool({
-      host: process.env.POSTGRES_HOST || 'localhost',
-      port: process.env.POSTGRES_PORT || 5432,
-      database: process.env.POSTGRES_DB || 'attendance_system',
-      user: process.env.POSTGRES_USER || 'postgres',
-      password: process.env.POSTGRES_PASSWORD || 'Aedr15150302'
-    });
-
+    // Crear asignaciones usando el modelo UserShiftAssignment
     let assignedCount = 0;
-    try {
-      for (const userId of userIds) {
-        // 1. Eliminar asignaciones actuales del usuario
-        await pool.query('DELETE FROM user_shifts WHERE user_id = $1', [userId]);
+    const errors = [];
 
-        // 2. Insertar nuevas asignaciones
-        for (const shiftId of shiftIds) {
-          await pool.query(`
-            INSERT INTO user_shifts (user_id, shift_id, "createdAt", "updatedAt")
-            VALUES ($1, $2, NOW(), NOW())
-            ON CONFLICT DO NOTHING
-          `, [userId, shiftId]);
+    for (const userId of userIds) {
+      for (const shiftId of shiftIds) {
+        try {
+          // El hook beforeCreate desactivará asignaciones previas automáticamente
+          await UserShiftAssignment.create({
+            user_id: userId,
+            shift_id: shiftId,
+            company_id: companyId,
+            join_date: effectiveJoinDate,
+            assigned_phase: phase,
+            group_name: groupName || shift.name,
+            sector: sector || null,
+            assigned_by: assignedBy,
+            is_active: true,
+            notes: `Asignado desde módulo Usuarios el ${new Date().toISOString()}`
+          });
           assignedCount++;
+          console.log(`✅ [SHIFTS] Usuario ${userId} asignado a turno ${shiftId} (fase: ${phase}, join_date: ${effectiveJoinDate})`);
+        } catch (assignError) {
+          console.error(`❌ [SHIFTS] Error asignando usuario ${userId} a turno ${shiftId}:`, assignError.message);
+          errors.push({ userId, shiftId, error: assignError.message });
         }
       }
+    }
 
-      await pool.end();
-      console.log(`[USERS] ✅ ${assignedCount} asignaciones completadas`);
-
-    } catch (dbError) {
-      await pool.end();
-      throw dbError; // Re-throw para que lo maneje el catch principal
+    if (assignedCount === 0 && errors.length > 0) {
+      return res.status(400).json({
+        error: 'No se pudo realizar ninguna asignación',
+        details: errors
+      });
     }
 
     res.json({
-      message: `Asignación exitosa: ${shifts.length} turno(s) asignados a ${users.length} usuario(s)`,
+      message: `Asignación exitosa: ${assignedCount} asignación(es) en user_shift_assignments`,
       assigned: assignedCount,
       users: users.length,
-      shifts: shifts.length
+      shifts: shifts.length,
+      joinDate: effectiveJoinDate,
+      assignedPhase: phase,
+      errors: errors.length > 0 ? errors : undefined
     });
 
   } catch (error) {
-    console.error('[USERS] Error en asignación bulk de turnos:', error);
+    console.error('[SHIFTS] Error en asignación:', error);
     res.status(500).json({ error: 'Error interno del servidor: ' + error.message });
   }
 });

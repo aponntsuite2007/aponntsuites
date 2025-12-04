@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bolsa de Trabajo | Aponnt - Oportunidades Laborales</title>
+    <meta name="description" content="Encuentra tu próximo empleo. Explora oportunidades laborales en empresas líderes.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --primary-light: #16213e;
+            --accent: #0f3460;
+            --accent-pink: #e94560;
+            --accent-purple: #764ba2;
+            --text-primary: #1a1a2e;
+            --text-secondary: #64748b;
+            --text-light: #94a3b8;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-dark: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-primary);
+            line-height: 1.6;
+            background: var(--bg-light);
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            background: var(--bg-white);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--accent-pink);
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .header-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .header-nav a:hover {
+            color: var(--primary);
+        }
+
+        .btn-login {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* ========== HERO ========== */
+        .hero {
+            background: var(--gradient-dark);
+            padding: 80px 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .search-box {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .search-box input,
+        .search-box select {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg-light);
+        }
+
+        .search-box input:focus,
+        .search-box select:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 2px var(--accent-pink);
+        }
+
+        .search-box button {
+            background: var(--accent-pink);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-box button:hover {
+            background: #d63754;
+        }
+
+        /* ========== STATS ========== */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-pink);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .filter-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .filter-card h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            cursor: pointer;
+        }
+
+        .filter-option input[type="checkbox"],
+        .filter-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-pink);
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .filter-option .count {
+            margin-left: auto;
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        /* ========== JOB LISTINGS ========== */
+        .job-listings {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .results-count {
+            color: var(--text-secondary);
+        }
+
+        .sort-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* ========== JOB CARD ========== */
+        .job-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .job-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: var(--accent-pink);
+        }
+
+        .job-card-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .company-logo {
+            width: 56px;
+            height: 56px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .job-info {
+            flex: 1;
+        }
+
+        .job-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .company-name {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .job-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .job-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .job-meta-item svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .job-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-light);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .tag.featured {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .job-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .job-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .salary {
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .posted-date {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .btn-apply {
+            background: var(--accent-pink);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-apply:hover {
+            background: #d63754;
+        }
+
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 2rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-section h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* ========== FORM STYLES ========== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group label .required {
+            color: var(--accent-pink);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--accent-pink);
+            background: rgba(233, 69, 96, 0.05);
+        }
+
+        .file-upload.has-file {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .file-upload-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ========== LOADING ========== */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent-pink);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========== EMPTY STATE ========== */
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+        }
+
+        /* ========== SUCCESS MESSAGE ========== */
+        .success-message {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .success-message h3 {
+            color: var(--success);
+            margin-bottom: 0.5rem;
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            background: var(--primary);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .footer a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-nav {
+                display: none;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">Aponnt<span>.</span></a>
+            <nav class="header-nav">
+                <a href="/">Inicio</a>
+                <a href="/careers.html">Empleos</a>
+                <a href="/#contacto">Contacto</a>
+                <a href="/panel-empresa.html" class="btn-login">Acceso Empresas</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <h1>Encuentra tu Trabajo Ideal</h1>
+        <p>Explora oportunidades laborales en empresas líderes. Tu siguiente paso profesional te espera.</p>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Buscar por cargo, empresa o palabra clave...">
+            <select id="locationFilter">
+                <option value="">Todas las ubicaciones</option>
+            </select>
+            <select id="typeFilter">
+                <option value="">Tipo de empleo</option>
+                <option value="full-time">Tiempo Completo</option>
+                <option value="part-time">Medio Tiempo</option>
+                <option value="contract">Contrato</option>
+                <option value="temporary">Temporal</option>
+                <option value="internship">Pasantia</option>
+            </select>
+            <button onclick="searchJobs()">Buscar</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="totalJobs">0</div>
+                <div class="stat-label">Ofertas Activas</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="totalCompanies">0</div>
+                <div class="stat-label">Empresas</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Sidebar Filters -->
+        <aside class="sidebar">
+            <div class="filter-card">
+                <h3>Tipo de Empleo</h3>
+                <div class="filter-option">
+                    <input type="checkbox" id="ft-fulltime" value="full-time" onchange="applyFilters()">
+                    <label for="ft-fulltime">Tiempo Completo</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="ft-parttime" value="part-time" onchange="applyFilters()">
+                    <label for="ft-parttime">Medio Tiempo</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="ft-contract" value="contract" onchange="applyFilters()">
+                    <label for="ft-contract">Contrato</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="ft-temporary" value="temporary" onchange="applyFilters()">
+                    <label for="ft-temporary">Temporal</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="ft-internship" value="internship" onchange="applyFilters()">
+                    <label for="ft-internship">Pasantia</label>
+                </div>
+            </div>
+
+            <div class="filter-card" id="companyFilters">
+                <h3>Empresas</h3>
+                <!-- Populated dynamically -->
+            </div>
+        </aside>
+
+        <!-- Job Listings -->
+        <section class="job-listings-container">
+            <div class="results-header">
+                <span class="results-count" id="resultsCount">Cargando...</span>
+                <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+                    <option value="recent">Mas recientes</option>
+                    <option value="salary">Mayor salario</option>
+                </select>
+            </div>
+
+            <div class="job-listings" id="jobListings">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Cargando ofertas...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Application Modal -->
+    <div class="modal-overlay" id="applyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modalJobTitle">Postularse</h2>
+                    <p id="modalCompanyName" style="color: var(--text-secondary);"></p>
+                </div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="applicationForm" onsubmit="submitApplication(event)">
+                    <input type="hidden" id="jobPostingId">
+
+                    <div class="modal-section">
+                        <h4>Datos Personales</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Nombre <span class="required">*</span></label>
+                                <input type="text" id="firstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Apellido <span class="required">*</span></label>
+                                <input type="text" id="lastName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email <span class="required">*</span></label>
+                                <input type="email" id="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Telefono</label>
+                                <input type="tel" id="phone">
+                            </div>
+                            <div class="form-group">
+                                <label>DNI</label>
+                                <input type="text" id="dni">
+                            </div>
+                            <div class="form-group">
+                                <label>Ciudad</label>
+                                <input type="text" id="city">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-section">
+                        <h4>Experiencia</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Puesto Actual</label>
+                                <input type="text" id="currentPosition">
+                            </div>
+                            <div class="form-group">
+                                <label>Empresa Actual</label>
+                                <input type="text" id="currentCompany">
+                            </div>
+                            <div class="form-group">
+                                <label>Anos de Experiencia</label>
+                                <input type="number" id="experienceYears" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Nivel Educativo</label>
+                                <select id="educationLevel">
+                                    <option value="">Seleccionar</option>
+                                    <option value="secundario">Secundario</option>
+                                    <option value="terciario">Terciario</option>
+                                    <option value="universitario">Universitario</option>
+                                    <option value="posgrado">Posgrado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-section">
+                        <h4>Curriculum Vitae <span class="required">*</span></h4>
+                        <div class="file-upload" id="cvUpload" onclick="document.getElementById('cvFile').click()">
+                            <input type="file" id="cvFile" accept=".pdf,.doc,.docx" onchange="handleFileSelect(this)">
+                            <div class="file-upload-icon">📄</div>
+                            <p id="cvFileName">Haz clic para subir tu CV (PDF, DOC, DOCX)</p>
+                            <small style="color: var(--text-light);">Maximo 5MB</small>
+                        </div>
+                    </div>
+
+                    <div class="modal-section">
+                        <h4>Carta de Presentacion</h4>
+                        <div class="form-group full-width" style="margin-bottom: 0;">
+                            <textarea id="coverLetter" placeholder="Cuentanos por que te interesa este puesto y que te hace un buen candidato..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-section">
+                        <h4>Expectativas</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Expectativa Salarial (ARS)</label>
+                                <input type="number" id="salaryExpectation" placeholder="Ej: 500000">
+                            </div>
+                            <div class="form-group">
+                                <label>Disponibilidad</label>
+                                <select id="availability">
+                                    <option value="">Seleccionar</option>
+                                    <option value="inmediata">Inmediata</option>
+                                    <option value="15_dias">15 dias</option>
+                                    <option value="30_dias">30 dias</option>
+                                    <option value="60_dias">60 dias</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        Enviar Postulacion
+                    </button>
+                </form>
+
+                <div class="success-message" id="successMessage" style="display: none;">
+                    <div class="success-icon">✅</div>
+                    <h3>¡Postulacion Enviada!</h3>
+                    <p>Gracias por tu interes. Revisaremos tu perfil y te contactaremos pronto.</p>
+                    <button class="btn-submit" style="margin-top: 1.5rem; width: auto; padding: 0.75rem 2rem;" onclick="closeModal()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 Aponnt. Todos los derechos reservados.</p>
+        <p style="margin-top: 0.5rem;">
+            <a href="/terminos.html">Terminos</a> &bull;
+            <a href="/privacidad.html">Privacidad</a> &bull;
+            <a href="/#contacto">Contacto</a>
+        </p>
+    </footer>
+
+    <script>
+        // State
+        let allJobs = [];
+        let companies = [];
+
+        // Job type labels
+        const JOB_TYPE_LABELS = {
+            'full-time': 'Tiempo Completo',
+            'part-time': 'Medio Tiempo',
+            'contract': 'Contrato',
+            'temporary': 'Temporal',
+            'internship': 'Pasantia'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadJobs();
+            await loadCompanies();
+        });
+
+        // Load jobs from API
+        async function loadJobs() {
+            try {
+                const response = await fetch('/api/job-postings/public/offers');
+                const data = await response.json();
+
+                if (data.success) {
+                    allJobs = data.offers || [];
+                    document.getElementById('totalJobs').textContent = allJobs.length;
+
+                    // Populate location filter
+                    const locationFilter = document.getElementById('locationFilter');
+                    const locations = data.filters?.locations || [];
+                    locations.forEach(loc => {
+                        const option = document.createElement('option');
+                        option.value = loc;
+                        option.textContent = loc;
+                        locationFilter.appendChild(option);
+                    });
+
+                    renderJobs(allJobs);
+                }
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                document.getElementById('jobListings').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">😕</div>
+                        <h3>Error al cargar ofertas</h3>
+                        <p>Por favor intenta nuevamente mas tarde.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load companies
+        async function loadCompanies() {
+            try {
+                const response = await fetch('/api/job-postings/public/companies');
+                const data = await response.json();
+
+                if (data.success) {
+                    companies = data.companies || [];
+                    document.getElementById('totalCompanies').textContent = companies.length;
+
+                    // Populate company filters
+                    const companyFilters = document.getElementById('companyFilters');
+                    companies.forEach(company => {
+                        const div = document.createElement('div');
+                        div.className = 'filter-option';
+                        div.innerHTML = `
+                            <input type="checkbox" id="company-${company.company_id}" value="${company.company_id}" onchange="applyFilters()">
+                            <label for="company-${company.company_id}">${company.name}</label>
+                            <span class="count">${company.jobCount || 0}</span>
+                        `;
+                        companyFilters.appendChild(div);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading companies:', error);
+            }
+        }
+
+        // Render job listings
+        function renderJobs(jobs) {
+            const container = document.getElementById('jobListings');
+            const resultsCount = document.getElementById('resultsCount');
+
+            resultsCount.textContent = `${jobs.length} ofertas encontradas`;
+
+            if (jobs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <h3>No se encontraron ofertas</h3>
+                        <p>Intenta ajustar los filtros de busqueda.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = jobs.map(job => `
+                <div class="job-card" onclick="openJobDetails(${job.id})">
+                    <div class="job-card-header">
+                        <div class="company-logo">
+                            ${(job.company?.name || 'E').charAt(0).toUpperCase()}
+                        </div>
+                        <div class="job-info">
+                            <div class="job-title">${escapeHtml(job.title)}</div>
+                            <div class="company-name">${escapeHtml(job.company?.name || 'Empresa')}</div>
+                        </div>
+                    </div>
+
+                    <div class="job-meta">
+                        ${job.location ? `
+                            <div class="job-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                ${escapeHtml(job.location)}
+                            </div>
+                        ` : ''}
+                        <div class="job-meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                            </svg>
+                            ${JOB_TYPE_LABELS[job.job_type] || job.job_type}
+                        </div>
+                    </div>
+
+                    ${job.tags && job.tags.length > 0 ? `
+                        <div class="job-tags">
+                            ${job.tags.slice(0, 3).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+
+                    <div class="job-description">
+                        ${escapeHtml(job.description || '').substring(0, 200)}...
+                    </div>
+
+                    <div class="job-card-footer">
+                        <div>
+                            ${job.salary_min || job.salary_max ? `
+                                <span class="salary">
+                                    ${job.salary_currency || 'ARS'} ${formatNumber(job.salary_min)} - ${formatNumber(job.salary_max)}
+                                </span>
+                            ` : '<span style="color: var(--text-light);">Salario a convenir</span>'}
+                            <span class="posted-date">
+                                ${job.posted_at ? formatDate(job.posted_at) : ''}
+                            </span>
+                        </div>
+                        <button class="btn-apply" onclick="event.stopPropagation(); openApplyModal(${job.id}, '${escapeHtml(job.title)}', '${escapeHtml(job.company?.name || '')}')">
+                            Postularme
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Search jobs
+        function searchJobs() {
+            applyFilters();
+        }
+
+        // Apply all filters
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const locationFilter = document.getElementById('locationFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+
+            // Get checked job types
+            const checkedTypes = [];
+            ['ft-fulltime', 'ft-parttime', 'ft-contract', 'ft-temporary', 'ft-internship'].forEach(id => {
+                const checkbox = document.getElementById(id);
+                if (checkbox && checkbox.checked) {
+                    checkedTypes.push(checkbox.value);
+                }
+            });
+
+            // Get checked companies
+            const checkedCompanies = [];
+            companies.forEach(company => {
+                const checkbox = document.getElementById(`company-${company.company_id}`);
+                if (checkbox && checkbox.checked) {
+                    checkedCompanies.push(company.company_id);
+                }
+            });
+
+            let filtered = [...allJobs];
+
+            // Apply search
+            if (searchTerm) {
+                filtered = filtered.filter(job =>
+                    job.title?.toLowerCase().includes(searchTerm) ||
+                    job.description?.toLowerCase().includes(searchTerm) ||
+                    job.company?.name?.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Apply location filter
+            if (locationFilter) {
+                filtered = filtered.filter(job => job.location === locationFilter);
+            }
+
+            // Apply type filter (header select)
+            if (typeFilter) {
+                filtered = filtered.filter(job => job.job_type === typeFilter);
+            }
+
+            // Apply checked types (sidebar)
+            if (checkedTypes.length > 0) {
+                filtered = filtered.filter(job => checkedTypes.includes(job.job_type));
+            }
+
+            // Apply company filter
+            if (checkedCompanies.length > 0) {
+                filtered = filtered.filter(job => checkedCompanies.includes(job.company_id));
+            }
+
+            // Apply sort
+            const sortBy = document.getElementById('sortSelect').value;
+            if (sortBy === 'salary') {
+                filtered.sort((a, b) => (b.salary_max || 0) - (a.salary_max || 0));
+            } else {
+                filtered.sort((a, b) => new Date(b.posted_at || 0) - new Date(a.posted_at || 0));
+            }
+
+            renderJobs(filtered);
+        }
+
+        // Open job details (could expand to a full page view)
+        function openJobDetails(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            if (job) {
+                openApplyModal(jobId, job.title, job.company?.name || '');
+            }
+        }
+
+        // Open apply modal
+        function openApplyModal(jobId, title, companyName) {
+            document.getElementById('jobPostingId').value = jobId;
+            document.getElementById('modalJobTitle').textContent = title;
+            document.getElementById('modalCompanyName').textContent = companyName;
+            document.getElementById('applicationForm').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('applyModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('applyModal').classList.remove('active');
+            document.body.style.overflow = '';
+            document.getElementById('applicationForm').reset();
+            document.getElementById('cvUpload').classList.remove('has-file');
+            document.getElementById('cvFileName').textContent = 'Haz clic para subir tu CV (PDF, DOC, DOCX)';
+        }
+
+        // Handle file select
+        function handleFileSelect(input) {
+            const file = input.files[0];
+            if (file) {
+                document.getElementById('cvFileName').textContent = file.name;
+                document.getElementById('cvUpload').classList.add('has-file');
+            }
+        }
+
+        // Submit application
+        async function submitApplication(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Enviando...';
+
+            const formData = new FormData();
+            formData.append('job_posting_id', document.getElementById('jobPostingId').value);
+            formData.append('candidate_first_name', document.getElementById('firstName').value);
+            formData.append('candidate_last_name', document.getElementById('lastName').value);
+            formData.append('candidate_email', document.getElementById('email').value);
+            formData.append('candidate_phone', document.getElementById('phone').value);
+            formData.append('candidate_dni', document.getElementById('dni').value);
+            formData.append('candidate_city', document.getElementById('city').value);
+            formData.append('current_position', document.getElementById('currentPosition').value);
+            formData.append('current_company', document.getElementById('currentCompany').value);
+            formData.append('experience_years', document.getElementById('experienceYears').value);
+            formData.append('education_level', document.getElementById('educationLevel').value);
+            formData.append('cover_letter', document.getElementById('coverLetter').value);
+            formData.append('salary_expectation', document.getElementById('salaryExpectation').value);
+            formData.append('availability', document.getElementById('availability').value);
+
+            const cvFile = document.getElementById('cvFile').files[0];
+            if (cvFile) {
+                formData.append('cv', cvFile);
+            }
+
+            try {
+                const response = await fetch('/api/job-postings/public/apply', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('applicationForm').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                } else {
+                    alert(data.error || 'Error al enviar postulacion');
+                }
+            } catch (error) {
+                console.error('Error submitting application:', error);
+                alert('Error al enviar postulacion. Por favor intenta nuevamente.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Enviar Postulacion';
+            }
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatNumber(num) {
+            if (!num) return '-';
+            return new Intl.NumberFormat('es-AR').format(num);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return 'Hoy';
+            if (diffDays === 1) return 'Ayer';
+            if (diffDays < 7) return `Hace ${diffDays} dias`;
+            if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`;
+            return date.toLocaleDateString('es-AR');
+        }
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Close modal on overlay click
+        document.getElementById('applyModal').addEventListener('click', (e) => {
+            if (e.target.id === 'applyModal') closeModal();
+        });
+    </script>
+</body>
+</html>

@@ -12,17 +12,413 @@ if (typeof window.showUsersContent === 'function') {
     window.__USERS_MODULE_LOADED__ = true;
 
 // ═══════════════════════════════════════════════════════════════════
-// 🎨 INYECTAR CSS RESPONSIVE GLOBAL PARA TODOS LOS MODALES
+// 🎨 INYECTAR CSS MODERNO PARA MÓDULO USERS (estilo hours-cube-dashboard)
 // ═══════════════════════════════════════════════════════════════════
-(function injectResponsiveModalCSS() {
-    if (document.getElementById('responsive-modals-css')) return; // Ya existe
+(function injectUsersModuleCSS() {
+    if (document.getElementById('users-module-modern-css')) return;
 
     const style = document.createElement('style');
-    style.id = 'responsive-modals-css';
+    style.id = 'users-module-modern-css';
     style.textContent = `
-        /* ✅ FIX RESPONSIVE: Todos los modales creados dinámicamente */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* USERS MODULE - MODERN STYLES (similar to hours-cube-dashboard)      */
+        /* ═══════════════════════════════════════════════════════════════════ */
+
+        .users-dashboard {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .users-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .users-title h2 {
+            margin: 0;
+            color: #1a365d;
+            font-size: 1.6em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .users-subtitle {
+            display: block;
+            color: #718096;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+
+        /* Quick Actions - Modern Style */
+        .users-quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .users-quick-actions .btn-action {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            color: #4a5568;
+            font-size: 0.95em;
+        }
+
+        .users-quick-actions .btn-action:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .users-quick-actions .btn-action.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .users-quick-actions .btn-action.primary:hover {
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        /* KPIs / Stats Grid - Modern Style */
+        .users-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .users-stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .users-stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .users-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .users-stat-card.success::before { background: linear-gradient(90deg, #48bb78, #38a169); }
+        .users-stat-card.warning::before { background: linear-gradient(90deg, #ecc94b, #d69e2e); }
+        .users-stat-card.danger::before { background: linear-gradient(90deg, #fc8181, #e53e3e); }
+        .users-stat-card.info::before { background: linear-gradient(90deg, #63b3ed, #4299e1); }
+        .users-stat-card.purple::before { background: linear-gradient(90deg, #667eea, #764ba2); }
+
+        .users-stat-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        .users-stat-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #1a365d;
+            margin-bottom: 5px;
+        }
+
+        .users-stat-label {
+            color: #718096;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        /* Search Section - Modern Style */
+        .users-search-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .users-search-grid {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .users-search-field {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .users-search-field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #4a5568;
+            font-size: 0.9em;
+        }
+
+        .users-search-field input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .users-search-field input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        .users-search-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .users-search-actions .btn-clear {
+            background: #edf2f7;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+
+        .users-search-actions .btn-clear:hover {
+            background: #e2e8f0;
+        }
+
+        .users-filter-results {
+            font-size: 0.8em;
+            color: #718096;
+        }
+
+        /* Table Container - Modern Style */
+        .users-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .users-table th {
+            padding: 15px 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .users-table th .th-icon {
+            display: block;
+            font-size: 1.2em;
+            margin-bottom: 4px;
+        }
+
+        .users-table tbody tr {
+            border-bottom: 1px solid #e2e8f0;
+            transition: background 0.2s;
+        }
+
+        .users-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .users-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .users-table td {
+            padding: 14px 12px;
+            text-align: center;
+            color: #4a5568;
+        }
+
+        .users-table td.name-cell {
+            font-weight: 600;
+            color: #1a365d;
+            text-align: left;
+        }
+
+        /* Status Badges - Modern Style */
+        .users-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .users-badge.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .users-badge.warning {
+            background: #fefcbf;
+            color: #744210;
+        }
+
+        .users-badge.danger {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .users-badge.info {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+
+        /* Action Buttons - Modern Style */
+        .users-action-btns {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .users-action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 0.9em;
+        }
+
+        .users-action-btn.shifts { background: #c6f6d5; color: #22543d; }
+        .users-action-btn.shifts:hover { background: #9ae6b4; }
+
+        .users-action-btn.reset { background: #fefcbf; color: #744210; }
+        .users-action-btn.reset:hover { background: #faf089; }
+
+        .users-action-btn.view { background: #bee3f8; color: #2a4365; }
+        .users-action-btn.view:hover { background: #90cdf4; }
+
+        .users-action-btn.delete { background: #fed7d7; color: #742a2a; }
+        .users-action-btn.delete:hover { background: #feb2b2; }
+
+        /* Pagination - Modern Style */
+        .users-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 20px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .users-pagination button {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .users-pagination button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .users-pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .users-pagination button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .users-pagination-info {
+            color: #718096;
+            font-size: 0.9em;
+            margin: 0 15px;
+        }
+
+        /* Loading Spinner */
+        .users-loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .users-spinner {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: users-spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes users-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* MODALES - RESPONSIVE                                                */
+        /* ═══════════════════════════════════════════════════════════════════ */
         [id*="Modal"], [id*="modal"] {
-            /* Overlay del modal */
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -37,21 +433,19 @@ if (typeof window.showUsersContent === 'function') {
             padding: 20px 10px !important;
         }
 
-        /* Contenido interno del modal */
         [id*="Modal"] > div:first-child,
         [id*="modal"] > div:first-child {
             background: white !important;
-            border-radius: 10px !important;
+            border-radius: 12px !important;
             width: 100% !important;
             max-width: 1400px !important;
             max-height: calc(100vh - 80px) !important;
             overflow-y: auto !important;
             margin: 40px auto !important;
             padding: 30px !important;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3) !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
         }
 
-        /* Responsive para tablets */
         @media (max-width: 1200px) {
             [id*="Modal"] > div:first-child,
             [id*="modal"] > div:first-child {
@@ -60,8 +454,12 @@ if (typeof window.showUsersContent === 'function') {
             }
         }
 
-        /* Responsive para móviles */
         @media (max-width: 768px) {
+            .users-header { flex-direction: column; }
+            .users-quick-actions { justify-content: center; }
+            .users-stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .users-search-grid { flex-direction: column; }
+            .users-table th, .users-table td { padding: 10px 6px; font-size: 0.8em; }
             [id*="Modal"] > div:first-child,
             [id*="modal"] > div:first-child {
                 max-width: 98% !important;
@@ -69,16 +467,9 @@ if (typeof window.showUsersContent === 'function') {
                 margin: 20px auto !important;
             }
         }
-
-        /* Botones siempre visibles en el footer */
-        [id*="Modal"] button,
-        [id*="modal"] button {
-            position: relative !important;
-            z-index: 1 !important;
-        }
     `;
     document.head.appendChild(style);
-    console.log('✅ [USERS] CSS responsive global inyectado para todos los modales');
+    console.log('✅ [USERS] CSS moderno inyectado (estilo hours-cube-dashboard)');
 })();
 
 // Global variables for users
@@ -122,67 +513,95 @@ async function showUsersContent() {
     if (!content) return;
     
     content.innerHTML = `
-        <div class="tab-content active" id="users">
-            <div class="card">
-                <h2 data-translate="users.title">👥 Gestión de Usuarios</h2>
-                <div class="quick-actions">
-                    <button class="btn btn-primary" onclick="showAddUser()" data-translate="users.add_user">➕ Agregar Usuario</button>
-                    <button class="btn btn-success" onclick="loadUsers()" data-translate="users.user_list">📋 Lista de Usuarios</button>
-                    <button class="btn btn-warning" onclick="showUserStats()" data-translate="users.statistics" data-module="analytics-basic">📊 Estadísticas</button>
-                    <button class="btn btn-info" onclick="exportUsers()" data-translate="users.export_csv" data-module="reports-advanced">📤 Exportar CSV</button>
-                    <button class="btn btn-secondary" onclick="showBulkActions()" data-translate="users.bulk_actions" data-module="users-advanced">⚡ Acciones Masivas</button>
+        <div class="users-dashboard">
+            <!-- Header moderno -->
+            <div class="users-header">
+                <div class="users-title">
+                    <h2><i class="fas fa-users"></i> Gestion de Usuarios</h2>
+                    <span class="users-subtitle">Administracion centralizada de usuarios y permisos</span>
                 </div>
-                
-                <div id="users-container">
-                    <h3 data-translate="users.list_title">📋 Lista de Usuarios</h3>
-                    
-                    <!-- Campos de búsqueda -->
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #dee2e6;">
-                        <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #495057;" data-translate="users.search_dni">🔍 Buscar por DNI:</label>
-                                <input type="text" id="searchDNI" data-translate-placeholder="users.search_dni" 
-                                       style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px;"
-                                       onkeyup="filterUsers()" />
-                            </div>
-                            <div style="flex: 1; min-width: 250px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #495057;" data-translate="users.search_name">👤 Buscar por Nombre/Apellido:</label>
-                                <input type="text" id="searchName" data-translate-placeholder="users.search_name" 
-                                       style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px;"
-                                       onkeyup="filterUsers()" />
-                            </div>
-                            <div style="display: flex; flex-direction: column; justify-content: flex-end; gap: 5px; align-items: center; height: 60px;">
-                                <button class="btn btn-sm btn-secondary" onclick="clearFilters()" title="Limpiar filtros" style="margin-top: 8px;" data-translate="users.clear_filters">🧹 Limpiar</button>
-                                <span id="filterResults" style="font-size: 12px; color: #6c757d; white-space: nowrap;"></span>
-                            </div>
+            </div>
+
+            <!-- Quick Actions - Estilo moderno -->
+            <div class="users-quick-actions">
+                <button class="btn-action primary" onclick="showAddUser()" data-translate="users.add_user">
+                    <i class="fas fa-user-plus"></i> Agregar Usuario
+                </button>
+                <button class="btn-action" onclick="loadUsers()" data-translate="users.user_list">
+                    <i class="fas fa-list"></i> Actualizar Lista
+                </button>
+                <button class="btn-action" onclick="showUserStats()" data-translate="users.statistics" data-module="analytics-basic">
+                    <i class="fas fa-chart-bar"></i> Estadisticas
+                </button>
+                <button class="btn-action" onclick="exportUsers()" data-translate="users.export_csv" data-module="reports-advanced">
+                    <i class="fas fa-file-export"></i> Exportar CSV
+                </button>
+                <button class="btn-action" onclick="showBulkActions()" data-translate="users.bulk_actions" data-module="users-advanced">
+                    <i class="fas fa-bolt"></i> Acciones Masivas
+                </button>
+            </div>
+
+            <!-- Stats Cards - Estilo KPIs moderno -->
+            <div class="users-stats-grid" id="user-stats">
+                <div class="users-stat-card purple">
+                    <div class="users-stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="users-stat-value" id="total-users">--</div>
+                    <div class="users-stat-label" data-translate="users.total_users">Usuarios Totales</div>
+                </div>
+                <div class="users-stat-card success">
+                    <div class="users-stat-icon"><i class="fas fa-user-check"></i></div>
+                    <div class="users-stat-value" id="active-users">--</div>
+                    <div class="users-stat-label" data-translate="users.active_users">Usuarios Activos</div>
+                </div>
+                <div class="users-stat-card info">
+                    <div class="users-stat-icon"><i class="fas fa-user-shield"></i></div>
+                    <div class="users-stat-value" id="admin-users">--</div>
+                    <div class="users-stat-label" data-translate="users.admin_users">Administradores</div>
+                </div>
+                <div class="users-stat-card warning">
+                    <div class="users-stat-icon"><i class="fas fa-fingerprint"></i></div>
+                    <div class="users-stat-value" id="biometric-users">--</div>
+                    <div class="users-stat-label">Con Biometria</div>
+                </div>
+            </div>
+
+            <div id="users-container">
+                <!-- Campos de busqueda - Estilo moderno -->
+                <div class="users-search-section">
+                    <div class="users-search-grid">
+                        <div class="users-search-field">
+                            <label data-translate="users.search_dni"><i class="fas fa-id-card"></i> Buscar por DNI:</label>
+                            <input type="text" id="searchDNI" placeholder="Ingrese DNI..." onkeyup="filterUsers()" />
+                        </div>
+                        <div class="users-search-field">
+                            <label data-translate="users.search_name"><i class="fas fa-user"></i> Buscar por Nombre/Apellido:</label>
+                            <input type="text" id="searchName" placeholder="Ingrese nombre o apellido..." onkeyup="filterUsers()" />
+                        </div>
+                        <div class="users-search-actions">
+                            <button class="btn-clear" onclick="clearFilters()" title="Limpiar filtros" data-translate="users.clear_filters">
+                                <i class="fas fa-eraser"></i> Limpiar
+                            </button>
+                            <span id="filterResults" class="users-filter-results"></span>
                         </div>
                     </div>
-
-                    <!-- 📄 PAGINATION CONTROLS TOP -->
-                    <div id="pagination-top" style="display: none; margin: 15px 0;"></div>
-
-                    <div id="users-list" class="server-info" data-translate="messages.loading_users">
-                        Presiona "Lista de Usuarios" para cargar...
-                    </div>
-
-                    <!-- 📄 PAGINATION CONTROLS BOTTOM -->
-                    <div id="pagination-bottom" style="display: none; margin: 15px 0;"></div>
                 </div>
-                
-                <div id="user-stats" class="stats-grid" style="margin-top: 20px;">
-                    <div class="stat-item">
-                        <div class="stat-value" id="total-users">--</div>
-                        <div class="stat-label" data-translate="users.total_users">Usuarios Totales</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="active-users">--</div>
-                        <div class="stat-label" data-translate="users.active_users">Usuarios Activos</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="admin-users">--</div>
-                        <div class="stat-label" data-translate="users.admin_users">Administradores</div>
-                    </div>
+
+                <!-- Pagination Top -->
+                <div id="pagination-top" style="display: none;"></div>
+
+                <!-- Users List -->
+                <div id="users-list" class="users-loading">
+                    <div class="users-spinner"></div>
+                    <p style="color: #718096;">Cargando usuarios...</p>
                 </div>
+
+                <!-- Pagination Bottom -->
+                <div id="pagination-bottom" style="display: none;"></div>
+            </div>
+
+            <!-- Footer legal -->
+            <div style="margin-top: 20px; text-align: center; color: #718096; font-size: 0.85em;">
+                <i class="fas fa-shield-alt"></i> Datos protegidos | Sistema Multi-Tenant con aislamiento por empresa
             </div>
         </div>
     `;
@@ -383,49 +802,41 @@ function displayUsersTable(users) {
     console.log(`📄 [PAGINATION] Mostrando usuarios ${startIndex + 1}-${Math.min(endIndex, users.length)} de ${users.length} (Página ${currentPage}/${totalPages})`);
 
     let tableHTML = `
-        <div class="table-container" style="margin-top: 15px;">
-            <table class="data-table" style="width: 100%;">
+        <div class="users-table-container">
+            <table class="users-table">
                 <thead>
                     <tr>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>👤</div>
-                            <div style="font-size: 0.85em;">Nombre</div>
+                        <th>
+                            <span class="th-icon"><i class="fas fa-user"></i></span>
+                            Nombre
                         </th>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>🏷️</div>
-                            <div style="font-size: 0.85em;">Legajo</div>
+                        <th>
+                            <span class="th-icon"><i class="fas fa-id-badge"></i></span>
+                            Legajo
                         </th>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>🏢</div>
-                            <div style="font-size: 0.85em;">Departamento</div>
+                        <th>
+                            <span class="th-icon"><i class="fas fa-building"></i></span>
+                            Departamento
                         </th>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>👑</div>
-                            <div style="font-size: 0.85em;">Rol</div>
+                        <th>
+                            <span class="th-icon"><i class="fas fa-crown"></i></span>
+                            Rol
                         </th>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>📋</div>
-                            <div style="font-size: 0.85em;">Convenio</div>
+                        <th>
+                            <span class="th-icon"><i class="fas fa-toggle-on"></i></span>
+                            Estado
                         </th>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>📊</div>
-                            <div style="font-size: 0.85em;">Estado</div>
+                        <th>
+                            <span class="th-icon"><i class="fas fa-map-marker-alt"></i></span>
+                            GPS
                         </th>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>📍</div>
-                            <div style="font-size: 0.85em;">GPS Radio</div>
+                        <th>
+                            <span class="th-icon"><i class="fas fa-fingerprint"></i></span>
+                            Bio
                         </th>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>🕐</div>
-                            <div style="font-size: 0.85em;">Turnos</div>
-                        </th>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>🖐️</div>
-                            <div style="font-size: 0.85em;">Bio</div>
-                        </th>
-                        <th style="text-align: center; padding: 8px;">
-                            <div>⚙️</div>
-                            <div style="font-size: 0.85em;">Acciones</div>
+                        <th>
+                            <span class="th-icon"><i class="fas fa-cogs"></i></span>
+                            Acciones
                         </th>
                     </tr>
                 </thead>
@@ -434,43 +845,43 @@ function displayUsersTable(users) {
 
     // 📄 RENDER ONLY CURRENT PAGE USERS
     paginatedUsers.forEach(user => {
-        const statusClass = user.status === 'Activo' ? 'success' : 'error';
+        const statusClass = user.status === 'Activo' ? 'success' : 'danger';
         const biometricClass = user.biometric === 'Registrado' ? 'success' : 'warning';
-        
+
         const gpsRadiusClass = user.allowOutsideRadius ? 'success' : 'warning';
-        const gpsRadiusText = user.allowOutsideRadius ? '✅ Permitido' : '❌ Restringido';
-        
-        // Turnos asignados (por ahora simulado, luego se conectará con API)
-        const userShifts = user.shifts || ['Mañana 08:00-16:00', 'Tarde 16:00-24:00'];
-        const shiftsText = userShifts.length > 0 ? userShifts.join(', ') : 'Sin turnos';
-        
+        const gpsRadiusText = user.allowOutsideRadius ? 'Permitido' : 'Restringido';
+
         tableHTML += `
             <tr>
-                <td><strong>${user.name}</strong></td>
+                <td class="name-cell">${user.name}</td>
                 <td>${user.legajo}</td>
-                <td>${user.role}</td>
-                <td><span style="font-size: 0.8em; color: #666;">${user.convenioColectivo || 'No especificado'}</span></td>
-                <td><span class="status-badge ${statusClass}">${user.status}</span></td>
-                <td><span class="status-badge ${gpsRadiusClass}">${gpsRadiusText}</span></td>
-                <td style="font-size: 0.85em; max-width: 150px; overflow: hidden; text-overflow: ellipsis;" title="${shiftsText}">${shiftsText}</td>
+                <td>${user.department || 'Sin asignar'}</td>
+                <td><span class="users-badge info">${user.role}</span></td>
+                <td><span class="users-badge ${statusClass}">${user.status}</span></td>
+                <td><span class="users-badge ${gpsRadiusClass}">${gpsRadiusText}</span></td>
                 <td>
-                    <span class="status-badge ${biometricClass}">${user.biometric}</span>
-                    ${user.biometricDetails && (user.biometricDetails.face || user.biometricDetails.fingerprint) ?
-                        `<button class="btn-mini btn-primary" onclick="verifyUserBiometric('${user.id}', '${user.name}')"
-                         title="Verificar biometría" style="margin-left: 5px;" data-module="biometric-enterprise">🔍</button>` : ''}
+                    <span class="users-badge ${biometricClass}">${user.biometric}</span>
                 </td>
-                <td style="white-space: nowrap; min-width: 90px;">
-                    <div style="display: flex; flex-direction: column; gap: 2px; align-items: center;">
-                        <button class="btn-mini btn-success" onclick="assignUserShifts('${user.id}', '${user.name}')" title="Asignar Turnos" data-module="shifts-enterprise">🕐</button>
-                        <button class="btn-mini btn-warning" onclick="resetPassword('${user.id}', '${user.name}')" title="Reset">🔑</button>
-                        <button class="btn-mini btn-info" onclick="viewUser('${user.id}')" title="Ver">👁️</button>
-                        <button class="btn-mini btn-danger" onclick="deleteUser('${user.id}')" title="Eliminar">🗑️</button>
+                <td>
+                    <div class="users-action-btns">
+                        <button class="users-action-btn shifts" onclick="assignUserShifts('${user.id}', '${user.name}')" title="Asignar Turnos" data-module="shifts-enterprise">
+                            <i class="fas fa-clock"></i>
+                        </button>
+                        <button class="users-action-btn reset" onclick="resetPassword('${user.id}', '${user.name}')" title="Reset Password">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="users-action-btn view" onclick="viewUser('${user.id}')" title="Ver Detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="users-action-btn delete" onclick="deleteUser('${user.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </td>
             </tr>
         `;
     });
-    
+
     tableHTML += `
                 </tbody>
             </table>
@@ -522,60 +933,43 @@ function createPaginationHTML(totalUsers, startIndex, endIndex) {
 
     let pagesHTML = '';
     for (let i = startPage; i <= endPage; i++) {
-        const activeClass = i === currentPage ? 'background: #2c5aa0; color: white; font-weight: bold;' : 'background: #f8f9fa; color: #495057;';
+        const activeClass = i === currentPage ? 'active' : '';
         pagesHTML += `
-            <button onclick="goToPage(${i})"
-                    style="padding: 6px 12px; margin: 0 2px; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer; ${activeClass}">
+            <button class="${activeClass}" onclick="goToPage(${i})">
                 ${i}
             </button>
         `;
     }
 
     return `
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;">
-            <!-- Info Section -->
-            <div style="font-size: 14px; color: #495057;">
-                Mostrando <strong>${startIndex + 1}</strong> a <strong>${endIndex}</strong> de <strong>${totalUsers}</strong> usuarios
-            </div>
+        <div class="users-pagination">
+            <span class="users-pagination-info">
+                Mostrando <strong>${startIndex + 1}</strong> a <strong>${endIndex}</strong> de <strong>${totalUsers}</strong>
+            </span>
 
-            <!-- Controls Section -->
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <!-- Items per page selector -->
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <label style="font-size: 14px; color: #495057;">Por página:</label>
-                    <select onchange="changeItemsPerPage(this.value)"
-                            style="padding: 6px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px;">
-                        <option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10</option>
-                        <option value="25" ${itemsPerPage === 25 ? 'selected' : ''}>25</option>
-                        <option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50</option>
-                        <option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100</option>
-                        <option value="9999" ${itemsPerPage === 9999 ? 'selected' : ''}>Todos</option>
-                    </select>
-                </div>
+            <select onchange="changeItemsPerPage(this.value)" style="padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9em;">
+                <option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10</option>
+                <option value="25" ${itemsPerPage === 25 ? 'selected' : ''}>25</option>
+                <option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50</option>
+                <option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100</option>
+                <option value="9999" ${itemsPerPage === 9999 ? 'selected' : ''}>Todos</option>
+            </select>
 
-                <!-- Navigation buttons -->
-                <div style="display: flex; gap: 5px;">
-                    <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}
-                            style="padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 4px; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'}; background: ${currentPage === 1 ? '#e9ecef' : '#fff'};">
-                        ⏮️ Primera
-                    </button>
-                    <button onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''}
-                            style="padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 4px; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'}; background: ${currentPage === 1 ? '#e9ecef' : '#fff'};">
-                        ◀️ Anterior
-                    </button>
+            <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>
+                <i class="fas fa-angle-double-left"></i>
+            </button>
+            <button onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''}>
+                <i class="fas fa-angle-left"></i>
+            </button>
 
-                    ${pagesHTML}
+            ${pagesHTML}
 
-                    <button onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''}
-                            style="padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 4px; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'}; background: ${currentPage === totalPages ? '#e9ecef' : '#fff'};">
-                        Siguiente ▶️
-                    </button>
-                    <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}
-                            style="padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 4px; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'}; background: ${currentPage === totalPages ? '#e9ecef' : '#fff'};">
-                        Última ⏭️
-                    </button>
-                </div>
-            </div>
+            <button onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''}>
+                <i class="fas fa-angle-right"></i>
+            </button>
+            <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>
+                <i class="fas fa-angle-double-right"></i>
+            </button>
         </div>
     `;
 }
@@ -1657,6 +2051,7 @@ async function viewUser(userId) {
                     <button class="file-tab" onclick="showFileTab('disciplinary', this)">⚖️ Disciplinarios</button>
                     <button class="file-tab" onclick="showFileTab('tasks', this)">🎯 Config. Tareas</button>
                     <button class="file-tab" onclick="showFileTab('biometric', this)">📸 Registro Biométrico</button>
+                    <button class="file-tab" onclick="showFileTab('notifications', this)">🔔 Notificaciones</button>
                 </div>
 
                 <!-- Contenido del Expediente -->
@@ -1753,6 +2148,63 @@ async function viewUser(userId) {
                             </div>
                         </div>
 
+                        <!-- Acceso a Kioscos -->
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                            <h4 style="margin: 0 0 15px 0; color: #333;">📟 Acceso a Kioscos</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="info-card">
+                                    <div class="info-label">📟 Puede usar Kioscos:</div>
+                                    <div class="info-value" id="admin-kiosk-access">
+                                        <span class="status-badge ${user.canUseKiosk || user.can_use_kiosk ? 'success' : 'secondary'}">${user.canUseKiosk || user.can_use_kiosk ? '✅ Habilitado' : '❌ No habilitado'}</span>
+                                    </div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-label">🏢 Kioscos Autorizados:</div>
+                                    <div class="info-value" id="admin-allowed-kiosks">
+                                        ${user.useAllKiosks || user.use_all_kiosks ? '✅ Todos los kioscos' : (user.allowedKiosks && user.allowedKiosks.length > 0 ? user.allowedKiosks.map(k => k.name || k).join(', ') : 'Ninguno específico')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Horario Flexible -->
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                            <h4 style="margin: 0 0 15px 0; color: #333;">⏰ Configuración de Horario</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="info-card">
+                                    <div class="info-label">⏰ Horario Flexible:</div>
+                                    <div class="info-value" id="admin-flexible-schedule">
+                                        <span class="status-badge ${user.hasFlexibleSchedule || user.has_flexible_schedule ? 'warning' : 'secondary'}">${user.hasFlexibleSchedule || user.has_flexible_schedule ? '✅ Habilitado (sin restricción horaria)' : '📅 Horario estándar'}</span>
+                                    </div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-label">📝 Notas de Horario Flexible:</div>
+                                    <div class="info-value" id="admin-flexible-notes">
+                                        ${user.flexibleScheduleNotes || user.flexible_schedule_notes || 'Sin notas'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Permisos de Autorización -->
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                            <h4 style="margin: 0 0 15px 0; color: #333;">🔐 Permisos Especiales</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="info-card">
+                                    <div class="info-label">⏱️ Puede Autorizar Llegadas Tarde:</div>
+                                    <div class="info-value" id="admin-authorize-late">
+                                        <span class="status-badge ${user.canAuthorizeLateArrivals || user.can_authorize_late_arrivals ? 'success' : 'secondary'}">${user.canAuthorizeLateArrivals || user.can_authorize_late_arrivals ? '✅ Habilitado' : '❌ No habilitado'}</span>
+                                    </div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-label">📱 Puede usar App Móvil:</div>
+                                    <div class="info-value" id="admin-mobile-app">
+                                        <span class="status-badge ${user.canUseMobileApp || user.can_use_mobile_app ? 'success' : 'secondary'}">${user.canUseMobileApp || user.can_use_mobile_app ? '✅ Habilitado' : '❌ No habilitado'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Acciones Administrativas -->
                         <div style="border: 1px solid #e74c3c; border-radius: 8px; padding: 15px; margin: 15px 0; background: #fdf2f2;">
                             <h4 style="margin: 0 0 15px 0; color: #c0392b;">⚡ Acciones Administrativas</h4>
@@ -1763,7 +2215,7 @@ async function viewUser(userId) {
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Tab: Datos Personales -->
                     <div id="personal-tab" class="file-tab-content" style="display: none;">
                         <h3>👤 Información Personal</h3>
@@ -1789,13 +2241,9 @@ async function viewUser(userId) {
                                         <h4 style="color: #856404; margin: 0;">📞 Contactos</h4>
                                         <button class="btn btn-sm btn-warning" onclick="editContactInfo('${userId}')">✏️ Editar</button>
                                     </div>
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                         <div><strong>Emergencia:</strong><br>${user.emergencyContact || 'No especificado'}</div>
                                         <div><strong>Tel. Emergencia:</strong><br>${user.emergencyPhone || 'No especificado'}</div>
-                                    </div>
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                        <div><strong>Contacto Adicional:</strong><br><span id="additional-contact">No especificado</span></div>
-                                        <div><strong>Tel. Adicional:</strong><br><span id="additional-phone">No especificado</span></div>
                                     </div>
                                 </div>
                                 
@@ -1975,11 +2423,10 @@ async function viewUser(userId) {
                         <h3>💼 Antecedentes Laborales</h3>
                         <div id="work-history">
                             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                                <h4>Posición Actual</h4>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                                <h4>📌 Posición Actual <span style="font-size: 11px; color: #666; font-weight: normal;">(Resumen - editar desde ⚙️ Administración)</span></h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                     <div><strong>Cargo:</strong><br>${user.position || 'No especificado'}</div>
-                                    <div><strong>Departamento:</strong><br>${user.department?.name || 'No asignado'}</div>
-                                    <div><strong>Salario:</strong><br>${user.salary ? '$' + user.salary.toLocaleString() : 'No especificado'}</div>
+                                    <div><strong>Departamento:</strong><br><span style="color: #666;">${user.department?.name || user.departmentName || 'No asignado'}</span> <span style="font-size: 10px; color: #999;">→ Tab Admin</span></div>
                                 </div>
                             </div>
 
@@ -1996,11 +2443,11 @@ async function viewUser(userId) {
                                         <h5 style="color: #1b5e20; margin: 0 0 12px 0; font-size: 14px;">📋 Convenio y Categoría</h5>
                                         <div style="font-size: 13px;">
                                             <div style="margin-bottom: 8px;">
-                                                <strong>Convenio (CCT):</strong><br>
+                                                <strong id="salary-agreement-label">Convenio Laboral:</strong><br>
                                                 <span id="salary-agreement" style="color: #2e7d32; font-weight: bold;">No asignado</span>
                                             </div>
                                             <div style="margin-bottom: 8px;">
-                                                <strong>Categoría:</strong><br>
+                                                <strong id="salary-category-label">Categoría Salarial:</strong><br>
                                                 <span id="salary-category">No asignada</span>
                                             </div>
                                             <div>
@@ -2053,58 +2500,64 @@ async function viewUser(userId) {
                                 </div>
                             </div>
 
-                            <!-- ÚLTIMAS LIQUIDACIONES -->
+                            <!-- HISTORIAL DE LIQUIDACIONES (DINÁMICO) -->
                             <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #2196f3;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                    <h4 style="color: #1565c0; margin: 0;">📊 Últimas Liquidaciones</h4>
+                                    <h4 style="color: #1565c0; margin: 0;">📊 Historial de Liquidaciones</h4>
                                     <div>
-                                        <button class="btn btn-sm btn-info" onclick="viewPayrollHistory('${userId}')">📜 Ver Historial</button>
-                                        <button class="btn btn-sm btn-primary" onclick="generatePayroll('${userId}')">+ Nueva Liquidación</button>
+                                        <button class="btn btn-sm btn-secondary" onclick="loadUserPayrollHistory('${userId}')">🔄 Actualizar</button>
                                     </div>
                                 </div>
 
-                                <div id="recent-payrolls" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                                <!-- KPIs Dinámicos -->
+                                <div id="payroll-kpis-${userId}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px;">
                                     <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 8px; text-align: center;">
-                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Mes Actual</div>
-                                        <div style="font-size: 18px; font-weight: bold; color: #1565c0;" id="payroll-current">$--</div>
-                                        <div style="font-size: 10px; color: #666;" id="payroll-current-status">Sin procesar</div>
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Última Liquidación</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #1565c0;" id="payroll-last-net-${userId}">--</div>
+                                        <div style="font-size: 10px; color: #666;" id="payroll-last-period-${userId}">Sin datos</div>
                                     </div>
                                     <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 8px; text-align: center;">
-                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Mes Anterior</div>
-                                        <div style="font-size: 18px; font-weight: bold; color: #388e3c;" id="payroll-previous">$--</div>
-                                        <div style="font-size: 10px; color: #2e7d32;" id="payroll-previous-status">--</div>
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Total Liquidaciones</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #388e3c;" id="payroll-total-count-${userId}">0</div>
+                                        <div style="font-size: 10px; color: #2e7d32;">registradas</div>
                                     </div>
                                     <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 8px; text-align: center;">
-                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Acumulado Año</div>
-                                        <div style="font-size: 18px; font-weight: bold; color: #7b1fa2;" id="payroll-ytd">$--</div>
-                                        <div style="font-size: 10px; color: #666;" id="payroll-months-processed">0 meses procesados</div>
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;" id="payroll-ytd-year-${userId}">Acumulado 2025</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #7b1fa2;" id="payroll-ytd-net-${userId}">--</div>
+                                        <div style="font-size: 10px; color: #666;" id="payroll-ytd-months-${userId}">0 meses procesados</div>
                                     </div>
                                 </div>
 
-                                <div style="background: rgba(255,255,255,0.8); padding: 15px; border-radius: 8px; margin-top: 15px;">
-                                    <h5 style="color: #1565c0; margin: 0 0 10px 0; font-size: 13px;">📋 Desglose Última Liquidación</h5>
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 12px;">
-                                        <div>
-                                            <div style="color: #2e7d32; font-weight: bold; margin-bottom: 5px;">Haberes (+)</div>
-                                            <div style="display: flex; justify-content: space-between;"><span>Sueldo Básico:</span><span id="payroll-basic">$--</span></div>
-                                            <div style="display: flex; justify-content: space-between;"><span>Horas Extra:</span><span id="payroll-overtime">$--</span></div>
-                                            <div style="display: flex; justify-content: space-between;"><span>Presentismo:</span><span id="payroll-attendance">$--</span></div>
-                                            <div style="display: flex; justify-content: space-between;"><span>Adicionales:</span><span id="payroll-additionals">$--</span></div>
-                                            <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px;">
-                                                <span>Total Bruto:</span><span id="payroll-gross">$--</span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div style="color: #d32f2f; font-weight: bold; margin-bottom: 5px;">Deducciones (-)</div>
-                                            <div style="display: flex; justify-content: space-between;"><span>Jubilación (11%):</span><span id="payroll-retirement">$--</span></div>
-                                            <div style="display: flex; justify-content: space-between;"><span>Obra Social (3%):</span><span id="payroll-health">$--</span></div>
-                                            <div style="display: flex; justify-content: space-between;"><span>Ley 19.032 (3%):</span><span id="payroll-pami">$--</span></div>
-                                            <div style="display: flex; justify-content: space-between;"><span>Sindicato:</span><span id="payroll-union">$--</span></div>
-                                            <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px; color: #1565c0;">
-                                                <span>Neto a Cobrar:</span><span id="payroll-net">$--</span>
-                                            </div>
-                                        </div>
+                                <!-- Grilla de Liquidaciones -->
+                                <div style="background: rgba(255,255,255,0.9); border-radius: 8px; overflow: hidden;">
+                                    <div style="max-height: 300px; overflow-y: auto;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                            <thead style="background: #1565c0; color: white; position: sticky; top: 0;">
+                                                <tr>
+                                                    <th style="padding: 10px; text-align: left;">Período</th>
+                                                    <th style="padding: 10px; text-align: right;">Bruto</th>
+                                                    <th style="padding: 10px; text-align: right;">Deducciones</th>
+                                                    <th style="padding: 10px; text-align: right;">Neto</th>
+                                                    <th style="padding: 10px; text-align: center;">Estado</th>
+                                                    <th style="padding: 10px; text-align: center;">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="payroll-history-table-${userId}">
+                                                <tr>
+                                                    <td colspan="6" style="padding: 20px; text-align: center; color: #666;">
+                                                        <span id="payroll-loading-${userId}">⏳ Cargando historial...</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
+                                </div>
+
+                                <!-- Paginación -->
+                                <div id="payroll-pagination-${userId}" style="display: none; margin-top: 10px; text-align: center;">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="loadMorePayrollHistory('${userId}')" id="payroll-load-more-${userId}">
+                                        Cargar más liquidaciones
+                                    </button>
                                 </div>
                             </div>
 
@@ -2215,9 +2668,43 @@ async function viewUser(userId) {
                                     <p style="text-align: center; color: #666; font-style: italic;">No hay otros familiares registrados</p>
                                 </div>
                             </div>
+
+                            <!-- Documentos / Certificados Familiares -->
+                            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h4 style="color: #e65100; margin: 0;">📄 Documentos / Certificados Familiares</h4>
+                                    <button class="btn btn-sm btn-warning" onclick="addFamilyDocument('${userId}')" style="background: #ff9800; border: none; color: white;">+ Cargar Documento</button>
+                                </div>
+                                <p style="font-size: 12px; color: #666; margin-bottom: 15px;">
+                                    Certificados de escolaridad, facturas de guardería, certificados médicos y otros documentos que pueden ser requeridos para beneficios o asignaciones.
+                                </p>
+                                <div id="family-documents-list">
+                                    <p style="text-align: center; color: #666; font-style: italic; font-size: 12px;">No hay documentos cargados</p>
+                                </div>
+                                <div id="family-documents-stats" style="display: none; margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 6px;">
+                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center; font-size: 12px;">
+                                        <div>
+                                            <span style="font-size: 20px; color: #4caf50;">&#10003;</span><br>
+                                            <strong id="docs-valid-count">0</strong> Vigentes
+                                        </div>
+                                        <div>
+                                            <span style="font-size: 20px; color: #ff9800;">&#9888;</span><br>
+                                            <strong id="docs-expiring-count">0</strong> Por Vencer
+                                        </div>
+                                        <div>
+                                            <span style="font-size: 20px; color: #f44336;">&#10007;</span><br>
+                                            <strong id="docs-expired-count">0</strong> Vencidos
+                                        </div>
+                                        <div>
+                                            <span style="font-size: 20px; color: #2196f3;">&#128196;</span><br>
+                                            <strong id="docs-total-count">0</strong> Total
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
+
                     <!-- Tab: Antecedentes Médicos -->
                     <div id="medical-tab" class="file-tab-content" style="display: none;">
                         <h3>🏥 Historia Clínica y Antecedentes Médicos</h3>
@@ -2729,10 +3216,51 @@ async function viewUser(userId) {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Tab: Notificaciones del Empleado -->
+                    <div id="notifications-tab" class="file-tab-content" style="display: none;">
+                        <h3>🔔 Notificaciones del Empleado</h3>
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 15px 0; background: #f8f9fa;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h4 style="margin: 0; color: #333;">📬 Bandeja de Notificaciones</h4>
+                                <button class="btn btn-primary btn-sm" onclick="loadEmployeeNotifications('${userId}')">
+                                    🔄 Actualizar
+                                </button>
+                            </div>
+                            <div id="employee-notifications-container" style="max-height: 500px; overflow-y: auto;">
+                                <div style="text-align: center; padding: 40px; color: #666;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i>
+                                    <p>Cargando notificaciones...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 15px 0;">
+                            <h4 style="margin: 0 0 15px 0; color: #333;">📊 Resumen de Notificaciones</h4>
+                            <div id="employee-notifications-stats" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                                <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #2196f3;" id="notif-stat-total">-</div>
+                                    <div style="font-size: 12px; color: #666;">Total</div>
+                                </div>
+                                <div style="background: #fdecea; padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #f44336;" id="notif-stat-unread">-</div>
+                                    <div style="font-size: 12px; color: #666;">Sin Leer</div>
+                                </div>
+                                <div style="background: #fff8e1; padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #ff9800;" id="notif-stat-pending">-</div>
+                                    <div style="font-size: 12px; color: #666;">Pendientes</div>
+                                </div>
+                                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #4caf50;" id="notif-stat-resolved">-</div>
+                                    <div style="font-size: 12px; color: #666;">Resueltas</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
         
         // Cargar datos iniciales de cada sección
@@ -3585,12 +4113,15 @@ function updateFilterResults() {
 console.log('🔍 [USERS] Funciones de filtrado agregadas');
 
 // Función para asignar turnos a un usuario específico
-function assignUserShifts(userId, userName) {
-    console.log('🕐 [USERS] Asignando turnos para usuario:', userId, userName);
-    
+function assignUserShifts(userId, userName, userBranchId = null) {
+    console.log('🕐 [USERS] Asignando turnos para usuario:', userId, userName, 'Branch:', userBranchId);
+
     // Crear modal específico para asignación de turnos de un usuario
     const modal = document.createElement('div');
     modal.id = 'assignUserShiftsModal';
+    modal.dataset.userId = userId;
+    modal.dataset.userName = userName;
+    modal.dataset.branchId = userBranchId || '';
     modal.style.cssText = `
         position: fixed;
         top: 0;
@@ -3603,87 +4134,238 @@ function assignUserShifts(userId, userName) {
         align-items: center;
         z-index: 10000;
     `;
-    
+
     modal.innerHTML = `
-        <div style="background: white; border-radius: 12px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto;">
+        <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto;">
             <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
                 <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-                    🕐 Asignar Turnos: ${userName}
+                    🕐 Asignar Turno: ${userName}
                     <button onclick="closeUserShiftsModal()" style="margin-left: auto; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">✕</button>
                 </h3>
             </div>
             <div style="padding: 20px;">
+                <!-- Turno actual -->
                 <div style="margin-bottom: 20px;">
-                    <h4>📋 Turnos Disponibles</h4>
-                    <div id="availableShiftsForUser" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
-                        Cargando turnos disponibles...
+                    <h4 style="margin: 0 0 10px 0;">🕐 Turno Actual</h4>
+                    <div id="currentUserShiftInfo" style="padding: 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                        Cargando...
                     </div>
                 </div>
-                
+
+                <!-- Selección de nuevo turno -->
                 <div style="margin-bottom: 20px;">
-                    <h4>🕐 Turnos Actuales del Usuario</h4>
-                    <div id="currentUserShifts" style="max-height: 150px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: 8px; padding: 10px; background: #f8f9fa;">
-                        Cargando turnos actuales...
-                    </div>
+                    <h4 style="margin: 0 0 10px 0;">📋 Seleccionar Turno</h4>
+                    <select id="shiftSelector" style="width: 100%; padding: 12px; border: 2px solid #28a745; border-radius: 8px; font-size: 14px; background: white;" onchange="onShiftSelected()">
+                        <option value="">-- Cargando turnos disponibles... --</option>
+                    </select>
+                    <div id="shiftDetails" style="margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 6px; display: none;"></div>
                 </div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <button id="assignSelectedShifts" class="btn btn-success" onclick="performUserShiftAssignment('${userId}', '${userName}')" style="margin: 5px;">
-                        ✅ Asignar Turnos Seleccionados
+
+                <!-- Fase para turnos rotativos -->
+                <div id="phaseContainer" style="margin-bottom: 20px; display: none;">
+                    <h4 style="margin: 0 0 10px 0;">🔄 Fase del Turno Rotativo</h4>
+                    <select id="phaseSelector" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                        <option value="">-- Seleccionar fase --</option>
+                    </select>
+                    <p style="margin: 5px 0 0 0; font-size: 11px; color: #666;">
+                        El empleado trabajará cuando el turno global esté en esta fase
+                    </p>
+                </div>
+
+                <!-- Fecha de acoplamiento -->
+                <div style="margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+                    <h4 style="margin: 0 0 10px 0; color: #1565c0;">📅 Fecha de Acoplamiento</h4>
+                    <p style="margin: 0 0 10px 0; font-size: 12px; color: #555;">
+                        El empleado se "acopla" al turno en marcha desde esta fecha.
+                    </p>
+                    <input type="date" id="shiftJoinDate" value="${new Date().toISOString().split('T')[0]}"
+                           style="padding: 10px 12px; border: 1px solid #90caf9; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box;">
+                </div>
+
+                <!-- Botones -->
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button id="assignShiftBtn" class="btn btn-success" onclick="performUserShiftAssignment('${userId}', '${userName}')" style="flex: 1; padding: 12px;" disabled>
+                        ✅ Asignar Turno
                     </button>
-                    <button class="btn btn-secondary" onclick="closeUserShiftsModal()" style="margin: 5px;">
+                    <button class="btn btn-secondary" onclick="closeUserShiftsModal()" style="flex: 1; padding: 12px;">
                         ❌ Cancelar
                     </button>
                 </div>
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
-    // Cargar datos de turnos
-    loadShiftsForUser(userId);
+
+    // Cargar datos de turnos con branch_id
+    loadShiftsForUser(userId, userBranchId);
+}
+
+// Callback cuando se selecciona un turno
+function onShiftSelected() {
+    const selector = document.getElementById('shiftSelector');
+    const phaseContainer = document.getElementById('phaseContainer');
+    const phaseSelector = document.getElementById('phaseSelector');
+    const shiftDetails = document.getElementById('shiftDetails');
+    const assignBtn = document.getElementById('assignShiftBtn');
+
+    if (!selector.value) {
+        phaseContainer.style.display = 'none';
+        shiftDetails.style.display = 'none';
+        assignBtn.disabled = true;
+        return;
+    }
+
+    // Buscar el turno seleccionado
+    const option = selector.options[selector.selectedIndex];
+    const shiftType = option.dataset.shiftType;
+    const phases = option.dataset.phases ? JSON.parse(option.dataset.phases) : [];
+    const startTime = option.dataset.startTime || '';
+    const endTime = option.dataset.endTime || '';
+    const branchName = option.dataset.branchName || 'Sin sucursal';
+
+    // Mostrar detalles del turno
+    shiftDetails.innerHTML = `
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <span>⏰ <strong>Horario:</strong> ${startTime} - ${endTime}</span>
+            <span>🏢 <strong>Sucursal:</strong> ${branchName}</span>
+            <span>📊 <strong>Tipo:</strong> ${shiftType === 'rotative' ? '🔄 Rotativo' : '📋 Estándar'}</span>
+        </div>
+    `;
+    shiftDetails.style.display = 'block';
+
+    // Mostrar selector de fase solo para turnos rotativos
+    if (shiftType === 'rotative' && phases.length > 0) {
+        phaseSelector.innerHTML = '<option value="">-- Seleccionar fase --</option>' +
+            phases.filter(p => p.name !== 'descanso' && p.name !== 'franco' && p.name !== 'rest')
+                  .map(p => `<option value="${p.name}">${p.name.charAt(0).toUpperCase() + p.name.slice(1)} (${p.duration || '?'} días)</option>`)
+                  .join('');
+        phaseContainer.style.display = 'block';
+        assignBtn.disabled = true; // Requiere seleccionar fase
+        phaseSelector.onchange = () => {
+            assignBtn.disabled = !phaseSelector.value;
+        };
+    } else {
+        phaseContainer.style.display = 'none';
+        assignBtn.disabled = false;
+    }
 }
 
 // Función para cargar turnos disponibles y actuales del usuario
-async function loadShiftsForUser(userId) {
+async function loadShiftsForUser(userId, branchId = null) {
     try {
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
 
-        // Primero, cargar turnos actuales del usuario
+        // 1. Obtener datos del usuario (incluyendo asignación de turno actual desde user_shift_assignments)
         const userResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        let currentUserShifts = [];
+        let userBranchId = branchId;
+        let currentAssignment = null;
+
         if (userResponse.ok) {
             const userData = await userResponse.json();
             const user = userData.user || userData;
-            currentUserShifts = user.shifts || [];
-            renderCurrentUserShifts(currentUserShifts);
+
+            // Obtener branch_id del usuario si no se proporcionó
+            if (!userBranchId && user.branch_id) {
+                userBranchId = user.branch_id;
+            }
+
+            // Mostrar turno actual (de user_shift_assignments si existe)
+            currentAssignment = user.shiftAssignment || (user.shifts && user.shifts[0]);
+            renderCurrentUserShiftInfo(currentAssignment);
         } else {
             console.error('Error al obtener usuario:', userResponse.status);
-            document.getElementById('currentUserShifts').innerHTML = '❌ Error cargando turnos actuales';
+            document.getElementById('currentUserShiftInfo').innerHTML = '❌ Error cargando datos del usuario';
         }
 
-        // Luego, cargar turnos disponibles y marcar los ya asignados
-        const shiftsResponse = await fetch(window.progressiveAdmin.getApiUrl('/api/v1/shifts'), {
+        // 2. Cargar turnos disponibles (filtrados por empresa, opcionalmente por sucursal)
+        let shiftsUrl = '/api/v1/shifts?isActive=true';
+        if (userBranchId) {
+            shiftsUrl += `&branchId=${userBranchId}`;
+        }
+
+        const shiftsResponse = await fetch(window.progressiveAdmin.getApiUrl(shiftsUrl), {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (shiftsResponse.ok) {
             const shiftsData = await shiftsResponse.json();
             const allShifts = shiftsData.shifts || shiftsData || [];
-            renderAvailableShiftsForUser(allShifts, currentUserShifts);
+            renderShiftDropdown(allShifts, currentAssignment);
         } else {
             console.error('Error al obtener shifts:', shiftsResponse.status);
-            document.getElementById('availableShiftsForUser').innerHTML = '❌ Error cargando turnos disponibles';
+            document.getElementById('shiftSelector').innerHTML = '<option value="">❌ Error cargando turnos</option>';
         }
 
     } catch (error) {
         console.error('Error cargando turnos:', error);
-        document.getElementById('availableShiftsForUser').innerHTML = `❌ Error: ${error.message}`;
-        document.getElementById('currentUserShifts').innerHTML = `❌ Error: ${error.message}`;
+        document.getElementById('shiftSelector').innerHTML = `<option value="">❌ Error: ${error.message}</option>`;
+    }
+}
+
+// Renderizar información del turno actual
+function renderCurrentUserShiftInfo(assignment) {
+    const container = document.getElementById('currentUserShiftInfo');
+    if (!container) return;
+
+    if (!assignment) {
+        container.innerHTML = '<span style="color: #666;">⚠️ Sin turno asignado actualmente</span>';
+        return;
+    }
+
+    const shiftName = assignment.name || assignment.shift?.name || 'Turno sin nombre';
+    const phase = assignment.assigned_phase || assignment.phase || '';
+    const joinDate = assignment.join_date || '';
+
+    container.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">🕐</span>
+            <div>
+                <strong>${shiftName}</strong>
+                ${phase ? `<span style="margin-left: 8px; background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">${phase}</span>` : ''}
+                ${joinDate ? `<br><small style="color: #666;">Acoplado desde: ${joinDate}</small>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+// Renderizar dropdown de turnos disponibles
+function renderShiftDropdown(shifts, currentAssignment) {
+    const selector = document.getElementById('shiftSelector');
+    if (!selector) return;
+
+    if (shifts.length === 0) {
+        selector.innerHTML = '<option value="">⚠️ No hay turnos disponibles para esta sucursal</option>';
+        return;
+    }
+
+    const currentShiftId = currentAssignment?.shift_id || currentAssignment?.id || '';
+
+    selector.innerHTML = '<option value="">-- Seleccionar turno --</option>' +
+        shifts.map(shift => {
+            const branchName = shift.Branch?.name || 'Sin sucursal';
+            const isRotative = shift.shiftType === 'rotative';
+            const phasesJson = shift.phases ? JSON.stringify(shift.phases) : '[]';
+
+            return `
+                <option value="${shift.id}"
+                        data-shift-type="${shift.shiftType || 'standard'}"
+                        data-phases='${phasesJson}'
+                        data-start-time="${shift.startTime || shift.start_time || ''}"
+                        data-end-time="${shift.endTime || shift.end_time || ''}"
+                        data-branch-name="${branchName}"
+                        ${shift.id === currentShiftId ? 'selected' : ''}>
+                    ${shift.name} ${isRotative ? '🔄' : ''} (${shift.startTime || shift.start_time} - ${shift.endTime || shift.end_time})
+                </option>
+            `;
+        }).join('');
+
+    // Si hay turno actual seleccionado, disparar evento change
+    if (currentShiftId && selector.value) {
+        onShiftSelected();
     }
 }
 
@@ -3740,19 +4422,36 @@ function renderCurrentUserShifts(shifts) {
     `).join('');
 }
 
-// Realizar asignación de turnos seleccionados
+// Realizar asignación de turno seleccionado (dropdown único)
 async function performUserShiftAssignment(userId, userName) {
-    const selectedCheckboxes = document.querySelectorAll('#availableShiftsForUser .shift-checkbox:checked');
+    const shiftSelector = document.getElementById('shiftSelector');
+    const phaseSelector = document.getElementById('phaseSelector');
+    const joinDateInput = document.getElementById('shiftJoinDate');
 
-    if (selectedCheckboxes.length === 0) {
-        alert('⚠️ Debe seleccionar al menos un turno para asignar');
+    if (!shiftSelector || !shiftSelector.value) {
+        alert('⚠️ Debe seleccionar un turno para asignar');
         return;
     }
 
-    // ✅ FIX: NO convertir a integer - los IDs de shifts son UUIDs
-    const shiftIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+    const shiftId = shiftSelector.value;
+    const shiftName = shiftSelector.options[shiftSelector.selectedIndex].text;
+    const assignedPhase = phaseSelector ? phaseSelector.value : null;
+    const joinDate = joinDateInput ? joinDateInput.value : new Date().toISOString().split('T')[0];
 
-    if (!confirm(`¿Desea asignar ${shiftIds.length} turno(s) a ${userName}?`)) {
+    // Validar fase para turnos rotativos
+    const shiftType = shiftSelector.options[shiftSelector.selectedIndex].dataset.shiftType;
+    if (shiftType === 'rotative' && !assignedPhase) {
+        alert('⚠️ Debe seleccionar una fase para el turno rotativo');
+        return;
+    }
+
+    let confirmMsg = `¿Desea asignar el turno "${shiftName}" a ${userName}?\n`;
+    confirmMsg += `\n📅 Fecha de acoplamiento: ${joinDate}`;
+    if (assignedPhase) {
+        confirmMsg += `\n🔄 Fase asignada: ${assignedPhase}`;
+    }
+
+    if (!confirm(confirmMsg)) {
         return;
     }
 
@@ -3763,26 +4462,28 @@ async function performUserShiftAssignment(userId, userName) {
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({
                 userIds: [userId],
-                shiftIds: shiftIds
+                shiftIds: [shiftId],
+                joinDate: joinDate,
+                assignedPhase: assignedPhase || 'default'
             })
         });
 
         if (response.ok) {
             const result = await response.json();
-            showUserMessage(`✅ Turnos asignados exitosamente a ${userName}. ${result.assigned} asignaciones realizadas.`, 'success');
+            showUserMessage(`✅ Turno asignado exitosamente a ${userName}. Acoplamiento: ${result.joinDate}`, 'success');
             closeUserShiftsModal();
 
-            // ✅ FIX: Reabrir el modal Ver Usuario para mostrar los cambios
+            // Reabrir el modal Ver Usuario para mostrar los cambios
             setTimeout(() => {
                 viewUser(userId);
             }, 300);
         } else {
             const error = await response.json();
-            showUserMessage(`❌ Error: ${error.message}`, 'error');
+            showUserMessage(`❌ Error: ${error.message || error.error}`, 'error');
         }
     } catch (error) {
-        console.error('Error asignando turnos:', error);
-        showUserMessage('❌ Error al asignar turnos', 'error');
+        console.error('Error asignando turno:', error);
+        showUserMessage('❌ Error al asignar turno', 'error');
     }
 }
 
@@ -3840,11 +4541,13 @@ async function startBiometricCapture(userId, employeeId) {
     console.log('📸 [BIOMETRIC] Iniciando captura biométrica para:', { userId, employeeId });
 
     try {
-        // Importar dinámicamente el módulo biometric-simple
-        const { startProfessionalFaceCapture } = await import('./biometric-simple.js');
+        // Verificar que el módulo biometric-simple esté cargado
+        if (!window.BiometricSimple || !window.BiometricSimple.startProfessionalFaceCapture) {
+            throw new Error('Módulo BiometricSimple no disponible');
+        }
 
         // Iniciar la captura profesional con feedback en tiempo real
-        await startProfessionalFaceCapture({
+        await window.BiometricSimple.startProfessionalFaceCapture({
             userId: userId,
             employeeId: employeeId,
             onSuccess: async (capturedData) => {
@@ -3875,10 +4578,13 @@ async function startBiometricCapture(userId, employeeId) {
         });
 
     } catch (error) {
-        console.error('❌ [BIOMETRIC] Error importando módulo:', error);
+        console.error('❌ [BIOMETRIC] Error al iniciar captura:', error);
         showUserMessage('❌ Error al iniciar captura biométrica. Verifique que el módulo esté disponible.', 'error');
     }
 }
+
+// Exponer función globalmente para onclick del botón
+window.startBiometricCapture = startBiometricCapture;
 
 // Cambiar entre tabs del expediente
 window.showFileTab = function(tabName, button) {
@@ -3923,15 +4629,99 @@ window.showFileTab = function(tabName, button) {
             const userId = window.currentViewUserId;
             if (userId && typeof loadMedicalAdvancedData === 'function') {
                 loadMedicalAdvancedData(userId);
+            } else if (!userId) {
+                console.warn('⚠️ [MEDICAL] No hay userId disponible');
+            } else {
+                console.warn('⚠️ [MEDICAL] Función loadMedicalAdvancedData no disponible');
             }
         }
 
-        // Si es el tab laboral, cargar datos salariales avanzados
+        // Si es el tab laboral, cargar datos salariales avanzados e historial de liquidaciones
         if (tabName === 'work') {
             console.log('💼 [SALARY] Cargando datos salariales avanzados...');
             const userId = window.currentViewUserId;
             if (userId && typeof loadSalaryAdvancedData === 'function') {
                 loadSalaryAdvancedData(userId);
+            } else {
+                // Fallback visible: mostrar mensaje en la sección de salario
+                const salaryAmount = document.getElementById('salary-base-amount');
+                if (salaryAmount && salaryAmount.textContent === '$--') {
+                    salaryAmount.innerHTML = '<span style="color: #999; font-size: 14px;">Sin configuración</span>';
+                }
+                console.warn('⚠️ [SALARY] No se pudo cargar configuración salarial');
+            }
+            // Cargar historial de liquidaciones dinámico
+            if (userId && typeof loadUserPayrollHistory === 'function') {
+                console.log('📊 [PAYROLL] Cargando historial de liquidaciones...');
+                loadUserPayrollHistory(userId);
+            } else {
+                // Fallback: mostrar mensaje en lista de historial
+                const historyList = document.getElementById('payroll-history-list');
+                if (historyList) {
+                    historyList.innerHTML = '<p style="text-align: center; color: #999; font-style: italic;">Historial no disponible</p>';
+                }
+            }
+            // Cargar juicios y mediaciones desde SSOT (sección está en tab work)
+            if (typeof loadLegalIssuesFromSSOT === 'function') {
+                console.log('⚖️ [LEGAL-ISSUES] Cargando juicios/mediaciones...');
+                loadLegalIssuesFromSSOT(userId);
+            }
+        }
+
+        // Si es el tab familiar, cargar documentos familiares
+        if (tabName === 'family') {
+            console.log('👨‍👩‍👧‍👦 [FAMILY] Cargando documentos familiares...');
+            const userId = window.currentViewUserId;
+            if (userId && typeof loadFamilyDocuments === 'function') {
+                loadFamilyDocuments(userId);
+            } else {
+                console.warn('⚠️ [FAMILY] No se pudo cargar documentos familiares');
+            }
+        }
+
+        // Si es el tab de asistencias, cargar historial de ausencias médicas
+        if (tabName === 'attendance') {
+            console.log('📅 [ATTENDANCE] Cargando historial de ausencias...');
+            const userId = window.currentViewUserId;
+            if (userId && typeof loadAttendanceHistory === 'function') {
+                loadAttendanceHistory(userId);
+            } else {
+                console.warn('⚠️ [ATTENDANCE] No se pudo cargar historial de asistencias');
+            }
+        }
+
+        // Si es el tab de notificaciones, cargar notificaciones del empleado
+        if (tabName === 'notifications') {
+            console.log('🔔 [NOTIFICATIONS] Cargando notificaciones del empleado...');
+            const userId = window.currentViewUserId;
+            if (userId && typeof loadEmployeeNotifications === 'function') {
+                loadEmployeeNotifications(userId);
+            } else {
+                console.warn('⚠️ [NOTIFICATIONS] No se pudo cargar notificaciones');
+                const container = document.getElementById('employee-notifications-container');
+                if (container) {
+                    container.innerHTML = '<p style="text-align: center; color: #999; font-style: italic;">Notificaciones no disponibles</p>';
+                }
+            }
+        }
+
+        // Si es el tab disciplinario, cargar datos desde SSOT (legal_communications + user_legal_issues)
+        if (tabName === 'disciplinary') {
+            console.log('⚖️ [DISCIPLINARY] Cargando datos legales desde SSOT...');
+            const userId = window.currentViewUserId;
+            if (userId) {
+                // Cargar historial disciplinario desde SSOT (legal_communications)
+                if (typeof loadDisciplinaryFromSSOT === 'function') {
+                    loadDisciplinaryFromSSOT(userId);
+                } else {
+                    console.warn('⚠️ [DISCIPLINARY] Función loadDisciplinaryFromSSOT no disponible');
+                }
+                // Cargar juicios y mediaciones desde SSOT (user_legal_issues)
+                if (typeof loadLegalIssuesFromSSOT === 'function') {
+                    loadLegalIssuesFromSSOT(userId);
+                } else {
+                    console.warn('⚠️ [LEGAL-ISSUES] Función loadLegalIssuesFromSSOT no disponible');
+                }
             }
         }
     } else {
@@ -4030,6 +4820,375 @@ function loadScript(src) {
         };
         document.head.appendChild(script);
     });
+}
+
+// =================== FUNCIONES SSOT - DATOS LEGALES ===================
+
+/**
+ * Cargar historial disciplinario desde SSOT (legal_communications)
+ * Fuente única de verdad: tabla legal_communications con tipo disciplinario
+ */
+async function loadDisciplinaryFromSSOT(userId) {
+    console.log('⚖️ [DISCIPLINARY-SSOT] Cargando historial disciplinario para:', userId);
+
+    const container = document.getElementById('disciplinary-history');
+    if (!container) {
+        console.warn('⚠️ [DISCIPLINARY-SSOT] Container disciplinary-history no encontrado');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+        if (!token) {
+            container.innerHTML = '<p style="color: #999; text-align: center; font-style: italic;">No autenticado</p>';
+            return;
+        }
+
+        // Llamar al endpoint SSOT de comunicaciones legales (disciplinarias)
+        const response = await fetch(`/api/v1/legal/communications?employee_id=${userId}&category=disciplinary`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            // Si el endpoint no existe, intentar fallback
+            console.warn('⚠️ [DISCIPLINARY-SSOT] Endpoint SSOT no disponible, usando fallback');
+            const fallbackResponse = await fetch(`/api/v1/user-admin/${userId}/disciplinary`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                renderDisciplinaryHistory(container, fallbackData.data || []);
+                return;
+            }
+            throw new Error('Error al cargar historial disciplinario');
+        }
+
+        const data = await response.json();
+        const communications = data.data || data.communications || [];
+
+        // Filtrar solo las comunicaciones disciplinarias
+        const disciplinaryRecords = communications.filter(c =>
+            c.communication_type === 'warning' ||
+            c.communication_type === 'reprimand' ||
+            c.communication_type === 'suspension' ||
+            c.category === 'disciplinary'
+        );
+
+        renderDisciplinaryHistory(container, disciplinaryRecords);
+
+        // Actualizar estadísticas si existen los elementos
+        updateDisciplinaryStats(disciplinaryRecords);
+
+    } catch (error) {
+        console.error('❌ [DISCIPLINARY-SSOT] Error:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 15px; color: #dc3545;">
+                <p>Error al cargar historial disciplinario</p>
+                <small>${error.message}</small>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Renderizar historial disciplinario
+ */
+function renderDisciplinaryHistory(container, records) {
+    if (!records || records.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">No hay acciones disciplinarias registradas</p>';
+        return;
+    }
+
+    const TYPE_CONFIG = {
+        warning: { icon: '⚠️', label: 'Amonestación', color: '#ffc107' },
+        reprimand: { icon: '📝', label: 'Apercibimiento', color: '#fd7e14' },
+        suspension: { icon: '🚫', label: 'Suspensión', color: '#dc3545' }
+    };
+
+    let html = '<div style="max-height: 300px; overflow-y: auto;">';
+
+    records.forEach(record => {
+        const type = record.communication_type || record.action_type || 'warning';
+        const config = TYPE_CONFIG[type] || TYPE_CONFIG.warning;
+        const date = record.sent_at || record.date_occurred || record.created_at;
+        const formattedDate = date ? new Date(date).toLocaleDateString('es-ES') : 'Sin fecha';
+
+        html += `
+            <div style="background: #fff; border-left: 4px solid ${config.color}; padding: 12px; margin-bottom: 10px; border-radius: 0 6px 6px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight: bold; color: ${config.color};">
+                        ${config.icon} ${config.label}
+                    </span>
+                    <span style="font-size: 12px; color: #666;">${formattedDate}</span>
+                </div>
+                <div style="font-size: 13px; color: #333;">
+                    <strong>Motivo:</strong> ${record.subject || record.action_taken || record.reason || 'No especificado'}
+                </div>
+                ${record.body || record.description ? `
+                    <div style="font-size: 12px; color: #666; margin-top: 5px; padding: 8px; background: #f8f9fa; border-radius: 4px;">
+                        ${record.body || record.description}
+                    </div>
+                ` : ''}
+                ${record.suspension_days || record.days ? `
+                    <div style="font-size: 12px; color: #dc3545; margin-top: 5px;">
+                        <strong>Días de suspensión:</strong> ${record.suspension_days || record.days}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+/**
+ * Actualizar estadísticas disciplinarias
+ */
+function updateDisciplinaryStats(records) {
+    const warnings = records.filter(r => r.communication_type === 'warning' || r.action_type === 'warning').length;
+    const reprimands = records.filter(r => r.communication_type === 'reprimand' || r.action_type === 'reprimand').length;
+    const suspensions = records.filter(r => r.communication_type === 'suspension' || r.action_type === 'suspension').length;
+    const totalDays = records.reduce((sum, r) => sum + (parseInt(r.suspension_days || r.days || 0)), 0);
+
+    // Actualizar elementos si existen (están en la sección de estadísticas del tab)
+    const statsContainer = document.querySelector('#disciplinary-tab .disciplinary-stats');
+    if (statsContainer) {
+        const statDivs = statsContainer.querySelectorAll('div > strong');
+        if (statDivs[0]) statDivs[0].textContent = warnings;
+        if (statDivs[1]) statDivs[1].textContent = reprimands;
+        if (statDivs[2]) statDivs[2].textContent = suspensions;
+        if (statDivs[3]) statDivs[3].textContent = totalDays;
+    }
+}
+
+/**
+ * Cargar juicios y mediaciones desde SSOT (user_legal_issues)
+ * Fuente única de verdad: tabla user_legal_issues
+ */
+async function loadLegalIssuesFromSSOT(userId) {
+    console.log('⚖️ [LEGAL-ISSUES-SSOT] Cargando juicios/mediaciones para:', userId);
+
+    const container = document.getElementById('legal-issues-list');
+    if (!container) {
+        console.warn('⚠️ [LEGAL-ISSUES-SSOT] Container legal-issues-list no encontrado');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+        if (!token) {
+            container.innerHTML = '<p style="color: #999; text-align: center; font-style: italic; font-size: 12px;">No autenticado</p>';
+            return;
+        }
+
+        // Llamar al endpoint SSOT de juicios laborales
+        const response = await fetch(`/api/v1/legal/issues?user_id=${userId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            console.warn('⚠️ [LEGAL-ISSUES-SSOT] Endpoint no disponible');
+            container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic; font-size: 12px;">Sin antecedentes judiciales</p>';
+            return;
+        }
+
+        const data = await response.json();
+        const issues = data.data || data.issues || [];
+
+        renderLegalIssues(container, issues);
+
+    } catch (error) {
+        console.error('❌ [LEGAL-ISSUES-SSOT] Error:', error);
+        container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic; font-size: 12px;">Sin antecedentes judiciales</p>';
+    }
+}
+
+/**
+ * Renderizar lista de juicios y mediaciones
+ */
+function renderLegalIssues(container, issues) {
+    if (!issues || issues.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic; font-size: 12px;">Sin antecedentes judiciales</p>';
+        return;
+    }
+
+    const TYPE_CONFIG = {
+        lawsuit: { icon: '⚖️', label: 'Juicio', color: '#dc3545' },
+        mediation: { icon: '🤝', label: 'Mediación', color: '#17a2b8' },
+        arbitration: { icon: '👨‍⚖️', label: 'Arbitraje', color: '#6f42c1' },
+        complaint: { icon: '📋', label: 'Denuncia', color: '#fd7e14' }
+    };
+
+    const STATUS_CONFIG = {
+        active: { label: 'Activo', color: '#dc3545', bg: '#f8d7da' },
+        resolved: { label: 'Resuelto', color: '#28a745', bg: '#d4edda' },
+        dismissed: { label: 'Desestimado', color: '#6c757d', bg: '#e2e3e5' }
+    };
+
+    let html = '<div style="max-height: 200px; overflow-y: auto;">';
+
+    issues.forEach(issue => {
+        const type = issue.issue_type || 'lawsuit';
+        const typeConfig = TYPE_CONFIG[type] || TYPE_CONFIG.lawsuit;
+        const status = issue.status || 'active';
+        const statusConfig = STATUS_CONFIG[status] || STATUS_CONFIG.active;
+        const startDate = issue.start_date ? new Date(issue.start_date).toLocaleDateString('es-ES') : 'Sin fecha';
+
+        html += `
+            <div style="background: #fff; border-left: 3px solid ${typeConfig.color}; padding: 10px; margin-bottom: 8px; border-radius: 0 4px 4px 0; font-size: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <span style="font-weight: bold;">${typeConfig.icon} ${typeConfig.label}</span>
+                    <span style="background: ${statusConfig.bg}; color: ${statusConfig.color}; padding: 2px 8px; border-radius: 10px; font-size: 10px;">
+                        ${statusConfig.label}
+                    </span>
+                </div>
+                <div style="color: #666; font-size: 11px;">
+                    <div><strong>Demandante:</strong> ${issue.plaintiff || 'No especificado'}</div>
+                    <div><strong>Inicio:</strong> ${startDate}</div>
+                    ${issue.description ? `<div style="margin-top: 4px;">${issue.description.substring(0, 100)}${issue.description.length > 100 ? '...' : ''}</div>` : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Exponer funciones SSOT globalmente
+window.loadDisciplinaryFromSSOT = loadDisciplinaryFromSSOT;
+window.loadLegalIssuesFromSSOT = loadLegalIssuesFromSSOT;
+
+// Cargar notificaciones del empleado (para ficha de usuario)
+async function loadEmployeeNotifications(userId) {
+    console.log('🔔 [NOTIFICATIONS] Cargando notificaciones para empleado:', userId);
+
+    const container = document.getElementById('employee-notifications-container');
+    if (!container) return;
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+        if (!token) {
+            container.innerHTML = '<p style="color: #999; text-align: center;">No autenticado</p>';
+            return;
+        }
+
+        // Llamar al endpoint de notificaciones del empleado
+        const response = await fetch(`/api/inbox/employee/${userId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al cargar notificaciones');
+        }
+
+        const data = await response.json();
+        const notifications = data.notifications || [];
+
+        // Actualizar estadísticas
+        const total = notifications.length;
+        const unread = notifications.filter(n => parseInt(n.unread_count) > 0).length;
+        const pending = notifications.filter(n => n.status === 'pending').length;
+        const resolved = notifications.filter(n => n.status === 'closed').length;
+
+        document.getElementById('notif-stat-total').textContent = total;
+        document.getElementById('notif-stat-unread').textContent = unread;
+        document.getElementById('notif-stat-pending').textContent = pending;
+        document.getElementById('notif-stat-resolved').textContent = resolved;
+
+        // Renderizar lista de notificaciones
+        if (notifications.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <i class="fas fa-bell-slash" style="font-size: 48px; opacity: 0.5;"></i>
+                    <p style="margin-top: 15px;">No hay notificaciones para este empleado</p>
+                </div>
+            `;
+            return;
+        }
+
+        const GROUP_TYPE_CONFIG = {
+            proactive_vacation_expiry: { icon: '🏖️', label: 'Vacaciones por Vencer', color: '#3498db' },
+            proactive_overtime_limit: { icon: '⏰', label: 'Límite Horas Extra', color: '#e74c3c' },
+            proactive_rest_violation: { icon: '😴', label: 'Violación Descanso', color: '#9b59b6' },
+            proactive_document_expiry: { icon: '📄', label: 'Documentos por Vencer', color: '#f39c12' },
+            proactive_certificate_expiry: { icon: '🏥', label: 'Certificados Médicos', color: '#1abc9c' },
+            proactive_consent_renewal: { icon: '🔐', label: 'Renovar Consentimiento', color: '#34495e' },
+            vacation_request: { icon: '🌴', label: 'Solicitud Vacaciones', color: '#27ae60' },
+            leave_request: { icon: '📝', label: 'Solicitud Licencia', color: '#2980b9' },
+            overtime_request: { icon: '💼', label: 'Solicitud Horas Extra', color: '#8e44ad' },
+            late_arrival: { icon: '🕐', label: 'Llegada Tarde', color: '#e67e22' },
+            shift_swap: { icon: '🔄', label: 'Cambio de Turno', color: '#16a085' },
+            training_mandatory: { icon: '📚', label: 'Capacitación', color: '#2c3e50' },
+            system_alert: { icon: '⚠️', label: 'Alerta Sistema', color: '#c0392b' },
+            announcement: { icon: '📢', label: 'Anuncio', color: '#16a085' },
+            default: { icon: '🔔', label: 'Notificación', color: '#95a5a6' }
+        };
+
+        const PRIORITY_COLORS = {
+            critical: '#c0392b',
+            high: '#e67e22',
+            medium: '#f1c40f',
+            normal: '#27ae60',
+            low: '#95a5a6'
+        };
+
+        container.innerHTML = notifications.map(notif => {
+            const config = GROUP_TYPE_CONFIG[notif.group_type] || GROUP_TYPE_CONFIG.default;
+            const priorityColor = PRIORITY_COLORS[notif.priority] || PRIORITY_COLORS.normal;
+            const isUnread = parseInt(notif.unread_count) > 0;
+            const date = new Date(notif.last_message_at || notif.created_at);
+            const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+            return `
+                <div style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;
+                            ${isUnread ? 'background: #fff8e1; border-left: 3px solid #ff9800;' : ''}"
+                     onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='${isUnread ? '#fff8e1' : 'white'}'">
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 8px; background: ${config.color}20;
+                                    display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                            ${config.icon}
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <strong style="color: #333;">${notif.subject || 'Sin asunto'}</strong>
+                                <span style="font-size: 11px; color: #999;">${dateStr}</span>
+                            </div>
+                            <p style="margin: 5px 0; font-size: 13px; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                ${notif.last_message || 'Sin mensajes'}
+                            </p>
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <span style="font-size: 11px; padding: 2px 8px; border-radius: 10px; background: ${config.color}20; color: ${config.color};">
+                                    ${config.label}
+                                </span>
+                                <span style="font-size: 11px; padding: 2px 8px; border-radius: 10px; background: ${priorityColor}20; color: ${priorityColor};">
+                                    ${notif.priority}
+                                </span>
+                                ${isUnread ? `<span style="font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #f44336; color: white;">${notif.unread_count} nuevos</span>` : ''}
+                                <span style="font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #eee; color: #666;">
+                                    💬 ${notif.message_count || 0}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error('❌ [NOTIFICATIONS] Error:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #e74c3c;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 48px;"></i>
+                <p style="margin-top: 15px;">Error al cargar notificaciones</p>
+                <p style="font-size: 12px; color: #666;">${error.message}</p>
+                <button onclick="loadEmployeeNotifications('${userId}')" class="btn btn-outline-primary btn-sm" style="margin-top: 10px;">
+                    🔄 Reintentar
+                </button>
+            </div>
+        `;
+    }
 }
 
 // Cargar datos iniciales del expediente
@@ -4502,14 +5661,121 @@ function addMedicalRecord(userId) {
 
 // =================== FUNCIONES DE ASISTENCIA Y PERMISOS ===================
 
-function loadAttendanceHistory(userId) {
+async function loadAttendanceHistory(userId) {
     console.log('📊 [ATTENDANCE] Cargando historial de asistencias:', userId);
-    // Integrar con el sistema de asistencias existente
-    showUserMessage('🔧 Función en desarrollo: Historial de Asistencias', 'info');
+
+    const container = document.getElementById('attendance-history');
+    if (!container) return;
+
+    container.innerHTML = '<p style="text-align: center; color: #666;"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</p>';
+
+    try {
+        const response = await fetch(`/api/medical-cases/employee/${userId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al cargar historial de ausencias');
+        }
+
+        const data = await response.json();
+        const cases = data.cases || [];
+
+        if (cases.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">No hay ausencias registradas</p>';
+            return;
+        }
+
+        // Generate table
+        let html = `
+            <table class="table table-hover" style="font-size: 13px;">
+                <thead style="background: #f8f9fa;">
+                    <tr>
+                        <th style="width: 15%;">Fecha Inicio</th>
+                        <th style="width: 15%;">Tipo de Ausencia</th>
+                        <th style="width: 10%;">Días</th>
+                        <th style="width: 20%;">Estado</th>
+                        <th style="width: 20%;">Médico Asignado</th>
+                        <th style="width: 10%;">Mensajes</th>
+                        <th style="width: 10%;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        cases.forEach(c => {
+            const statusBadge = getAbsenceCaseStatusBadge(c.case_status);
+            const typeBadge = getAbsenceTypeBadge(c.absence_type);
+            const doctorName = c.doctor_name || 'Sin asignar';
+            const unreadCount = c.unread_messages || 0;
+            const messagesBadge = unreadCount > 0
+                ? `<span class="badge badge-danger">${unreadCount} nuevos</span>`
+                : `<span class="badge badge-secondary">${c.total_messages || 0}</span>`;
+
+            html += `
+                <tr>
+                    <td>${formatDateShort(c.start_date)}</td>
+                    <td>${typeBadge}</td>
+                    <td>${c.requested_days} días</td>
+                    <td>${statusBadge}</td>
+                    <td style="font-size: 12px;">${doctorName}</td>
+                    <td>${messagesBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="viewAbsenceCase('${c.id}')" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('❌ [ATTENDANCE] Error:', error);
+        container.innerHTML = `<p style="text-align: center; color: #dc3545;">❌ Error al cargar historial: ${error.message}</p>`;
+    }
+}
+
+// Helper functions for badges
+function getAbsenceCaseStatusBadge(status) {
+    const badges = {
+        'pending': '<span class="badge badge-warning">⏳ Pendiente</span>',
+        'under_review': '<span class="badge badge-info">🔍 En Revisión</span>',
+        'awaiting_docs': '<span class="badge badge-warning">📄 Esperando Docs</span>',
+        'needs_follow_up': '<span class="badge badge-primary">🩺 Seguimiento</span>',
+        'justified': '<span class="badge badge-success">✅ Justificada</span>',
+        'not_justified': '<span class="badge badge-danger">❌ No Justificada</span>',
+        'closed': '<span class="badge badge-secondary">🔒 Cerrada</span>'
+    };
+    return badges[status] || `<span class="badge badge-secondary">${status}</span>`;
+}
+
+function getAbsenceTypeBadge(type) {
+    const types = {
+        'medical_illness': '<span class="badge badge-info">🩺 Enfermedad Común</span>',
+        'work_accident': '<span class="badge badge-danger">🚑 Accidente Laboral</span>',
+        'non_work_accident': '<span class="badge badge-warning">🤕 Accidente No Laboral</span>',
+        'occupational_disease': '<span class="badge badge-danger">⚠️ Enfermedad Profesional</span>',
+        'maternity': '<span class="badge badge-primary">🤱 Maternidad</span>',
+        'family_care': '<span class="badge badge-info">👨‍👩‍👧 Cuidado Familiar</span>',
+        'authorized_leave': '<span class="badge badge-success">✅ Licencia Autorizada</span>',
+        'unauthorized': '<span class="badge badge-secondary">❌ Injustificada</span>'
+    };
+    return types[type] || `<span class="badge badge-secondary">${type}</span>`;
+}
+
+function formatDateShort(dateStr) {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function addPermissionRequest(userId) {
-    console.log('📅 [PERMISSIONS] Agregando solicitud de permiso:', userId);
+    console.log('📅 [PERMISSIONS] Agregando solicitud de ausencia:', userId);
 
     const modal = document.createElement('div');
     modal.id = 'permissionRequestModal';
@@ -4520,46 +5786,51 @@ function addPermissionRequest(userId) {
     `;
 
     modal.innerHTML = `
-        <div style="background: white; padding: 20px; border-radius: 8px; width: 600px; max-height: 90vh; overflow-y: auto;">
-            <h4>📅 Agregar Solicitud de Permiso</h4>
-            <form id="permissionRequestForm">
+        <div style="background: white; padding: 20px; border-radius: 8px; width: 700px; max-height: 90vh; overflow-y: auto;">
+            <h4>🩺 Registrar Ausencia Médica</h4>
+            <form id="permissionRequestForm" enctype="multipart/form-data">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div style="margin: 10px 0;">
-                        <label>Tipo de Permiso:</label>
-                        <select id="requestType" class="form-control" required>
+                        <label><strong>Tipo de Ausencia:</strong></label>
+                        <select id="absenceType" class="form-control" required>
                             <option value="">Seleccionar...</option>
-                            <option value="vacaciones">Vacaciones</option>
-                            <option value="licencia_medica">Licencia Médica</option>
-                            <option value="permiso_personal">Permiso Personal</option>
-                            <option value="estudio">Estudio</option>
-                            <option value="duelo">Duelo</option>
-                            <option value="maternidad">Maternidad</option>
-                            <option value="paternidad">Paternidad</option>
-                            <option value="otro">Otro</option>
+                            <option value="medical_illness">🩺 Enfermedad Común</option>
+                            <option value="work_accident">🚑 Accidente Laboral</option>
+                            <option value="non_work_accident">🤕 Accidente No Laboral</option>
+                            <option value="occupational_disease">⚠️ Enfermedad Profesional</option>
+                            <option value="maternity">🤱 Maternidad</option>
+                            <option value="family_care">👨‍👩‍👧 Cuidado Familiar</option>
+                            <option value="authorized_leave">✅ Licencia Autorizada</option>
+                            <option value="unauthorized">❌ Ausencia Injustificada</option>
                         </select>
                     </div>
                     <div style="margin: 10px 0;">
-                        <label>Días Totales:</label>
-                        <input type="number" id="totalDays" class="form-control" min="1" required>
+                        <label><strong>Días Solicitados:</strong></label>
+                        <input type="number" id="requestedDays" class="form-control" min="1" required>
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div style="margin: 10px 0;">
-                        <label>Fecha Inicio:</label>
+                        <label><strong>Fecha Inicio:</strong></label>
                         <input type="date" id="startDate" class="form-control" required>
                     </div>
                     <div style="margin: 10px 0;">
-                        <label>Fecha Fin:</label>
-                        <input type="date" id="endDate" class="form-control" required>
+                        <label><strong>Fecha Fin (opcional):</strong></label>
+                        <input type="date" id="endDate" class="form-control">
                     </div>
                 </div>
                 <div style="margin: 10px 0;">
-                    <label>Motivo:</label>
-                    <textarea id="permissionReason" class="form-control" rows="4" required></textarea>
+                    <label><strong>Descripción del Empleado:</strong></label>
+                    <textarea id="employeeDescription" class="form-control" rows="4" placeholder="Describa los síntomas, motivo de la ausencia, etc." required></textarea>
+                </div>
+                <div style="margin: 10px 0;">
+                    <label><strong>Adjuntar Documentos (opcional):</strong></label>
+                    <input type="file" id="attachments" class="form-control" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                    <small style="color: #666; font-size: 11px;">Certificados médicos, fotos, etc. (máx. 5 archivos, 10MB cada uno)</small>
                 </div>
                 <div style="text-align: right; margin-top: 15px;">
                     <button type="button" onclick="closeModal('permissionRequestModal')" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Solicitar</button>
+                    <button type="submit" class="btn btn-success">📤 Registrar Ausencia</button>
                 </div>
             </form>
         </div>
@@ -4570,7 +5841,7 @@ function addPermissionRequest(userId) {
     // Auto-calculate days
     const startInput = document.getElementById('startDate');
     const endInput = document.getElementById('endDate');
-    const daysInput = document.getElementById('totalDays');
+    const daysInput = document.getElementById('requestedDays');
 
     const calculateDays = () => {
         if (startInput.value && endInput.value) {
@@ -4589,40 +5860,197 @@ function addPermissionRequest(userId) {
         e.preventDefault();
 
         try {
-            const formData = {
-                request_type: document.getElementById('requestType').value,
-                start_date: document.getElementById('startDate').value,
-                end_date: document.getElementById('endDate').value,
-                total_days: parseInt(document.getElementById('totalDays').value),
-                reason: document.getElementById('permissionReason').value
-            };
+            const formData = new FormData();
+            formData.append('employee_id', userId);
+            formData.append('absence_type', document.getElementById('absenceType').value);
+            formData.append('start_date', document.getElementById('startDate').value);
 
-            const response = await fetch(`/api/v1/user-admin/${userId}/permissions`, {
+            const endDate = document.getElementById('endDate').value;
+            if (endDate) {
+                formData.append('end_date', endDate);
+            }
+
+            formData.append('requested_days', parseInt(document.getElementById('requestedDays').value));
+            formData.append('employee_description', document.getElementById('employeeDescription').value);
+
+            // Add attachments
+            const attachmentsInput = document.getElementById('attachments');
+            if (attachmentsInput.files.length > 0) {
+                for (let i = 0; i < attachmentsInput.files.length; i++) {
+                    formData.append('attachments', attachmentsInput.files[i]);
+                }
+            }
+
+            const response = await fetch('/api/medical-cases', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
-                body: JSON.stringify(formData)
+                body: formData
             });
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || 'Error al procesar solicitud');
+                throw new Error(error.error || 'Error al registrar ausencia');
             }
 
+            const result = await response.json();
             closeModal('permissionRequestModal');
-            showUserMessage('✅ Solicitud de permiso registrada exitosamente', 'success');
+            showUserMessage('✅ Ausencia registrada exitosamente. Se notificó al médico asignado.', 'success');
 
-            // Reload permissions if function exists
-            if (typeof loadPermissionRequests === 'function') {
-                loadPermissionRequests(userId);
-            }
+            // Reload attendance history
+            loadAttendanceHistory(userId);
         } catch (error) {
-            console.error('❌ [PERMISSIONS] Error:', error);
+            console.error('❌ [MEDICAL-CASES] Error:', error);
             showUserMessage(`❌ Error: ${error.message}`, 'error');
         }
     };
+}
+
+// View absence case details
+async function viewAbsenceCase(caseId) {
+    console.log('👁️ [MEDICAL-CASES] Viewing case:', caseId);
+
+    const modal = document.createElement('div');
+    modal.id = 'absenceCaseModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 8px; width: 900px; max-height: 90vh; overflow-y: auto;">
+            <h4>🩺 Detalles del Expediente Médico</h4>
+            <div id="caseDetailsContent" style="text-align: center; padding: 40px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #666;"></i>
+                <p style="margin-top: 15px; color: #666;">Cargando detalles...</p>
+            </div>
+            <div style="text-align: right; margin-top: 15px;">
+                <button type="button" onclick="closeModal('absenceCaseModal')" class="btn btn-secondary">Cerrar</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    try {
+        const response = await fetch(`/api/medical-cases/${caseId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al cargar detalles del expediente');
+        }
+
+        const data = await response.json();
+        const caseData = data.case;
+        const messages = data.messages || [];
+
+        let html = `
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; font-size: 13px;">
+                    <div>
+                        <strong>Tipo:</strong><br>
+                        ${getAbsenceTypeBadge(caseData.absence_type)}
+                    </div>
+                    <div>
+                        <strong>Estado:</strong><br>
+                        ${getAbsenceCaseStatusBadge(caseData.case_status)}
+                    </div>
+                    <div>
+                        <strong>Fecha Inicio:</strong><br>
+                        ${formatDateShort(caseData.start_date)}
+                    </div>
+                    <div>
+                        <strong>Días Solicitados:</strong><br>
+                        ${caseData.requested_days} días
+                    </div>
+                    <div>
+                        <strong>Días Aprobados:</strong><br>
+                        ${caseData.approved_days || 'Pendiente'}
+                    </div>
+                    <div>
+                        <strong>Médico Asignado:</strong><br>
+                        ${caseData.doctor_name || 'Sin asignar'}
+                    </div>
+                </div>
+            </div>
+
+            ${caseData.employee_description ? `
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h5 style="margin-top: 0;">📝 Descripción del Empleado:</h5>
+                    <p style="margin: 0; white-space: pre-wrap;">${caseData.employee_description}</p>
+                </div>
+            ` : ''}
+
+            ${caseData.final_diagnosis ? `
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h5 style="margin-top: 0;">🩺 Diagnóstico Médico:</h5>
+                    <p style="margin: 0; white-space: pre-wrap;">${caseData.final_diagnosis}</p>
+                    ${caseData.is_justified !== null ? `
+                        <div style="margin-top: 10px;">
+                            <strong>Justificación:</strong>
+                            <span class="badge ${caseData.is_justified ? 'badge-success' : 'badge-danger'}">
+                                ${caseData.is_justified ? '✅ Justificada' : '❌ No Justificada'}
+                            </span>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : ''}
+
+            <div style="background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px;">
+                <h5 style="margin-top: 0;">💬 Comunicaciones (${messages.length})</h5>
+                <div style="max-height: 400px; overflow-y: auto;">
+        `;
+
+        if (messages.length === 0) {
+            html += '<p style="text-align: center; color: #666; font-style: italic; padding: 20px;">No hay mensajes aún</p>';
+        } else {
+            messages.forEach(msg => {
+                const isDoctor = msg.sender_type === 'doctor';
+                const isSystem = msg.sender_type === 'system';
+                const bgColor = isSystem ? '#f5f5f5' : (isDoctor ? '#e3f2fd' : '#fff3cd');
+                const icon = isSystem ? '🤖' : (isDoctor ? '👨‍⚕️' : '👤');
+                const sender = msg.sender_name || msg.sender_type;
+
+                html += `
+                    <div style="background: ${bgColor}; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid ${isDoctor ? '#2196f3' : (isSystem ? '#999' : '#ffc107')};">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <strong>${icon} ${sender}</strong>
+                            <span style="font-size: 11px; color: #666;">${formatDateShort(msg.created_at)}</span>
+                        </div>
+                        <p style="margin: 0; white-space: pre-wrap; font-size: 13px;">${msg.message}</p>
+                        ${msg.attachments && msg.attachments.length > 0 ? `
+                            <div style="margin-top: 8px; font-size: 12px;">
+                                <strong>📎 Adjuntos:</strong>
+                                ${msg.attachments.map(att => `
+                                    <a href="${att.url}" target="_blank" style="display: inline-block; margin-right: 10px;">
+                                        ${att.filename}
+                                    </a>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        document.getElementById('caseDetailsContent').innerHTML = html;
+
+    } catch (error) {
+        console.error('❌ [MEDICAL-CASES] Error:', error);
+        document.getElementById('caseDetailsContent').innerHTML = `
+            <p style="text-align: center; color: #dc3545;">❌ Error al cargar detalles: ${error.message}</p>
+        `;
+    }
 }
 
 // =================== FUNCIONES DISCIPLINARIAS ===================
@@ -5066,11 +6494,50 @@ function addLegalIssue(userId) {
     `;
     
     document.body.appendChild(modal);
-    
-    document.getElementById('legalIssueForm').onsubmit = (e) => {
+
+    document.getElementById('legalIssueForm').onsubmit = async (e) => {
         e.preventDefault();
-        closeModal('legalIssueModal');
-        showUserMessage('✅ Antecedente judicial registrado', 'success');
+
+        try {
+            const formData = {
+                user_id: userId,
+                issue_type: document.getElementById('legalType').value || 'lawsuit',
+                status: document.getElementById('legalStatus').value || 'active',
+                plaintiff: document.getElementById('plaintiff').value || null,
+                start_date: document.getElementById('startDate').value || null,
+                resolution_date: document.getElementById('resolutionDate').value || null,
+                description: document.getElementById('description').value || null,
+                resolution: document.getElementById('resolution').value || null
+            };
+
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+
+            // Usar endpoint SSOT para guardar en user_legal_issues
+            const response = await fetch('/api/v1/legal/issues', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Error al registrar antecedente judicial');
+            }
+
+            closeModal('legalIssueModal');
+            showUserMessage('✅ Antecedente judicial registrado exitosamente', 'success');
+
+            // Recargar lista de juicios desde SSOT
+            if (typeof loadLegalIssuesFromSSOT === 'function') {
+                loadLegalIssuesFromSSOT(userId);
+            }
+        } catch (error) {
+            console.error('❌ [LEGAL-ISSUE] Error:', error);
+            showUserMessage(`❌ Error: ${error.message}`, 'error');
+        }
     };
 }
 
@@ -6495,6 +7962,527 @@ function addWorkRestriction(userId) {
 }
 
 // ============================================================================
+// FUNCIONES DE DOCUMENTOS FAMILIARES - Certificados, dependencias de conceptos
+// ============================================================================
+
+// Variable global para almacenar las dependencias disponibles
+let availableDependencies = [];
+
+/**
+ * Cargar tipos de dependencias disponibles de la empresa
+ */
+async function loadAvailableDependencies() {
+    try {
+        const response = await fetch('/api/v1/concept-dependencies/company', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            availableDependencies = data.success ? data.data : [];
+        }
+    } catch (error) {
+        console.error('[FAMILY-DOCS] Error loading dependencies:', error);
+        availableDependencies = [];
+    }
+}
+
+/**
+ * Agregar un documento/certificado familiar
+ */
+async function addFamilyDocument(userId) {
+    console.log('[FAMILY-DOCS] Agregando documento para usuario:', userId);
+
+    // Cargar dependencias disponibles si no están cargadas
+    if (availableDependencies.length === 0) {
+        await loadAvailableDependencies();
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'familyDocumentModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    const dependencyOptions = availableDependencies.map(dep =>
+        `<option value="${dep.id}">${dep.dependency_name} (${dep.dependency_code})</option>`
+    ).join('');
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 8px; width: 650px; max-height: 90vh; overflow-y: auto;">
+            <h4 style="color: #e65100; margin-bottom: 20px;">📄 Cargar Documento / Certificado Familiar</h4>
+            <form id="familyDocumentForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-weight: bold;">Tipo de Documento *</label>
+                        <select id="docDependencyId" class="form-control" required>
+                            <option value="">Seleccionar tipo...</option>
+                            ${dependencyOptions}
+                        </select>
+                        <small style="color: #666;">Define qué tipo de certificado/documento es</small>
+                    </div>
+                    <div>
+                        <label style="font-weight: bold;">Miembro Familiar</label>
+                        <select id="docFamilyMemberType" class="form-control">
+                            <option value="">Empleado directo</option>
+                            <option value="CHILD">Hijo/a</option>
+                            <option value="SPOUSE">Cónyuge</option>
+                            <option value="PARENT">Padre/Madre</option>
+                            <option value="SIBLING">Hermano/a</option>
+                            <option value="OTHER">Otro familiar</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="familyMemberNameSection" style="display: none; margin-bottom: 15px;">
+                    <label style="font-weight: bold;">Nombre del Familiar</label>
+                    <input type="text" id="docFamilyMemberName" class="form-control" placeholder="Nombre completo del familiar">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-weight: bold;">Fecha de Emisión *</label>
+                        <input type="date" id="docIssueDate" class="form-control" required>
+                    </div>
+                    <div>
+                        <label style="font-weight: bold;">Fecha de Vencimiento</label>
+                        <input type="date" id="docExpirationDate" class="form-control">
+                        <small style="color: #666;">Dejar vacío si no vence</small>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold;">Número de Documento/Referencia</label>
+                    <input type="text" id="docDocumentNumber" class="form-control" placeholder="Ej: CERT-2024-00123">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold;">Entidad Emisora</label>
+                    <input type="text" id="docIssuer" class="form-control" placeholder="Ej: Ministerio de Educación, Colegio San Martín">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold;">Archivo del Documento</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="file" id="docFile" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="flex: 1;">
+                        <button type="button" id="uploadDocBtn" class="btn btn-info btn-sm" style="white-space: nowrap;">
+                            <i class="fa fa-upload"></i> Subir
+                        </button>
+                    </div>
+                    <div id="uploadStatus" style="margin-top: 5px; font-size: 11px;"></div>
+                    <input type="hidden" id="docFileUrl" value="">
+                    <small style="color: #666;">Formatos: PDF, JPG, PNG, DOC (max 5MB)</small>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold;">Notas Adicionales</label>
+                    <textarea id="docNotes" class="form-control" rows="2" placeholder="Observaciones sobre el documento..."></textarea>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" onclick="closeModal('familyDocumentModal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-warning" style="background: #ff9800; border: none;">Guardar Documento</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Mostrar/ocultar nombre de familiar según selección
+    document.getElementById('docFamilyMemberType').onchange = function() {
+        const nameSection = document.getElementById('familyMemberNameSection');
+        nameSection.style.display = this.value ? 'block' : 'none';
+    };
+
+    // Handler para upload de archivo
+    document.getElementById('uploadDocBtn').onclick = async function() {
+        const fileInput = document.getElementById('docFile');
+        const statusDiv = document.getElementById('uploadStatus');
+        const fileUrlInput = document.getElementById('docFileUrl');
+
+        if (!fileInput.files || fileInput.files.length === 0) {
+            statusDiv.innerHTML = '<span style="color: #dc3545;">Selecciona un archivo primero</span>';
+            return;
+        }
+
+        const file = fileInput.files[0];
+
+        // Validar tamaño (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            statusDiv.innerHTML = '<span style="color: #dc3545;">El archivo excede 5MB</span>';
+            return;
+        }
+
+        // Mostrar estado de carga
+        this.disabled = true;
+        statusDiv.innerHTML = '<span style="color: #17a2b8;"><i class="fa fa-spinner fa-spin"></i> Subiendo archivo...</span>';
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/api/v1/upload/single', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || 'Error al subir archivo');
+            }
+
+            // Guardar URL del archivo
+            fileUrlInput.value = result.file.url;
+            statusDiv.innerHTML = `<span style="color: #28a745;"><i class="fa fa-check"></i> Archivo subido: ${result.file.filename}</span>`;
+            console.log('[FAMILY-DOCS] Archivo subido:', result.file.url);
+
+        } catch (error) {
+            console.error('[FAMILY-DOCS] Error upload:', error);
+            statusDiv.innerHTML = `<span style="color: #dc3545;"><i class="fa fa-times"></i> ${error.message}</span>`;
+        } finally {
+            this.disabled = false;
+        }
+    };
+
+    // Form submit handler
+    document.getElementById('familyDocumentForm').onsubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const formData = {
+                dependency_id: parseInt(document.getElementById('docDependencyId').value),
+                family_member_type: document.getElementById('docFamilyMemberType').value || null,
+                family_member_name: document.getElementById('docFamilyMemberName').value || null,
+                issue_date: document.getElementById('docIssueDate').value,
+                expiration_date: document.getElementById('docExpirationDate').value || null,
+                document_number: document.getElementById('docDocumentNumber').value || null,
+                issuer: document.getElementById('docIssuer').value || null,
+                file_url: document.getElementById('docFileUrl').value || null,
+                notes: document.getElementById('docNotes').value || null
+            };
+
+            const response = await fetch(`/api/v1/concept-dependencies/documents/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Error al guardar documento');
+            }
+
+            closeModal('familyDocumentModal');
+            showUserMessage('Documento guardado exitosamente', 'success');
+            await loadFamilyDocuments(userId);
+
+        } catch (error) {
+            console.error('[FAMILY-DOCS] Error:', error);
+            showUserMessage(`Error: ${error.message}`, 'error');
+        }
+    };
+}
+
+/**
+ * Cargar documentos familiares del usuario
+ */
+async function loadFamilyDocuments(userId) {
+    console.log('[FAMILY-DOCS] Cargando documentos para:', userId);
+
+    const listContainer = document.getElementById('family-documents-list');
+    const statsContainer = document.getElementById('family-documents-stats');
+
+    if (!listContainer) {
+        console.warn('[FAMILY-DOCS] Container no encontrado');
+        return;
+    }
+
+    try {
+        listContainer.innerHTML = '<p style="text-align: center; color: #666;">Cargando documentos...</p>';
+
+        const response = await fetch(`/api/v1/concept-dependencies/documents/${userId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al cargar documentos');
+        }
+
+        const result = await response.json();
+        const documents = result.success ? result.data : [];
+
+        renderFamilyDocuments(documents, userId);
+
+    } catch (error) {
+        console.error('[FAMILY-DOCS] Error cargando:', error);
+        listContainer.innerHTML = '<p style="text-align: center; color: #dc3545;">Error al cargar documentos</p>';
+    }
+}
+
+/**
+ * Renderizar documentos familiares en la UI
+ */
+function renderFamilyDocuments(documents, userId) {
+    const listContainer = document.getElementById('family-documents-list');
+    const statsContainer = document.getElementById('family-documents-stats');
+
+    if (!documents || documents.length === 0) {
+        listContainer.innerHTML = '<p style="text-align: center; color: #666; font-style: italic; font-size: 12px;">No hay documentos cargados</p>';
+        if (statsContainer) statsContainer.style.display = 'none';
+        return;
+    }
+
+    // Calcular estadísticas
+    const stats = {
+        valid: documents.filter(d => d.status === 'VALID').length,
+        expiring: documents.filter(d => d.status === 'EXPIRING_SOON').length,
+        expired: documents.filter(d => d.status === 'EXPIRED').length,
+        total: documents.length
+    };
+
+    // Actualizar stats
+    if (statsContainer) {
+        statsContainer.style.display = 'block';
+        document.getElementById('docs-valid-count').textContent = stats.valid;
+        document.getElementById('docs-expiring-count').textContent = stats.expiring;
+        document.getElementById('docs-expired-count').textContent = stats.expired;
+        document.getElementById('docs-total-count').textContent = stats.total;
+    }
+
+    // Renderizar lista de documentos
+    const getStatusBadge = (status) => {
+        const badges = {
+            'VALID': '<span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px;">Vigente</span>',
+            'EXPIRING_SOON': '<span style="background: #ff9800; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px;">Por Vencer</span>',
+            'EXPIRED': '<span style="background: #f44336; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px;">Vencido</span>',
+            'PENDING_REVIEW': '<span style="background: #2196f3; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px;">En Revisión</span>'
+        };
+        return badges[status] || badges['PENDING_REVIEW'];
+    };
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString('es-AR');
+    };
+
+    listContainer.innerHTML = documents.map(doc => `
+        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; margin-bottom: 10px; background: white;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; color: #333; margin-bottom: 4px;">
+                        ${doc.dependency?.dependency_name || 'Documento'} ${getStatusBadge(doc.status)}
+                    </div>
+                    <div style="font-size: 12px; color: #666;">
+                        ${doc.family_member_type ? `<strong>Familiar:</strong> ${doc.family_member_name || doc.family_member_type} | ` : ''}
+                        <strong>Emisión:</strong> ${formatDate(doc.issue_date)}
+                        ${doc.expiration_date ? ` | <strong>Vence:</strong> ${formatDate(doc.expiration_date)}` : ' | <em>Sin vencimiento</em>'}
+                    </div>
+                    ${doc.document_number ? `<div style="font-size: 11px; color: #888; margin-top: 4px;">Ref: ${doc.document_number}</div>` : ''}
+                    ${doc.issuer ? `<div style="font-size: 11px; color: #888;">Emisor: ${doc.issuer}</div>` : ''}
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    ${doc.file_url ? `<a href="${doc.file_url}" target="_blank" class="btn btn-sm btn-outline-primary" title="Ver documento">📄</a>` : ''}
+                    <button onclick="editFamilyDocument(${doc.id}, '${userId}')" class="btn btn-sm btn-outline-secondary" title="Editar">✏️</button>
+                    <button onclick="deleteFamilyDocument(${doc.id}, '${userId}')" class="btn btn-sm btn-outline-danger" title="Eliminar">🗑️</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+/**
+ * Eliminar documento familiar
+ */
+async function deleteFamilyDocument(documentId, userId) {
+    if (!confirm('¿Está seguro de eliminar este documento?')) return;
+
+    try {
+        const response = await fetch(`/api/v1/concept-dependencies/documents/${documentId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (!response.ok) {
+            const result = await response.json();
+            throw new Error(result.error || 'Error al eliminar');
+        }
+
+        showUserMessage('Documento eliminado', 'success');
+        await loadFamilyDocuments(userId);
+
+    } catch (error) {
+        console.error('[FAMILY-DOCS] Error eliminando:', error);
+        showUserMessage(`Error: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Editar documento familiar
+ */
+async function editFamilyDocument(documentId, userId) {
+    console.log('[FAMILY-DOCS] Editando documento:', documentId);
+
+    // Cargar dependencias si no están cargadas
+    if (availableDependencies.length === 0) {
+        await loadAvailableDependencies();
+    }
+
+    // Obtener datos actuales del documento
+    try {
+        const response = await fetch(`/api/v1/concept-dependencies/documents/${userId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (!response.ok) throw new Error('Error al cargar documento');
+
+        const result = await response.json();
+        const doc = result.data?.find(d => d.id === documentId);
+
+        if (!doc) throw new Error('Documento no encontrado');
+
+        const modal = document.createElement('div');
+        modal.id = 'editFamilyDocumentModal';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+            align-items: center; z-index: 10001;
+        `;
+
+        const dependencyOptions = availableDependencies.map(dep =>
+            `<option value="${dep.id}" ${dep.id === doc.dependency_id ? 'selected' : ''}>${dep.dependency_name}</option>`
+        ).join('');
+
+        modal.innerHTML = `
+            <div style="background: white; padding: 20px; border-radius: 8px; width: 650px; max-height: 90vh; overflow-y: auto;">
+                <h4 style="color: #e65100; margin-bottom: 20px;">📄 Editar Documento</h4>
+                <form id="editFamilyDocumentForm">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="font-weight: bold;">Tipo de Documento *</label>
+                            <select id="editDocDependencyId" class="form-control" required>
+                                ${dependencyOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-weight: bold;">Miembro Familiar</label>
+                            <select id="editDocFamilyMemberType" class="form-control">
+                                <option value="" ${!doc.family_member_type ? 'selected' : ''}>Empleado directo</option>
+                                <option value="CHILD" ${doc.family_member_type === 'CHILD' ? 'selected' : ''}>Hijo/a</option>
+                                <option value="SPOUSE" ${doc.family_member_type === 'SPOUSE' ? 'selected' : ''}>Cónyuge</option>
+                                <option value="PARENT" ${doc.family_member_type === 'PARENT' ? 'selected' : ''}>Padre/Madre</option>
+                                <option value="SIBLING" ${doc.family_member_type === 'SIBLING' ? 'selected' : ''}>Hermano/a</option>
+                                <option value="OTHER" ${doc.family_member_type === 'OTHER' ? 'selected' : ''}>Otro familiar</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px; ${doc.family_member_type ? '' : 'display: none;'}" id="editFamilyMemberNameSection">
+                        <label style="font-weight: bold;">Nombre del Familiar</label>
+                        <input type="text" id="editDocFamilyMemberName" class="form-control" value="${doc.family_member_name || ''}">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="font-weight: bold;">Fecha de Emisión *</label>
+                            <input type="date" id="editDocIssueDate" class="form-control" value="${doc.issue_date?.split('T')[0] || ''}" required>
+                        </div>
+                        <div>
+                            <label style="font-weight: bold;">Fecha de Vencimiento</label>
+                            <input type="date" id="editDocExpirationDate" class="form-control" value="${doc.expiration_date?.split('T')[0] || ''}">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight: bold;">Número de Documento/Referencia</label>
+                        <input type="text" id="editDocDocumentNumber" class="form-control" value="${doc.document_number || ''}">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight: bold;">Entidad Emisora</label>
+                        <input type="text" id="editDocIssuer" class="form-control" value="${doc.issuer || ''}">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight: bold;">URL del Archivo</label>
+                        <input type="url" id="editDocFileUrl" class="form-control" value="${doc.file_url || ''}">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight: bold;">Notas</label>
+                        <textarea id="editDocNotes" class="form-control" rows="2">${doc.notes || ''}</textarea>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                        <button type="button" onclick="closeModal('editFamilyDocumentModal')" class="btn btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn btn-warning" style="background: #ff9800; border: none;">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById('editDocFamilyMemberType').onchange = function() {
+            document.getElementById('editFamilyMemberNameSection').style.display = this.value ? 'block' : 'none';
+        };
+
+        document.getElementById('editFamilyDocumentForm').onsubmit = async (e) => {
+            e.preventDefault();
+
+            try {
+                const formData = {
+                    dependency_id: parseInt(document.getElementById('editDocDependencyId').value),
+                    family_member_type: document.getElementById('editDocFamilyMemberType').value || null,
+                    family_member_name: document.getElementById('editDocFamilyMemberName').value || null,
+                    issue_date: document.getElementById('editDocIssueDate').value,
+                    expiration_date: document.getElementById('editDocExpirationDate').value || null,
+                    document_number: document.getElementById('editDocDocumentNumber').value || null,
+                    issuer: document.getElementById('editDocIssuer').value || null,
+                    file_url: document.getElementById('editDocFileUrl').value || null,
+                    notes: document.getElementById('editDocNotes').value || null
+                };
+
+                const updateResponse = await fetch(`/api/v1/concept-dependencies/documents/${documentId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!updateResponse.ok) {
+                    const result = await updateResponse.json();
+                    throw new Error(result.error || 'Error al actualizar');
+                }
+
+                closeModal('editFamilyDocumentModal');
+                showUserMessage('Documento actualizado', 'success');
+                await loadFamilyDocuments(userId);
+
+            } catch (error) {
+                console.error('[FAMILY-DOCS] Error actualizando:', error);
+                showUserMessage(`Error: ${error.message}`, 'error');
+            }
+        };
+
+    } catch (error) {
+        console.error('[FAMILY-DOCS] Error:', error);
+        showUserMessage(`Error: ${error.message}`, 'error');
+    }
+}
+
+// ============================================================================
 // FUNCIONES MÉDICAS AVANZADAS - Antropométricos, Cirugías, Psiquiatría, Deportes
 // ============================================================================
 
@@ -7362,7 +9350,7 @@ async function editSalaryConfig(userId) {
             <form id="salaryConfigForm">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                     <div>
-                        <label style="font-weight: bold; color: #333;">Convenio Colectivo (CCT) *</label>
+                        <label style="font-weight: bold; color: #333;">Convenio Laboral *</label>
                         <select id="laborAgreement" class="form-control" onchange="loadCategories(this.value)" required>
                             <option value="">Seleccionar convenio...</option>
                             ${agreementOptions}
@@ -7612,16 +9600,503 @@ function addSalaryIncrease(userId) {
     };
 }
 
-function viewPayrollHistory(userId) {
-    console.log('📜 [SALARY] Viendo historial de liquidaciones:', userId);
-    showUserMessage('📜 Abriendo historial de liquidaciones...', 'info');
-    // TODO: Implementar modal con historial completo
+// ============================================================================
+// HISTORIAL DE LIQUIDACIONES - Sistema Dinámico Multi-País
+// ============================================================================
+
+// Estado global para paginación de liquidaciones
+const payrollHistoryState = {};
+
+/**
+ * Carga el historial de liquidaciones de un usuario
+ * @param {string|number} userId - ID del usuario
+ * @param {boolean} append - Si es true, agrega a la lista existente (paginación)
+ */
+async function loadUserPayrollHistory(userId, append = false) {
+    console.log('📊 [PAYROLL] Cargando historial de liquidaciones para:', userId);
+
+    // Inicializar estado si no existe
+    if (!payrollHistoryState[userId]) {
+        payrollHistoryState[userId] = { offset: 0, limit: 12, total: 0, data: [] };
+    }
+
+    const state = payrollHistoryState[userId];
+    if (!append) {
+        state.offset = 0;
+        state.data = [];
+    }
+
+    const tableBody = document.getElementById(`payroll-history-table-${userId}`);
+    const loadingSpan = document.getElementById(`payroll-loading-${userId}`);
+
+    if (!append && tableBody) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #666;">⏳ Cargando historial...</td></tr>`;
+    }
+
+    try {
+        const companyId = window.progressiveAdmin?.currentUser?.company_id || window.progressiveAdmin?.currentUser?.companyId || 11;
+        const response = await fetch(`/api/payroll/user/${userId}/history?limit=${state.limit}&offset=${state.offset}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'x-company-id': companyId.toString()
+            }
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'Error al cargar historial');
+        }
+
+        const { history, ytd, pagination } = result.data;
+        state.total = pagination.total;
+        state.data = append ? [...state.data, ...history] : history;
+
+        // Actualizar KPIs
+        updatePayrollKPIs(userId, history, ytd, pagination);
+
+        // Renderizar tabla
+        renderPayrollHistoryTable(userId, state.data);
+
+        // Mostrar/ocultar botón de cargar más
+        const paginationDiv = document.getElementById(`payroll-pagination-${userId}`);
+        if (paginationDiv) {
+            paginationDiv.style.display = state.data.length < state.total ? 'block' : 'none';
+        }
+
+        console.log(`✅ [PAYROLL] Cargadas ${history.length} liquidaciones (total: ${pagination.total})`);
+
+    } catch (error) {
+        console.error('❌ [PAYROLL] Error:', error);
+        if (tableBody) {
+            tableBody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #dc3545;">
+                ❌ ${error.message}<br>
+                <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadUserPayrollHistory('${userId}')">Reintentar</button>
+            </td></tr>`;
+        }
+    }
 }
 
-function generatePayroll(userId) {
-    console.log('💼 [SALARY] Generando nueva liquidación:', userId);
-    showUserMessage('⚠️ Módulo de liquidaciones pendiente de integración real', 'warning');
-    // TODO: Integrar con módulo de liquidación de sueldos
+/**
+ * Carga más liquidaciones (paginación)
+ */
+function loadMorePayrollHistory(userId) {
+    const state = payrollHistoryState[userId];
+    if (state) {
+        state.offset += state.limit;
+        loadUserPayrollHistory(userId, true);
+    }
+}
+
+/**
+ * Actualiza los KPIs de liquidaciones
+ */
+function updatePayrollKPIs(userId, history, ytd, pagination) {
+    // Última liquidación
+    const lastNetEl = document.getElementById(`payroll-last-net-${userId}`);
+    const lastPeriodEl = document.getElementById(`payroll-last-period-${userId}`);
+
+    if (history.length > 0) {
+        const last = history[0];
+        if (lastNetEl) lastNetEl.textContent = `${last.currency.symbol}${last.amounts.net.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+        if (lastPeriodEl) lastPeriodEl.textContent = last.period.label;
+    } else {
+        if (lastNetEl) lastNetEl.textContent = '--';
+        if (lastPeriodEl) lastPeriodEl.textContent = 'Sin liquidaciones';
+    }
+
+    // Total liquidaciones
+    const totalCountEl = document.getElementById(`payroll-total-count-${userId}`);
+    if (totalCountEl) totalCountEl.textContent = pagination.total;
+
+    // YTD
+    const ytdYearEl = document.getElementById(`payroll-ytd-year-${userId}`);
+    const ytdNetEl = document.getElementById(`payroll-ytd-net-${userId}`);
+    const ytdMonthsEl = document.getElementById(`payroll-ytd-months-${userId}`);
+
+    if (ytdYearEl) ytdYearEl.textContent = `Acumulado ${ytd.year}`;
+    if (ytdNetEl) {
+        const symbol = history.length > 0 ? history[0].currency.symbol : '$';
+        ytdNetEl.textContent = `${symbol}${ytd.net.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+    }
+    if (ytdMonthsEl) ytdMonthsEl.textContent = `${ytd.months_processed} meses procesados`;
+}
+
+/**
+ * Renderiza la tabla de historial de liquidaciones
+ */
+function renderPayrollHistoryTable(userId, data) {
+    const tableBody = document.getElementById(`payroll-history-table-${userId}`);
+    if (!tableBody) return;
+
+    if (data.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #666;">
+            📭 No hay liquidaciones registradas para este empleado
+        </td></tr>`;
+        return;
+    }
+
+    const statusConfig = {
+        completed: { label: 'Calculada', color: '#ffc107', bg: '#fff3cd' },
+        approved: { label: 'Aprobada', color: '#17a2b8', bg: '#d1ecf1' },
+        paid: { label: 'Pagada', color: '#28a745', bg: '#d4edda' }
+    };
+
+    tableBody.innerHTML = data.map((item, index) => {
+        const status = statusConfig[item.status] || { label: item.status, color: '#6c757d', bg: '#e9ecef' };
+        const rowBg = index % 2 === 0 ? '#f8f9fa' : '#ffffff';
+
+        return `
+            <tr style="background: ${rowBg}; border-bottom: 1px solid #dee2e6;">
+                <td style="padding: 10px;">
+                    <strong>${item.period.label}</strong>
+                    ${item.template.name ? `<br><small style="color: #666;">${item.template.name}</small>` : ''}
+                </td>
+                <td style="padding: 10px; text-align: right; color: #28a745;">
+                    ${item.currency.symbol}${item.amounts.gross.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                </td>
+                <td style="padding: 10px; text-align: right; color: #dc3545;">
+                    -${item.currency.symbol}${item.amounts.deductions.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                </td>
+                <td style="padding: 10px; text-align: right; font-weight: bold; color: #1565c0;">
+                    ${item.currency.symbol}${item.amounts.net.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                </td>
+                <td style="padding: 10px; text-align: center;">
+                    <span style="background: ${status.bg}; color: ${status.color}; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">
+                        ${status.label}
+                    </span>
+                </td>
+                <td style="padding: 10px; text-align: center;">
+                    <button class="btn btn-sm btn-outline-info" onclick="viewPayrollDetail('${userId}', ${item.detail_id})" title="Ver detalle">
+                        👁️
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exportPayrollToPDF('${userId}', ${item.detail_id})" title="Descargar PDF">
+                        📄
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+/**
+ * Muestra el modal con el detalle de una liquidación
+ */
+async function viewPayrollDetail(userId, detailId) {
+    console.log('👁️ [PAYROLL] Viendo detalle de liquidación:', { userId, detailId });
+
+    // Crear modal si no existe
+    let modal = document.getElementById('payrollDetailModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'payrollDetailModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1565c0, #0d47a1); color: white;">
+                    <h3 id="payroll-detail-title">📋 Detalle de Liquidación</h3>
+                    <span class="close-btn" onclick="closeModal('payrollDetailModal')">&times;</span>
+                </div>
+                <div class="modal-body" id="payroll-detail-body" style="padding: 20px;">
+                    <div style="text-align: center; padding: 40px;">⏳ Cargando detalle...</div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: space-between; padding: 15px; background: #f8f9fa;">
+                    <button class="btn btn-primary" onclick="exportPayrollToPDF('${userId}', ${detailId})">
+                        📄 Descargar PDF
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeModal('payrollDetailModal')">Cerrar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // Mostrar modal
+    modal.style.display = 'flex';
+
+    const bodyEl = document.getElementById('payroll-detail-body');
+    bodyEl.innerHTML = `<div style="text-align: center; padding: 40px;">⏳ Cargando detalle...</div>`;
+
+    try {
+        const companyId = window.progressiveAdmin?.currentUser?.company_id || window.progressiveAdmin?.currentUser?.companyId || 11;
+        const response = await fetch(`/api/payroll/user/${userId}/history/${detailId}/concepts`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'x-company-id': companyId.toString()
+            }
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'Error al cargar detalle');
+        }
+
+        const { header, concepts, totals, hours } = result.data;
+
+        // Actualizar título
+        document.getElementById('payroll-detail-title').textContent =
+            `📋 Recibo de Sueldo - ${header.period.label}`;
+
+        // Renderizar contenido
+        bodyEl.innerHTML = renderPayrollDetailContent(header, concepts, totals, hours);
+
+    } catch (error) {
+        console.error('❌ [PAYROLL] Error:', error);
+        bodyEl.innerHTML = `<div style="text-align: center; padding: 40px; color: #dc3545;">
+            ❌ Error: ${error.message}<br>
+            <button class="btn btn-sm btn-outline-primary mt-3" onclick="viewPayrollDetail('${userId}', ${detailId})">Reintentar</button>
+        </div>`;
+    }
+}
+
+/**
+ * Renderiza el contenido del detalle de liquidación
+ */
+function renderPayrollDetailContent(header, concepts, totals, hours) {
+    const sym = header.currency.symbol;
+
+    // Función helper para formatear montos
+    const fmt = (amount) => `${sym}${parseFloat(amount || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+
+    return `
+        <!-- Header del recibo -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <div>
+                <h5 style="margin: 0 0 10px 0; color: #1565c0;">👤 Empleado</h5>
+                <div><strong>${header.employee.full_name}</strong></div>
+                <div style="font-size: 12px; color: #666;">DNI/ID: ${header.employee.dni || '--'}</div>
+                <div style="font-size: 12px; color: #666;">Departamento: ${header.employee.department || '--'}</div>
+            </div>
+            <div style="text-align: right;">
+                <h5 style="margin: 0 0 10px 0; color: #1565c0;">📅 Período</h5>
+                <div><strong>${header.period.label}</strong></div>
+                <div style="font-size: 12px; color: #666;">${header.period.start || ''} - ${header.period.end || ''}</div>
+                <div style="font-size: 12px; color: #666;">Plantilla: ${header.template.name || 'N/A'}</div>
+            </div>
+        </div>
+
+        <!-- Horas trabajadas -->
+        ${hours.worked_days || hours.worked_hours ? `
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+            ${hours.worked_days ? `<span style="background: #e3f2fd; padding: 5px 12px; border-radius: 15px; font-size: 12px;">📅 ${hours.worked_days} días trabajados</span>` : ''}
+            ${hours.worked_hours ? `<span style="background: #e8f5e9; padding: 5px 12px; border-radius: 15px; font-size: 12px;">⏱️ ${hours.worked_hours}hs normales</span>` : ''}
+            ${hours.overtime_50 ? `<span style="background: #fff3e0; padding: 5px 12px; border-radius: 15px; font-size: 12px;">⏰ ${hours.overtime_50}hs extra 50%</span>` : ''}
+            ${hours.overtime_100 ? `<span style="background: #fce4ec; padding: 5px 12px; border-radius: 15px; font-size: 12px;">⏰ ${hours.overtime_100}hs extra 100%</span>` : ''}
+        </div>
+        ` : ''}
+
+        <!-- Conceptos: Haberes -->
+        <div style="margin-bottom: 20px;">
+            <h5 style="color: #2e7d32; margin: 0 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #2e7d32;">
+                ➕ Haberes (Remunerativos)
+            </h5>
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                    <tr style="background: #e8f5e9;">
+                        <th style="padding: 8px; text-align: left;">Concepto</th>
+                        <th style="padding: 8px; text-align: right;">Cant.</th>
+                        <th style="padding: 8px; text-align: right;">Importe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${concepts.earnings.length > 0 ? concepts.earnings.map(c => `
+                        <tr style="border-bottom: 1px solid #dee2e6;">
+                            <td style="padding: 8px;">${c.name} <small style="color:#888;">(${c.code})</small></td>
+                            <td style="padding: 8px; text-align: right;">${c.quantity || c.rate ? (c.rate ? `${c.rate}%` : c.quantity) : '-'}</td>
+                            <td style="padding: 8px; text-align: right; color: #2e7d32; font-weight: 500;">${fmt(c.amount)}</td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="3" style="padding: 8px; color: #666; text-align: center;">Sin haberes registrados</td></tr>'}
+                </tbody>
+                <tfoot>
+                    <tr style="background: #c8e6c9; font-weight: bold;">
+                        <td colspan="2" style="padding: 8px;">TOTAL BRUTO</td>
+                        <td style="padding: 8px; text-align: right;">${fmt(totals.gross)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Conceptos: Deducciones -->
+        <div style="margin-bottom: 20px;">
+            <h5 style="color: #c62828; margin: 0 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #c62828;">
+                ➖ Deducciones
+            </h5>
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                    <tr style="background: #ffebee;">
+                        <th style="padding: 8px; text-align: left;">Concepto</th>
+                        <th style="padding: 8px; text-align: left;">Destino</th>
+                        <th style="padding: 8px; text-align: right;">Tasa</th>
+                        <th style="padding: 8px; text-align: right;">Importe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${concepts.deductions.length > 0 ? concepts.deductions.map(c => `
+                        <tr style="border-bottom: 1px solid #dee2e6;">
+                            <td style="padding: 8px;">${c.name} <small style="color:#888;">(${c.code})</small></td>
+                            <td style="padding: 8px; font-size: 11px; color: #666;">${c.entity || '-'}</td>
+                            <td style="padding: 8px; text-align: right;">${c.rate ? `${c.rate}%` : '-'}</td>
+                            <td style="padding: 8px; text-align: right; color: #c62828; font-weight: 500;">-${fmt(c.amount)}</td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="4" style="padding: 8px; color: #666; text-align: center;">Sin deducciones</td></tr>'}
+                </tbody>
+                <tfoot>
+                    <tr style="background: #ffcdd2; font-weight: bold;">
+                        <td colspan="3" style="padding: 8px;">TOTAL DEDUCCIONES</td>
+                        <td style="padding: 8px; text-align: right;">-${fmt(totals.deductions)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Neto a cobrar -->
+        <div style="background: linear-gradient(135deg, #1565c0, #0d47a1); color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 14px; margin-bottom: 5px;">NETO A COBRAR</div>
+            <div style="font-size: 32px; font-weight: bold;">${fmt(totals.net)}</div>
+        </div>
+
+        <!-- Aportes patronales (informativo) -->
+        ${concepts.employer_contributions.length > 0 ? `
+        <div style="margin-bottom: 10px;">
+            <h5 style="color: #6c757d; margin: 0 0 10px 0; padding-bottom: 5px; border-bottom: 1px solid #6c757d; font-size: 13px;">
+                ℹ️ Contribuciones Patronales (Informativo)
+            </h5>
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #666;">
+                <tbody>
+                    ${concepts.employer_contributions.map(c => `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 6px;">${c.name}</td>
+                            <td style="padding: 6px;">${c.entity || '-'}</td>
+                            <td style="padding: 6px; text-align: right;">${c.rate ? `${c.rate}%` : '-'}</td>
+                            <td style="padding: 6px; text-align: right;">${fmt(c.amount)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr style="background: #f8f9fa; font-weight: bold;">
+                        <td colspan="3" style="padding: 6px;">Costo Empleador Total</td>
+                        <td style="padding: 6px; text-align: right;">${fmt(totals.employer_cost)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        ` : ''}
+
+        <!-- Footer con estado -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #dee2e6; font-size: 11px; color: #666;">
+            <span>Estado: <strong style="color: ${header.status === 'paid' ? '#28a745' : '#ffc107'}">${header.status === 'paid' ? 'PAGADO' : header.status === 'approved' ? 'APROBADO' : 'CALCULADO'}</strong></span>
+            ${header.pay_date ? `<span>Fecha de pago: ${new Date(header.pay_date).toLocaleDateString('es-AR')}</span>` : ''}
+            <span>País: ${header.country || 'N/A'} | Moneda: ${header.currency.code}</span>
+        </div>
+    `;
+}
+
+/**
+ * Exporta una liquidación a PDF
+ */
+async function exportPayrollToPDF(userId, detailId) {
+    console.log('📄 [PAYROLL] Exportando a PDF:', { userId, detailId });
+    showUserMessage('📄 Generando PDF...', 'info');
+
+    try {
+        // Cargar datos del detalle
+        const response = await fetch(`/api/payroll/user/${userId}/history/${detailId}/concepts`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error);
+
+        const { header, concepts, totals, hours } = result.data;
+
+        // Crear contenido HTML para el PDF
+        const pdfContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Recibo de Sueldo - ${header.period.label}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
+                    .header { text-align: center; border-bottom: 2px solid #1565c0; padding-bottom: 15px; margin-bottom: 20px; }
+                    .header h1 { color: #1565c0; margin: 0; }
+                    .info-grid { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                    .info-box { flex: 1; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+                    th { background: #f5f5f5; }
+                    .earnings th { background: #e8f5e9; }
+                    .deductions th { background: #ffebee; }
+                    .total-row { font-weight: bold; background: #f5f5f5; }
+                    .net-box { background: #1565c0; color: white; padding: 20px; text-align: center; margin: 20px 0; }
+                    .net-amount { font-size: 28px; font-weight: bold; }
+                    .footer { font-size: 10px; color: #666; text-align: center; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; }
+                    @media print { body { margin: 0; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>RECIBO DE SUELDO</h1>
+                    <div>${header.period.label}</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-box">
+                        <strong>Empleado:</strong> ${header.employee.full_name}<br>
+                        <strong>DNI:</strong> ${header.employee.dni || 'N/A'}<br>
+                        <strong>Departamento:</strong> ${header.employee.department || 'N/A'}
+                    </div>
+                    <div class="info-box" style="text-align: right;">
+                        <strong>Período:</strong> ${header.period.start} - ${header.period.end}<br>
+                        <strong>Plantilla:</strong> ${header.template.name || 'N/A'}<br>
+                        <strong>País:</strong> ${header.country || 'N/A'}
+                    </div>
+                </div>
+
+                <h3 style="color: #2e7d32;">Haberes</h3>
+                <table class="earnings">
+                    <thead><tr><th>Concepto</th><th style="text-align:right;">Importe</th></tr></thead>
+                    <tbody>
+                        ${concepts.earnings.map(c => `<tr><td>${c.name}</td><td style="text-align:right;">${header.currency.symbol}${c.amount.toFixed(2)}</td></tr>`).join('')}
+                    </tbody>
+                    <tfoot><tr class="total-row"><td>TOTAL BRUTO</td><td style="text-align:right;">${header.currency.symbol}${totals.gross.toFixed(2)}</td></tr></tfoot>
+                </table>
+
+                <h3 style="color: #c62828;">Deducciones</h3>
+                <table class="deductions">
+                    <thead><tr><th>Concepto</th><th>Destino</th><th style="text-align:right;">Importe</th></tr></thead>
+                    <tbody>
+                        ${concepts.deductions.map(c => `<tr><td>${c.name}</td><td>${c.entity || '-'}</td><td style="text-align:right;">-${header.currency.symbol}${c.amount.toFixed(2)}</td></tr>`).join('')}
+                    </tbody>
+                    <tfoot><tr class="total-row"><td colspan="2">TOTAL DEDUCCIONES</td><td style="text-align:right;">-${header.currency.symbol}${totals.deductions.toFixed(2)}</td></tr></tfoot>
+                </table>
+
+                <div class="net-box">
+                    <div>NETO A COBRAR</div>
+                    <div class="net-amount">${header.currency.symbol}${totals.net.toFixed(2)}</div>
+                </div>
+
+                <div class="footer">
+                    <p>Generado el ${new Date().toLocaleDateString('es-AR')} | Sistema de Asistencia Biométrico</p>
+                    ${header.receipt_footer || ''}
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Abrir en nueva ventana para imprimir/guardar como PDF
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(pdfContent);
+        printWindow.document.close();
+        printWindow.print();
+
+        showUserMessage('✅ PDF generado correctamente', 'success');
+
+    } catch (error) {
+        console.error('❌ [PAYROLL] Error exportando PDF:', error);
+        showUserMessage(`❌ Error: ${error.message}`, 'error');
+    }
 }
 
 // Función para cargar todos los datos salariales avanzados
@@ -10518,5 +12993,10 @@ window.openWorkVisaModal = openWorkVisaModal;
 window.openNationalLicenseModal = openNationalLicenseModal;
 // window.uploadUserPhoto = uploadUserPhoto; // COMMENTED: Function not defined, causing errors
 // window.removeUserPhoto = removeUserPhoto; // COMMENTED: Function not defined, causing errors
+
+// Family Documents - Benefits Engine
+window.addFamilyDocument = addFamilyDocument;
+window.loadFamilyDocuments = loadFamilyDocuments;
+window.renderFamilyDocuments = renderFamilyDocuments;
 
 } // Cierre del bloque else - previene re-ejecución en doble carga del módulo

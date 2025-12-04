@@ -20,8 +20,8 @@ const router = express.Router();
 const { database } = require('../config/database');
 const AssistantService = require('../services/AssistantService');
 
-// Instancia del servicio
-const assistantService = new AssistantService();
+// Instancia del servicio (pasando database para acceso a modelos)
+const assistantService = new AssistantService(database);
 
 /**
  * Middleware: Autenticación JWT simple

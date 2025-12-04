@@ -8,6 +8,13 @@
  * @author Sistema Biometrico Enterprise
  * @version 3.0.0
  */
+
+// Evitar doble carga del módulo
+if (window.PayrollEngine) {
+    console.log('[PAYROLL] Módulo ya cargado');
+    throw new Error('PayrollModule already loaded');
+}
+
 console.log('%c PAYROLL ENGINE v3.0 ', 'background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); color: #00d4ff; font-size: 14px; padding: 8px 12px; border-radius: 4px; font-weight: bold;');
 
 // ============================================================================
@@ -54,14 +61,44 @@ const PayrollAPI = {
         }
     },
 
+    // Request para respuestas binarias (PDF)
+    async requestBlob(endpoint, options = {}) {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const config = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            ...options
+        };
+
+        try {
+            const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'API Error');
+            }
+            return await response.blob();
+        } catch (error) {
+            console.error(`[PayrollAPI] ${endpoint}:`, error);
+            throw error;
+        }
+    },
+
     // Templates
     getTemplates: (params = '') => PayrollAPI.request(`/templates${params}`),
     getTemplate: (id) => PayrollAPI.request(`/templates/${id}`),
     createTemplate: (data) => PayrollAPI.request('/templates', { method: 'POST', body: JSON.stringify(data) }),
     updateTemplate: (id, data) => PayrollAPI.request(`/templates/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
-    // Concepts
-    getConceptTypes: () => PayrollAPI.request('/concept-types'),
+    // Concepts - Sistema Universal
+    getConceptTypes: (locale = 'es', countryId = null) => {
+        let params = `?locale=${locale}&include_rates=true`;
+        if (countryId) params += `&country_id=${countryId}`;
+        return PayrollAPI.request(`/concept-types${params}`);
+    },
+    getConceptClassifications: (locale = 'es') => PayrollAPI.request(`/concept-classifications?locale=${locale}`),
     addConcept: (templateId, data) => PayrollAPI.request(`/templates/${templateId}/concepts`, { method: 'POST', body: JSON.stringify(data) }),
     updateConcept: (id, data) => PayrollAPI.request(`/concepts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     deleteConcept: (id) => PayrollAPI.request(`/concepts/${id}`, { method: 'DELETE' }),
@@ -76,16 +113,32 @@ const PayrollAPI = {
     approveRun: (id) => PayrollAPI.request(`/runs/${id}/approve`, { method: 'PUT' }),
     payRun: (id) => PayrollAPI.request(`/runs/${id}/pay`, { method: 'PUT' }),
 
-    // Entities
-    getEntities: () => PayrollAPI.request('/entities?include_global=true'),
+    // Entity Categories (Tipos de entidades parametrizables)
+    getEntityCategories: (params = '') => PayrollAPI.request(`/entity-categories${params}`),
+    getEntityCategory: (id) => PayrollAPI.request(`/entity-categories/${id}`),
+    createEntityCategory: (data) => PayrollAPI.request('/entity-categories', { method: 'POST', body: JSON.stringify(data) }),
+    updateEntityCategory: (id, data) => PayrollAPI.request(`/entity-categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteEntityCategory: (id) => PayrollAPI.request(`/entity-categories/${id}`, { method: 'DELETE' }),
+
+    // Entities (Entidades de destino parametrizables)
+    getEntities: (params = '') => PayrollAPI.request(`/entities?include_global=true${params}`),
+    getEntity: (id) => PayrollAPI.request(`/entities/${id}`),
     createEntity: (data) => PayrollAPI.request('/entities', { method: 'POST', body: JSON.stringify(data) }),
+    updateEntity: (id, data) => PayrollAPI.request(`/entities/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteEntity: (id) => PayrollAPI.request(`/entities/${id}`, { method: 'DELETE' }),
 
     // Settlements
     getSettlements: () => PayrollAPI.request('/entity-settlements'),
     generateSettlement: (data) => PayrollAPI.request('/entity-settlements/generate', { method: 'POST', body: JSON.stringify(data) }),
 
-    // Payslips
+    // Payslip Templates (Editor Visual de Recibos)
+    getPayslipBlockTypes: () => PayrollAPI.request('/payslip-block-types'),
     getPayslipTemplates: () => PayrollAPI.request('/payslip-templates'),
+    getPayslipTemplate: (id) => PayrollAPI.request(`/payslip-templates/${id}`),
+    createPayslipTemplate: (data) => PayrollAPI.request('/payslip-templates', { method: 'POST', body: JSON.stringify(data) }),
+    updatePayslipTemplate: (id, data) => PayrollAPI.request(`/payslip-templates/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    previewPayslipPDF: (templateId) => PayrollAPI.requestBlob('/payslip/preview-pdf', { method: 'POST', body: JSON.stringify({ template_id: templateId }) }),
+    generatePayslipPDF: (runDetailId, templateId) => PayrollAPI.requestBlob('/payslip/generate-pdf', { method: 'POST', body: JSON.stringify({ run_detail_id: runDetailId, template_id: templateId }) }),
 
     // Export
     exportRun: (runId, format) => PayrollAPI.request(`/export/payroll-run/${runId}`, { method: 'POST', body: JSON.stringify({ format }) }),
@@ -100,6 +153,389 @@ const PayrollAPI = {
     getAssignments: () => PayrollAPI.request('/assignments'),
     createAssignment: (data) => PayrollAPI.request('/assignments', { method: 'POST', body: JSON.stringify(data) })
 };
+
+// ============================================================================
+// FORMULA EDITOR - Editor profesional de formulas con validacion y preview
+// ============================================================================
+const FormulaEditor = {
+    // Variables disponibles para formulas con descripcion y valores de prueba
+    variables: {
+        baseSalary: {
+            name: '{baseSalary}',
+            description: 'Sueldo base mensual del empleado',
+            example: 500000,
+            category: 'salary'
+        },
+        hourlyRate: {
+            name: '{hourlyRate}',
+            description: 'Valor por hora (baseSalary / 200 horas)',
+            example: 2500,
+            category: 'salary'
+        },
+        workedDays: {
+            name: '{workedDays}',
+            description: 'Dias efectivamente trabajados en el periodo',
+            example: 22,
+            category: 'time'
+        },
+        workedHours: {
+            name: '{workedHours}',
+            description: 'Horas totales trabajadas en el periodo',
+            example: 176,
+            category: 'time'
+        },
+        overtime50Hours: {
+            name: '{overtime50Hours}',
+            description: 'Horas extras al 50% (dias habiles)',
+            example: 8,
+            category: 'overtime'
+        },
+        overtime100Hours: {
+            name: '{overtime100Hours}',
+            description: 'Horas extras al 100% (feriados/fines de semana)',
+            example: 4,
+            category: 'overtime'
+        },
+        nightHours: {
+            name: '{nightHours}',
+            description: 'Horas nocturnas trabajadas (21:00 - 06:00)',
+            example: 20,
+            category: 'overtime'
+        },
+        absentDays: {
+            name: '{absentDays}',
+            description: 'Dias de ausencia injustificada',
+            example: 1,
+            category: 'time'
+        },
+        holidayCount: {
+            name: '{holidayCount}',
+            description: 'Cantidad de feriados en el periodo',
+            example: 2,
+            category: 'time'
+        }
+    },
+
+    // Operadores y funciones permitidas
+    operators: ['+', '-', '*', '/', '(', ')', '%'],
+    functions: ['round', 'floor', 'ceil', 'abs', 'min', 'max', 'sqrt', 'pow'],
+
+    // Ejemplos de formulas comunes por tipo de concepto
+    examples: {
+        percentage: {
+            name: 'Porcentaje del sueldo',
+            formula: '{baseSalary} * 0.11',
+            description: '11% del sueldo base (ej: aporte jubilatorio)'
+        },
+        overtime50: {
+            name: 'Horas extras 50%',
+            formula: '{overtime50Hours} * {hourlyRate} * 1.5',
+            description: 'Pago de horas extras con recargo del 50%'
+        },
+        overtime100: {
+            name: 'Horas extras 100%',
+            formula: '{overtime100Hours} * {hourlyRate} * 2',
+            description: 'Pago de horas extras con recargo del 100%'
+        },
+        nightBonus: {
+            name: 'Adicional nocturno',
+            formula: '{nightHours} * {hourlyRate} * 0.2',
+            description: '20% adicional por hora nocturna'
+        },
+        attendance: {
+            name: 'Presentismo',
+            formula: '{absentDays} == 0 ? {baseSalary} * 0.10 : 0',
+            description: '10% del sueldo si no hay ausencias'
+        },
+        perDay: {
+            name: 'Valor por dia',
+            formula: '{baseSalary} / 30 * {workedDays}',
+            description: 'Calculo proporcional por dias trabajados'
+        },
+        combined: {
+            name: 'Formula combinada',
+            formula: 'round({baseSalary} * 0.05 + {overtime50Hours} * {hourlyRate} * 0.5)',
+            description: '5% de base + 50% extra por horas extras'
+        }
+    },
+
+    // Validar formula
+    validate(formula) {
+        if (!formula || formula.trim() === '') {
+            return { valid: true, isSimple: true, message: 'Valor fijo o porcentaje simple' };
+        }
+
+        // Si es solo un numero o porcentaje, es valido simple
+        if (/^[\d.]+%?$/.test(formula.trim())) {
+            return { valid: true, isSimple: true, message: 'Valor fijo valido' };
+        }
+
+        const errors = [];
+
+        // Verificar que todas las variables sean conocidas
+        const varPattern = /\{([^}]+)\}/g;
+        let match;
+        const foundVars = [];
+        while ((match = varPattern.exec(formula)) !== null) {
+            const varName = match[1];
+            if (!this.variables[varName]) {
+                errors.push(`Variable desconocida: {${varName}}`);
+            } else {
+                foundVars.push(varName);
+            }
+        }
+
+        // Verificar parentesis balanceados
+        let parenCount = 0;
+        for (const char of formula) {
+            if (char === '(') parenCount++;
+            if (char === ')') parenCount--;
+            if (parenCount < 0) {
+                errors.push('Parentesis desbalanceados');
+                break;
+            }
+        }
+        if (parenCount !== 0) {
+            errors.push('Parentesis no cerrados');
+        }
+
+        // Verificar caracteres permitidos (despues de quitar variables)
+        const cleanFormula = formula.replace(/\{[^}]+\}/g, '0');
+        const allowedPattern = /^[\d\s+\-*/().,%a-zA-Z?:=<>!&|]+$/;
+        if (!allowedPattern.test(cleanFormula)) {
+            errors.push('Contiene caracteres no permitidos');
+        }
+
+        // Verificar funciones
+        const funcPattern = /([a-zA-Z]+)\s*\(/g;
+        while ((match = funcPattern.exec(cleanFormula)) !== null) {
+            const funcName = match[1].toLowerCase();
+            if (!this.functions.includes(funcName)) {
+                errors.push(`Funcion desconocida: ${funcName}()`);
+            }
+        }
+
+        if (errors.length > 0) {
+            return { valid: false, errors, foundVars };
+        }
+
+        return { valid: true, isFormula: true, foundVars, message: 'Formula valida' };
+    },
+
+    // Calcular preview con valores de ejemplo
+    calculatePreview(formula) {
+        if (!formula || formula.trim() === '') return null;
+
+        // Si es solo un numero
+        if (/^[\d.]+$/.test(formula.trim())) {
+            return { result: parseFloat(formula), type: 'fixed' };
+        }
+
+        // Si es porcentaje
+        if (/^[\d.]+%$/.test(formula.trim())) {
+            const pct = parseFloat(formula) / 100;
+            const result = this.variables.baseSalary.example * pct;
+            return { result, type: 'percentage', percentage: parseFloat(formula) };
+        }
+
+        // Evaluar formula con valores de ejemplo
+        try {
+            let expression = formula;
+
+            // 1. Reemplazar variables con valores de ejemplo
+            for (const [key, data] of Object.entries(this.variables)) {
+                expression = expression.replace(new RegExp(`\\{${key}\\}`, 'gi'), String(data.example));
+            }
+
+            // 2. Reemplazar funciones con Math.*
+            expression = expression.replace(/\bround\b/gi, 'Math.round');
+            expression = expression.replace(/\bfloor\b/gi, 'Math.floor');
+            expression = expression.replace(/\bceil\b/gi, 'Math.ceil');
+            expression = expression.replace(/\babs\b/gi, 'Math.abs');
+            expression = expression.replace(/\bmin\b/gi, 'Math.min');
+            expression = expression.replace(/\bmax\b/gi, 'Math.max');
+            expression = expression.replace(/\bsqrt\b/gi, 'Math.sqrt');
+            expression = expression.replace(/\bpow\b/gi, 'Math.pow');
+
+            // 3. Evaluar con Function (mas seguro que eval para preview)
+            const safeEval = new Function('return ' + expression);
+            const result = safeEval();
+
+            if (typeof result !== 'number' || !isFinite(result)) {
+                return { error: 'Resultado no valido' };
+            }
+
+            return { result: Math.round(result * 100) / 100, type: 'formula' };
+        } catch (e) {
+            return { error: e.message };
+        }
+    },
+
+    // Formatear numero como moneda
+    formatCurrency(value) {
+        if (value === null || value === undefined) return '--';
+        return new Intl.NumberFormat('es-AR', {
+            style: 'currency',
+            currency: 'ARS',
+            minimumFractionDigits: 2
+        }).format(value);
+    },
+
+    // Renderizar el editor de formulas completo
+    renderEditor(index, currentValue = '', fieldName = 'concept_formula') {
+        const validation = this.validate(currentValue);
+        const preview = this.calculatePreview(currentValue);
+
+        return `
+            <div class="pe-formula-editor" data-index="${index}">
+                <div class="pe-formula-input-wrapper">
+                    <input type="text"
+                           name="${fieldName}_${index}"
+                           value="${currentValue || ''}"
+                           placeholder="Ej: 11 o {baseSalary} * 0.11"
+                           class="pe-formula-input ${validation.valid ? 'valid' : 'invalid'}"
+                           oninput="FormulaEditor.onInput(this, ${index})"
+                           onfocus="FormulaEditor.showPanel(${index})"
+                           autocomplete="off">
+                    <button type="button"
+                            class="pe-formula-help-btn"
+                            onclick="FormulaEditor.togglePanel(${index})"
+                            title="Ayuda de formulas">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="pe-formula-status">
+                    ${validation.valid ?
+                        `<span class="pe-status-ok" title="${validation.message}">&#10003;</span>` :
+                        `<span class="pe-status-error" title="${validation.errors?.join(', ')}">&#10007;</span>`
+                    }
+                    ${preview && !preview.error ?
+                        `<span class="pe-preview-result" title="Preview con valores de ejemplo">${this.formatCurrency(preview.result)}</span>` :
+                        ''
+                    }
+                </div>
+                <div id="pe-formula-panel-${index}" class="pe-formula-panel" style="display:none;">
+                    ${this.renderHelpPanel(index)}
+                </div>
+            </div>
+        `;
+    },
+
+    // Panel de ayuda con variables y ejemplos
+    renderHelpPanel(index) {
+        // Agrupar variables por categoria
+        const categories = {
+            salary: { name: 'Salario', icon: '$', vars: [] },
+            time: { name: 'Tiempo', icon: '&#128337;', vars: [] },
+            overtime: { name: 'Extras', icon: '+', vars: [] }
+        };
+
+        for (const [key, data] of Object.entries(this.variables)) {
+            if (categories[data.category]) {
+                categories[data.category].vars.push({ key, ...data });
+            }
+        }
+
+        return `
+            <div class="pe-formula-help">
+                <div class="pe-help-section">
+                    <h5>Variables Disponibles</h5>
+                    <div class="pe-vars-grid">
+                        ${Object.values(categories).map(cat => `
+                            <div class="pe-var-category">
+                                <span class="pe-cat-header">${cat.icon} ${cat.name}</span>
+                                ${cat.vars.map(v => `
+                                    <div class="pe-var-item" onclick="FormulaEditor.insertVariable(${index}, '${v.name}')" title="${v.description}">
+                                        <code>${v.name}</code>
+                                        <small>${v.description.substring(0, 30)}...</small>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="pe-help-section">
+                    <h5>Ejemplos Rapidos</h5>
+                    <div class="pe-examples-list">
+                        ${Object.values(this.examples).slice(0, 5).map(ex => `
+                            <div class="pe-example-item" onclick="FormulaEditor.insertExample(${index}, '${ex.formula.replace(/'/g, "\\'")}')">
+                                <span class="pe-ex-name">${ex.name}</span>
+                                <code class="pe-ex-formula">${ex.formula.length > 35 ? ex.formula.substring(0, 35) + '...' : ex.formula}</code>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="pe-help-section pe-help-functions">
+                    <h5>Funciones: <code>round() floor() ceil() abs() min() max()</code></h5>
+                </div>
+            </div>
+        `;
+    },
+
+    // Eventos
+    onInput(input, index) {
+        const formula = input.value;
+        const validation = this.validate(formula);
+        const preview = this.calculatePreview(formula);
+
+        // Actualizar clase de validacion
+        input.classList.toggle('valid', validation.valid);
+        input.classList.toggle('invalid', !validation.valid);
+
+        // Actualizar status
+        const statusEl = input.closest('.pe-formula-editor').querySelector('.pe-formula-status');
+        if (statusEl) {
+            statusEl.innerHTML = `
+                ${validation.valid ?
+                    `<span class="pe-status-ok" title="${validation.message}">&#10003;</span>` :
+                    `<span class="pe-status-error" title="${validation.errors?.join(', ')}">&#10007;</span>`
+                }
+                ${preview && !preview.error ?
+                    `<span class="pe-preview-result" title="Preview">${this.formatCurrency(preview.result)}</span>` :
+                    preview?.error ? `<span class="pe-preview-error" title="${preview.error}">Error</span>` : ''
+                }
+            `;
+        }
+    },
+
+    showPanel(index) {
+        // No hacer nada en focus, solo con el boton
+    },
+
+    togglePanel(index) {
+        const panel = document.getElementById(`pe-formula-panel-${index}`);
+        if (panel) {
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+    },
+
+    insertVariable(index, varName) {
+        const input = document.querySelector(`.pe-formula-editor[data-index="${index}"] .pe-formula-input`);
+        if (input) {
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const text = input.value;
+            input.value = text.substring(0, start) + varName + text.substring(end);
+            input.focus();
+            input.setSelectionRange(start + varName.length, start + varName.length);
+            this.onInput(input, index);
+        }
+    },
+
+    insertExample(index, formula) {
+        const input = document.querySelector(`.pe-formula-editor[data-index="${index}"] .pe-formula-input`);
+        if (input) {
+            input.value = formula;
+            this.onInput(input, index);
+            this.togglePanel(index);
+        }
+    }
+};
+
+// Hacer FormulaEditor global para acceso desde HTML
+window.FormulaEditor = FormulaEditor;
 
 // ============================================================================
 // MAIN RENDER FUNCTION
@@ -180,6 +616,10 @@ function showPayrollLiquidationContent() {
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
                     Reportes
                 </button>
+                <button class="pe-nav-item" data-view="payslip-editor" onclick="PayrollEngine.showView('payslip-editor')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    Recibos
+                </button>
             </nav>
 
             <!-- Main Content Area -->
@@ -197,10 +637,85 @@ function showPayrollLiquidationContent() {
 }
 
 // ============================================================================
+// CONCEPT TYPE HELPER - Dropdown 100% dinámico desde BD
+// ============================================================================
+const ConceptTypeHelper = {
+    _classifications: null,
+    _conceptTypes: null,
+    _initialized: false,
+
+    async init() {
+        if (this._initialized) return;
+        try {
+            const [classResult, typesResult] = await Promise.all([
+                PayrollAPI.getConceptClassifications('es'),
+                PayrollAPI.getConceptTypes('es')
+            ]);
+            this._classifications = classResult.data || [];
+            this._conceptTypes = typesResult.data || [];
+            this._initialized = true;
+            console.log('[ConceptTypeHelper] Cargados', this._classifications.length, 'clasificaciones,', this._conceptTypes.length, 'tipos');
+        } catch (e) {
+            console.error('[ConceptTypeHelper] Error:', e);
+            this._classifications = [];
+            this._conceptTypes = [];
+        }
+    },
+
+    getConceptTypes() { return this._conceptTypes || []; },
+    getClassifications() { return this._classifications || []; },
+
+    // Agrupar tipos por clasificación
+    getTypesByClassification() {
+        const grouped = {};
+        (this._conceptTypes || []).forEach(ct => {
+            const code = ct.classification_code || 'OTHER';
+            if (!grouped[code]) grouped[code] = [];
+            grouped[code].push(ct);
+        });
+        return grouped;
+    },
+
+    // Renderiza dropdown 100% dinámico - clasificaciones y tipos de BD
+    renderTypeDropdown(name, selectedId = null) {
+        const grouped = this.getTypesByClassification();
+        const classifications = this.getClassifications();
+
+        let html = `<select name="${name}" class="pe-select-type">`;
+        html += `<option value="">-- Tipo --</option>`;
+
+        // Usar clasificaciones de BD (orden por calculation_order)
+        classifications.forEach(cls => {
+            const types = grouped[cls.classification_code] || [];
+            if (types.length === 0) return;
+
+            // Label viene de BD (description o classification_name)
+            const label = cls.description || cls.classification_name;
+            html += `<optgroup label="${label}">`;
+            types.forEach(t => {
+                const selected = selectedId == t.id ? 'selected' : '';
+                const displayName = t.display_name || t.type_name;
+                html += `<option value="${t.id}" ${selected}>${displayName}</option>`;
+            });
+            html += `</optgroup>`;
+        });
+
+        html += `</select>`;
+        return html;
+    },
+
+    injectStyles() { }
+};
+
+// ============================================================================
 // PAYROLL ENGINE - Main Controller
 // ============================================================================
 const PayrollEngine = {
     async init() {
+        // Inicializar sistema de tipos de concepto universales
+        await ConceptTypeHelper.init();
+        ConceptTypeHelper.injectStyles();
+
         this.bindEvents();
         await this.showView('dashboard');
     },
@@ -235,6 +750,7 @@ const PayrollEngine = {
                 case 'templates': await this.renderTemplates(); break;
                 case 'entities': await this.renderEntities(); break;
                 case 'reports': await this.renderReports(); break;
+                case 'payslip-editor': await this.renderPayslipEditor(); break;
             }
         } catch (error) {
             content.innerHTML = `<div class="pe-error"><span>Error: ${error.message}</span></div>`;
@@ -1161,12 +1677,23 @@ const PayrollEngine = {
         `;
     },
 
+    // Almacenar entidades para el formulario de conceptos
+    templateEntities: [],
+
     async showCreateTemplateModal() {
         let conceptTypes = [];
         try {
             const result = await PayrollAPI.getConceptTypes();
             if (result.data) conceptTypes = result.data;
         } catch (e) {}
+
+        // Cargar entidades para el selector
+        try {
+            const entResult = await PayrollAPI.getEntities();
+            this.templateEntities = entResult.data || [];
+        } catch (e) {
+            this.templateEntities = [];
+        }
 
         const modal = document.createElement('div');
         modal.className = 'pe-modal-overlay';
@@ -1206,6 +1733,7 @@ const PayrollEngine = {
 
                         <div class="pe-section-divider">
                             <h4>Conceptos de la Plantilla</h4>
+                            <p class="pe-text-muted pe-text-sm">Asigna una entidad de destino a cada concepto para consolidacion automatica</p>
                             <button type="button" onclick="PayrollEngine.addConceptRow()" class="pe-btn pe-btn-sm pe-btn-outline">+ Agregar Concepto</button>
                         </div>
 
@@ -1224,21 +1752,47 @@ const PayrollEngine = {
     },
 
     renderConceptFormRow(conceptType, index) {
-        // concept_type_id values: 1=Haber Fijo, 9=Deduccion Jubilacion, 14=Carga Patronal
-        const currentTypeId = conceptType?.concept_type_id || 1;
+        // Usar sistema universal de tipos de concepto
+        const currentTypeId = conceptType?.concept_type_id || null;
+        const currentEntityId = conceptType?.entity_id || '';
+        const currentFormula = conceptType?.formula || conceptType?.default_value || '';
+
+        // Agrupar entidades por categoría para mejor UX
+        const entitiesByCategory = {};
+        (this.templateEntities || []).forEach(e => {
+            const catName = e.category_name || 'Sin Categoria';
+            if (!entitiesByCategory[catName]) entitiesByCategory[catName] = [];
+            entitiesByCategory[catName].push(e);
+        });
+
+        const entityOptions = Object.entries(entitiesByCategory).map(([catName, entities]) => `
+            <optgroup label="${catName}">
+                ${entities.map(e => `
+                    <option value="${e.entity_id}" ${currentEntityId == e.entity_id ? 'selected' : ''}>
+                        ${e.entity_code} - ${e.entity_short_name || e.entity_name}
+                    </option>
+                `).join('')}
+            </optgroup>
+        `).join('');
+
+        // Dropdown dinámico de tipos (cargados de BD)
+        const typeDropdown = ConceptTypeHelper.renderTypeDropdown(`concept_type_id_${index}`, currentTypeId);
+
         return `
             <div class="pe-concept-row" data-index="${index}">
-                <input type="text" name="concept_name_${index}" value="${conceptType?.concept_name || ''}" placeholder="Nombre del concepto">
-                <select name="concept_type_id_${index}">
-                    <option value="1" ${currentTypeId == 1 ? 'selected' : ''}>Haber Fijo</option>
-                    <option value="2" ${currentTypeId == 2 ? 'selected' : ''}>Haber Variable</option>
-                    <option value="9" ${currentTypeId == 9 ? 'selected' : ''}>Aporte Jubilatorio</option>
-                    <option value="10" ${currentTypeId == 10 ? 'selected' : ''}>Obra Social</option>
-                    <option value="14" ${currentTypeId == 14 ? 'selected' : ''}>Contrib. Patronal Jubilacion</option>
-                    <option value="15" ${currentTypeId == 15 ? 'selected' : ''}>Contrib. Patronal OS</option>
-                </select>
-                <input type="text" name="concept_formula_${index}" placeholder="Formula o % (ej: 11%)">
-                <button type="button" onclick="this.parentElement.remove()" class="pe-btn-icon pe-btn-danger">&times;</button>
+                <div class="pe-concept-main">
+                    <input type="text" name="concept_name_${index}" value="${conceptType?.concept_name || ''}" placeholder="Nombre del concepto" class="pe-concept-name">
+                    ${typeDropdown}
+                    ${FormulaEditor.renderEditor(index, currentFormula)}
+                </div>
+                <div class="pe-concept-entity">
+                    <select name="entity_id_${index}" class="pe-select-entity" title="Entidad de Destino">
+                        <option value="">-- Sin entidad --</option>
+                        ${entityOptions}
+                    </select>
+                    <input type="text" name="entity_label_${index}" value="${conceptType?.entity_label || ''}" placeholder="Etiqueta recibo" class="pe-input-label">
+                </div>
+                <button type="button" onclick="this.closest('.pe-concept-row').remove()" class="pe-btn-icon pe-btn-danger" title="Eliminar">&times;</button>
             </div>
         `;
     },
@@ -1262,11 +1816,13 @@ const PayrollEngine = {
             concepts: []
         };
 
-        // Collect concepts
+        // Collect concepts with entity assignment
         document.querySelectorAll('.pe-concept-row').forEach((row, i) => {
             const name = formData.get(`concept_name_${i}`);
             if (name) {
                 const typeId = parseInt(formData.get(`concept_type_id_${i}`)) || 1;
+                const entityId = formData.get(`entity_id_${i}`);
+                const entityLabel = formData.get(`entity_label_${i}`);
                 // Auto-generate concept_code from name
                 const code = name.substring(0, 10).toUpperCase().replace(/[^A-Z0-9]/g, '') + '-' + (i + 1);
                 data.concepts.push({
@@ -1274,7 +1830,9 @@ const PayrollEngine = {
                     concept_code: code,
                     concept_type_id: typeId,
                     calculation_type: 'fixed',
-                    formula: formData.get(`concept_formula_${i}`)
+                    formula: formData.get(`concept_formula_${i}`),
+                    entity_id: entityId ? parseInt(entityId) : null,
+                    entity_label: entityLabel || null
                 });
             }
         });
@@ -1347,17 +1905,10 @@ const PayrollEngine = {
 
                             <div id="pe-edit-concepts-list" class="pe-concepts-list">
                                 ${(template.concepts || []).map((c, i) => `
-                                    <div class="pe-concept-row" data-concept-id="${c.id || ''}" data-index="${i}">
-                                        <input type="text" name="concept_name_${i}" value="${c.concept_name || ''}" placeholder="Nombre del concepto">
-                                        <select name="concept_type_id_${i}">
-                                            <option value="1" ${c.concept_type_id == 1 ? 'selected' : ''}>Haber Fijo</option>
-                                            <option value="2" ${c.concept_type_id == 2 ? 'selected' : ''}>Haber Variable</option>
-                                            <option value="9" ${c.concept_type_id == 9 ? 'selected' : ''}>Aporte Jubilatorio</option>
-                                            <option value="10" ${c.concept_type_id == 10 ? 'selected' : ''}>Obra Social</option>
-                                            <option value="14" ${c.concept_type_id == 14 ? 'selected' : ''}>Contrib. Patronal Jub.</option>
-                                            <option value="15" ${c.concept_type_id == 15 ? 'selected' : ''}>Contrib. Patronal OS</option>
-                                        </select>
-                                        <input type="text" name="concept_formula_${i}" value="${c.formula || (c.percentage ? c.percentage + '%' : '')}" placeholder="Formula o %">
+                                    <div class="pe-concept-row pe-concept-row-edit" data-concept-id="${c.id || ''}" data-index="${i}">
+                                        <input type="text" name="concept_name_${i}" value="${c.concept_name || ''}" placeholder="Nombre del concepto" class="pe-concept-name">
+                                        ${ConceptTypeHelper.renderTypeDropdown('concept_type_id_' + i, c.concept_type_id)}
+                                        ${FormulaEditor.renderEditor(i, c.formula || (c.percentage ? c.percentage + '%' : ''))}
                                         <button type="button" onclick="PayrollEngine.removeConceptRow(this, '${c.id || ''}')" class="pe-btn-icon pe-btn-danger">&times;</button>
                                     </div>
                                 `).join('')}
@@ -1379,18 +1930,12 @@ const PayrollEngine = {
     addEditConceptRow() {
         const list = document.getElementById('pe-edit-concepts-list');
         const index = list.children.length;
+        const typeDropdown = ConceptTypeHelper.renderTypeDropdown(`concept_type_id_${index}`, null);
         list.insertAdjacentHTML('beforeend', `
-            <div class="pe-concept-row" data-concept-id="" data-index="${index}">
-                <input type="text" name="concept_name_${index}" placeholder="Nombre del concepto">
-                <select name="concept_type_id_${index}">
-                    <option value="1">Haber Fijo</option>
-                    <option value="2">Haber Variable</option>
-                    <option value="9">Aporte Jubilatorio</option>
-                    <option value="10">Obra Social</option>
-                    <option value="14">Contrib. Patronal Jub.</option>
-                    <option value="15">Contrib. Patronal OS</option>
-                </select>
-                <input type="text" name="concept_formula_${index}" placeholder="Formula o %">
+            <div class="pe-concept-row pe-concept-row-edit" data-concept-id="" data-index="${index}">
+                <input type="text" name="concept_name_${index}" placeholder="Nombre del concepto" class="pe-concept-name">
+                ${typeDropdown}
+                ${FormulaEditor.renderEditor(index, '')}
                 <button type="button" onclick="PayrollEngine.removeConceptRow(this, '')" class="pe-btn-icon pe-btn-danger">&times;</button>
             </div>
         `);
@@ -1598,98 +2143,491 @@ const PayrollEngine = {
     },
 
     // ========================================================================
-    // ENTITIES VIEW
+    // ENTITIES VIEW - 100% Parametrizable con Categorías
     // ========================================================================
+    entitiesViewTab: 'entities', // 'categories' o 'entities'
+    entityCategories: [],
+    entities: [],
+
     async renderEntities() {
         const content = document.getElementById('pe-content');
 
-        let entities = [];
+        // Cargar datos
         try {
-            const result = await PayrollAPI.getEntities();
-            if (result.data) entities = result.data;
-        } catch (e) {}
+            const [catResult, entResult] = await Promise.all([
+                PayrollAPI.getEntityCategories(),
+                PayrollAPI.getEntities()
+            ]);
+            this.entityCategories = catResult.data || [];
+            this.entities = entResult.data || [];
+        } catch (e) {
+            console.error('Error loading entities:', e);
+        }
 
         content.innerHTML = `
             <div class="pe-entities">
-                <div class="pe-toolbar">
-                    <h3>Entidades Receptoras</h3>
-                    <button onclick="PayrollEngine.showCreateEntityModal()" class="pe-btn pe-btn-primary">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Nueva Entidad
+                <!-- Tabs para Categorías / Entidades -->
+                <div class="pe-entities-tabs">
+                    <button class="pe-tab ${this.entitiesViewTab === 'categories' ? 'active' : ''}"
+                            onclick="PayrollEngine.switchEntitiesTab('categories')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                        </svg>
+                        Categorias de Destino
+                    </button>
+                    <button class="pe-tab ${this.entitiesViewTab === 'entities' ? 'active' : ''}"
+                            onclick="PayrollEngine.switchEntitiesTab('entities')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11M20 10v11"/>
+                        </svg>
+                        Entidades de Destino
                     </button>
                 </div>
 
-                <div class="pe-entities-grid">
-                    ${entities.length > 0 ? entities.map(e => this.renderEntityCard(e)).join('') : `
-                        <div class="pe-empty-state">
-                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11M20 10v11"/></svg>
-                            <h4>No hay entidades configuradas</h4>
-                            <p>Configure las entidades receptoras de deducciones</p>
-                            <button onclick="PayrollEngine.showCreateEntityModal()" class="pe-btn pe-btn-primary">Crear Entidad</button>
-                        </div>
-                    `}
+                <div id="pe-entities-content">
+                    ${this.entitiesViewTab === 'categories' ? this.renderCategoriesView() : this.renderEntitiesView()}
                 </div>
             </div>
         `;
     },
 
-    renderEntityCard(entity) {
-        const icons = {
-            'TAX_AUTHORITY': '🏛️',
-            'HEALTH_INSURANCE': '🏥',
-            'UNION': '👷',
-            'PENSION_FUND': '💰',
-            'SOCIAL_SECURITY': '🛡️'
+    switchEntitiesTab(tab) {
+        this.entitiesViewTab = tab;
+        const container = document.getElementById('pe-entities-content');
+        if (container) {
+            container.innerHTML = tab === 'categories' ? this.renderCategoriesView() : this.renderEntitiesView();
+        }
+        document.querySelectorAll('.pe-entities-tabs .pe-tab').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.toLowerCase().includes(tab.substring(0, 3)));
+        });
+    },
+
+    // --- VISTA DE CATEGORÍAS ---
+    renderCategoriesView() {
+        const flowColors = {
+            'earning': { bg: '#dcfce7', text: '#166534', label: 'Ingreso' },
+            'deduction': { bg: '#fee2e2', text: '#991b1b', label: 'Deduccion' },
+            'employer_contribution': { bg: '#dbeafe', text: '#1e40af', label: 'Aporte Patronal' },
+            'informative': { bg: '#f3f4f6', text: '#374151', label: 'Informativo' }
         };
+
         return `
-            <div class="pe-entity-card">
-                <div class="pe-entity-icon">${icons[entity.entity_type] || '🏢'}</div>
-                <div class="pe-entity-info">
-                    <h4>${entity.entity_name}</h4>
-                    <span class="pe-entity-code">${entity.entity_code}</span>
-                    <span class="pe-entity-type">${entity.entity_type}</span>
+            <div class="pe-section-header">
+                <div>
+                    <h3>Categorias de Entidades</h3>
+                    <p class="pe-text-muted">Define los tipos de destino para conceptos de liquidacion</p>
                 </div>
-                ${entity.is_mandatory ? '<span class="pe-badge pe-badge-warning">Obligatorio</span>' : ''}
-                <div class="pe-entity-actions">
-                    <button onclick="PayrollEngine.viewEntitySettlements(${entity.entity_id})" class="pe-btn pe-btn-sm pe-btn-outline">Ver Liquidaciones</button>
-                    <button onclick="PayrollEngine.generateEntitySettlement(${entity.entity_id})" class="pe-btn pe-btn-sm pe-btn-primary">Generar</button>
-                </div>
+                <button onclick="PayrollEngine.showCategoryModal()" class="pe-btn pe-btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nueva Categoria
+                </button>
+            </div>
+
+            <div class="pe-categories-grid">
+                ${this.entityCategories.length > 0 ? this.entityCategories.map(cat => {
+                    const flow = flowColors[cat.flow_direction] || flowColors.informative;
+                    return `
+                        <div class="pe-category-card" style="border-left: 4px solid ${cat.color_hex || '#6b7280'}">
+                            <div class="pe-category-header">
+                                <span class="pe-category-icon" style="background: ${cat.color_hex || '#6b7280'}20; color: ${cat.color_hex || '#6b7280'}">
+                                    ${this.getCategoryIcon(cat.icon_name)}
+                                </span>
+                                <div class="pe-category-title">
+                                    <h4>${cat.category_name}</h4>
+                                    <span class="pe-code">${cat.category_code}</span>
+                                </div>
+                                ${cat.is_global ? '<span class="pe-badge pe-badge-info">Global</span>' : ''}
+                                ${cat.is_system ? '<span class="pe-badge pe-badge-secondary">Sistema</span>' : ''}
+                            </div>
+                            <p class="pe-category-desc">${cat.description || 'Sin descripcion'}</p>
+                            <div class="pe-category-meta">
+                                <span class="pe-flow-badge" style="background: ${flow.bg}; color: ${flow.text}">${flow.label}</span>
+                                <span class="pe-meta-item">Grupo: ${cat.consolidation_group || 'N/A'}</span>
+                            </div>
+                            ${!cat.is_system ? `
+                                <div class="pe-category-actions">
+                                    <button onclick="PayrollEngine.showCategoryModal(${cat.id})" class="pe-btn pe-btn-sm pe-btn-ghost">Editar</button>
+                                    <button onclick="PayrollEngine.deleteCategory(${cat.id})" class="pe-btn pe-btn-sm pe-btn-ghost pe-btn-danger">Eliminar</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('') : `
+                    <div class="pe-empty-state">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                        </svg>
+                        <p>No hay categorias configuradas</p>
+                    </div>
+                `}
             </div>
         `;
     },
 
-    showCreateEntityModal() {
+    getCategoryIcon(iconName) {
+        const icons = {
+            'piggy-bank': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7V4a1 1 0 00-1-1H5a2 2 0 00-2 2v14a2 2 0 002 2h13a1 1 0 001-1v-3"/><path d="M3 6l10 7 10-7"/></svg>',
+            'heart': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>',
+            'users': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
+            'building': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11M20 10v11"/></svg>',
+            'receipt': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z"/></svg>',
+            'shield-check': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
+            'home': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
+            'briefcase': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>'
+        };
+        return icons[iconName] || icons['building'];
+    },
+
+    // --- VISTA DE ENTIDADES ---
+    renderEntitiesView() {
+        const flowColors = {
+            'earning': { bg: '#dcfce7', text: '#166534' },
+            'deduction': { bg: '#fee2e2', text: '#991b1b' },
+            'employer_contribution': { bg: '#dbeafe', text: '#1e40af' },
+            'informative': { bg: '#f3f4f6', text: '#374151' }
+        };
+
+        // Agrupar por categoría
+        const grouped = {};
+        this.entities.forEach(e => {
+            const catName = e.category_name || 'Sin Categoria';
+            if (!grouped[catName]) grouped[catName] = [];
+            grouped[catName].push(e);
+        });
+
+        return `
+            <div class="pe-section-header">
+                <div>
+                    <h3>Entidades de Destino</h3>
+                    <p class="pe-text-muted">Organismos, sindicatos y entidades que reciben deducciones/aportes</p>
+                </div>
+                <button onclick="PayrollEngine.showEntityModal()" class="pe-btn pe-btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nueva Entidad
+                </button>
+            </div>
+
+            ${Object.keys(grouped).length > 0 ? Object.entries(grouped).map(([catName, entities]) => `
+                <div class="pe-entity-group">
+                    <h4 class="pe-group-title">${catName} <span class="pe-count">(${entities.length})</span></h4>
+                    <div class="pe-entities-grid">
+                        ${entities.map(e => {
+                            const flow = flowColors[e.flow_direction] || flowColors.informative;
+                            return `
+                                <div class="pe-entity-card" style="border-left: 4px solid ${e.color_hex || '#6b7280'}">
+                                    <div class="pe-entity-header">
+                                        <span class="pe-entity-icon" style="background: ${e.color_hex || '#6b7280'}20; color: ${e.color_hex || '#6b7280'}">
+                                            ${this.getCategoryIcon(e.icon_name)}
+                                        </span>
+                                        <div>
+                                            <h4>${e.entity_name}</h4>
+                                            <span class="pe-code">${e.entity_code}</span>
+                                        </div>
+                                    </div>
+                                    <div class="pe-entity-meta">
+                                        ${e.country_name ? `<span class="pe-meta-item">🌍 ${e.country_name}</span>` : ''}
+                                        ${e.is_government ? '<span class="pe-badge pe-badge-warning">Gubernamental</span>' : ''}
+                                        ${e.is_mandatory ? '<span class="pe-badge pe-badge-error">Obligatorio</span>' : ''}
+                                        ${e.is_global ? '<span class="pe-badge pe-badge-info">Global</span>' : ''}
+                                    </div>
+                                    ${e.tax_id ? `<p class="pe-entity-taxid">ID Fiscal: ${e.tax_id}</p>` : ''}
+                                    <div class="pe-entity-actions">
+                                        <button onclick="PayrollEngine.viewEntitySettlements(${e.entity_id})" class="pe-btn pe-btn-sm pe-btn-outline">Liquidaciones</button>
+                                        ${!e.is_global ? `
+                                            <button onclick="PayrollEngine.showEntityModal(${e.entity_id})" class="pe-btn pe-btn-sm pe-btn-ghost">Editar</button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `).join('') : `
+                <div class="pe-empty-state">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <path d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11M20 10v11"/>
+                    </svg>
+                    <h4>No hay entidades configuradas</h4>
+                    <p>Primero crea categorias y luego las entidades de destino</p>
+                    <button onclick="PayrollEngine.switchEntitiesTab('categories')" class="pe-btn pe-btn-secondary">Ir a Categorias</button>
+                    <button onclick="PayrollEngine.showEntityModal()" class="pe-btn pe-btn-primary">Crear Entidad</button>
+                </div>
+            `}
+        `;
+    },
+
+    // --- MODAL DE CATEGORÍA ---
+    async showCategoryModal(categoryId = null) {
+        let category = null;
+        if (categoryId) {
+            category = this.entityCategories.find(c => c.id === categoryId);
+        }
+
         const modal = document.createElement('div');
         modal.className = 'pe-modal-overlay';
         modal.innerHTML = `
             <div class="pe-modal">
                 <div class="pe-modal-header">
-                    <h3>Nueva Entidad</h3>
+                    <h3>${category ? 'Editar' : 'Nueva'} Categoria</h3>
+                    <button onclick="this.closest('.pe-modal-overlay').remove()" class="pe-modal-close">&times;</button>
+                </div>
+                <div class="pe-modal-body">
+                    <form id="pe-category-form">
+                        <input type="hidden" name="id" value="${category?.id || ''}">
+                        <div class="pe-form-row">
+                            <div class="pe-form-group">
+                                <label>Codigo *</label>
+                                <input type="text" name="category_code" required value="${category?.category_code || ''}" placeholder="EJ: PENSION">
+                            </div>
+                            <div class="pe-form-group">
+                                <label>Nombre Corto</label>
+                                <input type="text" name="category_name_short" value="${category?.category_name_short || ''}" placeholder="Jubilacion">
+                            </div>
+                        </div>
+                        <div class="pe-form-group">
+                            <label>Nombre Completo *</label>
+                            <input type="text" name="category_name" required value="${category?.category_name || ''}" placeholder="Sistema Previsional / Jubilacion">
+                        </div>
+                        <div class="pe-form-group">
+                            <label>Descripcion</label>
+                            <textarea name="description" rows="2" placeholder="Descripcion de la categoria">${category?.description || ''}</textarea>
+                        </div>
+                        <div class="pe-form-row">
+                            <div class="pe-form-group">
+                                <label>Direccion del Flujo *</label>
+                                <select name="flow_direction" required>
+                                    <option value="deduction" ${category?.flow_direction === 'deduction' ? 'selected' : ''}>Deduccion (del empleado)</option>
+                                    <option value="employer_contribution" ${category?.flow_direction === 'employer_contribution' ? 'selected' : ''}>Aporte Patronal</option>
+                                    <option value="earning" ${category?.flow_direction === 'earning' ? 'selected' : ''}>Ingreso/Haber</option>
+                                    <option value="informative" ${category?.flow_direction === 'informative' ? 'selected' : ''}>Solo Informativo</option>
+                                </select>
+                            </div>
+                            <div class="pe-form-group">
+                                <label>Grupo de Consolidacion</label>
+                                <input type="text" name="consolidation_group" value="${category?.consolidation_group || ''}" placeholder="social_security">
+                            </div>
+                        </div>
+                        <div class="pe-form-row">
+                            <div class="pe-form-group">
+                                <label>Color (HEX)</label>
+                                <input type="color" name="color_hex" value="${category?.color_hex || '#3B82F6'}">
+                            </div>
+                            <div class="pe-form-group">
+                                <label>Icono</label>
+                                <select name="icon_name">
+                                    <option value="building" ${category?.icon_name === 'building' ? 'selected' : ''}>Edificio</option>
+                                    <option value="piggy-bank" ${category?.icon_name === 'piggy-bank' ? 'selected' : ''}>Alcancia</option>
+                                    <option value="heart" ${category?.icon_name === 'heart' ? 'selected' : ''}>Corazon</option>
+                                    <option value="users" ${category?.icon_name === 'users' ? 'selected' : ''}>Usuarios</option>
+                                    <option value="receipt" ${category?.icon_name === 'receipt' ? 'selected' : ''}>Recibo</option>
+                                    <option value="shield-check" ${category?.icon_name === 'shield-check' ? 'selected' : ''}>Escudo</option>
+                                    <option value="home" ${category?.icon_name === 'home' ? 'selected' : ''}>Casa</option>
+                                    <option value="briefcase" ${category?.icon_name === 'briefcase' ? 'selected' : ''}>Maletin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="pe-form-group pe-form-checkboxes">
+                            <label><input type="checkbox" name="requires_tax_id" ${category?.requires_tax_id ? 'checked' : ''}> Requiere ID Fiscal</label>
+                            <label><input type="checkbox" name="requires_bank_info" ${category?.requires_bank_info ? 'checked' : ''}> Requiere Datos Bancarios</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="pe-modal-footer">
+                    <button onclick="PayrollEngine.saveCategory()" class="pe-btn pe-btn-primary">Guardar</button>
+                    <button onclick="this.closest('.pe-modal-overlay').remove()" class="pe-btn pe-btn-secondary">Cancelar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    async saveCategory() {
+        const form = document.getElementById('pe-category-form');
+        const formData = new FormData(form);
+        const id = formData.get('id');
+
+        const data = {
+            category_code: formData.get('category_code'),
+            category_name: formData.get('category_name'),
+            category_name_short: formData.get('category_name_short'),
+            description: formData.get('description'),
+            flow_direction: formData.get('flow_direction'),
+            consolidation_group: formData.get('consolidation_group'),
+            color_hex: formData.get('color_hex'),
+            icon_name: formData.get('icon_name'),
+            requires_tax_id: formData.get('requires_tax_id') === 'on',
+            requires_bank_info: formData.get('requires_bank_info') === 'on'
+        };
+
+        try {
+            if (id) {
+                await PayrollAPI.updateEntityCategory(id, data);
+                this.showNotification('Categoria actualizada', 'success');
+            } else {
+                await PayrollAPI.createEntityCategory(data);
+                this.showNotification('Categoria creada', 'success');
+            }
+            document.querySelector('.pe-modal-overlay')?.remove();
+            this.renderEntities();
+        } catch (error) {
+            this.showNotification('Error: ' + error.message, 'error');
+        }
+    },
+
+    async deleteCategory(id) {
+        if (!confirm('Eliminar esta categoria? Las entidades asociadas quedaran sin categoria.')) return;
+        try {
+            await PayrollAPI.deleteEntityCategory(id);
+            this.showNotification('Categoria eliminada', 'success');
+            this.renderEntities();
+        } catch (error) {
+            this.showNotification('Error: ' + error.message, 'error');
+        }
+    },
+
+    // --- MODAL DE ENTIDAD ---
+    async showEntityModal(entityId = null) {
+        let entity = null;
+        if (entityId) {
+            entity = this.entities.find(e => e.entity_id === entityId);
+        }
+
+        // Cargar países si no están cargados
+        let countries = [];
+        try {
+            const result = await PayrollAPI.request('/countries');
+            countries = result.data || [];
+        } catch (e) {}
+
+        const modal = document.createElement('div');
+        modal.className = 'pe-modal-overlay';
+        modal.innerHTML = `
+            <div class="pe-modal pe-modal-lg">
+                <div class="pe-modal-header">
+                    <h3>${entity ? 'Editar' : 'Nueva'} Entidad</h3>
                     <button onclick="this.closest('.pe-modal-overlay').remove()" class="pe-modal-close">&times;</button>
                 </div>
                 <div class="pe-modal-body">
                     <form id="pe-entity-form">
-                        <div class="pe-form-group">
-                            <label>Codigo *</label>
-                            <input type="text" name="entity_code" required placeholder="EJ: AFIP">
+                        <input type="hidden" name="entity_id" value="${entity?.entity_id || ''}">
+
+                        <div class="pe-form-section">
+                            <h4>Datos Basicos</h4>
+                            <div class="pe-form-row">
+                                <div class="pe-form-group">
+                                    <label>Categoria *</label>
+                                    <select name="category_id" required>
+                                        <option value="">-- Seleccione --</option>
+                                        ${this.entityCategories.map(c => `
+                                            <option value="${c.id}" ${entity?.category_id == c.id ? 'selected' : ''}>
+                                                ${c.category_name}
+                                            </option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                                <div class="pe-form-group">
+                                    <label>Pais</label>
+                                    <select name="country_id">
+                                        <option value="">-- Aplica a todos --</option>
+                                        ${countries.map(c => `
+                                            <option value="${c.id}" ${entity?.country_id == c.id ? 'selected' : ''}>
+                                                ${c.country_name}
+                                            </option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="pe-form-row">
+                                <div class="pe-form-group">
+                                    <label>Codigo *</label>
+                                    <input type="text" name="entity_code" required value="${entity?.entity_code || ''}" placeholder="EJ: AFIP_JUB">
+                                </div>
+                                <div class="pe-form-group">
+                                    <label>Nombre Corto</label>
+                                    <input type="text" name="entity_short_name" value="${entity?.entity_short_name || ''}" placeholder="AFIP">
+                                </div>
+                            </div>
+                            <div class="pe-form-group">
+                                <label>Nombre Completo *</label>
+                                <input type="text" name="entity_name" required value="${entity?.entity_name || ''}" placeholder="AFIP - Sistema Integrado Previsional">
+                            </div>
+                            <div class="pe-form-row">
+                                <div class="pe-form-group">
+                                    <label>Razon Social</label>
+                                    <input type="text" name="legal_name" value="${entity?.legal_name || ''}" placeholder="Razon social completa">
+                                </div>
+                                <div class="pe-form-group">
+                                    <label>ID Fiscal (CUIT/RFC/etc)</label>
+                                    <input type="text" name="tax_id" value="${entity?.tax_id || ''}" placeholder="30-12345678-9">
+                                </div>
+                            </div>
                         </div>
-                        <div class="pe-form-group">
-                            <label>Nombre *</label>
-                            <input type="text" name="entity_name" required placeholder="AFIP - Administracion Federal">
+
+                        <div class="pe-form-section">
+                            <h4>Contacto</h4>
+                            <div class="pe-form-row">
+                                <div class="pe-form-group">
+                                    <label>Telefono</label>
+                                    <input type="text" name="phone" value="${entity?.phone || ''}">
+                                </div>
+                                <div class="pe-form-group">
+                                    <label>Email</label>
+                                    <input type="email" name="email" value="${entity?.email || ''}">
+                                </div>
+                            </div>
+                            <div class="pe-form-group">
+                                <label>Direccion</label>
+                                <input type="text" name="address" value="${entity?.address || ''}">
+                            </div>
+                            <div class="pe-form-group">
+                                <label>Sitio Web</label>
+                                <input type="url" name="website" value="${entity?.website || ''}" placeholder="https://...">
+                            </div>
                         </div>
-                        <div class="pe-form-group">
-                            <label>Tipo</label>
-                            <select name="entity_type">
-                                <option value="TAX_AUTHORITY">Organismo Fiscal</option>
-                                <option value="HEALTH_INSURANCE">Obra Social</option>
-                                <option value="UNION">Sindicato</option>
-                                <option value="PENSION_FUND">Fondo de Pension</option>
-                                <option value="SOCIAL_SECURITY">Seguridad Social</option>
-                                <option value="OTHER">Otro</option>
-                            </select>
+
+                        <div class="pe-form-section">
+                            <h4>Datos Bancarios (para pagos)</h4>
+                            <div class="pe-form-row">
+                                <div class="pe-form-group">
+                                    <label>Banco</label>
+                                    <input type="text" name="bank_name" value="${entity?.bank_name || ''}">
+                                </div>
+                                <div class="pe-form-group">
+                                    <label>CBU/Cuenta</label>
+                                    <input type="text" name="bank_cbu" value="${entity?.bank_cbu || ''}">
+                                </div>
+                            </div>
+                            <div class="pe-form-group">
+                                <label>Alias</label>
+                                <input type="text" name="bank_alias" value="${entity?.bank_alias || ''}">
+                            </div>
                         </div>
-                        <div class="pe-form-group">
-                            <label><input type="checkbox" name="is_mandatory"> Es obligatorio</label>
+
+                        <div class="pe-form-section">
+                            <h4>Configuracion</h4>
+                            <div class="pe-form-row">
+                                <div class="pe-form-group">
+                                    <label>Formato de Presentacion</label>
+                                    <input type="text" name="presentation_format" value="${entity?.presentation_format || ''}" placeholder="CUSTOM, TXT, EXCEL...">
+                                </div>
+                                <div class="pe-form-group">
+                                    <label>Referencia Legal</label>
+                                    <input type="text" name="legal_reference" value="${entity?.legal_reference || ''}" placeholder="Ley N XX Art. YY">
+                                </div>
+                            </div>
+                            <div class="pe-form-group pe-form-checkboxes">
+                                <label><input type="checkbox" name="is_government" ${entity?.is_government ? 'checked' : ''}> Organismo Gubernamental</label>
+                                <label><input type="checkbox" name="is_mandatory" ${entity?.is_mandatory ? 'checked' : ''}> Obligatorio por Ley</label>
+                            </div>
+                            <div class="pe-form-group">
+                                <label>Notas de Calculo</label>
+                                <textarea name="calculation_notes" rows="2" placeholder="Instrucciones sobre como calcular">${entity?.calculation_notes || ''}</textarea>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -1705,22 +2643,51 @@ const PayrollEngine = {
     async saveEntity() {
         const form = document.getElementById('pe-entity-form');
         const formData = new FormData(form);
+        const id = formData.get('entity_id');
 
         const data = {
+            category_id: formData.get('category_id') || null,
+            country_id: formData.get('country_id') || null,
             entity_code: formData.get('entity_code'),
             entity_name: formData.get('entity_name'),
-            entity_type: formData.get('entity_type'),
+            entity_short_name: formData.get('entity_short_name'),
+            legal_name: formData.get('legal_name'),
+            tax_id: formData.get('tax_id'),
+            phone: formData.get('phone'),
+            email: formData.get('email'),
+            address: formData.get('address'),
+            website: formData.get('website'),
+            bank_name: formData.get('bank_name'),
+            bank_cbu: formData.get('bank_cbu'),
+            bank_alias: formData.get('bank_alias'),
+            presentation_format: formData.get('presentation_format'),
+            legal_reference: formData.get('legal_reference'),
+            calculation_notes: formData.get('calculation_notes'),
+            is_government: formData.get('is_government') === 'on',
             is_mandatory: formData.get('is_mandatory') === 'on'
         };
 
         try {
-            await PayrollAPI.createEntity(data);
-            this.showNotification('Entidad creada', 'success');
+            if (id) {
+                await PayrollAPI.updateEntity(id, data);
+                this.showNotification('Entidad actualizada', 'success');
+            } else {
+                await PayrollAPI.createEntity(data);
+                this.showNotification('Entidad creada', 'success');
+            }
             document.querySelector('.pe-modal-overlay')?.remove();
             this.renderEntities();
         } catch (error) {
             this.showNotification('Error: ' + error.message, 'error');
         }
+    },
+
+    // Legacy - mantener para compatibilidad
+    showCreateEntityModal() {
+        this.showEntityModal();
+    },
+    renderEntityCard(entity) {
+        return `<div class="pe-entity-card-legacy">${entity.entity_name}</div>`;
     },
 
     async viewEntitySettlements(entityId) {
@@ -1889,6 +2856,52 @@ const PayrollEngine = {
                 </div>
             </div>
         `;
+    },
+
+    // ========================================================================
+    // PAYSLIP EDITOR VIEW - Editor Visual de Recibos de Sueldo
+    // ========================================================================
+    async renderPayslipEditor() {
+        const content = document.getElementById('pe-content');
+
+        // Cargar script del editor si no existe
+        if (!window.PayslipEditor) {
+            await this.loadPayslipEditorScript();
+        }
+
+        // Renderizar editor
+        if (window.PayslipEditor) {
+            await PayslipEditor.render('pe-content');
+        } else {
+            content.innerHTML = `
+                <div class="pe-error">
+                    <p>Error cargando el editor de recibos</p>
+                    <button onclick="PayrollEngine.showView('payslip-editor')" class="pe-btn pe-btn-primary">Reintentar</button>
+                </div>
+            `;
+        }
+    },
+
+    async loadPayslipEditorScript() {
+        return new Promise((resolve, reject) => {
+            // Verificar si ya está cargado
+            if (window.PayslipEditor) {
+                resolve();
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = '/js/modules/payslip-template-editor.js?v=' + Date.now();
+            script.onload = () => {
+                console.log('[Payroll] PayslipEditor script loaded');
+                resolve();
+            };
+            script.onerror = () => {
+                console.error('[Payroll] Failed to load PayslipEditor');
+                reject(new Error('Failed to load PayslipEditor script'));
+            };
+            document.head.appendChild(script);
+        });
     },
 
     async exportReport(type) {
@@ -3426,6 +4439,323 @@ function injectEnterpriseStyles() {
             display: flex;
             gap: 4px;
             justify-content: center;
+        }
+
+        /* ============================================================================ */
+        /* FORMULA EDITOR STYLES */
+        /* ============================================================================ */
+        .pe-formula-editor {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .pe-formula-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            position: relative;
+        }
+
+        .pe-formula-input {
+            flex: 1;
+            background: var(--pe-bg-tertiary);
+            border: 1px solid var(--pe-border);
+            color: var(--pe-text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'Fira Code', 'Monaco', monospace;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .pe-formula-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.15);
+        }
+
+        .pe-formula-input.valid {
+            border-color: var(--accent-green);
+        }
+
+        .pe-formula-input.invalid {
+            border-color: var(--accent-red);
+        }
+
+        .pe-formula-help-btn {
+            background: var(--pe-bg-tertiary);
+            border: 1px solid var(--pe-border);
+            color: var(--pe-text-secondary);
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .pe-formula-help-btn:hover {
+            background: var(--pe-bg-secondary);
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .pe-formula-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            min-height: 20px;
+        }
+
+        .pe-status-ok {
+            color: var(--accent-green);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .pe-status-error {
+            color: var(--accent-red);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .pe-preview-result {
+            font-size: 11px;
+            color: var(--accent-blue);
+            background: rgba(0, 212, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .pe-preview-error {
+            font-size: 11px;
+            color: var(--accent-red);
+            background: rgba(255, 82, 82, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .pe-formula-panel {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--pe-bg-secondary);
+            border: 1px solid var(--pe-border);
+            border-radius: 8px;
+            margin-top: 8px;
+            padding: 12px;
+            z-index: 1000;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .pe-formula-help {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .pe-help-section h5 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--pe-text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .pe-vars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .pe-var-category {
+            background: var(--pe-bg-tertiary);
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .pe-cat-header {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .pe-var-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 6px 8px;
+            background: var(--pe-bg-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .pe-var-item:hover {
+            background: var(--pe-bg-primary);
+            transform: translateX(2px);
+        }
+
+        .pe-var-item code {
+            font-size: 12px;
+            color: var(--accent-green);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .pe-var-item small {
+            font-size: 10px;
+            color: var(--pe-text-muted);
+        }
+
+        .pe-examples-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .pe-example-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--pe-bg-tertiary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pe-example-item:hover {
+            background: var(--pe-bg-primary);
+            border-left: 2px solid var(--accent-blue);
+        }
+
+        .pe-ex-name {
+            font-size: 12px;
+            color: var(--pe-text-primary);
+            font-weight: 500;
+        }
+
+        .pe-ex-formula {
+            font-size: 11px;
+            color: var(--accent-purple);
+            font-family: 'Fira Code', monospace;
+            background: var(--pe-bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .pe-help-functions {
+            border-top: 1px solid var(--pe-border);
+            padding-top: 12px;
+        }
+
+        .pe-help-functions h5 {
+            margin: 0;
+        }
+
+        .pe-help-functions code {
+            color: var(--accent-yellow);
+            font-size: 11px;
+        }
+
+        /* Concept Row Layout with Formula Editor */
+        .pe-concept-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: var(--pe-bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pe-concept-main {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            flex: 2;
+            flex-wrap: wrap;
+        }
+
+        .pe-concept-name {
+            flex: 0 0 200px;
+            background: var(--pe-bg-secondary);
+            border: 1px solid var(--pe-border);
+            color: var(--pe-text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .pe-select-type {
+            flex: 0 0 180px;
+            background: var(--pe-bg-secondary);
+            border: 1px solid var(--pe-border);
+            color: var(--pe-text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .pe-concept-entity {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .pe-select-entity {
+            flex: 1;
+            background: var(--pe-bg-secondary);
+            border: 1px solid var(--pe-border);
+            color: var(--pe-text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .pe-input-label {
+            flex: 0 0 120px;
+            background: var(--pe-bg-secondary);
+            border: 1px solid var(--pe-border);
+            color: var(--pe-text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        /* Edit modal concept row adjustments */
+        .pe-concept-row-edit {
+            flex-wrap: nowrap;
+        }
+
+        .pe-concept-row-edit .pe-formula-editor {
+            min-width: 250px;
+            max-width: 350px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .pe-concept-main {
+                flex: 1 1 100%;
+            }
+            .pe-concept-entity {
+                flex: 1 1 100%;
+            }
         }
     `;
     document.head.appendChild(styles);

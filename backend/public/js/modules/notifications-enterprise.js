@@ -37,6 +37,48 @@ const NotificationsEnterprise = {
     this.renderDashboard();
     this.loadDashboardData();
     this.startAutoRefresh();
+    // Inyectar indicador de IA después de renderizar
+    this.injectAIIndicator();
+  },
+
+  injectAIIndicator(attempt = 1) {
+    const maxAttempts = 5;
+    const delay = attempt * 200; // 200ms, 400ms, 600ms, 800ms, 1000ms
+
+    setTimeout(() => {
+      const container = document.getElementById('neAIIndicator');
+      if (!container) {
+        console.warn('🤖 [ENTERPRISE] Contenedor neAIIndicator no encontrado');
+        return;
+      }
+
+      if (typeof InboxAIIndicator !== 'undefined') {
+        console.log('🤖 [ENTERPRISE] Inyectando AI Indicator (intento ' + attempt + ')...');
+        InboxAIIndicator.init().then(() => {
+          container.innerHTML = InboxAIIndicator.render();
+          console.log('✅ [ENTERPRISE] AI Indicator renderizado correctamente');
+        }).catch((err) => {
+          console.warn('⚠️ [ENTERPRISE] Error inicializando AI Indicator:', err);
+          container.innerHTML = InboxAIIndicator.render();
+        });
+      } else if (attempt < maxAttempts) {
+        console.log('🔄 [ENTERPRISE] InboxAIIndicator no disponible, reintentando... (' + attempt + '/' + maxAttempts + ')');
+        this.injectAIIndicator(attempt + 1);
+      } else {
+        console.log('🤖 [ENTERPRISE] Mostrando indicador básico (InboxAIIndicator no cargó)');
+        // Fallback: mostrar un indicador simple inline
+        container.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,255,136,0.1)); border-radius: 25px; border: 1px solid rgba(0,212,255,0.3);">
+            <div style="width: 12px; height: 12px; background: #00d4ff; border-radius: 50%; animation: pulse 2s infinite; box-shadow: 0 0 10px rgba(0,212,255,0.6);"></div>
+            <span style="font-size: 13px; font-weight: 600; background: linear-gradient(90deg, #00d4ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🧠 IA Activa</span>
+            <span style="font-size: 11px; color: rgba(255,255,255,0.7);">Ollama + Llama 3.1</span>
+          </div>
+          <style>
+            @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.1); } }
+          </style>
+        `;
+      }
+    }, delay);
   },
 
   // ========== ESTILOS PROFESIONALES ==========
@@ -56,6 +98,21 @@ const NotificationsEnterprise = {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         min-height: 100vh;
+        position: relative;
+      }
+
+      /* ========== AI INDICATOR FLOTANTE ========== */
+      .ne-ai-floating {
+        position: fixed;
+        top: 80px;
+        right: 30px;
+        z-index: 9999;
+        animation: slideInRight 0.5s ease;
+      }
+
+      @keyframes slideInRight {
+        from { transform: translateX(100px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
       }
 
       /* ========== HEADER ========== */
@@ -90,6 +147,14 @@ const NotificationsEnterprise = {
       .ne-header-actions {
         display: flex;
         gap: 12px;
+      }
+
+      .ne-ai-indicator {
+        display: flex;
+        align-items: center;
+        margin: 0 20px;
+        flex-grow: 1;
+        justify-content: center;
       }
 
       .ne-btn {
@@ -745,9 +810,20 @@ const NotificationsEnterprise = {
           <div class="ne-header-left">
             <h1>
               <i class="fas fa-bell" style="color: #667eea;"></i>
-              Notificaciones Enterprise V3.0
+              Centro de Notificaciones
             </h1>
-            <p>Sistema de notificaciones con workflows y aprobaciones multi-nivel</p>
+            <p>Sistema Unificado Multi-tenant</p>
+          </div>
+          <!-- AI Indicator - Se inyecta después con injectAIIndicator() -->
+          <div class="ne-ai-indicator" id="neAIIndicator">
+            <!-- Placeholder visible -->
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 20px; background: linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15)); border-radius: 25px; border: 1px solid rgba(102,126,234,0.3);">
+              <div style="width: 10px; height: 10px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+              <span style="font-size: 13px; font-weight: 600; color: #667eea;">🧠 Cargando IA...</span>
+            </div>
+            <style>
+              @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+            </style>
           </div>
           <div class="ne-header-actions">
             <button class="ne-btn ne-btn-secondary" onclick="NotificationsEnterprise.toggleView('list')">
@@ -768,6 +844,24 @@ const NotificationsEnterprise = {
         <!-- Content Container -->
         <div id="neContent">
           <!-- Aquí se renderiza el contenido dinámico -->
+        </div>
+
+        <!-- AI Indicator FLOTANTE - Siempre visible -->
+        <div class="ne-ai-floating" id="neAIFloating">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95)); border-radius: 30px; border: 1px solid rgba(0,212,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 20px rgba(0,212,255,0.2); backdrop-filter: blur(10px);">
+            <div style="width: 14px; height: 14px; background: linear-gradient(135deg, #00ff88, #00d4ff); border-radius: 50%; animation: aiPulse 2s infinite; box-shadow: 0 0 15px rgba(0,255,136,0.6);"></div>
+            <div style="display: flex; flex-direction: column;">
+              <span style="font-size: 13px; font-weight: 700; color: #00ff88; letter-spacing: 0.5px;">🧠 IA ACTIVA</span>
+              <span style="font-size: 10px; color: rgba(255,255,255,0.7);">Ollama · Llama 3.1</span>
+            </div>
+            <div style="margin-left: 8px; padding: 4px 10px; background: rgba(0,212,255,0.2); border-radius: 12px; font-size: 10px; color: #00d4ff; font-weight: 600;">LIVE</div>
+          </div>
+          <style>
+            @keyframes aiPulse {
+              0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 15px rgba(0,255,136,0.6); }
+              50% { opacity: 0.7; transform: scale(1.15); box-shadow: 0 0 25px rgba(0,255,136,0.9); }
+            }
+          </style>
         </div>
       </div>
     `;
@@ -1613,10 +1707,16 @@ function showNotificationsEnterpriseContent() {
 
 // ✅ HACER FUNCIÓN DISPONIBLE GLOBALMENTE (Legacy)
 window.showNotificationsEnterpriseContent = showNotificationsEnterpriseContent;
+// Alias legacy para notifications-complete
+window.showNotificationsCompleteContent = showNotificationsEnterpriseContent;
 
 // ✅ EXPORTACIÓN UNIFICADA (Sistema de Auto-Conocimiento v3.0)
 if (!window.Modules) window.Modules = {};
 window.Modules['notifications-enterprise'] = {
     init: showNotificationsEnterpriseContent
 };
-console.log('🧠 [NOTIFICATIONS-ENTERPRISE] Exportación unificada registrada: window.Modules[\'notifications-enterprise\']');
+// Alias para notifications-complete
+window.Modules['notifications-complete'] = {
+    init: showNotificationsEnterpriseContent
+};
+console.log('🧠 [NOTIFICATIONS-ENTERPRISE] Exportación unificada registrada: window.Modules[\'notifications-enterprise\'] + alias notifications-complete');

@@ -71,6 +71,15 @@ function formatUserForFrontend(user) {
   if (userData.has_fingerprint !== undefined) formatted.hasFingerprint = userData.has_fingerprint;
   if (userData.has_facial_data !== undefined) formatted.hasFacialData = userData.has_facial_data;
   if (userData.biometric_last_updated !== undefined) formatted.biometricLastUpdated = userData.biometric_last_updated;
+
+  // Biometric photo fields (for profile display)
+  if (userData.biometricPhotoUrl !== undefined) formatted.biometric_photo_url = userData.biometricPhotoUrl;
+  if (userData.biometric_photo_url !== undefined) formatted.biometric_photo_url = userData.biometric_photo_url;
+  if (userData.biometricPhotoDate !== undefined) formatted.biometric_photo_date = userData.biometricPhotoDate;
+  if (userData.biometric_photo_date !== undefined) formatted.biometric_photo_date = userData.biometric_photo_date;
+  if (userData.biometricPhotoExpiration !== undefined) formatted.biometric_photo_expiration = userData.biometricPhotoExpiration;
+  if (userData.biometric_photo_expiration !== undefined) formatted.biometric_photo_expiration = userData.biometric_photo_expiration;
+
   // GPS settings - FIX CRITICAL: Calculate allowOutsideRadius from gpsEnabled
   // IMPORTANT: allowOutsideRadius is a VIRTUAL field, NOT stored in DB
   // DB stores: gps_enabled (boolean)

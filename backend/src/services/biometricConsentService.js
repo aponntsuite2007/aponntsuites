@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const { sequelize } = require('../config/database');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const PrivacyRegulationService = require('./PrivacyRegulationService');
 
 class BiometricConsentService {
     constructor() {
@@ -132,9 +133,95 @@ class BiometricConsentService {
             }
 
             // Usar documento por defecto si no se encontró en BD
+            // Ahora usa PrivacyRegulationService para obtener textos localizados por país
             if (!legalDoc) {
-                legalDoc = {
-                    content: `CONSENTIMIENTO INFORMADO PARA TRATAMIENTO DE DATOS BIOMÉTRICOS Y ANÁLISIS BIOMÉTRICO BASADO EN IA
+                try {
+                    // Obtener configuración de privacidad del país de la empresa
+                    const privacyConfig = await PrivacyRegulationService.getPrivacyConfigForCompany(companyId);
+                    const consentDoc = await PrivacyRegulationService.generateConsentDocument(companyId, {
+                        includeEmotional: true,
+                        includeDataSharing: false,
+                        employeeName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+                        companyName: 'la empresa'
+                    });
+
+                    // Construir documento legal desde configuración de país
+                    const buildLegalContent = () => {
+                        const pc = privacyConfig;
+                        const ct = pc.consentTexts || {};
+
+                        return `CONSENTIMIENTO INFORMADO PARA TRATAMIENTO DE DATOS BIOMÉTRICOS Y ANÁLISIS BIOMÉTRICO BASADO EN IA
+
+${ct.intro || `En cumplimiento de ${pc.law?.name || 'la legislación de protección de datos'}, se solicita su consentimiento expreso para el tratamiento de sus datos biométricos.`}
+
+1. RESPONSABLE DEL TRATAMIENTO
+El responsable del tratamiento de sus datos biométricos es la empresa a la cual usted pertenece como empleado.
+
+2. FINALIDAD DEL TRATAMIENTO
+Los datos biométricos (vectores matemáticos de 128 dimensiones derivados del análisis facial) serán utilizados exclusivamente para:
+- Control de asistencia laboral
+- Identificación de empleados en el sistema
+- Registro de horarios de entrada y salida
+${pc.requirements?.allowsEmotional !== false ? `- Análisis Biométrico Basado en IA para:
+  • Detección de indicadores de fatiga laboral
+  • Análisis de bienestar emocional en el ambiente de trabajo
+  • Medición de niveles de estrés y engagement` : ''}
+
+3. DATOS BIOMÉTRICOS
+${ct.biometric || 'Sus datos biométricos (embeddings faciales) serán procesados mediante tecnología de reconocimiento facial.'}
+
+${pc.requirements?.allowsEmotional !== false ? `4. ANÁLISIS EMOCIONAL
+${ct.emotional || 'El análisis emocional es opcional y se utiliza únicamente para mejorar el bienestar laboral.'}` : ''}
+
+5. TIEMPO DE CONSERVACIÓN
+- Embeddings faciales: Durante relación laboral + ${pc.retention?.biometricDays || 90} días
+- Datos de análisis emocional: ${pc.retention?.emotionalDays || 365} días
+- Registros de asistencia: ${pc.retention?.attendanceYears || 5} años
+
+6. DERECHOS DEL TITULAR
+${ct.rights || 'Usted tiene derecho a acceder, rectificar y suprimir sus datos personales.'}
+
+Derechos disponibles según ${pc.law?.name || 'la ley aplicable'}:
+${(pc.dataSubjectRights?.rights || ['acceso', 'rectificación', 'supresión', 'oposición']).map(r => `- ${r.charAt(0).toUpperCase() + r.slice(1)}`).join('\n')}
+
+Plazo de respuesta: ${pc.dataSubjectRights?.responseDays || 30} días hábiles
+
+7. REVOCACIÓN
+${ct.revocation || 'Puede revocar este consentimiento en cualquier momento sin afectar su situación laboral.'}
+
+8. BASE LEGAL
+- ${pc.law?.name || 'Ley de Protección de Datos'} (${pc.country?.name || 'País'})
+- Consentimiento expreso, libre e informado del titular
+
+9. CONTACTO Y AUTORIDAD DE CONTROL
+${ct.footer || `Para ejercer sus derechos contacte al responsable de protección de datos de su empresa.`}
+${pc.authority?.name ? `Autoridad de control: ${pc.authority.name}` : ''}
+${pc.authority?.contactUrl ? `Web: ${pc.authority.contactUrl}` : ''}
+
+Al aceptar este consentimiento, usted declara:
+□ Haber leído y comprendido este documento en su totalidad
+□ Conocer la tecnología de IA utilizada
+□ Comprender el uso que se dará a sus datos biométricos
+□ Conocer sus derechos y cómo ejercerlos
+□ Otorgar su consentimiento de forma libre, informada y voluntaria
+□ Entender que puede revocar este consentimiento en cualquier momento`;
+                    };
+
+                    legalDoc = {
+                        content: buildLegalContent(),
+                        version: `3.0-${privacyConfig.country?.code || 'INTL'}`,
+                        title: `Consentimiento Informado - ${privacyConfig.law?.name || 'Protección de Datos'}`,
+                        countryCode: privacyConfig.country?.code,
+                        lawName: privacyConfig.law?.name
+                    };
+
+                    console.log(`📋 [CONSENT] Documento legal generado para país: ${privacyConfig.country?.name} (${privacyConfig.law?.name})`);
+
+                } catch (privacyError) {
+                    console.warn('⚠️ [CONSENT] Error obteniendo configuración de privacidad, usando documento legacy:', privacyError.message);
+                    // Fallback al documento legacy hardcodeado (Argentina por defecto)
+                    legalDoc = {
+                        content: `CONSENTIMIENTO INFORMADO PARA TRATAMIENTO DE DATOS BIOMÉTRICOS Y ANÁLISIS BIOMÉTRICO BASADO EN IA
 
 En cumplimiento de la Ley 25.326 de Protección de Datos Personales (Argentina), el Reglamento General de Protección de Datos (GDPR) de la Unión Europea, y la Biometric Information Privacy Act (BIPA) de Illinois, se solicita su consentimiento expreso para el tratamiento de sus datos biométricos.
 
@@ -256,10 +343,11 @@ Al aceptar este consentimiento mediante el enlace recibido por email, usted decl
 □ Conocer sus derechos y cómo ejercerlos
 □ Otorgar su consentimiento de forma libre, informada y voluntaria
 □ Entender que puede revocar este consentimiento en cualquier momento`,
-                    version: '2.0',
-                    title: 'Consentimiento Informado para Análisis Biométrico Basado en IA'
-                };
-            }
+                        version: '2.0-ARG-LEGACY',
+                        title: 'Consentimiento Informado para Análisis Biométrico Basado en IA'
+                    };
+                } // Fin del catch (privacyError)
+            } // Fin del if (!legalDoc)
 
             // Generar token único
             const token = uuidv4();
