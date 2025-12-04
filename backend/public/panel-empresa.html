@@ -2213,7 +2213,7 @@
     // Configuración de red esencial
     let savedNetworkConfig = {
         serverHost: window.location.hostname || 'localhost',
-        serverPort: window.location.port || 3009,
+        serverPort: window.location.port || '',
         corsOrigin: '*'
     };
 
@@ -2225,8 +2225,11 @@
 
     function getApiUrl(endpoint = '') {
         const host = getSelectedHost();
-        const port = document.getElementById('serverPort')?.value || '9999';
-        return `http://${host}:${port}${endpoint}`;
+        const port = document.getElementById('serverPort')?.value || window.location.port || '';
+        const protocol = window.location.protocol || 'https:';
+        // En producción (sin puerto explícito), no agregar puerto
+        const portPart = port && port !== '80' && port !== '443' ? `:${port}` : '';
+        return `${protocol}//${host}${portPart}${endpoint}`;
     }
 
     // Update loading status
