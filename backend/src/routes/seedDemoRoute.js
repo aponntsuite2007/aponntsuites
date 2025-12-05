@@ -1181,6 +1181,174 @@ router.get('/fix-job-tables', async (req, res) => {
     });
 });
 
+// GET /api/seed-demo/recreate-job-tables?key=SECRET - Recrear tablas con esquema correcto (INTEGER ids)
+router.get('/recreate-job-tables', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const results = [];
+    const errors = [];
+
+    try {
+        // 1. Eliminar tablas existentes (job_applications primero por FK)
+        await sequelize.query(`DROP TABLE IF EXISTS job_applications CASCADE`);
+        results.push('job_applications: DROPPED');
+
+        await sequelize.query(`DROP TABLE IF EXISTS job_postings CASCADE`);
+        results.push('job_postings: DROPPED');
+
+        // 2. Crear job_postings con ID INTEGER (SERIAL)
+        await sequelize.query(`
+            CREATE TABLE job_postings (
+                id SERIAL PRIMARY KEY,
+                company_id INTEGER,
+                title VARCHAR(255),
+                description TEXT,
+                requirements TEXT,
+                responsibilities TEXT,
+                department_id INTEGER,
+                department_name VARCHAR(100),
+                location VARCHAR(255),
+                job_type VARCHAR(50) DEFAULT 'full-time',
+                salary_min DECIMAL(12,2),
+                salary_max DECIMAL(12,2),
+                salary_currency VARCHAR(3) DEFAULT 'ARS',
+                salary_period VARCHAR(20) DEFAULT 'monthly',
+                benefits JSONB DEFAULT '[]'::jsonb,
+                status VARCHAR(30) DEFAULT 'draft',
+                is_public BOOLEAN DEFAULT true,
+                is_internal BOOLEAN DEFAULT false,
+                max_applications INTEGER,
+                auto_close_date DATE,
+                requires_cv BOOLEAN DEFAULT true,
+                requires_cover_letter BOOLEAN DEFAULT false,
+                tags JSONB DEFAULT '[]'::jsonb,
+                skills_required JSONB DEFAULT '[]'::jsonb,
+                hiring_manager_id VARCHAR(100),
+                recruiter_id VARCHAR(100),
+                views_count INTEGER DEFAULT 0,
+                applications_count INTEGER DEFAULT 0,
+                posted_at TIMESTAMP,
+                closed_at TIMESTAMP,
+                created_by VARCHAR(100),
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
+        results.push('job_postings: CREATED with INTEGER id');
+
+        // 3. Crear job_applications con job_posting_id INTEGER
+        await sequelize.query(`
+            CREATE TABLE job_applications (
+                id SERIAL PRIMARY KEY,
+                company_id INTEGER,
+                job_posting_id INTEGER REFERENCES job_postings(id) ON DELETE CASCADE,
+                candidate_first_name VARCHAR(100),
+                candidate_last_name VARCHAR(100),
+                candidate_email VARCHAR(255),
+                candidate_phone VARCHAR(50),
+                candidate_dni VARCHAR(20),
+                candidate_birth_date DATE,
+                candidate_gender VARCHAR(20),
+                candidate_nationality VARCHAR(100),
+                candidate_address TEXT,
+                candidate_city VARCHAR(100),
+                candidate_province VARCHAR(100),
+                candidate_postal_code VARCHAR(20),
+                experience_years INTEGER,
+                current_position VARCHAR(255),
+                current_company VARCHAR(255),
+                education_level VARCHAR(50),
+                education_title VARCHAR(255),
+                skills JSONB DEFAULT '[]'::jsonb,
+                languages JSONB DEFAULT '[]'::jsonb,
+                certifications JSONB DEFAULT '[]'::jsonb,
+                cv_file_path VARCHAR(500),
+                cv_file_name VARCHAR(255),
+                cv_uploaded_at TIMESTAMP,
+                cover_letter TEXT,
+                additional_documents JSONB DEFAULT '[]'::jsonb,
+                salary_expectation DECIMAL(12,2),
+                availability VARCHAR(50),
+                preferred_schedule VARCHAR(100),
+                willing_to_relocate BOOLEAN DEFAULT false,
+                status VARCHAR(50) DEFAULT 'nuevo',
+                status_history JSONB DEFAULT '[]'::jsonb,
+                reviewed_by VARCHAR(100),
+                reviewed_at TIMESTAMP,
+                review_notes TEXT,
+                review_score INTEGER,
+                interview_scheduled_at TIMESTAMP,
+                interview_location VARCHAR(255),
+                interview_type VARCHAR(50),
+                interview_notes TEXT,
+                interview_score INTEGER,
+                interviewer_id VARCHAR(100),
+                admin_approved_by VARCHAR(100),
+                admin_approved_at TIMESTAMP,
+                admin_approval_notes TEXT,
+                medical_record_id INTEGER,
+                medical_exam_date DATE,
+                medical_result VARCHAR(50),
+                medical_observations TEXT,
+                medical_restrictions JSONB DEFAULT '[]'::jsonb,
+                medical_approved_by VARCHAR(100),
+                medical_approved_at TIMESTAMP,
+                hired_at TIMESTAMP,
+                hired_by VARCHAR(100),
+                employee_user_id VARCHAR(100),
+                start_date DATE,
+                assigned_department_id INTEGER,
+                assigned_position VARCHAR(255),
+                final_salary DECIMAL(12,2),
+                contract_type VARCHAR(50),
+                rejected_at TIMESTAMP,
+                rejected_by VARCHAR(100),
+                rejection_reason VARCHAR(255),
+                rejection_notes TEXT,
+                rejection_stage VARCHAR(50),
+                notification_sent_to_medical BOOLEAN DEFAULT false,
+                notification_sent_at TIMESTAMP,
+                notification_id INTEGER,
+                source VARCHAR(100),
+                referrer_employee_id VARCHAR(100),
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                applied_at TIMESTAMP DEFAULT NOW(),
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
+        results.push('job_applications: CREATED with INTEGER job_posting_id');
+
+        // 4. Crear índices
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_job_postings_company ON job_postings(company_id)`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_job_postings_status ON job_postings(status)`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_job_applications_posting ON job_applications(job_posting_id)`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_job_applications_company ON job_applications(company_id)`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_job_applications_status ON job_applications(status)`);
+        results.push('indexes: CREATED');
+
+        res.json({
+            success: true,
+            message: 'Tablas job_postings y job_applications recreadas con INTEGER ids',
+            results,
+            errors: errors.length > 0 ? errors : 'none'
+        });
+
+    } catch (e) {
+        errors.push(e.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error recreando tablas',
+            results,
+            errors
+        });
+    }
+});
+
 // GET /api/seed-demo/create-admin?key=SECRET - Crear usuario admin para DEMO
 router.get('/create-admin', async (req, res) => {
     const { key } = req.query;
