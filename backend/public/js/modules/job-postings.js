@@ -1223,7 +1223,7 @@ const TalentEngine = {
             { key: 'contratar', label: '🎉 Por Contratar', filter: ['apto', 'apto_con_observaciones'] }
         ];
 
-        const pipeline = TalentState.pipeline || TalentState.applications;
+        const pipeline = TalentState.pipeline || TalentState.applications || [];
 
         container.innerHTML = `
             <div class="talent-card" style="overflow-x: auto;">
