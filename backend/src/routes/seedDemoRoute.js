@@ -910,57 +910,70 @@ router.get('/fix-notification-types', async (req, res) => {
     const results = [];
     const errors = [];
 
-    // El inboxService usa employeeId (string "EMP-001") pero las columnas eran INTEGER
-    // Cambiar a VARCHAR para aceptar ambos formatos
-
-    const alterations = [
-        // notification_messages
+    // FORZAR cambio de tipo INTEGER -> VARCHAR para columnas de ID
+    // Estas columnas usan employeeId (string "EMP-001") pero fueron creadas como INTEGER
+    const forceTypeChanges = [
         { table: 'notification_messages', column: 'sender_id', newType: 'VARCHAR(100)' },
         { table: 'notification_messages', column: 'recipient_id', newType: 'VARCHAR(100)' },
-        { table: 'notification_messages', column: 'sender_name', newType: 'VARCHAR(255)' },
-        { table: 'notification_messages', column: 'recipient_name', newType: 'VARCHAR(255)' },
-        { table: 'notification_messages', column: 'sender_type', newType: 'VARCHAR(100)' },
-        { table: 'notification_messages', column: 'recipient_type', newType: 'VARCHAR(100)' },
-        { table: 'notification_messages', column: 'message_type', newType: 'VARCHAR(100)' },
-        { table: 'notification_messages', column: 'sequence_number', newType: 'INTEGER DEFAULT 1' },
-        { table: 'notification_messages', column: 'read_at', newType: 'TIMESTAMP' },
-        { table: 'notification_messages', column: 'delivered_at', newType: 'TIMESTAMP' },
-        { table: 'notification_messages', column: 'channels', newType: "JSONB DEFAULT '[\"web\"]'::jsonb" },
-        { table: 'notification_messages', column: 'attachments', newType: 'JSONB' },
-        { table: 'notification_messages', column: 'message_hash', newType: 'VARCHAR(255)' },
-        // notification_groups
         { table: 'notification_groups', column: 'initiator_id', newType: 'VARCHAR(100)' },
-        { table: 'notification_groups', column: 'initiator_type', newType: 'VARCHAR(100)' },
-        { table: 'notification_groups', column: 'subject', newType: 'VARCHAR(500)' },
-        { table: 'notification_groups', column: 'status', newType: "VARCHAR(50) DEFAULT 'open'" },
-        { table: 'notification_groups', column: 'priority', newType: "VARCHAR(50) DEFAULT 'normal'" },
-        { table: 'notification_groups', column: 'group_type', newType: "VARCHAR(50) DEFAULT 'general'" },
-        { table: 'notification_groups', column: 'closed_at', newType: 'TIMESTAMP' },
-        { table: 'notification_groups', column: 'closed_by', newType: 'VARCHAR(100)' },
-        { table: 'notification_groups', column: 'metadata', newType: "JSONB DEFAULT '{}'::jsonb" }
+        { table: 'notification_groups', column: 'created_by', newType: 'VARCHAR(100)' }
     ];
 
-    for (const { table, column, newType } of alterations) {
+    for (const { table, column, newType } of forceTypeChanges) {
         try {
-            // Primero agregar la columna si no existe
-            await sequelize.query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${column} ${newType}`);
-            results.push(`${table}.${column}: added/exists`);
+            // Primero eliminar cualquier default
+            await sequelize.query(`ALTER TABLE ${table} ALTER COLUMN ${column} DROP DEFAULT`).catch(() => {});
+            // Forzar cambio de tipo usando CAST
+            await sequelize.query(`ALTER TABLE ${table} ALTER COLUMN ${column} TYPE ${newType} USING ${column}::TEXT`);
+            results.push(`${table}.${column}: CHANGED to ${newType}`);
         } catch (e) {
-            // Intentar alterar el tipo si la columna ya existe pero con tipo diferente
-            try {
-                // Eliminar el DEFAULT primero si es necesario
-                await sequelize.query(`ALTER TABLE ${table} ALTER COLUMN ${column} DROP DEFAULT`).catch(() => {});
-                await sequelize.query(`ALTER TABLE ${table} ALTER COLUMN ${column} TYPE ${newType.split(' DEFAULT')[0]} USING ${column}::${newType.split(' DEFAULT')[0]}`);
-                results.push(`${table}.${column}: type changed`);
-            } catch (e2) {
-                if (!e2.message.includes('does not exist')) {
+            if (e.message.includes('does not exist')) {
+                // La columna no existe, agregarla
+                try {
+                    await sequelize.query(`ALTER TABLE ${table} ADD COLUMN ${column} ${newType}`);
+                    results.push(`${table}.${column}: ADDED as ${newType}`);
+                } catch (e2) {
                     errors.push(`${table}.${column}: ${e2.message.substring(0, 60)}`);
                 }
+            } else {
+                errors.push(`${table}.${column}: ${e.message.substring(0, 60)}`);
             }
         }
     }
 
-    // Crear tabla notification_audit_log si no existe (usada por sendMessage)
+    // Agregar columnas adicionales que faltan
+    const additionalColumns = [
+        { table: 'notification_messages', column: 'sender_name', type: 'VARCHAR(255)' },
+        { table: 'notification_messages', column: 'recipient_name', type: 'VARCHAR(255)' },
+        { table: 'notification_messages', column: 'sender_type', type: 'VARCHAR(100)' },
+        { table: 'notification_messages', column: 'recipient_type', type: 'VARCHAR(100)' },
+        { table: 'notification_messages', column: 'message_type', type: 'VARCHAR(100)' },
+        { table: 'notification_messages', column: 'sequence_number', type: 'INTEGER DEFAULT 1' },
+        { table: 'notification_messages', column: 'read_at', type: 'TIMESTAMP' },
+        { table: 'notification_messages', column: 'delivered_at', type: 'TIMESTAMP' },
+        { table: 'notification_messages', column: 'channels', type: "JSONB DEFAULT '[\"web\"]'::jsonb" },
+        { table: 'notification_messages', column: 'attachments', type: 'JSONB' },
+        { table: 'notification_messages', column: 'message_hash', type: 'VARCHAR(255)' },
+        { table: 'notification_groups', column: 'initiator_type', type: 'VARCHAR(100)' },
+        { table: 'notification_groups', column: 'subject', type: 'VARCHAR(500)' },
+        { table: 'notification_groups', column: 'status', type: "VARCHAR(50) DEFAULT 'open'" },
+        { table: 'notification_groups', column: 'priority', type: "VARCHAR(50) DEFAULT 'normal'" },
+        { table: 'notification_groups', column: 'group_type', type: "VARCHAR(50) DEFAULT 'general'" },
+        { table: 'notification_groups', column: 'closed_at', type: 'TIMESTAMP' },
+        { table: 'notification_groups', column: 'closed_by', type: 'VARCHAR(100)' },
+        { table: 'notification_groups', column: 'metadata', type: "JSONB DEFAULT '{}'::jsonb" }
+    ];
+
+    for (const { table, column, type } of additionalColumns) {
+        try {
+            await sequelize.query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${column} ${type}`);
+            results.push(`${table}.${column}: ok`);
+        } catch (e) {
+            errors.push(`${table}.${column}: ${e.message.substring(0, 40)}`);
+        }
+    }
+
+    // Crear tabla notification_audit_log si no existe
     try {
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS notification_audit_log (
@@ -974,18 +987,16 @@ router.get('/fix-notification-types', async (req, res) => {
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         `);
-        results.push('notification_audit_log: created');
+        results.push('notification_audit_log: ok');
     } catch (e) {
-        if (e.message.includes('already exists')) {
-            results.push('notification_audit_log: exists');
-        } else {
+        if (!e.message.includes('already exists')) {
             errors.push(`notification_audit_log: ${e.message.substring(0, 50)}`);
         }
     }
 
     res.json({
         success: true,
-        message: 'Columnas de notificaciones actualizadas para soportar employeeId (string)',
+        message: 'Tipos de columnas FORZADOS a VARCHAR para soportar employeeId (string)',
         results,
         errors: errors.length > 0 ? errors : 'none'
     });
