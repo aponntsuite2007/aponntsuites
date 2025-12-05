@@ -900,6 +900,97 @@ router.get('/create-missing-tables', async (req, res) => {
     res.json({ success: true, results, errors: errors.length > 0 ? errors : 'none' });
 });
 
+// GET /api/seed-demo/fix-notification-types?key=SECRET - Cambiar INTEGER a VARCHAR para employeeId
+router.get('/fix-notification-types', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const results = [];
+    const errors = [];
+
+    // El inboxService usa employeeId (string "EMP-001") pero las columnas eran INTEGER
+    // Cambiar a VARCHAR para aceptar ambos formatos
+
+    const alterations = [
+        // notification_messages
+        { table: 'notification_messages', column: 'sender_id', newType: 'VARCHAR(100)' },
+        { table: 'notification_messages', column: 'recipient_id', newType: 'VARCHAR(100)' },
+        { table: 'notification_messages', column: 'sender_name', newType: 'VARCHAR(255)' },
+        { table: 'notification_messages', column: 'recipient_name', newType: 'VARCHAR(255)' },
+        { table: 'notification_messages', column: 'sender_type', newType: 'VARCHAR(100)' },
+        { table: 'notification_messages', column: 'recipient_type', newType: 'VARCHAR(100)' },
+        { table: 'notification_messages', column: 'message_type', newType: 'VARCHAR(100)' },
+        { table: 'notification_messages', column: 'sequence_number', newType: 'INTEGER DEFAULT 1' },
+        { table: 'notification_messages', column: 'read_at', newType: 'TIMESTAMP' },
+        { table: 'notification_messages', column: 'delivered_at', newType: 'TIMESTAMP' },
+        { table: 'notification_messages', column: 'channels', newType: "JSONB DEFAULT '[\"web\"]'::jsonb" },
+        { table: 'notification_messages', column: 'attachments', newType: 'JSONB' },
+        { table: 'notification_messages', column: 'message_hash', newType: 'VARCHAR(255)' },
+        // notification_groups
+        { table: 'notification_groups', column: 'initiator_id', newType: 'VARCHAR(100)' },
+        { table: 'notification_groups', column: 'initiator_type', newType: 'VARCHAR(100)' },
+        { table: 'notification_groups', column: 'subject', newType: 'VARCHAR(500)' },
+        { table: 'notification_groups', column: 'status', newType: "VARCHAR(50) DEFAULT 'open'" },
+        { table: 'notification_groups', column: 'priority', newType: "VARCHAR(50) DEFAULT 'normal'" },
+        { table: 'notification_groups', column: 'group_type', newType: "VARCHAR(50) DEFAULT 'general'" },
+        { table: 'notification_groups', column: 'closed_at', newType: 'TIMESTAMP' },
+        { table: 'notification_groups', column: 'closed_by', newType: 'VARCHAR(100)' },
+        { table: 'notification_groups', column: 'metadata', newType: "JSONB DEFAULT '{}'::jsonb" }
+    ];
+
+    for (const { table, column, newType } of alterations) {
+        try {
+            // Primero agregar la columna si no existe
+            await sequelize.query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${column} ${newType}`);
+            results.push(`${table}.${column}: added/exists`);
+        } catch (e) {
+            // Intentar alterar el tipo si la columna ya existe pero con tipo diferente
+            try {
+                // Eliminar el DEFAULT primero si es necesario
+                await sequelize.query(`ALTER TABLE ${table} ALTER COLUMN ${column} DROP DEFAULT`).catch(() => {});
+                await sequelize.query(`ALTER TABLE ${table} ALTER COLUMN ${column} TYPE ${newType.split(' DEFAULT')[0]} USING ${column}::${newType.split(' DEFAULT')[0]}`);
+                results.push(`${table}.${column}: type changed`);
+            } catch (e2) {
+                if (!e2.message.includes('does not exist')) {
+                    errors.push(`${table}.${column}: ${e2.message.substring(0, 60)}`);
+                }
+            }
+        }
+    }
+
+    // Crear tabla notification_audit_log si no existe (usada por sendMessage)
+    try {
+        await sequelize.query(`
+            CREATE TABLE IF NOT EXISTS notification_audit_log (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                group_id UUID,
+                message_id UUID,
+                action VARCHAR(100),
+                actor_type VARCHAR(100),
+                actor_id VARCHAR(100),
+                metadata JSONB DEFAULT '{}'::jsonb,
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
+        results.push('notification_audit_log: created');
+    } catch (e) {
+        if (e.message.includes('already exists')) {
+            results.push('notification_audit_log: exists');
+        } else {
+            errors.push(`notification_audit_log: ${e.message.substring(0, 50)}`);
+        }
+    }
+
+    res.json({
+        success: true,
+        message: 'Columnas de notificaciones actualizadas para soportar employeeId (string)',
+        results,
+        errors: errors.length > 0 ? errors : 'none'
+    });
+});
+
 // GET /api/seed-demo/create-admin?key=SECRET - Crear usuario admin para DEMO
 router.get('/create-admin', async (req, res) => {
     const { key } = req.query;
