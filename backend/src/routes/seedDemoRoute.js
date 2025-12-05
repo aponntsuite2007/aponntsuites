@@ -1002,6 +1002,185 @@ router.get('/fix-notification-types', async (req, res) => {
     });
 });
 
+// GET /api/seed-demo/fix-job-tables?key=SECRET - Agregar columnas faltantes a job_postings y job_applications
+router.get('/fix-job-tables', async (req, res) => {
+    const { key } = req.query;
+    if (key !== SECRET_KEY) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+
+    const results = [];
+    const errors = [];
+
+    // Columnas para JOB_POSTINGS según el modelo
+    const jobPostingColumns = [
+        { col: 'company_id', type: 'INTEGER' },
+        { col: 'title', type: 'VARCHAR(255)' },
+        { col: 'description', type: 'TEXT' },
+        { col: 'requirements', type: 'TEXT' },
+        { col: 'responsibilities', type: 'TEXT' },
+        { col: 'department_id', type: 'INTEGER' },
+        { col: 'department_name', type: 'VARCHAR(100)' },
+        { col: 'location', type: 'VARCHAR(255)' },
+        { col: 'job_type', type: "VARCHAR(50) DEFAULT 'full-time'" },
+        { col: 'salary_min', type: 'DECIMAL(12,2)' },
+        { col: 'salary_max', type: 'DECIMAL(12,2)' },
+        { col: 'salary_currency', type: "VARCHAR(3) DEFAULT 'ARS'" },
+        { col: 'salary_period', type: "VARCHAR(20) DEFAULT 'monthly'" },
+        { col: 'benefits', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'status', type: "VARCHAR(30) DEFAULT 'draft'" },
+        { col: 'is_public', type: 'BOOLEAN DEFAULT true' },
+        { col: 'is_internal', type: 'BOOLEAN DEFAULT false' },
+        { col: 'max_applications', type: 'INTEGER' },
+        { col: 'auto_close_date', type: 'DATE' },
+        { col: 'requires_cv', type: 'BOOLEAN DEFAULT true' },
+        { col: 'requires_cover_letter', type: 'BOOLEAN DEFAULT false' },
+        { col: 'tags', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'skills_required', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'hiring_manager_id', type: 'VARCHAR(100)' },
+        { col: 'recruiter_id', type: 'VARCHAR(100)' },
+        { col: 'views_count', type: 'INTEGER DEFAULT 0' },
+        { col: 'applications_count', type: 'INTEGER DEFAULT 0' },
+        { col: 'posted_at', type: 'TIMESTAMP' },
+        { col: 'closed_at', type: 'TIMESTAMP' },
+        { col: 'created_by', type: 'VARCHAR(100)' },
+        { col: 'created_at', type: 'TIMESTAMPTZ DEFAULT NOW()' },
+        { col: 'updated_at', type: 'TIMESTAMPTZ DEFAULT NOW()' }
+    ];
+
+    // Columnas para JOB_APPLICATIONS según el modelo
+    const jobApplicationColumns = [
+        { col: 'company_id', type: 'INTEGER' },
+        { col: 'job_posting_id', type: 'INTEGER' },
+        { col: 'candidate_first_name', type: 'VARCHAR(100)' },
+        { col: 'candidate_last_name', type: 'VARCHAR(100)' },
+        { col: 'candidate_email', type: 'VARCHAR(255)' },
+        { col: 'candidate_phone', type: 'VARCHAR(50)' },
+        { col: 'candidate_dni', type: 'VARCHAR(20)' },
+        { col: 'candidate_birth_date', type: 'DATE' },
+        { col: 'candidate_gender', type: 'VARCHAR(20)' },
+        { col: 'candidate_nationality', type: 'VARCHAR(100)' },
+        { col: 'candidate_address', type: 'TEXT' },
+        { col: 'candidate_city', type: 'VARCHAR(100)' },
+        { col: 'candidate_province', type: 'VARCHAR(100)' },
+        { col: 'candidate_postal_code', type: 'VARCHAR(20)' },
+        { col: 'experience_years', type: 'INTEGER' },
+        { col: 'current_position', type: 'VARCHAR(255)' },
+        { col: 'current_company', type: 'VARCHAR(255)' },
+        { col: 'education_level', type: 'VARCHAR(50)' },
+        { col: 'education_title', type: 'VARCHAR(255)' },
+        { col: 'skills', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'languages', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'certifications', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'cv_file_path', type: 'VARCHAR(500)' },
+        { col: 'cv_file_name', type: 'VARCHAR(255)' },
+        { col: 'cv_uploaded_at', type: 'TIMESTAMP' },
+        { col: 'cover_letter', type: 'TEXT' },
+        { col: 'additional_documents', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'salary_expectation', type: 'DECIMAL(12,2)' },
+        { col: 'availability', type: 'VARCHAR(50)' },
+        { col: 'preferred_schedule', type: 'VARCHAR(100)' },
+        { col: 'willing_to_relocate', type: 'BOOLEAN DEFAULT false' },
+        { col: 'status', type: "VARCHAR(50) DEFAULT 'nuevo'" },
+        { col: 'status_history', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'reviewed_by', type: 'VARCHAR(100)' },
+        { col: 'reviewed_at', type: 'TIMESTAMP' },
+        { col: 'review_notes', type: 'TEXT' },
+        { col: 'review_score', type: 'INTEGER' },
+        { col: 'interview_scheduled_at', type: 'TIMESTAMP' },
+        { col: 'interview_location', type: 'VARCHAR(255)' },
+        { col: 'interview_type', type: 'VARCHAR(50)' },
+        { col: 'interview_notes', type: 'TEXT' },
+        { col: 'interview_score', type: 'INTEGER' },
+        { col: 'interviewer_id', type: 'VARCHAR(100)' },
+        { col: 'admin_approved_by', type: 'VARCHAR(100)' },
+        { col: 'admin_approved_at', type: 'TIMESTAMP' },
+        { col: 'admin_approval_notes', type: 'TEXT' },
+        { col: 'medical_record_id', type: 'INTEGER' },
+        { col: 'medical_exam_date', type: 'DATE' },
+        { col: 'medical_result', type: 'VARCHAR(50)' },
+        { col: 'medical_observations', type: 'TEXT' },
+        { col: 'medical_restrictions', type: "JSONB DEFAULT '[]'::jsonb" },
+        { col: 'medical_approved_by', type: 'VARCHAR(100)' },
+        { col: 'medical_approved_at', type: 'TIMESTAMP' },
+        { col: 'hired_at', type: 'TIMESTAMP' },
+        { col: 'hired_by', type: 'VARCHAR(100)' },
+        { col: 'employee_user_id', type: 'VARCHAR(100)' },
+        { col: 'start_date', type: 'DATE' },
+        { col: 'assigned_department_id', type: 'INTEGER' },
+        { col: 'assigned_position', type: 'VARCHAR(255)' },
+        { col: 'final_salary', type: 'DECIMAL(12,2)' },
+        { col: 'contract_type', type: 'VARCHAR(50)' },
+        { col: 'rejected_at', type: 'TIMESTAMP' },
+        { col: 'rejected_by', type: 'VARCHAR(100)' },
+        { col: 'rejection_reason', type: 'VARCHAR(255)' },
+        { col: 'rejection_notes', type: 'TEXT' },
+        { col: 'rejection_stage', type: 'VARCHAR(50)' },
+        { col: 'notification_sent_to_medical', type: 'BOOLEAN DEFAULT false' },
+        { col: 'notification_sent_at', type: 'TIMESTAMP' },
+        { col: 'notification_id', type: 'INTEGER' },
+        { col: 'source', type: 'VARCHAR(100)' },
+        { col: 'referrer_employee_id', type: 'VARCHAR(100)' },
+        { col: 'ip_address', type: 'VARCHAR(45)' },
+        { col: 'user_agent', type: 'TEXT' },
+        { col: 'applied_at', type: 'TIMESTAMP DEFAULT NOW()' },
+        { col: 'created_at', type: 'TIMESTAMPTZ DEFAULT NOW()' },
+        { col: 'updated_at', type: 'TIMESTAMPTZ DEFAULT NOW()' }
+    ];
+
+    // Agregar columnas a job_postings
+    for (const { col, type } of jobPostingColumns) {
+        try {
+            await sequelize.query(`ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+            results.push(`job_postings.${col}: ok`);
+        } catch (e) {
+            errors.push(`job_postings.${col}: ${e.message.substring(0, 50)}`);
+        }
+    }
+
+    // Agregar columnas a job_applications
+    for (const { col, type } of jobApplicationColumns) {
+        try {
+            await sequelize.query(`ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+            results.push(`job_applications.${col}: ok`);
+        } catch (e) {
+            errors.push(`job_applications.${col}: ${e.message.substring(0, 50)}`);
+        }
+    }
+
+    // Crear tabla si id no existe (ALTER falla si la tabla no existe)
+    try {
+        const [check] = await sequelize.query(`SELECT COUNT(*) as cnt FROM job_postings`);
+        results.push(`job_postings: table exists (${check[0].cnt} rows)`);
+    } catch (e) {
+        // La tabla no existe, crearla
+        try {
+            await sequelize.query(`
+                CREATE TABLE IF NOT EXISTS job_postings (
+                    id SERIAL PRIMARY KEY,
+                    company_id INTEGER,
+                    title VARCHAR(255),
+                    created_at TIMESTAMPTZ DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            `);
+            results.push('job_postings: table CREATED');
+        } catch (e2) {
+            errors.push(`job_postings create: ${e2.message.substring(0, 50)}`);
+        }
+    }
+
+    res.json({
+        success: true,
+        message: 'Tablas job_postings y job_applications actualizadas',
+        job_postings_cols: jobPostingColumns.length,
+        job_applications_cols: jobApplicationColumns.length,
+        results: results.slice(0, 20), // Limitar output
+        total_results: results.length,
+        errors: errors.length > 0 ? errors : 'none'
+    });
+});
+
 // GET /api/seed-demo/create-admin?key=SECRET - Crear usuario admin para DEMO
 router.get('/create-admin', async (req, res) => {
     const { key } = req.query;
