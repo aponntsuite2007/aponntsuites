@@ -85,20 +85,30 @@ router.get('/compare-schema', requireDbAdminAuth, async (req, res) => {
         `);
         comparison.summary.totalDbTables = dbTables.length;
         const dbTableNames = dbTables.map(t => t.table_name);
+        const dbTableNamesLower = dbTables.map(t => t.table_name.toLowerCase());
 
         // 3. Para cada modelo, comparar con la BD
         for (const [modelName, model] of Object.entries(models)) {
             const tableName = model.tableName || model.name;
+            const tableNameLower = tableName.toLowerCase();
+
+            // Verificar existencia case-insensitive
+            const tableExists = dbTableNamesLower.includes(tableNameLower);
+            // Obtener nombre real de la BD (puede diferir en case)
+            const actualTableName = tableExists
+                ? dbTables.find(t => t.table_name.toLowerCase() === tableNameLower)?.table_name
+                : tableName;
 
             comparison.models[modelName] = {
                 tableName,
-                exists: dbTableNames.includes(tableName),
+                actualTableName,
+                exists: tableExists,
                 columns: {},
                 missingColumns: [],
                 typeMismatches: []
             };
 
-            if (!dbTableNames.includes(tableName)) {
+            if (!tableExists) {
                 comparison.missingTables.push({
                     model: modelName,
                     table: tableName
@@ -110,7 +120,7 @@ router.get('/compare-schema', requireDbAdminAuth, async (req, res) => {
             // Obtener columnas del modelo
             const modelAttributes = model.rawAttributes || {};
 
-            // Obtener columnas reales de la BD
+            // Obtener columnas reales de la BD (usar nombre real de BD)
             const [dbColumns] = await sequelize.query(`
                 SELECT
                     column_name,
@@ -123,17 +133,29 @@ router.get('/compare-schema', requireDbAdminAuth, async (req, res) => {
                 WHERE table_name = :tableName
                 AND table_schema = 'public'
                 ORDER BY ordinal_position
-            `, { replacements: { tableName } });
+            `, { replacements: { tableName: actualTableName } });
 
+            // Crear mapa de columnas con keys en lowercase para comparación case-insensitive
             const dbColumnMap = {};
+            const dbColumnMapLower = {};
             dbColumns.forEach(col => {
                 dbColumnMap[col.column_name] = col;
+                dbColumnMapLower[col.column_name.toLowerCase()] = col;
             });
 
             // Comparar cada atributo del modelo con la BD
             for (const [attrName, attrDef] of Object.entries(modelAttributes)) {
                 const dbColumnName = attrDef.field || attrName;
-                const dbCol = dbColumnMap[dbColumnName];
+                const dbColumnNameLower = dbColumnName.toLowerCase();
+
+                // Saltar tipos VIRTUAL (no existen en BD, son calculados)
+                const typeName = getSequelizeTypeName(attrDef.type).toUpperCase();
+                if (typeName === 'VIRTUAL') {
+                    continue;
+                }
+
+                // Buscar columna case-insensitive
+                const dbCol = dbColumnMapLower[dbColumnNameLower];
 
                 if (!dbCol) {
                     // Columna falta en BD
@@ -217,16 +239,57 @@ router.post('/sync-schema', requireDbAdminAuth, async (req, res) => {
         // Primero obtener comparación actual
         const models = sequelize.models;
 
-        // Obtener tablas existentes
-        const [dbTables] = await sequelize.query(`
+        // Obtener tablas existentes (normalizar a minúsculas)
+        const dbTables = await sequelize.query(`
             SELECT table_name FROM information_schema.tables
             WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
-        `);
-        const dbTableNames = dbTables.map(t => t.table_name);
+        `, { type: QueryTypes.SELECT });
+
+        // Log de debug para ver qué está pasando
+        const debugLog = [];
+
+        // Debug: ver estructura de dbTables
+        debugLog.push({
+            step: 'query_result',
+            dbTablesLength: Array.isArray(dbTables) ? dbTables.length : 'not array',
+            firstItem: dbTables?.[0],
+            isArray: Array.isArray(dbTables)
+        });
+
+        // dbTables puede ser:
+        // - array de objetos {table_name: ...}
+        // - array de strings
+        // - array de arrays [['table1'], ['table2']]
+        // Normalizamos para manejar todos los casos
+        const dbTableNames = dbTables.map(t => {
+            if (typeof t === 'string') return t.toLowerCase();
+            if (Array.isArray(t) && t.length > 0) return t[0]?.toLowerCase?.() || null;
+            if (t && t.table_name) return t.table_name.toLowerCase();
+            return null;
+        }).filter(Boolean);
+
+        debugLog.push({
+            step: 'normalized_tables',
+            count: dbTableNames.length,
+            sample: dbTableNames.slice(0, 5)
+        });
 
         // Procesar cada modelo
         for (const [modelName, model] of Object.entries(models)) {
             const tableName = model.tableName || model.name;
+            const tableNameLower = tableName.toLowerCase();
+
+            // Debug: log para ver qué modelos se procesan
+            if (modelName === 'Attendance') {
+                debugLog.push({
+                    step: 'model_found',
+                    model: modelName,
+                    tableName,
+                    tableNameLower,
+                    tableExistsInDb: dbTableNames.includes(tableNameLower),
+                    dbTableNamesSnapshot: dbTableNames.filter(t => t.includes('attend'))
+                });
+            }
 
             // Filtrar si se especificaron tablas específicas
             if (onlyTables.length > 0 && !onlyTables.includes(tableName)) {
@@ -234,7 +297,7 @@ router.post('/sync-schema', requireDbAdminAuth, async (req, res) => {
             }
 
             // Si la tabla no existe, crearla
-            if (!dbTableNames.includes(tableName)) {
+            if (!dbTableNames.includes(tableNameLower)) {
                 const createSql = `CREATE TABLE IF NOT EXISTS "${tableName}" (id SERIAL PRIMARY KEY)`;
 
                 if (dryRun) {
@@ -264,22 +327,56 @@ router.post('/sync-schema', requireDbAdminAuth, async (req, res) => {
             // Tabla existe, verificar columnas
             const modelAttributes = model.rawAttributes || {};
 
-            const [dbColumns] = await sequelize.query(`
+            // Usar el nombre de tabla real de la BD (puede diferir en case)
+            // dbTables puede ser [{table_name: 'x'}] o strings
+            let actualTableName = tableName;
+            for (const t of dbTables) {
+                const name = typeof t === 'string' ? t : t?.table_name;
+                if (name && name.toLowerCase() === tableNameLower) {
+                    actualTableName = name;
+                    break;
+                }
+            }
+
+            const dbColumnsResult = await sequelize.query(`
                 SELECT column_name FROM information_schema.columns
                 WHERE table_name = :tableName AND table_schema = 'public'
-            `, { replacements: { tableName } });
-            const dbColumnNames = dbColumns.map(c => c.column_name);
+            `, { replacements: { tableName: actualTableName }, type: QueryTypes.SELECT });
+            const dbColumnNames = dbColumnsResult.map(c => {
+                if (typeof c === 'string') return c.toLowerCase();
+                return c?.column_name?.toLowerCase() || null;
+            }).filter(Boolean);
+
+            // Debug logging for specific models
+            if (modelName === 'Attendance') {
+                debugLog.push({
+                    step: 'attendance_columns',
+                    model: modelName,
+                    tableName,
+                    actualTableName,
+                    modelAttrCount: Object.keys(modelAttributes).length,
+                    dbColumnCount: dbColumnNames.length,
+                    dbColumnsSample: dbColumnNames.slice(0, 10)
+                });
+            }
 
             for (const [attrName, attrDef] of Object.entries(modelAttributes)) {
                 const dbColumnName = attrDef.field || attrName;
+                const dbColumnNameLower = dbColumnName.toLowerCase();
+
+                // Saltar tipos VIRTUAL (no existen en BD)
+                const pgType = mapSequelizeToPostgres(attrDef.type);
+                if (pgType === null) {
+                    continue; // VIRTUAL u otro tipo que no debe crearse
+                }
 
                 // Filtrar si se especificaron columnas específicas
                 if (onlyColumns.length > 0 && !onlyColumns.includes(`${tableName}.${dbColumnName}`)) {
                     continue;
                 }
 
-                if (!dbColumnNames.includes(dbColumnName)) {
-                    const addColumnSql = generateAddColumnSql(tableName, dbColumnName, attrDef);
+                if (!dbColumnNames.includes(dbColumnNameLower)) {
+                    const addColumnSql = generateAddColumnSql(actualTableName, dbColumnName, attrDef);
 
                     if (dryRun) {
                         results.executed.push({
@@ -327,7 +424,8 @@ router.post('/sync-schema', requireDbAdminAuth, async (req, res) => {
 
         res.json({
             success: true,
-            results
+            results,
+            debugLog: debugLog.length > 0 ? debugLog : undefined
         });
 
     } catch (error) {
@@ -462,6 +560,12 @@ function mapSequelizeToPostgres(sequelizeType) {
 
     const typeName = getSequelizeTypeName(sequelizeType).toUpperCase();
 
+    // Tipos que NO deben crearse en la BD
+    const skipTypes = ['VIRTUAL'];
+    if (skipTypes.includes(typeName)) {
+        return null; // Señal para saltar esta columna
+    }
+
     const mapping = {
         'STRING': 'VARCHAR',
         'TEXT': 'TEXT',
@@ -476,8 +580,20 @@ function mapSequelizeToPostgres(sequelizeType) {
         'UUID': 'UUID',
         'JSONB': 'JSONB',
         'JSON': 'JSON',
-        'ARRAY': 'ARRAY',
-        'ENUM': 'VARCHAR'
+        'ARRAY': 'TEXT[]',
+        'ENUM': 'VARCHAR',
+        'GEOMETRY': 'TEXT', // Fallback si no hay PostGIS
+        'INET': 'VARCHAR(45)', // IPv4/IPv6
+        'CIDR': 'VARCHAR(50)',
+        'MACADDR': 'VARCHAR(17)',
+        'BLOB': 'BYTEA',
+        'REAL': 'REAL',
+        'SMALLINT': 'SMALLINT',
+        'TINYINT': 'SMALLINT',
+        'MEDIUMINT': 'INTEGER',
+        'CITEXT': 'TEXT',
+        'HSTORE': 'JSONB',
+        'RANGE': 'TEXT'
     };
 
     return mapping[typeName] || 'TEXT';
@@ -586,5 +702,95 @@ function formatDefaultValue(value, pgType) {
 
     return null;
 }
+
+// ============================================================================
+// GET /api/database/debug-compare/:tableName
+// Debug de comparación para una tabla específica
+// ============================================================================
+router.get('/debug-compare/:tableName', requireDbAdminAuth, async (req, res) => {
+    try {
+        const { tableName } = req.params;
+        const models = sequelize.models;
+
+        // Buscar el modelo por nombre de tabla
+        let targetModel = null;
+        let modelName = null;
+        for (const [name, model] of Object.entries(models)) {
+            const tbl = model.tableName || model.name;
+            if (tbl.toLowerCase() === tableName.toLowerCase()) {
+                targetModel = model;
+                modelName = name;
+                break;
+            }
+        }
+
+        if (!targetModel) {
+            return res.json({
+                success: false,
+                error: `No se encontró modelo para tabla: ${tableName}`,
+                availableModels: Object.entries(models).map(([n, m]) => ({
+                    model: n,
+                    table: m.tableName || m.name
+                })).slice(0, 20)
+            });
+        }
+
+        // Obtener columnas del modelo
+        const modelAttributes = targetModel.rawAttributes || {};
+        const modelColumns = [];
+        for (const [attrName, attrDef] of Object.entries(modelAttributes)) {
+            const dbColumnName = attrDef.field || attrName;
+            const typeName = getSequelizeTypeName(attrDef.type);
+            const pgType = mapSequelizeToPostgres(attrDef.type);
+            modelColumns.push({
+                attribute: attrName,
+                field: dbColumnName,
+                fieldLower: dbColumnName.toLowerCase(),
+                sequelizeType: typeName,
+                pgType: pgType,
+                isVirtual: pgType === null
+            });
+        }
+
+        // Obtener columnas de la BD
+        const [dbColumns] = await sequelize.query(`
+            SELECT column_name, data_type, udt_name
+            FROM information_schema.columns
+            WHERE table_name = :tableName AND table_schema = 'public'
+        `, { replacements: { tableName: tableName.toLowerCase() } });
+
+        const dbColumnNames = dbColumns.map(c => c.column_name);
+        const dbColumnNamesLower = dbColumns.map(c => c.column_name.toLowerCase());
+
+        // Comparar
+        const missingInDb = modelColumns.filter(mc =>
+            !mc.isVirtual && !dbColumnNamesLower.includes(mc.fieldLower)
+        );
+
+        const existsInDb = modelColumns.filter(mc =>
+            !mc.isVirtual && dbColumnNamesLower.includes(mc.fieldLower)
+        );
+
+        res.json({
+            success: true,
+            debug: {
+                modelName,
+                tableName: targetModel.tableName,
+                tableNameLower: tableName.toLowerCase(),
+                modelColumnsCount: modelColumns.length,
+                dbColumnsCount: dbColumns.length,
+                missingCount: missingInDb.length,
+                modelColumns: modelColumns,
+                dbColumns: dbColumnNames,
+                dbColumnsLower: dbColumnNamesLower,
+                missingInDb: missingInDb,
+                existsInDb: existsInDb.map(c => c.field)
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 module.exports = router;
