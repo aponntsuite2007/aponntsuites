@@ -1903,7 +1903,7 @@ const userSalaryConfigRoutes = require('./src/routes/userSalaryConfigRoutes'); /
 // 🆕 Sistema Médico Avanzado y Salarial V2 (Noviembre 2025)
 const medicalAdvancedRoutes = require('./src/routes/medicalAdvancedRoutes'); // Antropométricos, Cirugías, Psiquiatría, Deportes
 const medicalCaseRoutes = require('./src/routes/medicalCaseRoutes'); // Sistema Completo de Gestión Médica (Enero 2025)
-const occupationalHealthRoutes = require('./src/routes/occupationalHealthRoutes'); // ✨ Occupational Health Enterprise v5.0 (Enero 2025)
+// ELIMINADO: occupationalHealthRoutes - Módulo eliminado, funcionalidad en medical-dashboard-professional.js
 // 🏥 Sistema Médico Profesional con Inmutabilidad (Diciembre 2025) - Ley 19.587, SRT
 const medicalRecordsRoutes = require('./src/routes/medicalRecordsRoutes'); // Registros con firma digital y bloqueo
 const medicalTemplatesRoutes = require('./src/routes/medicalTemplatesRoutes'); // Plantillas de exámenes por empresa
@@ -2219,6 +2219,18 @@ console.log('   🔄 POST /api/database/sync-schema - Sincronizar esquema');
 console.log('   📋 GET  /api/database/tables - Listar tablas');
 console.log('   ⚠️  Requiere adminKey para todas las operaciones');
 
+// ✅ CONFIGURAR DEPLOYMENT SYNC - Sistema de Sincronización de Deploy
+const deploymentSyncRoutes = require('./src/routes/deploymentSyncRoutes');
+app.use('/api/deployment', deploymentSyncRoutes);
+
+console.log('🚀 [DEPLOYMENT SYNC] Sistema de Sincronización de Deploy ACTIVO:');
+console.log('   📊 GET  /api/deployment/status - Estado de todos los componentes');
+console.log('   🔍 GET  /api/deployment/git-diff - Diferencias local vs remoto');
+console.log('   📤 POST /api/deployment/push - Push cambios a GitHub/Render');
+console.log('   📱 GET  /api/deployment/apk/versions - Versiones de APK');
+console.log('   🔨 POST /api/deployment/apk/build - Iniciar build de APK');
+console.log('   ⚠️  Requiere adminKey para operaciones de deploy');
+
 // ✅ CONFIGURAR TASK INTELLIGENCE - Sistema Inteligente de Tareas
 const taskIntelligenceRoutes = require('./src/routes/taskIntelligenceRoutes');
 app.use('/api/task-intelligence', taskIntelligenceRoutes);
@@ -2307,6 +2319,40 @@ console.log('   🧠 Technology: Ollama + Llama 3.1 (8B) + RAG + PostgreSQL');
 console.log('   🔧 /api/audit/bundles - Sugerencias comerciales');
 console.log('   🌱 /api/audit/seed/:module - Generar datos de prueba');
 console.log('   🔥 Auto-diagnóstico, Auto-reparación híbrida, Análisis de dependencias');
+
+// ✅ CONFIGURAR SISTEMA DE CONTROL DE ACCESO ENTERPRISE (RBAC + SSOT) - Diciembre 2025
+const accessControlRoutes = require('./src/routes/accessControlRoutes');
+const associateRoutes = require('./src/routes/associateRoutes');
+const contextualHelpRoutes = require('./src/routes/contextualHelpRoutes');
+
+app.use('/api/v1/access-control', accessControlRoutes);
+app.use('/api/v1/associates', associateRoutes);
+app.use('/api/v1/help', contextualHelpRoutes);
+
+console.log('🔐 [ACCESS-CONTROL] Sistema Enterprise de Control de Acceso ACTIVO:');
+console.log('   🎭 /api/v1/access-control/roles - Gestión de roles SSOT');
+console.log('   🔓 /api/v1/access-control/check - Verificar permisos por módulo');
+console.log('   📋 /api/v1/access-control/my-permissions - Permisos del usuario actual');
+console.log('   👥 /api/v1/access-control/users/:id/roles - Asignar/revocar roles');
+console.log('   📊 /api/v1/access-control/permissions-matrix - Matriz de permisos admin');
+console.log('   🔗 /api/v1/access-control/check-dependencies/:module - Verificar dependencias');
+console.log('');
+console.log('👨‍⚕️ [ASSOCIATES] Sistema de Asociados APONNT ACTIVO:');
+console.log('   🔍 /api/v1/associates/search - Buscar asociados (médicos, abogados, etc.)');
+console.log('   📂 /api/v1/associates/categories - Categorías de asociados');
+console.log('   📝 /api/v1/associates/contracts - Gestión de contratos empresa-asociado');
+console.log('   👥 /api/v1/associates/contracts/:id/employees - Asignar empleados (eventual)');
+console.log('   🏢 /api/v1/associates/my-companies - Empresas donde trabajo (para asociados)');
+console.log('');
+console.log('💡 [CONTEXTUAL-HELP] Sistema de Ayuda Contextual con IA ACTIVO:');
+console.log('   📖 /api/v1/help/module/:key - Ayuda completa de módulo');
+console.log('   💬 /api/v1/help/tooltip - Tooltips de elementos');
+console.log('   🎓 /api/v1/help/walkthrough/:key - Tutorial interactivo');
+console.log('   ✅ /api/v1/help/readiness/:key - Verificar dependencias antes de usar');
+console.log('   🤖 /api/v1/help/ask - Preguntar a Ollama (IA contextual)');
+console.log('   📊 /api/v1/help/full-context/:key - Todo el contexto de ayuda');
+console.log('   🧠 Technology: Ollama + RAG + Dependency Checker + SSOT');
+console.log('');
 
 // ✅ CONFIGURAR EMAIL VERIFICATION & CONSENT MANAGEMENT SYSTEM
 const emailVerificationRoutes = require('./src/routes/emailVerificationRoutes');
@@ -2424,7 +2470,7 @@ app.use('/api/v1/facial-biometric', facialBiometricRoutes);
 
 // 🏥 CONFIGURAR API MÉDICA (eliminado medicalRoutes-simple - mockup)
 app.use('/api/medical-cases', medicalCaseRoutes); // Sistema completo de gestión médica
-app.use('/api/occupational-health', occupationalHealthRoutes); // ✨ Occupational Health Enterprise v5.0 - International Standards
+// ELIMINADO: occupationalHealthRoutes - Módulo retirado (Dic 2025), usar medical-dashboard-professional.js
 // ELIMINADO: occupationalHealthPhase2Routes - Funcionalidad ahora en /api/medical-cases
 
 // 🏥 Sistema Médico Profesional con Inmutabilidad (Diciembre 2025)
