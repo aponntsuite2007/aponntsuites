@@ -2209,6 +2209,16 @@ console.log('🏗️ [ENGINEERING] Engineering Dashboard API ACTIVO:');
 console.log('   📊 GET  /api/engineering/metadata - Metadata completo del sistema');
 console.log('   📋 GET  /api/engineering/modules - Solo módulos');
 
+// ✅ CONFIGURAR DATABASE SYNC - Sistema de Sincronización de BD
+const databaseSyncRoutes = require('./src/routes/databaseSyncRoutes');
+app.use('/api/database', databaseSyncRoutes);
+
+console.log('🗄️ [DATABASE SYNC] Sistema de Sincronización de BD ACTIVO:');
+console.log('   🔍 GET  /api/database/compare-schema - Comparar modelos vs BD');
+console.log('   🔄 POST /api/database/sync-schema - Sincronizar esquema');
+console.log('   📋 GET  /api/database/tables - Listar tablas');
+console.log('   ⚠️  Requiere adminKey para todas las operaciones');
+
 // ✅ CONFIGURAR TASK INTELLIGENCE - Sistema Inteligente de Tareas
 const taskIntelligenceRoutes = require('./src/routes/taskIntelligenceRoutes');
 app.use('/api/task-intelligence', taskIntelligenceRoutes);

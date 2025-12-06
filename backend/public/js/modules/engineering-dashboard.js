@@ -1112,12 +1112,29 @@ const EngineeringDashboard = {
         <div style="margin-bottom: 30px;">
           <h2 style="margin: 0 0 10px 0; color: #1f2937; display: flex; align-items: center; gap: 10px;">
             <span>🗄️</span>
-            <span>Base de Datos - Schema Coordinado</span>
+            <span>Base de Datos</span>
           </h2>
-          <p style="margin: 0; color: #6b7280; font-size: 14px;">
+        </div>
+
+        <!-- Sub-tabs de Base de Datos -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+          <button onclick="window.EngineeringDashboard.switchDbSubTab('schema')" id="db-subtab-schema"
+            class="db-subtab active"
+            style="padding: 10px 20px; border: none; background: #3b82f6; color: white; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500;">
+            📋 Schema Coordinado
+          </button>
+          <button onclick="window.EngineeringDashboard.switchDbSubTab('sync')" id="db-subtab-sync"
+            class="db-subtab"
+            style="padding: 10px 20px; border: none; background: #e5e7eb; color: #374151; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500;">
+            🔄 Sincronización
+          </button>
+        </div>
+
+        <!-- Contenido Schema (default) -->
+        <div id="db-content-schema">
+          <p style="margin: 0 0 15px 0; color: #6b7280; font-size: 14px;">
             ⚠️ <strong>IMPORTANTE:</strong> Antes de modificar cualquier campo, verificar qué módulos lo usan para no romper funcionalidad.
           </p>
-        </div>
 
         <!-- Stats -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
@@ -1202,8 +1219,59 @@ const EngineeringDashboard = {
             </div>
           `).join('')}
         </div>
+        </div>
+
+        <!-- Contenido Sincronización (hidden by default) -->
+        <div id="db-content-sync" style="display: none;"></div>
       </div>
     `;
+  },
+
+  /**
+   * Switch entre sub-tabs de Base de Datos
+   */
+  switchDbSubTab(tabId) {
+    // Ocultar todos los contenidos
+    document.getElementById('db-content-schema').style.display = 'none';
+    document.getElementById('db-content-sync').style.display = 'none';
+
+    // Desactivar todos los tabs
+    document.getElementById('db-subtab-schema').style.background = '#e5e7eb';
+    document.getElementById('db-subtab-schema').style.color = '#374151';
+    document.getElementById('db-subtab-sync').style.background = '#e5e7eb';
+    document.getElementById('db-subtab-sync').style.color = '#374151';
+
+    // Activar el tab seleccionado
+    const activeTab = document.getElementById(`db-subtab-${tabId}`);
+    activeTab.style.background = '#3b82f6';
+    activeTab.style.color = 'white';
+
+    // Mostrar contenido correspondiente
+    const content = document.getElementById(`db-content-${tabId}`);
+    content.style.display = 'block';
+
+    // Si es sync, renderizar el módulo DatabaseSync
+    if (tabId === 'sync') {
+      if (typeof DatabaseSync !== 'undefined') {
+        DatabaseSync.render(content);
+      } else {
+        content.innerHTML = `
+          <div style="padding: 40px; text-align: center; color: #6b7280;">
+            <p>⏳ Cargando módulo de sincronización...</p>
+            <p style="font-size: 12px; margin-top: 10px;">Si no carga, verifique que database-sync.js esté incluido</p>
+          </div>
+        `;
+        // Intentar cargar el script dinámicamente
+        const script = document.createElement('script');
+        script.src = '/js/modules/database-sync.js';
+        script.onload = () => {
+          if (typeof DatabaseSync !== 'undefined') {
+            DatabaseSync.render(content);
+          }
+        };
+        document.head.appendChild(script);
+      }
+    }
   },
 
   /**
