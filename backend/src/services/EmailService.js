@@ -123,7 +123,7 @@ class EmailService {
         try {
             console.log(`🔍 [EMPRESA] Validando configuración SMTP: ${smtpConfig.host}:${smtpConfig.port}`);
 
-            const transporter = nodemailer.createTransporter({
+            const transporter = nodemailer.createTransport({
                 host: smtpConfig.host,
                 port: smtpConfig.port,
                 secure: smtpConfig.secure || false,
@@ -485,7 +485,7 @@ class EmailService {
             return this.aponntTransporters.get(key);
         }
 
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
             host: config.smtp_host,
             port: config.smtp_port,
             secure: config.smtp_secure,
@@ -512,7 +512,7 @@ class EmailService {
         // Desencriptar password
         const password = Buffer.from(config.smtp_password, 'base64').toString('utf8');
 
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
             host: config.smtp_host,
             port: config.smtp_port,
             secure: config.smtp_secure,

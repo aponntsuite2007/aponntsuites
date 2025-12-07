@@ -729,6 +729,78 @@
       }
     },
     {
+      "id": "hse-management",
+      "key": "hse-management",
+      "name": "Seguridad e Higiene Laboral",
+      "icon": "🛡️",
+      "category": "compliance",
+      "is_core": false,
+      "base_price": 120,
+      "description": "Sistema completo de Seguridad e Higiene Laboral (HSE) con gestión de EPP, ISO 45001, OSHA, EU-OSHA, SRT Argentina. Incluye: Catálogo de EPP, Matriz rol-EPP, Entregas con firma digital, Inspecciones, Alertas de vencimiento, Dashboard de cumplimiento.",
+      "isCommercial": true,
+      "isAdministrative": false,
+      "hasImplementation": true,
+      "frontend_file": "/js/modules/hse-management.js",
+      "init_function": "initHseManagement",
+      "status": "IN_PROGRESS",
+      "progress": 70,
+      "is_multi_tenant": true,
+      "aliases": ["hse", "epp-management", "ppe-management", "safety-management"],
+      "dependencies": {
+        "required": [
+          "users",
+          "organizational-structure"
+        ],
+        "optional": [
+          "notification-center",
+          "document-management"
+        ],
+        "provides_to": [
+          "employee-360",
+          "compliance-dashboard"
+        ]
+      },
+      "api_endpoints": [
+        "GET /api/v1/hse/categories",
+        "GET /api/v1/hse/catalog",
+        "POST /api/v1/hse/catalog",
+        "PUT /api/v1/hse/catalog/:id",
+        "DELETE /api/v1/hse/catalog/:id",
+        "GET /api/v1/hse/requirements",
+        "GET /api/v1/hse/requirements/position/:positionId",
+        "GET /api/v1/hse/requirements/matrix",
+        "POST /api/v1/hse/requirements",
+        "PUT /api/v1/hse/requirements/:id",
+        "DELETE /api/v1/hse/requirements/:id",
+        "GET /api/v1/hse/deliveries",
+        "GET /api/v1/hse/deliveries/employee/:employeeId",
+        "GET /api/v1/hse/deliveries/expiring",
+        "POST /api/v1/hse/deliveries",
+        "PUT /api/v1/hse/deliveries/:id",
+        "POST /api/v1/hse/deliveries/:id/sign",
+        "POST /api/v1/hse/deliveries/:id/return",
+        "POST /api/v1/hse/deliveries/:id/replace",
+        "GET /api/v1/hse/inspections",
+        "GET /api/v1/hse/inspections/pending",
+        "POST /api/v1/hse/inspections",
+        "PUT /api/v1/hse/inspections/:id/complete",
+        "GET /api/v1/hse/dashboard",
+        "GET /api/v1/hse/compliance/:employeeId",
+        "GET /api/v1/hse/reports/expiring",
+        "GET /api/v1/hse/config",
+        "PUT /api/v1/hse/config"
+      ],
+      "database_tables": [
+        "epp_categories",
+        "epp_catalog",
+        "epp_role_requirements",
+        "epp_deliveries",
+        "epp_inspections",
+        "hse_company_config"
+      ],
+      "international_standards": ["ISO 45001:2018", "OSHA", "EU-OSHA", "SRT Argentina", "NOM-017-STPS Mexico", "NR-6 Brazil"]
+    },
+    {
       "id": "sla-tracking",
       "key": "sla-tracking",
       "name": "Seguimiento de SLA",

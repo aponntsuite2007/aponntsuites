@@ -2005,6 +2005,12 @@ const companyAccountRoutes = require('./src/routes/companyAccountRoutes'); // �
 // 💼 IMPORTAR RUTAS DE POSTULACIONES LABORALES
 const jobPostingsRoutes = require('./src/routes/jobPostingsRoutes');
 
+// 🆘 IMPORTAR RUTAS DEL CENTRO DE AYUDA UNIFICADO (Diciembre 2025)
+const unifiedHelpRoutes = require('./src/routes/unifiedHelpRoutes');
+
+// 🎫 IMPORTAR RUTAS DE ESCALAMIENTO DE TICKETS DE SOPORTE (Diciembre 2025)
+const supportEscalationRoutes = require('./src/routes/supportEscalationRoutes');
+
 // 📋 IMPORTAR RUTAS DE DEPENDENCIAS DE CONCEPTOS (Benefits Engine Multi-Tenant)
 const conceptDependenciesRoutes = require('./src/routes/conceptDependenciesRoutes');
 
@@ -2098,6 +2104,23 @@ app.use('/api', pricingRoutes);
 
 // 💼 CONFIGURAR RUTAS DE POSTULACIONES LABORALES
 app.use('/api/job-postings', jobPostingsRoutes);
+
+// 🆘 CONFIGURAR RUTAS DEL CENTRO DE AYUDA UNIFICADO (Diciembre 2025)
+app.use('/api/v1/help', unifiedHelpRoutes);
+console.log('🆘 [UNIFIED-HELP] Centro de Ayuda Unificado configurado');
+
+// 🎫 CONFIGURAR RUTAS DE ESCALAMIENTO DE TICKETS DE SOPORTE (Diciembre 2025)
+app.use('/api/v1/support', supportEscalationRoutes);
+console.log('🎫 [SUPPORT-ESCALATION] Rutas de escalamiento de soporte configuradas');
+
+// 📋 CONFIGURAR RUTAS DE MANUAL DE PROCEDIMIENTOS (ISO 9001)
+const proceduresRoutes = require('./src/routes/proceduresRoutes');
+app.use('/api/procedures', proceduresRoutes);
+
+// 🛡️ CONFIGURAR RUTAS DE HSE - SEGURIDAD E HIGIENE LABORAL (ISO 45001)
+const hseRoutes = require('./src/routes/hseRoutes');
+app.use('/api/v1/hse', hseRoutes);
+console.log('🛡️ [HSE] Módulo de Seguridad e Higiene Laboral (ISO 45001) configurado');
 
 // 🖥️ CONFIGURAR RUTAS DE KIOSKS BIOMÉTRICOS
 app.use('/api/kiosks', kiosksRoutes);
@@ -2847,6 +2870,52 @@ async function startServer() {
       console.warn('⚠️  [SCHEDULER] El servidor continuará sin scheduler de exámenes médicos.\n');
     }
 
+    // ✅ INICIALIZAR SCHEDULER DE VENCIMIENTO DE EPP (HSE - Seguridad e Higiene)
+    console.log('🛡️ [SCHEDULER] Inicializando scheduler de EPP (HSE)...');
+    try {
+      const eppExpirationService = require('./src/services/EppExpirationNotificationService');
+      await eppExpirationService.initialize(database);
+
+      // Hacer disponible en toda la aplicación
+      app.locals.eppExpirationService = eppExpirationService;
+      global.eppExpirationService = eppExpirationService;
+
+      console.log('✅ [SCHEDULER] Scheduler de EPP iniciado correctamente');
+      console.log('   • Frecuencia: Diario a las 8:00 AM');
+      console.log('   • Notificaciones: 30, 15, 7, 1 días antes del vencimiento');
+      console.log('   • EPP monitoreados: Cascos, Guantes, Zapatos, Arneses, etc.');
+      console.log('   • Destinatarios: Empleado + HSE Manager + Admin');
+      console.log('   • Zona horaria: America/Argentina/Buenos_Aires\n');
+    } catch (schedulerError) {
+      console.warn('⚠️  [SCHEDULER] Error iniciando scheduler de EPP:', schedulerError.message);
+      console.warn('⚠️  [SCHEDULER] El servidor continuará sin scheduler de EPP.\n');
+    }
+
+    // ✅ INICIALIZAR SCHEDULER DE LIMPIEZA DE BORRADORES DE PROCEDIMIENTOS
+    console.log('📝 [SCHEDULER] Inicializando scheduler de borradores de procedimientos...');
+    try {
+      const ProcedureDraftCleanupScheduler = require('./src/services/ProcedureDraftCleanupScheduler');
+
+      const NotificationEnterpriseService = require('./src/services/NotificationEnterpriseService');
+      const notificationServiceProcs = new NotificationEnterpriseService(database);
+      const procedureScheduler = new ProcedureDraftCleanupScheduler(database, notificationServiceProcs);
+      procedureScheduler.start();
+
+      // Hacer disponible en toda la aplicación
+      app.locals.procedureScheduler = procedureScheduler;
+      global.procedureScheduler = procedureScheduler;
+
+      console.log('✅ [SCHEDULER] Scheduler de borradores de procedimientos iniciado correctamente');
+      console.log('   • Frecuencia: Diario a las 3:30 AM');
+      console.log('   • TTL de borradores: 7 días máximo');
+      console.log('   • Acciones: Elimina borradores expirados, libera bloqueos');
+      console.log('   • Notificaciones: Alerta a usuarios afectados');
+      console.log('   • Zona horaria: America/Argentina/Buenos_Aires\n');
+    } catch (schedulerError) {
+      console.warn('⚠️  [SCHEDULER] Error iniciando scheduler de procedimientos:', schedulerError.message);
+      console.warn('⚠️  [SCHEDULER] El servidor continuará sin limpieza automática de borradores.\n');
+    }
+
     // 📁 INICIALIZAR DMS (Sistema de Gestión Documental Enterprise)
     console.log('📁 [DMS] Inicializando Sistema de Gestión Documental...');
     try {
@@ -2906,6 +2975,21 @@ async function startServer() {
     } catch (slaError) {
       console.warn('⚠️  [SLA-ESCALATION] Error iniciando servicio de escalamiento:', slaError.message);
       console.warn('⚠️  [SLA-ESCALATION] El servidor continuará sin escalamiento automático.\n');
+    }
+
+    // ✅ INICIALIZAR SERVICIO DE ESCALAMIENTO DE TICKETS DE SOPORTE
+    console.log('🎫 [SUPPORT-ESCALATION] Inicializando servicio de escalamiento de soporte...');
+    try {
+      const supportTicketEscalationService = require('./src/services/SupportTicketEscalationService');
+      supportTicketEscalationService.start();
+      console.log('✅ [SUPPORT-ESCALATION] Servicio de escalamiento de soporte iniciado');
+      console.log('   • Frecuencia: Cada 15 minutos');
+      console.log('   • Cadena: Soporte asignado → Coordinador → Dirección');
+      console.log('   • SLA Config: critical(2h), high(8h), medium(24h), low(48h)');
+      console.log('   • API: /api/v1/support/escalate\n');
+    } catch (supportError) {
+      console.warn('⚠️  [SUPPORT-ESCALATION] Error iniciando servicio:', supportError.message);
+      console.warn('⚠️  [SUPPORT-ESCALATION] El servidor continuará sin escalamiento de soporte.\n');
     }
 
     // ✅ INICIALIZAR SERVICIO DE ANÁLISIS INTELIGENTE OLLAMA

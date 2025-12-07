@@ -531,6 +531,19 @@
                         </div>
                     </div>
 
+                    <!-- Card: Mis Procedimientos -->
+                    <div class="mi-espacio-module-card"
+                         style="--card-accent: #1abc9c; --card-glow: rgba(26, 188, 156, 0.3);"
+                         onclick="window.MiEspacio.openSubmodule('my-procedures', 'Mis Procedimientos')">
+                        <div class="module-icon"><i class="fas fa-book"></i></div>
+                        <h4>Mis Procedimientos</h4>
+                        <p>Consulta los instructivos y procedimientos asignados a tu rol. Da acuse de recibo de nuevos documentos.</p>
+                        <div class="module-actions">
+                            <span class="action-tag"><i class="fas fa-file-alt"></i> Instructivos</span>
+                            <span class="action-tag"><i class="fas fa-check-circle"></i> Acuses</span>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Accesos Rápidos -->

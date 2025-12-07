@@ -13,12 +13,12 @@ class BiometricConsentService {
     initializeEmailTransporter() {
         try {
             // Verificar que nodemailer esté disponible
-            if (!nodemailer || typeof nodemailer.createTransporter !== 'function') {
+            if (!nodemailer || typeof nodemailer.createTransport !== 'function') {
                 console.warn('⚠️ nodemailer no está disponible. Servicio de email deshabilitado.');
                 return;
             }
 
-            this.emailTransporter = nodemailer.createTransporter({
+            this.emailTransporter = nodemailer.createTransport({
                 host: process.env.SMTP_HOST || 'smtp.gmail.com',
                 port: process.env.SMTP_PORT || 587,
                 secure: false,

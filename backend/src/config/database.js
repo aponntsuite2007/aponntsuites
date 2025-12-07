@@ -305,6 +305,20 @@ const MedicalRecordAuditLog = require('../models/MedicalRecordAuditLog')(sequeli
 const JobPosting = require('../models/JobPosting')(sequelize);
 const JobApplication = require('../models/JobApplication')(sequelize);
 
+// ✅ MODELOS - Manual de Procedimientos ISO 9001
+const Procedure = require('../models/Procedure')(sequelize);
+const ProcedureVersion = require('../models/ProcedureVersion')(sequelize);
+const ProcedureRole = require('../models/ProcedureRole')(sequelize);
+const ProcedureAcknowledgement = require('../models/ProcedureAcknowledgement')(sequelize);
+
+// ✅ MODELOS - Sistema HSE (Seguridad e Higiene Laboral) ISO 45001
+const EppCategory = require('../models/EppCategory')(sequelize);
+const EppCatalog = require('../models/EppCatalog')(sequelize);
+const EppRoleRequirement = require('../models/EppRoleRequirement')(sequelize);
+const EppDelivery = require('../models/EppDelivery')(sequelize);
+const EppInspection = require('../models/EppInspection')(sequelize);
+const HseCompanyConfig = require('../models/HseCompanyConfig')(sequelize);
+
 // SuperUser eliminado - se unificó con tabla User
 
 // Definir asociaciones
@@ -1430,6 +1444,102 @@ JobApplication.belongsTo(Department, { foreignKey: 'assigned_department_id', as:
 MedicalRecord.hasOne(JobApplication, { foreignKey: 'medical_record_id', as: 'originatingApplication' });
 JobApplication.belongsTo(MedicalRecord, { foreignKey: 'medical_record_id', as: 'medicalRecord' });
 
+// =========================================================================
+// ✅ ASOCIACIONES - Manual de Procedimientos ISO 9001
+// =========================================================================
+
+// Procedure -> Company
+Company.hasMany(Procedure, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'procedures' });
+Procedure.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+// Procedure -> Branch/Department/Sector (segmentación)
+Branch.hasMany(Procedure, { foreignKey: 'branch_id', as: 'procedures' });
+Procedure.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
+
+Department.hasMany(Procedure, { foreignKey: 'department_id', as: 'procedures' });
+Procedure.belongsTo(Department, { foreignKey: 'department_id', as: 'department' });
+
+Sector.hasMany(Procedure, { foreignKey: 'sector_id', as: 'procedures' });
+Procedure.belongsTo(Sector, { foreignKey: 'sector_id', as: 'sector' });
+
+// Procedure -> User (workflow)
+User.hasMany(Procedure, { foreignKey: 'created_by', sourceKey: 'user_id', as: 'proceduresCreated' });
+Procedure.belongsTo(User, { foreignKey: 'created_by', targetKey: 'user_id', as: 'creator' });
+
+User.hasMany(Procedure, { foreignKey: 'reviewed_by', sourceKey: 'user_id', as: 'proceduresReviewed' });
+Procedure.belongsTo(User, { foreignKey: 'reviewed_by', targetKey: 'user_id', as: 'reviewer' });
+
+User.hasMany(Procedure, { foreignKey: 'approved_by', sourceKey: 'user_id', as: 'proceduresApproved' });
+Procedure.belongsTo(User, { foreignKey: 'approved_by', targetKey: 'user_id', as: 'approver' });
+
+User.hasMany(Procedure, { foreignKey: 'published_by', sourceKey: 'user_id', as: 'proceduresPublished' });
+Procedure.belongsTo(User, { foreignKey: 'published_by', targetKey: 'user_id', as: 'publisher' });
+
+// Procedure -> ProcedureVersion
+Procedure.hasMany(ProcedureVersion, { foreignKey: 'procedure_id', as: 'versions' });
+ProcedureVersion.belongsTo(Procedure, { foreignKey: 'procedure_id', as: 'procedure' });
+
+User.hasMany(ProcedureVersion, { foreignKey: 'created_by', sourceKey: 'user_id', as: 'procedureVersionsCreated' });
+ProcedureVersion.belongsTo(User, { foreignKey: 'created_by', targetKey: 'user_id', as: 'creator' });
+
+User.hasMany(ProcedureVersion, { foreignKey: 'published_by', sourceKey: 'user_id', as: 'procedureVersionsPublished' });
+ProcedureVersion.belongsTo(User, { foreignKey: 'published_by', targetKey: 'user_id', as: 'publisher' });
+
+// Procedure -> ProcedureRole
+Procedure.hasMany(ProcedureRole, { foreignKey: 'procedure_id', as: 'roles' });
+ProcedureRole.belongsTo(Procedure, { foreignKey: 'procedure_id', as: 'procedure' });
+
+OrganizationalPosition.hasMany(ProcedureRole, { foreignKey: 'organizational_position_id', as: 'procedureRoles' });
+ProcedureRole.belongsTo(OrganizationalPosition, { foreignKey: 'organizational_position_id', as: 'organizationalPosition' });
+
+// Procedure -> ProcedureAcknowledgement
+Procedure.hasMany(ProcedureAcknowledgement, { foreignKey: 'procedure_id', as: 'acknowledgements' });
+ProcedureAcknowledgement.belongsTo(Procedure, { foreignKey: 'procedure_id', as: 'procedure' });
+
+ProcedureVersion.hasMany(ProcedureAcknowledgement, { foreignKey: 'procedure_version_id', as: 'acknowledgements' });
+ProcedureAcknowledgement.belongsTo(ProcedureVersion, { foreignKey: 'procedure_version_id', as: 'version' });
+
+User.hasMany(ProcedureAcknowledgement, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'procedureAcknowledgements' });
+ProcedureAcknowledgement.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// =========================================================================
+// ✅ ASOCIACIONES - Sistema HSE (Seguridad e Higiene Laboral) ISO 45001
+// =========================================================================
+
+// EppCategory -> EppCatalog
+EppCategory.hasMany(EppCatalog, { foreignKey: 'category_id', as: 'catalogItems' });
+EppCatalog.belongsTo(EppCategory, { foreignKey: 'category_id', as: 'category' });
+
+// EppCatalog -> EppRoleRequirement
+EppCatalog.hasMany(EppRoleRequirement, { foreignKey: 'epp_catalog_id', as: 'requirements' });
+EppRoleRequirement.belongsTo(EppCatalog, { foreignKey: 'epp_catalog_id', as: 'catalog' });
+
+// OrganizationalPosition -> EppRoleRequirement
+OrganizationalPosition.hasMany(EppRoleRequirement, { foreignKey: 'position_id', as: 'eppRequirements' });
+EppRoleRequirement.belongsTo(OrganizationalPosition, { foreignKey: 'position_id', as: 'position' });
+
+// EppCatalog -> EppDelivery
+EppCatalog.hasMany(EppDelivery, { foreignKey: 'epp_catalog_id', as: 'deliveries' });
+EppDelivery.belongsTo(EppCatalog, { foreignKey: 'epp_catalog_id', as: 'catalog' });
+
+// EppRoleRequirement -> EppDelivery
+EppRoleRequirement.hasMany(EppDelivery, { foreignKey: 'requirement_id', as: 'deliveries' });
+EppDelivery.belongsTo(EppRoleRequirement, { foreignKey: 'requirement_id', as: 'requirement' });
+
+// User -> EppDelivery (empleado y entregador)
+User.hasMany(EppDelivery, { foreignKey: 'employee_id', sourceKey: 'user_id', as: 'eppDeliveries' });
+EppDelivery.belongsTo(User, { foreignKey: 'employee_id', targetKey: 'user_id', as: 'employee' });
+User.hasMany(EppDelivery, { foreignKey: 'delivered_by', sourceKey: 'user_id', as: 'eppDelivered' });
+EppDelivery.belongsTo(User, { foreignKey: 'delivered_by', targetKey: 'user_id', as: 'deliveredBy' });
+
+// EppDelivery -> EppInspection
+EppDelivery.hasMany(EppInspection, { foreignKey: 'delivery_id', as: 'inspections' });
+EppInspection.belongsTo(EppDelivery, { foreignKey: 'delivery_id', as: 'delivery' });
+
+// User -> EppInspection (inspector)
+User.hasMany(EppInspection, { foreignKey: 'inspector_id', sourceKey: 'user_id', as: 'eppInspections' });
+EppInspection.belongsTo(User, { foreignKey: 'inspector_id', targetKey: 'user_id', as: 'inspector' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -1623,6 +1733,20 @@ module.exports = {
   // ✅ EXPORTS - Sistema de Postulaciones Laborales
   JobPosting,
   JobApplication,
+
+  // ✅ EXPORTS - Manual de Procedimientos ISO 9001
+  Procedure,
+  ProcedureVersion,
+  ProcedureRole,
+  ProcedureAcknowledgement,
+
+  // ✅ EXPORTS - Sistema HSE (Seguridad e Higiene Laboral) ISO 45001
+  EppCategory,
+  EppCatalog,
+  EppRoleRequirement,
+  EppDelivery,
+  EppInspection,
+  HseCompanyConfig,
 
   connect: async () => {
     try {

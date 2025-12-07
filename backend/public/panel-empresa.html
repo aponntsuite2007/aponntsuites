@@ -1941,31 +1941,29 @@
                 }, 3000);
             });
         </script>
-        <div class="header" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 35%, #3498db 70%, #87ceeb 100%); color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-bottom: 3px solid #2980b9;">
+        <div class="header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-bottom: 3px solid #3b82f6;">
             
             <!-- Barra superior con información principal - REDUCIDA 1cm v2.2.0 -->
-            <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 40%, #3498db 100%); padding: 1px 20px; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 5px; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); height: 60px;">
+            <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%); padding: 1px 20px; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 5px; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); height: 60px;">
                 
                 <!-- Izquierda: Logo y Sistema -->
                 <div class="brand-section" style="display: flex; align-items: center; gap: 15px;">
                     <div class="logo-container" style="display: flex; flex-direction: column; transform: translateY(-30px);">
-                        <div style="font-size: 35px; font-weight: 700; letter-spacing: -1px; margin-bottom: 2px;">
-                            <span style="color: #5dade2; font-weight: 800; font-size: 42px; transform: skewX(-15deg); display: inline-block;">A</span><span style="color: white;">ponnt</span>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="color: #60a5fa; font-weight: 800; font-size: 42px; transform: skewX(-12deg); display: inline-block;">A</span><span style="font-size: 35px; color: white; font-weight: 400;">ponnt</span>
+                            <span style="font-size: 18px; color: #60a5fa; font-weight: 600;">360º</span>
                         </div>
-                        <div id="systemTitle" style="font-size: 8px; color: rgba(255,255,255,0.9); font-weight: 500; text-transform: uppercase; letter-spacing: 0.2px; line-height: 1.1; white-space: nowrap;" data-translate="header.system_title">Software Integrado de Planificación de Recursos Empresariales</div>
+                        <div id="systemTitle" style="font-size: 11px; color: #60a5fa; font-weight: 500; letter-spacing: 0.5px; margin-top: -2px;" data-translate="header.system_title">Intelligent Ecosystem</div>
                     </div>
                 </div>
                 
-                <!-- Centro: Información de la empresa cliente (LOGO IZQUIERDA, TEXTO DERECHA) -->
+                <!-- Centro: Información de la empresa cliente - CENTRADO -->
                 <div class="client-info-center" style="display: flex; justify-content: center; transform: translateY(-20px);">
-                    <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 40%, #3498db 100%); padding: 1px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); min-width: 280px; border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; gap: 10px;">
-                        <span style="color: #f39c12; font-size: 20px;">🏢</span>
-                        <div style="text-align: left; flex: 1;">
-                            <div id="companyNameDisplay" style="font-weight: 700; color: white; margin-bottom: 0px; font-size: 18px;">Empresa Cliente</div>
-                            <div style="font-size: 10px; color: rgba(255,255,255,0.9); line-height: 1.1;">
-                                <div id="companyAddressDisplay" style="margin-bottom: 1px;">Dirección empresa</div>
-                                <div id="companyPhoneDisplay">📞 Teléfono</div>
-                            </div>
+                    <div style="background: rgba(255,255,255,0.08); padding: 8px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); min-width: 280px; border: 1px solid rgba(255,255,255,0.15); text-align: center;">
+                        <div id="companyNameDisplay" style="font-weight: 700; color: white; margin-bottom: 2px; font-size: 18px;">Empresa Cliente</div>
+                        <div style="font-size: 10px; color: rgba(255,255,255,0.9); line-height: 1.3;">
+                            <div id="companyAddressDisplay" style="margin-bottom: 1px;">Dirección empresa</div>
+                            <div id="companyPhoneDisplay">Teléfono</div>
                         </div>
                     </div>
                 </div>
@@ -1989,30 +1987,30 @@
                 </div>
             </div>
             
-            <!-- Barra inferior con información secundaria - REDUCIDA 1cm v2.2.0 -->
-            <div style="background: linear-gradient(135deg, #3498db 0%, #5dade2 50%, #87ceeb 100%); padding: 1px 20px; display: flex; justify-content: flex-end; align-items: center; font-size: 9px; color: #2c3e50;">
+            <!-- Barra inferior con información secundaria - REDUCIDA 1cm v2.2.0 - DARK THEME -->
+            <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1px 20px; display: flex; justify-content: flex-end; align-items: center; font-size: 9px; color: rgba(255,255,255,0.9);">
 
                 <!-- Widgets de Fecha, Hora y Clima -->
                 <div class="bottom-widgets" style="display: flex; align-items: center; gap: 10px;">
-                    <!-- Widget de Fecha y Hora -->
-                    <div class="datetime-card" style="background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 130px; backdrop-filter: blur(5px);">
-                        <div id="currentDate" style="font-size: 9px; color: #2c3e50; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;"></div>
-                        <div id="currentTime" style="font-size: 14px; font-weight: 700; color: #1e3c72; font-family: 'Courier New', monospace;"></div>
-                    </div>
-                    
-                    <!-- Widget de Clima -->
-                    <div class="weather-card" style="background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 8px 10px; text-align: center; min-width: 120px; backdrop-filter: blur(5px);">
-                        <div style="font-size: 8px; color: #2c3e50; margin-bottom: 1px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Villa Mercedes</div>
-                        <div style="font-size: 12px; font-weight: 600; color: #1e3c72;">🌤️ 24°</div>
+                    <!-- Widget de Fecha y Hora - SIN FONDO -->
+                    <div class="datetime-card" style="padding: 8px 12px; text-align: center;">
+                        <div id="currentDate" style="font-size: 9px; color: rgba(255,255,255,0.8); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;"></div>
+                        <div id="currentTime" style="font-size: 14px; font-weight: 700; color: #60a5fa; font-family: 'Courier New', monospace;"></div>
                     </div>
 
-                    <!-- Botón Mi Dashboard Personal (visible para TODOS los usuarios) -->
-                    <button id="btnMiDashboard" onclick="showEmployeeDashboard(window.currentUser, window.currentCompany || window.selectedCompany)" style="background: linear-gradient(135deg, #667eea, #764ba2); border: 1px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 110px; backdrop-filter: blur(5px); cursor: pointer; transition: all 0.3s ease; display: none;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Mi espacio personal: documentos, asistencia, vacaciones">
+                    <!-- Widget de Clima - SIN FONDO -->
+                    <div class="weather-card" style="padding: 8px 10px; text-align: center;">
+                        <div style="font-size: 8px; color: rgba(255,255,255,0.8); margin-bottom: 1px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Villa Mercedes</div>
+                        <div style="font-size: 12px; font-weight: 600; color: #60a5fa;">🌤️ 24°</div>
+                    </div>
+
+                    <!-- Botón Mi Dashboard Personal (visible para TODOS los usuarios) - DARK THEME -->
+                    <button id="btnMiDashboard" onclick="showEmployeeDashboard(window.currentUser, window.currentCompany || window.selectedCompany)" style="background: linear-gradient(135deg, #667eea, #764ba2); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 110px; backdrop-filter: blur(5px); cursor: pointer; transition: all 0.3s ease; display: none;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Mi espacio personal: documentos, asistencia, vacaciones">
                         <div style="font-size: 11px; font-weight: 600; color: white;">👤 Mi Espacio</div>
                     </button>
 
-                    <!-- Botón Cerrar Sesión -->
-                    <button onclick="cerrarSesion()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); border: 1px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 90px; backdrop-filter: blur(5px); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <!-- Botón Cerrar Sesión - CELESTE SUAVE -->
+                    <button onclick="cerrarSesion()" style="background: linear-gradient(135deg, #64748b, #475569); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 90px; backdrop-filter: blur(5px); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <div style="font-size: 11px; font-weight: 600; color: white;">🚪 Salir</div>
                     </button>
                 </div>
@@ -2115,6 +2113,10 @@
     <script src="js/modules/positions-management.js"></script>
     <script src="js/modules/payslip-template-editor.js"></script>
     <script src="js/modules/job-postings.js"></script>
+
+    <!-- Manual de Procedimientos ISO 9001 -->
+    <script src="js/modules/procedures-manual.js"></script>
+    <script src="js/modules/my-procedures.js"></script>
 
     <!-- Notification Systems -->
     <!-- <script src="js/modules/notifications-complete.js"></script> --> <!-- CARGA DINÁMICA como 'notifications' -->
@@ -4380,7 +4382,9 @@
                         'payroll-liquidation': 'showPayrollLiquidationContent',
                         'employee-360': 'showEmployee360Content',
                         'organizational-structure': 'showOrganizationalStructureContent',
-                        'company-account': 'showCompanyAccountContent'
+                        'company-account': 'showCompanyAccountContent',
+                        'procedures-manual': 'showProceduresManualContent',
+                        'my-procedures': 'showMyProceduresContent'
                     };
 
                     const legacyFunctionName = legacyFunctionMap[moduleId] || `show${capitalize(moduleId)}Content`;
@@ -4701,6 +4705,24 @@
                             showJobPostingsContent();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'job-postings.js no cargado');
+                        }
+                        break;
+                    case 'procedures-manual':
+                        // Manual de Procedimientos ISO 9001
+                        moduleContainer.innerHTML = '<div id="module-content" style="padding:20px;"></div>';
+                        if (typeof ProceduresManual !== 'undefined') {
+                            ProceduresManual.render('module-content');
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'procedures-manual.js no cargado');
+                        }
+                        break;
+                    case 'my-procedures':
+                        // Mis Procedimientos (Vista empleado - Mi Espacio)
+                        moduleContainer.innerHTML = '<div id="module-content" style="padding:20px;"></div>';
+                        if (typeof MyProcedures !== 'undefined') {
+                            MyProcedures.render('module-content');
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'my-procedures.js no cargado');
                         }
                         break;
                     case 'training-management':
@@ -7629,8 +7651,9 @@
         window.addEventListener('orientationchange', closeMobileSidebar);
     </script>
 
-    <!-- ✅ ASISTENTE IA - Ollama + Llama 3.1 (Chat Flotante con Tech Badges) -->
-    <script src="js/modules/ai-assistant-chat.js"></script>
+    <!-- ✅ CENTRO DE AYUDA UNIFICADO (Diciembre 2025) -->
+    <!-- Chat IA + Tickets de Soporte + Guías Contextuales - Integrado a Notificaciones -->
+    <script src="js/modules/unified-help-center.js"></script>
 
     <!-- 🔔 GLOBO FLOTANTE DE NOTIFICACIONES PENDIENTES -->
     <script src="js/modules/notification-badge-floating.js"></script>
@@ -7638,7 +7661,8 @@
     <!-- 🔐 SISTEMA ENTERPRISE DE CONTROL DE ACCESO (RBAC + SSOT) - Diciembre 2025 -->
     <script src="js/modules/roles-permissions.js"></script>
     <script src="js/modules/associate-marketplace.js"></script>
-    <script src="js/modules/contextual-help-system.js"></script>
+    <!-- DESACTIVADO: Reemplazado por unified-help-center.js -->
+    <!-- <script src="js/modules/contextual-help-system.js"></script> -->
 
     <!-- 🏆 TECH STACK BADGES - Marketing Subliminal Profesional -->
     <!-- DESACTIVADO: No mostrar badges en login -->
