@@ -414,6 +414,53 @@ async function initializeDatabase() {
       }
       console.log('   ✅ Módulos HSE, Procedures, Help registrados');
 
+      // 9. Sincronizar columnas críticas que pueden faltar
+      const columnMigrations = [
+        // Users
+        { table: 'users', column: 'organizational_position_id', type: 'UUID' },
+        { table: 'users', column: 'branch_scope', type: 'JSONB' },
+        { table: 'users', column: 'risk_score', type: 'DECIMAL(5,2)' },
+        // Companies
+        { table: 'companies', column: 'multi_branch_enabled', type: 'BOOLEAN DEFAULT false' },
+        { table: 'companies', column: 'industry_sector', type: 'VARCHAR(100)' },
+        { table: 'companies', column: 'risk_profile', type: 'VARCHAR(50)' },
+        // Procedures extras
+        { table: 'procedures', column: 'department_ids', type: 'INTEGER[]' },
+        { table: 'procedures', column: 'position_ids', type: 'INTEGER[]' },
+        { table: 'procedures', column: 'scope_type', type: 'VARCHAR(50) DEFAULT \'company\'' },
+        { table: 'procedures', column: 'draft_expires_at', type: 'TIMESTAMP' },
+        { table: 'procedures', column: 'owner_user_id', type: 'UUID' },
+        { table: 'procedures', column: 'owner_department_id', type: 'INTEGER' },
+        // Support tickets
+        { table: 'support_tickets', column: 'escalation_level', type: 'INTEGER DEFAULT 0' },
+        { table: 'support_tickets', column: 'escalated_at', type: 'TIMESTAMP' },
+        { table: 'support_tickets', column: 'escalated_to', type: 'UUID' },
+        // Organizational positions
+        { table: 'organizational_positions', column: 'work_category', type: 'VARCHAR(50)' },
+        { table: 'organizational_positions', column: 'physical_demand_level', type: 'VARCHAR(20)' },
+        { table: 'organizational_positions', column: 'risk_exposure_level', type: 'VARCHAR(20)' },
+      ];
+
+      for (const mig of columnMigrations) {
+        try {
+          await database.sequelize.query(`ALTER TABLE ${mig.table} ADD COLUMN IF NOT EXISTS ${mig.column} ${mig.type}`);
+        } catch(e) { /* columna ya existe o tabla no existe */ }
+      }
+      console.log('   ✅ Columnas adicionales sincronizadas');
+
+      // 10. DEMO en Render: Asignar los mismos módulos que ISI
+      const isiModules = ["legal-dashboard", "dms-dashboard", "payroll-liquidation", "art-management", "employee-map", "job-postings", "attendance", "mi-espacio", "biometric-consent", "plantillas-fiscales", "medical", "vacation-management", "licensing-management", "compliance-dashboard", "procedures-manual", "users", "kiosks", "training-management", "clientes", "facturacion", "sanctions-management", "employee-360", "organizational-structure", "company-account", "hse-management", "notification-center"];
+      const modulesJson = JSON.stringify(isiModules);
+
+      // Buscar empresa DEMO y asignarle módulos
+      await database.sequelize.query(`
+        UPDATE companies
+        SET active_modules = '${modulesJson}',
+            updated_at = NOW()
+        WHERE LOWER(slug) LIKE '%demo%' OR LOWER(name) LIKE '%demo%'
+      `);
+      console.log('   ✅ Módulos de ISI asignados a DEMO (26 módulos)');
+
       console.log('✅ Migraciones críticas completadas');
     } catch (migErr) {
       console.log('⚠️ Algunas migraciones ya existían o fallaron:', migErr.message.substring(0, 100));
