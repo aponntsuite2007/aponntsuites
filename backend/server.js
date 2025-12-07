@@ -478,6 +478,81 @@ async function initializeDatabase() {
       const [allCompanies] = await database.sequelize.query(`SELECT company_id, name, slug FROM companies WHERE is_active = true LIMIT 10`);
       console.log('   📋 Empresas activas:', allCompanies.map(c => c.slug).join(', '));
 
+      // 11. Tablas de Auditoría
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS audit_test_logs (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          execution_id UUID NOT NULL,
+          company_id INTEGER NOT NULL,
+          module_name VARCHAR(100) NOT NULL,
+          test_name VARCHAR(255) NOT NULL,
+          test_type VARCHAR(50),
+          test_category VARCHAR(50),
+          status VARCHAR(20) NOT NULL,
+          started_at TIMESTAMPTZ,
+          completed_at TIMESTAMPTZ,
+          duration_ms INTEGER,
+          error_type VARCHAR(100),
+          error_message TEXT,
+          error_stack TEXT,
+          screenshot_path VARCHAR(500),
+          fix_attempted BOOLEAN DEFAULT false,
+          fix_strategy VARCHAR(100),
+          fix_code TEXT,
+          fix_applied BOOLEAN DEFAULT false,
+          fix_successful BOOLEAN,
+          metadata JSONB,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW(),
+          environment VARCHAR(50),
+          triggered_by VARCHAR(100),
+          severity VARCHAR(20),
+          test_description TEXT,
+          error_file VARCHAR(255),
+          error_line INTEGER,
+          error_context JSONB,
+          endpoint VARCHAR(500),
+          http_method VARCHAR(10),
+          request_body JSONB,
+          request_headers JSONB,
+          response_status INTEGER,
+          response_body JSONB,
+          response_time_ms INTEGER,
+          metrics JSONB,
+          fix_result VARCHAR(100),
+          suggestions JSONB,
+          notes TEXT,
+          test_data JSONB,
+          tags TEXT[]
+        )
+      `);
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS audit_logs (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          execution_id UUID,
+          company_id INTEGER,
+          module_name VARCHAR(100),
+          test_type VARCHAR(50),
+          status VARCHAR(20),
+          error_message TEXT,
+          fix_attempted BOOLEAN DEFAULT false,
+          fix_applied BOOLEAN DEFAULT false,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS audit_reports (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          execution_id UUID,
+          company_id INTEGER,
+          report_type VARCHAR(50),
+          report_data JSONB,
+          generated_at TIMESTAMPTZ DEFAULT NOW(),
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+      console.log('   ✅ Tablas de auditoría listas');
+
       console.log('✅ Migraciones críticas completadas');
     } catch (migErr) {
       console.log('⚠️ Algunas migraciones ya existían o fallaron:', migErr.message.substring(0, 100));
