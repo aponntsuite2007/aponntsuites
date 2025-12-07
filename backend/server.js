@@ -452,12 +452,15 @@ async function initializeDatabase() {
       const isiModules = ["legal-dashboard", "dms-dashboard", "payroll-liquidation", "art-management", "employee-map", "job-postings", "attendance", "mi-espacio", "biometric-consent", "plantillas-fiscales", "medical", "vacation-management", "licensing-management", "compliance-dashboard", "procedures-manual", "users", "kiosks", "training-management", "clientes", "facturacion", "sanctions-management", "employee-360", "organizational-structure", "company-account", "hse-management", "notification-center"];
       const modulesJson = JSON.stringify(isiModules);
 
-      // Buscar empresa DEMO y asignarle módulos
+      // Buscar empresa DEMO y asignarle módulos (por ID, nombre o slug)
       const [demoResult] = await database.sequelize.query(`
         UPDATE companies
         SET active_modules = '${modulesJson}',
             updated_at = NOW()
-        WHERE slug = 'demo' OR slug = 'aponnt-empresa-demo' OR LOWER(name) = 'demo'
+        WHERE company_id = 1
+           OR UPPER(name) = 'DEMO'
+           OR slug = 'demo'
+           OR slug = 'aponnt-empresa-demo'
         RETURNING company_id, name, slug
       `);
       if (demoResult && demoResult.length > 0) {
