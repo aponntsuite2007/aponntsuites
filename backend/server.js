@@ -831,6 +831,22 @@ app.get(`${API_PREFIX}/health`, (req, res) => {
   });
 });
 
+// DEBUG: Endpoint para verificar módulos de empresas
+app.get(`${API_PREFIX}/debug/company-modules`, async (req, res) => {
+  try {
+    const [companies] = await database.sequelize.query(`
+      SELECT company_id, name, slug, active_modules
+      FROM companies
+      WHERE is_active = true
+      ORDER BY company_id
+      LIMIT 10
+    `);
+    res.json({ success: true, companies });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
 // === DEPARTAMENTOS ENDPOINTS - COMENTADOS ===
 // MOTIVO: Estos handlers NO tienen auth middleware y usan company_id=1 hardcodeado
 // Las peticiones ahora se manejan por departmentRoutes.js que tiene auth y multi-tenant
