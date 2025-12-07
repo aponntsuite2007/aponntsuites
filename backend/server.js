@@ -265,6 +265,155 @@ async function initializeDatabase() {
       `);
       console.log('   ✅ Tabla company_risk_config lista');
 
+      // 5. HSE - Tablas de EPP (Equipos de Protección Personal)
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS epp_categories (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(100) NOT NULL,
+          description TEXT,
+          icon VARCHAR(50),
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS epp_catalog (
+          id SERIAL PRIMARY KEY,
+          company_id INTEGER REFERENCES companies(id),
+          category_id INTEGER REFERENCES epp_categories(id),
+          name VARCHAR(150) NOT NULL,
+          brand VARCHAR(100),
+          model VARCHAR(100),
+          certification VARCHAR(100),
+          useful_life_months INTEGER DEFAULT 12,
+          stock_quantity INTEGER DEFAULT 0,
+          min_stock INTEGER DEFAULT 5,
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS epp_deliveries (
+          id SERIAL PRIMARY KEY,
+          company_id INTEGER REFERENCES companies(id),
+          employee_id UUID,
+          catalog_id INTEGER REFERENCES epp_catalog(id),
+          delivery_date DATE NOT NULL,
+          quantity INTEGER DEFAULT 1,
+          expiration_date DATE,
+          status VARCHAR(50) DEFAULT 'active',
+          delivered_by UUID,
+          notes TEXT,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS hse_company_config (
+          id SERIAL PRIMARY KEY,
+          company_id INTEGER REFERENCES companies(id) UNIQUE,
+          enable_epp_tracking BOOLEAN DEFAULT true,
+          expiration_warning_days INTEGER DEFAULT 30,
+          require_acknowledgement BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      console.log('   ✅ Tablas HSE/EPP listas');
+
+      // 6. Procedures - Manual de Procedimientos
+      await database.sequelize.query(`
+        DO $$ BEGIN
+          CREATE TYPE procedure_type AS ENUM ('politica', 'manual', 'procedimiento', 'instructivo', 'formato', 'registro');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$
+      `);
+      await database.sequelize.query(`
+        DO $$ BEGIN
+          CREATE TYPE procedure_status AS ENUM ('borrador', 'en_revision', 'aprobado', 'vigente', 'obsoleto');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$
+      `);
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS procedures (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          company_id INTEGER REFERENCES companies(id),
+          code VARCHAR(50) NOT NULL,
+          title VARCHAR(255) NOT NULL,
+          type VARCHAR(50) DEFAULT 'procedimiento',
+          status VARCHAR(50) DEFAULT 'borrador',
+          parent_id UUID REFERENCES procedures(id),
+          current_version INTEGER DEFAULT 1,
+          objective TEXT,
+          scope TEXT,
+          content TEXT,
+          created_by UUID,
+          approved_by UUID,
+          approved_at TIMESTAMP,
+          effective_date DATE,
+          review_date DATE,
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW(),
+          UNIQUE(company_id, code)
+        )
+      `);
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS procedure_versions (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          procedure_id UUID REFERENCES procedures(id) ON DELETE CASCADE,
+          version_number INTEGER NOT NULL,
+          content TEXT,
+          changes_summary TEXT,
+          created_by UUID,
+          created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS procedure_acknowledgements (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          procedure_id UUID REFERENCES procedures(id) ON DELETE CASCADE,
+          employee_id UUID NOT NULL,
+          version_number INTEGER NOT NULL,
+          acknowledged_at TIMESTAMP DEFAULT NOW(),
+          ip_address VARCHAR(50),
+          UNIQUE(procedure_id, employee_id, version_number)
+        )
+      `);
+      console.log('   ✅ Tablas Procedures listas');
+
+      // 7. Support Escalation
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS support_escalation_rules (
+          id SERIAL PRIMARY KEY,
+          company_id INTEGER REFERENCES companies(id),
+          priority VARCHAR(20) NOT NULL,
+          escalation_hours INTEGER NOT NULL,
+          notify_roles TEXT[],
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      console.log('   ✅ Tablas Support Escalation listas');
+
+      // 8. Registrar módulos HSE y Procedures
+      const newModules = [
+        { key: 'hse-management', name: 'HSE - Seguridad e Higiene', icon: 'fas fa-hard-hat', cat: 'compliance' },
+        { key: 'procedures-manual', name: 'Manual de Procedimientos', icon: 'fas fa-book', cat: 'compliance' },
+        { key: 'unified-help-center', name: 'Centro de Ayuda', icon: 'fas fa-question-circle', cat: 'support' }
+      ];
+      for (const mod of newModules) {
+        await database.sequelize.query(`
+          INSERT INTO system_modules (id, module_key, name, icon, category, is_active, created_at, updated_at)
+          VALUES (gen_random_uuid(), '${mod.key}', '${mod.name}', '${mod.icon}', '${mod.cat}', true, NOW(), NOW())
+          ON CONFLICT (module_key) DO UPDATE SET name = EXCLUDED.name, icon = EXCLUDED.icon, updated_at = NOW()
+        `);
+      }
+      console.log('   ✅ Módulos HSE, Procedures, Help registrados');
+
       console.log('✅ Migraciones críticas completadas');
     } catch (migErr) {
       console.log('⚠️ Algunas migraciones ya existían o fallaron:', migErr.message.substring(0, 100));
