@@ -946,19 +946,132 @@
     // INICIALIZACIÓN
     // =========================================================================
 
+    // Variable para detectar modo self-view (acceso desde Mi Espacio)
+    let selfViewMode = false;
+
     function init() {
         console.log('🎯 [360°] Inicializando módulo Expediente 360°...');
 
-        // Renderizar la UI base
-        renderModuleUI();
+        // Detectar si viene desde Mi Espacio (modo self-view)
+        selfViewMode = window.miEspacioSelfView === true;
 
-        // Cargar lista de empleados
-        loadEmployeesList();
-
-        // Event listeners
-        setupEventListeners();
+        if (selfViewMode) {
+            console.log('🔒 [360°] MODO SELF-VIEW: Solo perfil del usuario logueado');
+            renderSelfViewUI();
+            loadCurrentUserReport();
+        } else {
+            // Modo administrador: muestra selector de empleados
+            renderModuleUI();
+            loadEmployeesList();
+            setupEventListeners();
+        }
 
         console.log('✅ [360°] Módulo inicializado correctamente');
+    }
+
+    /**
+     * Renderizar UI para modo self-view (solo mi perfil)
+     */
+    function renderSelfViewUI() {
+        injectStyles();
+
+        const container = document.getElementById('mainContent');
+        if (!container) {
+            console.error('❌ [360°] Contenedor mainContent no encontrado');
+            return;
+        }
+
+        const currentUser = window.currentUser || {};
+        const userName = currentUser.firstName || currentUser.name || 'Mi Perfil';
+
+        container.innerHTML = `
+            <div id="employee-360-container" class="employee-360-wrapper">
+                <!-- Header del módulo -->
+                <div class="e360-header">
+                    <div class="e360-header-left">
+                        <h2><i class="fas fa-id-card"></i> Mi Perfil 360°</h2>
+                        <span class="e360-subtitle">Vista integral de ${userName}</span>
+                    </div>
+                    <div class="e360-header-right">
+                        <div class="e360-tech-badges">
+                            <span class="badge badge-ai" title="Análisis con Inteligencia Artificial">
+                                <i class="fas fa-brain"></i> Ollama + Llama 3.1
+                            </span>
+                            <span class="badge badge-scoring" title="Sistema de Scoring">
+                                <i class="fas fa-chart-line"></i> Scoring
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading mientras se carga el perfil -->
+                <div class="e360-content">
+                    <div class="e360-loading">
+                        <div class="spinner"></div>
+                        <p>Cargando tu perfil 360°...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Cargar reporte del usuario actual (modo self-view)
+     */
+    async function loadCurrentUserReport() {
+        try {
+            const currentUser = window.currentUser || {};
+            const userId = currentUser.id || currentUser.user_id || window.miEspacioUserId;
+
+            if (!userId) {
+                console.error('❌ [360°] No se pudo determinar el ID del usuario');
+                showSelfViewError('No se pudo identificar tu perfil. Por favor, vuelve a iniciar sesión.');
+                return;
+            }
+
+            console.log('📊 [360°] Cargando perfil del usuario:', userId);
+
+            // Usar el mismo endpoint pero con el ID del usuario actual
+            const response = await fetch(`${API_BASE}/${userId}`, {
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.data) {
+                currentEmployee = userId;
+                currentReport = data.data;
+                renderReport(currentReport);
+                enableActions();
+            } else {
+                throw new Error(data.error || 'Error cargando perfil');
+            }
+        } catch (error) {
+            console.error('❌ [360°] Error cargando perfil:', error);
+            showSelfViewError('Error al cargar tu perfil: ' + error.message);
+        }
+    }
+
+    function showSelfViewError(message) {
+        const container = document.querySelector('.e360-content');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px; color: #e0e0e0;">
+                    <div style="font-size: 4em; margin-bottom: 20px;">⚠️</div>
+                    <h3 style="color: #e74c3c;">Error</h3>
+                    <p style="color: #999;">${message}</p>
+                    <button onclick="window.MiEspacio?.init()" style="
+                        margin-top: 20px; padding: 12px 24px;
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        color: white; border: none; border-radius: 8px; cursor: pointer;
+                    ">Volver a Mi Espacio</button>
+                </div>
+            `;
+        }
     }
 
     // =========================================================================

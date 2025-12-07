@@ -150,18 +150,18 @@ const RiskState = {
 };
 
 // ============================================================================
-// ÍNDICES DE RIESGO CONFIGURABLES (Extensible)
+// ÍNDICES DE RIESGO - SE CARGAN DESDE BD (no hardcoded)
 // ============================================================================
-const RISK_INDICES = {
+let RISK_INDICES = {
     FATIGUE: {
         id: 'fatigue',
         name: 'Índice de Fatiga',
         icon: '😴',
         color: '#e94560',
         description: 'Evalúa agotamiento por horas extras, descanso insuficiente y jornadas prolongadas',
-        weight: 0.25,
+        weight: 0.25,  // Se actualiza desde BD
         sources: ['attendances', 'overtime', 'rest_periods'],
-        thresholds: { low: 30, medium: 60, high: 80, critical: 90 }
+        thresholds: { low: 30, medium: 50, high: 70, critical: 85 } // Se actualiza desde BD
     },
     ACCIDENT: {
         id: 'accident',
@@ -171,8 +171,8 @@ const RISK_INDICES = {
         description: 'Probabilidad de accidente según tipo de tarea, fatiga y antecedentes',
         weight: 0.25,
         sources: ['job_type', 'fatigue_index', 'medical_history', 'sanctions'],
-        thresholds: { low: 20, medium: 50, high: 70, critical: 85 },
-        excludeJobTypes: ['administrative', 'remote'] // No aplica a administrativos
+        thresholds: { low: 30, medium: 50, high: 70, critical: 85 },
+        excludeJobTypes: ['administrative', 'remote']
     },
     LEGAL_CLAIM: {
         id: 'legal_claim',
@@ -182,7 +182,7 @@ const RISK_INDICES = {
         description: 'Posibilidad de demanda laboral por condiciones de trabajo',
         weight: 0.20,
         sources: ['overtime_violations', 'rest_violations', 'vacation_pending', 'sanctions'],
-        thresholds: { low: 25, medium: 50, high: 70, critical: 85 }
+        thresholds: { low: 30, medium: 50, high: 70, critical: 85 }
     },
     PERFORMANCE: {
         id: 'performance',
@@ -192,7 +192,7 @@ const RISK_INDICES = {
         description: 'Indicadores de posible baja en productividad',
         weight: 0.15,
         sources: ['late_arrivals', 'absences', 'sanctions', 'fatigue_index'],
-        thresholds: { low: 30, medium: 55, high: 75, critical: 90 }
+        thresholds: { low: 30, medium: 50, high: 70, critical: 85 }
     },
     TURNOVER: {
         id: 'turnover',
@@ -202,9 +202,12 @@ const RISK_INDICES = {
         description: 'Probabilidad de renuncia o abandono',
         weight: 0.15,
         sources: ['tenure', 'sanctions', 'performance_index', 'salary_position'],
-        thresholds: { low: 25, medium: 50, high: 70, critical: 85 }
+        thresholds: { low: 30, medium: 50, high: 70, critical: 85 }
     }
 };
+
+// Configuración cargada desde la BD
+let CompanyRiskConfig = null;
 
 // ============================================================================
 // API SERVICE
@@ -255,8 +258,60 @@ const RiskAPI = {
     updateIndexConfig: (indexId, config) => RiskAPI.request(`/indices-config/${indexId}`, {
         method: 'PUT',
         body: JSON.stringify(config)
-    })
+    }),
+
+    // RBAC SSOT - Configuración desde BD
+    getRiskConfig: () => RiskAPI.request('/risk-config'),
+    updateRiskConfig: (config) => RiskAPI.request('/risk-config', {
+        method: 'PUT',
+        body: JSON.stringify(config)
+    }),
+    setThresholdMethod: (method, hybridWeights) => RiskAPI.request('/risk-config/method', {
+        method: 'POST',
+        body: JSON.stringify({ method, hybrid_weights: hybridWeights })
+    }),
+    setSegmentation: (enabled) => RiskAPI.request('/risk-config/segmentation', {
+        method: 'POST',
+        body: JSON.stringify({ enabled })
+    }),
+    recalculateQuartiles: () => RiskAPI.request('/risk-config/recalculate', { method: 'POST' }),
+    getSegmentedAnalysis: () => RiskAPI.request('/segmented-analysis'),
+    getBenchmarkComparison: () => RiskAPI.request('/benchmark-comparison')
 };
+
+/**
+ * HELPER: Cargar configuración de riesgo desde BD y actualizar RISK_INDICES
+ */
+async function loadRiskConfigFromDB() {
+    try {
+        const response = await RiskAPI.getRiskConfig();
+        if (response.success && response.config) {
+            CompanyRiskConfig = response.config;
+
+            // Actualizar umbrales en RISK_INDICES desde BD
+            const thresholds = response.config.global_thresholds || {};
+            const weights = response.config.global_weights || {};
+
+            if (thresholds.fatigue) RISK_INDICES.FATIGUE.thresholds = thresholds.fatigue;
+            if (thresholds.accident) RISK_INDICES.ACCIDENT.thresholds = thresholds.accident;
+            if (thresholds.legal_claim) RISK_INDICES.LEGAL_CLAIM.thresholds = thresholds.legal_claim;
+            if (thresholds.performance) RISK_INDICES.PERFORMANCE.thresholds = thresholds.performance;
+            if (thresholds.turnover) RISK_INDICES.TURNOVER.thresholds = thresholds.turnover;
+
+            if (weights.fatigue) RISK_INDICES.FATIGUE.weight = weights.fatigue;
+            if (weights.accident) RISK_INDICES.ACCIDENT.weight = weights.accident;
+            if (weights.legal_claim) RISK_INDICES.LEGAL_CLAIM.weight = weights.legal_claim;
+            if (weights.performance) RISK_INDICES.PERFORMANCE.weight = weights.performance;
+            if (weights.turnover) RISK_INDICES.TURNOVER.weight = weights.turnover;
+
+            console.log('[RISK] Configuración cargada desde BD:', response.config.threshold_method);
+            return response;
+        }
+    } catch (error) {
+        console.warn('[RISK] Error cargando config desde BD, usando defaults:', error.message);
+    }
+    return null;
+}
 
 // ============================================================================
 // RISK INTELLIGENCE ENGINE
@@ -274,6 +329,9 @@ const RiskIntelligence = {
             ModuleHelpSystem.init('risk-intelligence');
             ModuleHelpSystem.setContext('dashboard');
         }
+
+        // CARGAR CONFIGURACIÓN DESDE BD ANTES DE CARGAR DASHBOARD
+        await loadRiskConfigFromDB();
 
         await this.loadDashboard();
     },

@@ -203,6 +203,73 @@ async function initializeDatabase() {
 
     console.log('ℹ️ Migraciones automáticas: sequelize.sync() ejecutado al iniciar');
 
+    // AUTO-MIGRATE: Ejecutar migraciones críticas para nuevos módulos
+    console.log('🔄 Ejecutando migraciones críticas...');
+    try {
+      // 1. Registrar módulo DMS Dashboard
+      await database.sequelize.query(`
+        INSERT INTO system_modules (id, module_key, name, description, icon, category, is_active, created_at, updated_at)
+        VALUES (gen_random_uuid(), 'dms-dashboard', 'Gestión Documental (DMS)',
+                'Sistema de Gestión Documental - Fuente Única de Verdad',
+                'fas fa-folder-open', 'core', true, NOW(), NOW())
+        ON CONFLICT (module_key) DO UPDATE SET
+          name = EXCLUDED.name, description = EXCLUDED.description, updated_at = NOW()
+      `);
+      console.log('   ✅ Módulo dms-dashboard registrado');
+
+      // 2. Activar DMS para empresas activas
+      await database.sequelize.query(`
+        UPDATE companies SET active_modules =
+          CASE
+            WHEN active_modules IS NULL OR active_modules = '[]' THEN '["dms-dashboard"]'
+            WHEN active_modules NOT LIKE '%dms-dashboard%' THEN REPLACE(active_modules, ']', ',"dms-dashboard"]')
+            ELSE active_modules
+          END
+        WHERE is_active = true AND active_modules NOT LIKE '%dms-dashboard%'
+      `);
+      console.log('   ✅ DMS activado para empresas');
+
+      // 3. Crear tabla risk_benchmarks si no existe
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS risk_benchmarks (
+          id SERIAL PRIMARY KEY,
+          category VARCHAR(100) NOT NULL,
+          metric_name VARCHAR(150) NOT NULL,
+          benchmark_source VARCHAR(100),
+          low_threshold DECIMAL(10,4),
+          medium_threshold DECIMAL(10,4),
+          high_threshold DECIMAL(10,4),
+          critical_threshold DECIMAL(10,4),
+          unit VARCHAR(50),
+          description TEXT,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW(),
+          UNIQUE(category, metric_name)
+        )
+      `);
+      console.log('   ✅ Tabla risk_benchmarks lista');
+
+      // 4. Crear tabla company_risk_config si no existe
+      await database.sequelize.query(`
+        CREATE TABLE IF NOT EXISTS company_risk_config (
+          id SERIAL PRIMARY KEY,
+          company_id INTEGER REFERENCES companies(id),
+          threshold_method VARCHAR(50) DEFAULT 'benchmark',
+          custom_thresholds JSONB,
+          enable_segmentation BOOLEAN DEFAULT true,
+          risk_weights JSONB,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW(),
+          UNIQUE(company_id)
+        )
+      `);
+      console.log('   ✅ Tabla company_risk_config lista');
+
+      console.log('✅ Migraciones críticas completadas');
+    } catch (migErr) {
+      console.log('⚠️ Algunas migraciones ya existían o fallaron:', migErr.message.substring(0, 100));
+    }
+
     // // Ejecutar migraciones automáticamente (actualización dinámica de schema)
     // console.log('🔧 Ejecutando migraciones de base de datos...');
     //

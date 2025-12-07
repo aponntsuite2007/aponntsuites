@@ -84,7 +84,9 @@
       "Bash(del \"C:\\Bio\\sistema_asistencia_biometrico\\backend\\public\\js\\modules\\auditor-dashboard-unified.js\")",
       "Bash(cmd //c \"taskkill /F /PID 13436\")",
       "Bash(timeout /t 3 /nobreak)",
-      "Bash(cmd //c \"taskkill /F /PID 17448\")"
+      "Bash(cmd //c \"taskkill /F /PID 17448\")",
+      "Bash(timeout /t 10 /nobreak)",
+      "Bash(PGPASSWORD=Ihb9jdoOTYzb4c0u7cXxGo8XaIb1Iyvt \"C:\\Program Files\\PostgreSQL\\16\\bin\\psql.exe\":*)"
     ],
     "deny": [],
     "ask": []

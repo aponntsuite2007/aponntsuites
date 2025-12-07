@@ -59,13 +59,48 @@ const RISK_CONFIG = DEFAULT_RISK_CONFIG;
 class RiskIntelligenceService {
 
     /**
+     * HELPER: Obtener configuración efectiva de la empresa desde BD
+     * Retorna umbrales, pesos y método de cálculo
+     */
+    static async getEffectiveConfig(companyId) {
+        try {
+            const config = await RBACService.getOrCreateRiskConfig(companyId);
+            return {
+                thresholds: config.global_thresholds || DEFAULT_RISK_CONFIG.FATIGUE.thresholds,
+                weights: config.global_weights || {
+                    fatigue: DEFAULT_RISK_CONFIG.FATIGUE.weight,
+                    accident: DEFAULT_RISK_CONFIG.ACCIDENT.weight,
+                    legal_claim: DEFAULT_RISK_CONFIG.LEGAL_CLAIM.weight,
+                    performance: DEFAULT_RISK_CONFIG.PERFORMANCE.weight,
+                    turnover: DEFAULT_RISK_CONFIG.TURNOVER.weight
+                },
+                method: config.threshold_method || 'manual',
+                segmentation: config.enable_segmentation || false
+            };
+        } catch (error) {
+            console.error('[RiskIntelligence] Error getEffectiveConfig, usando defaults:', error.message);
+            // Fallback a defaults si falla la BD
+            return {
+                thresholds: { low: 30, medium: 50, high: 70, critical: 85 },
+                weights: { fatigue: 0.25, accident: 0.25, legal_claim: 0.20, performance: 0.15, turnover: 0.15 },
+                method: 'manual',
+                segmentation: false
+            };
+        }
+    }
+
+    /**
      * Obtener dashboard completo de riesgos
+     * USA CONFIGURACIÓN DE BD - NO HARDCODEADO
      */
     static async getDashboard(companyId, period = 30) {
         try {
+            // Obtener configuración de empresa desde BD
+            const config = await this.getEffectiveConfig(companyId);
+
             const [employees, stats, indices] = await Promise.all([
-                this.getEmployeesWithRisk(companyId, period),
-                this.calculateStats(companyId, period),
+                this.getEmployeesWithRisk(companyId, period, config),
+                this.calculateStats(companyId, period, config),
                 this.calculateGlobalIndices(companyId, period)
             ]);
 
@@ -74,6 +109,11 @@ class RiskIntelligenceService {
                 stats,
                 indices,
                 employees,
+                config: {
+                    method: config.method,
+                    thresholds: config.thresholds,
+                    weights: config.weights
+                },
                 lastUpdate: new Date().toISOString(),
                 period: `${period}d`
             };
@@ -85,9 +125,17 @@ class RiskIntelligenceService {
 
     /**
      * Obtener empleados con análisis de riesgo
+     * @param {number} companyId - ID de la empresa
+     * @param {number} period - Período en días
+     * @param {object} config - Configuración de umbrales/pesos (opcional, se obtiene de BD si no se pasa)
      */
-    static async getEmployeesWithRisk(companyId, period = 30) {
+    static async getEmployeesWithRisk(companyId, period = 30, config = null) {
         try {
+            // Si no se pasó config, obtenerla de BD
+            if (!config) {
+                config = await this.getEffectiveConfig(companyId);
+            }
+
             // Obtener empleados activos de la empresa
             const employees = await sequelize.query(`
                 SELECT
@@ -110,11 +158,11 @@ class RiskIntelligenceService {
                 type: QueryTypes.SELECT
             });
 
-            // Calcular índices para cada empleado
+            // Calcular índices para cada empleado usando pesos de BD
             const employeesWithRisk = await Promise.all(
                 employees.map(async (emp) => {
                     const indices = await this.calculateEmployeeIndices(emp.id, companyId, period);
-                    const riskScore = this.calculateOverallRisk(indices);
+                    const riskScore = this.calculateOverallRisk(indices, config.weights);
 
                     return {
                         id: emp.id,
@@ -444,18 +492,28 @@ class RiskIntelligenceService {
 
     /**
      * Calcular riesgo global ponderado
+     * @param {object} indices - Índices calculados {fatigue, accident, legal_claim, performance, turnover}
+     * @param {object} weights - Pesos de BD (opcional, usa defaults si no se pasa)
      */
-    static calculateOverallRisk(indices) {
+    static calculateOverallRisk(indices, weights = null) {
+        // Usar pesos de BD si se pasaron, sino usar defaults
+        const effectiveWeights = weights || {
+            fatigue: DEFAULT_RISK_CONFIG.FATIGUE.weight,
+            accident: DEFAULT_RISK_CONFIG.ACCIDENT.weight,
+            legal_claim: DEFAULT_RISK_CONFIG.LEGAL_CLAIM.weight,
+            performance: DEFAULT_RISK_CONFIG.PERFORMANCE.weight,
+            turnover: DEFAULT_RISK_CONFIG.TURNOVER.weight
+        };
+
         let totalWeight = 0;
         let weightedSum = 0;
 
-        for (const [key, config] of Object.entries(RISK_CONFIG)) {
-            const indexId = config.id;
+        for (const [indexId, weight] of Object.entries(effectiveWeights)) {
             const value = indices[indexId];
 
-            if (value !== undefined && value !== null) {
-                weightedSum += value * config.weight;
-                totalWeight += config.weight;
+            if (value !== undefined && value !== null && weight > 0) {
+                weightedSum += value * weight;
+                totalWeight += weight;
             }
         }
 
@@ -500,13 +558,26 @@ class RiskIntelligenceService {
 
     /**
      * Calcular estadísticas generales
+     * @param {number} companyId - ID de la empresa
+     * @param {number} period - Período en días
+     * @param {object} config - Configuración de umbrales (opcional, se obtiene de BD)
      */
-    static async calculateStats(companyId, period = 30) {
+    static async calculateStats(companyId, period = 30, config = null) {
         try {
-            const employees = await this.getEmployeesWithRisk(companyId, period);
+            // Si no se pasó config, obtenerla de BD
+            if (!config) {
+                config = await this.getEffectiveConfig(companyId);
+            }
 
-            const criticalCount = employees.filter(e => e.risk_score >= 80).length;
-            const highCount = employees.filter(e => e.risk_score >= 60 && e.risk_score < 80).length;
+            const employees = await this.getEmployeesWithRisk(companyId, period, config);
+
+            // Usar umbrales de BD para clasificar
+            const thresholds = config.thresholds;
+            const criticalThreshold = thresholds.critical || 85;
+            const highThreshold = thresholds.high || 70;
+
+            const criticalCount = employees.filter(e => e.risk_score >= criticalThreshold).length;
+            const highCount = employees.filter(e => e.risk_score >= highThreshold && e.risk_score < criticalThreshold).length;
             const averageRisk = employees.length > 0
                 ? Math.round(employees.reduce((sum, e) => sum + e.risk_score, 0) / employees.length)
                 : 0;
@@ -946,8 +1017,14 @@ class RiskIntelligenceService {
      */
     static async getSegmentedRiskAnalysis(companyId, period = 30) {
         try {
-            const employees = await this.getEmployeesWithRisk(companyId, period);
             const config = await RBACService.getOrCreateRiskConfig(companyId);
+            const effectiveConfig = await this.getEffectiveConfig(companyId);
+            const employees = await this.getEmployeesWithRisk(companyId, period, effectiveConfig);
+
+            // Obtener umbrales de BD para clasificar
+            const thresholds = effectiveConfig.thresholds;
+            const criticalThreshold = thresholds.critical || 85;
+            const highThreshold = thresholds.high || 70;
 
             // Agrupar por categoría de trabajo
             const segments = {};
@@ -980,8 +1057,8 @@ class RiskIntelligenceService {
                     emp.position_data = position;
                     segments[category].employees.push(emp);
 
-                    if (emp.risk_score >= 80) segments[category].critical_count++;
-                    else if (emp.risk_score >= 60) segments[category].high_count++;
+                    if (emp.risk_score >= criticalThreshold) segments[category].critical_count++;
+                    else if (emp.risk_score >= highThreshold) segments[category].high_count++;
                 } else {
                     unassigned.push(emp);
                 }

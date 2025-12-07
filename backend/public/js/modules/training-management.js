@@ -42,9 +42,7 @@ async function fetchTrainingsFromAPI() {
         console.log('🌐 [TRAINING-API] Cargando capacitaciones desde servidor...');
         const response = await fetch(getApiUrl('/api/v1/trainings'), {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             credentials: 'include'
         });
 
@@ -68,9 +66,7 @@ async function createTrainingAPI(trainingData) {
         console.log('🌐 [TRAINING-API] Creando capacitación:', trainingData.title);
         const response = await fetch(getApiUrl('/api/v1/trainings'), {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             credentials: 'include',
             body: JSON.stringify(trainingData)
         });
@@ -95,9 +91,7 @@ async function updateTrainingAPI(trainingId, trainingData) {
         console.log('🌐 [TRAINING-API] Actualizando capacitación:', trainingId);
         const response = await fetch(getApiUrl(`/api/v1/trainings/${trainingId}`), {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             credentials: 'include',
             body: JSON.stringify(trainingData)
         });
@@ -122,9 +116,7 @@ async function deleteTrainingAPI(trainingId) {
         console.log('🌐 [TRAINING-API] Eliminando capacitación:', trainingId);
         const response = await fetch(getApiUrl(`/api/v1/trainings/${trainingId}`), {
             method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             credentials: 'include'
         });
 
@@ -147,9 +139,7 @@ async function fetchTrainingStatsAPI() {
     try {
         const response = await fetch(getApiUrl('/api/v1/trainings/stats/dashboard'), {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             credentials: 'include'
         });
 

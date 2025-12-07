@@ -10,7 +10,9 @@ const DB_URL = process.env.DATABASE_URL || 'postgresql://postgres:Aedr15150302@l
 async function runMigration() {
     const sequelize = new Sequelize(DB_URL, {
         logging: false,
-        dialectOptions: { ssl: false }
+        dialectOptions: DB_URL.includes('render.com') ? {
+            ssl: { require: true, rejectUnauthorized: false }
+        } : {}
     });
 
     try {
