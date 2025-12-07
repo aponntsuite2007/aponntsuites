@@ -448,33 +448,51 @@ async function initializeDatabase() {
       }
       console.log('   ✅ Columnas adicionales sincronizadas');
 
-      // 10. DEMO en Render: Asignar los mismos módulos que ISI
-      const isiModules = ["legal-dashboard", "dms-dashboard", "payroll-liquidation", "art-management", "employee-map", "job-postings", "attendance", "mi-espacio", "biometric-consent", "plantillas-fiscales", "medical", "vacation-management", "licensing-management", "compliance-dashboard", "procedures-manual", "users", "kiosks", "training-management", "clientes", "facturacion", "sanctions-management", "employee-360", "organizational-structure", "company-account", "hse-management", "notification-center"];
-      const modulesJson = JSON.stringify(isiModules);
+      // 10. DEMO en Render: Agregar módulos faltantes (dms-dashboard, mi-espacio, procedures-manual, hse-management)
+      const modulosNuevos = [
+        { key: 'dms-dashboard', icon: '📁', name: 'Gestión Documental (DMS)', color: '#6366f1', category: 'core' },
+        { key: 'mi-espacio', icon: '🏠', name: 'Mi Espacio', color: '#10b981', category: 'employee' },
+        { key: 'procedures-manual', icon: '📖', name: 'Manual de Procedimientos', color: '#8b5cf6', category: 'compliance' },
+        { key: 'hse-management', icon: '🦺', name: 'HSE - Seguridad e Higiene', color: '#f59e0b', category: 'compliance' },
+        { key: 'unified-help-center', icon: '❓', name: 'Centro de Ayuda', color: '#06b6d4', category: 'support' }
+      ];
 
-      // Buscar empresa DEMO y asignarle módulos (por ID, nombre o slug)
-      const [demoResult] = await database.sequelize.query(`
-        UPDATE companies
-        SET active_modules = '${modulesJson}',
-            updated_at = NOW()
-        WHERE company_id = 1
-           OR UPPER(name) = 'DEMO'
-           OR slug = 'demo'
-           OR slug = 'aponnt-empresa-demo'
-        RETURNING company_id, name, slug
+      // Obtener módulos actuales de DEMO y agregar los nuevos
+      const [demoCompany] = await database.sequelize.query(`
+        SELECT company_id, active_modules FROM companies
+        WHERE company_id = 1 OR slug = 'demo-corp' OR UPPER(name) = 'DEMO'
+        LIMIT 1
       `);
-      if (demoResult && demoResult.length > 0) {
-        console.log('   ✅ Módulos ISI asignados a DEMO:', demoResult.map(d => d.slug).join(', '));
+
+      if (demoCompany && demoCompany.length > 0) {
+        let currentModules = demoCompany[0].active_modules || [];
+        if (typeof currentModules === 'string') {
+          try { currentModules = JSON.parse(currentModules); } catch(e) { currentModules = []; }
+        }
+
+        // Agregar módulos nuevos que no existan
+        const existingKeys = currentModules.map(m => typeof m === 'string' ? m : m.key);
+        let added = 0;
+        for (const mod of modulosNuevos) {
+          if (!existingKeys.includes(mod.key)) {
+            currentModules.push(mod);
+            added++;
+          }
+        }
+
+        if (added > 0) {
+          await database.sequelize.query(`
+            UPDATE companies
+            SET active_modules = '${JSON.stringify(currentModules).replace(/'/g, "''")}',
+                updated_at = NOW()
+            WHERE company_id = ${demoCompany[0].company_id}
+          `);
+          console.log('   ✅ Agregados', added, 'módulos nuevos a DEMO (dms, mi-espacio, procedures, hse, help)');
+        } else {
+          console.log('   ✅ DEMO ya tiene todos los módulos');
+        }
       } else {
-        // Intentar con LIKE más amplio
-        const [demoResult2] = await database.sequelize.query(`
-          UPDATE companies
-          SET active_modules = '${modulesJson}',
-              updated_at = NOW()
-          WHERE LOWER(slug) LIKE '%demo%' OR LOWER(name) LIKE '%demo%'
-          RETURNING company_id, name, slug
-        `);
-        console.log('   ✅ Módulos ISI asignados a:', demoResult2?.length || 0, 'empresas');
+        console.log('   ⚠️ No se encontró empresa DEMO');
       }
 
       // También listar empresas disponibles para debug
