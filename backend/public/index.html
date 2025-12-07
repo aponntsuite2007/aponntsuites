@@ -8728,6 +8728,758 @@
         }
     </style>
 
+    <!-- =========================================================== -->
+    <!-- MI ESPACIO (EMPLOYEE PORTAL) SECTION -->
+    <!-- =========================================================== -->
+    <section class="section section-miespacio" id="mi-espacio" style="background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%); overflow: hidden; position: relative;">
+        <!-- Animated Background -->
+        <div class="miespacio-bg-pattern"></div>
+        <div class="miespacio-bg-glow"></div>
+
+        <div class="container" style="position: relative; z-index: 2;">
+            <!-- Header con Impacto -->
+            <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="section-label" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 0.5rem 1.5rem; border-radius: 25px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span class="miespacio-pulse-dot"></span> PORTAL PERSONAL | PERFIL 360° INTEGRADO
+                </span>
+                <h2 class="section-title" style="color: white; margin-top: 1.5rem; font-size: 2.8rem; font-weight: 800;">
+                    Mi Espacio <span style="background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Dashboard Personal</span>
+                </h2>
+                <p class="section-subtitle" style="color: #94a3b8; max-width: 850px; margin: 1rem auto 0; font-size: 1.1rem; line-height: 1.6;">
+                    Portal personal para cada empleado con acceso a su expediente 360°, documentos, asistencias, vacaciones, notificaciones y perfil completo. Dark theme moderno con experiencia de usuario optimizada para móviles.
+                </p>
+            </div>
+
+            <!-- KPIs de Impacto -->
+            <div class="miespacio-kpis">
+                <div class="miespacio-kpi">
+                    <div class="miespacio-kpi-value"><span class="miespacio-counter" data-target="6">0</span></div>
+                    <div class="miespacio-kpi-label">Módulos Integrados</div>
+                    <div class="miespacio-kpi-detail">Docs, Asistencia, Vacaciones, Perfil</div>
+                </div>
+                <div class="miespacio-kpi">
+                    <div class="miespacio-kpi-value"><span class="miespacio-counter" data-target="100">0</span>%</div>
+                    <div class="miespacio-kpi-label">Acceso Móvil</div>
+                    <div class="miespacio-kpi-detail">Responsive dark theme</div>
+                </div>
+                <div class="miespacio-kpi">
+                    <div class="miespacio-kpi-value"><span class="miespacio-counter" data-target="24">0</span>/7</div>
+                    <div class="miespacio-kpi-label">Disponibilidad</div>
+                    <div class="miespacio-kpi-detail">Auto-servicio continuo</div>
+                </div>
+                <div class="miespacio-kpi">
+                    <div class="miespacio-kpi-value"><span class="miespacio-counter" data-target="360">0</span>°</div>
+                    <div class="miespacio-kpi-label">Vista Completa</div>
+                    <div class="miespacio-kpi-detail">Expediente integral</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Principal Mi Espacio -->
+            <div class="miespacio-dashboard">
+                <!-- Panel Izquierdo: Quick Stats -->
+                <div class="miespacio-panel miespacio-stats">
+                    <div class="miespacio-panel-header">
+                        <span class="miespacio-panel-title">MIS ESTADÍSTICAS</span>
+                        <span class="miespacio-preview-badge">HOY</span>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="miespacio-stats-grid">
+                        <div class="miespacio-stat-card attendance">
+                            <span class="miespacio-stat-icon">⏰</span>
+                            <div class="miespacio-stat-info">
+                                <span class="miespacio-stat-value">08:05</span>
+                                <span class="miespacio-stat-label">Hora de Ingreso</span>
+                            </div>
+                        </div>
+                        <div class="miespacio-stat-card vacation">
+                            <span class="miespacio-stat-icon">🏖️</span>
+                            <div class="miespacio-stat-info">
+                                <span class="miespacio-stat-value">12</span>
+                                <span class="miespacio-stat-label">Días Disponibles</span>
+                            </div>
+                        </div>
+                        <div class="miespacio-stat-card docs">
+                            <span class="miespacio-stat-icon">📄</span>
+                            <div class="miespacio-stat-info">
+                                <span class="miespacio-stat-value">23</span>
+                                <span class="miespacio-stat-label">Mis Documentos</span>
+                            </div>
+                        </div>
+                        <div class="miespacio-stat-card notif">
+                            <span class="miespacio-stat-icon">🔔</span>
+                            <div class="miespacio-stat-info">
+                                <span class="miespacio-stat-value">5</span>
+                                <span class="miespacio-stat-label">Notificaciones</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="miespacio-quick-actions">
+                        <div class="miespacio-quick-header">Acciones Rápidas</div>
+                        <div class="miespacio-action-item">
+                            <span class="miespacio-action-icon">📤</span>
+                            <span class="miespacio-action-label">Subir Documento</span>
+                        </div>
+                        <div class="miespacio-action-item">
+                            <span class="miespacio-action-icon">🏖️</span>
+                            <span class="miespacio-action-label">Solicitar Vacaciones</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Central: User Profile -->
+                <div class="miespacio-panel miespacio-profile">
+                    <div class="miespacio-panel-header">
+                        <span class="miespacio-panel-title">MI PERFIL 360°</span>
+                        <span class="miespacio-live-badge"><span class="miespacio-live-dot"></span>ACTUALIZADO</span>
+                    </div>
+
+                    <!-- User Avatar & Info -->
+                    <div class="miespacio-user-card">
+                        <div class="miespacio-avatar">
+                            <span class="miespacio-avatar-text">JD</span>
+                        </div>
+                        <div class="miespacio-user-info">
+                            <div class="miespacio-user-name">Juan Pérez</div>
+                            <div class="miespacio-user-role">Desarrollador Senior</div>
+                            <div class="miespacio-user-dept">Departamento IT</div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Sections -->
+                    <div class="miespacio-profile-sections">
+                        <div class="miespacio-profile-section">
+                            <span class="miespacio-section-icon">👤</span>
+                            <div class="miespacio-section-info">
+                                <span class="miespacio-section-title">Datos Personales</span>
+                                <span class="miespacio-section-status">✓ Completo</span>
+                            </div>
+                        </div>
+                        <div class="miespacio-profile-section">
+                            <span class="miespacio-section-icon">🏥</span>
+                            <div class="miespacio-section-info">
+                                <span class="miespacio-section-title">Salud Ocupacional</span>
+                                <span class="miespacio-section-status">✓ APTO</span>
+                            </div>
+                        </div>
+                        <div class="miespacio-profile-section">
+                            <span class="miespacio-section-icon">⚖️</span>
+                            <div class="miespacio-section-info">
+                                <span class="miespacio-section-title">Documentos Legales</span>
+                                <span class="miespacio-section-status warning">⚠️ 2 pendientes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Derecho: Notifications & Calendar -->
+                <div class="miespacio-panel miespacio-activity">
+                    <div class="miespacio-panel-header">
+                        <span class="miespacio-panel-title">ACTIVIDAD RECIENTE</span>
+                        <span class="miespacio-cct-badge">🔔</span>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="miespacio-notifications">
+                        <div class="miespacio-notif-item new">
+                            <span class="miespacio-notif-icon">✅</span>
+                            <div class="miespacio-notif-content">
+                                <span class="miespacio-notif-title">Vacaciones Aprobadas</span>
+                                <span class="miespacio-notif-time">Hace 2 horas</span>
+                            </div>
+                        </div>
+                        <div class="miespacio-notif-item">
+                            <span class="miespacio-notif-icon">📄</span>
+                            <div class="miespacio-notif-content">
+                                <span class="miespacio-notif-title">Documento Validado</span>
+                                <span class="miespacio-notif-time">Ayer</span>
+                            </div>
+                        </div>
+                        <div class="miespacio-notif-item">
+                            <span class="miespacio-notif-icon">⏰</span>
+                            <div class="miespacio-notif-content">
+                                <span class="miespacio-notif-title">Examen Médico Próximo</span>
+                                <span class="miespacio-notif-time">En 15 días</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Widget -->
+                    <div class="miespacio-calendar">
+                        <div class="miespacio-calendar-header">
+                            <span>📅</span> Este Mes
+                        </div>
+                        <div class="miespacio-calendar-event">
+                            <span class="miespacio-event-date">15 Dic</span>
+                            <span class="miespacio-event-title">Vacaciones</span>
+                        </div>
+                        <div class="miespacio-calendar-event">
+                            <span class="miespacio-event-date">20 Dic</span>
+                            <span class="miespacio-event-title">Examen Médico</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulos del Portal -->
+            <div class="miespacio-tabs-preview">
+                <h3 style="color: white; text-align: center; margin-bottom: 1.5rem;">
+                    <span style="color: #667eea;">6 Módulos Personales</span> de Auto-Servicio
+                </h3>
+                <div class="miespacio-tabs-grid">
+                    <div class="miespacio-tab-card">
+                        <div class="miespacio-tab-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">🏠</div>
+                        <span class="miespacio-tab-name">Dashboard</span>
+                        <span class="miespacio-tab-desc">Vista general personal</span>
+                    </div>
+                    <div class="miespacio-tab-card">
+                        <div class="miespacio-tab-icon" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9);">📁</div>
+                        <span class="miespacio-tab-name">Mis Documentos</span>
+                        <span class="miespacio-tab-desc">DMS personal</span>
+                    </div>
+                    <div class="miespacio-tab-card">
+                        <div class="miespacio-tab-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">⏰</div>
+                        <span class="miespacio-tab-name">Mi Asistencia</span>
+                        <span class="miespacio-tab-desc">Historial y reportes</span>
+                    </div>
+                    <div class="miespacio-tab-card">
+                        <div class="miespacio-tab-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">🏖️</div>
+                        <span class="miespacio-tab-name">Mis Vacaciones</span>
+                        <span class="miespacio-tab-desc">Solicitudes y saldos</span>
+                    </div>
+                    <div class="miespacio-tab-card">
+                        <div class="miespacio-tab-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">🔔</div>
+                        <span class="miespacio-tab-name">Notificaciones</span>
+                        <span class="miespacio-tab-desc">Centro de mensajes</span>
+                    </div>
+                    <div class="miespacio-tab-card">
+                        <div class="miespacio-tab-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">👤</div>
+                        <span class="miespacio-tab-name">Mi Perfil</span>
+                        <span class="miespacio-tab-desc">Expediente completo 360°</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Badges -->
+            <div class="miespacio-compliance">
+                <div class="miespacio-compliance-item">
+                    <span class="miespacio-compliance-icon">📱</span>
+                    <span class="miespacio-compliance-name">Mobile First</span>
+                    <span class="miespacio-compliance-desc">Optimizado para celular</span>
+                </div>
+                <div class="miespacio-compliance-item">
+                    <span class="miespacio-compliance-icon">🌙</span>
+                    <span class="miespacio-compliance-name">Dark Theme</span>
+                    <span class="miespacio-compliance-desc">Menos fatiga visual</span>
+                </div>
+                <div class="miespacio-compliance-item">
+                    <span class="miespacio-compliance-icon">🚀</span>
+                    <span class="miespacio-compliance-name">Auto-Servicio</span>
+                    <span class="miespacio-compliance-desc">Sin depender de RRHH</span>
+                </div>
+                <div class="miespacio-compliance-item">
+                    <span class="miespacio-compliance-icon">🔒</span>
+                    <span class="miespacio-compliance-name">Privacidad Total</span>
+                    <span class="miespacio-compliance-desc">Solo sus datos personales</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mi Espacio Section Styles -->
+    <style>
+        /* ========== MI ESPACIO SECTION - EMPLOYEE PORTAL ========== */
+        .section-miespacio {
+            padding: 5rem 2rem;
+            position: relative;
+        }
+        .miespacio-bg-pattern {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(102, 126, 234, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 126, 234, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: miespacio-grid-move 25s linear infinite;
+        }
+        @keyframes miespacio-grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+        .miespacio-bg-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 900px; height: 900px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.12) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .miespacio-pulse-dot {
+            width: 8px; height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: miespacio-pulse 2s ease-in-out infinite;
+        }
+        @keyframes miespacio-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        /* Mi Espacio KPIs */
+        .miespacio-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .miespacio-kpi {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .miespacio-kpi:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-3px);
+        }
+        .miespacio-kpi-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .miespacio-kpi-label {
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .miespacio-kpi-detail {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* Mi Espacio Dashboard */
+        .miespacio-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .miespacio-panel {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .miespacio-panel:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+        .miespacio-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .miespacio-panel-title {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .miespacio-preview-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        .miespacio-live-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #667eea;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .miespacio-live-dot {
+            width: 6px;
+            height: 6px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: miespacio-pulse 2s ease-in-out infinite;
+        }
+
+        /* Stats Grid */
+        .miespacio-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .miespacio-stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.2s ease;
+        }
+        .miespacio-stat-card:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+        .miespacio-stat-card.attendance {
+            border-left: 3px solid #22c55e;
+        }
+        .miespacio-stat-card.vacation {
+            border-left: 3px solid #f59e0b;
+        }
+        .miespacio-stat-card.docs {
+            border-left: 3px solid #06b6d4;
+        }
+        .miespacio-stat-card.notif {
+            border-left: 3px solid #ef4444;
+        }
+        .miespacio-stat-icon {
+            font-size: 1.5rem;
+        }
+        .miespacio-stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .miespacio-stat-value {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .miespacio-stat-label {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+
+        /* Quick Actions */
+        .miespacio-quick-actions {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .miespacio-quick-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .miespacio-action-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .miespacio-action-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateX(4px);
+        }
+        .miespacio-action-icon {
+            font-size: 1.2rem;
+        }
+        .miespacio-action-label {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* User Profile Card */
+        .miespacio-user-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+        .miespacio-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+        .miespacio-avatar-text {
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .miespacio-user-info {
+            text-align: center;
+        }
+        .miespacio-user-name {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .miespacio-user-role {
+            color: #667eea;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        .miespacio-user-dept {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* Profile Sections */
+        .miespacio-profile-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .miespacio-profile-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .miespacio-profile-section:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+        .miespacio-section-icon {
+            font-size: 1.5rem;
+        }
+        .miespacio-section-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .miespacio-section-title {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .miespacio-section-status {
+            color: #22c55e;
+            font-size: 0.7rem;
+        }
+        .miespacio-section-status.warning {
+            color: #f59e0b;
+        }
+
+        /* Notifications */
+        .miespacio-notifications {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .miespacio-notif-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .miespacio-notif-item.new {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+        .miespacio-notif-item:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        .miespacio-notif-icon {
+            font-size: 1.2rem;
+        }
+        .miespacio-notif-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .miespacio-notif-title {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .miespacio-notif-time {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+
+        /* Calendar */
+        .miespacio-calendar {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .miespacio-calendar-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .miespacio-calendar-event {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .miespacio-calendar-event:last-child {
+            border-bottom: none;
+        }
+        .miespacio-event-date {
+            color: #667eea;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .miespacio-event-title {
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        /* Tabs Preview */
+        .miespacio-tabs-preview {
+            margin-bottom: 3rem;
+        }
+        .miespacio-tabs-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 1rem;
+        }
+        .miespacio-tab-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .miespacio-tab-card:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-4px);
+        }
+        .miespacio-tab-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .miespacio-tab-name {
+            display: block;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .miespacio-tab-desc {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+
+        /* Compliance Badges */
+        .miespacio-compliance {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+        .miespacio-compliance-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .miespacio-compliance-item:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(102, 126, 234, 0.2);
+            transform: translateY(-3px);
+        }
+        .miespacio-compliance-icon {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        .miespacio-compliance-name {
+            display: block;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .miespacio-compliance-desc {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .miespacio-dashboard {
+                grid-template-columns: 1fr;
+            }
+            .miespacio-tabs-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .miespacio-kpis,
+            .miespacio-compliance {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .miespacio-tabs-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .miespacio-kpis,
+            .miespacio-compliance {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
     <!-- Biometric Section -->
     <section class="section section-light" id="biometric">
         <div class="container">

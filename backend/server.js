@@ -877,6 +877,46 @@ app.get(`${API_PREFIX}/debug/system-modules`, async (req, res) => {
   }
 });
 
+// DEBUG: Crear system_modules faltantes
+app.post(`${API_PREFIX}/debug/create-system-modules`, async (req, res) => {
+  try {
+    const modulosFaltantes = [
+      { key: "dms-dashboard", name: "Gestión Documental (DMS)", icon: "📁", category: "core" },
+      { key: "mi-espacio", name: "Mi Espacio", icon: "🏠", category: "employee" },
+      { key: "hse-management", name: "HSE - Seguridad e Higiene", icon: "🦺", category: "compliance" },
+      { key: "procedures-manual", name: "Manual de Procedimientos", icon: "📖", category: "compliance" }
+    ];
+
+    const results = [];
+    for (const mod of modulosFaltantes) {
+      try {
+        // Verificar si existe
+        const [existing] = await database.sequelize.query(
+          `SELECT id FROM system_modules WHERE module_key = $1`,
+          { bind: [mod.key] }
+        );
+
+        if (existing.length === 0) {
+          // Crear nuevo
+          await database.sequelize.query(`
+            INSERT INTO system_modules (id, module_key, name, icon, category, is_active, created_at, updated_at)
+            VALUES (gen_random_uuid(), $1, $2, $3, $4, true, NOW(), NOW())
+          `, { bind: [mod.key, mod.name, mod.icon, mod.category] });
+          results.push({ key: mod.key, action: 'CREATED' });
+        } else {
+          results.push({ key: mod.key, action: 'EXISTS' });
+        }
+      } catch (e) {
+        results.push({ key: mod.key, action: 'ERROR', error: e.message });
+      }
+    }
+
+    res.json({ success: true, results });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
 // DEBUG: Endpoint POST para REEMPLAZAR módulos de DEMO con los de ISI
 app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
   try {
