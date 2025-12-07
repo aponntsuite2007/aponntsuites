@@ -865,17 +865,49 @@ app.get(`${API_PREFIX}/debug/company-modules`, async (req, res) => {
   }
 });
 
+// DEBUG: Ver system_modules disponibles
+app.get(`${API_PREFIX}/debug/system-modules`, async (req, res) => {
+  try {
+    const [modules] = await database.sequelize.query(`
+      SELECT id, module_key, name FROM system_modules ORDER BY module_key
+    `);
+    res.json({ success: true, count: modules.length, modules: modules.map(m => m.module_key) });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
 // DEBUG: Endpoint POST para REEMPLAZAR módulos de DEMO con los de ISI
 app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
   try {
-    // Módulos EXACTOS de ISI (26 módulos)
+    // Módulos EXACTOS de ISI con metadata completa (26 módulos)
     const modulosISI = [
-      "legal-dashboard", "dms-dashboard", "payroll-liquidation", "art-management",
-      "employee-map", "job-postings", "attendance", "mi-espacio", "biometric-consent",
-      "plantillas-fiscales", "medical", "vacation-management", "licensing-management",
-      "compliance-dashboard", "procedures-manual", "users", "kiosks", "training-management",
-      "clientes", "facturacion", "sanctions-management", "employee-360",
-      "organizational-structure", "company-account", "hse-management", "notification-center"
+      { key: "legal-dashboard", name: "Legal Dashboard", icon: "⚖️", category: "compliance" },
+      { key: "dms-dashboard", name: "Gestión Documental (DMS)", icon: "📁", category: "core" },
+      { key: "payroll-liquidation", name: "Liquidación de Nómina", icon: "💰", category: "payroll" },
+      { key: "art-management", name: "Gestión ART", icon: "🏥", category: "compliance" },
+      { key: "employee-map", name: "Mapa de Empleados", icon: "🗺️", category: "hr" },
+      { key: "job-postings", name: "Bolsa de Trabajo", icon: "💼", category: "hr" },
+      { key: "attendance", name: "Asistencia", icon: "⏰", category: "core" },
+      { key: "mi-espacio", name: "Mi Espacio", icon: "🏠", category: "employee" },
+      { key: "biometric-consent", name: "Consentimiento Biométrico", icon: "🔒", category: "compliance" },
+      { key: "plantillas-fiscales", name: "Plantillas Fiscales", icon: "📋", category: "fiscal" },
+      { key: "medical", name: "Salud Ocupacional", icon: "🩺", category: "medical" },
+      { key: "vacation-management", name: "Gestión de Vacaciones", icon: "🌴", category: "hr" },
+      { key: "licensing-management", name: "Gestión de Licencias", icon: "📄", category: "hr" },
+      { key: "compliance-dashboard", name: "Dashboard de Cumplimiento", icon: "✅", category: "compliance" },
+      { key: "procedures-manual", name: "Manual de Procedimientos", icon: "📖", category: "compliance" },
+      { key: "users", name: "Gestión de Usuarios", icon: "👥", category: "core" },
+      { key: "kiosks", name: "Kioscos", icon: "🖥️", category: "core" },
+      { key: "training-management", name: "Capacitaciones", icon: "📚", category: "hr" },
+      { key: "clientes", name: "Gestión de Clientes", icon: "🤝", category: "crm" },
+      { key: "facturacion", name: "Facturación", icon: "🧾", category: "finance" },
+      { key: "sanctions-management", name: "Gestión de Sanciones", icon: "⚠️", category: "hr" },
+      { key: "employee-360", name: "Employee 360", icon: "👤", category: "hr" },
+      { key: "organizational-structure", name: "Estructura Organizacional", icon: "🏢", category: "hr" },
+      { key: "company-account", name: "Cuenta de Empresa", icon: "🏛️", category: "core" },
+      { key: "hse-management", name: "HSE - Seguridad e Higiene", icon: "🦺", category: "compliance" },
+      { key: "notification-center", name: "Centro de Notificaciones", icon: "🔔", category: "core" }
     ];
 
     // Buscar empresa DEMO
@@ -891,6 +923,7 @@ app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
     }
 
     const demo = demoCompanies[0];
+    const moduleKeys = modulosISI.map(m => m.key);
 
     // 1. REEMPLAZAR en companies.active_modules
     await database.sequelize.query(`
@@ -899,30 +932,42 @@ app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
           updated_at = NOW()
       WHERE company_id = $2
     `, {
-      bind: [JSON.stringify(modulosISI), demo.company_id],
+      bind: [JSON.stringify(moduleKeys), demo.company_id],
       type: database.sequelize.QueryTypes.UPDATE
     });
 
-    // 2. SINCRONIZAR tabla company_modules
-    // Primero eliminar todos los módulos actuales de DEMO
-    await database.sequelize.query(`
-      DELETE FROM company_modules WHERE company_id = $1
-    `, { bind: [demo.company_id] });
-
-    // Luego insertar los módulos de ISI
-    let insertados = 0;
-    for (const moduleKey of modulosISI) {
+    // 2. CREAR system_modules faltantes
+    let systemModulesCreados = 0;
+    for (const mod of modulosISI) {
       try {
         await database.sequelize.query(`
+          INSERT INTO system_modules (id, module_key, name, icon, category, is_active, created_at, updated_at)
+          VALUES (gen_random_uuid(), $1, $2, $3, $4, true, NOW(), NOW())
+          ON CONFLICT (module_key) DO UPDATE SET name = $2, icon = $3, updated_at = NOW()
+        `, { bind: [mod.key, mod.name, mod.icon, mod.category] });
+        systemModulesCreados++;
+      } catch (e) {
+        console.log(`⚠️ Error creando system_module ${mod.key}:`, e.message);
+      }
+    }
+
+    // 3. SINCRONIZAR tabla company_modules
+    await database.sequelize.query(`DELETE FROM company_modules WHERE company_id = $1`, { bind: [demo.company_id] });
+
+    let insertados = 0;
+    for (const mod of modulosISI) {
+      try {
+        const [result] = await database.sequelize.query(`
           INSERT INTO company_modules (company_id, system_module_id, activo, created_at, updated_at)
           SELECT $1, id, true, NOW(), NOW()
           FROM system_modules
           WHERE module_key = $2
           ON CONFLICT DO NOTHING
-        `, { bind: [demo.company_id, moduleKey] });
-        insertados++;
+          RETURNING id
+        `, { bind: [demo.company_id, mod.key] });
+        if (result && result.length > 0) insertados++;
       } catch (e) {
-        console.log(`⚠️ Error insertando ${moduleKey}:`, e.message);
+        console.log(`⚠️ Error insertando company_module ${mod.key}:`, e.message);
       }
     }
 
@@ -930,10 +975,11 @@ app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
       success: true,
       companyId: demo.company_id,
       companyName: demo.name,
-      action: 'REPLACED_BOTH_TABLES',
+      action: 'FULL_SYNC',
+      systemModulesCreated: systemModulesCreados,
+      companyModulesInserted: insertados,
       totalModules: modulosISI.length,
-      insertedToCompanyModules: insertados,
-      modules: modulosISI.sort()
+      modules: moduleKeys.sort()
     });
   } catch (error) {
     res.json({ success: false, error: error.message, stack: error.stack });
