@@ -2257,23 +2257,248 @@ const HARDWARE_FINGERPRINT_PROFILES = {
 const PROFESSIONAL_STYLES = `
 <style>
 /* ========================================================================
-   ESTILOS PROFESIONALES - MÓDULO KIOSKS
+   ESTILOS DARK THEME - MÓDULO KIOSKS ENTERPRISE
    ======================================================================== */
 
-/* Variables CSS */
+/* Variables CSS - Dark Theme */
 :root {
-    --color-primary: #0066FF;
-    --color-success: #00C853;
-    --color-warning: #FFA000;
-    --color-danger: #E53935;
-    --color-enterprise: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --color-ios: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --color-android: linear-gradient(135deg, #3DDC84 0%, #00C853 100%);
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
-    --shadow-md: 0 4px 8px rgba(0,0,0,0.12);
-    --shadow-lg: 0 8px 16px rgba(0,0,0,0.15);
-    --radius: 12px;
-    --radius-lg: 16px;
+    --kiosk-bg-dark: #0f172a;
+    --kiosk-bg-card: #1e293b;
+    --kiosk-bg-input: #0f172a;
+    --kiosk-border: #334155;
+    --kiosk-border-light: #475569;
+    --kiosk-text: #e2e8f0;
+    --kiosk-text-muted: #94a3b8;
+    --kiosk-primary: #3b82f6;
+    --kiosk-success: #22c55e;
+    --kiosk-warning: #f59e0b;
+    --kiosk-danger: #ef4444;
+    --kiosk-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    --kiosk-radius: 8px;
+}
+
+/* Container principal */
+#kiosks-container {
+    background: var(--kiosk-bg-dark);
+    padding: 0;
+    margin: 0;
+}
+
+/* Header del módulo - Dark Theme */
+.kiosk-module-header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border: 1px solid var(--kiosk-border);
+    border-radius: var(--kiosk-radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kiosk-module-header h2 {
+    color: var(--kiosk-text) !important;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.kiosk-module-header p {
+    color: var(--kiosk-text-muted);
+    margin: 4px 0 0 0;
+    font-size: 0.9rem;
+}
+
+/* Stats inline */
+.kiosk-stats-inline {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.kiosk-stat-item {
+    background: var(--kiosk-bg-dark);
+    border: 1px solid var(--kiosk-border);
+    border-radius: 6px;
+    padding: 8px 16px;
+    text-align: center;
+}
+
+.kiosk-stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--kiosk-primary);
+}
+
+.kiosk-stat-label {
+    font-size: 0.75rem;
+    color: var(--kiosk-text-muted);
+    text-transform: uppercase;
+}
+
+/* Tabla dark theme */
+.kiosk-table-container {
+    background: var(--kiosk-bg-card);
+    border: 1px solid var(--kiosk-border);
+    border-radius: var(--kiosk-radius);
+    overflow: hidden;
+}
+
+.kiosk-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--kiosk-text);
+}
+
+.kiosk-table thead {
+    background: var(--kiosk-bg-dark);
+}
+
+.kiosk-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--kiosk-text);
+    border-bottom: 2px solid var(--kiosk-border);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kiosk-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--kiosk-border);
+    vertical-align: middle;
+}
+
+.kiosk-table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.kiosk-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Badges dark */
+.kiosk-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.kiosk-badge-success {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.kiosk-badge-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.kiosk-badge-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.kiosk-badge-info {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Botones dark */
+.kiosk-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kiosk-btn-primary {
+    background: var(--kiosk-primary);
+    color: white;
+}
+
+.kiosk-btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.kiosk-btn-success {
+    background: var(--kiosk-success);
+    color: white;
+}
+
+.kiosk-btn-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.kiosk-btn-danger:hover {
+    background: var(--kiosk-danger);
+    color: white;
+}
+
+.kiosk-btn-sm {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+}
+
+/* Empty state */
+.kiosk-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--kiosk-text-muted);
+}
+
+.kiosk-empty-state i {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* Last seen indicator */
+.kiosk-last-seen {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+}
+
+.kiosk-last-seen .online {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--kiosk-success);
+    animation: pulse 2s infinite;
+}
+
+.kiosk-last-seen .offline {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--kiosk-text-muted);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 /* Animaciones */
@@ -2704,52 +2929,57 @@ async function showKiosksContent() {
         if (!document.getElementById('kiosks-pro-styles')) {
             const styleEl = document.createElement('style');
             styleEl.id = 'kiosks-pro-styles';
-            styleEl.textContent = PROFESSIONAL_STYLES.replace(/<\/?style>/g, ''); // Extraer solo el CSS
+            styleEl.textContent = PROFESSIONAL_STYLES.replace(/<\/?style>/g, '');
             document.head.appendChild(styleEl);
         }
 
         const content = `
-            <div class="module-header-pro">
-                <h2>🖥️ Gestión de Kioscos Biométricos</h2>
-                <p>Configuración profesional de hardware facial + lector de huellas</p>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4>📋 Kioscos Registrados</h4>
-                        <button class="btn btn-primary btn-lg" onclick="showAddKioskModal()">
-                            <i class="fas fa-plus-circle"></i> Crear Nuevo Kiosco
+            <div id="kiosks-container">
+                <!-- Header con stats inline -->
+                <div class="kiosk-module-header">
+                    <div>
+                        <h2><i class="fas fa-tablet-alt"></i> Gestión de Kioscos</h2>
+                        <p>Dispositivos biométricos para control de asistencia</p>
+                    </div>
+                    <div class="kiosk-stats-inline">
+                        <div class="kiosk-stat-item">
+                            <div class="kiosk-stat-value" id="total-kiosks">-</div>
+                            <div class="kiosk-stat-label">Total</div>
+                        </div>
+                        <div class="kiosk-stat-item">
+                            <div class="kiosk-stat-value" id="active-kiosks" style="color: #22c55e;">-</div>
+                            <div class="kiosk-stat-label">Activos</div>
+                        </div>
+                        <button class="kiosk-btn kiosk-btn-primary" onclick="showAddKioskModal()">
+                            <i class="fas fa-plus"></i> Nuevo Kiosco
                         </button>
                     </div>
+                </div>
 
-                    <!-- Tabla de Kioscos -->
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="kiosks-table">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nombre</th>
-                                    <th>Hardware Facial</th>
-                                    <th>Lector de Huella</th>
-                                    <th>Rendimiento</th>
-                                    <th>Walk-through</th>
-                                    <th>Liveness</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="kiosks-tbody">
-                                <tr>
-                                    <td colspan="9" class="text-center">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Cargando...</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <!-- Tabla de Kioscos -->
+                <div class="kiosk-table-container">
+                    <table class="kiosk-table" id="kiosks-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre / Ubicación</th>
+                                <th>Device ID</th>
+                                <th>IP / Puerto</th>
+                                <th>GPS</th>
+                                <th>Última Conexión</th>
+                                <th>APK</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kiosks-tbody">
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6;"></i>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;
@@ -2796,17 +3026,26 @@ async function loadKiosks() {
 }
 
 /**
- * Renderiza la tabla de kiosks
+ * Renderiza la tabla de kiosks - Dark Theme con campos reales de BD
  */
 function renderKiosksTable(kiosks) {
     const tbody = document.getElementById('kiosks-tbody');
 
+    // Actualizar stats
+    const totalEl = document.getElementById('total-kiosks');
+    const activeEl = document.getElementById('active-kiosks');
+    if (totalEl) totalEl.textContent = kiosks?.length || 0;
+    if (activeEl) activeEl.textContent = kiosks?.filter(k => k.is_active).length || 0;
+
     if (!kiosks || kiosks.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" class="text-center text-muted py-5">
-                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                    <p>No hay kiosks registrados. Crea tu primer kiosk!</p>
+                <td colspan="9" class="kiosk-empty-state">
+                    <i class="fas fa-tablet-alt"></i>
+                    <p>No hay kioscos registrados</p>
+                    <button class="kiosk-btn kiosk-btn-primary" onclick="showAddKioskModal()">
+                        <i class="fas fa-plus"></i> Crear primer kiosco
+                    </button>
                 </td>
             </tr>
         `;
@@ -2814,91 +3053,66 @@ function renderKiosksTable(kiosks) {
     }
 
     tbody.innerHTML = kiosks.map(kiosk => {
-        const facialProfile = HARDWARE_FACIAL_PROFILES[kiosk.hardware_profile];
-        const fingerprintProfile = HARDWARE_FINGERPRINT_PROFILES[kiosk.detection_method_fingerprint];
+        // Formatear última conexión
+        const lastSeen = kiosk.last_seen ? new Date(kiosk.last_seen) : null;
+        const isOnline = lastSeen && (Date.now() - lastSeen.getTime()) < 5 * 60 * 1000; // 5 min
+        const lastSeenStr = lastSeen
+            ? `${lastSeen.toLocaleDateString()} ${lastSeen.toLocaleTimeString().slice(0,5)}`
+            : 'Nunca';
 
-        const performanceColor = kiosk.performance_score >= 90 ? 'success' :
-                                  kiosk.performance_score >= 75 ? 'warning' : 'danger';
+        // Formatear GPS
+        const gpsStr = (kiosk.gps_lat && kiosk.gps_lng)
+            ? `${parseFloat(kiosk.gps_lat).toFixed(4)}, ${parseFloat(kiosk.gps_lng).toFixed(4)}`
+            : '-';
+
+        // Formatear IP/Puerto
+        const ipStr = kiosk.ip_address
+            ? `${kiosk.ip_address}:${kiosk.port || 9998}`
+            : '-';
 
         return `
             <tr>
-                <td><strong>#${kiosk.id}</strong></td>
+                <td><strong style="color: #3b82f6;">#${kiosk.id}</strong></td>
                 <td>
-                    <strong>${kiosk.name || 'Kiosk ' + kiosk.id}</strong><br>
-                    <small class="text-muted">${kiosk.location || 'Sin ubicación'}</small>
-                </td>
-                <td style="max-width: 200px;">
-                    ${facialProfile ? `
-                        <div class="d-flex align-items-center" style="gap: 8px;">
-                            <div style="width: 24px; height: 24px; flex-shrink: 0;">
-                                ${facialProfile.logo}
-                            </div>
-                            <div style="line-height: 1.2;">
-                                <div style="font-size: 0.85rem; font-weight: 600;">${facialProfile.brand}</div>
-                                <small class="text-muted" style="font-size: 0.75rem;">${facialProfile.name.replace(facialProfile.brand, '').trim()}</small>
-                            </div>
-                        </div>
-                    ` : '<span class="text-muted" style="font-size: 0.85rem;">No configurado</span>'}
-                </td>
-                <td style="max-width: 200px;">
-                    ${fingerprintProfile ? `
-                        <div class="d-flex align-items-center" style="gap: 8px;">
-                            <div style="width: 24px; height: 24px; flex-shrink: 0;">
-                                ${fingerprintProfile.logo}
-                            </div>
-                            <div style="line-height: 1.2;">
-                                <div style="font-size: 0.85rem; font-weight: 600;">${fingerprintProfile.brand}</div>
-                                <small class="text-muted" style="font-size: 0.75rem;">${fingerprintProfile.name.replace(fingerprintProfile.brand, '').trim()}</small>
-                            </div>
-                        </div>
-                    ` : '<span class="text-muted" style="font-size: 0.85rem;">N/A</span>'}
+                    <strong style="color: #e2e8f0;">${kiosk.name || 'Kiosk ' + kiosk.id}</strong><br>
+                    <small style="color: #94a3b8;">${kiosk.location || 'Sin ubicación'}</small>
                 </td>
                 <td>
-                    <div class="progress" style="height: 25px;">
-                        <div class="progress-bar bg-${performanceColor}"
-                             role="progressbar"
-                             style="width: ${kiosk.performance_score}%"
-                             aria-valuenow="${kiosk.performance_score}"
-                             aria-valuemin="0"
-                             aria-valuemax="100">
-                            ${kiosk.performance_score}/100
-                        </div>
+                    <code style="background: #0f172a; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; color: #94a3b8;">
+                        ${kiosk.device_id || 'No asignado'}
+                    </code>
+                </td>
+                <td style="font-family: monospace; font-size: 0.8rem; color: #94a3b8;">
+                    ${ipStr}
+                </td>
+                <td>
+                    ${(kiosk.gps_lat && kiosk.gps_lng)
+                        ? `<span class="kiosk-badge kiosk-badge-success"><i class="fas fa-map-marker-alt"></i> ${gpsStr}</span>`
+                        : '<span class="kiosk-badge kiosk-badge-warning">Sin GPS</span>'}
+                </td>
+                <td>
+                    <div class="kiosk-last-seen">
+                        <span class="${isOnline ? 'online' : 'offline'}"></span>
+                        <span style="color: ${isOnline ? '#22c55e' : '#94a3b8'};">${lastSeenStr}</span>
                     </div>
                 </td>
-                <td class="text-center">
-                    ${kiosk.supports_walkthrough
-                        ? '<span class="badge bg-success">✓ SI</span>'
-                        : '<span class="badge bg-secondary">No</span>'}
-                </td>
-                <td class="text-center">
-                    ${kiosk.supports_liveness
-                        ? '<span class="badge bg-success">✓ SI</span>'
-                        : '<span class="badge bg-secondary">No</span>'}
+                <td>
+                    ${kiosk.apk_version
+                        ? `<span class="kiosk-badge kiosk-badge-info">v${kiosk.apk_version}</span>`
+                        : '<span style="color: #64748b;">-</span>'}
                 </td>
                 <td>
                     ${kiosk.is_active
-                        ? '<span class="badge bg-success">Activo</span>'
-                        : '<span class="badge bg-danger">Inactivo</span>'}
+                        ? '<span class="kiosk-badge kiosk-badge-success">Activo</span>'
+                        : '<span class="kiosk-badge kiosk-badge-danger">Inactivo</span>'}
                 </td>
                 <td>
-                    <div style="display: flex; flex-direction: row; gap: 3px; align-items: center;">
-                        <button class="btn btn-info"
-                                onclick="showKioskDetails(${kiosk.id})"
-                                title="Ver Detalles"
-                                style="font-size: 0.65rem; padding: 3px 6px; line-height: 1;">
-                            <i class="fas fa-eye" style="font-size: 0.7rem;"></i>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="kiosk-btn kiosk-btn-primary kiosk-btn-sm" onclick="showEditKioskModal(${kiosk.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-warning"
-                                onclick="showEditKioskModal(${kiosk.id})"
-                                title="Editar"
-                                style="font-size: 0.65rem; padding: 3px 6px; line-height: 1;">
-                            <i class="fas fa-edit" style="font-size: 0.7rem;"></i>
-                        </button>
-                        <button class="btn btn-danger"
-                                onclick="deleteKiosk(${kiosk.id})"
-                                title="Eliminar"
-                                style="font-size: 0.65rem; padding: 3px 6px; line-height: 1;">
-                            <i class="fas fa-trash" style="font-size: 0.7rem;"></i>
+                        <button class="kiosk-btn kiosk-btn-danger kiosk-btn-sm" onclick="deleteKiosk(${kiosk.id})" title="Eliminar">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </td>

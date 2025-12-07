@@ -27,9 +27,10 @@ if (typeof window.showUsersContent === 'function') {
         .users-dashboard {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
         }
 
         .users-header {
@@ -43,7 +44,7 @@ if (typeof window.showUsersContent === 'function') {
 
         .users-title h2 {
             margin: 0;
-            color: #1a365d;
+            color: #f1f5f9;
             font-size: 1.6em;
             display: flex;
             align-items: center;
@@ -52,117 +53,169 @@ if (typeof window.showUsersContent === 'function') {
 
         .users-subtitle {
             display: block;
-            color: #718096;
+            color: #94a3b8;
             font-size: 0.85em;
             margin-top: 5px;
         }
 
-        /* Quick Actions - Modern Style */
-        .users-quick-actions {
+        /* TOP BAR - Métricas + Botón Agregar */
+        .users-top-bar {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
+            justify-content: space-between;
+            align-items: stretch;
+            background: #1e293b;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border: 1px solid #334155;
+            gap: 12px;
         }
 
-        .users-quick-actions .btn-action {
-            background: white;
-            border: 1px solid #e2e8f0;
+        .users-stats-inline {
+            display: flex;
+            flex: 1;
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .users-stat-mini {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            padding: 10px 8px;
+            background: rgba(0,0,0,0.25);
+            border-radius: 6px;
+            border-bottom: 3px solid transparent;
+            min-height: 55px;
+        }
+        .users-stat-mini.purple { border-bottom-color: #8b5cf6; }
+        .users-stat-mini.success { border-bottom-color: #10b981; }
+        .users-stat-mini.info { border-bottom-color: #3b82f6; }
+        .users-stat-mini.warning { border-bottom-color: #f59e0b; }
+
+        .users-stat-mini i { font-size: 1.1em; margin-bottom: 2px; }
+        .users-stat-mini .stat-value {
+            font-weight: 700;
+            font-size: 1.3em;
+            color: #f1f5f9;
+            line-height: 1;
+        }
+        .users-stat-mini .stat-label {
+            font-size: 0.7em;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-add-user {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
             padding: 12px 20px;
             border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: 500;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s;
-            color: #4a5568;
-            font-size: 0.95em;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+            white-space: nowrap;
         }
-
-        .users-quick-actions .btn-action:hover {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
+        .btn-add-user:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
         }
 
-        .users-quick-actions .btn-action.primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
+        /* FILTROS EN UNA SOLA FILA - ANCHO COMPLETO */
+        .users-filters-compact {
+            background: #1e293b;
+            padding: 8px 12px;
+            border-radius: 6px 6px 0 0;
+            margin-bottom: 0;
+            border: 1px solid #334155;
+            border-bottom: none;
         }
 
-        .users-quick-actions .btn-action.primary:hover {
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        .filters-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: nowrap;
+            width: 100%;
         }
 
-        /* KPIs / Stats Grid - Modern Style */
-        .users-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 25px;
-        }
-
-        .users-stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .users-stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-
-        .users-stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-        }
-
-        .users-stat-card.success::before { background: linear-gradient(90deg, #48bb78, #38a169); }
-        .users-stat-card.warning::before { background: linear-gradient(90deg, #ecc94b, #d69e2e); }
-        .users-stat-card.danger::before { background: linear-gradient(90deg, #fc8181, #e53e3e); }
-        .users-stat-card.info::before { background: linear-gradient(90deg, #63b3ed, #4299e1); }
-        .users-stat-card.purple::before { background: linear-gradient(90deg, #667eea, #764ba2); }
-
-        .users-stat-icon {
-            font-size: 2em;
-            margin-bottom: 10px;
-            opacity: 0.8;
-        }
-
-        .users-stat-value {
-            font-size: 2.2em;
-            font-weight: 700;
-            color: #1a365d;
-            margin-bottom: 5px;
-        }
-
-        .users-stat-label {
-            color: #718096;
+        .filter-input {
+            flex: 1;
+            min-width: 80px;
+            padding: 6px 10px;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            background: #0f172a;
+            color: #e2e8f0;
             font-size: 0.85em;
-            font-weight: 500;
+        }
+        .filter-input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .filter-input::placeholder { color: #64748b; }
+
+        .filter-select {
+            flex: 1;
+            min-width: 80px;
+            padding: 6px 8px;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 0.85em;
+            cursor: pointer;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: #6366f1;
         }
 
-        /* Search Section - Modern Style */
+        .btn-clear-compact {
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 0.85em;
+        }
+        .btn-clear-compact:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .filter-results-compact {
+            font-size: 0.8em;
+            color: #94a3b8;
+            white-space: nowrap;
+            min-width: 60px;
+        }
+
+        /* Search Section - Modern Style (Legacy support) */
         .users-search-section {
-            background: white;
-            padding: 20px;
+            background: #1e293b;
+            padding: 10px;
             border-radius: 12px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+            border: 1px solid #334155;
         }
 
         .users-search-grid {
@@ -181,23 +234,29 @@ if (typeof window.showUsersContent === 'function') {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #4a5568;
+            color: #cbd5e1;
             font-size: 0.9em;
         }
 
         .users-search-field input {
             width: 100%;
             padding: 12px 16px;
-            border: 2px solid #e2e8f0;
+            border: 1px solid #334155;
             border-radius: 8px;
             font-size: 0.95em;
             transition: border-color 0.3s, box-shadow 0.3s;
+            background: #0f172a;
+            color: #e2e8f0;
         }
 
         .users-search-field input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .users-search-field input::placeholder {
+            color: #64748b;
         }
 
         .users-search-actions {
@@ -208,32 +267,35 @@ if (typeof window.showUsersContent === 'function') {
         }
 
         .users-search-actions .btn-clear {
-            background: #edf2f7;
+            background: #334155;
             border: none;
             padding: 10px 16px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
-            color: #4a5568;
+            color: #94a3b8;
             transition: all 0.2s;
         }
 
         .users-search-actions .btn-clear:hover {
-            background: #e2e8f0;
+            background: #475569;
+            color: #e2e8f0;
         }
 
         .users-filter-results {
             font-size: 0.8em;
-            color: #718096;
+            color: #94a3b8;
         }
 
         /* Table Container - Modern Style */
         .users-table-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            background: #1e293b;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
             overflow: hidden;
-            margin-top: 15px;
+            margin-top: 0;
+            border: 1px solid #334155;
+            border-top: 1px solid #475569;
         }
 
         .users-table {
@@ -260,14 +322,23 @@ if (typeof window.showUsersContent === 'function') {
             font-size: 1.2em;
             margin-bottom: 4px;
         }
+        .users-table th .th-icon i { color: #60a5fa !important; }
+        .users-table th:nth-child(1) .th-icon i { color: #8b5cf6 !important; }
+        .users-table th:nth-child(2) .th-icon i { color: #f59e0b !important; }
+        .users-table th:nth-child(3) .th-icon i { color: #10b981 !important; }
+        .users-table th:nth-child(4) .th-icon i { color: #ec4899 !important; }
+        .users-table th:nth-child(5) .th-icon i { color: #22c55e !important; }
+        .users-table th:nth-child(6) .th-icon i { color: #f97316 !important; }
+        .users-table th:nth-child(7) .th-icon i { color: #06b6d4 !important; }
+        .users-table th:nth-child(8) .th-icon i { color: #3b82f6 !important; }
 
         .users-table tbody tr {
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #334155;
             transition: background 0.2s;
         }
 
         .users-table tbody tr:hover {
-            background: #f7fafc;
+            background: rgba(99, 102, 241, 0.1);
         }
 
         .users-table tbody tr:last-child {
@@ -277,12 +348,12 @@ if (typeof window.showUsersContent === 'function') {
         .users-table td {
             padding: 14px 12px;
             text-align: center;
-            color: #4a5568;
+            color: #e2e8f0;
         }
 
         .users-table td.name-cell {
             font-weight: 600;
-            color: #1a365d;
+            color: #f1f5f9;
             text-align: left;
         }
 
@@ -338,37 +409,48 @@ if (typeof window.showUsersContent === 'function') {
             font-size: 0.9em;
         }
 
-        .users-action-btn.shifts { background: #c6f6d5; color: #22543d; }
-        .users-action-btn.shifts:hover { background: #9ae6b4; }
-
-        .users-action-btn.reset { background: #fefcbf; color: #744210; }
-        .users-action-btn.reset:hover { background: #faf089; }
-
-        .users-action-btn.view { background: #bee3f8; color: #2a4365; }
-        .users-action-btn.view:hover { background: #90cdf4; }
-
-        .users-action-btn.delete { background: #fed7d7; color: #742a2a; }
-        .users-action-btn.delete:hover { background: #feb2b2; }
+        .users-action-btn.view {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            color: white !important;
+            width: 38px !important;
+            height: 38px !important;
+            font-size: 1.1em !important;
+            border-radius: 8px !important;
+            border: 2px solid rgba(255,255,255,0.3) !important;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4) !important;
+        }
+        .users-action-btn.view:hover {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6) !important;
+            transform: scale(1.15) !important;
+            border-color: white !important;
+        }
+        .users-action-btn.view i {
+            color: white !important;
+            font-size: 1em !important;
+        }
 
         /* Pagination - Modern Style */
         .users-pagination {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 8px;
-            padding: 20px;
-            background: #f7fafc;
-            border-top: 1px solid #e2e8f0;
+            gap: 6px;
+            padding: 8px 10px;
+            background: #0f172a;
+            border-top: 1px solid #334155;
         }
 
         .users-pagination button {
-            background: white;
-            border: 1px solid #e2e8f0;
-            padding: 8px 14px;
-            border-radius: 6px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 5px 10px;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 500;
+            font-size: 0.8em;
+            color: #e2e8f0;
         }
 
         .users-pagination button:hover:not(:disabled) {
@@ -389,20 +471,34 @@ if (typeof window.showUsersContent === 'function') {
         }
 
         .users-pagination-info {
-            color: #718096;
-            font-size: 0.9em;
-            margin: 0 15px;
+            color: #94a3b8;
+            font-size: 0.75em;
+            margin: 0 8px;
+        }
+
+        /* Contenedores - Sin espacio extra */
+        #users-container {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        #users-list {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        #users-list > .users-table-container {
+            margin-top: 0 !important;
         }
 
         /* Loading Spinner */
         .users-loading {
             text-align: center;
-            padding: 60px 20px;
+            padding: 40px 20px;
+            color: #94a3b8;
         }
 
         .users-spinner {
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #667eea;
+            border: 4px solid #334155;
+            border-top: 4px solid #6366f1;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -514,83 +610,51 @@ async function showUsersContent() {
     
     content.innerHTML = `
         <div class="users-dashboard">
-            <!-- Header moderno -->
-            <div class="users-header">
-                <div class="users-title">
-                    <h2><i class="fas fa-users"></i> Gestion de Usuarios</h2>
-                    <span class="users-subtitle">Administracion centralizada de usuarios y permisos</span>
+            <!-- Fila 1: Métricas compactas + Botón Agregar -->
+            <div class="users-top-bar">
+                <div class="users-stats-inline" id="user-stats">
+                    <div class="users-stat-mini purple">
+                        <i class="fas fa-users" style="color: #8b5cf6;"></i>
+                        <span class="stat-value" id="total-users">--</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                    <div class="users-stat-mini success">
+                        <i class="fas fa-user-check" style="color: #10b981;"></i>
+                        <span class="stat-value" id="active-users">--</span>
+                        <span class="stat-label">Activos</span>
+                    </div>
+                    <div class="users-stat-mini info">
+                        <i class="fas fa-user-shield" style="color: #3b82f6;"></i>
+                        <span class="stat-value" id="admin-users">--</span>
+                        <span class="stat-label">Admins</span>
+                    </div>
+                    <div class="users-stat-mini warning">
+                        <i class="fas fa-fingerprint" style="color: #f59e0b;"></i>
+                        <span class="stat-value" id="biometric-users">--</span>
+                        <span class="stat-label">Biometria</span>
+                    </div>
                 </div>
-            </div>
-
-            <!-- Quick Actions - Estilo moderno -->
-            <div class="users-quick-actions">
-                <button class="btn-action primary" onclick="showAddUser()" data-translate="users.add_user">
+                <button class="btn-add-user" onclick="showAddUser()">
                     <i class="fas fa-user-plus"></i> Agregar Usuario
                 </button>
-                <button class="btn-action" onclick="loadUsers()" data-translate="users.user_list">
-                    <i class="fas fa-list"></i> Actualizar Lista
-                </button>
-                <button class="btn-action" onclick="showUserStats()" data-translate="users.statistics" data-module="analytics-basic">
-                    <i class="fas fa-chart-bar"></i> Estadisticas
-                </button>
-                <button class="btn-action" onclick="exportUsers()" data-translate="users.export_csv" data-module="reports-advanced">
-                    <i class="fas fa-file-export"></i> Exportar CSV
-                </button>
-                <button class="btn-action" onclick="showBulkActions()" data-translate="users.bulk_actions" data-module="users-advanced">
-                    <i class="fas fa-bolt"></i> Acciones Masivas
-                </button>
-            </div>
-
-            <!-- Stats Cards - Estilo KPIs moderno -->
-            <div class="users-stats-grid" id="user-stats">
-                <div class="users-stat-card purple">
-                    <div class="users-stat-icon"><i class="fas fa-users"></i></div>
-                    <div class="users-stat-value" id="total-users">--</div>
-                    <div class="users-stat-label" data-translate="users.total_users">Usuarios Totales</div>
-                </div>
-                <div class="users-stat-card success">
-                    <div class="users-stat-icon"><i class="fas fa-user-check"></i></div>
-                    <div class="users-stat-value" id="active-users">--</div>
-                    <div class="users-stat-label" data-translate="users.active_users">Usuarios Activos</div>
-                </div>
-                <div class="users-stat-card info">
-                    <div class="users-stat-icon"><i class="fas fa-user-shield"></i></div>
-                    <div class="users-stat-value" id="admin-users">--</div>
-                    <div class="users-stat-label" data-translate="users.admin_users">Administradores</div>
-                </div>
-                <div class="users-stat-card warning">
-                    <div class="users-stat-icon"><i class="fas fa-fingerprint"></i></div>
-                    <div class="users-stat-value" id="biometric-users">--</div>
-                    <div class="users-stat-label">Con Biometria</div>
-                </div>
             </div>
 
             <div id="users-container">
-                <!-- Campos de busqueda - Estilo moderno -->
-                <div class="users-search-section">
-                    <div class="users-search-grid">
-                        <div class="users-search-field">
-                            <label data-translate="users.search_dni"><i class="fas fa-id-card"></i> Buscar por DNI:</label>
-                            <input type="text" id="searchDNI" placeholder="Ingrese DNI..." onkeyup="filterUsers()" />
-                        </div>
-                        <div class="users-search-field">
-                            <label data-translate="users.search_name"><i class="fas fa-user"></i> Buscar por Nombre/Apellido:</label>
-                            <input type="text" id="searchName" placeholder="Ingrese nombre o apellido..." onkeyup="filterUsers()" />
-                        </div>
-                        <div class="users-search-actions">
-                            <button class="btn-clear" onclick="clearFilters()" title="Limpiar filtros" data-translate="users.clear_filters">
-                                <i class="fas fa-eraser"></i> Limpiar
-                            </button>
-                            <span id="filterResults" class="users-filter-results"></span>
-                        </div>
+                <!-- Filtros ultra-compactos en 1 sola fila -->
+                <div class="users-filters-compact">
+                    <div class="filters-row">
+                        <input type="text" id="searchDNI" placeholder="DNI" onkeyup="filterUsers()" class="filter-input" />
+                        <input type="text" id="searchName" placeholder="Nombre" onkeyup="filterUsers()" class="filter-input" />
+                        <input type="text" id="searchLegajo" placeholder="Legajo" onkeyup="filterUsers()" class="filter-input" />
+                        <select id="filterDepartment" onchange="filterUsers()" class="filter-select"><option value="">Depto</option></select>
+                        <select id="filterRole" onchange="filterUsers()" class="filter-select"><option value="">Rol</option><option value="admin">Admin</option><option value="operator">Operador</option><option value="employee">Empleado</option></select>
+                        <select id="filterStatus" onchange="filterUsers()" class="filter-select"><option value="">Estado</option><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select>
+                        <select id="filterGPS" onchange="filterUsers()" class="filter-select"><option value="">GPS</option><option value="true">Si</option><option value="false">No</option></select>
+                        <select id="filterBiometric" onchange="filterUsers()" class="filter-select"><option value="">Bio</option><option value="Registrado">Si</option><option value="Pendiente">No</option></select>
+                        <button class="btn-clear-compact" onclick="clearFilters()" title="Limpiar"><i class="fas fa-times"></i></button>
+                        <span id="filterResults" class="filter-results-compact"></span>
                     </div>
-                </div>
-
-                <!-- Pagination Top -->
-                <div id="pagination-top" style="display: none;"></div>
-
-                <!-- Users List -->
-                <div id="users-list" class="users-loading">
+                </div><!-- Users List --><div id="users-list" class="users-loading">
                     <div class="users-spinner"></div>
                     <p style="color: #718096;">Cargando usuarios...</p>
                 </div>
@@ -768,6 +832,9 @@ async function loadUsers() {
         // Update stats
         updateUserStatsFromData(users);
 
+        // Poblar filtro de departamentos
+        populateDepartmentFilter();
+
         // 🔌 Apply module visibility to dynamically generated buttons
         if (window.moduleHelper) {
             await window.moduleHelper.applyModuleVisibility();
@@ -807,35 +874,35 @@ function displayUsersTable(users) {
                 <thead>
                     <tr>
                         <th>
-                            <span class="th-icon"><i class="fas fa-user"></i></span>
+                            <span class="th-icon"><i class="fas fa-user" style="color: #8b5cf6;"></i></span>
                             Nombre
                         </th>
                         <th>
-                            <span class="th-icon"><i class="fas fa-id-badge"></i></span>
+                            <span class="th-icon"><i class="fas fa-id-badge" style="color: #f59e0b;"></i></span>
                             Legajo
                         </th>
                         <th>
-                            <span class="th-icon"><i class="fas fa-building"></i></span>
+                            <span class="th-icon"><i class="fas fa-building" style="color: #10b981;"></i></span>
                             Departamento
                         </th>
                         <th>
-                            <span class="th-icon"><i class="fas fa-crown"></i></span>
+                            <span class="th-icon"><i class="fas fa-crown" style="color: #ec4899;"></i></span>
                             Rol
                         </th>
                         <th>
-                            <span class="th-icon"><i class="fas fa-toggle-on"></i></span>
+                            <span class="th-icon"><i class="fas fa-toggle-on" style="color: #22c55e;"></i></span>
                             Estado
                         </th>
                         <th>
-                            <span class="th-icon"><i class="fas fa-map-marker-alt"></i></span>
+                            <span class="th-icon"><i class="fas fa-map-marker-alt" style="color: #f97316;"></i></span>
                             GPS
                         </th>
                         <th>
-                            <span class="th-icon"><i class="fas fa-fingerprint"></i></span>
+                            <span class="th-icon"><i class="fas fa-fingerprint" style="color: #06b6d4;"></i></span>
                             Bio
                         </th>
                         <th>
-                            <span class="th-icon"><i class="fas fa-cogs"></i></span>
+                            <span class="th-icon"><i class="fas fa-cogs" style="color: #3b82f6;"></i></span>
                             Acciones
                         </th>
                     </tr>
@@ -864,17 +931,8 @@ function displayUsersTable(users) {
                 </td>
                 <td>
                     <div class="users-action-btns">
-                        <button class="users-action-btn shifts" onclick="assignUserShifts('${user.id}', '${user.name}')" title="Asignar Turnos" data-module="shifts-enterprise">
-                            <i class="fas fa-clock"></i>
-                        </button>
-                        <button class="users-action-btn reset" onclick="resetPassword('${user.id}', '${user.name}')" title="Reset Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button class="users-action-btn view" onclick="viewUser('${user.id}')" title="Ver Detalles">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="users-action-btn delete" onclick="deleteUser('${user.id}')" title="Eliminar">
-                            <i class="fas fa-trash"></i>
+                        <button class="users-action-btn view" onclick="viewUser('${user.id}')" title="Ver Empleado" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 38px; height: 38px; font-size: 1.1em; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-eye" style="color: white;"></i>
                         </button>
                     </div>
                 </td>
@@ -2222,17 +2280,20 @@ async function viewUser(userId) {
                         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
                             <div>
                                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                                    <h4 style="color: #2c3e50; margin-top: 0;">Datos Básicos</h4>
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                        <div><strong>Nombre Completo:</strong><br>${user.firstName} ${user.lastName}</div>
-                                        <div><strong>DNI/ID:</strong><br>${user.employeeId}</div>
-                                        <div><strong>Email:</strong><br>${user.email}</div>
-                                        <div><strong>Teléfono:</strong><br>${user.phone || 'No especificado'}</div>
-                                        <div><strong>Fecha Nacimiento:</strong><br>${user.birthDate ? new Date(user.birthDate).toLocaleDateString() : 'No especificada'}</div>
-                                        <div><strong>Fecha Ingreso:</strong><br>${user.hireDate ? new Date(user.hireDate).toLocaleDateString() : 'No especificada'}</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <h4 style="color: #2c3e50; margin: 0;">Datos Básicos</h4>
+                                        <button class="btn btn-sm btn-primary" onclick="editBasicData('${userId}')" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer;">✏️ Editar</button>
+                                    </div>
+                                    <div id="basic-data-display-${userId}" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div><strong>Nombre Completo:</strong><br><span id="display-fullname-${userId}">${user.firstName} ${user.lastName}</span></div>
+                                        <div><strong>DNI/ID:</strong><br><span id="display-employeeid-${userId}">${user.employeeId}</span></div>
+                                        <div><strong>Email:</strong><br><span id="display-email-${userId}">${user.email}</span></div>
+                                        <div><strong>Teléfono:</strong><br><span id="display-phone-${userId}">${user.phone || 'No especificado'}</span></div>
+                                        <div><strong>Fecha Nacimiento:</strong><br><span id="display-birthdate-${userId}">${user.birthDate ? new Date(user.birthDate).toLocaleDateString() : 'No especificada'}</span></div>
+                                        <div><strong>Fecha Ingreso:</strong><br><span id="display-hiredate-${userId}">${user.hireDate ? new Date(user.hireDate).toLocaleDateString() : 'No especificada'}</span></div>
                                     </div>
                                     <div style="margin-top: 10px;">
-                                        <strong>Dirección:</strong><br>${user.address || 'No especificada'}
+                                        <strong>Dirección:</strong><br><span id="display-address-${userId}">${user.address || 'No especificada'}</span>
                                     </div>
                                 </div>
                                 
@@ -4056,16 +4117,27 @@ function toggleFlexibleScheduleNotes(hasFlexible) {
 
 console.log('🏢 [USERS] Funciones de departamentos y kioscos dinámicos agregadas');
 
-// User filtering functions
+// User filtering functions - EXTENDIDO con todos los filtros
 function filterUsers() {
     const dniSearch = document.getElementById('searchDNI')?.value.trim().toLowerCase() || '';
     const nameSearch = document.getElementById('searchName')?.value.trim().toLowerCase() || '';
+    const legajoSearch = document.getElementById('searchLegajo')?.value.trim().toLowerCase() || '';
+    const deptFilter = document.getElementById('filterDepartment')?.value || '';
+    const roleFilter = document.getElementById('filterRole')?.value || '';
+    const statusFilter = document.getElementById('filterStatus')?.value || '';
+    const gpsFilter = document.getElementById('filterGPS')?.value || '';
+    const bioFilter = document.getElementById('filterBiometric')?.value || '';
 
-    if (!dniSearch && !nameSearch) {
+    const hasAnyFilter = dniSearch || nameSearch || legajoSearch || deptFilter || roleFilter || statusFilter || gpsFilter || bioFilter;
+
+    if (!hasAnyFilter) {
         filteredUsers = [...allUsers];
     } else {
         filteredUsers = allUsers.filter(user => {
+            // Filtro DNI
             const matchesDNI = !dniSearch || (user.dni && user.dni.toLowerCase().includes(dniSearch));
+
+            // Filtro Nombre
             const matchesName = !nameSearch || (
                 (user.name && user.name.toLowerCase().includes(nameSearch)) ||
                 (user.firstName && user.firstName.toLowerCase().includes(nameSearch)) ||
@@ -4073,7 +4145,28 @@ function filterUsers() {
                 (user.email && user.email.toLowerCase().includes(nameSearch))
             );
 
-            return (!dniSearch || matchesDNI) && (!nameSearch || matchesName);
+            // Filtro Legajo
+            const matchesLegajo = !legajoSearch || (user.legajo && user.legajo.toLowerCase().includes(legajoSearch));
+
+            // Filtro Departamento
+            const matchesDept = !deptFilter || (user.department && user.department === deptFilter);
+
+            // Filtro Rol
+            const matchesRole = !roleFilter || (user.role && user.role.toLowerCase() === roleFilter.toLowerCase());
+
+            // Filtro Estado
+            const matchesStatus = !statusFilter || (user.status && user.status === statusFilter);
+
+            // Filtro GPS
+            const matchesGPS = !gpsFilter || (
+                (gpsFilter === 'true' && user.allowOutsideRadius === true) ||
+                (gpsFilter === 'false' && user.allowOutsideRadius === false)
+            );
+
+            // Filtro Biometría
+            const matchesBio = !bioFilter || (user.biometric && user.biometric === bioFilter);
+
+            return matchesDNI && matchesName && matchesLegajo && matchesDept && matchesRole && matchesStatus && matchesGPS && matchesBio;
         });
     }
 
@@ -4085,8 +4178,24 @@ function filterUsers() {
 }
 
 function clearFilters() {
-    document.getElementById('searchDNI').value = '';
-    document.getElementById('searchName').value = '';
+    const searchDNI = document.getElementById('searchDNI');
+    const searchName = document.getElementById('searchName');
+    const searchLegajo = document.getElementById('searchLegajo');
+    const filterDept = document.getElementById('filterDepartment');
+    const filterRole = document.getElementById('filterRole');
+    const filterStatus = document.getElementById('filterStatus');
+    const filterGPS = document.getElementById('filterGPS');
+    const filterBio = document.getElementById('filterBiometric');
+
+    if (searchDNI) searchDNI.value = '';
+    if (searchName) searchName.value = '';
+    if (searchLegajo) searchLegajo.value = '';
+    if (filterDept) filterDept.value = '';
+    if (filterRole) filterRole.value = '';
+    if (filterStatus) filterStatus.value = '';
+    if (filterGPS) filterGPS.value = '';
+    if (filterBio) filterBio.value = '';
+
     filteredUsers = [...allUsers];
 
     // 📄 Reset pagination to first page when clearing filters
@@ -4094,6 +4203,25 @@ function clearFilters() {
 
     displayUsersTable(filteredUsers);
     updateFilterResults();
+}
+
+// Función para poblar el select de departamentos
+function populateDepartmentFilter() {
+    const select = document.getElementById('filterDepartment');
+    if (!select || !allUsers.length) return;
+
+    // Extraer departamentos únicos
+    const departments = [...new Set(allUsers.map(u => u.department).filter(Boolean))].sort();
+
+    // Limpiar opciones existentes excepto la primera
+    select.innerHTML = '<option value="">Departamento</option>';
+
+    departments.forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept;
+        option.textContent = dept;
+        select.appendChild(option);
+    });
 }
 
 function updateFilterResults() {
@@ -6744,6 +6872,139 @@ function viewTaskHistory(userId) {
 }
 
 // =================== FUNCIONES DE CONTACTO Y OBRA SOCIAL ===================
+
+// ═══════════════════════════════════════════════════════════════════
+// EDITAR DATOS BÁSICOS DEL USUARIO
+// ═══════════════════════════════════════════════════════════════════
+async function editBasicData(userId) {
+    console.log('📝 [BASIC DATA] Editando datos básicos:', userId);
+
+    // Eliminar modal anterior si existe
+    const existingModal = document.getElementById('basicDataModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Obtener datos actuales del usuario
+    let userData = {};
+    try {
+        const response = await fetch(`/api/v1/users/${userId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            userData = data.user || data;
+        }
+    } catch (e) {
+        console.error('Error obteniendo datos:', e);
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'basicDataModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); display: flex; justify-content: center;
+        align-items: center; z-index: 10001;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
+                <h4 style="margin: 0; color: #1e40af;">📝 Editar Datos Básicos</h4>
+                <button onclick="closeModal('basicDataModal')" style="background: none; border: none; font-size: 1.5em; cursor: pointer; color: #666;">×</button>
+            </div>
+            <form id="basicDataForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-weight: 600; color: #374151; display: block; margin-bottom: 5px;">Nombre:</label>
+                        <input type="text" id="edit-firstName" class="form-control" value="${userData.firstName || ''}" required style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; color: #374151; display: block; margin-bottom: 5px;">Apellido:</label>
+                        <input type="text" id="edit-lastName" class="form-control" value="${userData.lastName || ''}" required style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; width: 100%;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-weight: 600; color: #374151; display: block; margin-bottom: 5px;">Email:</label>
+                        <input type="email" id="edit-email" class="form-control" value="${userData.email || ''}" required style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; color: #374151; display: block; margin-bottom: 5px;">Teléfono:</label>
+                        <input type="text" id="edit-phone" class="form-control" value="${userData.phone || ''}" placeholder="+54 11 9999-9999" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; width: 100%;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-weight: 600; color: #374151; display: block; margin-bottom: 5px;">Fecha de Nacimiento:</label>
+                        <input type="date" id="edit-birthDate" class="form-control" value="${userData.birthDate ? userData.birthDate.split('T')[0] : ''}" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; color: #374151; display: block; margin-bottom: 5px;">Fecha de Ingreso:</label>
+                        <input type="date" id="edit-hireDate" class="form-control" value="${userData.hireDate ? userData.hireDate.split('T')[0] : ''}" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; width: 100%;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; color: #374151; display: block; margin-bottom: 5px;">Dirección:</label>
+                    <input type="text" id="edit-address" class="form-control" value="${userData.address || ''}" placeholder="Calle, número, ciudad, provincia" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; width: 100%;">
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                    <button type="button" onclick="closeModal('basicDataModal')" class="btn btn-secondary" style="padding: 10px 20px; border-radius: 6px;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 25px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; color: white; border-radius: 6px; cursor: pointer;">💾 Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('basicDataForm').onsubmit = async (e) => {
+        e.preventDefault();
+
+        const updateData = {
+            firstName: document.getElementById('edit-firstName').value,
+            lastName: document.getElementById('edit-lastName').value,
+            email: document.getElementById('edit-email').value,
+            phone: document.getElementById('edit-phone').value || null,
+            birthDate: document.getElementById('edit-birthDate').value || null,
+            hireDate: document.getElementById('edit-hireDate').value || null,
+            address: document.getElementById('edit-address').value || null
+        };
+
+        try {
+            const response = await fetch(`/api/v1/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(updateData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Error al actualizar datos');
+            }
+
+            closeModal('basicDataModal');
+            showUserMessage('✅ Datos básicos actualizados correctamente', 'success');
+
+            // Recargar el modal de usuario para reflejar cambios
+            setTimeout(() => {
+                viewUser(userId);
+            }, 500);
+
+        } catch (error) {
+            console.error('Error guardando datos básicos:', error);
+            showUserMessage('❌ Error al guardar: ' + error.message, 'danger');
+        }
+    };
+}
+window.editBasicData = editBasicData;
 
 function editContactInfo(userId) {
     console.log('📞 [CONTACT] Editando información de contacto:', userId);

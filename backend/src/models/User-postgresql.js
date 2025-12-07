@@ -157,7 +157,17 @@ module.exports = (sequelize) => {
     position: {
       type: DataTypes.STRING(100),
       allowNull: true,
-      index: true
+      index: true,
+      comment: 'Nombre del puesto (legacy - sincronizado automáticamente desde organizational_position_id)'
+    },
+    // RBAC SSOT v2.0 - FK a OrganizationalPosition (fuente única de verdad para puestos)
+    organizationalPositionId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'organizational_position_id',
+      references: { model: 'organizational_positions', key: 'id' },
+      index: true,
+      comment: 'FK a organizational_positions - SSOT para puesto/cargo del empleado'
     },
     workSchedule: {
       type: DataTypes.JSONB,

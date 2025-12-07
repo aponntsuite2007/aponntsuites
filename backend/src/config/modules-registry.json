@@ -372,23 +372,6 @@
       }
     },
     {
-      "id": "permissions-test",
-      "key": "permissions-test",
-      "name": "Test de Permisos",
-      "icon": "fas fa-vial",
-      "category": "testing",
-      "is_core": false,
-      "base_price": 70,
-      "description": "Sistema de testing y validación de permisos",
-      "isCommercial": true,
-      "isAdministrative": false,
-      "dependencies": {
-        "required": [],
-        "optional": [],
-        "provides_to": []
-      }
-    },
-    {
       "id": "organizational-structure",
       "key": "organizational-structure",
       "name": "Estructura Organizacional",
@@ -523,25 +506,6 @@
       "is_core": false,
       "base_price": 1,
       "description": "Registro y control de ingreso de visitantes",
-      "isCommercial": true,
-      "isAdministrative": false,
-      "dependencies": {
-        "required": [
-          "users"
-        ],
-        "optional": [],
-        "provides_to": []
-      }
-    },
-    {
-      "id": "access-control",
-      "key": "access-control",
-      "name": "Control de Accesos",
-      "icon": "🔐",
-      "category": "security",
-      "is_core": false,
-      "base_price": 2.5,
-      "description": "Gestión de accesos a edificios y áreas restringidas",
       "isCommercial": true,
       "isAdministrative": false,
       "dependencies": {
@@ -761,25 +725,6 @@
         "optional": [],
         "provides_to": [
           "legal"
-        ]
-      }
-    },
-    {
-      "id": "licensing-management",
-      "key": "licensing-management",
-      "name": "Gestión de Licencias",
-      "icon": "📜",
-      "category": "admin",
-      "is_core": true,
-      "base_price": 0,
-      "description": "Administración de licencias y subscripciones",
-      "isCommercial": false,
-      "isAdministrative": true,
-      "dependencies": {
-        "required": [],
-        "optional": [],
-        "provides_to": [
-          "ALL"
         ]
       }
     },

@@ -18,6 +18,1196 @@ if (window.PayrollEngine) {
 console.log('%c PAYROLL ENGINE v3.0 ', 'background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); color: #00d4ff; font-size: 14px; padding: 8px 12px; border-radius: 4px; font-weight: bold;');
 
 // ============================================================================
+// PAYROLL HELP SYSTEM - Sistema de Ayuda Contextual Inteligente con Ollama
+// ============================================================================
+const PayrollHelpSystem = {
+    // Contextos de ayuda por pantalla/accion
+    contexts: {
+        dashboard: {
+            title: 'Panel de Control',
+            description: 'Vista general del estado de liquidaciones del periodo seleccionado.',
+            tips: [
+                'Los KPIs muestran el resumen del mes actual',
+                'Use "Iniciar Liquidacion" para comenzar el proceso',
+                'El panel de IA detecta anomalias automaticamente'
+            ],
+            helpTopics: ['¿Como inicio una liquidacion?', '¿Que significan los KPIs?', '¿Como exporto reportes?']
+        },
+        process: {
+            title: 'Proceso de Liquidacion',
+            description: 'Workflow guiado de 5 pasos para liquidar nominas de forma segura.',
+            tips: [
+                'Paso 1: Valida datos de empleados y plantillas',
+                'Paso 2: Calcula haberes y deducciones automaticamente',
+                'Paso 3: Revisa alertas y anomalias detectadas',
+                'Paso 4: Aprueba las liquidaciones verificadas',
+                'Paso 5: Genera archivos bancarios y recibos'
+            ],
+            warnings: [
+                'Una vez aprobadas, las liquidaciones no pueden modificarse sin autorizacion',
+                'Verifique que todos los empleados tengan plantilla asignada antes de calcular'
+            ],
+            helpTopics: ['¿Por que hay empleados con error?', '¿Como recalculo una nomina?', '¿Que pasa si apruebo por error?']
+        },
+        templates: {
+            title: 'Plantillas de Liquidacion',
+            description: 'Configure las estructuras de haberes y deducciones para diferentes tipos de empleados.',
+            tips: [
+                'Cada plantilla agrupa conceptos (haberes + deducciones)',
+                'Asigne entidades de destino para consolidacion automatica',
+                'Use formulas para calculos dinamicos basados en variables'
+            ],
+            requirements: [
+                { check: 'Al menos un concepto de tipo "Haber"', critical: true },
+                { check: 'Deducciones legales obligatorias configuradas', critical: true },
+                { check: 'Entidades de destino asignadas para consolidacion', critical: false }
+            ],
+            helpTopics: ['¿Como creo una formula?', '¿Que son las entidades de destino?', '¿Como asigno plantillas a empleados?']
+        },
+        templateCreate: {
+            title: 'Crear Plantilla',
+            description: 'Defina una nueva estructura de liquidacion con sus conceptos.',
+            fieldHelp: {
+                template_code: 'Codigo unico de la plantilla (ej: ARG-2025, COMERCIO-A)',
+                template_name: 'Nombre descriptivo para identificar la plantilla',
+                pay_frequency: 'Frecuencia de liquidacion: Mensual, Quincenal o Semanal',
+                is_default: 'Si se marca, esta plantilla se asignara automaticamente a nuevos empleados'
+            },
+            validations: [
+                { field: 'template_code', rule: 'required', message: 'El codigo es obligatorio' },
+                { field: 'template_name', rule: 'required', message: 'El nombre es obligatorio' },
+                { field: 'concepts', rule: 'minLength:1', message: 'Agregue al menos un concepto' }
+            ]
+        },
+        conceptCreate: {
+            title: 'Agregar Concepto',
+            description: 'Los conceptos definen cada linea del recibo de sueldo.',
+            fieldHelp: {
+                concept_name: 'Nombre que aparecera en el recibo (ej: Sueldo Basico, Jubilacion)',
+                concept_type: 'Tipo: Haber (suma), Deduccion (resta) o Carga Patronal (no afecta neto)',
+                formula: 'Formula de calculo usando variables como {baseSalary}, {workedDays}',
+                entity_id: 'Entidad recaudatoria de destino (AFIP, Obra Social, Sindicato, etc.)'
+            },
+            warnings: [
+                { condition: 'no_entity', message: 'Sin entidad de destino, este concepto no se incluira en consolidaciones', severity: 'warning' },
+                { condition: 'no_formula', message: 'Sin formula, debera ingresar el valor manualmente cada mes', severity: 'info' },
+                { condition: 'invalid_formula', message: 'La formula contiene errores y no podra calcularse', severity: 'error' }
+            ]
+        },
+        entities: {
+            title: 'Entidades de Destino',
+            description: 'Configure las entidades que reciben los aportes y contribuciones.',
+            tips: [
+                'Las Categorias agrupan tipos de entidades (Ej: Organismos Fiscales, Obras Sociales)',
+                'Las Entidades son los destinos especificos (Ej: AFIP, OSECAC, UOCRA)',
+                'Asigne entidades a conceptos para generar reportes de consolidacion'
+            ],
+            requirements: [
+                { check: 'Al menos una categoria de tipo "deduction" para deducciones', critical: true },
+                { check: 'Entidades con CUIT/Codigo para archivos de pago', critical: false }
+            ],
+            helpTopics: ['¿Como creo una entidad recaudatoria?', '¿Que es la consolidacion?', '¿Como genero el archivo de aportes?']
+        },
+        entityCreate: {
+            title: 'Crear Entidad',
+            description: 'Defina una nueva entidad de destino para aportes o contribuciones.',
+            fieldHelp: {
+                category_id: 'Categoria a la que pertenece (Ej: Obra Social, Sindicato, Fisco)',
+                entity_code: 'Codigo unico de la entidad (Ej: AFIP, OSECAC-01)',
+                entity_name: 'Nombre completo de la entidad',
+                cuit: 'CUIT o identificador fiscal para archivos de pago',
+                account_number: 'Numero de cuenta bancaria para depositos'
+            },
+            validations: [
+                { field: 'category_id', rule: 'required', message: 'Seleccione una categoria' },
+                { field: 'entity_code', rule: 'required', message: 'El codigo es obligatorio' },
+                { field: 'entity_name', rule: 'required', message: 'El nombre es obligatorio' }
+            ]
+        },
+        employees: {
+            title: 'Empleados y Liquidaciones',
+            description: 'Gestione las liquidaciones individuales de cada empleado.',
+            tips: [
+                'Use los checkboxes para seleccionar multiples empleados',
+                'El estado indica el progreso: Pendiente > Calculado > Aprobado > Pagado',
+                'Click en el ojo para ver el detalle completo de la liquidacion'
+            ],
+            helpTopics: ['¿Por que un empleado aparece sin plantilla?', '¿Como corrijo una liquidacion?', '¿Como exporto a Excel?']
+        },
+        payslipEditor: {
+            title: 'Editor de Recibos',
+            description: 'Personalice el diseño visual de los recibos de sueldo.',
+            tips: [
+                'Arrastre bloques para reorganizar el recibo',
+                'Use la vista previa para ver como quedara el PDF',
+                'Puede crear multiples plantillas para diferentes usos'
+            ]
+        }
+    },
+
+    // Estado del sistema de ayuda
+    state: {
+        currentContext: 'dashboard',
+        bubbleVisible: false,
+        chatOpen: false,
+        validationErrors: [],
+        suggestions: []
+    },
+
+    // Inicializar sistema de ayuda
+    init() {
+        console.log('[PayrollHelp] Sistema de ayuda contextual inicializado');
+        this.injectStyles();
+        this.createFloatingElements();
+        this.bindGlobalEvents();
+    },
+
+    // Inyectar estilos del sistema de ayuda
+    injectStyles() {
+        if (document.getElementById('payroll-help-styles')) return;
+
+        const styles = document.createElement('style');
+        styles.id = 'payroll-help-styles';
+        styles.textContent = `
+            /* Floating Help Button */
+            .ph-help-fab {
+                position: fixed;
+                bottom: 90px;
+                right: 24px;
+                width: 56px;
+                height: 56px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                border: none;
+                cursor: pointer;
+                box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9998;
+                transition: all 0.3s ease;
+            }
+            .ph-help-fab:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 30px rgba(99, 102, 241, 0.5);
+            }
+            .ph-help-fab svg { color: white; }
+            .ph-help-fab .ph-badge {
+                position: absolute;
+                top: -4px;
+                right: -4px;
+                background: #ef4444;
+                color: white;
+                font-size: 11px;
+                min-width: 20px;
+                height: 20px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+            }
+
+            /* Context Description Banner */
+            .ph-context-banner {
+                background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+                border-left: 4px solid #6366f1;
+                padding: 12px 16px;
+                margin-bottom: 16px;
+                border-radius: 0 8px 8px 0;
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .ph-context-banner .ph-icon {
+                background: rgba(99, 102, 241, 0.15);
+                padding: 8px;
+                border-radius: 8px;
+                color: #6366f1;
+            }
+            .ph-context-banner .ph-content h4 {
+                margin: 0 0 4px 0;
+                color: #e2e8f0;
+                font-size: 14px;
+            }
+            .ph-context-banner .ph-content p {
+                margin: 0;
+                color: #94a3b8;
+                font-size: 13px;
+            }
+            .ph-context-banner .ph-close {
+                margin-left: auto;
+                background: none;
+                border: none;
+                color: #64748b;
+                cursor: pointer;
+                padding: 4px;
+            }
+
+            /* Floating Bubble Tips */
+            .ph-bubble {
+                position: absolute;
+                background: #1e293b;
+                border: 1px solid #334155;
+                border-radius: 12px;
+                padding: 12px 16px;
+                max-width: 280px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                z-index: 9999;
+                animation: phBubbleIn 0.3s ease;
+            }
+            @keyframes phBubbleIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .ph-bubble::before {
+                content: '';
+                position: absolute;
+                bottom: -8px;
+                left: 20px;
+                border-left: 8px solid transparent;
+                border-right: 8px solid transparent;
+                border-top: 8px solid #334155;
+            }
+            .ph-bubble-title {
+                font-weight: 600;
+                color: #f1f5f9;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .ph-bubble-content {
+                color: #cbd5e1;
+                font-size: 13px;
+                line-height: 1.5;
+            }
+            .ph-bubble-close {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: none;
+                border: none;
+                color: #64748b;
+                cursor: pointer;
+                font-size: 16px;
+            }
+
+            /* Validation Warnings */
+            .ph-validation-alert {
+                background: rgba(251, 191, 36, 0.1);
+                border: 1px solid rgba(251, 191, 36, 0.3);
+                border-radius: 8px;
+                padding: 10px 14px;
+                margin-top: 8px;
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .ph-validation-alert.error {
+                background: rgba(239, 68, 68, 0.1);
+                border-color: rgba(239, 68, 68, 0.3);
+            }
+            .ph-validation-alert.success {
+                background: rgba(34, 197, 94, 0.1);
+                border-color: rgba(34, 197, 94, 0.3);
+            }
+            .ph-validation-alert .ph-icon { flex-shrink: 0; }
+            .ph-validation-alert .ph-icon.warning { color: #fbbf24; }
+            .ph-validation-alert .ph-icon.error { color: #ef4444; }
+            .ph-validation-alert .ph-icon.success { color: #22c55e; }
+            .ph-validation-alert .ph-message {
+                color: #e2e8f0;
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            /* AI Chat Panel */
+            .ph-chat-panel {
+                position: fixed;
+                bottom: 160px;
+                right: 24px;
+                width: 380px;
+                max-height: 500px;
+                background: #0f172a;
+                border: 1px solid #1e293b;
+                border-radius: 16px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+                z-index: 9999;
+                display: none;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            .ph-chat-panel.open { display: flex; }
+            .ph-chat-header {
+                background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                padding: 14px 16px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .ph-chat-header h4 {
+                margin: 0;
+                color: white;
+                font-size: 14px;
+                flex: 1;
+            }
+            .ph-chat-header .ph-ai-badge {
+                background: rgba(255,255,255,0.2);
+                padding: 3px 8px;
+                border-radius: 12px;
+                font-size: 11px;
+                color: white;
+            }
+            .ph-chat-header button {
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+            }
+            .ph-chat-body {
+                flex: 1;
+                overflow-y: auto;
+                padding: 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .ph-chat-message {
+                max-width: 85%;
+                padding: 10px 14px;
+                border-radius: 12px;
+                font-size: 13px;
+                line-height: 1.5;
+            }
+            .ph-chat-message.user {
+                background: #6366f1;
+                color: white;
+                align-self: flex-end;
+                border-bottom-right-radius: 4px;
+            }
+            .ph-chat-message.assistant {
+                background: #1e293b;
+                color: #e2e8f0;
+                align-self: flex-start;
+                border-bottom-left-radius: 4px;
+            }
+            .ph-chat-suggestions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 8px 0;
+            }
+            .ph-chat-suggestion {
+                background: rgba(99, 102, 241, 0.15);
+                border: 1px solid rgba(99, 102, 241, 0.3);
+                color: #a5b4fc;
+                padding: 6px 12px;
+                border-radius: 16px;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .ph-chat-suggestion:hover {
+                background: rgba(99, 102, 241, 0.25);
+            }
+            .ph-chat-input {
+                display: flex;
+                gap: 8px;
+                padding: 12px 16px;
+                border-top: 1px solid #1e293b;
+            }
+            .ph-chat-input input {
+                flex: 1;
+                background: #1e293b;
+                border: 1px solid #334155;
+                border-radius: 20px;
+                padding: 10px 16px;
+                color: #e2e8f0;
+                font-size: 13px;
+            }
+            .ph-chat-input input::placeholder { color: #64748b; }
+            .ph-chat-input button {
+                background: #6366f1;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+            }
+
+            /* Field Help Indicators */
+            .ph-field-help {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 18px;
+                height: 18px;
+                background: rgba(99, 102, 241, 0.2);
+                color: #a5b4fc;
+                border-radius: 50%;
+                font-size: 11px;
+                cursor: help;
+                margin-left: 6px;
+                transition: all 0.2s;
+            }
+            .ph-field-help:hover {
+                background: rgba(99, 102, 241, 0.4);
+                transform: scale(1.1);
+            }
+
+            /* Quick Tips Popover */
+            .ph-tips-popover {
+                position: absolute;
+                background: #1e293b;
+                border: 1px solid #334155;
+                border-radius: 10px;
+                padding: 12px;
+                min-width: 220px;
+                z-index: 10000;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            }
+            .ph-tips-popover h5 {
+                margin: 0 0 8px 0;
+                color: #f1f5f9;
+                font-size: 13px;
+            }
+            .ph-tips-popover ul {
+                margin: 0;
+                padding-left: 18px;
+                color: #94a3b8;
+                font-size: 12px;
+            }
+            .ph-tips-popover li { margin-bottom: 4px; }
+        `;
+        document.head.appendChild(styles);
+    },
+
+    // Crear elementos flotantes
+    createFloatingElements() {
+        // Boton flotante de ayuda
+        const fab = document.createElement('button');
+        fab.className = 'ph-help-fab';
+        fab.id = 'ph-help-fab';
+        fab.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span class="ph-badge" style="display:none">0</span>
+        `;
+        fab.onclick = () => this.toggleChat();
+        document.body.appendChild(fab);
+
+        // Panel de chat con IA
+        const chat = document.createElement('div');
+        chat.className = 'ph-chat-panel';
+        chat.id = 'ph-chat-panel';
+        chat.innerHTML = `
+            <div class="ph-chat-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/>
+                </svg>
+                <h4>Asistente de Liquidacion</h4>
+                <span class="ph-ai-badge">Ollama AI</span>
+                <button onclick="PayrollHelpSystem.toggleChat()">×</button>
+            </div>
+            <div class="ph-chat-body" id="ph-chat-body">
+                <div class="ph-chat-message assistant">
+                    Hola! Soy tu asistente de liquidaciones. Puedo ayudarte con:
+                    <ul style="margin: 8px 0 0 16px; padding: 0;">
+                        <li>Crear plantillas y conceptos</li>
+                        <li>Configurar formulas de calculo</li>
+                        <li>Resolver errores y validaciones</li>
+                        <li>Explicar el proceso de liquidacion</li>
+                    </ul>
+                </div>
+                <div class="ph-chat-suggestions" id="ph-chat-suggestions"></div>
+            </div>
+            <div class="ph-chat-input">
+                <input type="text" id="ph-chat-input" placeholder="Escribe tu pregunta..." onkeypress="if(event.key==='Enter')PayrollHelpSystem.sendMessage()">
+                <button onclick="PayrollHelpSystem.sendMessage()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+        document.body.appendChild(chat);
+    },
+
+    // Eventos globales
+    bindGlobalEvents() {
+        // Detectar hover en campos con ayuda
+        document.addEventListener('mouseover', (e) => {
+            const helpTrigger = e.target.closest('[data-ph-help]');
+            if (helpTrigger) {
+                this.showFieldHelp(helpTrigger, helpTrigger.dataset.phHelp);
+            }
+        });
+    },
+
+    // Cambiar contexto de ayuda
+    setContext(contextKey) {
+        this.state.currentContext = contextKey;
+        this.updateSuggestions();
+        console.log('[PayrollHelp] Contexto:', contextKey);
+    },
+
+    // Actualizar sugerencias segun contexto
+    updateSuggestions() {
+        const ctx = this.contexts[this.state.currentContext];
+        const container = document.getElementById('ph-chat-suggestions');
+        if (!container || !ctx) return;
+
+        const topics = ctx.helpTopics || [];
+        container.innerHTML = topics.map(topic =>
+            `<button class="ph-chat-suggestion" onclick="PayrollHelpSystem.askQuestion('${topic.replace(/'/g, "\\'")}')">${topic}</button>`
+        ).join('');
+    },
+
+    // Toggle chat panel
+    toggleChat() {
+        const panel = document.getElementById('ph-chat-panel');
+        if (panel) {
+            panel.classList.toggle('open');
+            this.state.chatOpen = panel.classList.contains('open');
+            if (this.state.chatOpen) {
+                this.updateSuggestions();
+                document.getElementById('ph-chat-input')?.focus();
+            }
+        }
+    },
+
+    // Enviar mensaje al asistente
+    async sendMessage() {
+        const input = document.getElementById('ph-chat-input');
+        const message = input?.value?.trim();
+        if (!message) return;
+
+        input.value = '';
+        this.addChatMessage(message, 'user');
+
+        // Mostrar "escribiendo..."
+        const typingId = this.addChatMessage('Analizando...', 'assistant', true);
+
+        try {
+            const response = await this.askOllama(message);
+            this.updateChatMessage(typingId, response);
+        } catch (error) {
+            this.updateChatMessage(typingId, 'Lo siento, no pude conectar con el asistente. Intenta de nuevo.');
+        }
+    },
+
+    // Preguntar directamente (desde sugerencias)
+    async askQuestion(question) {
+        const input = document.getElementById('ph-chat-input');
+        if (input) input.value = question;
+        await this.sendMessage();
+    },
+
+    // Agregar mensaje al chat
+    addChatMessage(content, type, isTyping = false) {
+        const body = document.getElementById('ph-chat-body');
+        const id = 'msg-' + Date.now();
+        const msg = document.createElement('div');
+        msg.className = `ph-chat-message ${type}`;
+        msg.id = id;
+        msg.innerHTML = isTyping ? '<em>Escribiendo...</em>' : content;
+        body.appendChild(msg);
+        body.scrollTop = body.scrollHeight;
+        return id;
+    },
+
+    // Actualizar mensaje existente
+    updateChatMessage(id, content) {
+        const msg = document.getElementById(id);
+        if (msg) {
+            msg.innerHTML = content.replace(/\n/g, '<br>');
+        }
+    },
+
+    // Consultar a Ollama
+    async askOllama(question) {
+        const context = this.contexts[this.state.currentContext];
+        const systemPrompt = `Eres un asistente experto en liquidacion de sueldos y nominas.
+El usuario esta en la pantalla: ${context?.title || 'General'}.
+${context?.description || ''}
+
+Responde de forma concisa y practica. Si detectas un error comun, sugiere la solucion.
+Usa ejemplos concretos cuando sea posible. Maximo 150 palabras.`;
+
+        try {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+            // Si no hay token, usar fallback directo
+            if (!token) {
+                console.log('[PayrollHelp] Sin token, usando fallback');
+                return this.getFallbackResponse(question);
+            }
+
+            const response = await fetch('/api/assistant/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    question: question,
+                    context: {
+                        module: 'payroll-liquidation',
+                        screen: this.state.currentContext,
+                        systemPrompt: systemPrompt
+                    }
+                })
+            });
+
+            // Si hay error HTTP, usar fallback
+            if (!response.ok) {
+                console.log('[PayrollHelp] Error HTTP', response.status, '- usando fallback');
+                return this.getFallbackResponse(question);
+            }
+
+            const data = await response.json();
+
+            // Verificar que hay respuesta válida
+            const answer = data.response || data.answer || data.message;
+            if (answer && answer.length > 10) {
+                return answer;
+            }
+
+            // Si la respuesta es muy corta o vacía, usar fallback
+            console.log('[PayrollHelp] Respuesta vacía de API, usando fallback');
+            return this.getFallbackResponse(question);
+        } catch (error) {
+            console.error('[PayrollHelp] Ollama error:', error);
+            // Fallback con respuestas predefinidas
+            return this.getFallbackResponse(question);
+        }
+    },
+
+    // Respuestas de fallback si Ollama no esta disponible
+    getFallbackResponse(question) {
+        const q = question.toLowerCase();
+
+        // Fórmulas y cálculos
+        if (q.includes('formula') || q.includes('calcul') || q.includes('creo una') || q.includes('crear una')) {
+            return `<strong>Crear Fórmulas de Cálculo</strong>
+
+Para crear una fórmula, use estas variables disponibles:
+
+<strong>Variables de Sueldo:</strong>
+• <code>{baseSalary}</code> - Sueldo básico mensual
+• <code>{dailySalary}</code> - Sueldo diario
+• <code>{hourlySalary}</code> - Sueldo por hora
+
+<strong>Variables de Tiempo:</strong>
+• <code>{workedDays}</code> - Días trabajados
+• <code>{workedHours}</code> - Horas trabajadas
+• <code>{overtime50Hours}</code> - Horas extras al 50%
+• <code>{overtime100Hours}</code> - Horas extras al 100%
+
+<strong>Ejemplos prácticos:</strong>
+• Jubilación 11%: <code>{baseSalary} * 0.11</code>
+• Presentismo 8.33%: <code>{baseSalary} * 0.0833</code>
+• Horas extras: <code>{hourlySalary} * {overtime50Hours} * 1.5</code>
+
+Ingrese la fórmula en el campo "Fórmula" al crear/editar un concepto.`;
+        }
+
+        // Entidades
+        if (q.includes('entidad') || q.includes('destino') || q.includes('recaudator')) {
+            return `<strong>Entidades de Destino</strong>
+
+Son las organizaciones que reciben los aportes y contribuciones:
+
+<strong>Tipos comunes:</strong>
+• <strong>AFIP</strong> - Jubilación, Obra Social, PAMI
+• <strong>Obras Sociales</strong> - OSECAC, OSPACA, etc.
+• <strong>Sindicatos</strong> - UOCRA, UOM, Comercio
+• <strong>ART</strong> - Aseguradoras de riesgos
+
+<strong>¿Cómo crearlas?</strong>
+1. Ir a "Entidades de Destino"
+2. Primero crear una Categoría (Ej: "Obras Sociales")
+3. Luego crear la Entidad dentro de esa categoría
+4. Asignar la entidad al concepto correspondiente
+
+<strong>Beneficio:</strong> Los reportes de consolidación agrupan automáticamente los montos por entidad.`;
+        }
+
+        // Plantillas
+        if (q.includes('plantilla') || q.includes('template')) {
+            return `<strong>Plantillas de Liquidación</strong>
+
+Una plantilla agrupa todos los conceptos que aplican a un tipo de empleado:
+
+<strong>Pasos para crear una plantilla:</strong>
+1. Click en "Nueva Plantilla"
+2. Asignar código único (ej: COMERCIO-2025)
+3. Agregar conceptos (haberes y deducciones)
+4. Configurar fórmulas o valores fijos
+5. Asignar entidades de destino a cada concepto
+
+<strong>Conceptos típicos:</strong>
+• <strong>Haberes:</strong> Sueldo básico, Presentismo, Antigüedad
+• <strong>Deducciones:</strong> Jubilación 11%, Obra Social 3%, PAMI 3%
+
+<strong>Tip:</strong> Puede clonar plantillas existentes y modificarlas.`;
+        }
+
+        // Concepto
+        if (q.includes('concepto') || q.includes('haber') || q.includes('deduccion')) {
+            return `<strong>Conceptos de Liquidación</strong>
+
+Son las líneas que aparecen en el recibo de sueldo:
+
+<strong>Tipos:</strong>
+• <strong>Haber:</strong> Suman al bruto (Sueldo, Presentismo, Extras)
+• <strong>Deducción:</strong> Restan del bruto (Jubilación, OS, Sindicato)
+• <strong>Patronal:</strong> No afectan el neto, van a cargas sociales
+
+<strong>Campos importantes:</strong>
+• <strong>Nombre:</strong> Lo que aparece en el recibo
+• <strong>Fórmula:</strong> Cálculo automático
+• <strong>Entidad:</strong> A quién va el aporte
+
+<strong>Ejemplo Jubilación:</strong>
+Nombre: "Aporte Jubilatorio"
+Tipo: Deducción
+Fórmula: {baseSalary} * 0.11
+Entidad: AFIP`;
+        }
+
+        // Proceso de liquidación
+        if (q.includes('proceso') || q.includes('liquidar') || q.includes('pasos')) {
+            return `<strong>Proceso de Liquidación (5 pasos)</strong>
+
+1. <strong>VALIDAR</strong> - Verifica datos de empleados y plantillas
+2. <strong>CALCULAR</strong> - Ejecuta fórmulas y genera montos
+3. <strong>REVISAR</strong> - Muestra alertas y anomalías
+4. <strong>APROBAR</strong> - Autorización para proceder al pago
+5. <strong>PAGAR</strong> - Genera archivos bancarios y recibos
+
+<strong>Requisitos previos:</strong>
+• Empleados con plantilla asignada
+• Plantillas con conceptos configurados
+• Entidades de destino creadas
+
+<strong>Tip:</strong> Use "Auditar Configuración" para verificar que todo esté listo.`;
+        }
+
+        // Errores
+        if (q.includes('error') || q.includes('problema') || q.includes('no funciona')) {
+            return `<strong>Errores Comunes y Soluciones</strong>
+
+• <strong>"Sin plantilla"</strong>
+  → Asigne una plantilla al empleado en su perfil
+
+• <strong>"Fórmula inválida"</strong>
+  → Revise variables y paréntesis balanceados
+
+• <strong>"Sin entidad"</strong>
+  → Asigne entidad de destino al concepto
+
+• <strong>"Cálculo en 0"</strong>
+  → Verifique que la variable tenga valor (ej: baseSalary)
+
+• <strong>"Empleado con errores"</strong>
+  → Revisar datos faltantes en perfil del empleado
+
+<strong>¿Necesita ayuda específica?</strong> Describa el error exacto que ve.`;
+        }
+
+        // Respuesta genérica mejorada
+        return `<strong>Asistente de Liquidación de Sueldos</strong>
+
+Puedo ayudarte con:
+
+• <strong>Fórmulas:</strong> Crear cálculos automáticos
+• <strong>Plantillas:</strong> Configurar estructuras de liquidación
+• <strong>Conceptos:</strong> Haberes, deducciones, patronales
+• <strong>Entidades:</strong> AFIP, Obras Sociales, Sindicatos
+• <strong>Proceso:</strong> Los 5 pasos de liquidación
+• <strong>Errores:</strong> Resolver problemas comunes
+
+<strong>Ejemplos de preguntas:</strong>
+• "¿Cómo creo una fórmula de jubilación?"
+• "¿Qué es una entidad de destino?"
+• "¿Cómo configuro una plantilla?"
+
+¿En qué puedo ayudarte?`;
+    },
+
+    // Mostrar banner de contexto en la vista
+    showContextBanner(contextKey = null) {
+        const ctx = this.contexts[contextKey || this.state.currentContext];
+        if (!ctx) return '';
+
+        // Generar tips adicionales si existen
+        const tipsHtml = ctx.tips && ctx.tips.length > 0 ? `
+            <div class="ph-tips-list" style="margin-top: 8px; font-size: 12px; color: #94a3b8;">
+                ${ctx.tips.slice(0, 2).map(tip => `<span style="margin-right: 12px;">💡 ${tip}</span>`).join('')}
+            </div>
+        ` : '';
+
+        return `
+            <div class="ph-context-banner">
+                <div class="ph-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                </div>
+                <div class="ph-content">
+                    <h4>${ctx.title}</h4>
+                    <p>${ctx.description}</p>
+                    ${tipsHtml}
+                </div>
+                <button class="ph-close" onclick="this.parentElement.remove()" title="Cerrar">×</button>
+            </div>
+        `;
+    },
+
+    // Mostrar ayuda de campo
+    showFieldHelp(element, helpKey) {
+        const [context, field] = helpKey.split('.');
+        const ctx = this.contexts[context];
+        const help = ctx?.fieldHelp?.[field];
+
+        if (!help) return;
+
+        this.showBubble(element, field.replace(/_/g, ' '), help);
+    },
+
+    // Mostrar burbuja de ayuda
+    showBubble(anchor, title, content, duration = 5000) {
+        // Remover burbuja anterior
+        document.querySelector('.ph-bubble')?.remove();
+
+        const rect = anchor.getBoundingClientRect();
+        const bubble = document.createElement('div');
+        bubble.className = 'ph-bubble';
+        bubble.innerHTML = `
+            <button class="ph-bubble-close" onclick="this.parentElement.remove()">×</button>
+            <div class="ph-bubble-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                ${title}
+            </div>
+            <div class="ph-bubble-content">${content}</div>
+        `;
+
+        bubble.style.top = (rect.top - 80) + 'px';
+        bubble.style.left = rect.left + 'px';
+
+        document.body.appendChild(bubble);
+
+        if (duration > 0) {
+            setTimeout(() => bubble.remove(), duration);
+        }
+    },
+
+    // Validar formulario antes de guardar
+    validateForm(formId, contextKey) {
+        const ctx = this.contexts[contextKey];
+        const validations = ctx?.validations || [];
+        const form = document.getElementById(formId);
+        if (!form) return { valid: true, errors: [] };
+
+        const errors = [];
+        const formData = new FormData(form);
+
+        validations.forEach(v => {
+            const value = formData.get(v.field);
+
+            if (v.rule === 'required' && (!value || value.trim() === '')) {
+                errors.push({ field: v.field, message: v.message });
+            }
+
+            if (v.rule.startsWith('minLength:')) {
+                const min = parseInt(v.rule.split(':')[1]);
+                // Para conceptos, contar elementos
+                if (v.field === 'concepts') {
+                    const conceptCount = form.querySelectorAll('.pe-concept-row').length;
+                    if (conceptCount < min) {
+                        errors.push({ field: v.field, message: v.message });
+                    }
+                }
+            }
+        });
+
+        return { valid: errors.length === 0, errors };
+    },
+
+    // Mostrar errores de validacion
+    showValidationErrors(errors, container) {
+        if (!container) return;
+
+        // Remover errores anteriores
+        container.querySelectorAll('.ph-validation-alert').forEach(el => el.remove());
+
+        errors.forEach(err => {
+            const alert = document.createElement('div');
+            alert.className = 'ph-validation-alert error';
+            alert.innerHTML = `
+                <span class="ph-icon error">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                </span>
+                <span class="ph-message">${err.message}</span>
+            `;
+            container.appendChild(alert);
+        });
+    },
+
+    // Validar concepto en tiempo real
+    validateConcept(conceptData) {
+        const warnings = [];
+
+        if (!conceptData.entity_id) {
+            warnings.push({
+                type: 'warning',
+                message: 'Sin entidad de destino: Este concepto no aparecera en consolidaciones de aportes.'
+            });
+        }
+
+        if (!conceptData.formula && !conceptData.percentage) {
+            warnings.push({
+                type: 'info',
+                message: 'Sin formula: Debera ingresar el valor manualmente para cada empleado.'
+            });
+        }
+
+        if (conceptData.formula) {
+            const validation = FormulaEditor.validate(conceptData.formula);
+            if (!validation.valid) {
+                warnings.push({
+                    type: 'error',
+                    message: 'Formula invalida: ' + (validation.errors?.join(', ') || 'Revise la sintaxis')
+                });
+            }
+        }
+
+        return warnings;
+    },
+
+    // Mostrar warnings proactivos
+    showProactiveWarning(element, warnings) {
+        if (!element || warnings.length === 0) return;
+
+        // Remover warnings anteriores
+        element.parentElement?.querySelectorAll('.ph-validation-alert')?.forEach(el => el.remove());
+
+        warnings.forEach(w => {
+            const alert = document.createElement('div');
+            alert.className = `ph-validation-alert ${w.type}`;
+            alert.innerHTML = `
+                <span class="ph-icon ${w.type}">
+                    ${w.type === 'error' ? '⚠️' : w.type === 'warning' ? '💡' : 'ℹ️'}
+                </span>
+                <span class="ph-message">${w.message}</span>
+            `;
+            element.parentElement.appendChild(alert);
+        });
+    },
+
+    // Auditar datos existentes
+    async auditPayrollData() {
+        const issues = [];
+
+        try {
+            // 1. Verificar plantillas sin conceptos
+            const templates = await PayrollAPI.getTemplates('?include_concepts=true');
+            (templates.data || []).forEach(t => {
+                if (!t.concepts || t.concepts.length === 0) {
+                    issues.push({
+                        type: 'error',
+                        entity: 'Plantilla',
+                        id: t.id,
+                        name: t.template_name,
+                        message: 'No tiene conceptos configurados - no se podra liquidar',
+                        action: 'Editar plantilla y agregar conceptos'
+                    });
+                } else {
+                    // Verificar conceptos sin entidad
+                    const noEntity = t.concepts.filter(c => !c.entity_id);
+                    if (noEntity.length > 0) {
+                        issues.push({
+                            type: 'warning',
+                            entity: 'Plantilla',
+                            id: t.id,
+                            name: t.template_name,
+                            message: `${noEntity.length} concepto(s) sin entidad de destino`,
+                            action: 'Asignar entidades para consolidacion'
+                        });
+                    }
+
+                    // Verificar si hay al menos un haber
+                    const haberes = t.concepts.filter(c => c.concept_type?.flow_direction === 'earning' || c.concept_type_id === 1);
+                    if (haberes.length === 0) {
+                        issues.push({
+                            type: 'warning',
+                            entity: 'Plantilla',
+                            id: t.id,
+                            name: t.template_name,
+                            message: 'No tiene ningun concepto de tipo Haber',
+                            action: 'Agregar al menos un haber (sueldo basico, etc.)'
+                        });
+                    }
+
+                    // Verificar formulas invalidas
+                    t.concepts.forEach(c => {
+                        if (c.formula && typeof FormulaEditor !== 'undefined') {
+                            const validation = FormulaEditor.validate(c.formula);
+                            if (!validation.valid) {
+                                issues.push({
+                                    type: 'error',
+                                    entity: 'Concepto',
+                                    id: c.id,
+                                    name: c.concept_name,
+                                    message: `Formula invalida en plantilla "${t.template_name}"`,
+                                    action: 'Corregir formula: ' + (validation.errors?.join(', ') || 'revisar sintaxis')
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            // 2. Verificar categorias sin entidades
+            try {
+                const categories = await PayrollAPI.getEntityCategories();
+                const entities = await PayrollAPI.getEntities();
+                const entitiesData = entities.data || [];
+
+                (categories.data || []).forEach(cat => {
+                    const catEntities = entitiesData.filter(e => e.category_id === cat.id);
+                    if (catEntities.length === 0) {
+                        issues.push({
+                            type: 'info',
+                            entity: 'Categoria',
+                            id: cat.id,
+                            name: cat.category_name,
+                            message: 'No tiene entidades asignadas',
+                            action: 'Crear entidades para esta categoria o eliminarla'
+                        });
+                    }
+                });
+            } catch (e) {
+                console.log('[PayrollHelp] Could not audit entities');
+            }
+
+            // 3. Actualizar badge
+            const badge = document.querySelector('.ph-help-fab .ph-badge');
+            if (badge) {
+                const criticalCount = issues.filter(i => i.type === 'error' || i.type === 'warning').length;
+                badge.textContent = criticalCount;
+                badge.style.display = criticalCount > 0 ? 'flex' : 'none';
+            }
+
+            this.state.validationErrors = issues;
+            console.log('[PayrollHelp] Auditoria completada:', issues.length, 'issues encontrados');
+            return issues;
+        } catch (error) {
+            console.error('[PayrollHelp] Audit error:', error);
+            return [];
+        }
+    },
+
+    // Mostrar resultados de auditoria en modal
+    showAuditReport() {
+        const issues = this.state.validationErrors || [];
+
+        const errorCount = issues.filter(i => i.type === 'error').length;
+        const warningCount = issues.filter(i => i.type === 'warning').length;
+        const infoCount = issues.filter(i => i.type === 'info').length;
+
+        const modal = document.createElement('div');
+        modal.className = 'pe-modal-overlay';
+        modal.innerHTML = `
+            <div class="pe-modal" style="max-width: 700px;">
+                <div class="pe-modal-header">
+                    <h3>🔍 Auditoria de Configuracion</h3>
+                    <button onclick="this.closest('.pe-modal-overlay').remove()" class="pe-modal-close">&times;</button>
+                </div>
+                <div class="pe-modal-body" style="max-height: 500px; overflow-y: auto;">
+                    <div style="display: flex; gap: 16px; margin-bottom: 20px;">
+                        <div style="background: rgba(239,68,68,0.15); padding: 12px 16px; border-radius: 8px; flex: 1; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #ef4444;">${errorCount}</div>
+                            <div style="font-size: 12px; color: #94a3b8;">Errores</div>
+                        </div>
+                        <div style="background: rgba(251,191,36,0.15); padding: 12px 16px; border-radius: 8px; flex: 1; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #fbbf24;">${warningCount}</div>
+                            <div style="font-size: 12px; color: #94a3b8;">Advertencias</div>
+                        </div>
+                        <div style="background: rgba(99,102,241,0.15); padding: 12px 16px; border-radius: 8px; flex: 1; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #6366f1;">${infoCount}</div>
+                            <div style="font-size: 12px; color: #94a3b8;">Sugerencias</div>
+                        </div>
+                    </div>
+
+                    ${issues.length === 0 ? `
+                        <div style="text-align: center; padding: 40px; color: #22c55e;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 12px;">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            <h4>Todo esta configurado correctamente</h4>
+                            <p style="color: #94a3b8;">No se encontraron problemas en la configuracion de liquidaciones.</p>
+                        </div>
+                    ` : issues.map(issue => `
+                        <div class="ph-validation-alert ${issue.type}" style="margin-bottom: 10px;">
+                            <span class="ph-icon ${issue.type}">
+                                ${issue.type === 'error' ? '❌' : issue.type === 'warning' ? '⚠️' : 'ℹ️'}
+                            </span>
+                            <div style="flex: 1;">
+                                <div style="color: #f1f5f9; font-weight: 500;">${issue.entity}: ${issue.name}</div>
+                                <div style="color: #94a3b8; font-size: 13px;">${issue.message}</div>
+                                ${issue.action ? `<div style="color: #a5b4fc; font-size: 12px; margin-top: 4px;">💡 ${issue.action}</div>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="pe-modal-footer" style="padding: 12px 16px; border-top: 1px solid #1e293b; display: flex; justify-content: space-between;">
+                    <button onclick="PayrollHelpSystem.auditPayrollData().then(() => PayrollHelpSystem.showAuditReport()); this.closest('.pe-modal-overlay').remove();" class="pe-btn pe-btn-outline">
+                        🔄 Re-auditar
+                    </button>
+                    <button onclick="this.closest('.pe-modal-overlay').remove()" class="pe-btn pe-btn-primary">Cerrar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    // Metodo para obtener sugerencias de AI basadas en issues
+    async getSuggestionsFromOllama() {
+        const issues = this.state.validationErrors || [];
+        if (issues.length === 0) return;
+
+        const prompt = `Tengo ${issues.length} problemas en mi configuracion de liquidacion de sueldos:
+${issues.map(i => `- ${i.entity} "${i.name}": ${i.message}`).join('\n')}
+
+Dame sugerencias breves y practicas para resolverlos.`;
+
+        try {
+            const response = await this.askOllama(prompt);
+            return response;
+        } catch (e) {
+            return null;
+        }
+    }
+};
+
+// Hacer global para acceso desde HTML
+window.PayrollHelpSystem = PayrollHelpSystem;
+
+// ============================================================================
 // STATE MANAGEMENT - Redux-like pattern
 // ============================================================================
 const PayrollState = {
@@ -716,8 +1906,14 @@ const PayrollEngine = {
         await ConceptTypeHelper.init();
         ConceptTypeHelper.injectStyles();
 
+        // Inicializar sistema de ayuda contextual con Ollama
+        PayrollHelpSystem.init();
+
         this.bindEvents();
         await this.showView('dashboard');
+
+        // Ejecutar auditoria inicial en background
+        setTimeout(() => PayrollHelpSystem.auditPayrollData(), 2000);
     },
 
     bindEvents() {
@@ -733,6 +1929,9 @@ const PayrollEngine = {
 
     async showView(view) {
         PayrollState.currentView = view;
+
+        // Actualizar contexto de ayuda
+        PayrollHelpSystem.setContext(view);
 
         // Update nav active state
         document.querySelectorAll('.pe-nav-item').forEach(btn => {
@@ -776,6 +1975,8 @@ const PayrollEngine = {
 
         content.innerHTML = `
             <div class="pe-dashboard">
+                <!-- Banner de ayuda contextual -->
+                ${PayrollHelpSystem.showContextBanner('dashboard')}
                 <!-- KPI Cards -->
                 <div class="pe-kpi-grid">
                     <div class="pe-kpi-card">
@@ -856,6 +2057,10 @@ const PayrollEngine = {
                             <div class="pe-action-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
                             <span>Exportar Reporte</span>
                         </button>
+                        <button onclick="PayrollHelpSystem.auditPayrollData().then(() => PayrollHelpSystem.showAuditReport())" class="pe-action-btn" style="border-color: rgba(99,102,241,0.3); background: rgba(99,102,241,0.05);">
+                            <div class="pe-action-icon" style="color: #6366f1;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg></div>
+                            <span>Auditar Configuracion</span>
+                        </button>
                     </div>
                 </div>
 
@@ -895,6 +2100,8 @@ const PayrollEngine = {
 
         content.innerHTML = `
             <div class="pe-process">
+                <!-- Banner de ayuda contextual -->
+                ${PayrollHelpSystem.showContextBanner('process')}
                 <div class="pe-workflow">
                     <div class="pe-workflow-steps">
                         ${steps.map(step => `
@@ -1038,6 +2245,8 @@ const PayrollEngine = {
 
         content.innerHTML = `
             <div class="pe-employees">
+                <!-- Banner de ayuda contextual -->
+                ${PayrollHelpSystem.showContextBanner('employees')}
                 <div class="pe-toolbar">
                     <div class="pe-search-box">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -1630,6 +2839,8 @@ const PayrollEngine = {
 
         content.innerHTML = `
             <div class="pe-templates">
+                <!-- Banner de ayuda contextual -->
+                ${PayrollHelpSystem.showContextBanner('templates')}
                 <div class="pe-toolbar">
                     <h3>Plantillas de Liquidacion RRHH</h3>
                     <button onclick="PayrollEngine.showCreateTemplateModal()" class="pe-btn pe-btn-primary">
@@ -1806,6 +3017,50 @@ const PayrollEngine = {
     async saveTemplate() {
         const form = document.getElementById('pe-template-form');
         const formData = new FormData(form);
+
+        // ====== VALIDACIÓN PROACTIVA CON PAYROLLHELPSYSTEM ======
+        PayrollHelpSystem.setContext('templateCreate');
+
+        // Validar campos requeridos
+        const validation = PayrollHelpSystem.validateForm('pe-template-form', 'templateCreate');
+        if (!validation.valid) {
+            PayrollHelpSystem.showValidationErrors(validation.errors, form);
+            this.showNotification('Por favor complete los campos requeridos', 'warning');
+            return;
+        }
+
+        // Contar conceptos antes de continuar
+        const conceptRows = document.querySelectorAll('.pe-concept-row');
+        if (conceptRows.length === 0) {
+            this.showNotification('Agregue al menos un concepto a la plantilla', 'warning');
+            PayrollHelpSystem.showBubble(document.getElementById('pe-concepts-container'),
+                'Conceptos requeridos',
+                'Una plantilla necesita al menos un concepto (haber o deduccion) para poder liquidar sueldos.');
+            return;
+        }
+
+        // Validar conceptos y mostrar warnings proactivos
+        let conceptsWithoutEntity = 0;
+        let conceptsWithoutFormula = 0;
+        conceptRows.forEach((row, i) => {
+            const entityId = formData.get(`entity_id_${i}`);
+            const formula = formData.get(`concept_formula_${i}`);
+            if (!entityId) conceptsWithoutEntity++;
+            if (!formula) conceptsWithoutFormula++;
+        });
+
+        // Mostrar warnings informativos (no bloqueantes)
+        if (conceptsWithoutEntity > 0 || conceptsWithoutFormula > 0) {
+            const warnings = [];
+            if (conceptsWithoutEntity > 0) {
+                warnings.push(`${conceptsWithoutEntity} concepto(s) sin entidad de destino - no apareceran en consolidaciones`);
+            }
+            if (conceptsWithoutFormula > 0) {
+                warnings.push(`${conceptsWithoutFormula} concepto(s) sin formula - requeriran valores manuales`);
+            }
+            console.log('[PayrollHelp] Warnings:', warnings);
+        }
+        // ====== FIN VALIDACIÓN PROACTIVA ======
 
         const data = {
             template_code: formData.get('template_code'),
@@ -2166,6 +3421,8 @@ const PayrollEngine = {
 
         content.innerHTML = `
             <div class="pe-entities">
+                <!-- Banner de ayuda contextual -->
+                ${PayrollHelpSystem.showContextBanner('entities')}
                 <!-- Tabs para Categorías / Entidades -->
                 <div class="pe-entities-tabs">
                     <button class="pe-tab ${this.entitiesViewTab === 'categories' ? 'active' : ''}"
@@ -2451,6 +3708,26 @@ const PayrollEngine = {
         const formData = new FormData(form);
         const id = formData.get('id');
 
+        // ====== VALIDACIÓN PROACTIVA ======
+        // Validar campos requeridos basicos
+        const code = formData.get('category_code');
+        const name = formData.get('category_name');
+        const flowDir = formData.get('flow_direction');
+
+        if (!code || !name) {
+            this.showNotification('Codigo y nombre son requeridos', 'warning');
+            return;
+        }
+
+        if (!flowDir) {
+            this.showNotification('Seleccione un tipo de flujo (Deduccion, Haber o Neutro)', 'warning');
+            PayrollHelpSystem.showBubble(form.querySelector('[name="flow_direction"]'),
+                'Tipo de flujo',
+                'El flujo determina como afecta al calculo: Deduccion (resta del neto), Haber (suma), Neutro (informativo).');
+            return;
+        }
+        // ====== FIN VALIDACIÓN ======
+
         const data = {
             category_code: formData.get('category_code'),
             category_name: formData.get('category_name'),
@@ -2644,6 +3921,27 @@ const PayrollEngine = {
         const form = document.getElementById('pe-entity-form');
         const formData = new FormData(form);
         const id = formData.get('entity_id');
+
+        // ====== VALIDACIÓN PROACTIVA ======
+        PayrollHelpSystem.setContext('entityCreate');
+
+        // Validar campos requeridos
+        const validation = PayrollHelpSystem.validateForm('pe-entity-form', 'entityCreate');
+        if (!validation.valid) {
+            PayrollHelpSystem.showValidationErrors(validation.errors, form);
+            this.showNotification('Por favor complete los campos requeridos', 'warning');
+            return;
+        }
+
+        // Validar categoria
+        if (!formData.get('category_id')) {
+            this.showNotification('Seleccione una categoria para la entidad', 'warning');
+            PayrollHelpSystem.showBubble(form.querySelector('[name="category_id"]'),
+                'Categoria requerida',
+                'La categoria determina el tipo de entidad (Obra Social, Sindicato, Organismo Fiscal, etc.)');
+            return;
+        }
+        // ====== FIN VALIDACIÓN ======
 
         const data = {
             category_id: formData.get('category_id') || null,

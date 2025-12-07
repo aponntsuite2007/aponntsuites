@@ -492,6 +492,43 @@ class LegalJurisdictionService {
             ASIA: Array.from(ASIA_COUNTRIES)
         };
     }
+
+    /**
+     * Obtiene la moneda según el código de país
+     */
+    static getCurrencyForCountry(countryCode) {
+        const CURRENCY_BY_COUNTRY = {
+            // LATAM
+            'ARG': 'ARS', // Peso argentino
+            'BRA': 'BRL', // Real brasileño
+            'CHL': 'CLP', // Peso chileno
+            'COL': 'COP', // Peso colombiano
+            'MEX': 'MXN', // Peso mexicano
+            'PER': 'PEN', // Sol peruano
+            'URY': 'UYU', // Peso uruguayo
+            'ECU': 'USD', // Dólar (Ecuador usa USD)
+            'VEN': 'VES', // Bolívar venezolano
+            'BOL': 'BOB', // Boliviano
+            'PRY': 'PYG', // Guaraní paraguayo
+            // Europa
+            'ESP': 'EUR', // Euro
+            'DEU': 'EUR', // Euro
+            'FRA': 'EUR', // Euro
+            'ITA': 'EUR', // Euro
+            'PRT': 'EUR', // Euro
+            'GBR': 'GBP', // Libra esterlina
+            'CHE': 'CHF', // Franco suizo
+            // Norteamérica
+            'USA': 'USD', // Dólar estadounidense
+            'CAN': 'CAD', // Dólar canadiense
+            // Asia
+            'CHN': 'CNY', // Yuan chino
+            'JPN': 'JPY', // Yen japonés
+            'KOR': 'KRW', // Won surcoreano
+            'IND': 'INR', // Rupia india
+        };
+        return CURRENCY_BY_COUNTRY[countryCode] || null;
+    }
 }
 
 module.exports = LegalJurisdictionService;

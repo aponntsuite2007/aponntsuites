@@ -92,6 +92,49 @@ module.exports = (sequelize) => {
             defaultValue: false
         },
 
+        // =====================================================
+        // ALCANCE DE BÚSQUEDA (INTERNO/EXTERNO/AMBOS)
+        // =====================================================
+        search_scope: {
+            type: DataTypes.STRING(20),
+            defaultValue: 'external',
+            validate: {
+                isIn: [['internal', 'external', 'both']]
+            },
+            comment: 'internal=solo empleados, external=solo público, both=ambos'
+        },
+
+        // Matching interno automático
+        internal_matching_enabled: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true,
+            comment: 'Activar escaneo automático de candidatos internos'
+        },
+        internal_matching_criteria: {
+            type: DataTypes.JSONB,
+            defaultValue: {
+                match_skills: true,
+                match_experience: true,
+                match_certifications: true,
+                match_education: true,
+                min_match_score: 50
+            },
+            comment: 'Criterios de matching para candidatos internos'
+        },
+        internal_candidates_notified: {
+            type: DataTypes.JSONB,
+            defaultValue: [],
+            comment: 'Lista de user_ids ya notificados'
+        },
+        internal_matching_executed_at: {
+            type: DataTypes.DATE,
+            comment: 'Última vez que se ejecutó el matching'
+        },
+        internal_candidates_count: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+
         // Configuración
         max_applications: {
             type: DataTypes.INTEGER

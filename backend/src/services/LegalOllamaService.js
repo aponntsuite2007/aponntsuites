@@ -77,7 +77,7 @@ class LegalOllamaService {
      */
     static async analyzeRisk(caseData, employee360) {
         const prompt = `
-Eres un asistente legal especializado en derecho laboral argentino.
+Eres un asistente legal especializado en derecho laboral.
 Analiza el siguiente caso y proporciona una evaluacion de riesgo.
 
 CASO:
@@ -86,6 +86,7 @@ CASO:
 - Descripcion: ${caseData.description || 'No especificada'}
 - Monto reclamado: ${caseData.claimed_amount || 'No especificado'}
 - Etapa actual: ${caseData.current_stage}
+- Jurisdiccion: ${caseData.jurisdiction || 'No especificada'}
 
 HISTORIAL DEL EMPLEADO:
 - Antiguedad: ${this.calculateSeniority(employee360?.employment)}
@@ -96,7 +97,7 @@ HISTORIAL DEL EMPLEADO:
 
 Por favor proporciona:
 1. NIVEL DE RIESGO (bajo/medio/alto/muy_alto)
-2. EXPOSICION ECONOMICA ESTIMADA (rango en pesos)
+2. EXPOSICION ECONOMICA ESTIMADA (rango en moneda local)
 3. PROBABILIDAD DE EXITO (porcentaje para la empresa)
 4. PUNTOS FUERTES del caso para la empresa
 5. PUNTOS DEBILES o vulnerabilidades
@@ -330,11 +331,12 @@ Enfocate en documentos criticos para la defensa de la empresa.
      */
     static async calculateExposure(caseData, employee360) {
         const prompt = `
-Calcula la exposicion economica estimada para el siguiente caso laboral argentino.
+Calcula la exposicion economica estimada para el siguiente caso laboral.
 
 DATOS DEL CASO:
 - Tipo: ${caseData.case_type}
 - Monto reclamado: ${caseData.claimed_amount || 'No especificado'}
+- Jurisdiccion: ${caseData.jurisdiction || 'No especificada'}
 
 DATOS DEL EMPLEADO:
 - Antiguedad: ${this.calculateSeniority(employee360?.employment)}
@@ -342,18 +344,18 @@ DATOS DEL EMPLEADO:
 - Categoria: ${employee360?.employment?.salary_category || 'No especificada'}
 - Convenio: ${employee360?.employment?.labor_agreement || 'No especificado'}
 
-Considerando la legislacion laboral argentina (LCT, convenios colectivos), estima:
+Considerando la legislacion laboral aplicable a la jurisdiccion indicada, estima:
 
 1. INDEMNIZACION BASE (si corresponde)
-   - Preaviso
-   - Antiguedad (art. 245 LCT)
-   - SAC proporcional
+   - Preaviso segun legislacion local
+   - Antiguedad segun legislacion local
+   - Aguinaldo/gratificacion proporcional
    - Vacaciones proporcionales
 
 2. MULTAS POTENCIALES
-   - Art. 2 Ley 25.323 (empleo no registrado)
-   - Art. 15 Ley 24.013
-   - Otras multas aplicables
+   - Por empleo no registrado (si aplica)
+   - Por irregularidades documentales
+   - Otras multas aplicables en la jurisdiccion
 
 3. RANGO DE EXPOSICION
    - Minimo esperado
@@ -362,7 +364,7 @@ Considerando la legislacion laboral argentina (LCT, convenios colectivos), estim
 
 4. FACTORES QUE MODIFICAN LA EXPOSICION
 
-Responde con numeros estimados cuando sea posible.
+Responde con numeros estimados en moneda local cuando sea posible.
 `;
 
         const result = await this.query(prompt, { max_tokens: 1000 });

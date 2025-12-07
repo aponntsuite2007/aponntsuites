@@ -33,10 +33,13 @@ class AssistantService {
     this.maxTokens = parseInt(process.env.OLLAMA_MAX_TOKENS || '500');
     this.timeout = parseInt(process.env.OLLAMA_TIMEOUT || '30000');
 
-    // Instancias de otros servicios
-    // TODO: Inicializar cuando se necesiten (lazy loading)
-    // this.systemRegistry = new SystemRegistry(database);
-    // this.auditorEngine = new AuditorEngine(database);
+    // ✅ FIX: Inicializar SystemRegistry para acceso a metadata de módulos
+    try {
+      this.systemRegistry = new SystemRegistry(database);
+    } catch (e) {
+      console.warn('⚠️ SystemRegistry no disponible:', e.message);
+      this.systemRegistry = null;
+    }
 
     console.log('🤖 AssistantService inicializado');
     console.log(`   Ollama URL: ${this.ollamaBaseURL}`);
@@ -218,16 +221,38 @@ class AssistantService {
     };
 
     // Agregar información de módulos del SystemRegistry
-    if (userContext.module) {
-      const moduleInfo = this.systemRegistry.getModule(userContext.module);
-      if (moduleInfo) {
-        context.modules.push({
-          name: moduleInfo.name,
-          description: moduleInfo.description,
-          category: moduleInfo.category,
-          dependencies: moduleInfo.dependencies,
-          help: moduleInfo.help
-        });
+    if (userContext.module && this.systemRegistry) {
+      try {
+        const moduleInfo = this.systemRegistry.getModule(userContext.module);
+        if (moduleInfo) {
+          const moduleContext = {
+            name: moduleInfo.name,
+            description: moduleInfo.description,
+            category: moduleInfo.category,
+            dependencies: moduleInfo.dependencies,
+            help: moduleInfo.help
+          };
+
+          // ✅ NUEVO: Incluir información específica de payroll-liquidation
+          if (userContext.module === 'payroll-liquidation') {
+            // Incluir fórmulas disponibles
+            if (moduleInfo.formulas) {
+              moduleContext.formulas = moduleInfo.formulas;
+            }
+            // Incluir info de entidades
+            if (moduleInfo.entities) {
+              moduleContext.entities = moduleInfo.entities;
+            }
+            // Incluir workflow
+            if (moduleInfo.workflow) {
+              moduleContext.workflow = moduleInfo.workflow;
+            }
+          }
+
+          context.modules.push(moduleContext);
+        }
+      } catch (e) {
+        console.warn('⚠️ Error obteniendo módulo de registry:', e.message);
       }
     }
 

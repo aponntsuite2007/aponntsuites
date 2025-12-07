@@ -75,6 +75,11 @@ const TALENT_CONSTANTS = {
         'temporary': 'Temporal',
         'internship': 'Pasantía'
     },
+    SEARCH_SCOPES: {
+        external: { label: 'Solo Externa (Portal Público)', icon: '🌐', description: 'Visible solo en el portal público de empleos' },
+        internal: { label: 'Solo Interna (Empleados)', icon: '👥', description: 'Solo visible para empleados actuales, con matching automático' },
+        both: { label: 'Ambas (Externa + Interna)', icon: '🔄', description: 'Portal público + invitación a empleados con perfil compatible' }
+    },
     PUBLICATION_CHANNELS: [
         { id: 'portal', name: 'Portal Público', icon: '🌐', enabled: true },
         { id: 'internal', name: 'Promoción Interna', icon: '👥', enabled: true },
@@ -179,6 +184,13 @@ const TalentAPI = {
     // === CANDIDATOS PENDIENTES (para médico/legal) ===
     getPendingMedical: () => TalentAPI.request('/pending-medical'),
     getPendingLegal: () => TalentAPI.request('/pending-legal'),
+
+    // === MATCHING INTERNO ===
+    runInternalMatching: (id, options = {}) => TalentAPI.request(`/offers/${id}/run-internal-matching`, {
+        method: 'POST',
+        body: JSON.stringify(options)
+    }),
+    getInternalCandidates: (id, showAll = false) => TalentAPI.request(`/offers/${id}/internal-candidates?show_all=${showAll}`),
 
     // === AUXILIARES ===
     getDepartments: () => fetch('/api/v1/departments', {
@@ -855,9 +867,15 @@ const TalentEngine = {
                             <h1>💼 Talent Acquisition</h1>
                             <p>Sistema Integral de Reclutamiento y Selección</p>
                         </div>
-                        <button class="talent-btn talent-btn-primary" onclick="TalentEngine.showCreateOfferModal()">
-                            ➕ Nueva Oferta Laboral
-                        </button>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="talent-btn talent-btn-secondary" onclick="TalentHelp.showDetailedHelp('dashboard')"
+                                    title="Centro de Ayuda" style="padding: 10px 16px;">
+                                ❓ Ayuda
+                            </button>
+                            <button class="talent-btn talent-btn-primary" onclick="TalentEngine.showCreateOfferModal()">
+                                ➕ Nueva Oferta Laboral
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -865,22 +883,27 @@ const TalentEngine = {
                     <button class="talent-tab ${TalentState.currentView === 'dashboard' ? 'active' : ''}"
                             onclick="TalentEngine.switchView('dashboard')">
                         📊 Dashboard
+                        <span class="talent-help-icon" onclick="event.stopPropagation(); TalentHelp.showHelpBubble(this, 'dashboard')">?</span>
                     </button>
                     <button class="talent-tab ${TalentState.currentView === 'offers' ? 'active' : ''}"
                             onclick="TalentEngine.switchView('offers')">
                         📋 Ofertas Laborales
+                        <span class="talent-help-icon" onclick="event.stopPropagation(); TalentHelp.showHelpBubble(this, 'create_offer')">?</span>
                     </button>
                     <button class="talent-tab ${TalentState.currentView === 'applications' ? 'active' : ''}"
                             onclick="TalentEngine.switchView('applications')">
                         👥 Postulaciones
+                        <span class="talent-help-icon" onclick="event.stopPropagation(); TalentHelp.showHelpBubble(this, 'applications')">?</span>
                     </button>
                     <button class="talent-tab ${TalentState.currentView === 'pipeline' ? 'active' : ''}"
                             onclick="TalentEngine.switchView('pipeline')">
                         🔄 Pipeline
+                        <span class="talent-help-icon" onclick="event.stopPropagation(); TalentHelp.showHelpBubble(this, 'pipeline')">?</span>
                     </button>
                     <button class="talent-tab ${TalentState.currentView === 'interviews' ? 'active' : ''}"
                             onclick="TalentEngine.switchView('interviews')">
                         🗣️ Entrevistas
+                        <span class="talent-help-icon" onclick="event.stopPropagation(); TalentHelp.showHelpBubble(this, 'pipeline')">?</span>
                     </button>
                 </div>
 
@@ -1025,10 +1048,10 @@ const TalentEngine = {
                             <tr>
                                 <th>Puesto</th>
                                 <th>Departamento</th>
-                                <th>Ubicación</th>
+                                <th>Alcance</th>
                                 <th>Postulaciones</th>
+                                <th>Candidatos Int.</th>
                                 <th>Estado</th>
-                                <th>Publicada</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -1039,17 +1062,32 @@ const TalentEngine = {
                                         <strong style="color: #fff;">${offer.title}</strong>
                                         <div style="font-size: 12px; color: rgba(255,255,255,0.5);">
                                             ${TALENT_CONSTANTS.JOB_TYPES[offer.job_type] || offer.job_type}
+                                            ${offer.location ? ` • ${offer.location}` : ''}
                                         </div>
                                     </td>
                                     <td>${offer.department_name || '-'}</td>
-                                    <td>${offer.location || '-'}</td>
+                                    <td>
+                                        ${TalentEngine.getSearchScopeBadge(offer.search_scope)}
+                                    </td>
                                     <td>
                                         <span style="font-size: 20px; font-weight: 600; color: #ff6b9d;">
                                             ${offer.applications_count || 0}
                                         </span>
                                     </td>
+                                    <td>
+                                        ${['internal', 'both'].includes(offer.search_scope) ? `
+                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                <span style="font-size: 16px; font-weight: 600; color: #17a2b8;">
+                                                    ${offer.internal_candidates_count || 0}
+                                                </span>
+                                                <button class="talent-btn talent-btn-secondary" style="padding: 3px 8px; font-size: 11px;"
+                                                        onclick="TalentEngine.showInternalCandidates(${offer.id})" title="Ver candidatos internos">
+                                                    👥
+                                                </button>
+                                            </div>
+                                        ` : '-'}
+                                    </td>
                                     <td>${TalentUI.getOfferStatusBadge(offer.status)}</td>
-                                    <td>${TalentUI.formatDate(offer.posted_at)}</td>
                                     <td>
                                         <div style="display: flex; gap: 5px;">
                                             <button class="talent-btn talent-btn-secondary" style="padding: 6px 10px;"
@@ -1060,6 +1098,12 @@ const TalentEngine = {
                                                     onclick="TalentEngine.editOffer(${offer.id})" title="Editar">
                                                 ✏️
                                             </button>
+                                            ${['internal', 'both'].includes(offer.search_scope) && offer.status === 'active' ? `
+                                                <button class="talent-btn talent-btn-primary" style="padding: 6px 10px;"
+                                                        onclick="TalentEngine.runInternalMatching(${offer.id})" title="Re-escanear candidatos">
+                                                    🔄
+                                                </button>
+                                            ` : ''}
                                             ${offer.status === 'active' ? `
                                                 <button class="talent-btn talent-btn-warning" style="padding: 6px 10px;"
                                                         onclick="TalentEngine.pauseOffer(${offer.id})" title="Pausar">
@@ -1368,6 +1412,75 @@ const TalentEngine = {
                                 <input type="text" class="talent-input" name="location"
                                        placeholder="Ej: Buenos Aires / Remoto">
                             </div>
+                        </div>
+
+                        <!-- SELECTOR DE ALCANCE DE BÚSQUEDA -->
+                        <div class="talent-form-group" style="margin-top: 20px;">
+                            <label class="talent-form-label">
+                                🎯 Alcance de la Búsqueda <span>*</span>
+                                <span class="talent-help-icon" style="margin-left: 8px;"
+                                      onclick="event.stopPropagation(); TalentHelp.showHelpBubble(this, 'search_scope')"
+                                      title="Click para más información">?</span>
+                            </label>
+                            <p style="font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 15px;">
+                                Define si la oferta será visible para el público, solo empleados internos, o ambos.
+                            </p>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                                ${Object.entries(TALENT_CONSTANTS.SEARCH_SCOPES).map(([key, scope]) => `
+                                    <div class="talent-channel-card search-scope-card ${key === 'external' ? 'selected' : ''}"
+                                         onclick="TalentEngine.selectSearchScope(this, '${key}')"
+                                         data-scope="${key}">
+                                        <div class="talent-channel-icon">${scope.icon}</div>
+                                        <div class="talent-channel-name" style="font-size: 13px;">${scope.label}</div>
+                                        <p style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 8px;">
+                                            ${scope.description}
+                                        </p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <input type="hidden" name="search_scope" id="search-scope-input" value="external">
+                        </div>
+
+                        <!-- PANEL DE MATCHING INTERNO (visible si scope es internal o both) -->
+                        <div id="internal-matching-panel" class="talent-card" style="margin-top: 15px; display: none; border-color: #ff6b9d;">
+                            <div class="talent-card-header" style="padding-bottom: 10px; margin-bottom: 15px;">
+                                <div class="talent-card-title" style="font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                                    👥 Configuración de Búsqueda Interna
+                                    <span class="talent-help-icon"
+                                          onclick="event.stopPropagation(); TalentHelp.showHelpBubble(this, 'internal_matching')"
+                                          title="Click para más información">?</span>
+                                </div>
+                            </div>
+                            <p style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 15px;">
+                                El sistema escaneará automáticamente a los empleados actuales y enviará
+                                invitaciones a quienes tengan un perfil compatible basado en:
+                            </p>
+                            <div class="talent-doc-checklist" style="margin-bottom: 15px;">
+                                <div class="talent-doc-item">
+                                    <input type="checkbox" name="match_skills" checked>
+                                    <span>Skills y competencias</span>
+                                </div>
+                                <div class="talent-doc-item">
+                                    <input type="checkbox" name="match_experience" checked>
+                                    <span>Experiencia laboral previa</span>
+                                </div>
+                                <div class="talent-doc-item">
+                                    <input type="checkbox" name="match_certifications" checked>
+                                    <span>Certificaciones y capacitaciones</span>
+                                </div>
+                                <div class="talent-doc-item">
+                                    <input type="checkbox" name="match_education" checked>
+                                    <span>Formación académica</span>
+                                </div>
+                            </div>
+                            <div class="talent-form-group" style="margin-bottom: 0;">
+                                <label class="talent-form-label" style="font-size: 13px;">Puntaje mínimo de compatibilidad (%)</label>
+                                <input type="number" class="talent-input" name="min_match_score" value="50" min="0" max="100"
+                                       style="width: 100px;">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
                             <div class="talent-form-group">
                                 <label class="talent-form-label">Salario Mínimo</label>
                                 <input type="number" class="talent-input" name="salary_min" placeholder="150000">
@@ -1440,6 +1553,23 @@ const TalentEngine = {
         element.classList.toggle('selected');
     },
 
+    selectSearchScope(element, scope) {
+        // Deselect all scope cards
+        document.querySelectorAll('.search-scope-card').forEach(card => card.classList.remove('selected'));
+        // Select this one
+        element.classList.add('selected');
+        // Update hidden input
+        document.getElementById('search-scope-input').value = scope;
+
+        // Show/hide internal matching panel
+        const panel = document.getElementById('internal-matching-panel');
+        if (scope === 'internal' || scope === 'both') {
+            panel.style.display = 'block';
+        } else {
+            panel.style.display = 'none';
+        }
+    },
+
     async saveOfferDraft() {
         const form = document.getElementById('create-offer-form');
         const formData = new FormData(form);
@@ -1471,12 +1601,28 @@ const TalentEngine = {
         const formData = new FormData(form);
 
         // Get selected channels
-        const selectedChannels = Array.from(document.querySelectorAll('.talent-channel-card.selected'))
-            .map(el => el.dataset.channel);
+        const selectedChannels = Array.from(document.querySelectorAll('.talent-channel-card.selected:not(.search-scope-card)'))
+            .map(el => el.dataset.channel)
+            .filter(Boolean);
 
         // Get required docs
         const requiredDocs = Array.from(form.querySelectorAll('input[name="required_docs"]:checked'))
             .map(cb => cb.value);
+
+        // Get search scope
+        const searchScope = formData.get('search_scope') || 'external';
+
+        // Build internal matching criteria if applicable
+        let internalMatchingCriteria = null;
+        if (searchScope === 'internal' || searchScope === 'both') {
+            internalMatchingCriteria = {
+                match_skills: form.querySelector('input[name="match_skills"]')?.checked !== false,
+                match_experience: form.querySelector('input[name="match_experience"]')?.checked !== false,
+                match_certifications: form.querySelector('input[name="match_certifications"]')?.checked !== false,
+                match_education: form.querySelector('input[name="match_education"]')?.checked !== false,
+                min_match_score: parseInt(formData.get('min_match_score')) || 50
+            };
+        }
 
         const data = {
             title: formData.get('title'),
@@ -1489,6 +1635,10 @@ const TalentEngine = {
             requirements: formData.get('requirements'),
             required_documents: requiredDocs,
             publication_channels: selectedChannels,
+            // Campos de búsqueda interna
+            search_scope: searchScope,
+            internal_matching_enabled: searchScope !== 'external',
+            internal_matching_criteria: internalMatchingCriteria,
             status: 'active'
         };
 
@@ -1498,12 +1648,21 @@ const TalentEngine = {
         }
 
         try {
-            await TalentAPI.createOffer(data);
-            TalentUI.showToast('¡Oferta publicada exitosamente!', 'success');
+            const result = await TalentAPI.createOffer(data);
+
+            // Show message based on search scope
+            let message = '¡Oferta publicada exitosamente!';
+            if (searchScope === 'internal' || searchScope === 'both') {
+                // Publish and run matching
+                await TalentAPI.publishOffer(result.offer?.id || result.id, selectedChannels);
+                message = '¡Oferta publicada! Se están enviando invitaciones a candidatos internos compatibles.';
+            }
+
+            TalentUI.showToast(message, 'success');
             this.closeModal('create-offer-modal');
             this.loadViewData();
         } catch (error) {
-            TalentUI.showToast('Error publicando oferta', 'error');
+            TalentUI.showToast('Error publicando oferta: ' + error.message, 'error');
         }
     },
 
@@ -1924,6 +2083,155 @@ const TalentEngine = {
         if (modal) modal.remove();
     },
 
+    // Get search scope badge
+    getSearchScopeBadge(scope) {
+        const scopes = {
+            external: { label: 'Externa', color: '#17a2b8', icon: '🌐' },
+            internal: { label: 'Interna', color: '#6f42c1', icon: '👥' },
+            both: { label: 'Ambas', color: '#20c997', icon: '🔄' }
+        };
+        const config = scopes[scope] || scopes.external;
+        return `<span class="talent-badge" style="background: ${config.color}20; color: ${config.color}; border: 1px solid ${config.color}40;">
+            ${config.icon} ${config.label}
+        </span>`;
+    },
+
+    // Show internal candidates modal
+    async showInternalCandidates(offerId) {
+        try {
+            const result = await TalentAPI.getInternalCandidates(offerId, true);
+
+            const modal = document.createElement('div');
+            modal.className = 'talent-modal-overlay';
+            modal.id = 'internal-candidates-modal';
+
+            modal.innerHTML = `
+                <div class="talent-modal" style="max-width: 800px;">
+                    <div class="talent-modal-header" style="background: linear-gradient(90deg, #6f42c1 0%, #17a2b8 100%);">
+                        <h3>👥 Candidatos Internos</h3>
+                        <button class="talent-modal-close" onclick="TalentEngine.closeModal('internal-candidates-modal')">&times;</button>
+                    </div>
+                    <div class="talent-modal-body">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                            <div>
+                                <p style="margin: 0; color: rgba(255,255,255,0.7);">
+                                    Total: <strong>${result.total}</strong> candidatos |
+                                    Notificados: <strong>${result.alreadyNotified}</strong> |
+                                    Pendientes: <strong>${result.pendingNotification}</strong>
+                                </p>
+                                ${result.lastExecutedAt ? `
+                                    <p style="margin: 5px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        Último escaneo: ${TalentUI.formatDateTime(result.lastExecutedAt)}
+                                    </p>
+                                ` : ''}
+                            </div>
+                            <button class="talent-btn talent-btn-primary" onclick="TalentEngine.runInternalMatching(${offerId})">
+                                🔄 Re-escanear
+                            </button>
+                        </div>
+
+                        ${result.candidates?.length ? `
+                            <table class="talent-table">
+                                <thead>
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>Puesto Actual</th>
+                                        <th>Compatibilidad</th>
+                                        <th>Detalles</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${result.candidates.map(c => `
+                                        <tr>
+                                            <td>
+                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                    <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #6f42c1 0%, #17a2b8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; font-size: 12px;">
+                                                        ${c.name?.split(' ').map(n => n[0]).slice(0, 2).join('') || '??'}
+                                                    </div>
+                                                    <div>
+                                                        <div style="font-weight: 600; color: #fff;">${c.name}</div>
+                                                        <div style="font-size: 11px; color: rgba(255,255,255,0.5);">${c.email}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>${c.current_position || '-'}</td>
+                                            <td>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                                        <div style="height: 100%; width: ${c.score}%; background: ${c.score >= 70 ? '#28a745' : c.score >= 50 ? '#ffc107' : '#dc3545'};"></div>
+                                                    </div>
+                                                    <span style="font-weight: 600; color: ${c.score >= 70 ? '#28a745' : c.score >= 50 ? '#ffc107' : '#dc3545'};">${c.score}%</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                ${c.matchDetails?.map(d => `
+                                                    <span style="display: inline-block; font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; margin: 2px;">
+                                                        ${d.category}: +${d.points}
+                                                    </span>
+                                                `).join('') || '-'}
+                                            </td>
+                                            <td>
+                                                ${c.already_notified ? `
+                                                    <span class="talent-badge" style="background: rgba(40,167,69,0.2); color: #28a745; border: 1px solid rgba(40,167,69,0.3);">
+                                                        ✓ Notificado
+                                                    </span>
+                                                ` : `
+                                                    <span class="talent-badge" style="background: rgba(255,193,7,0.2); color: #ffc107; border: 1px solid rgba(255,193,7,0.3);">
+                                                        ⏳ Pendiente
+                                                    </span>
+                                                `}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : `
+                            <div class="talent-empty-state" style="padding: 40px;">
+                                <div class="talent-empty-state-icon">👥</div>
+                                <p>No se encontraron candidatos internos compatibles</p>
+                                <p style="font-size: 12px; color: rgba(255,255,255,0.4);">
+                                    Ajuste los criterios de matching o las habilidades requeridas
+                                </p>
+                            </div>
+                        `}
+                    </div>
+                    <div class="talent-modal-footer">
+                        <button class="talent-btn talent-btn-secondary" onclick="TalentEngine.closeModal('internal-candidates-modal')">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        } catch (error) {
+            TalentUI.showToast('Error cargando candidatos internos', 'error');
+        }
+    },
+
+    // Run internal matching
+    async runInternalMatching(offerId) {
+        try {
+            TalentUI.showToast('Escaneando empleados...', 'info');
+            const result = await TalentAPI.runInternalMatching(offerId, { force: false });
+
+            TalentUI.showToast(
+                `${result.result?.candidatesNotified || 0} nuevos candidatos notificados`,
+                'success'
+            );
+
+            // Close and reopen modal if it's open
+            this.closeModal('internal-candidates-modal');
+            await this.showInternalCandidates(offerId);
+
+            // Refresh offers list
+            this.loadViewData();
+        } catch (error) {
+            TalentUI.showToast('Error ejecutando matching: ' + error.message, 'error');
+        }
+    },
+
     filterApplications() {
         const status = document.getElementById('filter-status')?.value || 'all';
         const rows = document.querySelectorAll('#applications-tbody tr');
@@ -2063,6 +2371,273 @@ const TalentEngine = {
         }
     }
 };
+
+// ============================================================================
+// CONTEXTUAL HELP SYSTEM - Powered by Ollama
+// ============================================================================
+
+// ============================================================================
+// TALENT HELP SYSTEM - Migrado a ModuleHelpSystem (SSOT)
+// ============================================================================
+
+// Registrar contenido de ayuda en el sistema unificado
+if (window.ModuleHelpSystem) {
+    ModuleHelpSystem.registerModule('job-postings', {
+        moduleName: 'Talent Acquisition',
+        moduleDescription: 'Sistema integral de reclutamiento y selección de personal',
+
+        contexts: {
+            dashboard: {
+                title: 'Dashboard de Reclutamiento',
+                description: 'Vista general del proceso de reclutamiento con métricas clave y acciones pendientes.',
+                tips: [
+                    'Las métricas se actualizan en tiempo real',
+                    'Los items en rojo requieren acción urgente',
+                    'Usa los filtros para ver por departamento o sucursal'
+                ],
+                warnings: [],
+                helpTopics: [
+                    '¿Cómo creo una nueva oferta laboral?',
+                    '¿Cómo veo los candidatos pendientes?',
+                    '¿Qué significan las métricas del dashboard?'
+                ],
+                fieldHelp: {
+                    ofertas_activas: 'Cantidad de búsquedas laborales actualmente publicadas',
+                    postulaciones: 'Total de candidatos que han aplicado a tus ofertas',
+                    entrevistas: 'Candidatos esperando ser entrevistados',
+                    contratados: 'Incorporaciones exitosas este mes'
+                }
+            },
+
+            search_scope: {
+                title: 'Alcance de Búsqueda',
+                description: 'Define si la oferta es pública, solo para empleados actuales, o ambas.',
+                tips: [
+                    'Para promociones internas, usa "Solo Interna"',
+                    'El matching automático analiza skills, experiencia y certificaciones',
+                    '"Ambas" maximiza el alcance de tu búsqueda'
+                ],
+                warnings: [
+                    'Las ofertas internas notifican automáticamente a empleados compatibles'
+                ],
+                helpTopics: [
+                    '¿Qué es el matching interno automático?',
+                    '¿Cómo funciona el portal público?',
+                    '¿Cuándo usar búsqueda interna vs externa?'
+                ],
+                fieldHelp: {
+                    external: 'Visible en el portal público - cualquier persona puede postularse',
+                    internal: 'Solo para empleados actuales - con invitaciones automáticas',
+                    both: 'Combina portal público + invitaciones a empleados compatibles'
+                }
+            },
+
+            internal_matching: {
+                title: 'Matching de Candidatos Internos',
+                description: 'El sistema analiza perfiles de empleados para encontrar candidatos ideales.',
+                tips: [
+                    'El matching usa un algoritmo de 100 puntos',
+                    'Skills aportan 30 pts, Experiencia 25 pts, Certificaciones 25 pts',
+                    'Puedes re-escanear cuando haya nuevos empleados'
+                ],
+                warnings: [
+                    'Solo empleados que superen el puntaje mínimo recibirán invitación'
+                ],
+                helpTopics: [
+                    '¿Cómo se calcula la compatibilidad?',
+                    '¿Puedo ajustar el puntaje mínimo?',
+                    '¿Cuándo debo re-escanear?'
+                ],
+                fieldHelp: {
+                    score_minimo: 'Umbral de compatibilidad (por defecto 50%). Solo empleados que superen este puntaje recibirán invitación.',
+                    criterios: 'Puedes activar/desactivar criterios específicos de matching',
+                    rescanear: 'Ejecuta el matching nuevamente para incluir nuevos empleados o actualizaciones de perfil'
+                }
+            },
+
+            pipeline: {
+                title: 'Pipeline de Reclutamiento',
+                description: 'Visualización Kanban del flujo de candidatos por etapas.',
+                tips: [
+                    'Click en un candidato para ver su ficha completa',
+                    'Las notificaciones son automáticas en cada cambio de estado',
+                    'El área médica recibe alertas cuando corresponde'
+                ],
+                warnings: [],
+                helpTopics: [
+                    '¿Cuáles son las etapas del pipeline?',
+                    '¿Cómo muevo un candidato de etapa?',
+                    '¿Se notifica al candidato de los cambios?'
+                ],
+                fieldHelp: {
+                    nuevos: 'Postulaciones recién recibidas pendientes de revisión',
+                    revision: 'Documentación siendo evaluada por RRHH',
+                    entrevista: 'Candidatos en proceso de entrevista',
+                    aprobado_rrhh: 'Validación administrativa completada',
+                    examen_medico: 'Pendiente o realizado el preocupacional',
+                    contratar: 'Candidatos listos para alta'
+                }
+            },
+
+            applications: {
+                title: 'Gestión de Postulaciones',
+                description: 'Revisa, evalúa y gestiona los candidatos que aplican a tus ofertas.',
+                tips: [
+                    'Usa los filtros para ver por estado o oferta',
+                    'Puedes agendar entrevistas directamente desde aquí',
+                    'La contratación genera alta automática como empleado'
+                ],
+                warnings: [
+                    'Al rechazar un candidato se envía notificación automática'
+                ],
+                helpTopics: [
+                    '¿Cómo cambio el estado de un candidato?',
+                    '¿Cómo agendo una entrevista?',
+                    '¿Qué pasa cuando contrato a alguien?'
+                ],
+                fieldHelp: {
+                    estado: 'Estado actual del candidato en el proceso de selección',
+                    acciones: 'Aprobar, rechazar, agendar entrevista o contratar',
+                    documentos: 'CV y documentación adjunta del candidato'
+                }
+            },
+
+            create_offer: {
+                title: 'Crear Oferta Laboral',
+                description: 'Completa los datos del puesto y configura cómo publicarla.',
+                tips: [
+                    'Define un rango salarial para atraer más candidatos',
+                    'Selecciona los documentos requeridos cuidadosamente',
+                    'Puedes guardar como borrador y publicar después'
+                ],
+                warnings: [
+                    'Una vez publicada, los cambios pueden afectar a candidatos existentes'
+                ],
+                helpTopics: [
+                    '¿Qué campos son obligatorios?',
+                    '¿Puedo editar una oferta después de publicarla?',
+                    '¿Cómo pauso o cierro una oferta?'
+                ],
+                fieldHelp: {
+                    titulo: 'Nombre del puesto (ej: "Desarrollador Full Stack Senior")',
+                    departamento: 'Área donde se ubicará el puesto',
+                    tipo_empleo: 'Full-time, Part-time, Contrato, Temporal, Pasantía',
+                    ubicacion: 'Ciudad, oficina o "Remoto"',
+                    salario: 'Rango salarial (mínimo - máximo)',
+                    documentos: 'CV es obligatorio, el resto es configurable'
+                }
+            }
+        },
+
+        fallbackResponses: {
+            'crear oferta': 'Para crear una oferta laboral, ve a la pestaña "Crear Oferta" y completa el formulario con título, departamento, requisitos y salario.',
+            'postulacion': 'Las postulaciones se gestionan desde la pestaña "Postulaciones". Puedes filtrar por estado o por oferta.',
+            'entrevista': 'Para agendar una entrevista, abre el detalle del candidato y usa el botón "Agendar Entrevista".',
+            'contratar': 'Para contratar, el candidato debe estar en estado "Apto Médico". Usa el botón "Contratar" para generar el alta automática.',
+            'matching': 'El matching interno analiza skills, experiencia, certificaciones y educación de los empleados contra los requisitos del puesto.',
+            'pipeline': 'El pipeline muestra el flujo de candidatos por etapas: Nuevo → Revisión → Entrevista → RRHH → Médico → Contratar'
+        }
+    });
+
+    console.log('✅ [TalentHelp] Contenido registrado en ModuleHelpSystem');
+} else {
+    console.warn('⚠️ [TalentHelp] ModuleHelpSystem no disponible, usando fallback');
+}
+
+// Wrapper de compatibilidad para llamadas existentes a TalentHelp
+const TalentHelp = {
+    // Contenido de respaldo si ModuleHelpSystem no está disponible
+    helpContent: {
+        dashboard: { title: 'Dashboard de Reclutamiento', brief: 'Vista general del proceso de reclutamiento.' },
+        search_scope: { title: 'Alcance de Búsqueda', brief: 'Define si la oferta es pública, interna o ambas.' },
+        internal_matching: { title: 'Matching Interno', brief: 'El sistema analiza perfiles de empleados.' },
+        pipeline: { title: 'Pipeline', brief: 'Visualización Kanban del flujo de candidatos.' },
+        applications: { title: 'Postulaciones', brief: 'Gestiona los candidatos que aplican.' },
+        create_offer: { title: 'Crear Oferta', brief: 'Completa los datos del puesto.' }
+    },
+
+    // Delega a ModuleHelpSystem si está disponible
+    showHelpBubble(element, contextKey) {
+        if (window.ModuleHelpSystem && ModuleHelpSystem.modules['job-postings']) {
+            const ctx = ModuleHelpSystem.modules['job-postings'].contexts[contextKey];
+            if (ctx) {
+                ModuleHelpSystem.showBubble(element, ctx.title, ctx.description);
+                return;
+            }
+        }
+        // Fallback
+        const help = this.helpContent[contextKey];
+        if (!help) return;
+
+        document.querySelectorAll('.talent-help-bubble').forEach(b => b.remove());
+        const bubble = document.createElement('div');
+        bubble.className = 'talent-help-bubble';
+        bubble.innerHTML = `
+            <div class="talent-help-bubble-header">
+                <span>💡 ${help.title}</span>
+                <button onclick="this.parentElement.parentElement.remove()">&times;</button>
+            </div>
+            <p>${help.brief}</p>
+        `;
+        const rect = element.getBoundingClientRect();
+        bubble.style.cssText = `position:fixed;top:${rect.bottom+10}px;left:${Math.min(rect.left, window.innerWidth-320)}px;z-index:100001;`;
+        document.body.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 8000);
+    },
+
+    // Muestra ayuda detallada
+    showDetailedHelp(contextKey) {
+        if (window.ModuleHelpSystem && ModuleHelpSystem.modules['job-postings']) {
+            ModuleHelpSystem.setContext(contextKey);
+            ModuleHelpSystem.toggleChat();
+            return;
+        }
+        // Fallback simple
+        alert(`Ayuda para: ${contextKey}\n\nPor favor, habilita ModuleHelpSystem para ver la ayuda completa.`);
+    },
+
+    // Pregunta al asistente
+    askQuestion(contextKey) {
+        if (window.ModuleHelpSystem) {
+            ModuleHelpSystem.setContext(contextKey);
+            ModuleHelpSystem.toggleChat();
+            return;
+        }
+        alert('El asistente de ayuda no está disponible.');
+    },
+
+    // Inyectar estilos mínimos (fallback)
+    injectHelpStyles() {
+        if (document.getElementById('talent-help-styles')) return;
+        const styles = document.createElement('style');
+        styles.id = 'talent-help-styles';
+        styles.textContent = `
+            .talent-help-icon { display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:rgba(255,107,157,0.2);border:1px solid rgba(255,107,157,0.4);border-radius:50%;cursor:pointer;font-size:12px;margin-left:8px;transition:all 0.3s; }
+            .talent-help-icon:hover { background:rgba(255,107,157,0.4);transform:scale(1.1); }
+            .talent-help-bubble { background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border:1px solid rgba(255,107,157,0.3);border-radius:12px;padding:15px;width:300px;box-shadow:0 10px 30px rgba(0,0,0,0.5);animation:fadeIn 0.3s ease; }
+            .talent-help-bubble-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:#ff6b9d;font-weight:600; }
+            .talent-help-bubble-header button { background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px; }
+            .talent-help-bubble p { color:rgba(255,255,255,0.8);font-size:13px;margin:0;line-height:1.5; }
+            @keyframes fadeIn { from{opacity:0;transform:translateY(-10px);} to{opacity:1;transform:translateY(0);} }
+        `;
+        document.head.appendChild(styles);
+    },
+
+    init() {
+        this.injectHelpStyles();
+        // Inicializar ModuleHelpSystem para este módulo
+        if (window.ModuleHelpSystem && ModuleHelpSystem.modules['job-postings']) {
+            ModuleHelpSystem.init('job-postings', { initialContext: 'dashboard' });
+        }
+        console.log('💡 [TalentHelp] Sistema de ayuda inicializado (delegando a ModuleHelpSystem)');
+    }
+};
+
+// Initialize help system on load
+TalentHelp.init();
+
+// Export to window
+window.TalentHelp = TalentHelp;
 
 // ============================================================================
 // INITIALIZATION

@@ -3485,8 +3485,7 @@
         "kiosks"
       ],
       "providesTo": [
-        "attendance",
-        "access-control"
+        "attendance"
       ],
       "_db_synced_at": "2025-11-02T21:24:57.338Z"
     },
@@ -3668,31 +3667,7 @@
       ],
       "bundledModules": [],
       "integratesWith": [
-        "access-control",
         "biometric-enterprise"
-      ],
-      "providesTo": [],
-      "_db_synced_at": "2025-11-02T21:24:57.338Z"
-    },
-    "access-control": {
-      "commercial": {
-        "basePrice": 2.5,
-        "isCore": false,
-        "isActive": true,
-        "minEmployees": null,
-        "maxEmployees": null,
-        "displayOrder": 65,
-        "rubro": "Sistema Base",
-        "availableIn": "company"
-      },
-      "features": [],
-      "requirements": [
-        "users"
-      ],
-      "bundledModules": [],
-      "integratesWith": [
-        "biometric-enterprise",
-        "visitors"
       ],
       "providesTo": [],
       "_db_synced_at": "2025-11-02T21:24:57.338Z"

@@ -5078,6 +5078,2912 @@
     })();
     </script>
 
+    <!-- =========================================================== -->
+    <!-- MEDICAL ENGINE - OCCUPATIONAL HEALTH MANAGEMENT SECTION -->
+    <!-- =========================================================== -->
+    <section class="section section-medical" id="medical" style="background: linear-gradient(180deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); overflow: hidden; position: relative;">
+        <!-- Animated Background -->
+        <div class="medical-bg-pattern"></div>
+        <div class="medical-bg-glow"></div>
+
+        <div class="container" style="position: relative; z-index: 2;">
+            <!-- Header con Impacto -->
+            <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="section-label" style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; padding: 0.5rem 1.5rem; border-radius: 25px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span class="medical-pulse-dot"></span> CUMPLIMIENTO NORMATIVO | MULTI-JURISDICCIÓN
+                </span>
+                <h2 class="section-title" style="color: white; margin-top: 1.5rem; font-size: 2.8rem; font-weight: 800;">
+                    Gestión Médica <span style="background: linear-gradient(135deg, #06b6d4, #0891b2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Ocupacional Integral</span>
+                </h2>
+                <p class="section-subtitle" style="color: #94a3b8; max-width: 850px; margin: 1rem auto 0; font-size: 1.1rem; line-height: 1.6;">
+                    Controla todo el ciclo de salud laboral: exámenes PRE-ocupacionales para nuevos ingresos, periódicos anuales y POST-egreso. Alertas automáticas de vencimientos, legajos médicos digitales y reportes regulatorios listos para auditoría.
+                </p>
+            </div>
+
+            <!-- KPIs de Impacto -->
+            <div class="medical-kpis">
+                <div class="medical-kpi">
+                    <div class="medical-kpi-value"><span class="medical-counter" data-target="100">0</span>%</div>
+                    <div class="medical-kpi-label">Cumplimiento Legal</div>
+                    <div class="medical-kpi-detail">Reportes regulatorios automáticos</div>
+                </div>
+                <div class="medical-kpi">
+                    <div class="medical-kpi-value"><span class="medical-counter" data-target="3">0</span></div>
+                    <div class="medical-kpi-label">Ciclos de Examen</div>
+                    <div class="medical-kpi-detail">PRE / Periódico / POST egreso</div>
+                </div>
+                <div class="medical-kpi">
+                    <div class="medical-kpi-value"><span class="medical-counter" data-target="30">0</span>d</div>
+                    <div class="medical-kpi-label">Alertas Anticipadas</div>
+                    <div class="medical-kpi-detail">Aviso antes de vencimientos</div>
+                </div>
+                <div class="medical-kpi">
+                    <div class="medical-kpi-value"><span class="medical-counter" data-target="24">0</span>/7</div>
+                    <div class="medical-kpi-label">Legajos Digitales</div>
+                    <div class="medical-kpi-detail">Acceso seguro 24/7</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Principal Medical -->
+            <div class="medical-dashboard">
+                <!-- Panel Izquierdo: Ciclo de Examenes -->
+                <div class="medical-panel medical-lifecycle">
+                    <div class="medical-panel-header">
+                        <span class="medical-panel-title">CICLO DE EXÁMENES</span>
+                        <span class="medical-preview-badge">OBLIGATORIO</span>
+                    </div>
+
+                    <!-- Ciclo Visual PRE/OCUPACIONAL/POST -->
+                    <div class="medical-cycle-visual">
+                        <div class="medical-cycle-step active">
+                            <div class="medical-cycle-icon">🔍</div>
+                            <div class="medical-cycle-info">
+                                <span class="medical-cycle-name">PRE-Ocupacional</span>
+                                <span class="medical-cycle-desc">Evaluación antes de contratar</span>
+                            </div>
+                            <div class="medical-cycle-status">INGRESO</div>
+                        </div>
+                        <div class="medical-cycle-connector"></div>
+                        <div class="medical-cycle-step">
+                            <div class="medical-cycle-icon">📋</div>
+                            <div class="medical-cycle-info">
+                                <span class="medical-cycle-name">Periódico Anual</span>
+                                <span class="medical-cycle-desc">Control anual/semestral</span>
+                            </div>
+                            <div class="medical-cycle-status">VIGENTE</div>
+                        </div>
+                        <div class="medical-cycle-connector"></div>
+                        <div class="medical-cycle-step">
+                            <div class="medical-cycle-icon">✅</div>
+                            <div class="medical-cycle-info">
+                                <span class="medical-cycle-name">POST-Egreso</span>
+                                <span class="medical-cycle-desc">Evaluación al desvincular</span>
+                            </div>
+                            <div class="medical-cycle-status">BAJA</div>
+                        </div>
+                    </div>
+
+                    <!-- Status Badges -->
+                    <div class="medical-status-grid">
+                        <div class="medical-status-item apt">
+                            <span class="medical-status-icon">✓</span>
+                            <span class="medical-status-label">APTO</span>
+                        </div>
+                        <div class="medical-status-item pending">
+                            <span class="medical-status-icon">⏳</span>
+                            <span class="medical-status-label">PENDIENTE</span>
+                        </div>
+                        <div class="medical-status-item not-apt">
+                            <span class="medical-status-icon">✗</span>
+                            <span class="medical-status-label">NO APTO</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Central: Dashboard Preview -->
+                <div class="medical-panel medical-preview">
+                    <div class="medical-panel-header">
+                        <span class="medical-panel-title">PANEL DE CONTROL MÉDICO</span>
+                        <span class="medical-live-badge"><span class="medical-live-dot"></span>EN VIVO</span>
+                    </div>
+
+                    <!-- Mini Dashboard -->
+                    <div class="medical-mini-dashboard">
+                        <div class="medical-mini-row">
+                            <div class="medical-mini-card">
+                                <span class="medical-mini-value">247</span>
+                                <span class="medical-mini-label">Empleados Activos</span>
+                            </div>
+                            <div class="medical-mini-card highlight">
+                                <span class="medical-mini-value">231</span>
+                                <span class="medical-mini-label">Aptos Médicos</span>
+                            </div>
+                        </div>
+                        <div class="medical-mini-row">
+                            <div class="medical-mini-card warning">
+                                <span class="medical-mini-value">12</span>
+                                <span class="medical-mini-label">Exámenes Pendientes</span>
+                            </div>
+                            <div class="medical-mini-card alert">
+                                <span class="medical-mini-value">4</span>
+                                <span class="medical-mini-label">Por Vencer</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alertas -->
+                    <div class="medical-alerts">
+                        <div class="medical-alert-header">
+                            <span>⚠️</span> Alertas de Vencimiento
+                        </div>
+                        <div class="medical-alert-item">
+                            <span class="medical-alert-name">García, María</span>
+                            <span class="medical-alert-days">7 días</span>
+                        </div>
+                        <div class="medical-alert-item">
+                            <span class="medical-alert-name">López, Juan</span>
+                            <span class="medical-alert-days">15 días</span>
+                        </div>
+                        <div class="medical-alert-item">
+                            <span class="medical-alert-name">Rodríguez, Ana</span>
+                            <span class="medical-alert-days">28 días</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Derecho: RRHH Integration -->
+                <div class="medical-panel medical-rrhh">
+                    <div class="medical-panel-header">
+                        <span class="medical-panel-title">INTEGRACIÓN RRHH</span>
+                        <span class="medical-cct-badge">🔗</span>
+                    </div>
+
+                    <!-- Candidatos Tab -->
+                    <div class="medical-candidates">
+                        <div class="medical-candidates-header">
+                            <span>👥</span> Candidatos en Proceso
+                        </div>
+                        <div class="medical-candidate-item">
+                            <div class="medical-candidate-avatar">PM</div>
+                            <div class="medical-candidate-info">
+                                <span class="medical-candidate-name">Pedro Martínez</span>
+                                <span class="medical-candidate-pos">Desarrollador Sr.</span>
+                            </div>
+                            <div class="medical-candidate-status pending">PRE Pend.</div>
+                        </div>
+                        <div class="medical-candidate-item">
+                            <div class="medical-candidate-avatar">LS</div>
+                            <div class="medical-candidate-info">
+                                <span class="medical-candidate-name">Laura Sánchez</span>
+                                <span class="medical-candidate-pos">Analista RRHH</span>
+                            </div>
+                            <div class="medical-candidate-status apt">APTO ✓</div>
+                        </div>
+                    </div>
+
+                    <!-- Digital Legajo -->
+                    <div class="medical-legajo">
+                        <div class="medical-legajo-header">
+                            <span>📁</span> Legajo Médico Digital
+                        </div>
+                        <div class="medical-legajo-items">
+                            <div class="medical-legajo-item">
+                                <span class="medical-legajo-icon">📄</span>
+                                <span>Certificados</span>
+                            </div>
+                            <div class="medical-legajo-item">
+                                <span class="medical-legajo-icon">🩺</span>
+                                <span>Historial Clínico</span>
+                            </div>
+                            <div class="medical-legajo-item">
+                                <span class="medical-legajo-icon">📊</span>
+                                <span>Laboratorios</span>
+                            </div>
+                            <div class="medical-legajo-item">
+                                <span class="medical-legajo-icon">🔒</span>
+                                <span>Auditoría</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="medical-actions">
+                        <button class="medical-action-btn primary">
+                            <span>📋</span> Agendar Examen
+                        </button>
+                        <button class="medical-action-btn secondary">
+                            <span>📊</span> Reporte Regulatorio
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6 Tabs del Modulo Medical -->
+            <div class="medical-tabs-preview">
+                <h3 style="color: white; text-align: center; margin-bottom: 1.5rem;">
+                    <span style="color: #06b6d4;">6 Módulos Especializados</span> para Gestión Completa
+                </h3>
+                <div class="medical-tabs-grid">
+                    <div class="medical-tab-card">
+                        <div class="medical-tab-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">📊</div>
+                        <span class="medical-tab-name">Vista General</span>
+                        <span class="medical-tab-desc">KPIs y Alertas</span>
+                    </div>
+                    <div class="medical-tab-card">
+                        <div class="medical-tab-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">👥</div>
+                        <span class="medical-tab-name">Candidatos</span>
+                        <span class="medical-tab-desc">Pipeline contratación</span>
+                    </div>
+                    <div class="medical-tab-card">
+                        <div class="medical-tab-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">🔍</div>
+                        <span class="medical-tab-name">PRE-Ocupacional</span>
+                        <span class="medical-tab-desc">Exámenes de ingreso</span>
+                    </div>
+                    <div class="medical-tab-card">
+                        <div class="medical-tab-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">📋</div>
+                        <span class="medical-tab-name">Ocupacional</span>
+                        <span class="medical-tab-desc">Control periódico</span>
+                    </div>
+                    <div class="medical-tab-card">
+                        <div class="medical-tab-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">✅</div>
+                        <span class="medical-tab-name">POST-Egreso</span>
+                        <span class="medical-tab-desc">Exámenes de baja</span>
+                    </div>
+                    <div class="medical-tab-card">
+                        <div class="medical-tab-icon" style="background: linear-gradient(135deg, #64748b, #475569);">📁</div>
+                        <span class="medical-tab-name">Legajos 360°</span>
+                        <span class="medical-tab-desc">Historial completo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compliance Badges Medical -->
+            <div class="medical-compliance">
+                <div class="medical-compliance-item">
+                    <span class="medical-compliance-icon">🌍</span>
+                    <span class="medical-compliance-name">Multi-País</span>
+                    <span class="medical-compliance-desc">Configurable por región</span>
+                </div>
+                <div class="medical-compliance-item">
+                    <span class="medical-compliance-icon">⚖️</span>
+                    <span class="medical-compliance-name">Compliance</span>
+                    <span class="medical-compliance-desc">Higiene y Seguridad</span>
+                </div>
+                <div class="medical-compliance-item">
+                    <span class="medical-compliance-icon">🔒</span>
+                    <span class="medical-compliance-name">Auditoría</span>
+                    <span class="medical-compliance-desc">Trazabilidad total</span>
+                </div>
+                <div class="medical-compliance-item">
+                    <span class="medical-compliance-icon">📊</span>
+                    <span class="medical-compliance-name">Reportes Auto</span>
+                    <span class="medical-compliance-desc">Export regulatorio</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Medical Section Styles -->
+    <style>
+        /* ========== MEDICAL SECTION - OCCUPATIONAL HEALTH ========== */
+        .section-medical {
+            padding: 5rem 2rem;
+            position: relative;
+        }
+        .medical-bg-pattern {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: medical-grid-move 25s linear infinite;
+        }
+        @keyframes medical-grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+        .medical-bg-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 900px; height: 900px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .medical-pulse-dot {
+            width: 8px; height: 8px;
+            background: #06b6d4;
+            border-radius: 50%;
+            animation: medical-pulse 2s ease-in-out infinite;
+        }
+        @keyframes medical-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        /* Medical KPIs */
+        .medical-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .medical-kpi {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .medical-kpi:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(6, 182, 212, 0.3);
+            transform: translateY(-3px);
+        }
+        .medical-kpi-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .medical-kpi-label {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+        .medical-kpi-detail {
+            color: #64748b;
+            font-size: 0.75rem;
+        }
+
+        /* Medical Dashboard */
+        .medical-dashboard {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .medical-panel {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+        }
+        .medical-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .medical-panel-title {
+            color: #94a3b8;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+        }
+        .medical-preview-badge, .medical-live-badge, .medical-cct-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.65rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .medical-preview-badge {
+            background: rgba(6, 182, 212, 0.2);
+            color: #22d3ee;
+        }
+        .medical-live-badge {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+        .medical-live-dot {
+            width: 6px; height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: medical-pulse 1.5s ease-in-out infinite;
+        }
+        .medical-cct-badge {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+        }
+
+        /* Cycle Visual */
+        .medical-cycle-visual {
+            margin-bottom: 1rem;
+        }
+        .medical-cycle-step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .medical-cycle-step.active {
+            border-color: rgba(6, 182, 212, 0.4);
+            background: rgba(6, 182, 212, 0.1);
+        }
+        .medical-cycle-icon {
+            font-size: 1.2rem;
+        }
+        .medical-cycle-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .medical-cycle-name {
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .medical-cycle-desc {
+            color: #64748b;
+            font-size: 0.65rem;
+        }
+        .medical-cycle-status {
+            font-size: 0.5rem;
+            font-weight: 700;
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            background: rgba(100, 116, 139, 0.3);
+            color: #94a3b8;
+        }
+        .medical-cycle-step.active .medical-cycle-status {
+            background: rgba(6, 182, 212, 0.3);
+            color: #22d3ee;
+        }
+        .medical-cycle-connector {
+            width: 2px;
+            height: 12px;
+            background: linear-gradient(180deg, rgba(6, 182, 212, 0.5), rgba(6, 182, 212, 0.2));
+            margin: 0.25rem 0 0.25rem 1.5rem;
+        }
+
+        /* Status Grid */
+        .medical-status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+        .medical-status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+        }
+        .medical-status-item.apt {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .medical-status-item.apt .medical-status-icon { color: #4ade80; }
+        .medical-status-item.pending {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .medical-status-item.pending .medical-status-icon { color: #fbbf24; }
+        .medical-status-item.not-apt {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .medical-status-item.not-apt .medical-status-icon { color: #f87171; }
+        .medical-status-icon {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .medical-status-label {
+            color: #94a3b8;
+            font-size: 0.6rem;
+            font-weight: 600;
+        }
+
+        /* Mini Dashboard */
+        .medical-mini-dashboard {
+            margin-bottom: 1rem;
+        }
+        .medical-mini-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .medical-mini-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .medical-mini-card.highlight {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .medical-mini-card.warning {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .medical-mini-card.alert {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .medical-mini-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+        }
+        .medical-mini-card.highlight .medical-mini-value { color: #4ade80; }
+        .medical-mini-card.warning .medical-mini-value { color: #fbbf24; }
+        .medical-mini-card.alert .medical-mini-value { color: #f87171; }
+        .medical-mini-label {
+            color: #94a3b8;
+            font-size: 0.65rem;
+        }
+
+        /* Alerts */
+        .medical-alerts {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem;
+        }
+        .medical-alert-header {
+            color: #f87171;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .medical-alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.35rem 0;
+            font-size: 0.7rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .medical-alert-item:last-child { border-bottom: none; }
+        .medical-alert-name { color: #cbd5e1; }
+        .medical-alert-days {
+            color: #fbbf24;
+            font-weight: 600;
+            font-size: 0.65rem;
+        }
+
+        /* Candidates */
+        .medical-candidates {
+            margin-bottom: 1rem;
+        }
+        .medical-candidates-header {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .medical-candidate-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        .medical-candidate-avatar {
+            width: 30px; height: 30px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 0.65rem;
+        }
+        .medical-candidate-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .medical-candidate-name {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .medical-candidate-pos {
+            color: #64748b;
+            font-size: 0.6rem;
+        }
+        .medical-candidate-status {
+            font-size: 0.5rem;
+            font-weight: 700;
+            padding: 0.15rem 0.4rem;
+            border-radius: 6px;
+        }
+        .medical-candidate-status.pending {
+            background: rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+        .medical-candidate-status.apt {
+            background: rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
+
+        /* Legajo */
+        .medical-legajo {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .medical-legajo-header {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .medical-legajo-items {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.35rem;
+        }
+        .medical-legajo-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.65rem;
+            color: #94a3b8;
+        }
+        .medical-legajo-icon {
+            font-size: 0.75rem;
+        }
+
+        /* Actions */
+        .medical-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .medical-action-btn {
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        .medical-action-btn.primary {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            color: white;
+        }
+        .medical-action-btn.secondary {
+            background: rgba(255,255,255,0.08);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .medical-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Tabs Preview Medical */
+        .medical-tabs-preview {
+            margin-bottom: 2rem;
+        }
+        .medical-tabs-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 1rem;
+        }
+        .medical-tab-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .medical-tab-card:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-3px);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+        .medical-tab-icon {
+            width: 45px; height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .medical-tab-name {
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .medical-tab-desc {
+            color: #64748b;
+            font-size: 0.65rem;
+        }
+
+        /* Compliance Badges Medical */
+        .medical-compliance {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        .medical-compliance-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+        }
+        .medical-compliance-icon {
+            font-size: 1.1rem;
+        }
+        .medical-compliance-name {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .medical-compliance-desc {
+            color: #22d3ee;
+            font-size: 0.7rem;
+        }
+
+        /* Responsive Medical */
+        @media (max-width: 1200px) {
+            .medical-dashboard {
+                grid-template-columns: 1fr;
+            }
+            .medical-kpis {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .medical-tabs-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .medical-kpis {
+                grid-template-columns: 1fr;
+            }
+            .medical-tabs-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .medical-compliance {
+                gap: 1rem;
+            }
+        }
+    </style>
+
+    <!-- Medical Counter Animation Script -->
+    <script>
+    (function() {
+        const medicalCounters = document.querySelectorAll('.medical-counter');
+        const observerOptions = { threshold: 0.5 };
+
+        const animateMedicalCounter = (counter) => {
+            const target = parseInt(counter.dataset.target);
+            const duration = 2000;
+            const step = target / (duration / 16);
+            let current = 0;
+
+            const update = () => {
+                current += step;
+                if (current < target) {
+                    counter.textContent = Math.floor(current);
+                    requestAnimationFrame(update);
+                } else {
+                    counter.textContent = target;
+                }
+            };
+            update();
+        };
+
+        const medicalObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateMedicalCounter(entry.target);
+                    medicalObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        medicalCounters.forEach(counter => medicalObserver.observe(counter));
+    })();
+    </script>
+
+    <!-- =========================================================== -->
+    <!-- LEGAL ENGINE - MULTI-JURISDICTION COMPLIANCE SECTION -->
+    <!-- =========================================================== -->
+    <section class="section section-legal" id="legal" style="background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%); overflow: hidden; position: relative;">
+        <!-- Animated Background -->
+        <div class="legal-bg-pattern"></div>
+        <div class="legal-bg-glow"></div>
+
+        <div class="container" style="position: relative; z-index: 2;">
+            <!-- Header con Impacto -->
+            <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="section-label" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; padding: 0.5rem 1.5rem; border-radius: 25px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span class="legal-pulse-dot"></span> <span data-translate="legal_badge">ANÁLISIS IA INTEGRADO | INMUTABILIDAD 48H PARA VALIDEZ LEGAL</span>
+                </span>
+                <h2 class="section-title" style="color: white; margin-top: 1.5rem; font-size: 2.8rem; font-weight: 800;">
+                    <span data-translate="legal_title_1">Gestión de Casos</span> <span style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;" data-translate="legal_title_2">Laborales y Judiciales</span>
+                </h2>
+                <p class="section-subtitle" style="color: #a5b4fc; max-width: 850px; margin: 1rem auto 0; font-size: 1.1rem; line-height: 1.6;" data-translate="legal_subtitle">
+                    Workflow completo de 6 etapas: desde reclamo prejudicial hasta sentencia firme. IA con Ollama para análisis de riesgo y cálculo de exposición económica. Ventana de inmutabilidad de 48h para validez probatoria en juicio.
+                </p>
+            </div>
+
+            <!-- KPIs de Impacto -->
+            <div class="legal-kpis">
+                <div class="legal-kpi">
+                    <div class="legal-kpi-value"><span class="legal-counter" data-target="6">0</span></div>
+                    <div class="legal-kpi-label" data-translate="legal_kpi1_label">Etapas del Workflow</div>
+                    <div class="legal-kpi-detail" data-translate="legal_kpi1_detail">Prejudicial → Sentencia</div>
+                </div>
+                <div class="legal-kpi">
+                    <div class="legal-kpi-value"><span class="legal-counter" data-target="48">0</span>h</div>
+                    <div class="legal-kpi-label" data-translate="legal_kpi2_label">Ventana Inmutable</div>
+                    <div class="legal-kpi-detail" data-translate="legal_kpi2_detail">Validez probatoria legal</div>
+                </div>
+                <div class="legal-kpi">
+                    <div class="legal-kpi-value">IA</div>
+                    <div class="legal-kpi-label" data-translate="legal_kpi3_label">Análisis de Riesgo</div>
+                    <div class="legal-kpi-detail" data-translate="legal_kpi3_detail">Predicción con Ollama</div>
+                </div>
+                <div class="legal-kpi">
+                    <div class="legal-kpi-value">$</div>
+                    <div class="legal-kpi-label" data-translate="legal_kpi4_label">Cálculo Exposición</div>
+                    <div class="legal-kpi-detail" data-translate="legal_kpi4_detail">Proyección económica</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Principal Legal -->
+            <div class="legal-dashboard">
+                <!-- Panel Izquierdo: Workflow 6 Stages -->
+                <div class="legal-panel legal-workflow">
+                    <div class="legal-panel-header">
+                        <span class="legal-panel-title" data-translate="legal_workflow_title">WORKFLOW DEL CASO</span>
+                        <span class="legal-preview-badge" data-translate="legal_workflow_badge">6 ETAPAS</span>
+                    </div>
+
+                    <!-- Workflow Visual -->
+                    <div class="legal-workflow-visual">
+                        <div class="legal-workflow-step active">
+                            <div class="legal-workflow-number">1</div>
+                            <div class="legal-workflow-info">
+                                <span class="legal-workflow-name" data-translate="legal_stage1_name">Prejudicial</span>
+                                <span class="legal-workflow-desc" data-translate="legal_stage1_desc">Carta documento inicial</span>
+                            </div>
+                        </div>
+                        <div class="legal-workflow-step">
+                            <div class="legal-workflow-number">2</div>
+                            <div class="legal-workflow-info">
+                                <span class="legal-workflow-name" data-translate="legal_stage2_name">Mediación</span>
+                                <span class="legal-workflow-desc" data-translate="legal_stage2_desc">Conciliación obligatoria</span>
+                            </div>
+                        </div>
+                        <div class="legal-workflow-step">
+                            <div class="legal-workflow-number">3</div>
+                            <div class="legal-workflow-info">
+                                <span class="legal-workflow-name" data-translate="legal_stage3_name">Judicial</span>
+                                <span class="legal-workflow-desc" data-translate="legal_stage3_desc">Demanda en tribunales</span>
+                            </div>
+                        </div>
+                        <div class="legal-workflow-step">
+                            <div class="legal-workflow-number">4</div>
+                            <div class="legal-workflow-info">
+                                <span class="legal-workflow-name" data-translate="legal_stage4_name">Apelación</span>
+                                <span class="legal-workflow-desc" data-translate="legal_stage4_desc">Cámara / instancia superior</span>
+                            </div>
+                        </div>
+                        <div class="legal-workflow-step">
+                            <div class="legal-workflow-number">5</div>
+                            <div class="legal-workflow-info">
+                                <span class="legal-workflow-name" data-translate="legal_stage5_name">Ejecución</span>
+                                <span class="legal-workflow-desc" data-translate="legal_stage5_desc">Cumplimiento sentencia</span>
+                            </div>
+                        </div>
+                        <div class="legal-workflow-step final">
+                            <div class="legal-workflow-number">✓</div>
+                            <div class="legal-workflow-info">
+                                <span class="legal-workflow-name" data-translate="legal_stage6_name">Cerrado</span>
+                                <span class="legal-workflow-desc" data-translate="legal_stage6_desc">Caso archivado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Central: AI Analysis Preview -->
+                <div class="legal-panel legal-preview">
+                    <div class="legal-panel-header">
+                        <span class="legal-panel-title" data-translate="legal_ai_title">ANÁLISIS CON IA</span>
+                        <span class="legal-live-badge"><span class="legal-live-dot"></span>OLLAMA</span>
+                    </div>
+
+                    <!-- Case Preview -->
+                    <div class="legal-case-preview">
+                        <div class="legal-case-header">
+                            <span class="legal-case-id">#LC-2024-0147</span>
+                            <span class="legal-case-status" data-translate="legal_status_judicial">Judicial</span>
+                        </div>
+                        <div class="legal-case-employee">
+                            <div class="legal-case-avatar">MG</div>
+                            <div class="legal-case-info">
+                                <span class="legal-case-name">Martínez, Gabriel</span>
+                                <span class="legal-case-type" data-translate="legal_case_dismissal">Despido sin causa</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Analysis -->
+                    <div class="legal-ai-analysis">
+                        <div class="legal-ai-header">
+                            <span>🤖</span> <span data-translate="legal_ai_risk_eval">Evaluación de Riesgo IA</span>
+                        </div>
+                        <div class="legal-ai-metrics">
+                            <div class="legal-ai-metric">
+                                <span class="legal-ai-label" data-translate="legal_prob_against">Prob. en Contra</span>
+                                <div class="legal-ai-bar">
+                                    <div class="legal-ai-fill high" style="width: 72%;"></div>
+                                </div>
+                                <span class="legal-ai-value">72%</span>
+                            </div>
+                            <div class="legal-ai-metric">
+                                <span class="legal-ai-label" data-translate="legal_doc_strength">Solidez Documental</span>
+                                <div class="legal-ai-bar">
+                                    <div class="legal-ai-fill medium" style="width: 58%;"></div>
+                                </div>
+                                <span class="legal-ai-value">58%</span>
+                            </div>
+                        </div>
+                        <div class="legal-ai-exposure">
+                            <span class="legal-exposure-label" data-translate="legal_exposure">Exposición Económica</span>
+                            <span class="legal-exposure-value">$847,500</span>
+                        </div>
+                    </div>
+
+                    <!-- 48h Immutability -->
+                    <div class="legal-immutability">
+                        <div class="legal-immutability-icon">🔒</div>
+                        <div class="legal-immutability-info">
+                            <span class="legal-immutability-title" data-translate="legal_immutable_active">Inmutabilidad 48h Activa</span>
+                            <span class="legal-immutability-desc" data-translate="legal_edit_window">Ventana edición: 23:45:12</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Derecho: Features -->
+                <div class="legal-panel legal-features">
+                    <div class="legal-panel-header">
+                        <span class="legal-panel-title" data-translate="legal_case_management">GESTIÓN DEL CASO</span>
+                        <span class="legal-cct-badge">⚖️</span>
+                    </div>
+
+                    <!-- Timeline Feature -->
+                    <div class="legal-feature">
+                        <div class="legal-feature-header">
+                            <span>📅</span> <span data-translate="legal_timeline">Cronograma del Caso</span>
+                        </div>
+                        <div class="legal-timeline-mini">
+                            <div class="legal-timeline-item">
+                                <span class="legal-timeline-date">15 Nov</span>
+                                <span class="legal-timeline-event" data-translate="legal_claim_filed">Reclamo presentado</span>
+                            </div>
+                            <div class="legal-timeline-item">
+                                <span class="legal-timeline-date">22 Nov</span>
+                                <span class="legal-timeline-event" data-translate="legal_mediation_hearing">Audiencia mediación</span>
+                            </div>
+                            <div class="legal-timeline-item active">
+                                <span class="legal-timeline-date">10 Dic</span>
+                                <span class="legal-timeline-event" data-translate="legal_court_hearing">Audiencia tribunal</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documents Feature -->
+                    <div class="legal-feature">
+                        <div class="legal-feature-header">
+                            <span>📄</span> <span data-translate="legal_documentation">Documentación</span>
+                        </div>
+                        <div class="legal-docs-grid">
+                            <div class="legal-doc-item">
+                                <span class="legal-doc-icon">📋</span>
+                                <span data-translate="legal_contracts">Contratos</span>
+                            </div>
+                            <div class="legal-doc-item">
+                                <span class="legal-doc-icon">📝</span>
+                                <span data-translate="legal_evidence">Pruebas</span>
+                            </div>
+                            <div class="legal-doc-item">
+                                <span class="legal-doc-icon">⚖️</span>
+                                <span data-translate="legal_briefs">Escritos</span>
+                            </div>
+                            <div class="legal-doc-item">
+                                <span class="legal-doc-icon">🔐</span>
+                                <span data-translate="legal_reserved">Reservados</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employee 360 Integration -->
+                    <div class="legal-feature integration">
+                        <div class="legal-feature-header">
+                            <span>🔗</span> <span data-translate="legal_emp360_link">Vínculo Employee 360</span>
+                        </div>
+                        <div class="legal-integration-desc" data-translate="legal_emp360_desc">
+                            Acceso completo al historial del empleado: sanciones, asistencia, y registros médicos para contexto del caso.
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="legal-actions">
+                        <button class="legal-action-btn primary">
+                            <span>🤖</span> <span data-translate="legal_ai_summary">Resumen IA del Caso</span>
+                        </button>
+                        <button class="legal-action-btn secondary">
+                            <span>📊</span> <span data-translate="legal_exposure_report">Reporte Exposición</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Features -->
+            <div class="legal-ai-features">
+                <h3 style="color: white; text-align: center; margin-bottom: 1.5rem;">
+                    <span style="color: #a78bfa;" data-translate="legal_ai_ollama">Inteligencia Artificial con Ollama</span> <span data-translate="legal_advanced_func">Funciones Avanzadas</span>
+                </h3>
+                <div class="legal-ai-grid">
+                    <div class="legal-ai-card">
+                        <div class="legal-ai-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">⚠️</div>
+                        <span class="legal-ai-name" data-translate="legal_risk_analysis">Análisis de Riesgo</span>
+                        <span class="legal-ai-desc" data-translate="legal_verdict_prob">Probabilidad de sentencia</span>
+                    </div>
+                    <div class="legal-ai-card">
+                        <div class="legal-ai-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">💰</div>
+                        <span class="legal-ai-name" data-translate="legal_exposure_calc">Cálculo Exposición</span>
+                        <span class="legal-ai-desc" data-translate="legal_econ_projection">Proyección económica</span>
+                    </div>
+                    <div class="legal-ai-card">
+                        <div class="legal-ai-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">📝</div>
+                        <span class="legal-ai-name" data-translate="legal_case_summary">Resumen del Caso</span>
+                        <span class="legal-ai-desc" data-translate="legal_auto_generated">Generado automático</span>
+                    </div>
+                    <div class="legal-ai-card">
+                        <div class="legal-ai-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">📄</div>
+                        <span class="legal-ai-name" data-translate="legal_suggest_docs">Sugerir Docs</span>
+                        <span class="legal-ai-desc" data-translate="legal_ai_recommendations">Recomendaciones IA</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compliance Badges Legal -->
+            <div class="legal-compliance">
+                <div class="legal-compliance-item">
+                    <span class="legal-compliance-icon">🔒</span>
+                    <span class="legal-compliance-name" data-translate="legal_48h_lock">Bloqueo 48h</span>
+                    <span class="legal-compliance-desc" data-translate="legal_immutable_records">Registros inmutables</span>
+                </div>
+                <div class="legal-compliance-item">
+                    <span class="legal-compliance-icon">📋</span>
+                    <span class="legal-compliance-name" data-translate="legal_audit">Auditoría</span>
+                    <span class="legal-compliance-desc" data-translate="legal_court_ready">Listo para juicio</span>
+                </div>
+                <div class="legal-compliance-item">
+                    <span class="legal-compliance-icon">🤖</span>
+                    <span class="legal-compliance-name" data-translate="legal_integrated_ai">IA Integrada</span>
+                    <span class="legal-compliance-desc" data-translate="legal_ollama_local">Ollama local/privado</span>
+                </div>
+                <div class="legal-compliance-item">
+                    <span class="legal-compliance-icon">🌎</span>
+                    <span class="legal-compliance-name" data-translate="legal_multi_jurisdiction">Multi-Jurisdicción</span>
+                    <span class="legal-compliance-desc" data-translate="legal_config_by_country">Configurable por país</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Legal Section Styles -->
+    <style>
+        /* ========== LEGAL SECTION - MULTI-JURISDICTION ========== */
+        .section-legal {
+            padding: 5rem 2rem;
+            position: relative;
+        }
+        .legal-bg-pattern {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: legal-grid-move 25s linear infinite;
+        }
+        @keyframes legal-grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+        .legal-bg-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 900px; height: 900px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .legal-pulse-dot {
+            width: 8px; height: 8px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            animation: legal-pulse 2s ease-in-out infinite;
+        }
+        @keyframes legal-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        /* Legal KPIs */
+        .legal-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .legal-kpi {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .legal-kpi:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-3px);
+        }
+        .legal-kpi-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .legal-kpi-label {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+        .legal-kpi-detail {
+            color: #818cf8;
+            font-size: 0.75rem;
+        }
+
+        /* Legal Dashboard */
+        .legal-dashboard {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .legal-panel {
+            background: rgba(30, 27, 75, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+        }
+        .legal-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .legal-panel-title {
+            color: #a5b4fc;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+        }
+        .legal-preview-badge, .legal-live-badge, .legal-cct-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.65rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .legal-preview-badge {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+        }
+        .legal-live-badge {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+        .legal-live-dot {
+            width: 6px; height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: legal-pulse 1.5s ease-in-out infinite;
+        }
+        .legal-cct-badge {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        /* Workflow Visual */
+        .legal-workflow-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .legal-workflow-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .legal-workflow-step.active {
+            border-color: rgba(139, 92, 246, 0.4);
+            background: rgba(139, 92, 246, 0.15);
+        }
+        .legal-workflow-step.final {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        .legal-workflow-number {
+            width: 22px; height: 22px;
+            background: rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #a78bfa;
+        }
+        .legal-workflow-step.active .legal-workflow-number {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+        .legal-workflow-step.final .legal-workflow-number {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+        }
+        .legal-workflow-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .legal-workflow-name {
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .legal-workflow-desc {
+            color: #818cf8;
+            font-size: 0.55rem;
+        }
+
+        /* Case Preview */
+        .legal-case-preview {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .legal-case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .legal-case-id {
+            color: #a5b4fc;
+            font-size: 0.7rem;
+            font-family: monospace;
+        }
+        .legal-case-status {
+            background: rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 0.15rem 0.4rem;
+            border-radius: 6px;
+        }
+        .legal-case-employee {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .legal-case-avatar {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 0.65rem;
+        }
+        .legal-case-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .legal-case-name {
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .legal-case-type {
+            color: #818cf8;
+            font-size: 0.65rem;
+        }
+
+        /* AI Analysis */
+        .legal-ai-analysis {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .legal-ai-header {
+            color: #a78bfa;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .legal-ai-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .legal-ai-metric {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .legal-ai-label {
+            color: #a5b4fc;
+            font-size: 0.6rem;
+            width: 90px;
+        }
+        .legal-ai-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .legal-ai-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+        .legal-ai-fill.high {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+        .legal-ai-fill.medium {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+        .legal-ai-value {
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            width: 35px;
+            text-align: right;
+        }
+        .legal-ai-exposure {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .legal-exposure-label {
+            color: #a5b4fc;
+            font-size: 0.7rem;
+        }
+        .legal-exposure-value {
+            color: #f87171;
+            font-size: 1rem;
+            font-weight: 800;
+            font-family: monospace;
+        }
+
+        /* Immutability */
+        .legal-immutability {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 10px;
+        }
+        .legal-immutability-icon {
+            font-size: 1.2rem;
+        }
+        .legal-immutability-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .legal-immutability-title {
+            color: #4ade80;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .legal-immutability-desc {
+            color: #86efac;
+            font-size: 0.6rem;
+        }
+
+        /* Features */
+        .legal-feature {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 0.6rem;
+            margin-bottom: 0.75rem;
+        }
+        .legal-feature.integration {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        .legal-feature-header {
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .legal-timeline-mini {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .legal-timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.6rem;
+            padding: 0.25rem 0;
+        }
+        .legal-timeline-item.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 6px;
+            padding: 0.25rem 0.5rem;
+            margin: 0 -0.5rem;
+        }
+        .legal-timeline-date {
+            color: #818cf8;
+            font-weight: 600;
+            width: 45px;
+        }
+        .legal-timeline-event {
+            color: #a5b4fc;
+        }
+        .legal-docs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.35rem;
+        }
+        .legal-doc-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.6rem;
+            color: #a5b4fc;
+        }
+        .legal-doc-icon {
+            font-size: 0.7rem;
+        }
+        .legal-integration-desc {
+            color: #a5b4fc;
+            font-size: 0.6rem;
+            line-height: 1.4;
+        }
+
+        /* Actions */
+        .legal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .legal-action-btn {
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        .legal-action-btn.primary {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+        .legal-action-btn.secondary {
+            background: rgba(255,255,255,0.08);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .legal-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        /* AI Features Grid */
+        .legal-ai-features {
+            margin-bottom: 2rem;
+        }
+        .legal-ai-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+        .legal-ai-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .legal-ai-card:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-3px);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+        .legal-ai-icon {
+            width: 45px; height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .legal-ai-name {
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .legal-ai-desc {
+            color: #818cf8;
+            font-size: 0.65rem;
+        }
+
+        /* Compliance Badges Legal */
+        .legal-compliance {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        .legal-compliance-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+        }
+        .legal-compliance-icon {
+            font-size: 1.1rem;
+        }
+        .legal-compliance-name {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .legal-compliance-desc {
+            color: #a78bfa;
+            font-size: 0.7rem;
+        }
+
+        /* Responsive Legal */
+        @media (max-width: 1200px) {
+            .legal-dashboard {
+                grid-template-columns: 1fr;
+            }
+            .legal-kpis {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .legal-ai-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .legal-kpis {
+                grid-template-columns: 1fr;
+            }
+            .legal-ai-grid {
+                grid-template-columns: 1fr;
+            }
+            .legal-compliance {
+                gap: 1rem;
+            }
+        }
+    </style>
+
+    <!-- Legal Counter Animation Script -->
+    <script>
+    (function() {
+        const legalCounters = document.querySelectorAll('.legal-counter');
+        const observerOptions = { threshold: 0.5 };
+
+        const animateLegalCounter = (counter) => {
+            const target = parseInt(counter.dataset.target);
+            const duration = 2000;
+            const step = target / (duration / 16);
+            let current = 0;
+
+            const update = () => {
+                current += step;
+                if (current < target) {
+                    counter.textContent = Math.floor(current);
+                    requestAnimationFrame(update);
+                } else {
+                    counter.textContent = target;
+                }
+            };
+            update();
+        };
+
+        const legalObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateLegalCounter(entry.target);
+                    legalObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        legalCounters.forEach(counter => legalObserver.observe(counter));
+    })();
+    </script>
+
+    <!-- =========================================================== -->
+    <!-- RISK INTELLIGENCE - LABOR RISK ANALYSIS SECTION -->
+    <!-- =========================================================== -->
+    <section class="section section-risk" id="risk-intelligence" style="background: linear-gradient(180deg, #1c1917 0%, #292524 50%, #1c1917 100%); overflow: hidden; position: relative;">
+        <!-- Animated Background -->
+        <div class="risk-bg-pattern"></div>
+        <div class="risk-bg-glow"></div>
+
+        <div class="container" style="position: relative; z-index: 2;">
+            <!-- Header -->
+            <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="section-label" style="background: linear-gradient(135deg, #f97316, #ea580c); color: white; padding: 0.5rem 1.5rem; border-radius: 25px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span class="risk-pulse-dot"></span> <span data-translate="risk_badge">ANÁLISIS EN TIEMPO REAL | DATOS SSOT</span>
+                </span>
+                <h2 class="section-title" style="color: white; margin-top: 1.5rem; font-size: 2.8rem; font-weight: 800;">
+                    Risk Intelligence <span style="background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Dashboard</span>
+                </h2>
+                <p class="section-subtitle" style="color: #a8a29e; max-width: 850px; margin: 1rem auto 0; font-size: 1.1rem; line-height: 1.6;" data-translate="risk_subtitle">
+                    Monitoreo de 5 índices de riesgo laboral calculados con datos reales: fatiga, accidentes, reclamos legales, rendimiento y rotación. Identifica empleados en riesgo antes de que se conviertan en problemas.
+                </p>
+            </div>
+
+            <!-- KPIs -->
+            <div class="risk-kpis">
+                <div class="risk-kpi">
+                    <div class="risk-kpi-value"><span class="risk-counter" data-target="5">0</span></div>
+                    <div class="risk-kpi-label" data-translate="risk_kpi1_label">Índices de Riesgo</div>
+                    <div class="risk-kpi-detail" data-translate="risk_kpi1_detail">Análisis multi-dimensional</div>
+                </div>
+                <div class="risk-kpi">
+                    <div class="risk-kpi-value">SSOT</div>
+                    <div class="risk-kpi-label" data-translate="risk_kpi2_label">Datos en Tiempo Real</div>
+                    <div class="risk-kpi-detail" data-translate="risk_kpi2_detail">Asistencia, sanciones, vacaciones</div>
+                </div>
+                <div class="risk-kpi">
+                    <div class="risk-kpi-value"><span class="risk-counter" data-target="100">0</span>%</div>
+                    <div class="risk-kpi-label" data-translate="risk_kpi3_label">Cobertura</div>
+                    <div class="risk-kpi-detail" data-translate="risk_kpi3_detail">Todos los empleados activos</div>
+                </div>
+                <div class="risk-kpi">
+                    <div class="risk-kpi-value">⚙️</div>
+                    <div class="risk-kpi-label" data-translate="risk_kpi4_label">Configurable</div>
+                    <div class="risk-kpi-detail" data-translate="risk_kpi4_detail">Pesos y umbrales editables</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Principal Risk -->
+            <div class="risk-dashboard">
+                <!-- Panel Izquierdo: 5 Índices -->
+                <div class="risk-panel risk-indices">
+                    <div class="risk-panel-header">
+                        <span class="risk-panel-title" data-translate="risk_indices_title">5 ÍNDICES DE RIESGO</span>
+                        <span class="risk-preview-badge" data-translate="risk_indices_badge">PONDERADOS</span>
+                    </div>
+
+                    <!-- Índices Visual -->
+                    <div class="risk-indices-list">
+                        <div class="risk-index-item">
+                            <div class="risk-index-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">😰</div>
+                            <div class="risk-index-info">
+                                <span class="risk-index-name" data-translate="risk_idx_fatigue">Fatiga</span>
+                                <span class="risk-index-desc" data-translate="risk_idx_fatigue_desc">Horas extras, días largos, fines de semana</span>
+                            </div>
+                            <div class="risk-index-weight">25%</div>
+                        </div>
+                        <div class="risk-index-item">
+                            <div class="risk-index-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">⚠️</div>
+                            <div class="risk-index-info">
+                                <span class="risk-index-name" data-translate="risk_idx_accident">Accidente</span>
+                                <span class="risk-index-desc" data-translate="risk_idx_accident_desc">Fatiga + sanciones + tipo de trabajo</span>
+                            </div>
+                            <div class="risk-index-weight">25%</div>
+                        </div>
+                        <div class="risk-index-item">
+                            <div class="risk-index-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">⚖️</div>
+                            <div class="risk-index-info">
+                                <span class="risk-index-name" data-translate="risk_idx_legal">Reclamo Legal</span>
+                                <span class="risk-index-desc" data-translate="risk_idx_legal_desc">Overtime excesivo, vacaciones pendientes</span>
+                            </div>
+                            <div class="risk-index-weight">20%</div>
+                        </div>
+                        <div class="risk-index-item">
+                            <div class="risk-index-icon" style="background: linear-gradient(135deg, #eab308, #ca8a04);">📉</div>
+                            <div class="risk-index-info">
+                                <span class="risk-index-name" data-translate="risk_idx_performance">Rendimiento</span>
+                                <span class="risk-index-desc" data-translate="risk_idx_performance_desc">Tardanzas, ausencias, sanciones</span>
+                            </div>
+                            <div class="risk-index-weight">15%</div>
+                        </div>
+                        <div class="risk-index-item">
+                            <div class="risk-index-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">🚪</div>
+                            <div class="risk-index-info">
+                                <span class="risk-index-name" data-translate="risk_idx_turnover">Rotación</span>
+                                <span class="risk-index-desc" data-translate="risk_idx_turnover_desc">Antigüedad + sanciones recientes</span>
+                            </div>
+                            <div class="risk-index-weight">15%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Central: Dashboard Preview -->
+                <div class="risk-panel risk-preview">
+                    <div class="risk-panel-header">
+                        <span class="risk-panel-title" data-translate="risk_panel_title">PANEL DE RIESGO</span>
+                        <span class="risk-live-badge"><span class="risk-live-dot"></span><span data-translate="risk_live">LIVE</span></span>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="risk-stats-grid">
+                        <div class="risk-stat-card critical">
+                            <span class="risk-stat-value">3</span>
+                            <span class="risk-stat-label" data-translate="risk_stat_critical">Críticos</span>
+                        </div>
+                        <div class="risk-stat-card high">
+                            <span class="risk-stat-value">8</span>
+                            <span class="risk-stat-label" data-translate="risk_stat_high">Alto Riesgo</span>
+                        </div>
+                        <div class="risk-stat-card medium">
+                            <span class="risk-stat-value">15</span>
+                            <span class="risk-stat-label" data-translate="risk_stat_medium">Moderado</span>
+                        </div>
+                        <div class="risk-stat-card low">
+                            <span class="risk-stat-value">89</span>
+                            <span class="risk-stat-label" data-translate="risk_stat_low">Bajo</span>
+                        </div>
+                    </div>
+
+                    <!-- Employees at Risk -->
+                    <div class="risk-employees">
+                        <div class="risk-employees-header">
+                            <span>👥</span> <span data-translate="risk_employees_header">Empleados con Mayor Riesgo</span>
+                        </div>
+                        <div class="risk-employee-item">
+                            <div class="risk-employee-avatar critical">JM</div>
+                            <div class="risk-employee-info">
+                                <span class="risk-employee-name">Juan Martínez</span>
+                                <span class="risk-employee-dept">Operaciones</span>
+                            </div>
+                            <div class="risk-employee-score critical">87</div>
+                        </div>
+                        <div class="risk-employee-item">
+                            <div class="risk-employee-avatar high">LG</div>
+                            <div class="risk-employee-info">
+                                <span class="risk-employee-name">Laura García</span>
+                                <span class="risk-employee-dept">Producción</span>
+                            </div>
+                            <div class="risk-employee-score high">72</div>
+                        </div>
+                        <div class="risk-employee-item">
+                            <div class="risk-employee-avatar medium">PR</div>
+                            <div class="risk-employee-info">
+                                <span class="risk-employee-name">Pedro Rodríguez</span>
+                                <span class="risk-employee-dept">Logística</span>
+                            </div>
+                            <div class="risk-employee-score medium">58</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Derecho: Análisis Individual -->
+                <div class="risk-panel risk-analysis">
+                    <div class="risk-panel-header">
+                        <span class="risk-panel-title" data-translate="risk_analysis_title">ANÁLISIS INDIVIDUAL</span>
+                        <span class="risk-cct-badge">📊</span>
+                    </div>
+
+                    <!-- Employee Detail -->
+                    <div class="risk-detail-card">
+                        <div class="risk-detail-header">
+                            <div class="risk-detail-avatar critical">JM</div>
+                            <div class="risk-detail-info">
+                                <span class="risk-detail-name">Juan Martínez</span>
+                                <span class="risk-detail-score">Score: 87/100</span>
+                            </div>
+                        </div>
+
+                        <!-- Individual Indices -->
+                        <div class="risk-detail-indices">
+                            <div class="risk-bar-item">
+                                <span class="risk-bar-label" data-translate="risk_idx_fatigue">Fatiga</span>
+                                <div class="risk-bar">
+                                    <div class="risk-bar-fill critical" style="width: 92%;"></div>
+                                </div>
+                                <span class="risk-bar-value">92</span>
+                            </div>
+                            <div class="risk-bar-item">
+                                <span class="risk-bar-label" data-translate="risk_idx_accident">Accidente</span>
+                                <div class="risk-bar">
+                                    <div class="risk-bar-fill high" style="width: 78%;"></div>
+                                </div>
+                                <span class="risk-bar-value">78</span>
+                            </div>
+                            <div class="risk-bar-item">
+                                <span class="risk-bar-label" data-translate="risk_idx_claim">Reclamo</span>
+                                <div class="risk-bar">
+                                    <div class="risk-bar-fill medium" style="width: 45%;"></div>
+                                </div>
+                                <span class="risk-bar-value">45</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div class="risk-recommendations">
+                        <div class="risk-rec-header">
+                            <span>💡</span> <span data-translate="risk_rec_header">Recomendaciones Automáticas</span>
+                        </div>
+                        <div class="risk-rec-item high" data-translate="risk_rec_workload">
+                            Revisar distribución de horarios y carga de trabajo
+                        </div>
+                        <div class="risk-rec-item medium" data-translate="risk_rec_safety">
+                            Verificar EPP y capacitación en seguridad
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="risk-actions">
+                        <button class="risk-action-btn primary">
+                            <span>📊</span> <span data-translate="risk_btn_analysis">Ver Análisis Completo</span>
+                        </button>
+                        <button class="risk-action-btn secondary">
+                            <span>📋</span> <span data-translate="risk_btn_export">Exportar Reporte</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Sources -->
+            <div class="risk-sources">
+                <h3 style="color: white; text-align: center; margin-bottom: 1.5rem;">
+                    <span style="color: #fb923c;" data-translate="risk_sources_title">Fuentes de Datos</span> <span data-translate="risk_sources_subtitle">en Tiempo Real (SSOT)</span>
+                </h3>
+                <div class="risk-sources-grid">
+                    <div class="risk-source-card">
+                        <div class="risk-source-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">🕐</div>
+                        <span class="risk-source-name" data-translate="risk_src_attendance">Asistencias</span>
+                        <span class="risk-source-desc" data-translate="risk_src_attendance_desc">Check-in/out, horas</span>
+                    </div>
+                    <div class="risk-source-card">
+                        <div class="risk-source-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">⚠️</div>
+                        <span class="risk-source-name" data-translate="risk_src_sanctions">Sanciones</span>
+                        <span class="risk-source-desc" data-translate="risk_src_sanctions_desc">Historial disciplinario</span>
+                    </div>
+                    <div class="risk-source-card">
+                        <div class="risk-source-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">🏖️</div>
+                        <span class="risk-source-name" data-translate="risk_src_vacations">Vacaciones</span>
+                        <span class="risk-source-desc" data-translate="risk_src_vacations_desc">Días tomados/pendientes</span>
+                    </div>
+                    <div class="risk-source-card">
+                        <div class="risk-source-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">👥</div>
+                        <span class="risk-source-name" data-translate="risk_src_employees">Empleados</span>
+                        <span class="risk-source-desc" data-translate="risk_src_employees_desc">Antigüedad, puesto</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compliance Badges -->
+            <div class="risk-compliance">
+                <div class="risk-compliance-item">
+                    <span class="risk-compliance-icon">📊</span>
+                    <span class="risk-compliance-name" data-translate="risk_comp_indices">5 Índices</span>
+                    <span class="risk-compliance-desc" data-translate="risk_comp_indices_desc">Análisis ponderado</span>
+                </div>
+                <div class="risk-compliance-item">
+                    <span class="risk-compliance-icon">⚡</span>
+                    <span class="risk-compliance-name" data-translate="risk_comp_realtime">Tiempo Real</span>
+                    <span class="risk-compliance-desc" data-translate="risk_comp_realtime_desc">Datos SSOT actualizados</span>
+                </div>
+                <div class="risk-compliance-item">
+                    <span class="risk-compliance-icon">⚙️</span>
+                    <span class="risk-compliance-name" data-translate="risk_comp_config">Configurable</span>
+                    <span class="risk-compliance-desc" data-translate="risk_comp_config_desc">Umbrales editables</span>
+                </div>
+                <div class="risk-compliance-item">
+                    <span class="risk-compliance-icon">💡</span>
+                    <span class="risk-compliance-name" data-translate="risk_comp_recs">Recomendaciones</span>
+                    <span class="risk-compliance-desc" data-translate="risk_comp_recs_desc">Acciones sugeridas</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Risk Section Styles -->
+    <style>
+        /* ========== RISK INTELLIGENCE SECTION ========== */
+        .section-risk {
+            padding: 5rem 2rem;
+            position: relative;
+        }
+        .risk-bg-pattern {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(249, 115, 22, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(249, 115, 22, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: risk-grid-move 25s linear infinite;
+        }
+        @keyframes risk-grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+        .risk-bg-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 900px; height: 900px;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .risk-pulse-dot {
+            width: 8px; height: 8px;
+            background: #f97316;
+            border-radius: 50%;
+            animation: risk-pulse 2s ease-in-out infinite;
+        }
+        @keyframes risk-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        /* Risk KPIs */
+        .risk-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .risk-kpi {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .risk-kpi:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(249, 115, 22, 0.3);
+            transform: translateY(-3px);
+        }
+        .risk-kpi-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f97316, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .risk-kpi-label {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+        .risk-kpi-detail {
+            color: #78716c;
+            font-size: 0.75rem;
+        }
+
+        /* Risk Dashboard */
+        .risk-dashboard {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .risk-panel {
+            background: rgba(28, 25, 23, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+        }
+        .risk-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .risk-panel-title {
+            color: #a8a29e;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+        }
+        .risk-preview-badge, .risk-live-badge, .risk-cct-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.65rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .risk-preview-badge {
+            background: rgba(249, 115, 22, 0.2);
+            color: #fb923c;
+        }
+        .risk-live-badge {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+        .risk-live-dot {
+            width: 6px; height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: risk-pulse 1.5s ease-in-out infinite;
+        }
+        .risk-cct-badge {
+            background: rgba(249, 115, 22, 0.2);
+            color: #fb923c;
+        }
+
+        /* Indices List */
+        .risk-indices-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .risk-index-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .risk-index-item:hover {
+            background: rgba(255,255,255,0.06);
+        }
+        .risk-index-icon {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        .risk-index-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .risk-index-name {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .risk-index-desc {
+            color: #78716c;
+            font-size: 0.6rem;
+        }
+        .risk-index-weight {
+            color: #fb923c;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        /* Stats Grid */
+        .risk-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .risk-stat-card {
+            padding: 0.75rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .risk-stat-card.critical {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .risk-stat-card.high {
+            background: rgba(249, 115, 22, 0.15);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+        .risk-stat-card.medium {
+            background: rgba(234, 179, 8, 0.15);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+        .risk-stat-card.low {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .risk-stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+        }
+        .risk-stat-card.critical .risk-stat-value { color: #f87171; }
+        .risk-stat-card.high .risk-stat-value { color: #fb923c; }
+        .risk-stat-card.medium .risk-stat-value { color: #fbbf24; }
+        .risk-stat-card.low .risk-stat-value { color: #4ade80; }
+        .risk-stat-label {
+            color: #a8a29e;
+            font-size: 0.65rem;
+        }
+
+        /* Employees List */
+        .risk-employees {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 0.75rem;
+        }
+        .risk-employees-header {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .risk-employee-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .risk-employee-item:last-child { border-bottom: none; }
+        .risk-employee-avatar {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: white;
+        }
+        .risk-employee-avatar.critical { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .risk-employee-avatar.high { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .risk-employee-avatar.medium { background: linear-gradient(135deg, #eab308, #ca8a04); }
+        .risk-employee-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .risk-employee-name {
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .risk-employee-dept {
+            color: #78716c;
+            font-size: 0.55rem;
+        }
+        .risk-employee-score {
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 0.15rem 0.4rem;
+            border-radius: 6px;
+        }
+        .risk-employee-score.critical { background: rgba(239, 68, 68, 0.3); color: #f87171; }
+        .risk-employee-score.high { background: rgba(249, 115, 22, 0.3); color: #fb923c; }
+        .risk-employee-score.medium { background: rgba(234, 179, 8, 0.3); color: #fbbf24; }
+
+        /* Detail Card */
+        .risk-detail-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .risk-detail-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .risk-detail-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 0.75rem;
+        }
+        .risk-detail-avatar.critical { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .risk-detail-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .risk-detail-name {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .risk-detail-score {
+            color: #f87171;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .risk-detail-indices {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .risk-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .risk-bar-label {
+            color: #a8a29e;
+            font-size: 0.6rem;
+            width: 50px;
+        }
+        .risk-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .risk-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+        .risk-bar-fill.critical { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .risk-bar-fill.high { background: linear-gradient(90deg, #f97316, #fb923c); }
+        .risk-bar-fill.medium { background: linear-gradient(90deg, #eab308, #fbbf24); }
+        .risk-bar-value {
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 600;
+            width: 25px;
+            text-align: right;
+        }
+
+        /* Recommendations */
+        .risk-recommendations {
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .risk-rec-header {
+            color: #fb923c;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .risk-rec-item {
+            font-size: 0.65rem;
+            padding: 0.35rem 0.5rem;
+            margin-bottom: 0.35rem;
+            border-radius: 6px;
+            color: #d6d3d1;
+        }
+        .risk-rec-item.high {
+            background: rgba(239, 68, 68, 0.15);
+            border-left: 2px solid #ef4444;
+        }
+        .risk-rec-item.medium {
+            background: rgba(234, 179, 8, 0.15);
+            border-left: 2px solid #eab308;
+        }
+
+        /* Actions */
+        .risk-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .risk-action-btn {
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        .risk-action-btn.primary {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+        }
+        .risk-action-btn.secondary {
+            background: rgba(255,255,255,0.08);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .risk-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Sources Grid */
+        .risk-sources {
+            margin-bottom: 2rem;
+        }
+        .risk-sources-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+        .risk-source-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .risk-source-card:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-3px);
+            border-color: rgba(249, 115, 22, 0.3);
+        }
+        .risk-source-icon {
+            width: 45px; height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .risk-source-name {
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .risk-source-desc {
+            color: #78716c;
+            font-size: 0.65rem;
+        }
+
+        /* Compliance Badges */
+        .risk-compliance {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        .risk-compliance-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+        }
+        .risk-compliance-icon {
+            font-size: 1.1rem;
+        }
+        .risk-compliance-name {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .risk-compliance-desc {
+            color: #fb923c;
+            font-size: 0.7rem;
+        }
+
+        /* Responsive Risk */
+        @media (max-width: 1200px) {
+            .risk-dashboard {
+                grid-template-columns: 1fr;
+            }
+            .risk-kpis, .risk-sources-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .risk-kpis, .risk-sources-grid {
+                grid-template-columns: 1fr;
+            }
+            .risk-compliance {
+                gap: 1rem;
+            }
+        }
+    </style>
+
+    <!-- Risk Counter Animation Script -->
+    <script>
+    (function() {
+        const riskCounters = document.querySelectorAll('.risk-counter');
+        const observerOptions = { threshold: 0.5 };
+
+        const animateRiskCounter = (counter) => {
+            const target = parseInt(counter.dataset.target);
+            const duration = 2000;
+            const step = target / (duration / 16);
+            let current = 0;
+
+            const update = () => {
+                current += step;
+                if (current < target) {
+                    counter.textContent = Math.floor(current);
+                    requestAnimationFrame(update);
+                } else {
+                    counter.textContent = target;
+                }
+            };
+            update();
+        };
+
+        const riskObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateRiskCounter(entry.target);
+                    riskObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        riskCounters.forEach(counter => riskObserver.observe(counter));
+    })();
+    </script>
+
+    <!-- =========================================================== -->
+    <!-- EMPLOYEE MAP - REAL-TIME GEOLOCATION SECTION -->
+    <!-- =========================================================== -->
+    <section class="section section-map" id="employee-map" style="background: linear-gradient(180deg, #0c4a6e 0%, #0e7490 50%, #0c4a6e 100%); overflow: hidden; position: relative;">
+        <!-- Animated Background -->
+        <div class="map-bg-pattern" style="position: absolute; inset: 0; background-image:
+            radial-gradient(circle at 20% 30%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 70%, rgba(34, 211, 238, 0.1) 0%, transparent 40%);
+            pointer-events: none;"></div>
+
+        <!-- Responsive Styles Employee Map -->
+        <style>
+            /* Tablet (1200px) */
+            @media (max-width: 1200px) {
+                .map-kpis-grid { grid-template-columns: repeat(2, 1fr) !important; }
+                .map-features-grid { grid-template-columns: repeat(2, 1fr) !important; }
+                .map-dashboard-grid { grid-template-columns: 1fr !important; }
+                .map-dashboard-wrapper { padding: 20px !important; }
+                .map-footer { flex-direction: column !important; gap: 10px !important; }
+                .map-legend { flex-wrap: wrap !important; justify-content: center !important; }
+            }
+            /* Mobile (768px) */
+            @media (max-width: 768px) {
+                .map-kpis-grid { grid-template-columns: 1fr !important; gap: 15px !important; }
+                .map-features-grid { grid-template-columns: 1fr !important; gap: 15px !important; }
+                .map-dashboard-wrapper { padding: 15px !important; border-radius: 15px !important; }
+                .map-dashboard-grid { gap: 15px !important; }
+                #employee-map .section-title { font-size: 2rem !important; }
+                #employee-map .section-subtitle { font-size: 0.95rem !important; }
+                .map-legend span { font-size: 0.65rem !important; padding: 3px 8px !important; }
+                .map-footer-brand { font-size: 0.7rem !important; }
+            }
+            /* Small Mobile (480px) */
+            @media (max-width: 480px) {
+                #employee-map .section-title { font-size: 1.6rem !important; }
+                .map-kpis-grid > div { padding: 18px !important; }
+                .map-features-grid > div { padding: 18px !important; }
+            }
+        </style>
+
+        <div class="container" style="position: relative; z-index: 2;">
+            <!-- Header -->
+            <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
+                <span style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: rgba(6, 182, 212, 0.2);
+                    border: 1px solid rgba(6, 182, 212, 0.4);
+                    color: #67e8f9;
+                    padding: 8px 20px;
+                    border-radius: 30px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                ">
+                    <span style="width: 8px; height: 8px; background: #22d3ee; border-radius: 50%; animation: pulse 2s infinite;"></span>
+                    <span data-translate="map_badge">GPS EN TIEMPO REAL | LEAFLET + WEBSOCKET</span>
+                </span>
+                <h2 class="section-title" style="color: white; margin-top: 1.5rem; font-size: 2.8rem; font-weight: 800;">
+                    <span data-translate="map_title_1">Mapa de</span> <span style="background: linear-gradient(135deg, #06b6d4, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent;" data-translate="map_title_2">Empleados</span>
+                </h2>
+                <p class="section-subtitle" style="color: #a5f3fc; max-width: 850px; margin: 1rem auto 0; font-size: 1.1rem; line-height: 1.6;" data-translate="map_subtitle">
+                    Visualización geográfica de empleados activos con GPS real capturado en check-in. Geofencing automático, tracking de visitantes con llaveros GPS, heatmaps de concentración y rutas históricas.
+                </p>
+            </div>
+
+            <!-- KPIs Row -->
+            <div class="map-kpis-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 3rem;">
+                <div style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 15px; padding: 25px; text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #22d3ee;" class="map-counter" data-target="100">0</div>
+                    <div style="color: #a5f3fc; font-size: 0.9rem; margin-top: 5px;" data-translate="map_kpi1_label">GPS Real</div>
+                    <div style="color: #67e8f9; font-size: 0.75rem;" data-translate="map_kpi1_detail">Precisión 8 decimales</div>
+                </div>
+                <div style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 15px; padding: 25px; text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #22d3ee;">WebSocket</div>
+                    <div style="color: #a5f3fc; font-size: 0.9rem; margin-top: 5px;" data-translate="map_kpi2_label">Tiempo Real</div>
+                    <div style="color: #67e8f9; font-size: 0.75rem;" data-translate="map_kpi2_detail">Sub-segundo latencia</div>
+                </div>
+                <div style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 15px; padding: 25px; text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #22d3ee;">Haversine</div>
+                    <div style="color: #a5f3fc; font-size: 0.9rem; margin-top: 5px;" data-translate="map_kpi3_label">Geofencing</div>
+                    <div style="color: #67e8f9; font-size: 0.75rem;" data-translate="map_kpi3_detail">Cálculo geodésico</div>
+                </div>
+                <div style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 15px; padding: 25px; text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #22d3ee;">$0</div>
+                    <div style="color: #a5f3fc; font-size: 0.9rem; margin-top: 5px;" data-translate="map_kpi4_label">APIs Externas</div>
+                    <div style="color: #67e8f9; font-size: 0.75rem;" data-translate="map_kpi4_detail">OpenStreetMap gratis</div>
+                </div>
+            </div>
+
+            <!-- Main Dashboard Preview -->
+            <div class="map-dashboard-wrapper" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); border-radius: 20px; padding: 30px; border: 1px solid rgba(6, 182, 212, 0.2); box-shadow: 0 25px 60px rgba(0,0,0,0.4);">
+                <div class="map-dashboard-grid" style="display: grid; grid-template-columns: 300px 1fr; gap: 25px;">
+                    <!-- Sidebar -->
+                    <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px;">
+                        <h4 style="color: #22d3ee; margin: 0 0 15px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-filter"></i> <span data-translate="map_filters">Filtros</span>
+                        </h4>
+                        <!-- Stats -->
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
+                            <div style="background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: #4ade80;">12</div>
+                                <div style="font-size: 0.7rem; color: #86efac;" data-translate="map_stat_working">Trabajando</div>
+                            </div>
+                            <div style="background: rgba(251, 146, 60, 0.2); border: 1px solid rgba(251, 146, 60, 0.4); border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: #fb923c;">3</div>
+                                <div style="font-size: 0.7rem; color: #fdba74;" data-translate="map_stat_break">Descanso</div>
+                            </div>
+                            <div style="background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.4); border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: #22d3ee;">14</div>
+                                <div style="font-size: 0.7rem; color: #67e8f9;" data-translate="map_stat_inzone">En Zona</div>
+                            </div>
+                            <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: #f87171;">1</div>
+                                <div style="font-size: 0.7rem; color: #fca5a5;" data-translate="map_stat_outside">Fuera</div>
+                            </div>
+                        </div>
+                        <!-- Filters -->
+                        <div style="margin-bottom: 15px;">
+                            <label style="color: #94a3b8; font-size: 0.75rem; display: block; margin-bottom: 5px;" data-translate="map_filter_dept">Departamento</label>
+                            <select style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; color: #e2e8f0; font-size: 0.85rem;">
+                                <option data-translate="map_filter_all">Todos</option>
+                                <option>IT</option>
+                                <option>RRHH</option>
+                                <option data-translate="map_filter_ops">Operaciones</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="color: #94a3b8; font-size: 0.75rem; display: block; margin-bottom: 5px;" data-translate="map_filter_branch">Sucursal</label>
+                            <select style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; color: #e2e8f0; font-size: 0.85rem;">
+                                <option data-translate="map_branch_main">Casa Central</option>
+                                <option data-translate="map_branch_north">Sucursal Norte</option>
+                            </select>
+                        </div>
+                        <!-- Employee List -->
+                        <div style="margin-top: 20px;">
+                            <h5 style="color: #67e8f9; font-size: 0.8rem; margin-bottom: 10px;" data-translate="map_active_employees">Empleados Activos</h5>
+                            <div style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto;">
+                                <div style="display: flex; align-items: center; gap: 10px; background: rgba(34, 197, 94, 0.1); border-radius: 8px; padding: 10px;">
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #22d3ee, #06b6d4); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.75rem;">JG</div>
+                                    <div style="flex: 1;">
+                                        <div style="color: #e2e8f0; font-size: 0.85rem;">García, Juan</div>
+                                        <div style="color: #4ade80; font-size: 0.7rem;">Trabajando • 2h 15m</div>
+                                    </div>
+                                    <span style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%;"></span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px; background: rgba(251, 146, 60, 0.1); border-radius: 8px; padding: 10px;">
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #22d3ee, #06b6d4); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.75rem;">ML</div>
+                                    <div style="flex: 1;">
+                                        <div style="color: #e2e8f0; font-size: 0.85rem;">López, María</div>
+                                        <div style="color: #fb923c; font-size: 0.7rem;">Descanso • 15m</div>
+                                    </div>
+                                    <span style="width: 8px; height: 8px; background: #fb923c; border-radius: 50%;"></span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; padding: 10px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.75rem;">PR</div>
+                                    <div style="flex: 1;">
+                                        <div style="color: #e2e8f0; font-size: 0.85rem;">Rodríguez, Pedro</div>
+                                        <div style="color: #f87171; font-size: 0.7rem;">⚠️ Fuera de zona</div>
+                                    </div>
+                                    <span style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse 1s infinite;"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Area -->
+                    <div style="background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; position: relative; min-height: 400px;">
+                        <!-- Map Header -->
+                        <div style="position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; z-index: 10;">
+                            <div style="display: flex; gap: 8px;">
+                                <button style="background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+                                    <i class="fas fa-layer-group"></i> <span data-translate="map_btn_style">Estilo</span>
+                                </button>
+                                <button style="background: rgba(6, 182, 212, 0.3); border: 1px solid rgba(6, 182, 212, 0.5); color: #22d3ee; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+                                    <i class="fas fa-fire"></i> Heatmap
+                                </button>
+                            </div>
+                            <div style="background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
+                                <span style="width: 6px; height: 6px; background: #4ade80; border-radius: 50%; animation: pulse 1.5s infinite;"></span>
+                                <span data-translate="map_ws_connected">WebSocket Conectado</span>
+                            </div>
+                        </div>
+
+                        <!-- Simulated Map -->
+                        <div style="width: 100%; height: 400px; background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); position: relative; display: flex; align-items: center; justify-content: center;">
+                            <!-- Grid pattern -->
+                            <div style="position: absolute; inset: 0; background-image:
+                                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+                                background-size: 50px 50px;"></div>
+
+                            <!-- Geofence Circle -->
+                            <div style="position: absolute; width: 200px; height: 200px; border: 2px dashed rgba(6, 182, 212, 0.5); border-radius: 50%; background: rgba(6, 182, 212, 0.1);"></div>
+
+                            <!-- Employee Markers -->
+                            <div style="position: absolute; top: 45%; left: 48%;" title="García, Juan - Trabajando">
+                                <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #22c55e, #16a34a); border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.7rem;">JG</div>
+                            </div>
+                            <div style="position: absolute; top: 55%; left: 55%;" title="López, María - Descanso">
+                                <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #f97316, #ea580c); border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.7rem;">ML</div>
+                            </div>
+                            <div style="position: absolute; top: 25%; left: 75%;" title="Rodríguez, Pedro - FUERA DE ZONA">
+                                <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 15px rgba(239,68,68,0.5); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.7rem; animation: pulse 1s infinite;">PR</div>
+                                <span style="position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem; font-weight: bold;">!</span>
+                            </div>
+                            <!-- Cluster -->
+                            <div style="position: absolute; top: 60%; left: 40%;" title="3 empleados agrupados">
+                                <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1rem;">3</div>
+                            </div>
+                            <!-- Visitor Marker -->
+                            <div style="position: absolute; top: 40%; left: 60%;" title="Visitante: Carlos Méndez">
+                                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-radius: 50%; border: 3px dashed white; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.65rem;">V</div>
+                            </div>
+
+                            <!-- Branch marker -->
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                <div style="width: 20px; height: 20px; background: #22d3ee; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-building" style="color: white; font-size: 0.6rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Map Footer -->
+                        <div class="map-footer" style="position: absolute; bottom: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center;">
+                            <div class="map-footer-brand" style="background: rgba(0,0,0,0.7); padding: 6px 12px; border-radius: 6px; color: #94a3b8; font-size: 0.75rem;">
+                                <i class="fas fa-map-marker-alt" style="color: #22d3ee;"></i> Leaflet + OpenStreetMap
+                            </div>
+                            <div class="map-legend" style="display: flex; gap: 8px;">
+                                <span style="background: rgba(34, 197, 94, 0.3); color: #4ade80; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem;">● <span data-translate="map_legend_working">Trabajando</span></span>
+                                <span style="background: rgba(251, 146, 60, 0.3); color: #fb923c; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem;">● <span data-translate="map_legend_break">Descanso</span></span>
+                                <span style="background: rgba(139, 92, 246, 0.3); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem;">● <span data-translate="map_legend_visitor">Visitante</span></span>
+                                <span style="background: rgba(239, 68, 68, 0.3); color: #f87171; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem;">● <span data-translate="map_legend_outside">Fuera zona</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="map-features-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 3rem;">
+                <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 12px; padding: 25px; text-align: center;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #06b6d4, #0891b2); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem;">
+                        📡
+                    </div>
+                    <h4 style="color: white; margin: 0 0 8px; font-size: 1rem;" data-translate="map_feat_gps">GPS Real</h4>
+                    <p style="color: #a5f3fc; font-size: 0.85rem; margin: 0; line-height: 1.5;" data-translate="map_feat_gps_desc">Coordenadas capturadas en check-in desde APK móvil. Fallback a ubicación del kiosko.</p>
+                </div>
+                <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 12px; padding: 25px; text-align: center;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #06b6d4, #0891b2); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem;">
+                        ⭕
+                    </div>
+                    <h4 style="color: white; margin: 0 0 8px; font-size: 1rem;" data-translate="map_feat_geofence">Geofencing</h4>
+                    <p style="color: #a5f3fc; font-size: 0.85rem; margin: 0; line-height: 1.5;" data-translate="map_feat_geofence_desc">Radio configurable por sucursal (default 50m). Cálculo con fórmula Haversine.</p>
+                </div>
+                <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 12px; padding: 25px; text-align: center;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #06b6d4, #0891b2); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem;">
+                        🔑
+                    </div>
+                    <h4 style="color: white; margin: 0 0 8px; font-size: 1rem;" data-translate="map_feat_visitors">Visitantes GPS</h4>
+                    <p style="color: #a5f3fc; font-size: 0.85rem; margin: 0; line-height: 1.5;" data-translate="map_feat_visitors_desc">Llaveros GPS inteligentes para tracking de visitantes. Alertas de batería y zona.</p>
+                </div>
+                <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 12px; padding: 25px; text-align: center;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #06b6d4, #0891b2); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem;">
+                        🔥
+                    </div>
+                    <h4 style="color: white; margin: 0 0 8px; font-size: 1rem;" data-translate="map_feat_heatmap">Heatmap</h4>
+                    <p style="color: #a5f3fc; font-size: 0.85rem; margin: 0; line-height: 1.5;" data-translate="map_feat_heatmap_desc">Mapa de calor mostrando concentración de empleados. Leaflet.heat integrado.</p>
+                </div>
+            </div>
+
+            <!-- Data Sources -->
+            <div style="margin-top: 3rem; text-align: center;">
+                <h4 style="color: #67e8f9; font-size: 0.9rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;" data-translate="map_data_sources">Fuentes de Datos SSOT</h4>
+                <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                    <span style="background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.3); color: #22d3ee; padding: 10px 20px; border-radius: 25px; font-size: 0.85rem;">
+                        <i class="fas fa-clock"></i> attendances (<span data-translate="map_src_checkin">check-in GPS</span>)
+                    </span>
+                    <span style="background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.3); color: #22d3ee; padding: 10px 20px; border-radius: 25px; font-size: 0.85rem;">
+                        <i class="fas fa-building"></i> branches (geofence)
+                    </span>
+                    <span style="background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.3); color: #22d3ee; padding: 10px 20px; border-radius: 25px; font-size: 0.85rem;">
+                        <i class="fas fa-desktop"></i> kiosks (<span data-translate="map_src_fixed">ubicación fija</span>)
+                    </span>
+                    <span style="background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.3); color: #22d3ee; padding: 10px 20px; border-radius: 25px; font-size: 0.85rem;">
+                        <i class="fas fa-user-clock"></i> visitor_gps_tracking
+                    </span>
+                </div>
+            </div>
+
+            <!-- Tech Stack -->
+            <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                <span style="background: rgba(255,255,255,0.1); color: #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
+                    <img src="https://leafletjs.com/docs/images/logo.png" style="height: 16px;"> Leaflet 1.9.4
+                </span>
+                <span style="background: rgba(255,255,255,0.1); color: #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 0.8rem;">
+                    🗺️ OpenStreetMap
+                </span>
+                <span style="background: rgba(255,255,255,0.1); color: #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 0.8rem;">
+                    🔌 <span data-translate="map_tech_ws">WebSocket Nativo</span>
+                </span>
+                <span style="background: rgba(255,255,255,0.1); color: #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 0.8rem;">
+                    🔥 Leaflet.heat
+                </span>
+                <span style="background: rgba(255,255,255,0.1); color: #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 0.8rem;">
+                    📍 MarkerCluster
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Employee Map Counter Animation -->
+    <script>
+    (function() {
+        const mapCounters = document.querySelectorAll('.map-counter');
+        const observerOptions = { threshold: 0.5 };
+
+        const animateMapCounter = (counter) => {
+            const target = parseInt(counter.getAttribute('data-target'));
+            const suffix = counter.getAttribute('data-suffix') || '%';
+            let current = 0;
+            const increment = target / 50;
+            const update = () => {
+                if (current < target) {
+                    current += increment;
+                    counter.textContent = Math.ceil(current) + suffix;
+                    requestAnimationFrame(update);
+                } else {
+                    counter.textContent = target + suffix;
+                }
+            };
+            update();
+        };
+
+        const mapObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateMapCounter(entry.target);
+                    mapObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        mapCounters.forEach(counter => mapObserver.observe(counter));
+    })();
+    </script>
+
     <!-- Biometric Section -->
     <section class="section section-light" id="biometric">
         <div class="container">

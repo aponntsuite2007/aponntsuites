@@ -1919,6 +1919,12 @@ const uploadRoutes = require('./src/routes/uploadRoutes'); // Upload de document
 // 🆕 Expediente 360° - Módulo de Análisis Integral de Empleados (Enero 2025)
 const employee360Routes = require('./src/routes/employee360Routes');
 
+// 📁 DMS - Sistema de Gestión Documental Enterprise (Diciembre 2025)
+// Multi-tenant, versionamiento, GDPR compliance, estados workflow
+const { initDMSModels } = require('./src/models/dms');
+const { initDMSServices } = require('./src/services/dms');
+const dmsRoutes = require('./src/routes/dms');
+
 // Importar rutas del sistema APONNT
 const aponntDashboardRoutes = require('./src/routes/aponntDashboard');
 const companyModuleRoutes = require('./src/routes/companyModuleRoutes');
@@ -2096,6 +2102,33 @@ app.use('/api/hours-cube', hoursCubeRoutes);
 
 // 🎯 CONFIGURAR API DE EXPEDIENTE 360° (Análisis Integral de Empleados)
 app.use('/api/employee-360', employee360Routes);
+
+// 📁 CONFIGURAR API DMS - Sistema de Gestión Documental Enterprise
+// Inicializar modelos y servicios DMS después de conexión a BD
+let dmsInitialized = false;
+async function initializeDMS() {
+  if (dmsInitialized || !isDatabaseConnected) return;
+  try {
+    console.log('📁 Inicializando DMS (Sistema de Gestión Documental)...');
+    // Pasar modelos de la app para asociaciones (User, Company, etc.)
+    const appModels = { User: database.User, Company: database.Company };
+    const dmsModels = initDMSModels(database.sequelize, appModels);
+    Object.assign(database, dmsModels); // Agregar modelos DMS a database
+    const dmsServices = initDMSServices({ ...database, ...dmsModels });
+    const dmsRouter = dmsRoutes({
+      services: dmsServices,
+      models: { ...database, ...dmsModels },
+      sequelize: database.sequelize,
+      authMiddleware: auth
+    });
+    app.use('/api/dms', dmsRouter);
+    dmsInitialized = true;
+    console.log('✅ DMS inicializado correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando DMS:', error.message);
+  }
+}
+// Llamar después de iniciar servidor (ver startServer())
 
 // 📟 CONFIGURAR API DE KIOSKS
 const kioskRoutes = require('./src/routes/kioskRoutes');
@@ -2613,27 +2646,30 @@ console.log('   • /api/v1/mobile/* - API Móvil Completa (Flutter APK)');
 console.log('   • /api/v1/vacation/* - Sistema de Vacaciones y Licencias');
 console.log('   • /api/v1/absence/* - Sistema de Ausencias y Faltas');
 
-// Manejo de errores 404
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Página no encontrada',
-    path: req.originalUrl,
-    method: req.method,
-    availableEndpoints: [
-      '/ - Página principal',
-      '/admin - Panel de administración',
-      '/api/v1/health - Estado del sistema',
-      '/api/v1/auth/login - Autenticación',
-      '/api/v1/departments - Gestión de departamentos (PostgreSQL)',
-      '/api/v1/shifts - Gestión de turnos',
-      '/api/v1/config/mobile-connection - Config para APK',
-      '/api/server-config - Config para web',
-      '/api/aponnt/auth/* - Sistema APONNT',
-      '/api/aponnt/admin/* - Administración APONNT',
-      '/api/aponnt/dashboard/* - Dashboard APONNT'
-    ]
+// Manejo de errores 404 - MOVED TO FUNCTION (se registra DESPUÉS de rutas dinámicas como DMS)
+function register404Handler() {
+  app.use('*', (req, res) => {
+    res.status(404).json({
+      error: 'Página no encontrada',
+      path: req.originalUrl,
+      method: req.method,
+      availableEndpoints: [
+        '/ - Página principal',
+        '/admin - Panel de administración',
+        '/api/v1/health - Estado del sistema',
+        '/api/v1/auth/login - Autenticación',
+        '/api/v1/departments - Gestión de departamentos (PostgreSQL)',
+        '/api/v1/shifts - Gestión de turnos',
+        '/api/v1/config/mobile-connection - Config para APK',
+        '/api/server-config - Config para web',
+        '/api/aponnt/auth/* - Sistema APONNT',
+        '/api/aponnt/admin/* - Administración APONNT',
+        '/api/aponnt/dashboard/* - Dashboard APONNT',
+        '/api/dms/* - Sistema de Gestión Documental (DMS)'
+      ]
+    });
   });
-});
+}
 
 // Manejo de errores global
 app.use((err, req, res, next) => {
@@ -2743,6 +2779,19 @@ async function startServer() {
       console.warn('⚠️  [SCHEDULER] Error iniciando scheduler de exámenes médicos:', schedulerError.message);
       console.warn('⚠️  [SCHEDULER] El servidor continuará sin scheduler de exámenes médicos.\n');
     }
+
+    // 📁 INICIALIZAR DMS (Sistema de Gestión Documental Enterprise)
+    console.log('📁 [DMS] Inicializando Sistema de Gestión Documental...');
+    try {
+      await initializeDMS();
+    } catch (dmsError) {
+      console.warn('⚠️  [DMS] Error iniciando DMS:', dmsError.message);
+      console.warn('⚠️  [DMS] El servidor continuará sin el sistema de gestión documental.\n');
+    }
+
+    // 🛑 REGISTRAR 404 HANDLER - DEBE SER LO ÚLTIMO después de todas las rutas dinámicas
+    register404Handler();
+    console.log('🛑 [404] Handler de rutas no encontradas registrado');
 
     
     // ✅ INICIALIZAR CERTIFICATION ALERT SERVICE (OH-V6-9)

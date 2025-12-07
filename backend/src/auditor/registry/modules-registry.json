@@ -212,8 +212,7 @@
           "kiosks"
         ],
         "integrates_with": [
-          "attendance",
-          "access-control"
+          "attendance"
         ],
         "provides_to": [
           "attendance"
@@ -534,8 +533,8 @@
       "id": "payroll-liquidation",
       "name": "Liquidación de Sueldos",
       "category": "finance",
-      "version": "1.0.0",
-      "description": "Cálculo y generación de liquidaciones de sueldos basado en asistencias",
+      "version": "3.0.0",
+      "description": "Sistema enterprise de liquidación de sueldos con fórmulas personalizables, entidades de destino, y workflow de 5 pasos (Validar→Calcular→Revisar→Aprobar→Pagar)",
       "dependencies": {
         "required": [
           "users",
@@ -555,6 +554,79 @@
       "commercial": {
         "is_core": false,
         "standalone": true
+      },
+      "help": {
+        "quickStart": "1. Crear plantilla con código único\n2. Agregar conceptos (haberes/deducciones)\n3. Configurar fórmulas usando variables\n4. Asignar entidades de destino\n5. Asociar empleados a la plantilla",
+        "commonIssues": [
+          {
+            "problem": "No calcula la liquidación",
+            "solution": "Verificar: 1) Empleado tiene plantilla asignada 2) Plantilla tiene conceptos 3) Variables tienen valores"
+          },
+          {
+            "problem": "Fórmula inválida",
+            "solution": "Revisar sintaxis: usar {variable} * 0.11, verificar paréntesis balanceados"
+          },
+          {
+            "problem": "No aparece en consolidación",
+            "solution": "El concepto debe tener una entidad de destino asignada"
+          }
+        ]
+      },
+      "formulas": {
+        "description": "Sistema de fórmulas para cálculo automático de conceptos",
+        "availableVariables": {
+          "salary": [
+            {"name": "baseSalary", "description": "Sueldo básico mensual del empleado", "example": "{baseSalary} * 0.11"},
+            {"name": "dailySalary", "description": "Sueldo diario (baseSalary/30)", "example": "{dailySalary} * {workedDays}"},
+            {"name": "hourlySalary", "description": "Sueldo por hora (baseSalary/200)", "example": "{hourlySalary} * {workedHours}"},
+            {"name": "grossSalary", "description": "Total bruto calculado", "example": "{grossSalary} * 0.03"}
+          ],
+          "time": [
+            {"name": "workedDays", "description": "Días efectivamente trabajados en el período", "example": "{dailySalary} * {workedDays}"},
+            {"name": "workedHours", "description": "Horas trabajadas totales", "example": "{hourlySalary} * {workedHours}"},
+            {"name": "overtime50Hours", "description": "Horas extras al 50%", "example": "{hourlySalary} * {overtime50Hours} * 1.5"},
+            {"name": "overtime100Hours", "description": "Horas extras al 100%", "example": "{hourlySalary} * {overtime100Hours} * 2"},
+            {"name": "absenceDays", "description": "Días de ausencia", "example": "{dailySalary} * {absenceDays}"},
+            {"name": "vacationDays", "description": "Días de vacaciones gozadas", "example": "{dailySalary} * {vacationDays}"}
+          ],
+          "employee": [
+            {"name": "seniority", "description": "Antigüedad en años", "example": "{baseSalary} * 0.01 * {seniority}"},
+            {"name": "age", "description": "Edad del empleado", "example": "Solo para cálculos especiales"},
+            {"name": "dependents", "description": "Cantidad de personas a cargo", "example": "Para asignaciones familiares"}
+          ]
+        },
+        "commonFormulas": [
+          {"name": "Jubilación 11%", "formula": "{baseSalary} * 0.11", "type": "deduction", "entity": "AFIP"},
+          {"name": "Obra Social 3%", "formula": "{baseSalary} * 0.03", "type": "deduction", "entity": "Obra Social"},
+          {"name": "PAMI 3%", "formula": "{baseSalary} * 0.03", "type": "deduction", "entity": "AFIP"},
+          {"name": "Ley 19.032 3%", "formula": "{baseSalary} * 0.03", "type": "deduction", "entity": "AFIP"},
+          {"name": "Presentismo 8.33%", "formula": "{baseSalary} * 0.0833", "type": "earning", "entity": null},
+          {"name": "Antigüedad 1% por año", "formula": "{baseSalary} * 0.01 * {seniority}", "type": "earning", "entity": null},
+          {"name": "Horas Extras 50%", "formula": "{hourlySalary} * {overtime50Hours} * 1.5", "type": "earning", "entity": null},
+          {"name": "Horas Extras 100%", "formula": "{hourlySalary} * {overtime100Hours} * 2", "type": "earning", "entity": null}
+        ],
+        "operators": ["+", "-", "*", "/", "(", ")"],
+        "syntax": "Usar {nombreVariable} para referenciar variables. Ejemplo: {baseSalary} * 0.11"
+      },
+      "entities": {
+        "description": "Entidades de destino para aportes y contribuciones",
+        "categories": [
+          {"code": "FISCAL", "name": "Organismos Fiscales", "examples": ["AFIP", "ARBA", "AGIP"]},
+          {"code": "OS", "name": "Obras Sociales", "examples": ["OSECAC", "OSPACA", "OSPLAD"]},
+          {"code": "SINDICATO", "name": "Sindicatos", "examples": ["UOCRA", "UOM", "COMERCIO"]},
+          {"code": "ART", "name": "Aseguradoras de Riesgos", "examples": ["EXPERTA", "GALENO ART"]},
+          {"code": "SEGURO", "name": "Seguros de Vida", "examples": ["SMG", "MAPFRE"]}
+        ],
+        "purpose": "Consolidar aportes por entidad para generar archivos de pago y declaraciones juradas"
+      },
+      "workflow": {
+        "steps": [
+          {"number": 1, "name": "Validar", "description": "Verifica datos de empleados, plantillas asignadas y configuración"},
+          {"number": 2, "name": "Calcular", "description": "Ejecuta fórmulas y genera montos para cada empleado"},
+          {"number": 3, "name": "Revisar", "description": "Muestra alertas, anomalías y permite correcciones manuales"},
+          {"number": 4, "name": "Aprobar", "description": "Autorización final por supervisor/RRHH"},
+          {"number": 5, "name": "Pagar", "description": "Genera archivos bancarios, recibos PDF y actualiza estados"}
+        ]
       }
     },
     {
@@ -638,38 +710,9 @@
           "companies"
         ],
         "optional": [
-          "real-biometric-enterprise",
-          "access-control"
+          "real-biometric-enterprise"
         ],
-        "integrates_with": [
-          "access-control"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
-    },
-    {
-      "id": "access-control",
-      "name": "Control de Accesos",
-      "category": "security",
-      "version": "1.0.0",
-      "description": "Gestión de accesos a edificios y áreas restringidas",
-      "dependencies": {
-        "required": [
-          "users",
-          "companies"
-        ],
-        "optional": [
-          "real-biometric-enterprise",
-          "departments"
-        ],
-        "integrates_with": [
-          "real-biometric-enterprise",
-          "visitors"
-        ],
+        "integrates_with": [],
         "provides_to": []
       },
       "commercial": {

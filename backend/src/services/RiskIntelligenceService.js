@@ -1,16 +1,26 @@
 /**
- * RISK INTELLIGENCE SERVICE v2.0
+ * RISK INTELLIGENCE SERVICE v3.0 - RBAC SSOT Integration
  * Servicio de Análisis de Riesgo Laboral - Conexión SSOT Real
  *
  * Consulta tablas reales: attendances, users, sanctions, vacations, departments
  * Calcula índices de riesgo basado en datos reales
+ *
+ * NUEVO v3.0:
+ * - Integración con RBACService para umbrales dinámicos
+ * - Segmentación por tipo de trabajo (work_category)
+ * - Soporte para benchmarks internacionales (OIT, OSHA, SRT)
+ * - Métodos: manual, quartile, benchmark, hybrid
+ *
+ * @version 3.0.0 - RBAC Unified SSOT
+ * @date 2025-12-07
  */
 
-const { sequelize } = require('../config/database');
+const { sequelize, OrganizationalPosition, CompanyRiskConfig, RiskBenchmark } = require('../config/database');
 const { QueryTypes, Op } = require('sequelize');
+const RBACService = require('./RBACService');
 
-// Configuración de índices (editable)
-const RISK_CONFIG = {
+// Configuración de índices DEFAULT (fallback si no hay config de empresa)
+const DEFAULT_RISK_CONFIG = {
     FATIGUE: {
         id: 'fatigue',
         weight: 0.25,
@@ -42,6 +52,9 @@ const RISK_CONFIG = {
         thresholds: { low: 25, medium: 50, high: 70, critical: 85 }
     }
 };
+
+// Alias para compatibilidad con código existente
+const RISK_CONFIG = DEFAULT_RISK_CONFIG;
 
 class RiskIntelligenceService {
 
@@ -779,6 +792,290 @@ class RiskIntelligenceService {
             return { success: true, config: index };
         }
         return { success: false, error: 'Índice no encontrado' };
+    }
+
+    // =========================================================================
+    // MÉTODOS DE SEGMENTACIÓN Y UMBRALES DINÁMICOS (RBAC SSOT v3.0)
+    // =========================================================================
+
+    /**
+     * Obtener configuración de riesgo de una empresa
+     * Incluye método de cálculo, umbrales y opciones de segmentación
+     */
+    static async getCompanyRiskConfig(companyId) {
+        try {
+            const config = await RBACService.getOrCreateRiskConfig(companyId);
+            const benchmarks = await RBACService.getAllBenchmarks();
+
+            return {
+                success: true,
+                config: {
+                    threshold_method: config.threshold_method,
+                    enable_segmentation: config.enable_segmentation,
+                    global_thresholds: config.global_thresholds,
+                    global_weights: config.global_weights,
+                    hybrid_weights: config.hybrid_weights,
+                    quartile_recalc_frequency: config.quartile_recalc_frequency,
+                    last_quartile_calculation: config.last_quartile_calculation,
+                    calculated_quartiles: config.calculated_quartiles,
+                    default_benchmark_code: config.default_benchmark_code
+                },
+                available_benchmarks: benchmarks.map(b => ({
+                    code: b.benchmark_code,
+                    name: b.benchmark_name,
+                    category: b.work_category,
+                    source: b.source,
+                    source_year: b.source_year
+                })),
+                methods: [
+                    { id: 'manual', name: 'Manual (Paramétrico)', description: 'Umbrales fijos definidos por administrador' },
+                    { id: 'quartile', name: 'Cuartiles Dinámicos', description: 'Calculados por cuartiles de datos propios' },
+                    { id: 'benchmark', name: 'Benchmarks Internacionales', description: 'Basados en OIT, OSHA, SRT' },
+                    { id: 'hybrid', name: 'Híbrido', description: 'Combinación ponderada de los tres métodos' }
+                ]
+            };
+        } catch (error) {
+            console.error('[RiskIntelligence] Error getCompanyRiskConfig:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualizar configuración de riesgo de una empresa
+     */
+    static async updateCompanyRiskConfig(companyId, updates, userId = null) {
+        try {
+            const config = await RBACService.updateRiskConfig(companyId, updates, userId);
+            return {
+                success: true,
+                config,
+                message: 'Configuración actualizada correctamente'
+            };
+        } catch (error) {
+            console.error('[RiskIntelligence] Error updateCompanyRiskConfig:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Cambiar método de cálculo de umbrales
+     */
+    static async setThresholdMethod(companyId, method, hybridWeights = null, userId = null) {
+        try {
+            await RBACService.setThresholdMethod(companyId, method, hybridWeights, userId);
+
+            // Si el método es quartile o hybrid, recalcular cuartiles
+            if (method === 'quartile' || method === 'hybrid') {
+                await RBACService.recalculateQuartiles(companyId);
+            }
+
+            return {
+                success: true,
+                method,
+                message: `Método cambiado a ${method}`
+            };
+        } catch (error) {
+            console.error('[RiskIntelligence] Error setThresholdMethod:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Habilitar/deshabilitar segmentación por tipo de trabajo
+     */
+    static async setSegmentation(companyId, enabled, userId = null) {
+        try {
+            await RBACService.setSegmentation(companyId, enabled, userId);
+            return {
+                success: true,
+                enabled,
+                message: enabled ? 'Segmentación habilitada' : 'Segmentación deshabilitada'
+            };
+        } catch (error) {
+            console.error('[RiskIntelligence] Error setSegmentation:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Forzar recálculo de cuartiles
+     */
+    static async recalculateQuartiles(companyId) {
+        try {
+            const result = await RBACService.recalculateQuartiles(companyId);
+            return {
+                success: true,
+                quartiles: result,
+                message: 'Cuartiles recalculados correctamente'
+            };
+        } catch (error) {
+            console.error('[RiskIntelligence] Error recalculateQuartiles:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener umbrales efectivos para un empleado específico
+     * Considera: método de empresa, posición organizacional, benchmarks
+     */
+    static async getEmployeeThresholds(userId, companyId) {
+        try {
+            const rbac = await RBACService.getUserRBAC(userId, companyId);
+            if (!rbac) {
+                return DEFAULT_RISK_CONFIG;
+            }
+
+            return {
+                success: true,
+                user_id: userId,
+                position: rbac.position,
+                thresholds: rbac.risk_config.thresholds,
+                weights: rbac.risk_config.weights,
+                method: rbac.risk_config.method,
+                segmentation_enabled: rbac.risk_config.segmentation_enabled
+            };
+        } catch (error) {
+            console.error('[RiskIntelligence] Error getEmployeeThresholds:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener análisis de riesgo con segmentación
+     * Agrupa empleados por categoría de trabajo
+     */
+    static async getSegmentedRiskAnalysis(companyId, period = 30) {
+        try {
+            const employees = await this.getEmployeesWithRisk(companyId, period);
+            const config = await RBACService.getOrCreateRiskConfig(companyId);
+
+            // Agrupar por categoría de trabajo
+            const segments = {};
+            const unassigned = [];
+
+            for (const emp of employees) {
+                // Obtener posición organizacional
+                const [position] = await sequelize.query(`
+                    SELECT op.work_category, op.position_name, op.risk_exposure_level,
+                           op.applies_accident_risk, op.applies_fatigue_index
+                    FROM users u
+                    LEFT JOIN organizational_positions op ON u.organizational_position_id = op.id
+                    WHERE u.user_id = :userId
+                `, {
+                    replacements: { userId: emp.id },
+                    type: QueryTypes.SELECT
+                });
+
+                if (position?.work_category) {
+                    const category = position.work_category;
+                    if (!segments[category]) {
+                        segments[category] = {
+                            category,
+                            employees: [],
+                            avg_risk: 0,
+                            critical_count: 0,
+                            high_count: 0
+                        };
+                    }
+                    emp.position_data = position;
+                    segments[category].employees.push(emp);
+
+                    if (emp.risk_score >= 80) segments[category].critical_count++;
+                    else if (emp.risk_score >= 60) segments[category].high_count++;
+                } else {
+                    unassigned.push(emp);
+                }
+            }
+
+            // Calcular promedios por segmento
+            for (const seg of Object.values(segments)) {
+                seg.avg_risk = seg.employees.length > 0
+                    ? Math.round(seg.employees.reduce((s, e) => s + e.risk_score, 0) / seg.employees.length)
+                    : 0;
+                seg.employee_count = seg.employees.length;
+            }
+
+            return {
+                success: true,
+                segmentation_enabled: config.enable_segmentation,
+                threshold_method: config.threshold_method,
+                segments,
+                unassigned: {
+                    employees: unassigned,
+                    count: unassigned.length,
+                    message: 'Empleados sin posición organizacional asignada'
+                },
+                summary: {
+                    total_employees: employees.length,
+                    segmented: employees.length - unassigned.length,
+                    categories: Object.keys(segments).length
+                }
+            };
+        } catch (error) {
+            console.error('[RiskIntelligence] Error getSegmentedRiskAnalysis:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener benchmarks disponibles con comparación
+     */
+    static async getBenchmarkComparison(companyId, period = 30) {
+        try {
+            const indices = await this.calculateGlobalIndices(companyId, period);
+            const benchmarks = await RBACService.getAllBenchmarks();
+
+            const comparison = benchmarks.map(b => ({
+                benchmark: {
+                    code: b.benchmark_code,
+                    name: b.benchmark_name,
+                    category: b.work_category,
+                    source: `${b.source} ${b.source_year}`
+                },
+                fatigue: {
+                    company: indices.fatigue,
+                    p50: parseFloat(b.fatigue_p50),
+                    p75: parseFloat(b.fatigue_p75),
+                    status: indices.fatigue <= parseFloat(b.fatigue_p50) ? 'good' :
+                            indices.fatigue <= parseFloat(b.fatigue_p75) ? 'warning' : 'critical'
+                },
+                accident: {
+                    company: indices.accident,
+                    p50: parseFloat(b.accident_p50),
+                    p75: parseFloat(b.accident_p75),
+                    status: indices.accident <= parseFloat(b.accident_p50) ? 'good' :
+                            indices.accident <= parseFloat(b.accident_p75) ? 'warning' : 'critical'
+                },
+                legal_claim: {
+                    company: indices.legal_claim,
+                    p50: parseFloat(b.legal_claim_p50),
+                    p75: parseFloat(b.legal_claim_p75),
+                    status: indices.legal_claim <= parseFloat(b.legal_claim_p50) ? 'good' :
+                            indices.legal_claim <= parseFloat(b.legal_claim_p75) ? 'warning' : 'critical'
+                }
+            }));
+
+            return {
+                success: true,
+                company_indices: indices,
+                benchmarks: comparison
+            };
+        } catch (error) {
+            console.error('[RiskIntelligence] Error getBenchmarkComparison:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener estadísticas de RBAC para la empresa
+     */
+    static async getRBACStats(companyId) {
+        try {
+            return await RBACService.getCompanyRBACStats(companyId);
+        } catch (error) {
+            console.error('[RiskIntelligence] Error getRBACStats:', error);
+            throw error;
+        }
     }
 }
 

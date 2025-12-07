@@ -73,6 +73,38 @@ module.exports = (sequelize) => {
       allowNull: true,
       defaultValue: [],
       comment: 'Array de department_id que pueden usar este kiosk además de su kiosk por defecto. Ejemplo: [1, 2, 5]'
+    },
+    // Campos adicionales de hardware
+    has_external_reader: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: false
+    },
+    reader_model: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    reader_config: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: {}
+    },
+    ip_address: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    port: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 9998
+    },
+    last_seen: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    apk_version: {
+      type: DataTypes.STRING(20),
+      allowNull: true
     }
   }, {
     tableName: 'kiosks',

@@ -4,19 +4,21 @@
  *
  * Etapas del workflow:
  * 1. PREJUDICIAL: Intimaciones, cartas documento, negociaciones previas
- * 2. MEDIACION: Mediacion obligatoria (SECLO en Argentina)
+ * 2. MEDIACION: Mediacion/conciliacion obligatoria (segun jurisdiccion)
  * 3. JUDICIAL: Proceso judicial completo
  * 4. APELACION: Recursos de apelacion
  * 5. EJECUCION: Ejecucion de sentencia
  * 6. CERRADO: Caso finalizado
  *
  * Cada etapa tiene sub-estados especificos
+ * Sistema multi-jurisdiccion: la jurisdiccion se obtiene automaticamente de la sucursal
  */
 
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const LegalCase360Service = require('./LegalCase360Service');
 const LegalOllamaService = require('./LegalOllamaService');
+const LegalJurisdictionService = require('./LegalJurisdictionService');
 
 class LegalWorkflowService {
 
@@ -121,6 +123,23 @@ class LegalWorkflowService {
                 companyId
             );
 
+            // Obtener jurisdicción automáticamente de la empresa/sucursal si no se especifica
+            let jurisdictionCode = caseData.jurisdiction_code;
+            let jurisdiction = caseData.jurisdiction;
+            let currency = caseData.currency;
+
+            if (!jurisdictionCode || !jurisdiction) {
+                const companyJurisdiction = await LegalJurisdictionService.getJurisdictionForCompany(sequelize, companyId);
+                if (companyJurisdiction) {
+                    jurisdictionCode = jurisdictionCode || companyJurisdiction.countryCode;
+                    jurisdiction = jurisdiction || companyJurisdiction.countryName;
+                    // Obtener moneda del país si no se especificó
+                    if (!currency && companyJurisdiction.countryCode) {
+                        currency = LegalJurisdictionService.getCurrencyForCountry(companyJurisdiction.countryCode);
+                    }
+                }
+            }
+
             // Obtener datos del empleado para snapshot
             const employeeInfo = employee360.personal || {};
             const employmentInfo = employee360.employment || {};
@@ -168,9 +187,9 @@ class LegalWorkflowService {
                     title: caseData.title,
                     description: caseData.description,
                     claimedAmount: caseData.claimed_amount,
-                    currency: caseData.currency || 'ARS',
-                    jurisdiction: caseData.jurisdiction,
-                    jurisdictionCode: caseData.jurisdiction_code || 'ARG',
+                    currency: currency || null,
+                    jurisdiction: jurisdiction || null,
+                    jurisdictionCode: jurisdictionCode || null,
                     plaintiffLawyer: caseData.plaintiff_lawyer,
                     defendantLawyerId: caseData.defendant_lawyer_id || userId,
                     priority: caseData.priority || 'normal',

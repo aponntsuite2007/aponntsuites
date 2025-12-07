@@ -125,7 +125,14 @@ class Phase4TestOrchestrator {
             'medical': 'medical_leaves',
             'organizational': 'departments', // Módulo organizacional completo (departments, sectors, shifts, branches, agreements, categories, roles)
             'positions': 'organizational_positions', // Cargos organizacionales con CRUD + fuentes únicas
-            'payroll-liquidation': 'payroll_runs' // Módulo de liquidación
+            'payroll-liquidation': 'payroll_runs', // Módulo de liquidación
+            'job-postings': 'job_postings', // Búsquedas laborales + job_applications
+            'dms': 'dms_documents', // Sistema de Gestión Documental
+            'biometric-consent': 'biometric_consents', // Consentimientos biométricos + consent_audit_log
+            'employee-map': 'employee_locations', // Mapa de empleados + geofencing
+            'company-account': 'company_communications', // Cuenta comercial APONNT-Empresa + budgets + contracts + invoices
+            'legal': 'legal_cases', // Gestión Legal + comunicaciones + juicios + workflow + IA
+            'sanctions': 'sanctions' // Gestión de Sanciones + workflow (Draft→Lawyer→HR→Active) + bloqueos + apelaciones
         };
     }
 

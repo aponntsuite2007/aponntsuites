@@ -16,9 +16,10 @@
  * - Comparación entre empleados
  * - Exportación PDF profesional
  *
- * @version 2.0.0 Enterprise
- * @date 2025-01-29
+ * @version 3.0.0 Enterprise Dark Theme
+ * @date 2025-12-06
  * @changelog
+ *   - 3.0.0: Rediseño visual completo con Dark Theme (igual que payroll-liquidation)
  *   - 2.0.0: Agregadas tabs Enterprise: Biométrico Emocional y Compatibilidad/Reemplazos
  *   - 1.0.0: Versión inicial con tabs estándar
  * ============================================================================
@@ -52,7 +53,7 @@
         style.textContent = `
             .employee-360-wrapper {
                 padding: 20px;
-                background: #f8f9fa;
+                background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
                 min-height: calc(100vh - 60px);
             }
 
@@ -60,12 +61,15 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
                 color: white;
                 padding: 20px 25px;
                 border-radius: 12px;
                 margin-bottom: 20px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                box-shadow: 0 4px 25px rgba(14, 165, 233, 0.3);
+                border: 1px solid rgba(255,255,255,0.1);
+                position: relative;
+                overflow: hidden;
             }
 
             .e360-header h2 {
@@ -108,11 +112,12 @@
                 display: flex;
                 gap: 20px;
                 align-items: flex-end;
-                background: white;
+                background: rgba(255,255,255,0.03);
                 padding: 20px;
-                border-radius: 10px;
+                border-radius: 12px;
                 margin-bottom: 20px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                border: 1px solid rgba(255,255,255,0.08);
                 flex-wrap: wrap;
             }
 
@@ -126,7 +131,7 @@
                 display: block;
                 margin-bottom: 5px;
                 font-weight: 600;
-                color: #495057;
+                color: #e2e8f0;
             }
 
             .e360-employee-selector select {
@@ -153,8 +158,8 @@
             }
 
             .e360-comparison-list {
-                background: #fff3cd;
-                border: 1px solid #ffc107;
+                background: rgba(251, 191, 36, 0.1);
+                border: 1px solid rgba(251, 191, 36, 0.3);
                 padding: 15px;
                 border-radius: 8px;
                 margin-bottom: 20px;
@@ -163,6 +168,7 @@
             .e360-comparison-list h4 {
                 margin: 0 0 10px 0;
                 font-size: 0.95rem;
+                color: #fbbf24;
             }
 
             #comparison-chips {
@@ -173,7 +179,9 @@
             }
 
             .comparison-chip {
-                background: #ffc107;
+                background: rgba(251, 191, 36, 0.2);
+                border: 1px solid rgba(251, 191, 36, 0.4);
+                color: #fbbf24;
                 padding: 5px 10px;
                 border-radius: 15px;
                 font-size: 0.85rem;
@@ -184,61 +192,69 @@
 
             .comparison-chip .remove {
                 cursor: pointer;
-                color: #856404;
+                color: #fbbf24;
             }
 
             .e360-tabs {
                 display: flex;
                 gap: 5px;
-                background: white;
+                background: rgba(255,255,255,0.02);
                 padding: 10px;
-                border-radius: 10px 10px 0 0;
-                border-bottom: 2px solid #e9ecef;
+                border-radius: 12px 12px 0 0;
+                border-bottom: 1px solid rgba(255,255,255,0.08);
                 flex-wrap: wrap;
             }
 
             .e360-tab {
                 padding: 10px 20px;
-                border: none;
-                background: #f8f9fa;
+                border: 1px solid transparent;
+                background: rgba(255,255,255,0.05);
                 border-radius: 8px;
                 cursor: pointer;
-                transition: all 0.2s;
+                transition: all 0.3s ease;
                 display: flex;
                 align-items: center;
                 gap: 8px;
                 font-size: 0.9rem;
+                color: #94a3b8;
             }
 
             .e360-tab:hover {
-                background: #e9ecef;
+                background: rgba(14, 165, 233, 0.1);
+                color: #0ea5e9;
+                border-color: rgba(14, 165, 233, 0.3);
             }
 
             .e360-tab.active {
-                background: #3498db;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
                 color: white;
+                border-color: transparent;
+                box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
             }
 
             .e360-content {
-                background: white;
-                border-radius: 0 0 10px 10px;
+                background: rgba(255,255,255,0.02);
+                border-radius: 0 0 12px 12px;
                 min-height: 500px;
                 padding: 25px;
+                border: 1px solid rgba(255,255,255,0.05);
+                border-top: none;
             }
 
             .e360-placeholder {
                 text-align: center;
                 padding: 80px 20px;
-                color: #6c757d;
+                color: #94a3b8;
             }
 
             .e360-placeholder i {
-                color: #dee2e6;
+                color: rgba(14, 165, 233, 0.3);
                 margin-bottom: 20px;
             }
 
             .e360-placeholder h3 {
                 margin-bottom: 10px;
+                color: #e2e8f0;
             }
 
             .e360-features {
@@ -257,11 +273,12 @@
 
             .e360-features .feature i {
                 font-size: 2rem;
-                color: #3498db;
+                color: #0ea5e9;
             }
 
             .e360-features .feature span {
                 font-size: 0.9rem;
+                color: #cbd5e1;
             }
 
             /* Scoring Card */
@@ -344,24 +361,25 @@
                 display: grid;
                 grid-template-columns: 150px 1fr;
                 gap: 25px;
-                background: #f8f9fa;
+                background: rgba(255,255,255,0.03);
                 padding: 20px;
-                border-radius: 10px;
+                border-radius: 12px;
                 margin-bottom: 20px;
+                border: 1px solid rgba(255,255,255,0.08);
             }
 
             .employee-avatar {
                 width: 150px;
                 height: 150px;
                 border-radius: 50%;
-                background: #dee2e6;
+                background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(6, 182, 212, 0.2));
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-size: 4rem;
-                color: #6c757d;
-                border: 4px solid white;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                color: #0ea5e9;
+                border: 4px solid rgba(14, 165, 233, 0.5);
+                box-shadow: 0 4px 20px rgba(14, 165, 233, 0.2);
             }
 
             .employee-details {
@@ -371,14 +389,15 @@
             }
 
             .detail-item {
-                background: white;
+                background: rgba(255,255,255,0.05);
                 padding: 12px;
                 border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.08);
             }
 
             .detail-label {
                 font-size: 0.75rem;
-                color: #6c757d;
+                color: #64748b;
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
             }
@@ -386,7 +405,7 @@
             .detail-value {
                 font-size: 1rem;
                 font-weight: 600;
-                color: #2c3e50;
+                color: #e2e8f0;
                 margin-top: 4px;
             }
 
@@ -399,17 +418,18 @@
             }
 
             .stat-card {
-                background: white;
+                background: rgba(255,255,255,0.03);
                 padding: 20px;
-                border-radius: 10px;
+                border-radius: 12px;
                 text-align: center;
-                border: 1px solid #e9ecef;
-                transition: transform 0.2s, box-shadow 0.2s;
+                border: 1px solid rgba(255,255,255,0.08);
+                transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
             }
 
             .stat-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                transform: translateY(-4px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+                border-color: rgba(14, 165, 233, 0.3);
             }
 
             .stat-icon {
@@ -423,20 +443,20 @@
                 font-size: 1.3rem;
             }
 
-            .stat-icon.green { background: #d4edda; color: #155724; }
-            .stat-icon.blue { background: #cce5ff; color: #004085; }
-            .stat-icon.yellow { background: #fff3cd; color: #856404; }
-            .stat-icon.red { background: #f8d7da; color: #721c24; }
+            .stat-icon.green { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+            .stat-icon.blue { background: rgba(14, 165, 233, 0.15); color: #0ea5e9; }
+            .stat-icon.yellow { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+            .stat-icon.red { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 
             .stat-value {
                 font-size: 1.8rem;
                 font-weight: 700;
-                color: #2c3e50;
+                color: #f1f5f9;
             }
 
             .stat-label {
                 font-size: 0.85rem;
-                color: #6c757d;
+                color: #94a3b8;
             }
 
             /* Timeline */
@@ -452,16 +472,22 @@
                 top: 0;
                 bottom: 0;
                 width: 2px;
-                background: #dee2e6;
+                background: rgba(255,255,255,0.1);
             }
 
             .timeline-item {
                 position: relative;
                 padding: 15px 20px;
-                background: white;
+                background: rgba(255,255,255,0.03);
                 border-radius: 8px;
                 margin-bottom: 15px;
-                border: 1px solid #e9ecef;
+                border: 1px solid rgba(255,255,255,0.08);
+                transition: all 0.3s ease;
+            }
+
+            .timeline-item:hover {
+                background: rgba(255,255,255,0.05);
+                border-color: rgba(14, 165, 233, 0.3);
             }
 
             .timeline-item::before {
@@ -472,31 +498,33 @@
                 width: 10px;
                 height: 10px;
                 border-radius: 50%;
-                background: #3498db;
-                border: 2px solid white;
+                background: #0ea5e9;
+                border: 2px solid #1a1a2e;
+                box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
             }
 
-            .timeline-item.attendance::before { background: #3498db; }
-            .timeline-item.sanction::before { background: #e74c3c; }
-            .timeline-item.training::before { background: #2ecc71; }
-            .timeline-item.vacation::before { background: #f39c12; }
-            .timeline-item.medical::before { background: #9b59b6; }
-            .timeline-item.audit::before { background: #95a5a6; }
+            .timeline-item.attendance::before { background: #0ea5e9; box-shadow: 0 0 10px rgba(14, 165, 233, 0.5); }
+            .timeline-item.sanction::before { background: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+            .timeline-item.training::before { background: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
+            .timeline-item.vacation::before { background: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+            .timeline-item.medical::before { background: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+            .timeline-item.audit::before { background: #64748b; box-shadow: 0 0 10px rgba(100, 116, 139, 0.5); }
 
             .timeline-date {
                 font-size: 0.75rem;
-                color: #6c757d;
+                color: #64748b;
                 margin-bottom: 5px;
             }
 
             .timeline-title {
                 font-weight: 600;
                 margin-bottom: 5px;
+                color: #e2e8f0;
             }
 
             .timeline-description {
                 font-size: 0.9rem;
-                color: #495057;
+                color: #94a3b8;
             }
 
             /* AI Analysis */
@@ -570,8 +598,8 @@
             .e360-loading .spinner {
                 width: 50px;
                 height: 50px;
-                border: 4px solid #e9ecef;
-                border-top-color: #3498db;
+                border: 4px solid rgba(255,255,255,0.1);
+                border-top-color: #0ea5e9;
                 border-radius: 50%;
                 animation: spin 1s linear infinite;
             }
@@ -582,7 +610,7 @@
 
             .e360-loading p {
                 margin-top: 15px;
-                color: #6c757d;
+                color: #94a3b8;
             }
 
             /* Comparison View */
@@ -594,17 +622,18 @@
             .comparison-header {
                 display: grid;
                 gap: 15px;
-                background: #f8f9fa;
+                background: rgba(255,255,255,0.03);
                 padding: 15px;
                 border-radius: 10px;
                 margin-bottom: 20px;
+                border: 1px solid rgba(255,255,255,0.08);
             }
 
             .comparison-row {
                 display: grid;
                 gap: 15px;
                 padding: 10px;
-                border-bottom: 1px solid #e9ecef;
+                border-bottom: 1px solid rgba(255,255,255,0.08);
             }
 
             .comparison-row:last-child {
@@ -619,6 +648,7 @@
             .comparison-employee-name {
                 font-weight: 600;
                 font-size: 1.1rem;
+                color: #e2e8f0;
             }
 
             .comparison-score {
@@ -626,10 +656,10 @@
                 font-weight: 700;
             }
 
-            .comparison-score.excellent { color: #27ae60; }
-            .comparison-score.good { color: #3498db; }
-            .comparison-score.average { color: #f39c12; }
-            .comparison-score.poor { color: #e74c3c; }
+            .comparison-score.excellent { color: #22c55e; }
+            .comparison-score.good { color: #0ea5e9; }
+            .comparison-score.average { color: #fbbf24; }
+            .comparison-score.poor { color: #ef4444; }
 
             /* Responsive */
             @media (max-width: 1200px) {
@@ -737,6 +767,176 @@
                 font-style: italic;
             }
 
+            /* Dark Theme: Form Controls */
+            .employee-360-wrapper .form-control,
+            .employee-360-wrapper select,
+            .employee-360-wrapper input[type="date"],
+            .employee-360-wrapper input[type="text"] {
+                background: rgba(255,255,255,0.05) !important;
+                border: 1px solid rgba(255,255,255,0.15) !important;
+                color: #e2e8f0 !important;
+                border-radius: 8px;
+                padding: 10px 14px;
+                transition: all 0.3s ease;
+            }
+
+            .employee-360-wrapper .form-control:focus,
+            .employee-360-wrapper select:focus,
+            .employee-360-wrapper input:focus {
+                background: rgba(255,255,255,0.08) !important;
+                border-color: rgba(14, 165, 233, 0.5) !important;
+                box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+                outline: none;
+            }
+
+            .employee-360-wrapper select option {
+                background: #1a1a2e;
+                color: #e2e8f0;
+            }
+
+            /* Dark Theme: Buttons */
+            .employee-360-wrapper .btn {
+                border-radius: 8px;
+                padding: 10px 18px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: 1px solid transparent;
+            }
+
+            .employee-360-wrapper .btn-primary {
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+                border-color: transparent;
+                color: white;
+                box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+            }
+
+            .employee-360-wrapper .btn-primary:hover:not(:disabled) {
+                background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+            }
+
+            .employee-360-wrapper .btn-primary:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .employee-360-wrapper .btn-secondary {
+                background: rgba(255,255,255,0.05);
+                border-color: rgba(255,255,255,0.15);
+                color: #cbd5e1;
+            }
+
+            .employee-360-wrapper .btn-secondary:hover:not(:disabled) {
+                background: rgba(255,255,255,0.1);
+                border-color: rgba(14, 165, 233, 0.3);
+                color: #0ea5e9;
+            }
+
+            .employee-360-wrapper .btn-success {
+                background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                border-color: transparent;
+                color: white;
+                box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            }
+
+            .employee-360-wrapper .btn-success:hover:not(:disabled) {
+                background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+            }
+
+            .employee-360-wrapper .btn-outline-danger {
+                background: transparent;
+                border-color: rgba(239, 68, 68, 0.5);
+                color: #ef4444;
+            }
+
+            .employee-360-wrapper .btn-outline-danger:hover {
+                background: rgba(239, 68, 68, 0.1);
+                border-color: #ef4444;
+            }
+
+            /* Dark Theme: Date range separator */
+            .e360-date-range .date-inputs span {
+                color: #94a3b8;
+            }
+
+            /* Dark Theme: Scrollbar */
+            .employee-360-wrapper ::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+
+            .employee-360-wrapper ::-webkit-scrollbar-track {
+                background: rgba(255,255,255,0.02);
+                border-radius: 4px;
+            }
+
+            .employee-360-wrapper ::-webkit-scrollbar-thumb {
+                background: rgba(255,255,255,0.1);
+                border-radius: 4px;
+            }
+
+            .employee-360-wrapper ::-webkit-scrollbar-thumb:hover {
+                background: rgba(14, 165, 233, 0.3);
+            }
+
+            /* Dark Theme: Tables */
+            .employee-360-wrapper table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .employee-360-wrapper table th {
+                background: rgba(14, 165, 233, 0.1);
+                color: #0ea5e9;
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.5px;
+                padding: 12px 16px;
+                text-align: left;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+
+            .employee-360-wrapper table td {
+                padding: 12px 16px;
+                color: #e2e8f0;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+            }
+
+            .employee-360-wrapper table tr:hover td {
+                background: rgba(14, 165, 233, 0.05);
+            }
+
+            /* Dark Theme: Badges */
+            .employee-360-wrapper .badge {
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: 600;
+            }
+
+            .employee-360-wrapper .badge-success { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+            .employee-360-wrapper .badge-warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+            .employee-360-wrapper .badge-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+            .employee-360-wrapper .badge-info { background: rgba(14, 165, 233, 0.2); color: #0ea5e9; }
+            .employee-360-wrapper .badge-secondary { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+
+            /* Glow effects for accent elements */
+            .e360-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), transparent);
+                border-radius: 12px;
+                pointer-events: none;
+            }
+
         `;
         document.head.appendChild(style);
         console.log('✅ [360°] Estilos inyectados en head');
@@ -836,32 +1036,7 @@
                     </button>
                 </div>
 
-                <!-- Tabs de contenido -->
-                <div class="e360-tabs">
-                    <button class="e360-tab active" data-tab="overview">
-                        <i class="fas fa-tachometer-alt"></i> Resumen
-                    </button>
-                    <button class="e360-tab" data-tab="attendance">
-                        <i class="fas fa-clock"></i> Asistencia
-                    </button>
-                    <button class="e360-tab" data-tab="discipline">
-                        <i class="fas fa-gavel"></i> Disciplina
-                    </button>
-                    <button class="e360-tab" data-tab="training">
-                        <i class="fas fa-graduation-cap"></i> Capacitaciones
-                    </button>
-                    <button class="e360-tab" data-tab="medical">
-                        <i class="fas fa-heartbeat"></i> Médico
-                    </button>
-                    <button class="e360-tab" data-tab="timeline">
-                        <i class="fas fa-history"></i> Timeline
-                    </button>
-                    <button class="e360-tab" data-tab="ai-analysis">
-                        <i class="fas fa-robot"></i> Análisis IA
-                    </button>
-                </div>
-
-                <!-- Contenido principal -->
+                <!-- Contenido principal - Las tabs se generan al crear el reporte -->
                 <div class="e360-content">
                     <!-- Placeholder inicial -->
                     <div id="e360-placeholder" class="e360-placeholder">
@@ -887,29 +1062,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Tab: Resumen -->
-                    <div id="tab-overview" class="e360-tab-content" style="display: none;"></div>
-
-                    <!-- Tab: Asistencia -->
-                    <div id="tab-attendance" class="e360-tab-content" style="display: none;"></div>
-
-                    <!-- Tab: Disciplina -->
-                    <div id="tab-discipline" class="e360-tab-content" style="display: none;"></div>
-
-                    <!-- Tab: Capacitaciones -->
-                    <div id="tab-training" class="e360-tab-content" style="display: none;"></div>
-
-                    <!-- Tab: Médico -->
-                    <div id="tab-medical" class="e360-tab-content" style="display: none;"></div>
-
-                    <!-- Tab: Timeline -->
-                    <div id="tab-timeline" class="e360-tab-content" style="display: none;"></div>
-
-                    <!-- Tab: Análisis IA -->
-                    <div id="tab-ai-analysis" class="e360-tab-content" style="display: none;"></div>
-                <div id="tab-biometric" class="e360-tab-content" style="display: none;"></div>
-                <div id="tab-compatibility" class="e360-tab-content" style="display: none;"></div>
                 </div>
             </div>
         `;

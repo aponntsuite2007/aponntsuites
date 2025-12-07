@@ -435,40 +435,192 @@ const EngineeringDashboard = {
 
   /**
    * VISTA: Backend Files - Todos los archivos/módulos de backend (DINÁMICO)
+   * Con sub-tabs: Archivos | Deploy
    */
   renderBackendFiles() {
     // Cargar archivos dinámicamente y renderizar
     this.loadAndRenderFiles('backend');
 
     return `
-      <div class="backend-files-container" id="backend-files-dynamic">
-        <h2>⚙️ Escaneando Archivos Backend...</h2>
-        <div style="text-align: center; padding: 50px;">
-          <div style="font-size: 64px; margin-bottom: 20px;">⚙️</div>
-          <div style="font-size: 18px; color: #6b7280;">Escaneando todos los archivos .js del proyecto...</div>
-          <div style="margin-top: 15px; color: #3b82f6;">Esto puede tardar unos segundos</div>
+      <div class="backend-files-container" style="padding: 20px;">
+        <div style="margin-bottom: 30px;">
+          <h2 style="margin: 0 0 10px 0; color: #1f2937; display: flex; align-items: center; gap: 10px;">
+            <span>⚙️</span>
+            <span>Archivos Backend</span>
+          </h2>
         </div>
+
+        <!-- Sub-tabs de Backend -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+          <button onclick="window.EngineeringDashboard.switchBackendSubTab('files')" id="backend-subtab-files"
+            class="backend-subtab active"
+            style="padding: 10px 20px; border: none; background: #3b82f6; color: white; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500;">
+            📂 Archivos
+          </button>
+          <button onclick="window.EngineeringDashboard.switchBackendSubTab('deploy')" id="backend-subtab-deploy"
+            class="backend-subtab"
+            style="padding: 10px 20px; border: none; background: #e5e7eb; color: #374151; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500;">
+            🚀 Deploy a Render
+          </button>
+        </div>
+
+        <!-- Contenido Archivos (default) -->
+        <div id="backend-content-files">
+          <div id="backend-files-dynamic">
+            <div style="text-align: center; padding: 50px;">
+              <div style="font-size: 64px; margin-bottom: 20px;">⚙️</div>
+              <div style="font-size: 18px; color: #6b7280;">Escaneando todos los archivos .js del proyecto...</div>
+              <div style="margin-top: 15px; color: #3b82f6;">Esto puede tardar unos segundos</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenido Deploy (hidden by default) -->
+        <div id="backend-content-deploy" style="display: none;"></div>
       </div>
     `;
   },
 
   /**
+   * Switch entre sub-tabs de Backend
+   */
+  switchBackendSubTab(tabId) {
+    // Ocultar todos los contenidos
+    document.getElementById('backend-content-files').style.display = 'none';
+    document.getElementById('backend-content-deploy').style.display = 'none';
+
+    // Desactivar todos los tabs
+    document.getElementById('backend-subtab-files').style.background = '#e5e7eb';
+    document.getElementById('backend-subtab-files').style.color = '#374151';
+    document.getElementById('backend-subtab-deploy').style.background = '#e5e7eb';
+    document.getElementById('backend-subtab-deploy').style.color = '#374151';
+
+    // Activar el tab seleccionado
+    const activeTab = document.getElementById(`backend-subtab-${tabId}`);
+    activeTab.style.background = '#3b82f6';
+    activeTab.style.color = 'white';
+
+    // Mostrar contenido correspondiente
+    const content = document.getElementById(`backend-content-${tabId}`);
+    content.style.display = 'block';
+
+    // Si es deploy, renderizar el módulo DeploymentSync
+    if (tabId === 'deploy') {
+      if (typeof DeploymentSync !== 'undefined') {
+        DeploymentSync.render(content, 'backend');
+      } else {
+        content.innerHTML = `
+          <div style="padding: 40px; text-align: center; color: #6b7280;">
+            <p>⏳ Cargando módulo de deployment...</p>
+            <p style="font-size: 12px; margin-top: 10px;">Si no carga, verifique que deployment-sync.js esté incluido</p>
+          </div>
+        `;
+        // Intentar cargar el script dinámicamente
+        const script = document.createElement('script');
+        script.src = '/js/modules/deployment-sync.js';
+        script.onload = () => {
+          if (typeof DeploymentSync !== 'undefined') {
+            DeploymentSync.render(content, 'backend');
+          }
+        };
+        document.head.appendChild(script);
+      }
+    }
+  },
+
+  /**
    * VISTA: Frontend Files - Todos los archivos/módulos de frontend (DINÁMICO)
+   * Con sub-tabs: Archivos | APK Management
    */
   renderFrontendFiles() {
     // Cargar archivos dinámicamente y renderizar
     this.loadAndRenderFiles('frontend');
 
     return `
-      <div class="frontend-files-container" id="frontend-files-dynamic">
-        <h2>🎨 Escaneando Archivos Frontend...</h2>
-        <div style="text-align: center; padding: 50px;">
-          <div style="font-size: 64px; margin-bottom: 20px;">🎨</div>
-          <div style="font-size: 18px; color: #6b7280;">Escaneando todos los archivos .js del frontend...</div>
-          <div style="margin-top: 15px; color: #10b981;">Esto puede tardar unos segundos</div>
+      <div class="frontend-files-container" style="padding: 20px;">
+        <div style="margin-bottom: 30px;">
+          <h2 style="margin: 0 0 10px 0; color: #1f2937; display: flex; align-items: center; gap: 10px;">
+            <span>🎨</span>
+            <span>Archivos Frontend</span>
+          </h2>
         </div>
+
+        <!-- Sub-tabs de Frontend -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+          <button onclick="window.EngineeringDashboard.switchFrontendSubTab('files')" id="frontend-subtab-files"
+            class="frontend-subtab active"
+            style="padding: 10px 20px; border: none; background: #10b981; color: white; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500;">
+            📂 Archivos
+          </button>
+          <button onclick="window.EngineeringDashboard.switchFrontendSubTab('apk')" id="frontend-subtab-apk"
+            class="frontend-subtab"
+            style="padding: 10px 20px; border: none; background: #e5e7eb; color: #374151; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500;">
+            📱 APK Management
+          </button>
+        </div>
+
+        <!-- Contenido Archivos (default) -->
+        <div id="frontend-content-files">
+          <div id="frontend-files-dynamic">
+            <div style="text-align: center; padding: 50px;">
+              <div style="font-size: 64px; margin-bottom: 20px;">🎨</div>
+              <div style="font-size: 18px; color: #6b7280;">Escaneando todos los archivos .js del frontend...</div>
+              <div style="margin-top: 15px; color: #10b981;">Esto puede tardar unos segundos</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenido APK (hidden by default) -->
+        <div id="frontend-content-apk" style="display: none;"></div>
       </div>
     `;
+  },
+
+  /**
+   * Switch entre sub-tabs de Frontend
+   */
+  switchFrontendSubTab(tabId) {
+    // Ocultar todos los contenidos
+    document.getElementById('frontend-content-files').style.display = 'none';
+    document.getElementById('frontend-content-apk').style.display = 'none';
+
+    // Desactivar todos los tabs
+    document.getElementById('frontend-subtab-files').style.background = '#e5e7eb';
+    document.getElementById('frontend-subtab-files').style.color = '#374151';
+    document.getElementById('frontend-subtab-apk').style.background = '#e5e7eb';
+    document.getElementById('frontend-subtab-apk').style.color = '#374151';
+
+    // Activar el tab seleccionado
+    const activeTab = document.getElementById(`frontend-subtab-${tabId}`);
+    activeTab.style.background = '#10b981';
+    activeTab.style.color = 'white';
+
+    // Mostrar contenido correspondiente
+    const content = document.getElementById(`frontend-content-${tabId}`);
+    content.style.display = 'block';
+
+    // Si es apk, renderizar el módulo DeploymentSync en modo APK
+    if (tabId === 'apk') {
+      if (typeof DeploymentSync !== 'undefined') {
+        DeploymentSync.render(content, 'apk');
+      } else {
+        content.innerHTML = `
+          <div style="padding: 40px; text-align: center; color: #6b7280;">
+            <p>⏳ Cargando módulo de APK management...</p>
+            <p style="font-size: 12px; margin-top: 10px;">Si no carga, verifique que deployment-sync.js esté incluido</p>
+          </div>
+        `;
+        // Intentar cargar el script dinámicamente
+        const script = document.createElement('script');
+        script.src = '/js/modules/deployment-sync.js';
+        script.onload = () => {
+          if (typeof DeploymentSync !== 'undefined') {
+            DeploymentSync.render(content, 'apk');
+          }
+        };
+        document.head.appendChild(script);
+      }
+    }
   },
 
   /**

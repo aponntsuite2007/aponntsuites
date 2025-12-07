@@ -1,6 +1,14 @@
 /**
  * Modelo: OrganizationalPosition
  * Posiciones/cargos organizacionales con template de recibo asignado
+ *
+ * SSOT (Single Source of Truth) para:
+ * - Estructura jerárquica organizacional
+ * - Clasificación de riesgo laboral por puesto
+ * - Templates de nómina/recibos
+ * - Segmentación para Risk Intelligence
+ *
+ * @version 2.0.0 - RBAC Unified SSOT
  */
 const { DataTypes } = require('sequelize');
 
@@ -57,6 +65,85 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: true
         },
+
+        // =====================================================================
+        // CAMPOS DE CLASIFICACIÓN LABORAL Y RIESGO (RBAC SSOT v2.0)
+        // =====================================================================
+
+        work_category: {
+            type: DataTypes.STRING(50),
+            allowNull: false,
+            defaultValue: 'administrativo',
+            validate: {
+                isIn: [['administrativo', 'operativo', 'tecnico', 'comercial', 'gerencial', 'mixto']]
+            },
+            comment: 'Categoría de trabajo: administrativo, operativo, técnico, comercial, gerencial, mixto'
+        },
+        work_environment: {
+            type: DataTypes.STRING(50),
+            allowNull: false,
+            defaultValue: 'oficina',
+            validate: {
+                isIn: [['oficina', 'planta', 'exterior', 'remoto', 'mixto']]
+            },
+            comment: 'Ambiente de trabajo: oficina, planta, exterior, remoto, mixto'
+        },
+        physical_demand_level: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 1,
+            validate: { min: 1, max: 5 },
+            comment: 'Nivel de demanda física 1-5 (OIT): 1=Sedentario, 2=Ligero, 3=Moderado, 4=Pesado, 5=Muy pesado'
+        },
+        cognitive_demand_level: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 3,
+            validate: { min: 1, max: 5 },
+            comment: 'Nivel de demanda cognitiva 1-5: 1=Rutinario, 2=Semi-rutinario, 3=Variable, 4=Complejo, 5=Muy complejo'
+        },
+        risk_exposure_level: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 1,
+            validate: { min: 1, max: 5 },
+            comment: 'Nivel de exposición al riesgo 1-5: 1=Mínimo, 2=Bajo, 3=Moderado, 4=Alto, 5=Muy alto'
+        },
+        international_code_ciuo: {
+            type: DataTypes.STRING(10),
+            allowNull: true,
+            comment: 'Código CIUO-08 (Clasificación Internacional Uniforme de Ocupaciones OIT)'
+        },
+        international_code_srt: {
+            type: DataTypes.STRING(20),
+            allowNull: true,
+            comment: 'Código SRT Argentina (Superintendencia de Riesgos del Trabajo)'
+        },
+        applies_accident_risk: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
+            comment: 'Si aplica índice de riesgo de accidente (false para administrativos puros)'
+        },
+        applies_fatigue_index: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
+            comment: 'Si aplica índice de fatiga laboral'
+        },
+        custom_risk_weights: {
+            type: DataTypes.JSONB,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Pesos personalizados por posición: {"fatigue": 0.30, "accident": 0.10, "legal": 0.20, "performance": 0.25, "turnover": 0.15}'
+        },
+        custom_thresholds: {
+            type: DataTypes.JSONB,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Umbrales personalizados por posición: {"fatigue": {"low": 25, "medium": 50, "high": 70, "critical": 85}}'
+        },
+
         is_active: {
             type: DataTypes.BOOLEAN,
             defaultValue: true

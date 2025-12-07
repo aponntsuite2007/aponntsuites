@@ -33,6 +33,9 @@ const {
 // Importar servicio de inbox para notificaciones proactivas
 const inboxService = require('../services/inboxService');
 
+// Importar servicio de matching de candidatos internos
+const InternalCandidateMatchingService = require('../services/InternalCandidateMatchingService');
+
 // Configurar multer para subida de CVs
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -678,6 +681,16 @@ router.post('/offers', [
       status: data.status || 'draft',
       is_public: data.is_public !== false,
       is_internal: data.is_internal || false,
+      // Campos de búsqueda interna
+      search_scope: data.search_scope || 'external',
+      internal_matching_enabled: data.internal_matching_enabled !== false,
+      internal_matching_criteria: data.internal_matching_criteria || {
+        match_skills: true,
+        match_experience: true,
+        match_certifications: true,
+        match_education: true,
+        min_match_score: 50
+      },
       max_applications: data.max_applications || null,
       auto_close_date: data.auto_close_date || null,
       requires_cv: data.requires_cv !== false,
@@ -734,6 +747,8 @@ router.put('/offers/:id', async (req, res) => {
       'department_id', 'department_name', 'location', 'job_type',
       'salary_min', 'salary_max', 'salary_currency', 'salary_period',
       'benefits', 'status', 'is_public', 'is_internal',
+      // Campos de búsqueda interna
+      'search_scope', 'internal_matching_enabled', 'internal_matching_criteria',
       'max_applications', 'auto_close_date', 'requires_cv',
       'requires_cover_letter', 'tags', 'skills_required',
       'hiring_manager_id', 'recruiter_id'
@@ -836,7 +851,7 @@ router.delete('/offers/:id', async (req, res) => {
 
 /**
  * POST /api/job-postings/offers/:id/publish
- * Publicar oferta
+ * Publicar oferta (auto-dispara matching interno si aplica)
  */
 router.post('/offers/:id/publish', async (req, res) => {
   try {
@@ -859,10 +874,28 @@ router.post('/offers/:id/publish', async (req, res) => {
 
     await offer.publish();
 
+    let internalMatchingResult = null;
+
+    // AUTO-TRIGGER: Si la búsqueda incluye candidatos internos, ejecutar matching
+    if (['internal', 'both'].includes(offer.search_scope) && offer.internal_matching_enabled) {
+      console.log(`🔍 [JOB-POSTINGS] Auto-ejecutando matching interno para oferta ${id}`);
+      try {
+        const matchingService = new InternalCandidateMatchingService(context.companyId);
+        internalMatchingResult = await matchingService.executeMatching(offer);
+        console.log(`✅ [JOB-POSTINGS] Matching completado: ${internalMatchingResult.candidatesNotified} candidatos notificados`);
+      } catch (matchError) {
+        console.error('⚠️ [JOB-POSTINGS] Error en matching interno:', matchError);
+        internalMatchingResult = { error: matchError.message, candidatesNotified: 0 };
+      }
+    }
+
     res.json({
       success: true,
       offer,
-      message: 'Oferta publicada exitosamente'
+      internalMatching: internalMatchingResult,
+      message: internalMatchingResult
+        ? `Oferta publicada. ${internalMatchingResult.candidatesNotified || 0} candidatos internos notificados.`
+        : 'Oferta publicada exitosamente'
     });
 
   } catch (error) {
@@ -870,6 +903,135 @@ router.post('/offers/:id/publish', async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Error al publicar oferta'
+    });
+  }
+});
+
+/**
+ * POST /api/job-postings/offers/:id/run-internal-matching
+ * Ejecutar matching de candidatos internos manualmente
+ */
+router.post('/offers/:id/run-internal-matching', async (req, res) => {
+  try {
+    const context = buildContext(req);
+    const { id } = req.params;
+    const { force = false, min_score } = req.body;
+
+    const offer = await JobPosting.findOne({
+      where: {
+        id,
+        company_id: context.companyId
+      }
+    });
+
+    if (!offer) {
+      return res.status(404).json({
+        success: false,
+        error: 'Oferta no encontrada'
+      });
+    }
+
+    // Verificar que la oferta esté activa
+    if (offer.status !== 'active') {
+      return res.status(400).json({
+        success: false,
+        error: 'La oferta debe estar activa para ejecutar el matching'
+      });
+    }
+
+    // Verificar que la oferta tenga búsqueda interna habilitada
+    if (!['internal', 'both'].includes(offer.search_scope)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Esta oferta no tiene habilitada la búsqueda interna',
+        hint: 'Cambie el campo search_scope a "internal" o "both"'
+      });
+    }
+
+    console.log(`🔍 [JOB-POSTINGS] Ejecutando matching interno manual para oferta ${id}`);
+
+    // Crear servicio de matching
+    const matchingService = new InternalCandidateMatchingService(context.companyId);
+
+    // Ejecutar matching
+    const result = await matchingService.executeMatching(offer, {
+      forceResend: force,
+      minScore: min_score || offer.internal_matching_criteria?.min_match_score || 50
+    });
+
+    console.log(`✅ [JOB-POSTINGS] Matching completado: ${result.candidatesNotified} candidatos notificados`);
+
+    res.json({
+      success: true,
+      result,
+      message: `Matching ejecutado. ${result.candidatesNotified} candidatos internos notificados.`
+    });
+
+  } catch (error) {
+    console.error('❌ [JOB-POSTINGS] Error ejecutando matching interno:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Error al ejecutar matching interno'
+    });
+  }
+});
+
+/**
+ * GET /api/job-postings/offers/:id/internal-candidates
+ * Obtener candidatos internos que hacen match con la oferta
+ */
+router.get('/offers/:id/internal-candidates', async (req, res) => {
+  try {
+    const context = buildContext(req);
+    const { id } = req.params;
+    const { show_all = false } = req.query;
+
+    const offer = await JobPosting.findOne({
+      where: {
+        id,
+        company_id: context.companyId
+      }
+    });
+
+    if (!offer) {
+      return res.status(404).json({
+        success: false,
+        error: 'Oferta no encontrada'
+      });
+    }
+
+    // Crear servicio de matching
+    const matchingService = new InternalCandidateMatchingService(context.companyId);
+
+    // Obtener candidatos con preview (sin enviar notificaciones)
+    const candidates = await matchingService.getMatchingCandidates(offer, {
+      showAll: show_all === 'true',
+      includeNotified: true
+    });
+
+    // Enriquecer con info de si ya fueron notificados
+    const notifiedIds = offer.internal_candidates_notified || [];
+    const enrichedCandidates = candidates.map(c => ({
+      ...c,
+      already_notified: notifiedIds.includes(c.user_id),
+      notified_at: notifiedIds.includes(c.user_id) ? offer.internal_matching_executed_at : null
+    }));
+
+    res.json({
+      success: true,
+      candidates: enrichedCandidates,
+      total: enrichedCandidates.length,
+      alreadyNotified: enrichedCandidates.filter(c => c.already_notified).length,
+      pendingNotification: enrichedCandidates.filter(c => !c.already_notified).length,
+      matchingCriteria: offer.internal_matching_criteria,
+      lastExecutedAt: offer.internal_matching_executed_at
+    });
+
+  } catch (error) {
+    console.error('❌ [JOB-POSTINGS] Error obteniendo candidatos internos:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Error al obtener candidatos internos'
     });
   }
 });

@@ -281,6 +281,10 @@ const PayrollEntitySettlementDetail = require('../models/PayrollEntitySettlement
 const PayrollPayslipTemplate = require('../models/PayrollPayslipTemplate')(sequelize);
 const OrganizationalPosition = require('../models/OrganizationalPosition')(sequelize);
 
+// ✅ MODELOS - RBAC Unified SSOT v2.0 (Risk Intelligence Segmentation)
+const RiskBenchmark = require('../models/RiskBenchmark')(sequelize);
+const CompanyRiskConfig = require('../models/CompanyRiskConfig')(sequelize);
+
 // ✅ MODELO - Sistema de Estructura Organizacional Enterprise
 const Sector = require('../models/Sector')(sequelize);
 
@@ -379,6 +383,33 @@ MedicalHistory.belongsTo(User, { foreignKey: 'userId', targetKey: 'user_id' });
 
 MedicalCertificate.hasMany(MedicalStudy, { foreignKey: 'certificateId', as: 'studies' });
 MedicalStudy.belongsTo(MedicalCertificate, { foreignKey: 'certificateId' });
+
+// =========================================================================
+// ✅ ASOCIACIONES - RBAC Unified SSOT v2.0 (Risk Intelligence)
+// =========================================================================
+
+// User <-> OrganizationalPosition (SSOT para puestos/cargos)
+User.belongsTo(OrganizationalPosition, {
+    foreignKey: 'organizational_position_id',
+    targetKey: 'id',
+    as: 'organizationalPosition'
+});
+OrganizationalPosition.hasMany(User, {
+    foreignKey: 'organizational_position_id',
+    sourceKey: 'id',
+    as: 'employees'
+});
+
+// Company <-> CompanyRiskConfig (configuración de umbrales por empresa)
+Company.hasOne(CompanyRiskConfig, { foreignKey: 'company_id', as: 'riskConfig' });
+CompanyRiskConfig.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
+
+// CompanyRiskConfig <-> User (quién actualizó)
+CompanyRiskConfig.belongsTo(User, {
+    foreignKey: 'updated_by',
+    targetKey: 'user_id',
+    as: 'updater'
+});
 
 // =========================================================================
 // ✅ ASOCIACIONES - Sistema Médico Avanzado
@@ -682,9 +713,7 @@ PayrollTemplate.hasMany(OrganizationalPosition, { foreignKey: 'payroll_template_
 OrganizationalPosition.belongsTo(OrganizationalPosition, { foreignKey: 'parent_position_id', as: 'parentPosition' });
 OrganizationalPosition.hasMany(OrganizationalPosition, { foreignKey: 'parent_position_id', as: 'childPositions' });
 
-// User -> OrganizationalPosition
-User.belongsTo(OrganizationalPosition, { foreignKey: 'organizational_position_id', as: 'organizationalPosition' });
-OrganizationalPosition.hasMany(User, { foreignKey: 'organizational_position_id', sourceKey: 'id', as: 'employees' });
+// User -> OrganizationalPosition (definido arriba en sección RBAC SSOT)
 
 // Department relations (ajustadas para PostgreSQL)
 Department.hasMany(User, { foreignKey: 'departmentId', as: 'employees' });
@@ -1570,6 +1599,10 @@ module.exports = {
   PayrollEntitySettlementDetail,
   PayrollPayslipTemplate,
   OrganizationalPosition,
+
+  // ✅ EXPORTS - RBAC Unified SSOT v2.0 (Risk Intelligence Segmentation)
+  RiskBenchmark,
+  CompanyRiskConfig,
 
   // ✅ EXPORT - Sistema de Estructura Organizacional Enterprise
   Sector,

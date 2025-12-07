@@ -2006,6 +2006,11 @@
                         <div style="font-size: 12px; font-weight: 600; color: #1e3c72;">🌤️ 24°</div>
                     </div>
 
+                    <!-- Botón Mi Dashboard Personal (visible para TODOS los usuarios) -->
+                    <button id="btnMiDashboard" onclick="showEmployeeDashboard(window.currentUser, window.currentCompany || window.selectedCompany)" style="background: linear-gradient(135deg, #667eea, #764ba2); border: 1px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 110px; backdrop-filter: blur(5px); cursor: pointer; transition: all 0.3s ease; display: none;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Mi espacio personal: documentos, asistencia, vacaciones">
+                        <div style="font-size: 11px; font-weight: 600; color: white;">👤 Mi Espacio</div>
+                    </button>
+
                     <!-- Botón Cerrar Sesión -->
                     <button onclick="cerrarSesion()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); border: 1px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 8px 12px; text-align: center; min-width: 90px; backdrop-filter: blur(5px); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <div style="font-size: 11px; font-weight: 600; color: white;">🚪 Salir</div>
@@ -2067,6 +2072,8 @@
 
     <!-- 🔌 CORE PLUG & PLAY SYSTEM - Module Helper -->
     <script src="js/core/moduleHelper.js"></script>
+    <!-- 💡 CORE HELP SYSTEM - Sistema unificado de ayuda contextual -->
+    <script src="js/core/ModuleHelpSystem.js"></script>
 
     <!-- ✅ CORE SYSTEM MODULES RESTAURADOS - TODOS LOS 43 MÓDULOS -->
     <!-- Core System -->
@@ -2085,9 +2092,6 @@
     <!-- 🖥️ KIOSKS PROFESIONAL CON HARDWARE PROFILES (Facial + Fingerprint) -->
     <!-- <script src="js/modules/kiosks-professional.js"></script> --> <!-- CARGA DINÁMICA -->
 
-    <!-- Authentication & Security Modules -->
-    <script src="js/modules/access-control.js"></script>
-
     <!-- 🧠 BIOMETRIC & AI ANALYSIS MODULES - UNIVERSIDAD MODELS -->
     <!-- Face API for Professional Facial Recognition -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.0.0/dist/tf.min.js"></script>
@@ -2100,7 +2104,7 @@
     <script src="js/modules/emotional-analysis.js"></script>
 
     <!-- Medical & Health Modules -->
-    <script src="js/modules/occupational-health-enterprise.js"></script>
+    <script src="js/modules/medical-dashboard-professional.js"></script>
     <script src="js/modules/psychological-assessment.js"></script>
 
     <!-- HR Management Modules -->
@@ -2117,8 +2121,8 @@
 
     <!-- Legal & Compliance Modules -->
     <!-- <script src="js/modules/legal-dashboard.js"></script> --> <!-- CARGA DINÁMICA -->
-    <!-- <script src="js/modules/document-management.js"></script> --> <!-- CARGA DINÁMICA -->
-    <script src="js/modules/licensing-management.js"></script>
+    <script src="js/modules/dms-dashboard.js"></script> <!-- DMS - FUENTE ÚNICA DE VERDAD DOCUMENTAL -->
+    <!-- <script src="js/modules/licensing-management.js"></script> --> <!-- REMOVIDO - Solo para panel-administrativo -->
     <script src="js/modules/art-management.js"></script>
 
     <!-- FIX: Eliminar modales fantasma que aparecen al abrir módulo usuarios -->
@@ -2887,6 +2891,256 @@
         console.log('✅ [DASHBOARD] Dashboard cargado completamente');
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DASHBOARD DEL EMPLEADO - Vista simplificada con acceso a Mis Documentos
+    // ═══════════════════════════════════════════════════════════════════════════
+    function showEmployeeDashboard(user, company) {
+        console.log('👤 [EMPLOYEE-DASHBOARD] Mostrando dashboard del empleado:', user?.usuario || user?.email);
+
+        // ═══════════════════════════════════════════════════════════════════
+        // MISMA LÓGICA QUE showModuleContent - Ocultar grid y mostrar content
+        // ═══════════════════════════════════════════════════════════════════
+
+        // 1. Ocultar el grid de módulos
+        const moduleGrid = document.querySelector('.module-grid');
+        if (moduleGrid) {
+            moduleGrid.style.display = 'none';
+            console.log('👤 [EMPLOYEE-DASHBOARD] Grid de módulos ocultado');
+        }
+
+        // 2. Obtener mainContent
+        const mainContent = document.getElementById('mainContent');
+        if (!mainContent) {
+            console.error('❌ [EMPLOYEE-DASHBOARD] mainContent no encontrado');
+            return;
+        }
+
+        // 3. Mostrar mainContent con los mismos estilos que showModuleContent
+        mainContent.style.display = 'block';
+        mainContent.style.visibility = 'visible';
+        mainContent.style.opacity = '1';
+        console.log('👤 [EMPLOYEE-DASHBOARD] mainContent visible');
+
+        // Determinar si el usuario puede volver al panel admin
+        const userRole = user?.role || 'employee';
+        const canAccessAdmin = ['admin', 'hr', 'supervisor'].includes(userRole);
+        const backButtonHTML = canAccessAdmin ? `
+            <button onclick="goBackToModulesGrid()" style="
+                background: rgba(255,255,255,0.2);
+                border: 1px solid rgba(255,255,255,0.4);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                ← Volver al Panel de Administración
+            </button>
+        ` : '';
+
+        mainContent.innerHTML = `
+            <div class="employee-dashboard" style="padding: 30px; min-height: calc(100vh - 120px);">
+                <!-- Header del empleado -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 30px; margin-bottom: 30px; color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 2.5rem;">
+                                ${user.photoUrl ? '<img src="' + user.photoUrl + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : '👤'}
+                            </div>
+                            <div>
+                                <h2 style="margin: 0; font-size: 1.8rem;">¡Hola, ${user.firstName || user.usuario || 'Empleado'}!</h2>
+                                <p style="margin: 5px 0 0; opacity: 0.9;">🏢 ${company?.name || 'Mi Empresa'}</p>
+                                <p style="margin: 5px 0 0; opacity: 0.8; font-size: 0.9rem;">📧 ${user.email || ''}</p>
+                            </div>
+                        </div>
+                        ${backButtonHTML}
+                    </div>
+                </div>
+
+                <!-- Módulos para empleados -->
+                <h3 style="color: #2c3e50; margin-bottom: 25px; font-size: 1.4rem;">📋 Mis Módulos</h3>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;">
+
+                    <!-- CARD: Mis Documentos (DMS) -->
+                    <div class="employee-module-card" onclick="showModuleContent('dms-dashboard', 'Mis Documentos')" style="
+                        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+                        border-radius: 16px;
+                        padding: 25px;
+                        cursor: pointer;
+                        border: 2px solid transparent;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        transition: all 0.3s ease;
+                        position: relative;
+                        overflow: hidden;
+                    " onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(52, 152, 219, 0.25)'; this.style.borderColor='#3498db';"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'; this.style.borderColor='transparent';">
+                        <div style="position: absolute; top: 0; right: 0; background: #3498db; color: white; padding: 5px 15px; font-size: 0.7rem; font-weight: bold; border-radius: 0 16px 0 12px;">
+                            CORE
+                        </div>
+                        <div style="font-size: 4rem; margin-bottom: 15px;">📁</div>
+                        <h4 style="margin: 0 0 10px; color: #2c3e50; font-size: 1.3rem;">Mis Documentos</h4>
+                        <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Accede a tus documentos personales, sube documentación solicitada y revisa vencimientos.</p>
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
+                            <span style="color: #3498db; font-weight: 500; font-size: 0.85rem;">📄 Ver documentos • 📤 Subir • ⚠️ Vencimientos</span>
+                        </div>
+                    </div>
+
+                    <!-- CARD: Mi Asistencia -->
+                    <div class="employee-module-card" onclick="showModuleContent('attendance', 'Mi Asistencia')" style="
+                        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+                        border-radius: 16px;
+                        padding: 25px;
+                        cursor: pointer;
+                        border: 2px solid transparent;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(39, 174, 96, 0.25)'; this.style.borderColor='#27ae60';"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'; this.style.borderColor='transparent';">
+                        <div style="font-size: 4rem; margin-bottom: 15px;">📋</div>
+                        <h4 style="margin: 0 0 10px; color: #2c3e50; font-size: 1.3rem;">Mi Asistencia</h4>
+                        <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Consulta tu historial de asistencia, horarios y marcaciones.</p>
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(39, 174, 96, 0.1); border-radius: 8px;">
+                            <span style="color: #27ae60; font-weight: 500; font-size: 0.85rem;">🕐 Historial • 📅 Horarios</span>
+                        </div>
+                    </div>
+
+                    <!-- CARD: Mis Vacaciones -->
+                    <div class="employee-module-card" onclick="showModuleContent('vacation-management', 'Mis Vacaciones')" style="
+                        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+                        border-radius: 16px;
+                        padding: 25px;
+                        cursor: pointer;
+                        border: 2px solid transparent;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(241, 196, 15, 0.25)'; this.style.borderColor='#f1c40f';"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'; this.style.borderColor='transparent';">
+                        <div style="font-size: 4rem; margin-bottom: 15px;">🏖️</div>
+                        <h4 style="margin: 0 0 10px; color: #2c3e50; font-size: 1.3rem;">Mis Vacaciones</h4>
+                        <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Solicita vacaciones, consulta días disponibles y revisa el estado de tus solicitudes.</p>
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(241, 196, 15, 0.1); border-radius: 8px;">
+                            <span style="color: #d68910; font-weight: 500; font-size: 0.85rem;">📝 Solicitar • 📊 Días disponibles</span>
+                        </div>
+                    </div>
+
+                    <!-- CARD: Notificaciones -->
+                    <div class="employee-module-card" onclick="showModuleContent('inbox', 'Mis Notificaciones')" style="
+                        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+                        border-radius: 16px;
+                        padding: 25px;
+                        cursor: pointer;
+                        border: 2px solid transparent;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(155, 89, 182, 0.25)'; this.style.borderColor='#9b59b6';"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'; this.style.borderColor='transparent';">
+                        <div style="font-size: 4rem; margin-bottom: 15px;">🔔</div>
+                        <h4 style="margin: 0 0 10px; color: #2c3e50; font-size: 1.3rem;">Mis Notificaciones</h4>
+                        <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Revisa tus notificaciones, mensajes de RRHH y comunicados importantes.</p>
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(155, 89, 182, 0.1); border-radius: 8px;">
+                            <span style="color: #9b59b6; font-weight: 500; font-size: 0.85rem;">📬 Bandeja • 📢 Comunicados</span>
+                        </div>
+                    </div>
+
+                    <!-- CARD: Mi Perfil -->
+                    <div class="employee-module-card" onclick="showModuleContent('employee-360', 'Mi Perfil')" style="
+                        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+                        border-radius: 16px;
+                        padding: 25px;
+                        cursor: pointer;
+                        border: 2px solid transparent;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(52, 73, 94, 0.25)'; this.style.borderColor='#34495e';"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'; this.style.borderColor='transparent';">
+                        <div style="font-size: 4rem; margin-bottom: 15px;">👤</div>
+                        <h4 style="margin: 0 0 10px; color: #2c3e50; font-size: 1.3rem;">Mi Perfil 360°</h4>
+                        <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Vista completa de tu información personal, evaluaciones y datos laborales.</p>
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(52, 73, 94, 0.1); border-radius: 8px;">
+                            <span style="color: #34495e; font-weight: 500; font-size: 0.85rem;">📊 Datos • 📈 Evaluaciones</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Accesos rápidos -->
+                <div style="margin-top: 40px; padding: 25px; background: #f8f9fa; border-radius: 16px;">
+                    <h4 style="margin: 0 0 20px; color: #2c3e50;">⚡ Accesos Rápidos</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                        <button onclick="showModuleContent('dms-dashboard', 'Subir Documento')" style="
+                            background: #3498db; color: white; border: none; padding: 12px 20px; border-radius: 10px;
+                            cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">
+                            📤 Subir Documento
+                        </button>
+                        <button onclick="showModuleContent('vacation-management', 'Solicitar Vacaciones')" style="
+                            background: #f39c12; color: white; border: none; padding: 12px 20px; border-radius: 10px;
+                            cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='#d68910'" onmouseout="this.style.background='#f39c12'">
+                            🏖️ Solicitar Vacaciones
+                        </button>
+                        <button onclick="showModuleContent('inbox', 'Ver Notificaciones')" style="
+                            background: #9b59b6; color: white; border: none; padding: 12px 20px; border-radius: 10px;
+                            cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='#8e44ad'" onmouseout="this.style.background='#9b59b6'">
+                            🔔 Ver Notificaciones
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        console.log('✅ [EMPLOYEE-DASHBOARD] Dashboard del empleado cargado');
+    }
+
+    // Función para mostrar dashboard según rol
+    function showDashboardByRole(user, company) {
+        const role = user.role || 'employee';
+        console.log('🔍 [DASHBOARD-ROLE] Rol detectado:', role);
+
+        if (role === 'employee') {
+            showEmployeeDashboard(user, company);
+        } else {
+            // Admin, hr, supervisor ven el dashboard completo de módulos
+            console.log('📊 [DASHBOARD-ROLE] Mostrando dashboard de administración');
+            // El dashboard admin ya se carga normalmente
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FUNCIÓN PARA VOLVER AL GRID DE MÓDULOS (Admin Panel)
+    // ═══════════════════════════════════════════════════════════════════════════
+    function goBackToModulesGrid() {
+        console.log('🔙 [BACK-TO-GRID] Volviendo al panel de administración...');
+
+        // 1. Ocultar mainContent
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) {
+            mainContent.style.display = 'none';
+            mainContent.innerHTML = '';
+        }
+
+        // 2. Mostrar grid de módulos
+        const moduleGrid = document.querySelector('.module-grid');
+        if (moduleGrid) {
+            moduleGrid.style.display = 'grid';
+            console.log('✅ [BACK-TO-GRID] Grid de módulos visible');
+        }
+    }
+
+    // Exponer funciones globalmente
+    window.showEmployeeDashboard = showEmployeeDashboard;
+    window.goBackToModulesGrid = goBackToModulesGrid;
+    window.showDashboardByRole = showDashboardByRole;
+
     async function performCompanyLogin() {
         const username = document.getElementById('userEmail').value.trim();
         const password = document.getElementById('userPassword').value.trim();
@@ -3248,9 +3502,41 @@
             if (header) header.style.display = 'block';
 
             console.log('🎯 Interfaz principal activada completamente');
-            
+
+            // ═══════════════════════════════════════════════════════════════
+            // MOSTRAR DASHBOARD SEGÚN ROL
+            // Empleados: Dashboard simplificado con "Mis Documentos"
+            // Admin/HR/Supervisor: Dashboard completo con todos los módulos
+            // ═══════════════════════════════════════════════════════════════
+            const userRole = currentUser?.role || result?.user?.role || 'admin';
+            console.log('👤 [ROLE-CHECK] Rol del usuario:', userRole);
+
+            // ═══════════════════════════════════════════════════════════════
+            // BOTÓN "MI DASHBOARD" VISIBLE PARA TODOS
+            // Todos los usuarios (admin, hr, supervisor, employee) son empleados
+            // y tienen acceso a su dashboard personal
+            // ═══════════════════════════════════════════════════════════════
+            const btnMiDashboard = document.getElementById('btnMiDashboard');
+            if (btnMiDashboard) {
+                btnMiDashboard.style.display = 'block';
+                console.log('✅ [ALL-USERS] Botón "Mi Dashboard" activado para todos');
+            }
+
+            if (userRole === 'employee') {
+                // Empleados ven SU dashboard personal por defecto
+                console.log('👤 [EMPLOYEE] Mostrando Dashboard del Empleado por defecto');
+                setTimeout(() => {
+                    showEmployeeDashboard(currentUser, currentCompany || selectedCompany);
+                }, 500);
+            } else {
+                // Admin/HR/Supervisor ven el dashboard de administración por defecto
+                // pero pueden acceder a "Mi Dashboard" cuando quieran
+                console.log('📊 [ADMIN] Mostrando Dashboard de Administración');
+                console.log('💡 [INFO] El botón "Mi Dashboard" permite acceder al panel personal');
+            }
+
             console.log('🎉 [DIRECT-LOGIN] Login completo exitoso');
-            
+
         } catch (error) {
             console.error('❌ [DIRECT-LOGIN] Error completo:', error);
             updateCompanyLoginStatus('❌ ' + error.message, 'error');
@@ -3472,18 +3758,29 @@
                 console.log('✅ [MODULES] Módulos cargados desde API:', data);
 
                 if (data.success && data.modules) {
-                    companyModules = data.modules.map(module => ({
-                        id: module.id,
-                        name: module.name,
-                        description: module.description,
-                        isOperational: module.isOperational,
-                        category: module.category || 'general',
-                        price: module.price || 0,
-                        icon: module.icon || '📦',
-                        color: module.color || '#666666'
-                    }));
+                    // 🚫 Módulos que NO deben aparecer en el dashboard de clientes
+                    // (son administrativos/internos de APONNT)
+                    const HIDDEN_FROM_CLIENT_DASHBOARD = [
+                        'licensing-management',  // Solo para panel-administrativo APONNT
+                        'permissions-test',      // Módulo de testing interno
+                        'audit-dashboard',       // Dashboard de auditoría interno
+                        'engineering-dashboard'  // Solo para desarrollo/ingeniería
+                    ];
 
-                    console.log(`✅ [MODULES] ${companyModules.length} módulos procesados para la empresa`);
+                    companyModules = data.modules
+                        .filter(module => !HIDDEN_FROM_CLIENT_DASHBOARD.includes(module.id))
+                        .map(module => ({
+                            id: module.id,
+                            name: module.name,
+                            description: module.description,
+                            isOperational: module.isOperational,
+                            category: module.category || 'general',
+                            price: module.price || 0,
+                            icon: module.icon || '📦',
+                            color: module.color || '#666666'
+                        }));
+
+                    console.log(`✅ [MODULES] ${companyModules.length} módulos procesados para la empresa (${HIDDEN_FROM_CLIENT_DASHBOARD.length} ocultos)`);
                 } else {
                     console.warn('⚠️ [MODULES] No se encontraron módulos contratados');
                     companyModules = [];
@@ -3756,6 +4053,18 @@
             console.log('✅ [FIX] biometric-dashboard FORZADO como activo');
         }
 
+        // FIX FORZADO: DMS Dashboard es CORE - siempre activo
+        contractedModulesMap['dms-dashboard'] = {
+            id: 'dms-dashboard',
+            module_key: 'dms-dashboard',
+            activo: true,
+            isOperational: true,
+            isContracted: true,
+            isActive: true,
+            isCore: true
+        };
+        console.log('✅ [FIX] dms-dashboard FORZADO como CORE activo');
+
         console.log('📋 [MODULES] Módulos contratados encontrados:', Object.keys(contractedModulesMap));
 
         // AGRUPAR MÓDULOS POR RUBRO Y ORDENAR ALFABÉTICAMENTE
@@ -3884,7 +4193,9 @@
     function createBasicModuleCards(company) {
         const basicModules = [
             { id: 'users', name: 'Usuarios', icon: '👥' },
-            { id: 'attendance', name: 'Asistencia', icon: '📋' },{ id: 'settings', name: 'Configuración', icon: '⚙️' }
+            { id: 'attendance', name: 'Asistencia', icon: '📋' },
+            { id: 'dms-dashboard', name: 'Gestión Documental (DMS)', icon: '📁' },
+            { id: 'settings', name: 'Configuración', icon: '⚙️' }
         ];
 
         return basicModules.map(module => `
@@ -4060,7 +4371,7 @@
                         'compliance-dashboard': 'showComplianceDashboardContent',
                         'vacation-management': 'showVacationManagementContent',
                         'training-management': 'showTrainingManagementContent',
-                        'document-management': 'showDocumentManagementContent',
+                        'dms-dashboard': 'showDmsDashboardContent',
                         'art-management': 'showArtManagementContent',
                         'employee-map': 'showEmployeeMapContent',
                         'job-postings': 'showJobPostingsContent',
@@ -4107,7 +4418,6 @@
 
                     case 'medical':
                     case 'medical-dashboard':
-                    case 'occupational-health-enterprise':
                         // Render container for medical dashboard
                         moduleContent.innerHTML = `
                             <div id="medical-dashboard-container" style="height: calc(100vh - 150px);"></div>
@@ -4115,10 +4425,10 @@
 
                         // Initialize medical dashboard (con delay para asegurar DOM listo)
                         setTimeout(() => {
-                            if (typeof window.OccupationalHealth === 'object' && typeof window.OccupationalHealth.init === 'function') {
-                                window.OccupationalHealth.init();
+                            if (typeof window.initMedicalDashboard === 'function') {
+                                window.initMedicalDashboard();
                             } else {
-                                showModuleFallback(moduleId, moduleName, 'occupational-health-enterprise.js no cargado');
+                                showModuleFallback(moduleId, moduleName, 'medical-dashboard-professional.js no cargado');
                             }
                         }, 100);
                         break;
@@ -4203,14 +4513,6 @@
                             SupportCustomerView.init('main-content');
                         } else {
                             showModuleFallback(moduleId, moduleName, 'support-customer-view.js no cargado');
-                        }
-                        break;
-
-                    case 'access-control':
-                        if (typeof showAccessControlContent === 'function') {
-                            showAccessControlContent();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'access-control.js no cargado');
                         }
                         break;
 
@@ -4408,13 +4710,6 @@
                             showModuleFallback(moduleId, moduleName, 'training-management.js no cargado');
                         }
                         break;
-                    case 'document-management':
-                        if (typeof showDocumentManagementContent === 'function') {
-                            showDocumentManagementContent();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'document-management.js no cargado');
-                        }
-                        break;
                     case 'employee-map':
                         if (typeof showEmployeeMapContent === 'function') {
                             showEmployeeMapContent();
@@ -4427,13 +4722,6 @@
                             showLegalDashboardContent();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'legal-dashboard.js no cargado');
-                        }
-                        break;
-                    case 'licensing-management':
-                        if (typeof showLicensingManagementContent === 'function') {
-                            showLicensingManagementContent();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'licensing-management.js no cargado');
                         }
                         break;
                     case 'payroll-liquidation':
@@ -4467,6 +4755,62 @@
                         } else {
                             showModuleFallback(moduleId, moduleName, 'art-management.js no cargado');
                         }
+                        break;
+                    case 'roles-permissions':
+                        // Sistema Enterprise de Roles y Permisos (RBAC)
+                        moduleContainer.innerHTML = '<div id="roles-permissions-container" style="padding:20px;"></div>';
+                        if (typeof RolesPermissionsModule !== 'undefined') {
+                            RolesPermissionsModule.init('roles-permissions-container');
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'roles-permissions.js no cargado');
+                        }
+                        break;
+                    case 'associate-marketplace':
+                        // Marketplace de Asociados APONNT (médicos, abogados, seguridad)
+                        moduleContainer.innerHTML = '<div id="associate-marketplace-container" style="padding:20px;"></div>';
+                        if (typeof AssociateMarketplace !== 'undefined') {
+                            AssociateMarketplace.init('associate-marketplace-container');
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'associate-marketplace.js no cargado');
+                        }
+                        break;
+                    case 'contextual-help':
+                        // Sistema de Ayuda Contextual (usa el panel flotante)
+                        moduleContainer.innerHTML = `
+                            <div style="padding: 40px; text-align: center;">
+                                <div style="font-size: 80px; margin-bottom: 20px;">💡</div>
+                                <h2 style="color: #00d4ff; margin-bottom: 15px;">Sistema de Ayuda Contextual</h2>
+                                <p style="color: rgba(255,255,255,0.7); max-width: 600px; margin: 0 auto 30px;">
+                                    El sistema de ayuda está siempre disponible. Usa el botón flotante
+                                    <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                                 padding: 5px 10px; border-radius: 20px; margin: 0 5px;">💡 Ayuda</span>
+                                    en la esquina inferior derecha para:
+                                </p>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 800px; margin: 0 auto;">
+                                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                                        <div style="font-size: 32px; margin-bottom: 10px;">📚</div>
+                                        <h4 style="color: #fff; margin-bottom: 8px;">Guías Rápidas</h4>
+                                        <p style="color: rgba(255,255,255,0.6); font-size: 13px;">Ayuda contextual según el módulo actual</p>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                                        <div style="font-size: 32px; margin-bottom: 10px;">🤖</div>
+                                        <h4 style="color: #fff; margin-bottom: 8px;">Preguntar a IA</h4>
+                                        <p style="color: rgba(255,255,255,0.6); font-size: 13px;">Ollama responde tus dudas en tiempo real</p>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                                        <div style="font-size: 32px; margin-bottom: 10px;">🔗</div>
+                                        <h4 style="color: #fff; margin-bottom: 8px;">Dependencias</h4>
+                                        <p style="color: rgba(255,255,255,0.6); font-size: 13px;">Ver qué módulos necesitas configurar primero</p>
+                                    </div>
+                                </div>
+                                <button onclick="if(typeof ContextualHelpSystem !== 'undefined') ContextualHelpSystem.togglePanel();"
+                                        style="margin-top: 30px; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                               border: none; border-radius: 25px; color: white; font-weight: 600; cursor: pointer;
+                                               transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                                    💡 Abrir Panel de Ayuda
+                                </button>
+                            </div>
+                        `;
                         break;
                     case 'settings':
                         if (typeof showSettingsContent === 'function') {
@@ -4540,7 +4884,7 @@
                         break;
                     default:
                         console.log(`❌ [SWITCH-DEBUG] NO SE ENCONTRÓ CASE para moduleId: "${moduleId}"`);
-                        console.log(`📝 [SWITCH-DEBUG] Cases disponibles: training, medical, medical-dashboard, psychological, psychological-assessment, sanctions, sanctions-management, vacation, vacation-management, dashboard, attendance, users, access-control, notifications, absence-notifications, fehaciente-consent, biometric, departments, siac-admin-panel, siac-clients, siac-products, siac-billing, clientes, facturacion, plantillas-fiscales, job-postings, training-management, document-management, employee-map, legal-dashboard, licensing-management, payroll-liquidation, art-management, settings, auditor-dashboard, auditor, shifts, terms-conditions, inbox, notifications-enterprise`);
+                        console.log(`📝 [SWITCH-DEBUG] Cases disponibles: training, medical, medical-dashboard, psychological, psychological-assessment, sanctions, sanctions-management, vacation, vacation-management, dashboard, attendance, users, notifications, absence-notifications, fehaciente-consent, biometric, departments, siac-admin-panel, siac-clients, siac-products, siac-billing, clientes, facturacion, plantillas-fiscales, job-postings, training-management, dms-dashboard, employee-map, legal-dashboard, licensing-management, payroll-liquidation, art-management, settings, auditor-dashboard, auditor, shifts, terms-conditions, inbox, notifications-enterprise`);
                         // Para módulos que no tienen implementación específica aún
                         showModuleFallback(moduleId, moduleName, `ID no encontrado: "${moduleId}"`);
                 }
@@ -4606,7 +4950,7 @@
             { id: 'attendance', name: 'Asistencia', icon: '📋' },
             { id: 'facial-biometric', name: 'Biometría Analítica', icon: '🎭' },{ id: 'medical', name: 'Médico', icon: '👩‍⚕️' },
             { id: 'art-management', name: 'ART', icon: '🏥' },
-            { id: 'document-management', name: 'Documentos', icon: '📄' },
+            { id: 'dms-dashboard', name: 'Gestión Documental (DMS)', icon: '📁' },
             { id: 'legal-dashboard', name: 'Gestión Legal', icon: '⚖️' },
             { id: 'compliance-dashboard', name: 'Compliance Legal', icon: '⚖️' },
             { id: 'sla-tracking', name: 'SLA Tracking', icon: '⏱️' },
@@ -4625,14 +4969,16 @@
         
         return modules.map(module => {
             // Verificar si el módulo está contratado
+            // Módulos CORE que siempre deben estar visibles
+            const coreModules = ['settings', 'dashboard', 'dms-dashboard'];
             const isActive = (company.activeModules && (
                                Array.isArray(company.activeModules) ?
                                    company.activeModules.includes(module.id) :
                                    company.activeModules[module.id] === true
-                           )) || ['settings', 'dashboard'].includes(module.id);
+                           )) || coreModules.includes(module.id);
 
             // Debug de módulos no activos
-            if (!isActive && !['settings', 'dashboard'].includes(module.id)) {
+            if (!isActive && !coreModules.includes(module.id)) {
                 console.log(`🔍 [DEBUG] Módulo ${module.id} NO activo - activeModules[${module.id}]: ${company.activeModules ? company.activeModules[module.id] : 'undefined'}`);
             }
             
@@ -4921,10 +5267,11 @@
                 // Crear mapa de iconos desde definición local (línea 4130)
                 // MÓDULOS UNIFICADOS - Sincronizado con Registry Maestro y PostgreSQL
                 const localModules = [
-                    // CORE (5)
+                    // CORE (6)
                     { id: 'users', name: 'Usuarios', icon: '👥' },
                     { id: 'attendance', name: 'Asistencia', icon: '📋' },
                     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
+                    { id: 'dms-dashboard', name: 'Gestión Documental (DMS)', icon: '📁' },
                     { id: 'settings', name: 'Configuración', icon: '⚙️' },
 
                     // HARDWARE (1)
@@ -4936,7 +5283,6 @@
                     { id: 'biometric', name: 'Control Biométrico', icon: '🔐' },
                     { id: 'real-biometric-enterprise', name: 'Biometría Enterprise', icon: '🔐' },
                     { id: 'professional-biometric-registration', name: 'Registro Biométrico Profesional', icon: '🔐' },
-                    { id: 'access-control', name: 'Control de Acceso', icon: '🔐' },
 
                     // COMPLIANCE (3)
                     { id: 'biometric-consent', name: 'Consentimientos Biométricos', icon: '📋' },
@@ -4946,9 +5292,8 @@
                     // COMMUNICATION (1)
                     { id: 'notifications-enterprise', name: 'Notificaciones Enterprise V3.0', icon: '🔔' },
 
-                    // MEDICAL (3)
+                    // MEDICAL (2)
                     { id: 'medical', name: 'Gestión Médica', icon: '👩‍⚕️' },
-                    { id: 'occupational-health-enterprise', name: 'Salud Ocupacional Enterprise', icon: '🏥' },
                     { id: 'art-management', name: 'ART', icon: '🏥' },
 
                     // RRHH (7)
@@ -4958,7 +5303,6 @@
                     { id: 'vacation', name: 'Vacaciones', icon: '🏖️' },
                     { id: 'sanctions-management', name: 'Gestión de Sanciones', icon: '⚖️' },
                     { id: 'psychological-assessment', name: 'Evaluación Psicológica', icon: '🧠' },
-                    { id: 'document-management', name: 'Documentos', icon: '📄' },
 
                     // MONITORING (1)
                     { id: 'sla-tracking', name: 'SLA Tracking', icon: '⏱️' },
@@ -4980,8 +5324,10 @@
                     { id: 'positions-management', name: 'Gestión de Cargos', icon: '🏢' },
                     { id: 'payslip-template-editor', name: 'Editor Templates Recibo', icon: '📄' },
 
-                    // ADMIN (1)
-                    { id: 'licensing-management', name: 'Licencias', icon: '📜' },
+                    // CONTROL DE ACCESO Y ASOCIADOS (3)
+                    { id: 'roles-permissions', name: 'Roles y Permisos', icon: '🔐' },
+                    { id: 'associate-marketplace', name: 'Asociados APONNT', icon: '👨‍⚕️' },
+                    { id: 'contextual-help', name: 'Ayuda del Sistema', icon: '💡' },
 
                     // AI (1)
                     { id: 'emotional-analysis', name: 'Análisis Emocional', icon: '😊' },
@@ -4989,10 +5335,8 @@
                     // SIAC (3)
                     { id: 'clientes', name: 'Clientes SIAC', icon: '👥' },
                     { id: 'facturacion', name: 'Facturación SIAC', icon: '💵' },
-                    { id: 'plantillas-fiscales', name: 'Plantillas Fiscales', icon: '📋' },
-
-                    // TESTING (1)
-                    { id: 'permissions-test', name: 'Test de Permisos', icon: '🧪' }
+                    { id: 'plantillas-fiscales', name: 'Plantillas Fiscales', icon: '📋' }
+                    // NOTA: permissions-test y licensing-management removidos - solo para panel-administrativo
                 ];
 
                 const iconMap = {};
@@ -5009,6 +5353,33 @@
                 }
 
                 console.log('📦 [MODULES] Módulos contratados encontrados:', modules.length, 'módulos');
+
+                // ═══════════════════════════════════════════════════════════════
+                // INYECCIÓN DE MÓDULOS CORE - Siempre visibles para todas empresas
+                // ═══════════════════════════════════════════════════════════════
+                const coreModulesToInject = [
+                    {
+                        id: 'dms-dashboard',
+                        moduleKey: 'dms-dashboard',
+                        name: 'Gestión Documental (DMS)',
+                        description: 'Sistema de Gestión Documental - Fuente Única de Verdad',
+                        isCore: true
+                    }
+                ];
+
+                coreModulesToInject.forEach(coreModule => {
+                    const exists = modules.find(m =>
+                        m.id === coreModule.id ||
+                        m.moduleKey === coreModule.moduleKey ||
+                        m.module_key === coreModule.moduleKey
+                    );
+                    if (!exists) {
+                        modules.push(coreModule);
+                        console.log(`📁 [CORE] Módulo CORE inyectado: ${coreModule.name}`);
+                    }
+                });
+
+                console.log('📦 [MODULES] Total módulos después de inyección CORE:', modules.length);
 
                 if (modules.length === 0) {
                     console.warn('⚠️ [MODULES] No se encontraron módulos contratados');
@@ -5470,9 +5841,6 @@
                 } else if (tabName === 'medical' || tabName === 'medical-dashboard') {
                     script.src = `js/modules/medical-dashboard-professional.js?v=${cacheBuster}`;
                     console.log(`📦 [PROGRESSIVE] Usando versión PROFESSIONAL para medical`);
-                } else if (tabName === 'occupational-health-enterprise') {
-                    script.src = `js/modules/occupational-health-enterprise.js?v=${cacheBuster}`;
-                    console.log(`📦 [PROGRESSIVE] Cargando occupational-health-enterprise`);
                 } else if (tabName === 'legal' || tabName === 'legal-dashboard') {
                     script.src = `js/modules/legal-dashboard.js?v=${cacheBuster}`;
                     console.log(`📦 [PROGRESSIVE] Usando LEGAL DASHBOARD ENTERPRISE v3.0`);
@@ -5551,7 +5919,7 @@
     async function loadRemainingModules() {
         const modules = ['users', 'kiosks', 'visitors', 'attendance', 'settings',
             'medical-config', 'medical', 'fehaciente-consent',
-            'terms-conditions', 'absence-notifications', 'document-management',
+            'terms-conditions', 'absence-notifications', 'dms-dashboard',
             'facial-biometric', 'employee-map', 'training-management','job-postings',
             'legal-dashboard', 'art-management', 'payroll-liquidation', 'emotional-analysis'
         ];
@@ -5658,6 +6026,12 @@
         console.log(`🔄 [PROGRESSIVE] Cambiando a tab: ${tabName}`);
         console.log(`🔄 [PROGRESSIVE] loadedModules actual:`, Array.from(loadedModules));
         console.log(`🔄 [PROGRESSIVE] ¿${tabName} está en loadedModules?:`, loadedModules.has(tabName));
+
+        // 🆘 [CONTEXTUAL-HELP v2.0] Actualizar módulo activo para ayuda contextual
+        if (typeof ContextualHelpSystem !== 'undefined' && ContextualHelpSystem.setCurrentModule) {
+            ContextualHelpSystem.setCurrentModule(tabName);
+            console.log(`💡 [HELP] Módulo activo actualizado a: ${tabName}`);
+        }
 
         // company-management removido - bypass eliminado
         // ✅ VALIDACIÓN DE PERMISOS ANTES DE CARGAR MÓDULO
@@ -7260,6 +7634,11 @@
 
     <!-- 🔔 GLOBO FLOTANTE DE NOTIFICACIONES PENDIENTES -->
     <script src="js/modules/notification-badge-floating.js"></script>
+
+    <!-- 🔐 SISTEMA ENTERPRISE DE CONTROL DE ACCESO (RBAC + SSOT) - Diciembre 2025 -->
+    <script src="js/modules/roles-permissions.js"></script>
+    <script src="js/modules/associate-marketplace.js"></script>
+    <script src="js/modules/contextual-help-system.js"></script>
 
     <!-- 🏆 TECH STACK BADGES - Marketing Subliminal Profesional -->
     <!-- DESACTIVADO: No mostrar badges en login -->

@@ -27,6 +27,15 @@ function getApiUrl(endpoint) {
     return endpoint;
 }
 
+// Helper: Get auth headers with JWT token
+function getAuthHeaders() {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
 // GET - Obtener todas las capacitaciones
 async function fetchTrainingsFromAPI() {
     try {
@@ -388,15 +397,15 @@ function showTrainingManagementContent() {
     content.innerHTML = `
         <div class="tab-content active" id="training-management">
             <div class="card">
-                <div class="training-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <div class="training-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #e2e8f0; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #334155; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h2 style="margin: 0; font-size: 28px;">📚 Sistema Integral de Capacitaciones</h2>
-                            <p style="margin: 5px 0 0 0; opacity: 0.9;">Gestión completa de capacitaciones, evaluaciones y desarrollo profesional</p>
+                            <h2 style="margin: 0; font-size: 28px; background: linear-gradient(90deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">📚 Sistema Integral de Capacitaciones</h2>
+                            <p style="margin: 8px 0 0 0; color: #94a3b8;">Gestión completa de capacitaciones, evaluaciones y desarrollo profesional</p>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 14px; opacity: 0.9;">📊 Total capacitaciones: <span id="total-trainings">0</span></div>
-                            <div style="font-size: 12px; opacity: 0.8;">👥 Empleados participando: <span id="active-participants">0</span></div>
+                        <div style="text-align: right; background: rgba(99, 102, 241, 0.1); padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                            <div style="font-size: 14px; color: #a5b4fc;">📊 Total capacitaciones: <span id="total-trainings" style="font-weight: bold; color: #f1f5f9;">0</span></div>
+                            <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">👥 Empleados participando: <span id="active-participants" style="font-weight: bold; color: #f1f5f9;">0</span></div>
                         </div>
                     </div>
                 </div>
@@ -651,107 +660,451 @@ function showTrainingManagementContent() {
     loadTrainingData();
 }
 
-// Add custom styles for training module
+// Add custom styles for training module - DARK THEME v2.0
 function addTrainingStyles() {
+    // Evitar duplicar estilos
+    if (document.getElementById('training-dark-theme-styles')) return;
+
     const style = document.createElement('style');
+    style.id = 'training-dark-theme-styles';
     style.textContent = `
+        /* === TRAINING MODULE DARK THEME v2.0 === */
+
+        /* Navigation Buttons */
         .training-nav-btn {
-            padding: 10px 15px;
-            border: 2px solid #dee2e6;
-            background: white;
-            border-radius: 5px;
+            padding: 12px 18px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: #94a3b8;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             white-space: nowrap;
             font-weight: 500;
+            font-size: 13px;
         }
-        
+
         .training-nav-btn:hover {
-            border-color: #667eea;
-            color: #667eea;
+            border-color: #6366f1;
+            color: #a5b4fc;
+            background: rgba(99, 102, 241, 0.1);
         }
-        
+
         .training-nav-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
-            border-color: #667eea;
+            border-color: #6366f1;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
-        
+
+        /* Training Cards */
         .training-card {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
-            background: white;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            background: #1e293b;
         }
-        
+
         .training-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transform: translateY(-3px);
+            border-color: #475569;
         }
-        
+
+        /* Training Status Badges */
         .training-status {
             display: inline-block;
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        
-        .status-active { background: #d4edda; color: #155724; }
-        .status-draft { background: #fff3cd; color: #856404; }
-        .status-completed { background: #d1ecf1; color: #0c5460; }
-        .status-expired { background: #f8d7da; color: #721c24; }
-        .status-suspended { background: #e2e3e5; color: #383d41; }
-        
+
+        .status-active {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .status-draft {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        .status-completed {
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        .status-expired {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .status-suspended {
+            background: rgba(100, 116, 139, 0.15);
+            color: #94a3b8;
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+
+        /* Progress Bar */
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: #e9ecef;
+            background: #334155;
             border-radius: 4px;
             overflow: hidden;
         }
-        
+
         .progress-fill {
             height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: width 0.3s;
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            transition: width 0.4s ease;
+            border-radius: 4px;
         }
-        
+
+        /* Stat Cards */
         .stat-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 24px;
             text-align: center;
-            border: 1px solid #dee2e6;
-            transition: all 0.3s;
+            border: 1px solid #334155;
+            transition: all 0.3s ease;
         }
-        
+
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: #475569;
         }
-        
+
+        .stat-card .stat-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Question Items */
         .question-item {
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 10px;
-            background: #f8f9fa;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 12px;
+            background: #0f172a;
         }
-        
+
+        .question-item:hover {
+            border-color: #475569;
+        }
+
+        /* Form Elements */
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 16px;
+            margin-bottom: 16px;
         }
-        
+
         @media (max-width: 768px) {
             .form-row {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* Dark theme form inputs */
+        #training-management input[type="text"],
+        #training-management input[type="number"],
+        #training-management input[type="email"],
+        #training-management input[type="datetime-local"],
+        #training-management select,
+        #training-management textarea {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            transition: all 0.2s;
+        }
+
+        #training-management input:focus,
+        #training-management select:focus,
+        #training-management textarea:focus {
+            border-color: #6366f1;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        #training-management input::placeholder,
+        #training-management textarea::placeholder {
+            color: #64748b;
+        }
+
+        /* Dark theme labels */
+        #training-management label {
+            color: #cbd5e1;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* Card headers in dark theme */
+        #training-management .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        #training-management .card h3,
+        #training-management .card h4 {
+            color: #f1f5f9;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        /* Buttons in dark theme */
+        #training-management .btn {
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        #training-management .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+        #training-management .btn-primary:hover {
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+        }
+
+        #training-management .btn-success {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+        }
+
+        #training-management .btn-info {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+        }
+
+        #training-management .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        #training-management .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        #training-management .btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+        }
+
+        #training-management .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Modal dark theme */
+        #training-management .modal-content,
+        .modal-content {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            border-radius: 16px !important;
+        }
+
+        #training-management .modal-header,
+        .modal-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+            border-bottom: 1px solid #334155 !important;
+            color: #f1f5f9 !important;
+            border-radius: 16px 16px 0 0 !important;
+            padding: 20px !important;
+        }
+
+        #training-management .modal-body,
+        .modal-body {
+            background: #1e293b !important;
+            color: #e2e8f0 !important;
+            padding: 24px !important;
+        }
+
+        /* Form labels in modals - CRITICAL for visibility */
+        #training-management .modal-body label,
+        .modal-body label,
+        #training-management .form-group label,
+        .form-group label {
+            color: #e2e8f0 !important;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* Form inputs in modals */
+        #training-management .modal-body input,
+        #training-management .modal-body select,
+        #training-management .modal-body textarea,
+        .modal-body input,
+        .modal-body select,
+        .modal-body textarea,
+        #training-management input[type="text"],
+        #training-management input[type="number"],
+        #training-management input[type="datetime-local"],
+        #training-management input[type="date"],
+        #training-management input[type="email"],
+        #training-management input[type="url"],
+        #training-management select,
+        #training-management textarea {
+            background: #0f172a !important;
+            border: 1px solid #334155 !important;
+            color: #e2e8f0 !important;
+            padding: 10px 12px !important;
+            border-radius: 8px !important;
+            width: 100%;
+        }
+
+        #training-management .modal-body input::placeholder,
+        .modal-body input::placeholder,
+        #training-management input::placeholder,
+        #training-management textarea::placeholder {
+            color: #64748b !important;
+        }
+
+        #training-management .modal-body input:focus,
+        #training-management .modal-body select:focus,
+        #training-management .modal-body textarea:focus,
+        .modal-body input:focus,
+        .modal-body select:focus,
+        .modal-body textarea:focus {
+            border-color: #6366f1 !important;
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+        }
+
+        /* Radio and checkbox text */
+        #training-management .modal-body input[type="radio"],
+        #training-management .modal-body input[type="checkbox"],
+        .modal-body input[type="radio"],
+        .modal-body input[type="checkbox"] {
+            width: auto !important;
+            margin-right: 8px;
+        }
+
+        /* Select dropdown options */
+        #training-management select option,
+        .modal-body select option {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        /* Form row and form group */
+        #training-management .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        #training-management .form-group {
+            flex: 1;
+            margin-bottom: 15px;
+        }
+
+        /* Form actions */
+        #training-management .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #334155;
+        }
+
+        /* Close button */
+        #training-management .close-btn,
+        .modal-header .close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        #training-management .close-btn:hover,
+        .modal-header .close-btn:hover {
+            color: #f1f5f9;
+        }
+
+        /* Table dark theme */
+        #training-management table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #training-management table thead {
+            background: #0f172a;
+        }
+
+        #training-management table th {
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            padding: 14px;
+            border: 1px solid #334155;
+        }
+
+        #training-management table td {
+            padding: 14px;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+        }
+
+        #training-management table tbody tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        /* Text colors */
+        #training-management p,
+        #training-management div {
+            color: #cbd5e1;
+        }
+
+        #training-management h1,
+        #training-management h2,
+        #training-management h3,
+        #training-management h4,
+        #training-management h5 {
+            color: #f1f5f9;
+        }
+
+        /* Links */
+        #training-management a {
+            color: #a5b4fc;
+        }
+
+        #training-management a:hover {
+            color: #c7d2fe;
         }
     `;
     document.head.appendChild(style);
@@ -797,53 +1150,53 @@ function switchTrainingView(view) {
     }
 }
 
-// Dashboard view
+// Dashboard view - DARK THEME v2.0
 function showTrainingDashboard() {
     const contentArea = document.getElementById('training-content-area');
-    
+
     contentArea.innerHTML = `
         <!-- Statistics cards -->
         <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-            <div class="stat-card" style="border-left: 4px solid #667eea;">
+            <div class="stat-card" style="border-left: 4px solid #6366f1; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
                 <div style="font-size: 2em; margin-bottom: 10px;">📚</div>
-                <div style="font-size: 2em; font-weight: bold; color: #667eea;" id="dash-total-trainings">--</div>
-                <div style="color: #6c757d;">Total Capacitaciones</div>
+                <div style="font-size: 2em; font-weight: bold; color: #a5b4fc;" id="dash-total-trainings">--</div>
+                <div style="color: #94a3b8;">Total Capacitaciones</div>
             </div>
-            
-            <div class="stat-card" style="border-left: 4px solid #28a745;">
+
+            <div class="stat-card" style="border-left: 4px solid #22c55e; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
                 <div style="font-size: 2em; margin-bottom: 10px;">✅</div>
-                <div style="font-size: 2em; font-weight: bold; color: #28a745;" id="dash-completed-trainings">--</div>
-                <div style="color: #6c757d;">Completadas</div>
+                <div style="font-size: 2em; font-weight: bold; color: #22c55e;" id="dash-completed-trainings">--</div>
+                <div style="color: #94a3b8;">Completadas</div>
             </div>
-            
-            <div class="stat-card" style="border-left: 4px solid #ffc107;">
+
+            <div class="stat-card" style="border-left: 4px solid #fbbf24; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
                 <div style="font-size: 2em; margin-bottom: 10px;">⏳</div>
-                <div style="font-size: 2em; font-weight: bold; color: #ffc107;" id="dash-pending-trainings">--</div>
-                <div style="color: #6c757d;">En Progreso</div>
+                <div style="font-size: 2em; font-weight: bold; color: #fbbf24;" id="dash-pending-trainings">--</div>
+                <div style="color: #94a3b8;">En Progreso</div>
             </div>
-            
-            <div class="stat-card" style="border-left: 4px solid #dc3545;">
+
+            <div class="stat-card" style="border-left: 4px solid #ef4444; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
                 <div style="font-size: 2em; margin-bottom: 10px;">🔔</div>
-                <div style="font-size: 2em; font-weight: bold; color: #dc3545;" id="dash-overdue-trainings">--</div>
-                <div style="color: #6c757d;">Vencidas</div>
+                <div style="font-size: 2em; font-weight: bold; color: #ef4444;" id="dash-overdue-trainings">--</div>
+                <div style="color: #94a3b8;">Vencidas</div>
             </div>
         </div>
-        
+
         <!-- Recent activity and quick actions -->
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
             <!-- Recent trainings -->
-            <div class="card">
-                <h3>📋 Capacitaciones Recientes</h3>
+            <div class="card" style="background: #1e293b; border: 1px solid #334155;">
+                <h3 style="color: #f1f5f9;">📋 Capacitaciones Recientes</h3>
                 <div id="recent-trainings-list">
-                    <div style="padding: 20px; text-align: center; color: #6c757d;">
+                    <div style="padding: 20px; text-align: center; color: #94a3b8;">
                         Cargando capacitaciones recientes...
                     </div>
                 </div>
             </div>
-            
+
             <!-- Quick actions -->
-            <div class="card">
-                <h3>⚡ Acciones Rápidas</h3>
+            <div class="card" style="background: #1e293b; border: 1px solid #334155;">
+                <h3 style="color: #f1f5f9;">⚡ Acciones Rápidas</h3>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <button onclick="showModal('trainingModal')" class="btn btn-primary">
                         ➕ Nueva Capacitación
@@ -858,33 +1211,33 @@ function showTrainingDashboard() {
                         📊 Reporte Cumplimiento
                     </button>
                 </div>
-                
-                <h4 style="margin-top: 20px;">📅 Próximos Vencimientos</h4>
+
+                <h4 style="margin-top: 20px; color: #f1f5f9;">📅 Próximos Vencimientos</h4>
                 <div id="upcoming-deadlines">
-                    <div style="padding: 20px; text-align: center; color: #6c757d; font-size: 14px;">
+                    <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 14px;">
                         Cargando próximos vencimientos...
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Progress by category -->
-        <div class="card" style="margin-top: 30px;">
-            <h3>📊 Progreso por Categoría</h3>
+        <div class="card" style="margin-top: 30px; background: #1e293b; border: 1px solid #334155;">
+            <h3 style="color: #f1f5f9;">📊 Progreso por Categoría</h3>
             <div id="category-progress" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
                 <!-- Category progress will be loaded here -->
             </div>
         </div>
-        
+
         <!-- Data Management Section -->
-        <div class="card" style="margin-top: 30px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-            <h3 style="color: #495057; display: flex; align-items: center; gap: 10px;">
+        <div class="card" style="margin-top: 30px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+            <h3 style="color: #f1f5f9; display: flex; align-items: center; gap: 10px;">
                 💾 Administración de Datos
             </h3>
-            <p style="color: #6c757d; margin-bottom: 20px;">
+            <p style="color: #94a3b8; margin-bottom: 20px;">
                 Gestione la persistencia y respaldo de todos los datos del módulo de capacitaciones
             </p>
-            
+
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                 <button onclick="saveAllTrainingData()" class="btn btn-primary" title="Guardar todos los datos en localStorage">
                     💾 Guardar Datos
@@ -900,10 +1253,10 @@ function showTrainingDashboard() {
                     🗑️ Limpiar Todo
                 </button>
             </div>
-            
-            <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 5px; border-left: 4px solid #17a2b8;">
-                <small style="color: #495057;">
-                    <strong>💡 Información:</strong><br>
+
+            <div style="margin-top: 15px; padding: 15px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; border-left: 4px solid #6366f1;">
+                <small style="color: #cbd5e1;">
+                    <strong style="color: #a5b4fc;">💡 Información:</strong><br>
                     • Los datos se guardan automáticamente en localStorage<br>
                     • Use "Exportar" para crear respaldos<br>
                     • "Importar" reemplazará todos los datos actuales<br>
@@ -912,42 +1265,42 @@ function showTrainingDashboard() {
             </div>
         </div>
     `;
-    
+
     // Load dashboard data
     loadDashboardData();
 }
 
-// Trainings management view
+// Trainings management view - DARK THEME v2.0
 function showTrainingsManagement() {
     const contentArea = document.getElementById('training-content-area');
-    
+
     contentArea.innerHTML = `
         <!-- Filters and search -->
-        <div class="card" style="margin-bottom: 20px;">
-            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 15px;">
-                <h3>🔍 Filtros de Búsqueda</h3>
+        <div class="card" style="margin-bottom: 20px; background: #1e293b; border: 1px solid #334155;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: #f1f5f9; margin: 0;">🔍 Filtros de Búsqueda</h3>
                 <button onclick="showModal('trainingModal')" class="btn btn-primary">
                     ➕ Nueva Capacitación
                 </button>
             </div>
-            
+
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                 <div>
-                    <label>🔍 Buscar:</label>
-                    <input type="text" id="training-search" placeholder="Buscar capacitaciones..." onkeyup="filterTrainings()">
+                    <label style="color: #cbd5e1;">🔍 Buscar:</label>
+                    <input type="text" id="training-search" placeholder="Buscar capacitaciones..." onkeyup="filterTrainings()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                 </div>
                 <div>
-                    <label>📂 Categoría:</label>
-                    <select id="category-filter" onchange="filterTrainings()">
+                    <label style="color: #cbd5e1;">📂 Categoría:</label>
+                    <select id="category-filter" onchange="filterTrainings()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="">Todas las categorías</option>
-                        ${trainingCategories.map(cat => 
+                        ${trainingCategories.map(cat =>
                             `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`
                         ).join('')}
                     </select>
                 </div>
                 <div>
-                    <label>🔄 Estado:</label>
-                    <select id="status-filter" onchange="filterTrainings()">
+                    <label style="color: #cbd5e1;">🔄 Estado:</label>
+                    <select id="status-filter" onchange="filterTrainings()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="">Todos los estados</option>
                         <option value="active">🟢 Activo</option>
                         <option value="draft">🟡 Borrador</option>
@@ -957,8 +1310,8 @@ function showTrainingsManagement() {
                     </select>
                 </div>
                 <div>
-                    <label>📅 Tipo:</label>
-                    <select id="type-filter" onchange="filterTrainings()">
+                    <label style="color: #cbd5e1;">📅 Tipo:</label>
+                    <select id="type-filter" onchange="filterTrainings()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="">Todos los tipos</option>
                         <option value="presential">🏢 Presencial</option>
                         <option value="virtual">💻 Virtual</option>
@@ -969,19 +1322,19 @@ function showTrainingsManagement() {
                 </div>
             </div>
         </div>
-        
+
         <!-- Trainings list -->
-        <div class="card">
-            <h3>📚 Lista de Capacitaciones</h3>
+        <div class="card" style="background: #1e293b; border: 1px solid #334155;">
+            <h3 style="color: #f1f5f9;">📚 Lista de Capacitaciones</h3>
             <div id="trainings-list">
-                <div style="padding: 40px; text-align: center; color: #6c757d;">
+                <div style="padding: 40px; text-align: center; color: #94a3b8;">
                     <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
                     <div>Cargando capacitaciones...</div>
                 </div>
             </div>
         </div>
     `;
-    
+
     // Load trainings data
     loadTrainingsList();
 }
@@ -1133,7 +1486,7 @@ function loadRecentTrainings() {
     
     if (recentTrainings.length === 0) {
         container.innerHTML = `
-            <div style="padding: 20px; text-align: center; color: #6c757d;">
+            <div style="padding: 20px; text-align: center; color: #94a3b8;">
                 📚 No hay capacitaciones recientes
             </div>
         `;
@@ -1150,9 +1503,9 @@ function loadRecentTrainings() {
                     <div style="flex: 1;">
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
                             <span style="font-size: 1.2em;">${category ? category.icon : '📚'}</span>
-                            <h4 style="margin: 0; color: #333;">${training.title}</h4>
+                            <h4 style="margin: 0; color: #f1f5f9;">${training.title}</h4>
                         </div>
-                        <p style="margin: 0; color: #6c757d; font-size: 14px;">${training.description}</p>
+                        <p style="margin: 0; color: #94a3b8; font-size: 14px;">${training.description}</p>
                     </div>
                     <span class="training-status ${statusClass}">
                         ${training.status === 'active' ? 'Activo' : 
@@ -1162,17 +1515,17 @@ function loadRecentTrainings() {
                 </div>
                 
                 <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
-                    <div style="font-size: 12px; color: #6c757d;">
+                    <div style="font-size: 12px; color: #94a3b8;">
                         👤 ${training.instructor} • ⏱️ ${training.duration}h • 👥 ${training.participants} participantes
                     </div>
-                    <div style="font-size: 12px; color: #6c757d;">
+                    <div style="font-size: 12px; color: #94a3b8;">
                         📅 ${new Date(training.deadline).toLocaleDateString()}
                     </div>
                 </div>
                 
                 <div style="margin-bottom: 10px;">
                     <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 3px;">
-                        <span style="font-size: 12px; color: #6c757d;">Progreso</span>
+                        <span style="font-size: 12px; color: #94a3b8;">Progreso</span>
                         <span style="font-size: 12px; font-weight: bold;">${training.progress}%</span>
                     </div>
                     <div class="progress-bar">
@@ -1208,7 +1561,7 @@ function loadUpcomingDeadlines() {
     
     if (upcoming.length === 0) {
         container.innerHTML = `
-            <div style="padding: 15px; text-align: center; color: #6c757d; font-size: 12px;">
+            <div style="padding: 15px; text-align: center; color: #94a3b8; font-size: 12px;">
                 📅 No hay vencimientos próximos
             </div>
         `;
@@ -1217,14 +1570,14 @@ function loadUpcomingDeadlines() {
     
     container.innerHTML = upcoming.map(training => {
         const daysUntilDeadline = Math.ceil((new Date(training.deadline) - new Date()) / (1000 * 60 * 60 * 24));
-        const urgencyClass = daysUntilDeadline <= 3 ? 'text-danger' : daysUntilDeadline <= 7 ? 'text-warning' : 'text-info';
-        
+        const urgencyColor = daysUntilDeadline <= 3 ? '#ef4444' : daysUntilDeadline <= 7 ? '#fbbf24' : '#6366f1';
+
         return `
-            <div style="padding: 8px 12px; border-left: 3px solid ${daysUntilDeadline <= 3 ? '#dc3545' : daysUntilDeadline <= 7 ? '#ffc107' : '#17a2b8'}; margin-bottom: 8px; background: #f8f9fa; border-radius: 0 4px 4px 0;">
-                <div style="font-weight: 600; font-size: 13px; color: #333;">${training.title}</div>
-                <div style="font-size: 11px; color: #6c757d;">
+            <div style="padding: 10px 14px; border-left: 3px solid ${urgencyColor}; margin-bottom: 10px; background: #0f172a; border-radius: 0 8px 8px 0; border: 1px solid #334155; border-left-width: 3px;">
+                <div style="font-weight: 600; font-size: 13px; color: #f1f5f9;">${training.title}</div>
+                <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
                     📅 ${new Date(training.deadline).toLocaleDateString()}
-                    <span class="${urgencyClass}" style="font-weight: bold; margin-left: 5px;">
+                    <span style="font-weight: bold; margin-left: 5px; color: ${urgencyColor};">
                         (${daysUntilDeadline} día${daysUntilDeadline !== 1 ? 's' : ''})
                     </span>
                 </div>
@@ -1254,26 +1607,26 @@ function loadCategoryProgress() {
     });
     
     container.innerHTML = categoryStats.map(cat => `
-        <div class="stat-card" style="border-left: 4px solid ${cat.color};">
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-                <span style="font-size: 2em; margin-right: 10px;">${cat.icon}</span>
+        <div class="stat-card" style="border-left: 4px solid ${cat.color}; background: #0f172a; border: 1px solid #334155;">
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                <span style="font-size: 2em; margin-right: 12px;">${cat.icon}</span>
                 <div style="text-align: left;">
                     <div style="font-weight: bold; color: ${cat.color};">${cat.name}</div>
-                    <div style="font-size: 12px; color: #6c757d;">${cat.trainings} capacitacion${cat.trainings !== 1 ? 'es' : ''}</div>
+                    <div style="font-size: 12px; color: #94a3b8;">${cat.trainings} capacitacion${cat.trainings !== 1 ? 'es' : ''}</div>
                 </div>
             </div>
-            
-            <div style="margin-bottom: 10px;">
-                <div style="display: flex; justify-content: between; margin-bottom: 3px;">
-                    <span style="font-size: 12px;">Progreso</span>
-                    <span style="font-size: 12px; font-weight: bold;">${cat.progress}%</span>
+
+            <div style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="font-size: 12px; color: #94a3b8;">Progreso</span>
+                    <span style="font-size: 12px; font-weight: bold; color: #f1f5f9;">${cat.progress}%</span>
                 </div>
-                <div class="progress-bar">
+                <div class="progress-bar" style="background: #334155;">
                     <div class="progress-fill" style="width: ${cat.progress}%; background: ${cat.color};"></div>
                 </div>
             </div>
-            
-            <div style="display: flex; justify-content: between; font-size: 11px; color: #6c757d;">
+
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8;">
                 <span>👥 ${cat.participants}</span>
                 <span>✅ ${cat.completed}</span>
             </div>
@@ -1609,10 +1962,10 @@ function loadTrainingsList() {
     
     if (allTrainings.length === 0) {
         container.innerHTML = `
-            <div style="padding: 40px; text-align: center; color: #6c757d;">
+            <div style="padding: 40px; text-align: center; color: #94a3b8;">
                 <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
-                <div style="font-size: 18px; margin-bottom: 10px;">No hay capacitaciones creadas</div>
-                <div style="margin-bottom: 20px;">Comienza creando tu primera capacitación</div>
+                <div style="font-size: 18px; margin-bottom: 10px; color: #f1f5f9;">No hay capacitaciones creadas</div>
+                <div style="margin-bottom: 20px; color: #94a3b8;">Comienza creando tu primera capacitación</div>
                 <button onclick="showModal('trainingModal')" class="btn btn-primary">
                     ➕ Crear Primera Capacitación
                 </button>
@@ -1644,17 +1997,17 @@ function loadTrainingsList() {
         const isOverdue = training.status === 'active' && new Date(training.deadline) < new Date();
         
         return `
-            <div class="training-card" style="${isOverdue ? 'border-left: 4px solid #dc3545;' : ''}">
-                <div style="display: flex; justify-content: between; align-items: flex-start; margin-bottom: 15px;">
+            <div class="training-card" style="${isOverdue ? 'border-left: 4px solid #ef4444;' : ''} background: #1e293b; border: 1px solid #334155;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
                     <div style="flex: 1;">
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                             <span style="font-size: 1.4em;">${category ? category.icon : '📚'}</span>
-                            <h3 style="margin: 0; color: #333;">${training.title}</h3>
+                            <h3 style="margin: 0; color: #f1f5f9;">${training.title}</h3>
                             <span style="font-size: 1.2em;">${typeIcons[training.type] || '📚'}</span>
-                            ${training.mandatory ? '<span style="background: #dc3545; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: bold;">OBLIGATORIO</span>' : ''}
+                            ${training.mandatory ? '<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; border: 1px solid rgba(239, 68, 68, 0.3);">OBLIGATORIO</span>' : ''}
                         </div>
-                        <p style="margin: 0 0 8px 0; color: #6c757d;">${training.description}</p>
-                        <div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 13px; color: #6c757d;">
+                        <p style="margin: 0 0 8px 0; color: #94a3b8;">${training.description}</p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 13px; color: #94a3b8;">
                             <span>👤 ${training.instructor}</span>
                             <span>⏱️ ${training.duration}h</span>
                             <span>👥 ${training.participants} participantes</span>
@@ -1667,21 +2020,21 @@ function loadTrainingsList() {
                             ${statusText[training.status]}
                             ${isOverdue ? ' - VENCIDO' : ''}
                         </span>
-                        <div style="font-size: 12px; color: #6c757d; text-align: right;">
+                        <div style="font-size: 12px; color: #64748b; text-align: right;">
                             Creado: ${new Date(training.createdAt || Date.now()).toLocaleDateString()}
                         </div>
                     </div>
                 </div>
-                
+
                 <div style="margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 5px;">
-                        <span style="font-size: 14px; font-weight: 500;">Progreso General</span>
-                        <span style="font-size: 14px; font-weight: bold; color: ${training.progress >= 80 ? '#28a745' : training.progress >= 50 ? '#ffc107' : '#dc3545'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span style="font-size: 14px; font-weight: 500; color: #cbd5e1;">Progreso General</span>
+                        <span style="font-size: 14px; font-weight: bold; color: ${training.progress >= 80 ? '#22c55e' : training.progress >= 50 ? '#fbbf24' : '#ef4444'};">
                             ${training.progress}%
                         </span>
                     </div>
-                    <div class="progress-bar" style="height: 10px;">
-                        <div class="progress-fill" style="width: ${training.progress}%; background: ${training.progress >= 80 ? '#28a745' : training.progress >= 50 ? '#ffc107' : '#dc3545'};"></div>
+                    <div class="progress-bar" style="height: 10px; background: #334155;">
+                        <div class="progress-fill" style="width: ${training.progress}%; background: ${training.progress >= 80 ? '#22c55e' : training.progress >= 50 ? '#fbbf24' : '#ef4444'};"></div>
                     </div>
                 </div>
                 
@@ -2039,52 +2392,52 @@ function viewTrainingParticipants(trainingId) {
                         <h4>👤 Lista de Participantes</h4>
                         <div style="overflow-x: auto;">
                             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                                <thead style="background: #f8f9fa;">
+                                <thead style="background: #1e293b; color: #e2e8f0;">
                                     <tr>
-                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">Participante</th>
-                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">Departamento</th>
-                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Estado</th>
-                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Progreso</th>
-                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Puntuación</th>
-                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Fecha Completado</th>
-                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Acciones</th>
+                                        <th style="padding: 12px; border: 1px solid #334155; text-align: left;">Participante</th>
+                                        <th style="padding: 12px; border: 1px solid #334155; text-align: left;">Departamento</th>
+                                        <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Estado</th>
+                                        <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Progreso</th>
+                                        <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Puntuación</th>
+                                        <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Fecha Completado</th>
+                                        <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="participants-table-body">
                                     ${mockParticipants.map(participant => `
-                                        <tr style="border-bottom: 1px solid #dee2e6;">
-                                            <td style="padding: 12px; border: 1px solid #dee2e6;">
+                                        <tr style="border-bottom: 1px solid #334155;">
+                                            <td style="padding: 12px; border: 1px solid #334155;">
                                                 <div style="font-weight: 600;">${participant.name}</div>
-                                                <div style="font-size: 12px; color: #6c757d;">${participant.email}</div>
+                                                <div style="font-size: 12px; color: #94a3b8;">${participant.email}</div>
                                             </td>
-                                            <td style="padding: 12px; border: 1px solid #dee2e6;">
-                                                <span style="background: #e9ecef; padding: 4px 8px; border-radius: 10px; font-size: 12px;">
+                                            <td style="padding: 12px; border: 1px solid #334155;">
+                                                <span style="background: #1e293b; color: #e2e8f0; padding: 4px 8px; border-radius: 10px; font-size: 12px;">
                                                     ${participant.department}
                                                 </span>
                                             </td>
-                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                                            <td style="padding: 12px; border: 1px solid #334155; text-align: center;">
                                                 <span style="background: ${statusColors[participant.status]}; color: white; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: bold;">
                                                     ${statusText[participant.status]}
                                                 </span>
                                             </td>
-                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                                            <td style="padding: 12px; border: 1px solid #334155; text-align: center;">
                                                 <div style="display: flex; flex-direction: column; align-items: center;">
                                                     <div style="font-weight: bold; margin-bottom: 3px;">${participant.progress}%</div>
-                                                    <div style="width: 60px; height: 6px; background: #e9ecef; border-radius: 3px;">
+                                                    <div style="width: 60px; height: 6px; background: #1e293b; color: #e2e8f0; border-radius: 3px;">
                                                         <div style="height: 100%; background: ${participant.progress >= 100 ? '#28a745' : participant.progress >= 50 ? '#ffc107' : '#dc3545'}; width: ${participant.progress}%; border-radius: 3px;"></div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                                            <td style="padding: 12px; border: 1px solid #334155; text-align: center;">
                                                 ${participant.score !== null ? 
                                                     `<span style="font-weight: bold; color: ${participant.score >= training.minScore ? '#28a745' : '#dc3545'};">${participant.score}%</span>` : 
-                                                    '<span style="color: #6c757d;">-</span>'
+                                                    '<span style="color: #94a3b8;">-</span>'
                                                 }
                                             </td>
-                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">
-                                                ${participant.completedDate ? participant.completedDate.toLocaleDateString() : '<span style="color: #6c757d;">-</span>'}
+                                            <td style="padding: 12px; border: 1px solid #334155; text-align: center; font-size: 12px;">
+                                                ${participant.completedDate ? participant.completedDate.toLocaleDateString() : '<span style="color: #94a3b8;">-</span>'}
                                             </td>
-                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                                            <td style="padding: 12px; border: 1px solid #334155; text-align: center;">
                                                 <div style="display: flex; gap: 5px; justify-content: center;">
                                                     <button onclick="viewParticipantDetail(${participant.id}, ${trainingId})" class="btn btn-sm btn-info" title="Ver detalles">
                                                         👁️
@@ -2325,15 +2678,15 @@ function simulateTrainingCompletion(trainingId) {
     showTrainingMessage('🎯 Iniciando simulación de completación...', 'info');
 }
 
-// Evaluations management view - COMPLETE IMPLEMENTATION
+// Evaluations management view - DARK THEME v2.0
 function showEvaluationsManagement() {
     const contentArea = document.getElementById('training-content-area');
-    
+
     contentArea.innerHTML = `
         <!-- Filters and search -->
-        <div class="card" style="margin-bottom: 20px;">
+        <div class="card" style="margin-bottom: 20px; background: #1e293b; border: 1px solid #334155;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3>🔍 Evaluaciones</h3>
+                <h3 style="color: #f1f5f9; margin: 0;">🔍 Evaluaciones</h3>
                 <div style="display: flex; gap: 10px;">
                     <button onclick="showModal('evaluationModal'); prepareEvaluationModal()" class="btn btn-primary">
                         ➕ Nueva Evaluación
@@ -2343,24 +2696,24 @@ function showEvaluationsManagement() {
                     </button>
                 </div>
             </div>
-            
+
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                 <div>
-                    <label>🔍 Buscar:</label>
-                    <input type="text" id="evaluation-search" placeholder="Buscar evaluaciones..." onkeyup="filterEvaluations()">
+                    <label style="color: #cbd5e1;">🔍 Buscar:</label>
+                    <input type="text" id="evaluation-search" placeholder="Buscar evaluaciones..." onkeyup="filterEvaluations()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                 </div>
                 <div>
-                    <label>📚 Capacitación:</label>
-                    <select id="evaluation-training-filter" onchange="filterEvaluations()">
+                    <label style="color: #cbd5e1;">📚 Capacitación:</label>
+                    <select id="evaluation-training-filter" onchange="filterEvaluations()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="">Todas las capacitaciones</option>
-                        ${allTrainings.map(training => 
+                        ${allTrainings.map(training =>
                             `<option value="${training.id}">${training.title}</option>`
                         ).join('')}
                     </select>
                 </div>
                 <div>
-                    <label>🔄 Estado:</label>
-                    <select id="evaluation-status-filter" onchange="filterEvaluations()">
+                    <label style="color: #cbd5e1;">🔄 Estado:</label>
+                    <select id="evaluation-status-filter" onchange="filterEvaluations()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="">Todos los estados</option>
                         <option value="active">🟢 Activa</option>
                         <option value="draft">🟡 Borrador</option>
@@ -2370,66 +2723,66 @@ function showEvaluationsManagement() {
                 </div>
             </div>
         </div>
-        
+
         <!-- Evaluations list -->
-        <div class="card">
-            <h3>📋 Lista de Evaluaciones</h3>
+        <div class="card" style="background: #1e293b; border: 1px solid #334155;">
+            <h3 style="color: #f1f5f9;">📋 Lista de Evaluaciones</h3>
             <div id="evaluations-list">
-                <div style="padding: 40px; text-align: center; color: #6c757d;">
+                <div style="padding: 40px; text-align: center; color: #94a3b8;">
                     <div style="font-size: 48px; margin-bottom: 15px;">📋</div>
                     <div>Cargando evaluaciones...</div>
                 </div>
             </div>
         </div>
     `;
-    
+
     // Load evaluations data
     loadEvaluationsList();
 }
 
-// 🆕 EVALUACIONES INDEPENDIENTES - Gestión de evaluaciones no vinculadas a capacitaciones
+// 🆕 EVALUACIONES INDEPENDIENTES - Gestión de evaluaciones no vinculadas a capacitaciones - DARK THEME v2.0
 function showIndependentEvaluationsManagement() {
     const contentArea = document.getElementById('training-content-area');
-    
+
     contentArea.innerHTML = `
         <!-- Header -->
-        <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+        <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
             <div style="padding: 20px;">
-                <h2 style="margin: 0; font-size: 24px; display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0; font-size: 24px; display: flex; align-items: center; gap: 10px; background: linear-gradient(90deg, #22c55e, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
                     🎯 Evaluaciones Independientes
                 </h2>
-                <p style="margin: 5px 0 0 0; opacity: 0.9;">
-                    Evaluaciones que no están vinculadas a capacitaciones específicas - ideales para evaluaciones de conocimientos generales, 
+                <p style="margin: 8px 0 0 0; color: #94a3b8;">
+                    Evaluaciones que no están vinculadas a capacitaciones específicas - ideales para evaluaciones de conocimientos generales,
                     exámenes de selección, tests psicotécnicos, evaluaciones de desempeño, etc.
                 </p>
             </div>
         </div>
 
-        <!-- Actions and filters -->
-        <div class="card" style="margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3>🔍 Gestión de Evaluaciones Independientes</h3>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="showIndependentEvaluationModal()" class="btn btn-primary">
+        <!-- Actions and filters - DARK THEME -->
+        <div class="card" style="margin-bottom: 20px; background: #1e293b; border: 1px solid #334155;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
+                <h3 style="color: #e2e8f0; margin: 0;">🔍 Gestión de Evaluaciones Independientes</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="showIndependentEvaluationModal()" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">
                         ➕ Nueva Evaluación Independiente
                     </button>
-                    <button onclick="showIndependentExamFormGenerator()" class="btn btn-success">
+                    <button onclick="showIndependentExamFormGenerator()" class="btn btn-success" style="background: linear-gradient(135deg, #22c55e, #10b981); border: none;">
                         🎯 Generar Formulario de Examen
                     </button>
-                    <button onclick="importIndependentEvaluations()" class="btn btn-info">
+                    <button onclick="importIndependentEvaluations()" class="btn btn-info" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9); border: none;">
                         📥 Importar Evaluaciones
                     </button>
                 </div>
             </div>
-            
+
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                 <div>
-                    <label>🔍 Buscar:</label>
-                    <input type="text" id="independent-evaluation-search" placeholder="Buscar evaluaciones independientes..." onkeyup="filterIndependentEvaluations()">
+                    <label style="color: #94a3b8; font-weight: 500;">🔍 Buscar:</label>
+                    <input type="text" id="independent-evaluation-search" placeholder="Buscar evaluaciones independientes..." onkeyup="filterIndependentEvaluations()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                 </div>
                 <div>
-                    <label>📂 Categoría:</label>
-                    <select id="independent-evaluation-category-filter" onchange="filterIndependentEvaluations()">
+                    <label style="color: #94a3b8; font-weight: 500;">📂 Categoría:</label>
+                    <select id="independent-evaluation-category-filter" onchange="filterIndependentEvaluations()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="">Todas las categorías</option>
                         <option value="knowledge">🧠 Conocimientos Generales</option>
                         <option value="psychometric">🧪 Psicotécnicas</option>
@@ -2441,8 +2794,8 @@ function showIndependentEvaluationsManagement() {
                     </select>
                 </div>
                 <div>
-                    <label>🔄 Estado:</label>
-                    <select id="independent-evaluation-status-filter" onchange="filterIndependentEvaluations()">
+                    <label style="color: #94a3b8; font-weight: 500;">🔄 Estado:</label>
+                    <select id="independent-evaluation-status-filter" onchange="filterIndependentEvaluations()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="">Todos los estados</option>
                         <option value="active">🟢 Activa</option>
                         <option value="draft">🟡 Borrador</option>
@@ -2451,8 +2804,8 @@ function showIndependentEvaluationsManagement() {
                     </select>
                 </div>
                 <div>
-                    <label>👥 Audiencia:</label>
-                    <select id="independent-evaluation-audience-filter" onchange="filterIndependentEvaluations()">
+                    <label style="color: #94a3b8; font-weight: 500;">👥 Audiencia:</label>
+                    <select id="independent-evaluation-audience-filter" onchange="filterIndependentEvaluations()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="">Todas las audiencias</option>
                         <option value="all_employees">👥 Todos los empleados</option>
                         <option value="new_candidates">🆕 Candidatos nuevos</option>
@@ -2464,34 +2817,34 @@ function showIndependentEvaluationsManagement() {
             </div>
         </div>
 
-        <!-- Statistics cards -->
+        <!-- Statistics cards - DARK THEME -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-            <div class="stat-card">
-                <div class="stat-value" id="total-independent-evaluations">0</div>
-                <div class="stat-label">Total Evaluaciones</div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155; padding: 20px; border-radius: 12px;">
+                <div class="stat-value" id="total-independent-evaluations" style="color: #a5b4fc; font-size: 2.5rem; font-weight: 700;">0</div>
+                <div class="stat-label" style="color: #94a3b8;">Total Evaluaciones</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="active-independent-evaluations">0</div>
-                <div class="stat-label">Activas</div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155; padding: 20px; border-radius: 12px;">
+                <div class="stat-value" id="active-independent-evaluations" style="color: #4ade80; font-size: 2.5rem; font-weight: 700;">0</div>
+                <div class="stat-label" style="color: #94a3b8;">Activas</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="completed-independent-evaluations">0</div>
-                <div class="stat-label">Completadas</div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155; padding: 20px; border-radius: 12px;">
+                <div class="stat-value" id="completed-independent-evaluations" style="color: #60a5fa; font-size: 2.5rem; font-weight: 700;">0</div>
+                <div class="stat-label" style="color: #94a3b8;">Completadas</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="participants-independent-evaluations">0</div>
-                <div class="stat-label">Participantes</div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155; padding: 20px; border-radius: 12px;">
+                <div class="stat-value" id="participants-independent-evaluations" style="color: #fbbf24; font-size: 2.5rem; font-weight: 700;">0</div>
+                <div class="stat-label" style="color: #94a3b8;">Participantes</div>
             </div>
         </div>
-        
-        <!-- Independent Evaluations list -->
-        <div class="card">
-            <h3>🎯 Lista de Evaluaciones Independientes</h3>
+
+        <!-- Independent Evaluations list - DARK THEME -->
+        <div class="card" style="background: #1e293b; border: 1px solid #334155;">
+            <h3 style="color: #e2e8f0;">🎯 Lista de Evaluaciones Independientes</h3>
             <div id="independent-evaluations-list">
-                <div style="padding: 40px; text-align: center; color: #6c757d;">
+                <div style="padding: 40px; text-align: center; color: #64748b; background: #0f172a; border-radius: 8px;">
                     <div style="font-size: 48px; margin-bottom: 15px;">🎯</div>
-                    <div style="font-size: 18px; margin-bottom: 10px;">No hay evaluaciones independientes creadas</div>
-                    <div style="margin-bottom: 20px;">
+                    <div style="font-size: 18px; margin-bottom: 10px; color: #e2e8f0;">No hay evaluaciones independientes creadas</div>
+                    <div style="margin-bottom: 20px; color: #94a3b8;">
                         Las evaluaciones independientes son perfectas para:<br>
                         • Tests de conocimientos generales<br>
                         • Evaluaciones psicotécnicas<br>
@@ -2499,7 +2852,7 @@ function showIndependentEvaluationsManagement() {
                         • Evaluaciones de desempeño<br>
                         • Certificaciones internas
                     </div>
-                    <button onclick="showIndependentEvaluationModal()" class="btn btn-primary">
+                    <button onclick="showIndependentEvaluationModal()" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">
                         ➕ Crear Primera Evaluación Independiente
                     </button>
                 </div>
@@ -2541,38 +2894,38 @@ function loadEvaluationsList() {
     
     if (allEvaluations.length === 0) {
         container.innerHTML = `
-            <div style="padding: 40px; text-align: center; color: #6c757d;">
+            <div style="padding: 40px; text-align: center; color: #64748b; background: #0f172a; border-radius: 8px;">
                 <div style="font-size: 48px; margin-bottom: 15px;">📋</div>
-                <div style="font-size: 18px; margin-bottom: 10px;">No hay evaluaciones creadas</div>
-                <div style="margin-bottom: 20px;">Comienza creando tu primera evaluación</div>
-                <button onclick="showModal('evaluationModal'); prepareEvaluationModal()" class="btn btn-primary">
+                <div style="font-size: 18px; margin-bottom: 10px; color: #e2e8f0;">No hay evaluaciones creadas</div>
+                <div style="margin-bottom: 20px; color: #94a3b8;">Comienza creando tu primera evaluación</div>
+                <button onclick="showModal('evaluationModal'); prepareEvaluationModal()" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">
                     ➕ Crear Primera Evaluación
                 </button>
             </div>
         `;
         return;
     }
-    
+
     container.innerHTML = allEvaluations.map(evaluation => {
         const training = allTrainings.find(t => t.id === evaluation.trainingId);
         const statusClass = `status-${evaluation.status}`;
         const statusText = {
             active: 'Activa',
-            draft: 'Borrador', 
+            draft: 'Borrador',
             completed: 'Completada',
             disabled: 'Deshabilitada'
         };
-        
+
         return `
-            <div class="training-card">
+            <div class="training-card" style="background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
                     <div style="flex: 1;">
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                             <span style="font-size: 1.4em;">📋</span>
-                            <h3 style="margin: 0; color: #333;">${evaluation.title}</h3>
+                            <h3 style="margin: 0; color: #e2e8f0;">${evaluation.title}</h3>
                         </div>
-                        <p style="margin: 0 0 8px 0; color: #6c757d;">${evaluation.instructions || 'Sin instrucciones especiales'}</p>
-                        <div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 13px; color: #6c757d;">
+                        <p style="margin: 0 0 8px 0; color: #94a3b8;">${evaluation.instructions || 'Sin instrucciones especiales'}</p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 13px; color: #64748b;">
                             <span>📚 ${training ? training.title : 'Capacitación eliminada'}</span>
                             <span>❓ ${evaluation.questions ? evaluation.questions.length : 0} preguntas</span>
                             <span>⏱️ ${evaluation.timeLimit || 60} min</span>
@@ -2584,7 +2937,7 @@ function loadEvaluationsList() {
                         ${statusText[evaluation.status]}
                     </span>
                 </div>
-                
+
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 8px;">
                         <button onclick="viewEvaluationDetails(${evaluation.id})" class="btn btn-sm btn-info" title="Ver detalles">
@@ -2712,7 +3065,7 @@ function updateQuestionType(select, questionId) {
                     </div>
                 </div>
                 <button type="button" onclick="addOption('${questionId}')" class="btn btn-sm btn-info">➕ Agregar Opción</button>
-                <p style="font-size: 12px; color: #6c757d; margin-top: 8px;">Seleccione la opción correcta</p>
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 8px;">Seleccione la opción correcta</p>
             `;
             break;
             
@@ -2736,7 +3089,7 @@ function updateQuestionType(select, questionId) {
             optionsContainer.innerHTML = `
                 <label>Palabras clave para evaluación automática (separadas por comas)</label>
                 <input type="text" class="text-keywords" placeholder="palabra1, palabra2, concepto importante">
-                <p style="font-size: 12px; color: #6c757d; margin-top: 5px;">Las respuestas que contengan estas palabras recibirán puntuación completa</p>
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;">Las respuestas que contengan estas palabras recibirán puntuación completa</p>
             `;
             break;
             
@@ -3008,7 +3361,7 @@ function viewEvaluationDetails(evaluationId) {
                                 ` : ''}
                                 
                                 ${question.explanation ? `
-                                    <div style="margin-left: 20px; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 13px;">
+                                    <div style="margin-left: 20px; margin-top: 8px; padding: 8px; background: #1e293b; color: #e2e8f0; border-radius: 4px; font-size: 13px;">
                                         <strong>Explicación:</strong> ${question.explanation}
                                     </div>
                                 ` : ''}
@@ -3048,10 +3401,10 @@ function previewEvaluation(evaluationId) {
                     <button onclick="closeModal('evaluationPreviewModal')" class="close-btn">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                         <h4 style="margin-top: 0;">📋 ${evaluation.title}</h4>
                         ${evaluation.instructions ? `<div style="margin-bottom: 10px;">${evaluation.instructions}</div>` : ''}
-                        <div style="display: flex; gap: 20px; font-size: 14px; color: #6c757d;">
+                        <div style="display: flex; gap: 20px; font-size: 14px; color: #94a3b8;">
                             <span>⏱️ Tiempo: ${evaluation.timeLimit} minutos</span>
                             <span>❓ Preguntas: ${evaluation.questions.length}</span>
                             <span>💯 Puntos: ${evaluation.totalPoints}</span>
@@ -3100,7 +3453,7 @@ function previewEvaluation(evaluationId) {
                                     ` : ''}
                                     
                                     ${question.type === 'practical' ? `
-                                        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                                        <div style="background: rgba(99, 102, 241, 0.2); color: #e2e8f0; padding: 15px; border-radius: 8px;">
                                             <strong>📝 Evaluación Práctica</strong>
                                             ${question.practicalInstructions ? `<div style="margin-top: 8px;">${question.practicalInstructions}</div>` : ''}
                                             ${question.requiresEvaluator ? '<div style="margin-top: 8px; color: #1976d2;"><strong>⚠️ Requiere evaluación manual</strong></div>' : ''}
@@ -3111,7 +3464,7 @@ function previewEvaluation(evaluationId) {
                         }).join('')}
                     </form>
                     
-                    <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;">
+                    <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #334155;">
                         <button onclick="closeModal('evaluationPreviewModal')" class="btn btn-secondary" style="margin-right: 10px;">Cerrar Vista Previa</button>
                         <button onclick="simulateEvaluationSubmission(${evaluation.id})" class="btn btn-primary">🎯 Simular Envío (Demo)</button>
                     </div>
@@ -3303,16 +3656,16 @@ function showEmployeeTracking() {
             
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse;">
-                    <thead style="background: #f8f9fa;">
+                    <thead style="background: #1e293b; color: #e2e8f0;">
                         <tr>
-                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">Empleado</th>
-                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Departamento</th>
-                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Capacitaciones</th>
-                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Completadas</th>
-                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Promedio</th>
-                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Estado</th>
-                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Última Actividad</th>
-                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">Acciones</th>
+                            <th style="padding: 12px; border: 1px solid #334155; text-align: left;">Empleado</th>
+                            <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Departamento</th>
+                            <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Capacitaciones</th>
+                            <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Completadas</th>
+                            <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Promedio</th>
+                            <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Estado</th>
+                            <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Última Actividad</th>
+                            <th style="padding: 12px; border: 1px solid #334155; text-align: center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="employees-table">
@@ -3444,32 +3797,32 @@ function renderEmployeeTable(employees) {
         const daysSinceActivity = Math.floor((new Date() - employee.lastActivity) / (1000 * 60 * 60 * 24));
         
         return `
-            <tr style="border-bottom: 1px solid #dee2e6;">
-                <td style="padding: 12px; border: 1px solid #dee2e6;">
+            <tr style="border-bottom: 1px solid #334155;">
+                <td style="padding: 12px; border: 1px solid #334155;">
                     <div style="font-weight: 600;">${employee.name}</div>
-                    <div style="font-size: 12px; color: #6c757d;">${employee.email}</div>
+                    <div style="font-size: 12px; color: #94a3b8;">${employee.email}</div>
                 </td>
-                <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
-                    <span style="background: #e9ecef; padding: 4px 8px; border-radius: 10px; font-size: 12px;">
+                <td style="padding: 12px; border: 1px solid #334155; text-align: center;">
+                    <span style="background: #1e293b; color: #e2e8f0; padding: 4px 8px; border-radius: 10px; font-size: 12px;">
                         ${employee.department}
                     </span>
                 </td>
-                <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                <td style="padding: 12px; border: 1px solid #334155; text-align: center;">
                     <div style="font-weight: bold;">${employee.totalTrainings}</div>
-                    <div style="font-size: 11px; color: #6c757d;">asignadas</div>
+                    <div style="font-size: 11px; color: #94a3b8;">asignadas</div>
                 </td>
-                <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                <td style="padding: 12px; border: 1px solid #334155; text-align: center;">
                     <div style="font-weight: bold; color: ${completionRate >= 80 ? '#28a745' : completionRate >= 60 ? '#ffc107' : '#dc3545'};">
                         ${employee.completedTrainings}/${employee.totalTrainings}
                     </div>
-                    <div style="font-size: 11px; color: #6c757d;">${completionRate}%</div>
+                    <div style="font-size: 11px; color: #94a3b8;">${completionRate}%</div>
                 </td>
-                <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                <td style="padding: 12px; border: 1px solid #334155; text-align: center;">
                     <div style="font-weight: bold; color: ${employee.averageScore >= 80 ? '#28a745' : employee.averageScore >= 70 ? '#ffc107' : '#dc3545'};">
                         ${employee.averageScore}%
                     </div>
                 </td>
-                <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                <td style="padding: 12px; border: 1px solid #334155; text-align: center;">
                     <span style="background: ${statusInfo.color}; color: white; padding: 4px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">
                         ${statusInfo.text}
                     </span>
@@ -3481,12 +3834,12 @@ function renderEmployeeTable(employees) {
                         </div>
                     ` : ''}
                 </td>
-                <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">
+                <td style="padding: 12px; border: 1px solid #334155; text-align: center; font-size: 12px;">
                     ${daysSinceActivity === 0 ? 'Hoy' : 
                       daysSinceActivity === 1 ? 'Ayer' : 
                       `${daysSinceActivity} días`}
                 </td>
-                <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                <td style="padding: 12px; border: 1px solid #334155; text-align: center;">
                     <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
                         <button onclick="viewEmployeeProfile(${employee.id})" class="btn btn-sm btn-info" title="Ver perfil">
                             👁️
@@ -3624,15 +3977,15 @@ function viewEmployeeCertificates(employeeId) {
 
 function showTrainingReports() {
     const contentArea = document.getElementById('training-content-area');
-    
+
     contentArea.innerHTML = `
-        <!-- Report Controls -->
-        <div class="card" style="margin-bottom: 20px;">
-            <h3>📊 Centro de Reportes</h3>
+        <!-- Report Controls - DARK THEME -->
+        <div class="card" style="margin-bottom: 20px; background: #1e293b; border: 1px solid #334155;">
+            <h3 style="color: #e2e8f0;">📊 Centro de Reportes</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
                 <div>
-                    <label>📅 Período de análisis:</label>
-                    <select id="report-period" onchange="updateReportPeriod()">
+                    <label style="color: #94a3b8; font-weight: 500;">📅 Período de análisis:</label>
+                    <select id="report-period" onchange="updateReportPeriod()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="week">Última semana</option>
                         <option value="month" selected>Último mes</option>
                         <option value="quarter">Último trimestre</option>
@@ -3641,17 +3994,17 @@ function showTrainingReports() {
                     </select>
                 </div>
                 <div>
-                    <label>📂 Categoría:</label>
-                    <select id="report-category" onchange="updateReportCategory()">
+                    <label style="color: #94a3b8; font-weight: 500;">📂 Categoría:</label>
+                    <select id="report-category" onchange="updateReportCategory()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="">Todas las categorías</option>
-                        ${trainingCategories.map(cat => 
+                        ${trainingCategories.map(cat =>
                             `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`
                         ).join('')}
                     </select>
                 </div>
                 <div>
-                    <label>📈 Tipo de reporte:</label>
-                    <select id="report-type" onchange="updateReportType()">
+                    <label style="color: #94a3b8; font-weight: 500;">📈 Tipo de reporte:</label>
+                    <select id="report-type" onchange="updateReportType()" style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 10px; border-radius: 8px; width: 100%;">
                         <option value="overview">Vista general</option>
                         <option value="completion">Cumplimiento</option>
                         <option value="performance">Rendimiento</option>
@@ -3659,113 +4012,113 @@ function showTrainingReports() {
                     </select>
                 </div>
                 <div style="display: flex; align-items: end; gap: 10px;">
-                    <button onclick="generateReport()" class="btn btn-primary">
+                    <button onclick="generateReport()" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">
                         📊 Generar Reporte
                     </button>
-                    <button onclick="exportReport()" class="btn btn-success">
+                    <button onclick="exportReport()" class="btn btn-success" style="background: linear-gradient(135deg, #22c55e, #10b981); border: none;">
                         📤 Exportar
                     </button>
                 </div>
             </div>
         </div>
         
-        <!-- Key Metrics -->
-        <div class="card" style="margin-bottom: 20px;">
-            <h4>🎯 Métricas Clave</h4>
+        <!-- Key Metrics - DARK THEME -->
+        <div class="card" style="margin-bottom: 20px; background: #1e293b; border: 1px solid #334155;">
+            <h4 style="color: #e2e8f0;">🎯 Métricas Clave</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
-                <div class="stat-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 20px; border-radius: 12px; text-align: center;">
                     <div style="font-size: 2.5em; margin-bottom: 10px;">📚</div>
                     <div style="font-size: 2em; font-weight: bold;" id="metrics-total-trainings">${allTrainings.length}</div>
                     <div style="font-size: 12px; opacity: 0.9;">Capacitaciones Totales</div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #22c55e, #10b981); color: white; padding: 20px; border-radius: 12px; text-align: center;">
                     <div style="font-size: 2.5em; margin-bottom: 10px;">✅</div>
                     <div style="font-size: 2em; font-weight: bold;" id="metrics-completion-rate">78%</div>
                     <div style="font-size: 12px; opacity: 0.9;">Tasa de Completación</div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #ffc107, #fd7e14); color: white;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 20px; border-radius: 12px; text-align: center;">
                     <div style="font-size: 2.5em; margin-bottom: 10px;">🏆</div>
                     <div style="font-size: 2em; font-weight: bold;" id="metrics-avg-score">87%</div>
                     <div style="font-size: 12px; opacity: 0.9;">Puntuación Promedio</div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #dc3545, #e74c3c); color: white;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 20px; border-radius: 12px; text-align: center;">
                     <div style="font-size: 2.5em; margin-bottom: 10px;">⏰</div>
                     <div style="font-size: 2em; font-weight: bold;" id="metrics-overdue">5</div>
                     <div style="font-size: 12px; opacity: 0.9;">Capacitaciones Vencidas</div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #6f42c1, #6610f2); color: white;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white; padding: 20px; border-radius: 12px; text-align: center;">
                     <div style="font-size: 2.5em; margin-bottom: 10px;">👥</div>
                     <div style="font-size: 2em; font-weight: bold;" id="metrics-active-participants">142</div>
                     <div style="font-size: 12px; opacity: 0.9;">Participantes Activos</div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #17a2b8, #138496); color: white;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9); color: white; padding: 20px; border-radius: 12px; text-align: center;">
                     <div style="font-size: 2.5em; margin-bottom: 10px;">🏅</div>
                     <div style="font-size: 2em; font-weight: bold;" id="metrics-certificates">89</div>
                     <div style="font-size: 12px; opacity: 0.9;">Certificados Emitidos</div>
                 </div>
             </div>
         </div>
-        
-        <!-- Charts and Analytics -->
+
+        <!-- Charts and Analytics - DARK THEME -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
             <!-- Completion Trends -->
-            <div class="card">
-                <h4>📈 Tendencia de Completación</h4>
-                <div id="completion-trend-chart" style="height: 250px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
+            <div class="card" style="background: #1e293b; border: 1px solid #334155;">
+                <h4 style="color: #e2e8f0;">📈 Tendencia de Completación</h4>
+                <div id="completion-trend-chart" style="height: 250px; display: flex; align-items: center; justify-content: center; background: #0f172a; border-radius: 8px;">
                     <div style="text-align: center;">
                         <canvas id="completionChart" width="400" height="200"></canvas>
-                        <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
+                        <div style="margin-top: 10px; font-size: 12px; color: #64748b;">
                             Datos de los últimos 6 meses
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Category Distribution -->
-            <div class="card">
-                <h4>📊 Distribución por Categoría</h4>
-                <div id="category-distribution-chart" style="height: 250px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
+            <div class="card" style="background: #1e293b; border: 1px solid #334155;">
+                <h4 style="color: #e2e8f0;">📊 Distribución por Categoría</h4>
+                <div id="category-distribution-chart" style="height: 250px; display: flex; align-items: center; justify-content: center; background: #0f172a; border-radius: 8px;">
                     <div style="text-align: center;">
                         <canvas id="categoryChart" width="200" height="200"></canvas>
-                        <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
+                        <div style="margin-top: 10px; font-size: 12px; color: #64748b;">
                             Capacitaciones por categoría
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Performance Analysis -->
-        <div class="card" style="margin-bottom: 20px;">
-            <h4>🎯 Análisis de Rendimiento</h4>
+
+        <!-- Performance Analysis - DARK THEME -->
+        <div class="card" style="margin-bottom: 20px; background: #1e293b; border: 1px solid #334155;">
+            <h4 style="color: #e2e8f0;">🎯 Análisis de Rendimiento</h4>
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
                 <div>
-                    <h5>📊 Top 5 Capacitaciones por Rendimiento</h5>
-                    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px;">
+                    <h5 style="color: #cbd5e1;">📊 Top 5 Capacitaciones por Rendimiento</h5>
+                    <div style="background: #0f172a; border-radius: 8px; padding: 15px; border: 1px solid #334155;">
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
-                                <tr style="border-bottom: 2px solid #dee2e6;">
-                                    <th style="text-align: left; padding: 8px;">Capacitación</th>
-                                    <th style="text-align: center; padding: 8px;">Participantes</th>
-                                    <th style="text-align: center; padding: 8px;">Completación</th>
-                                    <th style="text-align: center; padding: 8px;">Promedio</th>
+                                <tr style="border-bottom: 2px solid #334155;">
+                                    <th style="text-align: left; padding: 8px; color: #94a3b8;">Capacitación</th>
+                                    <th style="text-align: center; padding: 8px; color: #94a3b8;">Participantes</th>
+                                    <th style="text-align: center; padding: 8px; color: #94a3b8;">Completación</th>
+                                    <th style="text-align: center; padding: 8px; color: #94a3b8;">Promedio</th>
                                 </tr>
                             </thead>
                             <tbody id="top-trainings-table">
                                 ${allTrainings.slice(0, 5).map((training, index) => `
-                                    <tr style="border-bottom: 1px solid #dee2e6;">
+                                    <tr style="border-bottom: 1px solid #334155;">
                                         <td style="padding: 8px;">
-                                            <div style="font-weight: 600;">${training.title}</div>
-                                            <div style="font-size: 12px; color: #6c757d;">${trainingCategories.find(c => c.id === training.category)?.name || 'General'}</div>
+                                            <div style="font-weight: 600; color: #e2e8f0;">${training.title}</div>
+                                            <div style="font-size: 12px; color: #64748b;">${trainingCategories.find(c => c.id === training.category)?.name || 'General'}</div>
                                         </td>
-                                        <td style="text-align: center; padding: 8px;">${training.participants}</td>
+                                        <td style="text-align: center; padding: 8px; color: #cbd5e1;">${training.participants}</td>
                                         <td style="text-align: center; padding: 8px;">
-                                            <span style="color: ${training.progress >= 80 ? '#28a745' : training.progress >= 50 ? '#ffc107' : '#dc3545'}; font-weight: bold;">
+                                            <span style="color: ${training.progress >= 80 ? '#4ade80' : training.progress >= 50 ? '#fbbf24' : '#f87171'}; font-weight: bold;">
                                                 ${training.progress}%
                                             </span>
                                         </td>
                                         <td style="text-align: center; padding: 8px;">
-                                            <span style="font-weight: bold;">87%</span>
+                                            <span style="font-weight: bold; color: #a5b4fc;">87%</span>
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -3775,32 +4128,32 @@ function showTrainingReports() {
                 </div>
                 
                 <div>
-                    <h5>⚠️ Alertas y Recomendaciones</h5>
-                    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px;">
-                        <div style="margin-bottom: 15px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
-                            <div style="font-weight: bold; color: #856404; margin-bottom: 5px;">⚠️ Atención Requerida</div>
-                            <div style="font-size: 13px; color: #856404;">
+                    <h5 style="color: #cbd5e1;">⚠️ Alertas y Recomendaciones</h5>
+                    <div style="background: #0f172a; border-radius: 8px; padding: 15px; border: 1px solid #334155;">
+                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(251, 191, 36, 0.15); border-left: 4px solid #fbbf24; border-radius: 4px;">
+                            <div style="font-weight: bold; color: #fbbf24; margin-bottom: 5px;">⚠️ Atención Requerida</div>
+                            <div style="font-size: 13px; color: #fcd34d;">
                                 5 capacitaciones tienen fechas vencidas
                             </div>
                         </div>
-                        
-                        <div style="margin-bottom: 15px; padding: 10px; background: #d1ecf1; border-left: 4px solid #bee5eb; border-radius: 4px;">
-                            <div style="font-weight: bold; color: #0c5460; margin-bottom: 5px;">💡 Recomendación</div>
-                            <div style="font-size: 13px; color: #0c5460;">
+
+                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(6, 182, 212, 0.15); border-left: 4px solid #06b6d4; border-radius: 4px;">
+                            <div style="font-weight: bold; color: #06b6d4; margin-bottom: 5px;">💡 Recomendación</div>
+                            <div style="font-size: 13px; color: #22d3ee;">
                                 Considera crear más contenido de Seguridad Laboral
                             </div>
                         </div>
-                        
-                        <div style="margin-bottom: 15px; padding: 10px; background: #d4edda; border-left: 4px solid #c3e6cb; border-radius: 4px;">
-                            <div style="font-weight: bold; color: #155724; margin-bottom: 5px;">✅ Excelente</div>
-                            <div style="font-size: 13px; color: #155724;">
+
+                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(34, 197, 94, 0.15); border-left: 4px solid #22c55e; border-radius: 4px;">
+                            <div style="font-weight: bold; color: #22c55e; margin-bottom: 5px;">✅ Excelente</div>
+                            <div style="font-size: 13px; color: #4ade80;">
                                 Tasa de completación está por encima del objetivo (75%)
                             </div>
                         </div>
-                        
-                        <div style="padding: 10px; background: #f8d7da; border-left: 4px solid #f5c6cb; border-radius: 4px;">
-                            <div style="font-weight: bold; color: #721c24; margin-bottom: 5px;">🔴 Crítico</div>
-                            <div style="font-size: 13px; color: #721c24;">
+
+                        <div style="padding: 10px; background: rgba(239, 68, 68, 0.15); border-left: 4px solid #ef4444; border-radius: 4px;">
+                            <div style="font-weight: bold; color: #ef4444; margin-bottom: 5px;">🔴 Crítico</div>
+                            <div style="font-size: 13px; color: #f87171;">
                                 2 capacitaciones obligatorias tienen baja participación
                             </div>
                         </div>
@@ -3808,39 +4161,39 @@ function showTrainingReports() {
                 </div>
             </div>
         </div>
-        
-        <!-- Detailed Reports -->
-        <div class="card">
-            <h4>📋 Reportes Detallados</h4>
+
+        <!-- Detailed Reports - DARK THEME -->
+        <div class="card" style="background: #1e293b; border: 1px solid #334155;">
+            <h4 style="color: #e2e8f0;">📋 Reportes Detallados</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-                <div class="stat-card" onclick="generateDetailedReport('compliance')" style="cursor: pointer; border: 2px solid #e9ecef; transition: all 0.3s;">
+                <div class="stat-card" onclick="generateDetailedReport('compliance')" style="cursor: pointer; border: 2px solid #334155; transition: all 0.3s; background: #0f172a; padding: 20px; border-radius: 12px;">
                     <div style="font-size: 2em; margin-bottom: 10px;">⚖️</div>
-                    <h5 style="margin-bottom: 10px;">Reporte de Cumplimiento</h5>
-                    <p style="font-size: 13px; color: #6c757d; margin: 0;">
+                    <h5 style="margin-bottom: 10px; color: #e2e8f0;">Reporte de Cumplimiento</h5>
+                    <p style="font-size: 13px; color: #64748b; margin: 0;">
                         Análisis detallado de cumplimiento regulatorio y capacitaciones obligatorias
                     </p>
                 </div>
-                
-                <div class="stat-card" onclick="generateDetailedReport('performance')" style="cursor: pointer; border: 2px solid #e9ecef; transition: all 0.3s;">
+
+                <div class="stat-card" onclick="generateDetailedReport('performance')" style="cursor: pointer; border: 2px solid #334155; transition: all 0.3s; background: #0f172a; padding: 20px; border-radius: 12px;">
                     <div style="font-size: 2em; margin-bottom: 10px;">📈</div>
-                    <h5 style="margin-bottom: 10px;">Reporte de Rendimiento</h5>
-                    <p style="font-size: 13px; color: #6c757d; margin: 0;">
+                    <h5 style="margin-bottom: 10px; color: #e2e8f0;">Reporte de Rendimiento</h5>
+                    <p style="font-size: 13px; color: #64748b; margin: 0;">
                         Análisis de calificaciones, tiempo de completación y efectividad
                     </p>
                 </div>
-                
-                <div class="stat-card" onclick="generateDetailedReport('participation')" style="cursor: pointer; border: 2px solid #e9ecef; transition: all 0.3s;">
+
+                <div class="stat-card" onclick="generateDetailedReport('participation')" style="cursor: pointer; border: 2px solid #334155; transition: all 0.3s; background: #0f172a; padding: 20px; border-radius: 12px;">
                     <div style="font-size: 2em; margin-bottom: 10px;">👥</div>
-                    <h5 style="margin-bottom: 10px;">Reporte de Participación</h5>
-                    <p style="font-size: 13px; color: #6c757d; margin: 0;">
+                    <h5 style="margin-bottom: 10px; color: #e2e8f0;">Reporte de Participación</h5>
+                    <p style="font-size: 13px; color: #64748b; margin: 0;">
                         Estadísticas de participación por departamento y empleado
                     </p>
                 </div>
-                
-                <div class="stat-card" onclick="generateDetailedReport('certificates')" style="cursor: pointer; border: 2px solid #e9ecef; transition: all 0.3s;">
+
+                <div class="stat-card" onclick="generateDetailedReport('certificates')" style="cursor: pointer; border: 2px solid #334155; transition: all 0.3s; background: #0f172a; padding: 20px; border-radius: 12px;">
                     <div style="font-size: 2em; margin-bottom: 10px;">🏆</div>
-                    <h5 style="margin-bottom: 10px;">Reporte de Certificaciones</h5>
-                    <p style="font-size: 13px; color: #6c757d; margin: 0;">
+                    <h5 style="margin-bottom: 10px; color: #e2e8f0;">Reporte de Certificaciones</h5>
+                    <p style="font-size: 13px; color: #64748b; margin: 0;">
                         Certificados emitidos, vigencias y renovaciones necesarias
                     </p>
                 </div>
@@ -3864,8 +4217,8 @@ function initializeReportCharts() {
         // Simple line chart simulation
         ctx.clearRect(0, 0, 400, 200);
         
-        // Draw axes
-        ctx.strokeStyle = '#dee2e6';
+        // Draw axes - DARK THEME
+        ctx.strokeStyle = '#334155';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(30, 170);
@@ -4016,40 +4369,40 @@ function generateDetailedReport(reportType) {
                         <h3>📋 ${title}</h3>
                         <button onclick="closeModal('detailedReportModal')" class="close-btn">&times;</button>
                     </div>
-                    <div class="modal-body">
-                        <div class="card" style="margin-bottom: 20px;">
-                            <h4>📊 Resumen Ejecutivo</h4>
-                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                                <p>Este reporte presenta un análisis detallado de <strong>${title.toLowerCase()}</strong> 
+                    <div class="modal-body" style="background: #1e293b;">
+                        <div class="card" style="margin-bottom: 20px; background: #0f172a; border: 1px solid #334155;">
+                            <h4 style="color: #e2e8f0;">📊 Resumen Ejecutivo</h4>
+                            <div style="background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155;">
+                                <p style="color: #cbd5e1;">Este reporte presenta un análisis detallado de <strong style="color: #a5b4fc;">${title.toLowerCase()}</strong>
                                 basado en los datos de capacitación del sistema.</p>
-                                
+
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-                                    <div style="text-align: center; padding: 10px; background: white; border-radius: 8px;">
-                                        <div style="font-size: 1.8em; font-weight: bold; color: #667eea;">78%</div>
-                                        <div style="font-size: 12px; color: #6c757d;">Indicador Principal</div>
+                                    <div style="text-align: center; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #334155;">
+                                        <div style="font-size: 1.8em; font-weight: bold; color: #a5b4fc;">78%</div>
+                                        <div style="font-size: 12px; color: #64748b;">Indicador Principal</div>
                                     </div>
-                                    <div style="text-align: center; padding: 10px; background: white; border-radius: 8px;">
-                                        <div style="font-size: 1.8em; font-weight: bold; color: #28a745;">142</div>
-                                        <div style="font-size: 12px; color: #6c757d;">Total Participantes</div>
+                                    <div style="text-align: center; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #334155;">
+                                        <div style="font-size: 1.8em; font-weight: bold; color: #4ade80;">142</div>
+                                        <div style="font-size: 12px; color: #64748b;">Total Participantes</div>
                                     </div>
-                                    <div style="text-align: center; padding: 10px; background: white; border-radius: 8px;">
-                                        <div style="font-size: 1.8em; font-weight: bold; color: #ffc107;">89</div>
-                                        <div style="font-size: 12px; color: #6c757d;">Completados</div>
+                                    <div style="text-align: center; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #334155;">
+                                        <div style="font-size: 1.8em; font-weight: bold; color: #fbbf24;">89</div>
+                                        <div style="font-size: 12px; color: #64748b;">Completados</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="card" style="margin-bottom: 20px;">
-                            <h4>📈 Análisis Detallado</h4>
-                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+
+                        <div class="card" style="margin-bottom: 20px; background: #0f172a; border: 1px solid #334155;">
+                            <h4 style="color: #e2e8f0;">📈 Análisis Detallado</h4>
+                            <div style="background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; color: #cbd5e1;">
                                 ${getReportSpecificContent(reportType)}
                             </div>
                         </div>
-                        
-                        <div class="card">
-                            <h4>💡 Recomendaciones</h4>
-                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+
+                        <div class="card" style="background: #0f172a; border: 1px solid #334155;">
+                            <h4 style="color: #e2e8f0;">💡 Recomendaciones</h4>
+                            <div style="background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155;">
                                 ${getReportRecommendations(reportType)}
                             </div>
                         </div>
@@ -4126,38 +4479,38 @@ function getReportRecommendations(reportType) {
     switch (reportType) {
         case 'compliance':
             return `
-                <div style="padding: 10px; background: #d4edda; border-left: 4px solid #c3e6cb; border-radius: 4px; margin-bottom: 10px;">
-                    <strong>✅ Recomendación Principal:</strong> Implementar recordatorios automáticos 30 días antes del vencimiento
+                <div style="padding: 10px; background: rgba(34, 197, 94, 0.15); border-left: 4px solid #22c55e; border-radius: 4px; margin-bottom: 10px;">
+                    <strong style="color: #4ade80;">✅ Recomendación Principal:</strong> <span style="color: #86efac;">Implementar recordatorios automáticos 30 días antes del vencimiento</span>
                 </div>
-                <div style="padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
-                    <strong>⚠️ Atención Necesaria:</strong> Revisar proceso de renovación de certificaciones en Seguridad Industrial
+                <div style="padding: 10px; background: rgba(251, 191, 36, 0.15); border-left: 4px solid #fbbf24; border-radius: 4px;">
+                    <strong style="color: #fbbf24;">⚠️ Atención Necesaria:</strong> <span style="color: #fcd34d;">Revisar proceso de renovación de certificaciones en Seguridad Industrial</span>
                 </div>
             `;
         case 'performance':
             return `
-                <div style="padding: 10px; background: #d4edda; border-left: 4px solid #c3e6cb; border-radius: 4px; margin-bottom: 10px;">
-                    <strong>✅ Excelente Rendimiento:</strong> Los objetivos de calificación se están superando consistentemente
+                <div style="padding: 10px; background: rgba(34, 197, 94, 0.15); border-left: 4px solid #22c55e; border-radius: 4px; margin-bottom: 10px;">
+                    <strong style="color: #4ade80;">✅ Excelente Rendimiento:</strong> <span style="color: #86efac;">Los objetivos de calificación se están superando consistentemente</span>
                 </div>
-                <div style="padding: 10px; background: #d1ecf1; border-left: 4px solid #bee5eb; border-radius: 4px;">
-                    <strong>💡 Oportunidad:</strong> Considerar aumentar la dificultad de evaluaciones básicas
+                <div style="padding: 10px; background: rgba(6, 182, 212, 0.15); border-left: 4px solid #06b6d4; border-radius: 4px;">
+                    <strong style="color: #06b6d4;">💡 Oportunidad:</strong> <span style="color: #22d3ee;">Considerar aumentar la dificultad de evaluaciones básicas</span>
                 </div>
             `;
         case 'participation':
             return `
-                <div style="padding: 10px; background: #d4edda; border-left: 4px solid #c3e6cb; border-radius: 4px; margin-bottom: 10px;">
-                    <strong>✅ Buena Participación:</strong> La mayoría de departamentos superan el 75% de participación
+                <div style="padding: 10px; background: rgba(34, 197, 94, 0.15); border-left: 4px solid #22c55e; border-radius: 4px; margin-bottom: 10px;">
+                    <strong style="color: #4ade80;">✅ Buena Participación:</strong> <span style="color: #86efac;">La mayoría de departamentos superan el 75% de participación</span>
                 </div>
-                <div style="padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
-                    <strong>⚠️ Mejorar:</strong> Implementar incentivos para el departamento de Ventas
+                <div style="padding: 10px; background: rgba(251, 191, 36, 0.15); border-left: 4px solid #fbbf24; border-radius: 4px;">
+                    <strong style="color: #fbbf24;">⚠️ Mejorar:</strong> <span style="color: #fcd34d;">Implementar incentivos para el departamento de Ventas</span>
                 </div>
             `;
         case 'certificates':
             return `
-                <div style="padding: 10px; background: #d4edda; border-left: 4px solid #c3e6cb; border-radius: 4px; margin-bottom: 10px;">
-                    <strong>✅ Proceso Eficiente:</strong> El sistema de certificación está funcionando correctamente
+                <div style="padding: 10px; background: rgba(34, 197, 94, 0.15); border-left: 4px solid #22c55e; border-radius: 4px; margin-bottom: 10px;">
+                    <strong style="color: #4ade80;">✅ Proceso Eficiente:</strong> <span style="color: #86efac;">El sistema de certificación está funcionando correctamente</span>
                 </div>
-                <div style="padding: 10px; background: #d1ecf1; border-left: 4px solid #bee5eb; border-radius: 4px;">
-                    <strong>💡 Sugerencia:</strong> Implementar certificaciones digitales con QR para verificación
+                <div style="padding: 10px; background: rgba(6, 182, 212, 0.15); border-left: 4px solid #06b6d4; border-radius: 4px;">
+                    <strong style="color: #06b6d4;">💡 Sugerencia:</strong> <span style="color: #22d3ee;">Implementar certificaciones digitales con QR para verificación</span>
                 </div>
             `;
         default:
@@ -4232,7 +4585,7 @@ function showTrainingCalendar() {
             </div>
             
             <!-- Calendar Grid -->
-            <div id="calendar-container" style="background: white; border-radius: 8px; overflow: hidden;">
+            <div id="calendar-container" style="background: #0f172a; color: #e2e8f0; border-radius: 8px; overflow: hidden;">
                 <!-- Calendar will be rendered here -->
             </div>
             
@@ -4352,7 +4705,7 @@ function renderCalendar() {
     // Calendar header
     const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     let calendarHTML = `
-        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #dee2e6;">
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #334155;">
             ${weekDays.map(day => `
                 <div style="background: #667eea; color: white; padding: 10px; text-align: center; font-weight: bold; font-size: 14px;">
                     ${day}
@@ -4381,12 +4734,12 @@ function renderCalendar() {
         
         calendarHTML += `
             <div style="
-                background: white; 
+                background: #0f172a; color: #e2e8f0; 
                 min-height: 120px; 
                 padding: 8px; 
                 position: relative;
-                ${isToday ? 'background: #e3f2fd; border: 2px solid #2196f3;' : ''}
-                ${!isCurrentMonth ? 'background: #f8f9fa; color: #6c757d;' : ''}
+                ${isToday ? 'background: rgba(99, 102, 241, 0.2); color: #e2e8f0; border: 2px solid #2196f3;' : ''}
+                ${!isCurrentMonth ? 'background: #1e293b; color: #e2e8f0; color: #94a3b8;' : ''}
             ">
                 <div style="font-weight: ${isToday ? 'bold' : 'normal'}; color: ${isToday ? '#2196f3' : 'inherit'};">
                     ${isCurrentMonth ? dayCount : ''}
@@ -4461,7 +4814,7 @@ function loadTodayEvents() {
     
     if (todayEvents.length === 0) {
         container.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: #6c757d;">
+            <div style="text-align: center; padding: 20px; color: #94a3b8;">
                 📅 No hay eventos programados para hoy
             </div>
         `;
@@ -4479,12 +4832,12 @@ function loadTodayEvents() {
                 "></div>
                 <div style="flex: 1;">
                     <h5 style="margin: 0 0 5px 0;">${event.title}</h5>
-                    <div style="font-size: 13px; color: #6c757d;">
+                    <div style="font-size: 13px; color: #94a3b8;">
                         ${event.training ? `📚 ${event.training.instructor || 'Sin instructor'} • ⏱️ ${event.training.duration}h` : ''}
                     </div>
                 </div>
                 <div style="text-align: center;">
-                    <div style="font-size: 12px; color: #6c757d;">Hoy</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Hoy</div>
                     <div style="font-weight: bold;">${event.date.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}</div>
                 </div>
             </div>
@@ -4507,7 +4860,7 @@ function loadUpcomingDeadlinesCalendar() {
     
     if (upcomingDeadlines.length === 0) {
         container.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: #6c757d;">
+            <div style="text-align: center; padding: 20px; color: #94a3b8;">
                 ✅ No hay vencimientos próximos en los próximos 7 días
             </div>
         `;
@@ -4529,7 +4882,7 @@ function loadUpcomingDeadlinesCalendar() {
                     "></div>
                     <div style="flex: 1;">
                         <h5 style="margin: 0 0 5px 0;">${event.training?.title || event.title}</h5>
-                        <div style="font-size: 13px; color: #6c757d;">
+                        <div style="font-size: 13px; color: #94a3b8;">
                             📅 Vence: ${event.date.toLocaleDateString()}
                             ${event.training ? `• 👥 ${event.training.participants} participantes` : ''}
                         </div>
@@ -4538,7 +4891,7 @@ function loadUpcomingDeadlinesCalendar() {
                         <div class="${urgencyClass}" style="font-weight: bold; font-size: 16px;">
                             ${daysUntil}
                         </div>
-                        <div style="font-size: 12px; color: #6c757d;">
+                        <div style="font-size: 12px; color: #94a3b8;">
                             día${daysUntil !== 1 ? 's' : ''}
                         </div>
                     </div>
@@ -4572,7 +4925,7 @@ function showEventDetails(eventId) {
                         </div>
                         
                         ${event.training ? `
-                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <div style="background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px;">
                                 <h5>📚 Información de la Capacitación</h5>
                                 <div style="margin-bottom: 10px;"><strong>Instructor:</strong> ${event.training.instructor || 'No asignado'}</div>
                                 <div style="margin-bottom: 10px;"><strong>Duración:</strong> ${event.training.duration} horas</div>
@@ -4666,10 +5019,10 @@ function generateCertificates(trainingId) {
                             <h4>✅ Certificados Generados</h4>
                             <div style="max-height: 300px; overflow-y: auto;">
                                 ${completedParticipants.map(participant => `
-                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #dee2e6; border-radius: 5px; margin-bottom: 10px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #334155; border-radius: 5px; margin-bottom: 10px;">
                                         <div>
                                             <div style="font-weight: bold;">${participant.name}</div>
-                                            <div style="font-size: 12px; color: #6c757d;">${participant.email}</div>
+                                            <div style="font-size: 12px; color: #94a3b8;">${participant.email}</div>
                                             <div style="font-size: 12px; color: #28a745;">
                                                 Puntuación: ${participant.score}% • Completado: ${participant.completedDate.toLocaleDateString()}
                                             </div>
@@ -5013,7 +5366,7 @@ function showExamFormGenerator() {
     `;
     
     modal.innerHTML = `
-        <div style="background: white; border-radius: 15px; padding: 30px; max-width: 800px; width: 90%; max-height: 90%; overflow-y: auto; position: relative;">
+        <div style="background: #0f172a; color: #e2e8f0; border-radius: 15px; padding: 30px; max-width: 800px; width: 90%; max-height: 90%; overflow-y: auto; position: relative;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #eee;">
                 <h2 style="margin: 0; color: #28a745; display: flex; align-items: center; gap: 10px;">
                     🎯 Generador de Formularios de Examen
@@ -5529,21 +5882,21 @@ function generateExamHTML(examData) {
     <title>Examen: ${examData.trainingTitle}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; line-height: 1.6; background: #f5f5f5; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; background: #0f172a; color: #e2e8f0; }
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
         .exam-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px; }
-        .exam-info { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .question-container { background: white; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .exam-info { background: #0f172a; color: #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .question-container { background: #0f172a; color: #e2e8f0; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .question-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #495057; }
         .question-options { margin-top: 15px; }
-        .option { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
-        .option:hover { background: #e9ecef; }
+        .option { margin: 10px 0; padding: 10px; background: #1e293b; color: #e2e8f0; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
+        .option:hover { background: #1e293b; color: #e2e8f0; }
         .option input { margin-right: 10px; }
-        .submit-section { background: white; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .submit-section { background: #0f172a; color: #e2e8f0; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .btn-primary { background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; }
         .btn-primary:hover { background: #0056b3; }
         .timer { position: fixed; top: 20px; right: 20px; background: #dc3545; color: white; padding: 15px; border-radius: 8px; font-weight: bold; z-index: 1000; }
-        .progress-bar { height: 6px; background: #e9ecef; border-radius: 3px; margin: 20px 0; }
+        .progress-bar { height: 6px; background: #1e293b; color: #e2e8f0; border-radius: 3px; margin: 20px 0; }
         .progress-fill { height: 100%; background: #28a745; border-radius: 3px; transition: width 0.3s; width: 0%; }
         textarea, input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
         textarea { height: 100px; resize: vertical; }
@@ -5786,7 +6139,7 @@ function loadIndependentEvaluationsList() {
     
     if (allIndependentEvaluations.length === 0) {
         container.innerHTML = `
-            <div style="padding: 40px; text-align: center; color: #6c757d;">
+            <div style="padding: 40px; text-align: center; color: #94a3b8;">
                 <div style="font-size: 48px; margin-bottom: 15px;">🎯</div>
                 <div style="font-size: 18px; margin-bottom: 10px;">No hay evaluaciones independientes creadas</div>
                 <div style="margin-bottom: 20px;">
@@ -5840,7 +6193,7 @@ function loadIndependentEvaluationsList() {
                             <h4 style="margin: 0; color: #28a745; font-size: 18px;">🎯 ${evaluation.title}</h4>
                             <span class="training-status ${statusClass}">${statusText[evaluation.status]}</span>
                         </div>
-                        <p style="margin: 0 0 10px 0; color: #6c757d; line-height: 1.4;">${evaluation.description || 'Sin descripción'}</p>
+                        <p style="margin: 0 0 10px 0; color: #94a3b8; line-height: 1.4;">${evaluation.description || 'Sin descripción'}</p>
                         <div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 13px; color: #495057;">
                             <span><strong>📂 Categoría:</strong> ${categoryText[evaluation.category] || 'No especificada'}</span>
                             <span><strong>👥 Audiencia:</strong> ${audienceText[evaluation.audience] || 'No especificada'}</span>
@@ -5850,7 +6203,7 @@ function loadIndependentEvaluationsList() {
                         </div>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-                        <div style="font-size: 12px; color: #6c757d; text-align: right;">
+                        <div style="font-size: 12px; color: #94a3b8; text-align: right;">
                             <div>📅 Creada: ${evaluation.createdAt ? new Date(evaluation.createdAt).toLocaleDateString('es-ES') : 'N/A'}</div>
                             <div>👥 Participantes: ${evaluation.participants || 0}</div>
                         </div>
@@ -5917,7 +6270,7 @@ function showIndependentEvaluationModal() {
     `;
     
     modal.innerHTML = `
-        <div style="background: white; border-radius: 15px; padding: 30px; max-width: 700px; width: 90%; max-height: 90%; overflow-y: auto;">
+        <div style="background: #0f172a; color: #e2e8f0; border-radius: 15px; padding: 30px; max-width: 700px; width: 90%; max-height: 90%; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #eee;">
                 <h2 style="margin: 0; color: #28a745; display: flex; align-items: center; gap: 10px;">
                     🎯 Nueva Evaluación Independiente

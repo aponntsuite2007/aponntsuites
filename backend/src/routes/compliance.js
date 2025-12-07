@@ -388,4 +388,198 @@ router.get('/trends', requireRRHH, async (req, res) => {
     }
 });
 
+// ═══════════════════════════════════════════════════════════════
+// EXPORTACIÓN PDF/Excel
+// ═══════════════════════════════════════════════════════════════
+const RiskReportService = require('../services/RiskReportService');
+
+/**
+ * GET /api/compliance/export/dashboard/pdf
+ */
+router.get('/export/dashboard/pdf', requireRRHH, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const period = parseInt(req.query.period) || 30;
+        const companyName = req.query.company_name || 'Empresa';
+        const pdfBuffer = await RiskReportService.generateDashboardPDF(companyId, period, companyName);
+        const filename = `reporte-riesgos-${new Date().toISOString().split('T')[0]}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(pdfBuffer);
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/compliance/export/dashboard/excel
+ */
+router.get('/export/dashboard/excel', requireRRHH, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const period = parseInt(req.query.period) || 30;
+        const companyName = req.query.company_name || 'Empresa';
+        const excelBuffer = await RiskReportService.generateDashboardExcel(companyId, period, companyName);
+        const filename = `reporte-riesgos-${new Date().toISOString().split('T')[0]}.xlsx`;
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(excelBuffer);
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// RBAC SSOT v3.0 - CONFIGURACIÓN DE UMBRALES Y SEGMENTACIÓN
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/compliance/risk-config
+ * Configuración de umbrales de riesgo de la empresa
+ */
+router.get('/risk-config', requireRRHH, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        console.log(`[RISK-API] Obteniendo config para empresa ${companyId}`);
+        const result = await RiskIntelligenceService.getCompanyRiskConfig(companyId);
+        res.json(result);
+    } catch (error) {
+        console.error('[RISK-API] Error risk-config:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * PUT /api/compliance/risk-config
+ * Actualizar configuración de umbrales
+ */
+router.put('/risk-config', authorize('admin', 'super_admin'), async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const userId = req.user.id;
+        const updates = req.body;
+        console.log(`[RISK-API] Actualizando config para empresa ${companyId}`);
+        const result = await RiskIntelligenceService.updateCompanyRiskConfig(companyId, updates, userId);
+        res.json(result);
+    } catch (error) {
+        console.error('[RISK-API] Error actualizando risk-config:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/compliance/risk-config/method
+ * Cambiar método de cálculo (manual, quartile, benchmark, hybrid)
+ */
+router.post('/risk-config/method', authorize('admin', 'super_admin'), async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const userId = req.user.id;
+        const { method, hybrid_weights } = req.body;
+        console.log(`[RISK-API] Cambiando método a ${method} para empresa ${companyId}`);
+        const result = await RiskIntelligenceService.setThresholdMethod(companyId, method, hybrid_weights, userId);
+        res.json(result);
+    } catch (error) {
+        console.error('[RISK-API] Error cambiando método:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/compliance/risk-config/segmentation
+ * Habilitar/deshabilitar segmentación por tipo de trabajo
+ */
+router.post('/risk-config/segmentation', authorize('admin', 'super_admin'), async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const userId = req.user.id;
+        const { enabled } = req.body;
+        console.log(`[RISK-API] Segmentación ${enabled ? 'ON' : 'OFF'} para empresa ${companyId}`);
+        const result = await RiskIntelligenceService.setSegmentation(companyId, enabled, userId);
+        res.json(result);
+    } catch (error) {
+        console.error('[RISK-API] Error segmentación:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/compliance/risk-config/recalculate
+ * Forzar recálculo de cuartiles
+ */
+router.post('/risk-config/recalculate', authorize('admin', 'super_admin'), async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        console.log(`[RISK-API] Recalculando cuartiles para empresa ${companyId}`);
+        const result = await RiskIntelligenceService.recalculateQuartiles(companyId);
+        res.json(result);
+    } catch (error) {
+        console.error('[RISK-API] Error recalculando cuartiles:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/compliance/segmented-analysis
+ * Análisis de riesgo segmentado por categoría de trabajo
+ */
+router.get('/segmented-analysis', requireRRHH, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const period = parseInt(req.query.period) || 30;
+        const result = await RiskIntelligenceService.getSegmentedRiskAnalysis(companyId, period);
+        res.json(result);
+    } catch (error) {
+        console.error('[RISK-API] Error análisis segmentado:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/compliance/benchmark-comparison
+ * Comparación con benchmarks internacionales
+ */
+router.get('/benchmark-comparison', requireRRHH, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const period = parseInt(req.query.period) || 30;
+        const result = await RiskIntelligenceService.getBenchmarkComparison(companyId, period);
+        res.json(result);
+    } catch (error) {
+        console.error('[RISK-API] Error benchmark comparison:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/compliance/employee/:id/thresholds
+ * Umbrales efectivos de un empleado específico
+ */
+router.get('/employee/:id/thresholds', requireRRHH, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const userId = req.params.id;
+        const result = await RiskIntelligenceService.getEmployeeThresholds(userId, companyId);
+        res.json(result);
+    } catch (error) {
+        console.error('[RISK-API] Error umbrales empleado:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/compliance/rbac-stats
+ * Estadísticas RBAC de la empresa
+ */
+router.get('/rbac-stats', requireRRHH, async (req, res) => {
+    try {
+        const companyId = req.user.company_id;
+        const result = await RiskIntelligenceService.getRBACStats(companyId);
+        res.json({ success: true, stats: result });
+    } catch (error) {
+        console.error('[RISK-API] Error stats RBAC:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 module.exports = router;
