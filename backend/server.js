@@ -897,10 +897,10 @@ app.post(`${API_PREFIX}/debug/create-system-modules`, async (req, res) => {
         );
 
         if (existing.length === 0) {
-          // Crear nuevo
+          // Crear nuevo (sin especificar id, usar SERIAL/default)
           await database.sequelize.query(`
-            INSERT INTO system_modules (id, module_key, name, icon, category, is_active, created_at, updated_at)
-            VALUES (gen_random_uuid(), $1, $2, $3, $4, true, NOW(), NOW())
+            INSERT INTO system_modules (module_key, name, icon, category, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, true, NOW(), NOW())
           `, { bind: [mod.key, mod.name, mod.icon, mod.category] });
           results.push({ key: mod.key, action: 'CREATED' });
         } else {
@@ -980,12 +980,19 @@ app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
     let systemModulesCreados = 0;
     for (const mod of modulosISI) {
       try {
-        await database.sequelize.query(`
-          INSERT INTO system_modules (id, module_key, name, icon, category, is_active, created_at, updated_at)
-          VALUES (gen_random_uuid(), $1, $2, $3, $4, true, NOW(), NOW())
-          ON CONFLICT (module_key) DO UPDATE SET name = $2, icon = $3, updated_at = NOW()
-        `, { bind: [mod.key, mod.name, mod.icon, mod.category] });
-        systemModulesCreados++;
+        // Verificar si existe
+        const [existing] = await database.sequelize.query(
+          `SELECT id FROM system_modules WHERE module_key = $1`,
+          { bind: [mod.key] }
+        );
+
+        if (existing.length === 0) {
+          await database.sequelize.query(`
+            INSERT INTO system_modules (module_key, name, icon, category, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, true, NOW(), NOW())
+          `, { bind: [mod.key, mod.name, mod.icon, mod.category] });
+          systemModulesCreados++;
+        }
       } catch (e) {
         console.log(`⚠️ Error creando system_module ${mod.key}:`, e.message);
       }

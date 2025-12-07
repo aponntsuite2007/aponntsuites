@@ -9480,6 +9480,1517 @@
         }
     </style>
 
+    <!-- =========================================================== -->
+    <!-- MANUAL DE PROCEDIMIENTOS SECTION -->
+    <!-- =========================================================== -->
+    <section class="section section-procedures" id="procedures" style="background: linear-gradient(180deg, #0c4a6e 0%, #075985 50%, #0c4a6e 100%); overflow: hidden; position: relative;">
+        <!-- Animated Background -->
+        <div class="procedures-bg-pattern"></div>
+        <div class="procedures-bg-glow"></div>
+
+        <div class="container" style="position: relative; z-index: 2;">
+            <!-- Header con Impacto -->
+            <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="section-label" style="background: linear-gradient(135deg, #b388ff, #7c3aed); color: white; padding: 0.5rem 1.5rem; border-radius: 25px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span class="procedures-pulse-dot"></span> JERARQUÍA DOCUMENTAL | FIRMA DIGITAL
+                </span>
+                <h2 class="section-title" style="color: white; margin-top: 1.5rem; font-size: 2.8rem; font-weight: 800;">
+                    Manual de <span style="background: linear-gradient(135deg, #b388ff, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Procedimientos</span>
+                </h2>
+                <p class="section-subtitle" style="color: #94a3b8; max-width: 850px; margin: 1rem auto 0; font-size: 1.1rem; line-height: 1.6;">
+                    Sistema de control documental con jerarquía estricta (Política → Manual → Procedimiento → Instructivo), workflow de aprobación, scope types configurables, firma digital y acuse de recibo automático.
+                </p>
+            </div>
+
+            <!-- KPIs de Impacto -->
+            <div class="procedures-kpis">
+                <div class="procedures-kpi">
+                    <div class="procedures-kpi-value"><span class="procedures-counter" data-target="4">0</span></div>
+                    <div class="procedures-kpi-label">Niveles Jerárquicos</div>
+                    <div class="procedures-kpi-detail">Política → Manual → Procedimiento → Instructivo</div>
+                </div>
+                <div class="procedures-kpi">
+                    <div class="procedures-kpi-value"><span class="procedures-counter" data-target="7">0</span></div>
+                    <div class="procedures-kpi-label">Scope Types</div>
+                    <div class="procedures-kpi-detail">Empresa, sucursal, depto, rol, cargo, etc.</div>
+                </div>
+                <div class="procedures-kpi">
+                    <div class="procedures-kpi-value"><span class="procedures-counter" data-target="5">0</span></div>
+                    <div class="procedures-kpi-label">Estados de Workflow</div>
+                    <div class="procedures-kpi-detail">Desde borrador hasta publicado</div>
+                </div>
+                <div class="procedures-kpi">
+                    <div class="procedures-kpi-value"><span class="procedures-counter" data-target="100">0</span>%</div>
+                    <div class="procedures-kpi-label">Acuse de Recibo</div>
+                    <div class="procedures-kpi-detail">Firma digital automática</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Principal Procedures -->
+            <div class="procedures-dashboard">
+                <!-- Panel Izquierdo: Jerarquía -->
+                <div class="procedures-panel procedures-hierarchy">
+                    <div class="procedures-panel-header">
+                        <span class="procedures-panel-title">JERARQUÍA DOCUMENTAL</span>
+                        <span class="procedures-preview-badge">4 NIVELES</span>
+                    </div>
+
+                    <!-- Hierarchy Tree -->
+                    <div class="procedures-tree">
+                        <div class="procedures-tree-node level-1">
+                            <span class="procedures-node-icon">📜</span>
+                            <div class="procedures-node-info">
+                                <span class="procedures-node-title">Política</span>
+                                <span class="procedures-node-desc">Nivel raíz - "Qué y Por qué"</span>
+                            </div>
+                        </div>
+                        <div class="procedures-tree-connector"></div>
+                        <div class="procedures-tree-node level-2">
+                            <span class="procedures-node-icon">📕</span>
+                            <div class="procedures-node-info">
+                                <span class="procedures-node-title">Manual</span>
+                                <span class="procedures-node-desc">Agrupa procedimientos</span>
+                            </div>
+                        </div>
+                        <div class="procedures-tree-connector"></div>
+                        <div class="procedures-tree-node level-3">
+                            <span class="procedures-node-icon">📋</span>
+                            <div class="procedures-node-info">
+                                <span class="procedures-node-title">Procedimiento</span>
+                                <span class="procedures-node-desc">Define "Cómo" detallado</span>
+                            </div>
+                        </div>
+                        <div class="procedures-tree-connector"></div>
+                        <div class="procedures-tree-node level-4">
+                            <span class="procedures-node-icon">📝</span>
+                            <div class="procedures-node-info">
+                                <span class="procedures-node-title">Instructivo</span>
+                                <span class="procedures-node-desc">Paso a paso específico</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workflow Status -->
+                    <div class="procedures-workflow">
+                        <div class="procedures-workflow-header">Estados de Publicación</div>
+                        <div class="procedures-status-tags">
+                            <span class="procedures-status-tag draft">📝 Borrador</span>
+                            <span class="procedures-status-tag review">🔍 Revisión</span>
+                            <span class="procedures-status-tag published">✅ Publicado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Central: Dashboard Preview -->
+                <div class="procedures-panel procedures-preview">
+                    <div class="procedures-panel-header">
+                        <span class="procedures-panel-title">VISTA GENERAL</span>
+                        <span class="procedures-live-badge"><span class="procedures-live-dot"></span>ACTUALIZADO</span>
+                    </div>
+
+                    <!-- Mini Dashboard -->
+                    <div class="procedures-mini-dashboard">
+                        <div class="procedures-mini-row">
+                            <div class="procedures-mini-card">
+                                <span class="procedures-mini-value">45</span>
+                                <span class="procedures-mini-label">Documentos Totales</span>
+                            </div>
+                            <div class="procedures-mini-card highlight">
+                                <span class="procedures-mini-value">38</span>
+                                <span class="procedures-mini-label">Publicados</span>
+                            </div>
+                        </div>
+                        <div class="procedures-mini-row">
+                            <div class="procedures-mini-card warning">
+                                <span class="procedures-mini-value">5</span>
+                                <span class="procedures-mini-label">En Revisión</span>
+                            </div>
+                            <div class="procedures-mini-card info">
+                                <span class="procedures-mini-value">2</span>
+                                <span class="procedures-mini-label">Borradores</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Document Tree Example -->
+                    <div class="procedures-doc-tree">
+                        <div class="procedures-doc-header">Ejemplo de Estructura</div>
+                        <div class="procedures-doc-item root">
+                            📜 Política de Calidad
+                        </div>
+                        <div class="procedures-doc-item child">
+                            └─ 📕 Manual ISO 9001
+                        </div>
+                        <div class="procedures-doc-item grandchild">
+                            &nbsp;&nbsp;&nbsp;&nbsp;└─ 📋 Proc. Auditorías
+                        </div>
+                        <div class="procedures-doc-item great">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 📝 Inst. Checklist
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Derecho: Scope & Acknowledgment -->
+                <div class="procedures-panel procedures-scope">
+                    <div class="procedures-panel-header">
+                        <span class="procedures-panel-title">ALCANCE Y FIRMA</span>
+                        <span class="procedures-cct-badge">📝</span>
+                    </div>
+
+                    <!-- Scope Types -->
+                    <div class="procedures-scope-types">
+                        <div class="procedures-scope-header">Tipos de Alcance</div>
+                        <div class="procedures-scope-item">
+                            <span class="procedures-scope-icon">🏢</span>
+                            <span class="procedures-scope-label">Empresa Completa</span>
+                        </div>
+                        <div class="procedures-scope-item">
+                            <span class="procedures-scope-icon">📁</span>
+                            <span class="procedures-scope-label">Departamentos</span>
+                        </div>
+                        <div class="procedures-scope-item">
+                            <span class="procedures-scope-icon">👥</span>
+                            <span class="procedures-scope-label">Roles Específicos</span>
+                        </div>
+                        <div class="procedures-scope-item">
+                            <span class="procedures-scope-icon">💼</span>
+                            <span class="procedures-scope-label">Cargos</span>
+                        </div>
+                    </div>
+
+                    <!-- Acknowledgment Stats -->
+                    <div class="procedures-acknowledgment">
+                        <div class="procedures-ack-header">
+                            <span>✍️</span> Acuses de Recibo
+                        </div>
+                        <div class="procedures-ack-item">
+                            <span class="procedures-ack-doc">Manual ISO 9001</span>
+                            <span class="procedures-ack-status">85%</span>
+                        </div>
+                        <div class="procedures-ack-item">
+                            <span class="procedures-ack-doc">Proc. RRHH</span>
+                            <span class="procedures-ack-status">100%</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="procedures-actions">
+                        <button class="procedures-action-btn primary">
+                            <span>➕</span> Crear Documento
+                        </button>
+                        <button class="procedures-action-btn secondary">
+                            <span>📊</span> Ver Árbol Completo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs del Modulo -->
+            <div class="procedures-tabs-preview">
+                <h3 style="color: white; text-align: center; margin-bottom: 1.5rem;">
+                    <span style="color: #b388ff;">5 Módulos Especializados</span> de Control Documental
+                </h3>
+                <div class="procedures-tabs-grid">
+                    <div class="procedures-tab-card">
+                        <div class="procedures-tab-icon" style="background: linear-gradient(135deg, #b388ff, #7c3aed);">📊</div>
+                        <span class="procedures-tab-name">Dashboard</span>
+                        <span class="procedures-tab-desc">Vista general de documentos</span>
+                    </div>
+                    <div class="procedures-tab-card">
+                        <div class="procedures-tab-icon" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9);">🌳</div>
+                        <span class="procedures-tab-name">Árbol Jerárquico</span>
+                        <span class="procedures-tab-desc">Navegación visual</span>
+                    </div>
+                    <div class="procedures-tab-card">
+                        <div class="procedures-tab-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">➕</div>
+                        <span class="procedures-tab-name">Crear/Editar</span>
+                        <span class="procedures-tab-desc">Gestión de documentos</span>
+                    </div>
+                    <div class="procedures-tab-card">
+                        <div class="procedures-tab-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">✍️</div>
+                        <span class="procedures-tab-name">Acuses</span>
+                        <span class="procedures-tab-desc">Firma digital y tracking</span>
+                    </div>
+                    <div class="procedures-tab-card">
+                        <div class="procedures-tab-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">📜</div>
+                        <span class="procedures-tab-name">Mis Procedimientos</span>
+                        <span class="procedures-tab-desc">Vista del empleado</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compliance Badges -->
+            <div class="procedures-compliance">
+                <div class="procedures-compliance-item">
+                    <span class="procedures-compliance-icon">📐</span>
+                    <span class="procedures-compliance-name">ISO 9001</span>
+                    <span class="procedures-compliance-desc">Cumplimiento normativo</span>
+                </div>
+                <div class="procedures-compliance-item">
+                    <span class="procedures-compliance-icon">✍️</span>
+                    <span class="procedures-compliance-name">Firma Digital</span>
+                    <span class="procedures-compliance-desc">Acuse de recibo automático</span>
+                </div>
+                <div class="procedures-compliance-item">
+                    <span class="procedures-compliance-icon">🔄</span>
+                    <span class="procedures-compliance-name">Versionado</span>
+                    <span class="procedures-compliance-desc">Control de cambios</span>
+                </div>
+                <div class="procedures-compliance-item">
+                    <span class="procedures-compliance-icon">🔒</span>
+                    <span class="procedures-compliance-name">Inmutabilidad</span>
+                    <span class="procedures-compliance-desc">Audit trail permanente</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Procedures Section Styles -->
+    <style>
+        /* ========== PROCEDURES SECTION - MANUAL DE PROCEDIMIENTOS ========== */
+        .section-procedures {
+            padding: 5rem 2rem;
+            position: relative;
+        }
+        .procedures-bg-pattern {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(179, 136, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(179, 136, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: procedures-grid-move 25s linear infinite;
+        }
+        @keyframes procedures-grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+        .procedures-bg-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 900px; height: 900px;
+            background: radial-gradient(circle, rgba(179, 136, 255, 0.12) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .procedures-pulse-dot {
+            width: 8px; height: 8px;
+            background: #b388ff;
+            border-radius: 50%;
+            animation: procedures-pulse 2s ease-in-out infinite;
+        }
+        @keyframes procedures-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        /* Procedures KPIs */
+        .procedures-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .procedures-kpi {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .procedures-kpi:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(179, 136, 255, 0.3);
+            transform: translateY(-3px);
+        }
+        .procedures-kpi-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #b388ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .procedures-kpi-label {
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .procedures-kpi-detail {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* Procedures Dashboard */
+        .procedures-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .procedures-panel {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .procedures-panel:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(179, 136, 255, 0.2);
+        }
+        .procedures-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .procedures-panel-title {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .procedures-preview-badge {
+            background: linear-gradient(135deg, #b388ff, #7c3aed);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        .procedures-live-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #b388ff;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .procedures-live-dot {
+            width: 6px;
+            height: 6px;
+            background: #b388ff;
+            border-radius: 50%;
+            animation: procedures-pulse 2s ease-in-out infinite;
+        }
+
+        /* Hierarchy Tree */
+        .procedures-tree {
+            display: flex;
+            flex-direction: column;
+            gap: 0rem;
+            margin-bottom: 1.5rem;
+        }
+        .procedures-tree-node {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border-left: 3px solid;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .procedures-tree-node.level-1 {
+            border-left-color: #ffc107;
+        }
+        .procedures-tree-node.level-2 {
+            border-left-color: #b388ff;
+            margin-left: 1rem;
+        }
+        .procedures-tree-node.level-3 {
+            border-left-color: #00d4ff;
+            margin-left: 2rem;
+        }
+        .procedures-tree-node.level-4 {
+            border-left-color: #00e676;
+            margin-left: 3rem;
+        }
+        .procedures-tree-node:hover {
+            background: rgba(179, 136, 255, 0.1);
+        }
+        .procedures-node-icon {
+            font-size: 1.5rem;
+        }
+        .procedures-node-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .procedures-node-title {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .procedures-node-desc {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+        .procedures-tree-connector {
+            width: 2px;
+            height: 8px;
+            background: rgba(179, 136, 255, 0.3);
+            margin-left: 1.5rem;
+        }
+
+        /* Workflow */
+        .procedures-workflow {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .procedures-workflow-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .procedures-status-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .procedures-status-tag {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            border: 1px solid;
+        }
+        .procedures-status-tag.draft {
+            background: rgba(107, 107, 128, 0.1);
+            border-color: rgba(107, 107, 128, 0.3);
+            color: #94a3b8;
+        }
+        .procedures-status-tag.review {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+        .procedures-status-tag.published {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
+
+        /* Mini Dashboard */
+        .procedures-mini-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .procedures-mini-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .procedures-mini-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .procedures-mini-card.highlight {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        .procedures-mini-card.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        .procedures-mini-card.info {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+        .procedures-mini-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+        .procedures-mini-label {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+
+        /* Document Tree Example */
+        .procedures-doc-tree {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .procedures-doc-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .procedures-doc-item {
+            color: white;
+            font-size: 0.8rem;
+            font-family: 'Courier New', monospace;
+            padding: 0.25rem 0;
+        }
+        .procedures-doc-item.root {
+            color: #ffc107;
+            font-weight: 600;
+        }
+        .procedures-doc-item.child {
+            color: #b388ff;
+        }
+        .procedures-doc-item.grandchild {
+            color: #00d4ff;
+        }
+        .procedures-doc-item.great {
+            color: #00e676;
+        }
+
+        /* Scope Types */
+        .procedures-scope-types {
+            margin-bottom: 1.5rem;
+        }
+        .procedures-scope-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .procedures-scope-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .procedures-scope-item:hover {
+            background: rgba(179, 136, 255, 0.1);
+            border-color: rgba(179, 136, 255, 0.3);
+        }
+        .procedures-scope-icon {
+            font-size: 1.2rem;
+        }
+        .procedures-scope-label {
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        /* Acknowledgment */
+        .procedures-acknowledgment {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .procedures-ack-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .procedures-ack-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .procedures-ack-item:last-child {
+            border-bottom: none;
+        }
+        .procedures-ack-doc {
+            color: white;
+            font-size: 0.8rem;
+        }
+        .procedures-ack-status {
+            color: #22c55e;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Actions */
+        .procedures-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .procedures-action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .procedures-action-btn.primary {
+            background: linear-gradient(135deg, #b388ff, #7c3aed);
+            color: white;
+        }
+        .procedures-action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(179, 136, 255, 0.3);
+        }
+        .procedures-action-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .procedures-action-btn.secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* Tabs Preview */
+        .procedures-tabs-preview {
+            margin-bottom: 3rem;
+        }
+        .procedures-tabs-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+        }
+        .procedures-tab-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .procedures-tab-card:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(179, 136, 255, 0.3);
+            transform: translateY(-4px);
+        }
+        .procedures-tab-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .procedures-tab-name {
+            display: block;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .procedures-tab-desc {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+
+        /* Compliance Badges */
+        .procedures-compliance {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+        .procedures-compliance-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .procedures-compliance-item:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(179, 136, 255, 0.2);
+            transform: translateY(-3px);
+        }
+        .procedures-compliance-icon {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        .procedures-compliance-name {
+            display: block;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .procedures-compliance-desc {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .procedures-dashboard {
+                grid-template-columns: 1fr;
+            }
+            .procedures-tabs-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .procedures-kpis,
+            .procedures-compliance {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .procedures-tabs-grid,
+            .procedures-kpis,
+            .procedures-compliance {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <!-- =========================================================== -->
+    <!-- HSE (SEGURIDAD E HIGIENE LABORAL) SECTION -->
+    <!-- =========================================================== -->
+    <section class="section section-hse" id="hse" style="background: linear-gradient(180deg, #1c1917 0%, #292524 50%, #1c1917 100); overflow: hidden; position: relative;">
+        <!-- Animated Background -->
+        <div class="hse-bg-pattern"></div>
+        <div class="hse-bg-glow"></div>
+
+        <div class="container" style="position: relative; z-index: 2;">
+            <!-- Header con Impacto -->
+            <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="section-label" style="background: linear-gradient(135deg, #f97316, #ea580c); color: white; padding: 0.5rem 1.5rem; border-radius: 25px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span class="hse-pulse-dot"></span> GESTIÓN EPP | ALERTAS AUTOMÁTICAS
+                </span>
+                <h2 class="section-title" style="color: white; margin-top: 1.5rem; font-size: 2.8rem; font-weight: 800;">
+                    Seguridad e Higiene <span style="background: linear-gradient(135deg, #f97316, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Laboral (HSE)</span>
+                </h2>
+                <p class="section-subtitle" style="color: #94a3b8; max-width: 850px; margin: 1rem auto 0; font-size: 1.1rem; line-height: 1.6;">
+                    Sistema integral de gestión de Equipos de Protección Personal (EPP), matriz de riesgos por rol, entregas con firma digital, inspecciones periódicas y notificaciones automáticas de vencimiento. Cumplimiento SRT, NOM-017 y NR-6.
+                </p>
+            </div>
+
+            <!-- KPIs de Impacto -->
+            <div class="hse-kpis">
+                <div class="hse-kpi">
+                    <div class="hse-kpi-value"><span class="hse-counter" data-target="8">0</span></div>
+                    <div class="hse-kpi-label">Categorías de EPP</div>
+                    <div class="hse-kpi-detail">Cabeza, Ojos, Manos, Pies, Respiratorio</div>
+                </div>
+                <div class="hse-kpi">
+                    <div class="hse-kpi-value"><span class="hse-counter" data-target="100">0</span>%</div>
+                    <div class="hse-kpi-label">Cumplimiento Legal</div>
+                    <div class="hse-kpi-detail">SRT, NOM-017, NR-6</div>
+                </div>
+                <div class="hse-kpi">
+                    <div class="hse-kpi-value"><span class="hse-counter" data-target="30">0</span>d</div>
+                    <div class="hse-kpi-label">Alertas Anticipadas</div>
+                    <div class="hse-kpi-detail">Antes de vencimiento</div>
+                </div>
+                <div class="hse-kpi">
+                    <div class="hse-kpi-value"><span class="hse-counter" data-target="6">0</span></div>
+                    <div class="hse-kpi-label">Módulos Integrados</div>
+                    <div class="hse-kpi-detail">Catálogo, Matriz, Entregas, Inspecciones</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Principal HSE -->
+            <div class="hse-dashboard">
+                <!-- Panel Izquierdo: EPP Categories -->
+                <div class="hse-panel hse-categories">
+                    <div class="hse-panel-header">
+                        <span class="hse-panel-title">CATEGORÍAS DE EPP</span>
+                        <span class="hse-preview-badge">8 TIPOS</span>
+                    </div>
+
+                    <!-- Categories Grid -->
+                    <div class="hse-categories-grid">
+                        <div class="hse-category-item">
+                            <span class="hse-category-icon">🪖</span>
+                            <span class="hse-category-name">Cabeza</span>
+                        </div>
+                        <div class="hse-category-item">
+                            <span class="hse-category-icon">👓</span>
+                            <span class="hse-category-name">Ojos</span>
+                        </div>
+                        <div class="hse-category-item">
+                            <span class="hse-category-icon">🧤</span>
+                            <span class="hse-category-name">Manos</span>
+                        </div>
+                        <div class="hse-category-item">
+                            <span class="hse-category-icon">🥾</span>
+                            <span class="hse-category-name">Pies</span>
+                        </div>
+                        <div class="hse-category-item">
+                            <span class="hse-category-icon">😷</span>
+                            <span class="hse-category-name">Respiratorio</span>
+                        </div>
+                        <div class="hse-category-item">
+                            <span class="hse-category-icon">🔇</span>
+                            <span class="hse-category-name">Auditiva</span>
+                        </div>
+                    </div>
+
+                    <!-- Compliance Badges -->
+                    <div class="hse-compliance-badges">
+                        <div class="hse-badge-header">Certificaciones</div>
+                        <div class="hse-badge-item">✅ SRT (Argentina)</div>
+                        <div class="hse-badge-item">✅ NOM-017 (México)</div>
+                        <div class="hse-badge-item">✅ NR-6 (Brasil)</div>
+                    </div>
+                </div>
+
+                <!-- Panel Central: Dashboard Preview -->
+                <div class="hse-panel hse-preview">
+                    <div class="hse-panel-header">
+                        <span class="hse-panel-title">PANEL DE CONTROL HSE</span>
+                        <span class="hse-live-badge"><span class="hse-live-dot"></span>EN VIVO</span>
+                    </div>
+
+                    <!-- Mini Dashboard -->
+                    <div class="hse-mini-dashboard">
+                        <div class="hse-mini-row">
+                            <div class="hse-mini-card">
+                                <span class="hse-mini-value">247</span>
+                                <span class="hse-mini-label">EPP Entregados</span>
+                            </div>
+                            <div class="hse-mini-card highlight">
+                                <span class="hse-mini-value">95%</span>
+                                <span class="hse-mini-label">Cumplimiento</span>
+                            </div>
+                        </div>
+                        <div class="hse-mini-row">
+                            <div class="hse-mini-card warning">
+                                <span class="hse-mini-value">12</span>
+                                <span class="hse-mini-label">Por Vencer (30d)</span>
+                            </div>
+                            <div class="hse-mini-card alert">
+                                <span class="hse-mini-value">3</span>
+                                <span class="hse-mini-label">Vencidos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Matriz Rol-EPP Example -->
+                    <div class="hse-matrix-example">
+                        <div class="hse-matrix-header">Matriz Rol-EPP</div>
+                        <div class="hse-matrix-row">
+                            <span class="hse-matrix-role">🏭 Operador Planta</span>
+                            <span class="hse-matrix-epp">🪖 🧤 🥾 😷</span>
+                        </div>
+                        <div class="hse-matrix-row">
+                            <span class="hse-matrix-role">🔧 Mantenimiento</span>
+                            <span class="hse-matrix-epp">🪖 👓 🧤 🥾</span>
+                        </div>
+                        <div class="hse-matrix-row">
+                            <span class="hse-matrix-role">⚗️ Laboratorio</span>
+                            <span class="hse-matrix-epp">👓 🧤 😷</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Derecho: Deliveries & Alerts -->
+                <div class="hse-panel hse-deliveries">
+                    <div class="hse-panel-header">
+                        <span class="hse-panel-title">ENTREGAS Y ALERTAS</span>
+                        <span class="hse-cct-badge">⚠️</span>
+                    </div>
+
+                    <!-- Recent Deliveries -->
+                    <div class="hse-recent-deliveries">
+                        <div class="hse-delivery-header">Últimas Entregas</div>
+                        <div class="hse-delivery-item">
+                            <span class="hse-delivery-epp">🪖 Casco MSA</span>
+                            <span class="hse-delivery-employee">García, M.</span>
+                        </div>
+                        <div class="hse-delivery-item">
+                            <span class="hse-delivery-epp">🧤 Guantes Nitrilo</span>
+                            <span class="hse-delivery-employee">López, J.</span>
+                        </div>
+                        <div class="hse-delivery-item">
+                            <span class="hse-delivery-epp">😷 Barbijo N95</span>
+                            <span class="hse-delivery-employee">Rodríguez, A.</span>
+                        </div>
+                    </div>
+
+                    <!-- Expiring Alerts -->
+                    <div class="hse-alerts">
+                        <div class="hse-alert-header">
+                            <span>⚠️</span> Próximos Vencimientos
+                        </div>
+                        <div class="hse-alert-item urgent">
+                            <span class="hse-alert-name">Pérez, Juan</span>
+                            <span class="hse-alert-days">7 días</span>
+                        </div>
+                        <div class="hse-alert-item warning">
+                            <span class="hse-alert-name">Martínez, Ana</span>
+                            <span class="hse-alert-days">15 días</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="hse-actions">
+                        <button class="hse-action-btn primary">
+                            <span>📦</span> Nueva Entrega
+                        </button>
+                        <button class="hse-action-btn secondary">
+                            <span>🔍</span> Inspección
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs del Modulo -->
+            <div class="hse-tabs-preview">
+                <h3 style="color: white; text-align: center; margin-bottom: 1.5rem;">
+                    <span style="color: #f97316;">6 Módulos Especializados</span> de Seguridad Laboral
+                </h3>
+                <div class="hse-tabs-grid">
+                    <div class="hse-tab-card">
+                        <div class="hse-tab-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">📊</div>
+                        <span class="hse-tab-name">Dashboard</span>
+                        <span class="hse-tab-desc">KPIs y alertas</span>
+                    </div>
+                    <div class="hse-tab-card">
+                        <div class="hse-tab-icon" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9);">📦</div>
+                        <span class="hse-tab-name">Catálogo EPP</span>
+                        <span class="hse-tab-desc">CRUD de elementos</span>
+                    </div>
+                    <div class="hse-tab-card">
+                        <div class="hse-tab-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">🎯</div>
+                        <span class="hse-tab-name">Matriz Rol-EPP</span>
+                        <span class="hse-tab-desc">Asignación por puesto</span>
+                    </div>
+                    <div class="hse-tab-card">
+                        <div class="hse-tab-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">✍️</div>
+                        <span class="hse-tab-name">Entregas</span>
+                        <span class="hse-tab-desc">Registro con firma</span>
+                    </div>
+                    <div class="hse-tab-card">
+                        <div class="hse-tab-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">🔍</div>
+                        <span class="hse-tab-name">Inspecciones</span>
+                        <span class="hse-tab-desc">Checklist periódicas</span>
+                    </div>
+                    <div class="hse-tab-card">
+                        <div class="hse-tab-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">⚙️</div>
+                        <span class="hse-tab-name">Configuración</span>
+                        <span class="hse-tab-desc">Estándares y alertas</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compliance Badges -->
+            <div class="hse-compliance">
+                <div class="hse-compliance-item">
+                    <span class="hse-compliance-icon">⚖️</span>
+                    <span class="hse-compliance-name">Cumplimiento Legal</span>
+                    <span class="hse-compliance-desc">SRT, NOM-017, NR-6</span>
+                </div>
+                <div class="hse-compliance-item">
+                    <span class="hse-compliance-icon">🔔</span>
+                    <span class="hse-compliance-name">Alertas Auto</span>
+                    <span class="hse-compliance-desc">Vencimientos por WhatsApp/Email</span>
+                </div>
+                <div class="hse-compliance-item">
+                    <span class="hse-compliance-icon">✍️</span>
+                    <span class="hse-compliance-name">Firma Digital</span>
+                    <span class="hse-compliance-desc">Acuse de recibo en entregas</span>
+                </div>
+                <div class="hse-compliance-item">
+                    <span class="hse-compliance-icon">📊</span>
+                    <span class="hse-compliance-name">Reportes</span>
+                    <span class="hse-compliance-desc">Auditoría completa</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HSE Section Styles -->
+    <style>
+        /* ========== HSE SECTION - SEGURIDAD E HIGIENE LABORAL ========== */
+        .section-hse {
+            padding: 5rem 2rem;
+            position: relative;
+        }
+        .hse-bg-pattern {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(249, 115, 22, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(249, 115, 22, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: hse-grid-move 25s linear infinite;
+        }
+        @keyframes hse-grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+        .hse-bg-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 900px; height: 900px;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.12) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .hse-pulse-dot {
+            width: 8px; height: 8px;
+            background: #f97316;
+            border-radius: 50%;
+            animation: hse-pulse 2s ease-in-out infinite;
+        }
+        @keyframes hse-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        /* HSE KPIs */
+        .hse-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .hse-kpi {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .hse-kpi:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(249, 115, 22, 0.3);
+            transform: translateY(-3px);
+        }
+        .hse-kpi-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .hse-kpi-label {
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .hse-kpi-detail {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* HSE Dashboard */
+        .hse-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .hse-panel {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .hse-panel:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(249, 115, 22, 0.2);
+        }
+        .hse-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .hse-panel-title {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .hse-preview-badge {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        .hse-live-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #f97316;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .hse-live-dot {
+            width: 6px;
+            height: 6px;
+            background: #f97316;
+            border-radius: 50%;
+            animation: hse-pulse 2s ease-in-out infinite;
+        }
+
+        /* Categories Grid */
+        .hse-categories-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .hse-category-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .hse-category-item:hover {
+            background: rgba(249, 115, 22, 0.1);
+            border-color: rgba(249, 115, 22, 0.3);
+        }
+        .hse-category-icon {
+            font-size: 1.2rem;
+        }
+        .hse-category-name {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Compliance Badges */
+        .hse-compliance-badges {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .hse-badge-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .hse-badge-item {
+            color: #22c55e;
+            font-size: 0.8rem;
+            padding: 0.25rem 0;
+        }
+
+        /* Mini Dashboard */
+        .hse-mini-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .hse-mini-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .hse-mini-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .hse-mini-card.highlight {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        .hse-mini-card.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        .hse-mini-card.alert {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .hse-mini-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+        .hse-mini-label {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+
+        /* Matrix Example */
+        .hse-matrix-example {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .hse-matrix-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .hse-matrix-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .hse-matrix-row:last-child {
+            border-bottom: none;
+        }
+        .hse-matrix-role {
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .hse-matrix-epp {
+            font-size: 1rem;
+        }
+
+        /* Deliveries */
+        .hse-recent-deliveries {
+            margin-bottom: 1.5rem;
+        }
+        .hse-delivery-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .hse-delivery-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+        }
+        .hse-delivery-epp {
+            color: white;
+            font-size: 0.8rem;
+        }
+        .hse-delivery-employee {
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+
+        /* Alerts */
+        .hse-alerts {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .hse-alert-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .hse-alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .hse-alert-item:last-child {
+            border-bottom: none;
+        }
+        .hse-alert-item.urgent {
+            border-left: 3px solid #ef4444;
+            padding-left: 0.5rem;
+        }
+        .hse-alert-item.warning {
+            border-left: 3px solid #f59e0b;
+            padding-left: 0.5rem;
+        }
+        .hse-alert-name {
+            color: white;
+            font-size: 0.8rem;
+        }
+        .hse-alert-days {
+            color: #ef4444;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Actions */
+        .hse-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .hse-action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .hse-action-btn.primary {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+        }
+        .hse-action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+        .hse-action-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .hse-action-btn.secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* Tabs Preview */
+        .hse-tabs-preview {
+            margin-bottom: 3rem;
+        }
+        .hse-tabs-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 1rem;
+        }
+        .hse-tab-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .hse-tab-card:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(249, 115, 22, 0.3);
+            transform: translateY(-4px);
+        }
+        .hse-tab-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .hse-tab-name {
+            display: block;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .hse-tab-desc {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+
+        /* Compliance Badges */
+        .hse-compliance {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+        .hse-compliance-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .hse-compliance-item:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(249, 115, 22, 0.2);
+            transform: translateY(-3px);
+        }
+        .hse-compliance-icon {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        .hse-compliance-name {
+            display: block;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .hse-compliance-desc {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hse-dashboard {
+                grid-template-columns: 1fr;
+            }
+            .hse-tabs-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .hse-kpis,
+            .hse-compliance {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .hse-tabs-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .hse-kpis,
+            .hse-compliance {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
     <!-- Biometric Section -->
     <section class="section section-light" id="biometric">
         <div class="container">
