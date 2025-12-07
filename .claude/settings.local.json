@@ -170,7 +170,8 @@
       "Bash(PGPASSWORD=Aedr15150302 \"C:\\Program Files\\PostgreSQL\\16\\bin\\psql.exe\" -h localhost -U postgres -d attendance_system -c \"\\d procedure_acknowledgements\")",
       "Bash(PGPASSWORD=Aedr15150302 \"C:\\Program Files\\PostgreSQL\\16\\bin\\psql.exe\" -h localhost -U postgres -d attendance_system -c \"SELECT config_type, from_email, smtp_user, smtp_password, LENGTH(smtp_password) as password_length FROM aponnt_email_config WHERE smtp_user LIKE ''%aponntsuite%'' OR smtp_user LIKE ''%aponnt%''\")",
       "Bash(PGPASSWORD=Aedr15150302 \"C:\\Program Files\\PostgreSQL\\16\\bin\\psql.exe\" -h localhost -U postgres -d attendance_system -c \"UPDATE aponnt_email_config SET smtp_password = ''djphlxewopwvsbac'' WHERE smtp_user = ''aponntsuite@gmail.com'' RETURNING config_type, smtp_user, smtp_password\")",
-      "Bash(PGPASSWORD=Aedr15150302 \"C:\\Program Files\\PostgreSQL\\16\\bin\\psql.exe\" -h localhost -U postgres -d attendance_system -c \"SELECT config_type, smtp_user, smtp_password, length(smtp_password) as pass_length, is_active FROM aponnt_email_config ORDER BY config_type\")"
+      "Bash(PGPASSWORD=Aedr15150302 \"C:\\Program Files\\PostgreSQL\\16\\bin\\psql.exe\" -h localhost -U postgres -d attendance_system -c \"SELECT config_type, smtp_user, smtp_password, length(smtp_password) as pass_length, is_active FROM aponnt_email_config ORDER BY config_type\")",
+      "Bash(timeout /t 30 /nobreak)"
     ],
     "deny": [],
     "ask": []

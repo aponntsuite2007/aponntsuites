@@ -865,6 +865,75 @@ app.get(`${API_PREFIX}/debug/company-modules`, async (req, res) => {
   }
 });
 
+// DEBUG: Endpoint POST para forzar actualización de módulos en DEMO
+app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
+  try {
+    // 1. Buscar empresa DEMO
+    const [demoCompanies] = await database.sequelize.query(`
+      SELECT company_id, name, slug, active_modules
+      FROM companies
+      WHERE company_id = 1 OR slug = 'demo-corp' OR UPPER(name) = 'DEMO'
+      LIMIT 1
+    `);
+
+    if (!demoCompanies || demoCompanies.length === 0) {
+      return res.json({ success: false, error: 'No se encontró empresa DEMO' });
+    }
+
+    const demo = demoCompanies[0];
+    let currentModules = demo.active_modules || [];
+
+    // Parsear si es string
+    if (typeof currentModules === 'string') {
+      try { currentModules = JSON.parse(currentModules); } catch(e) { currentModules = []; }
+    }
+
+    // Módulos a agregar
+    const modulosNuevos = [
+      { key: 'dms-dashboard', icon: '📁', name: 'Gestión Documental (DMS)', color: '#6366f1', category: 'core' },
+      { key: 'mi-espacio', icon: '🏠', name: 'Mi Espacio', color: '#10b981', category: 'employee' },
+      { key: 'procedures-manual', icon: '📖', name: 'Manual de Procedimientos', color: '#8b5cf6', category: 'compliance' },
+      { key: 'hse-management', icon: '🦺', name: 'HSE - Seguridad e Higiene', color: '#f59e0b', category: 'compliance' },
+      { key: 'unified-help-center', icon: '❓', name: 'Centro de Ayuda', color: '#06b6d4', category: 'support' }
+    ];
+
+    // Obtener keys existentes
+    const existingKeys = currentModules.map(m => typeof m === 'string' ? m : m.key);
+    let added = 0;
+
+    for (const mod of modulosNuevos) {
+      if (!existingKeys.includes(mod.key)) {
+        currentModules.push(mod);
+        added++;
+      }
+    }
+
+    if (added > 0) {
+      // Usar jsonb_build_array para asegurar formato correcto
+      await database.sequelize.query(`
+        UPDATE companies
+        SET active_modules = $1::jsonb,
+            updated_at = NOW()
+        WHERE company_id = $2
+      `, {
+        bind: [JSON.stringify(currentModules), demo.company_id],
+        type: database.sequelize.QueryTypes.UPDATE
+      });
+    }
+
+    res.json({
+      success: true,
+      companyId: demo.company_id,
+      companyName: demo.name,
+      modulesAdded: added,
+      totalModules: currentModules.length,
+      modules: currentModules.map(m => typeof m === 'string' ? m : m.key)
+    });
+  } catch (error) {
+    res.json({ success: false, error: error.message, stack: error.stack });
+  }
+});
+
 // === DEPARTAMENTOS ENDPOINTS - COMENTADOS ===
 // MOTIVO: Estos handlers NO tienen auth middleware y usan company_id=1 hardcodeado
 // Las peticiones ahora se manejan por departmentRoutes.js que tiene auth y multi-tenant
