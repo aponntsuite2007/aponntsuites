@@ -453,13 +453,30 @@ async function initializeDatabase() {
       const modulesJson = JSON.stringify(isiModules);
 
       // Buscar empresa DEMO y asignarle módulos
-      await database.sequelize.query(`
+      const [demoResult] = await database.sequelize.query(`
         UPDATE companies
         SET active_modules = '${modulesJson}',
             updated_at = NOW()
-        WHERE LOWER(slug) LIKE '%demo%' OR LOWER(name) LIKE '%demo%'
+        WHERE slug = 'demo' OR slug = 'aponnt-empresa-demo' OR LOWER(name) = 'demo'
+        RETURNING company_id, name, slug
       `);
-      console.log('   ✅ Módulos de ISI asignados a DEMO (26 módulos)');
+      if (demoResult && demoResult.length > 0) {
+        console.log('   ✅ Módulos ISI asignados a DEMO:', demoResult.map(d => d.slug).join(', '));
+      } else {
+        // Intentar con LIKE más amplio
+        const [demoResult2] = await database.sequelize.query(`
+          UPDATE companies
+          SET active_modules = '${modulesJson}',
+              updated_at = NOW()
+          WHERE LOWER(slug) LIKE '%demo%' OR LOWER(name) LIKE '%demo%'
+          RETURNING company_id, name, slug
+        `);
+        console.log('   ✅ Módulos ISI asignados a:', demoResult2?.length || 0, 'empresas');
+      }
+
+      // También listar empresas disponibles para debug
+      const [allCompanies] = await database.sequelize.query(`SELECT company_id, name, slug FROM companies WHERE is_active = true LIMIT 10`);
+      console.log('   📋 Empresas activas:', allCompanies.map(c => c.slug).join(', '));
 
       console.log('✅ Migraciones críticas completadas');
     } catch (migErr) {
