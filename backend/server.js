@@ -892,7 +892,7 @@ app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
 
     const demo = demoCompanies[0];
 
-    // REEMPLAZAR completamente con los módulos de ISI
+    // 1. REEMPLAZAR en companies.active_modules
     await database.sequelize.query(`
       UPDATE companies
       SET active_modules = $1::jsonb,
@@ -903,12 +903,36 @@ app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
       type: database.sequelize.QueryTypes.UPDATE
     });
 
+    // 2. SINCRONIZAR tabla company_modules
+    // Primero eliminar todos los módulos actuales de DEMO
+    await database.sequelize.query(`
+      DELETE FROM company_modules WHERE company_id = $1
+    `, { bind: [demo.company_id] });
+
+    // Luego insertar los módulos de ISI
+    let insertados = 0;
+    for (const moduleKey of modulosISI) {
+      try {
+        await database.sequelize.query(`
+          INSERT INTO company_modules (company_id, system_module_id, activo, created_at, updated_at)
+          SELECT $1, id, true, NOW(), NOW()
+          FROM system_modules
+          WHERE module_key = $2
+          ON CONFLICT DO NOTHING
+        `, { bind: [demo.company_id, moduleKey] });
+        insertados++;
+      } catch (e) {
+        console.log(`⚠️ Error insertando ${moduleKey}:`, e.message);
+      }
+    }
+
     res.json({
       success: true,
       companyId: demo.company_id,
       companyName: demo.name,
-      action: 'REPLACED',
+      action: 'REPLACED_BOTH_TABLES',
       totalModules: modulosISI.length,
+      insertedToCompanyModules: insertados,
       modules: modulosISI.sort()
     });
   } catch (error) {

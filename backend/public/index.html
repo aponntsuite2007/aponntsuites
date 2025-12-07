@@ -7984,6 +7984,750 @@
     })();
     </script>
 
+    <!-- =========================================================== -->
+    <!-- GESTIÓN DOCUMENTAL (DMS) SECTION -->
+    <!-- =========================================================== -->
+    <section class="section section-dms" id="dms" style="background: linear-gradient(180deg, #1e3a5f 0%, #0f172a 50%, #1e3a5f 100%); overflow: hidden; position: relative;">
+        <!-- Animated Background -->
+        <div class="dms-bg-pattern"></div>
+        <div class="dms-bg-glow"></div>
+
+        <div class="container" style="position: relative; z-index: 2;">
+            <!-- Header con Impacto -->
+            <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="section-label" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9); color: white; padding: 0.5rem 1.5rem; border-radius: 25px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span class="dms-pulse-dot"></span> WORKFLOW DOCUMENTAL | VALIDACIÓN MULTI-TENANT
+                </span>
+                <h2 class="section-title" style="color: white; margin-top: 1.5rem; font-size: 2.8rem; font-weight: 800;">
+                    Gestión Documental <span style="background: linear-gradient(135deg, #06b6d4, #0ea5e9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Empresarial (DMS)</span>
+                </h2>
+                <p class="section-subtitle" style="color: #94a3b8; max-width: 850px; margin: 1rem auto 0; font-size: 1.1rem; line-height: 1.6;">
+                    Sistema centralizado de gestión documental con workflow de validación, control de versiones y trazabilidad total. Gestiona contratos, certificados, legajos y documentos legales con estados, categorías y permisos por rol.
+                </p>
+            </div>
+
+            <!-- KPIs de Impacto -->
+            <div class="dms-kpis">
+                <div class="dms-kpi">
+                    <div class="dms-kpi-value"><span class="dms-counter" data-target="8">0</span></div>
+                    <div class="dms-kpi-label">Categorías Documentales</div>
+                    <div class="dms-kpi-detail">RRHH, Legal, Médico, Capacitación</div>
+                </div>
+                <div class="dms-kpi">
+                    <div class="dms-kpi-value"><span class="dms-counter" data-target="9">0</span></div>
+                    <div class="dms-kpi-label">Estados de Workflow</div>
+                    <div class="dms-kpi-detail">Desde borrador hasta archivado</div>
+                </div>
+                <div class="dms-kpi">
+                    <div class="dms-kpi-value"><span class="dms-counter" data-target="100">0</span>%</div>
+                    <div class="dms-kpi-label">Trazabilidad</div>
+                    <div class="dms-kpi-detail">Auditoría completa de cambios</div>
+                </div>
+                <div class="dms-kpi">
+                    <div class="dms-kpi-value"><span class="dms-counter" data-target="4">0</span></div>
+                    <div class="dms-kpi-label">Niveles de Acceso</div>
+                    <div class="dms-kpi-detail">Admin, HR, Supervisor, Employee</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Principal DMS -->
+            <div class="dms-dashboard">
+                <!-- Panel Izquierdo: Categorías -->
+                <div class="dms-panel dms-categories">
+                    <div class="dms-panel-header">
+                        <span class="dms-panel-title">CATEGORÍAS DOCUMENTALES</span>
+                        <span class="dms-preview-badge">8 TIPOS</span>
+                    </div>
+
+                    <!-- Categorías Grid -->
+                    <div class="dms-categories-grid">
+                        <div class="dms-category-item">
+                            <span class="dms-category-icon">👥</span>
+                            <span class="dms-category-name">RRHH</span>
+                        </div>
+                        <div class="dms-category-item">
+                            <span class="dms-category-icon">⚖️</span>
+                            <span class="dms-category-name">Legal</span>
+                        </div>
+                        <div class="dms-category-item">
+                            <span class="dms-category-icon">🏥</span>
+                            <span class="dms-category-name">Médico</span>
+                        </div>
+                        <div class="dms-category-item">
+                            <span class="dms-category-icon">🎓</span>
+                            <span class="dms-category-name">Capacitación</span>
+                        </div>
+                        <div class="dms-category-item">
+                            <span class="dms-category-icon">💰</span>
+                            <span class="dms-category-name">Financiero</span>
+                        </div>
+                        <div class="dms-category-item">
+                            <span class="dms-category-icon">⚙️</span>
+                            <span class="dms-category-name">Operaciones</span>
+                        </div>
+                    </div>
+
+                    <!-- Workflow Status -->
+                    <div class="dms-workflow">
+                        <div class="dms-workflow-header">Workflow de Validación</div>
+                        <div class="dms-workflow-steps">
+                            <div class="dms-workflow-step">📝 Borrador</div>
+                            <div class="dms-workflow-arrow">→</div>
+                            <div class="dms-workflow-step">🔍 Revisión</div>
+                            <div class="dms-workflow-arrow">→</div>
+                            <div class="dms-workflow-step">✅ Aprobado</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Central: Dashboard Preview -->
+                <div class="dms-panel dms-preview">
+                    <div class="dms-panel-header">
+                        <span class="dms-panel-title">EXPLORADOR DE DOCUMENTOS</span>
+                        <span class="dms-live-badge"><span class="dms-live-dot"></span>EN VIVO</span>
+                    </div>
+
+                    <!-- Mini Dashboard -->
+                    <div class="dms-mini-dashboard">
+                        <div class="dms-mini-row">
+                            <div class="dms-mini-card">
+                                <span class="dms-mini-value">1,247</span>
+                                <span class="dms-mini-label">Documentos Totales</span>
+                            </div>
+                            <div class="dms-mini-card highlight">
+                                <span class="dms-mini-value">156</span>
+                                <span class="dms-mini-label">Aprobados</span>
+                            </div>
+                        </div>
+                        <div class="dms-mini-row">
+                            <div class="dms-mini-card warning">
+                                <span class="dms-mini-value">23</span>
+                                <span class="dms-mini-label">Pendiente Validación</span>
+                            </div>
+                            <div class="dms-mini-card alert">
+                                <span class="dms-mini-value">8</span>
+                                <span class="dms-mini-label">Por Vencer</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Types -->
+                    <div class="dms-file-types">
+                        <div class="dms-file-type">
+                            <span class="dms-file-icon">📕</span>
+                            <span class="dms-file-name">PDF</span>
+                        </div>
+                        <div class="dms-file-type">
+                            <span class="dms-file-icon">📘</span>
+                            <span class="dms-file-name">Word</span>
+                        </div>
+                        <div class="dms-file-type">
+                            <span class="dms-file-icon">📗</span>
+                            <span class="dms-file-name">Excel</span>
+                        </div>
+                        <div class="dms-file-type">
+                            <span class="dms-file-icon">🖼️</span>
+                            <span class="dms-file-name">Imágenes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Derecho: Permisos & Validación -->
+                <div class="dms-panel dms-permissions">
+                    <div class="dms-panel-header">
+                        <span class="dms-panel-title">CONTROL DE ACCESO</span>
+                        <span class="dms-cct-badge">🔒</span>
+                    </div>
+
+                    <!-- Roles Grid -->
+                    <div class="dms-roles">
+                        <div class="dms-role-item admin">
+                            <span class="dms-role-icon">👑</span>
+                            <div class="dms-role-info">
+                                <span class="dms-role-name">Admin</span>
+                                <span class="dms-role-perms">Acceso total</span>
+                            </div>
+                        </div>
+                        <div class="dms-role-item hr">
+                            <span class="dms-role-icon">👔</span>
+                            <div class="dms-role-info">
+                                <span class="dms-role-name">RRHH</span>
+                                <span class="dms-role-perms">Validar + Ver todos</span>
+                            </div>
+                        </div>
+                        <div class="dms-role-item employee">
+                            <span class="dms-role-icon">👤</span>
+                            <div class="dms-role-info">
+                                <span class="dms-role-name">Empleado</span>
+                                <span class="dms-role-perms">Solo sus docs</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Validación Pending -->
+                    <div class="dms-validation">
+                        <div class="dms-validation-header">
+                            <span>🔍</span> Pendiente Validación
+                        </div>
+                        <div class="dms-validation-item">
+                            <span class="dms-validation-doc">Contrato - García M.</span>
+                            <span class="dms-validation-status">⏳</span>
+                        </div>
+                        <div class="dms-validation-item">
+                            <span class="dms-validation-doc">Cert. - López J.</span>
+                            <span class="dms-validation-status">⏳</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="dms-actions">
+                        <button class="dms-action-btn primary">
+                            <span>📤</span> Subir Documento
+                        </button>
+                        <button class="dms-action-btn secondary">
+                            <span>✅</span> Validar Pendientes
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs del Modulo DMS -->
+            <div class="dms-tabs-preview">
+                <h3 style="color: white; text-align: center; margin-bottom: 1.5rem;">
+                    <span style="color: #06b6d4;">5 Módulos Especializados</span> de Gestión Documental
+                </h3>
+                <div class="dms-tabs-grid">
+                    <div class="dms-tab-card">
+                        <div class="dms-tab-icon" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9);">📁</div>
+                        <span class="dms-tab-name">Explorador</span>
+                        <span class="dms-tab-desc">Navegación por carpetas</span>
+                    </div>
+                    <div class="dms-tab-card">
+                        <div class="dms-tab-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">⏳</div>
+                        <span class="dms-tab-name">Validación</span>
+                        <span class="dms-tab-desc">Workflow de aprobación</span>
+                    </div>
+                    <div class="dms-tab-card">
+                        <div class="dms-tab-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">📥</div>
+                        <span class="dms-tab-name">Mis Solicitudes</span>
+                        <span class="dms-tab-desc">Documentos solicitados</span>
+                    </div>
+                    <div class="dms-tab-card">
+                        <div class="dms-tab-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">⚠️</div>
+                        <span class="dms-tab-name">Vencimientos</span>
+                        <span class="dms-tab-desc">Alertas automáticas</span>
+                    </div>
+                    <div class="dms-tab-card">
+                        <div class="dms-tab-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">⚙️</div>
+                        <span class="dms-tab-name">Configuración</span>
+                        <span class="dms-tab-desc">Carpetas y permisos</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compliance Badges DMS -->
+            <div class="dms-compliance">
+                <div class="dms-compliance-item">
+                    <span class="dms-compliance-icon">🔒</span>
+                    <span class="dms-compliance-name">Seguridad</span>
+                    <span class="dms-compliance-desc">Control de acceso por rol</span>
+                </div>
+                <div class="dms-compliance-item">
+                    <span class="dms-compliance-icon">📊</span>
+                    <span class="dms-compliance-name">Trazabilidad</span>
+                    <span class="dms-compliance-desc">Auditoría completa</span>
+                </div>
+                <div class="dms-compliance-item">
+                    <span class="dms-compliance-icon">🔄</span>
+                    <span class="dms-compliance-name">Versionado</span>
+                    <span class="dms-compliance-desc">Historial de cambios</span>
+                </div>
+                <div class="dms-compliance-item">
+                    <span class="dms-compliance-icon">⏰</span>
+                    <span class="dms-compliance-name">Alertas Auto</span>
+                    <span class="dms-compliance-desc">Notificación de vencimientos</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DMS Section Styles -->
+    <style>
+        /* ========== DMS SECTION - DOCUMENT MANAGEMENT ========== */
+        .section-dms {
+            padding: 5rem 2rem;
+            position: relative;
+        }
+        .dms-bg-pattern {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: dms-grid-move 25s linear infinite;
+        }
+        @keyframes dms-grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+        .dms-bg-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 900px; height: 900px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .dms-pulse-dot {
+            width: 8px; height: 8px;
+            background: #06b6d4;
+            border-radius: 50%;
+            animation: dms-pulse 2s ease-in-out infinite;
+        }
+        @keyframes dms-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        /* DMS KPIs */
+        .dms-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .dms-kpi {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .dms-kpi:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(6, 182, 212, 0.3);
+            transform: translateY(-3px);
+        }
+        .dms-kpi-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .dms-kpi-label {
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .dms-kpi-detail {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* DMS Dashboard */
+        .dms-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .dms-panel {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .dms-panel:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(6, 182, 212, 0.2);
+        }
+        .dms-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .dms-panel-title {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .dms-preview-badge {
+            background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        .dms-live-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #06b6d4;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .dms-live-dot {
+            width: 6px;
+            height: 6px;
+            background: #06b6d4;
+            border-radius: 50%;
+            animation: dms-pulse 2s ease-in-out infinite;
+        }
+
+        /* Categories Grid */
+        .dms-categories-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .dms-category-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .dms-category-item:hover {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+        .dms-category-icon {
+            font-size: 1.2rem;
+        }
+        .dms-category-name {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Workflow */
+        .dms-workflow {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .dms-workflow-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .dms-workflow-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .dms-workflow-step {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 6px;
+            padding: 0.4rem 0.6rem;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        .dms-workflow-arrow {
+            color: #06b6d4;
+            font-size: 1rem;
+        }
+
+        /* Mini Dashboard */
+        .dms-mini-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .dms-mini-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .dms-mini-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .dms-mini-card.highlight {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        .dms-mini-card.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        .dms-mini-card.alert {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .dms-mini-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+        .dms-mini-label {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+
+        /* File Types */
+        .dms-file-types {
+            display: flex;
+            justify-content: space-around;
+            gap: 0.5rem;
+        }
+        .dms-file-type {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .dms-file-icon {
+            font-size: 1.5rem;
+        }
+        .dms-file-name {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+
+        /* Roles */
+        .dms-roles {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .dms-role-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .dms-role-item.admin {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+        .dms-role-item.hr {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+        .dms-role-item.employee {
+            background: rgba(100, 116, 139, 0.1);
+            border-color: rgba(100, 116, 139, 0.3);
+        }
+        .dms-role-icon {
+            font-size: 1.5rem;
+        }
+        .dms-role-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .dms-role-name {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .dms-role-perms {
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+
+        /* Validation */
+        .dms-validation {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .dms-validation-header {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .dms-validation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .dms-validation-item:last-child {
+            border-bottom: none;
+        }
+        .dms-validation-doc {
+            color: white;
+            font-size: 0.8rem;
+        }
+        .dms-validation-status {
+            font-size: 1rem;
+        }
+
+        /* Actions */
+        .dms-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .dms-action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .dms-action-btn.primary {
+            background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+            color: white;
+        }
+        .dms-action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        }
+        .dms-action-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .dms-action-btn.secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* Tabs Preview */
+        .dms-tabs-preview {
+            margin-bottom: 3rem;
+        }
+        .dms-tabs-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+        }
+        .dms-tab-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .dms-tab-card:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(6, 182, 212, 0.3);
+            transform: translateY(-4px);
+        }
+        .dms-tab-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .dms-tab-name {
+            display: block;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .dms-tab-desc {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+
+        /* Compliance Badges */
+        .dms-compliance {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+        .dms-compliance-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .dms-compliance-item:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(6, 182, 212, 0.2);
+            transform: translateY(-3px);
+        }
+        .dms-compliance-icon {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        .dms-compliance-name {
+            display: block;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .dms-compliance-desc {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dms-dashboard {
+                grid-template-columns: 1fr;
+            }
+            .dms-tabs-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .dms-kpis,
+            .dms-compliance {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .dms-tabs-grid,
+            .dms-kpis,
+            .dms-compliance {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
     <!-- Biometric Section -->
     <section class="section section-light" id="biometric">
         <div class="container">
@@ -8314,30 +9058,6 @@
                     <div class="module-icon orange">🏗️</div>
                     <div class="module-name" data-translate="ingenieria">Ingenieria</div>
                     <div class="module-desc" data-translate="dashboard_con_cpm_y_roadmap">Dashboard con CPM y roadmap</div>
-                    <div class="module-status"><span class="module-status-dot"></span> Produccion</div>
-                </div>
-                <div class="module-card">
-                    <div class="module-icon cyan">📁</div>
-                    <div class="module-name" data-translate="gestion_documental">Gestión Documental (DMS)</div>
-                    <div class="module-desc" data-translate="workflow_validacion_documental">Workflow de validación documental multi-tenant</div>
-                    <div class="module-status"><span class="module-status-dot"></span> Produccion</div>
-                </div>
-                <div class="module-card">
-                    <div class="module-icon blue">👤</div>
-                    <div class="module-name" data-translate="mi_espacio">Mi Espacio</div>
-                    <div class="module-desc" data-translate="portal_personal_360">Portal personal con perfil 360° integrado</div>
-                    <div class="module-status"><span class="module-status-dot"></span> Produccion</div>
-                </div>
-                <div class="module-card">
-                    <div class="module-icon purple">📋</div>
-                    <div class="module-name" data-translate="manual_procedimientos">Manual de Procedimientos</div>
-                    <div class="module-desc" data-translate="jerarquia_documental_firma">Jerarquía documental con firma digital</div>
-                    <div class="module-status"><span class="module-status-dot"></span> Produccion</div>
-                </div>
-                <div class="module-card">
-                    <div class="module-icon orange">🦺</div>
-                    <div class="module-name" data-translate="hse_seguridad">Seguridad e Higiene (HSE)</div>
-                    <div class="module-desc" data-translate="gestion_epp_alertas">Gestión de EPP con alertas automáticas</div>
                     <div class="module-status"><span class="module-status-dot"></span> Produccion</div>
                 </div>
             </div>
