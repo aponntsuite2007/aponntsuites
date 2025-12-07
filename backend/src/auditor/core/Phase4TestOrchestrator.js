@@ -132,7 +132,11 @@ class Phase4TestOrchestrator {
             'employee-map': 'employee_locations', // Mapa de empleados + geofencing
             'company-account': 'company_communications', // Cuenta comercial APONNT-Empresa + budgets + contracts + invoices
             'legal': 'legal_cases', // Gestión Legal + comunicaciones + juicios + workflow + IA
-            'sanctions': 'sanctions' // Gestión de Sanciones + workflow (Draft→Lawyer→HR→Active) + bloqueos + apelaciones
+            'sanctions': 'sanctions', // Gestión de Sanciones + workflow (Draft→Lawyer→HR→Active) + bloqueos + apelaciones
+            'procedures': 'procedures', // Manual de Procedimientos + jerarquía documental + workflow + acuses
+            'hse': 'epp_catalog', // Seguridad e Higiene + catálogo EPP + matriz rol-EPP + entregas + inspecciones
+            'risk-intelligence': 'company_risk_config', // Dashboard de Riesgo Laboral + violaciones + RBAC + exportación
+            'mi-espacio': 'users' // Portal Personal Empleado + integración con múltiples módulos
         };
     }
 

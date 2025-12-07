@@ -865,12 +865,22 @@ app.get(`${API_PREFIX}/debug/company-modules`, async (req, res) => {
   }
 });
 
-// DEBUG: Endpoint POST para forzar actualización de módulos en DEMO
+// DEBUG: Endpoint POST para REEMPLAZAR módulos de DEMO con los de ISI
 app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
   try {
-    // 1. Buscar empresa DEMO
+    // Módulos EXACTOS de ISI (26 módulos)
+    const modulosISI = [
+      "legal-dashboard", "dms-dashboard", "payroll-liquidation", "art-management",
+      "employee-map", "job-postings", "attendance", "mi-espacio", "biometric-consent",
+      "plantillas-fiscales", "medical", "vacation-management", "licensing-management",
+      "compliance-dashboard", "procedures-manual", "users", "kiosks", "training-management",
+      "clientes", "facturacion", "sanctions-management", "employee-360",
+      "organizational-structure", "company-account", "hse-management", "notification-center"
+    ];
+
+    // Buscar empresa DEMO
     const [demoCompanies] = await database.sequelize.query(`
-      SELECT company_id, name, slug, active_modules
+      SELECT company_id, name, slug
       FROM companies
       WHERE company_id = 1 OR slug = 'demo-corp' OR UPPER(name) = 'DEMO'
       LIMIT 1
@@ -881,53 +891,25 @@ app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
     }
 
     const demo = demoCompanies[0];
-    let currentModules = demo.active_modules || [];
 
-    // Parsear si es string
-    if (typeof currentModules === 'string') {
-      try { currentModules = JSON.parse(currentModules); } catch(e) { currentModules = []; }
-    }
-
-    // Módulos a agregar
-    const modulosNuevos = [
-      { key: 'dms-dashboard', icon: '📁', name: 'Gestión Documental (DMS)', color: '#6366f1', category: 'core' },
-      { key: 'mi-espacio', icon: '🏠', name: 'Mi Espacio', color: '#10b981', category: 'employee' },
-      { key: 'procedures-manual', icon: '📖', name: 'Manual de Procedimientos', color: '#8b5cf6', category: 'compliance' },
-      { key: 'hse-management', icon: '🦺', name: 'HSE - Seguridad e Higiene', color: '#f59e0b', category: 'compliance' },
-      { key: 'unified-help-center', icon: '❓', name: 'Centro de Ayuda', color: '#06b6d4', category: 'support' }
-    ];
-
-    // Obtener keys existentes
-    const existingKeys = currentModules.map(m => typeof m === 'string' ? m : m.key);
-    let added = 0;
-
-    for (const mod of modulosNuevos) {
-      if (!existingKeys.includes(mod.key)) {
-        currentModules.push(mod);
-        added++;
-      }
-    }
-
-    if (added > 0) {
-      // Usar jsonb_build_array para asegurar formato correcto
-      await database.sequelize.query(`
-        UPDATE companies
-        SET active_modules = $1::jsonb,
-            updated_at = NOW()
-        WHERE company_id = $2
-      `, {
-        bind: [JSON.stringify(currentModules), demo.company_id],
-        type: database.sequelize.QueryTypes.UPDATE
-      });
-    }
+    // REEMPLAZAR completamente con los módulos de ISI
+    await database.sequelize.query(`
+      UPDATE companies
+      SET active_modules = $1::jsonb,
+          updated_at = NOW()
+      WHERE company_id = $2
+    `, {
+      bind: [JSON.stringify(modulosISI), demo.company_id],
+      type: database.sequelize.QueryTypes.UPDATE
+    });
 
     res.json({
       success: true,
       companyId: demo.company_id,
       companyName: demo.name,
-      modulesAdded: added,
-      totalModules: currentModules.length,
-      modules: currentModules.map(m => typeof m === 'string' ? m : m.key)
+      action: 'REPLACED',
+      totalModules: modulosISI.length,
+      modules: modulosISI.sort()
     });
   } catch (error) {
     res.json({ success: false, error: error.message, stack: error.stack });
