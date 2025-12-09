@@ -46,6 +46,52 @@ module.exports = (sequelize) => {
             defaultValue: 1,
             comment: '1=operativo, 2=supervisor, 3=gerente, etc.'
         },
+
+        // =====================================================================
+        // CAMPOS DE JERARQUÍA ORGANIZACIONAL (ORGANIGRAMA SSOT)
+        // =====================================================================
+
+        hierarchy_level: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 99,
+            comment: 'Nivel jerárquico en el organigrama (0=CEO/Director, 1=Gerentes, 2=Jefes, 3=Supervisores, 4+=Operativos)'
+        },
+        branch_code: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+            comment: 'Código de rama para identificar el área/departamento en el organigrama (ej: ADM, PROD, COM, RRHH)'
+        },
+        branch_order: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0,
+            comment: 'Orden de visualización dentro de posiciones del mismo nivel y rama'
+        },
+        full_path: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            comment: 'Ruta completa de IDs desde raíz (ej: 1.5.12.45) para queries de descendientes'
+        },
+        is_escalation_point: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+            comment: 'Indica si esta posición es un punto de escalamiento para aprobaciones'
+        },
+        can_approve_permissions: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+            comment: 'Indica si esta posición puede aprobar permisos de ingreso/ausencia'
+        },
+        max_approval_days: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0,
+            comment: 'Máximo de días de ausencia que esta posición puede aprobar sin escalar (0=sin límite)'
+        },
+        color_hex: {
+            type: DataTypes.STRING(7),
+            defaultValue: '#3B82F6',
+            comment: 'Color hexadecimal para visualización en organigrama'
+        },
         salary_category_id: {
             type: DataTypes.INTEGER,
             allowNull: true,

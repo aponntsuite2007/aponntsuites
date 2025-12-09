@@ -7,7 +7,8 @@ const https = require('https');
 const RENDER_API_KEY = 'rnd_iEHggaMyekPvZwwcCQpyrjI1dD0X';
 const RENDER_API_BASE = 'api.render.com';
 const SERVICE_ID = 'srv-d3i6p2gdl3ps73cve9vg';
-const DATABASE_URL = 'postgresql://attendance_system_866u_user:Ihb9jdoOTYzb4c0u7cXxGo8XaIb1Iyvt@dpg-d3i4mqjipnbc73dsnd6g-a.oregon-postgres.render.com/attendance_system_866u';
+// BASE DE PRODUCCIÓN (tiene empresa DEMO) - URL COMPLETA con hostname
+const DATABASE_URL = 'postgresql://aponnt_db_user:G50GN9h8meeCVsfi51Z7SlPQn4ThyJXY@dpg-d4op2lq4d50c7392i190-a.oregon-postgres.render.com/aponnt_db';
 
 function makeRequest(method, path, data = null) {
     return new Promise((resolve, reject) => {
@@ -63,7 +64,7 @@ async function main() {
                 console.log('✅ DATABASE_URL ya apunta a la base correcta');
             } else {
                 console.log('\n⚠️  DATABASE_URL apunta a base INCORRECTA');
-                console.log('💡 Actualizando DATABASE_URL a attendance_system_866u...\n');
+                console.log('💡 Actualizando DATABASE_URL a aponnt_db (producción)...\n');
 
                 const result = await makeRequest('PUT', `/services/${SERVICE_ID}/env-vars`, {
                     envVars: [

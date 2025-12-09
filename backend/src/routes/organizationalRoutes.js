@@ -1241,6 +1241,665 @@ router.put('/shifts/:shiftId/custom-days', async (req, res) => {
     }
 });
 
+// ============================================================================
+// JERARQUÍA ORGANIZACIONAL - ORGANIGRAMA (SSOT)
+// ============================================================================
+
+const OrganizationalHierarchyService = require('../services/OrganizationalHierarchyService');
+
+// GET /api/v1/organizational/hierarchy/tree - Árbol completo de la organización
+router.get('/hierarchy/tree', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.query.company_id;
+
+        if (!companyId) {
+            return res.status(400).json({ success: false, message: 'company_id requerido' });
+        }
+
+        const tree = await OrganizationalHierarchyService.getOrganizationTree(companyId);
+
+        res.json({
+            success: true,
+            data: tree,
+            message: 'Árbol organizacional obtenido exitosamente'
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo árbol organizacional:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/v1/organizational/hierarchy/flat - Lista plana ordenada por niveles
+router.get('/hierarchy/flat', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.query.company_id;
+
+        if (!companyId) {
+            return res.status(400).json({ success: false, message: 'company_id requerido' });
+        }
+
+        const positions = await OrganizationalHierarchyService.getOrganizationFlat(companyId);
+
+        res.json({
+            success: true,
+            data: positions,
+            count: positions.length,
+            message: 'Lista de posiciones obtenida exitosamente'
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo lista de posiciones:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/v1/organizational/hierarchy/flowchart - Datos para diagrama de flujo
+router.get('/hierarchy/flowchart', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.query.company_id;
+
+        if (!companyId) {
+            return res.status(400).json({ success: false, message: 'company_id requerido' });
+        }
+
+        const flowchartData = await OrganizationalHierarchyService.getFlowchartData(companyId);
+
+        res.json({
+            success: true,
+            data: flowchartData,
+            nodeCount: flowchartData.nodes.length,
+            edgeCount: flowchartData.edges.length,
+            message: 'Datos de organigrama obtenidos exitosamente'
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo datos de organigrama:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/v1/organizational/hierarchy/stats - Estadísticas del organigrama
+router.get('/hierarchy/stats', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.query.company_id;
+
+        if (!companyId) {
+            return res.status(400).json({ success: false, message: 'company_id requerido' });
+        }
+
+        const stats = await OrganizationalHierarchyService.getOrgStats(companyId);
+
+        res.json({
+            success: true,
+            data: stats,
+            message: 'Estadísticas del organigrama obtenidas exitosamente'
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo estadísticas:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/v1/organizational/hierarchy/escalation/:userId - Cadena de escalamiento
+router.get('/hierarchy/escalation/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { daysRequested } = req.query;
+
+        const chain = await OrganizationalHierarchyService.getEscalationChain(
+            parseInt(userId),
+            parseInt(daysRequested) || 1
+        );
+
+        res.json({
+            success: true,
+            data: chain,
+            userId: parseInt(userId),
+            daysRequested: parseInt(daysRequested) || 1,
+            message: 'Cadena de escalamiento obtenida exitosamente'
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo cadena de escalamiento:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/v1/organizational/hierarchy/supervisor/:userId - Supervisor inmediato
+router.get('/hierarchy/supervisor/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const supervisor = await OrganizationalHierarchyService.getImmediateSupervisor(parseInt(userId));
+
+        res.json({
+            success: true,
+            data: supervisor,
+            userId: parseInt(userId),
+            hasSupervisor: supervisor !== null,
+            message: supervisor ? 'Supervisor encontrado' : 'No se encontró supervisor asignado'
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo supervisor:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/v1/organizational/hierarchy/subordinates/:userId - Subordinados directos
+router.get('/hierarchy/subordinates/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const subordinates = await OrganizationalHierarchyService.getDirectReports(parseInt(userId));
+
+        res.json({
+            success: true,
+            data: subordinates,
+            userId: parseInt(userId),
+            count: subordinates.length,
+            message: `${subordinates.length} subordinado(s) encontrado(s)`
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo subordinados:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/v1/organizational/hierarchy/ancestors/:positionId - Ancestros de posición
+router.get('/hierarchy/ancestors/:positionId', async (req, res) => {
+    try {
+        const { positionId } = req.params;
+
+        const ancestors = await OrganizationalHierarchyService.getPositionAncestors(parseInt(positionId));
+
+        res.json({
+            success: true,
+            data: ancestors,
+            positionId: parseInt(positionId),
+            count: ancestors.length,
+            message: `${ancestors.length} ancestro(s) encontrado(s)`
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo ancestros:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/v1/organizational/hierarchy/descendants/:positionId - Descendientes de posición
+router.get('/hierarchy/descendants/:positionId', async (req, res) => {
+    try {
+        const { positionId } = req.params;
+
+        const descendants = await OrganizationalHierarchyService.getPositionDescendants(parseInt(positionId));
+
+        res.json({
+            success: true,
+            data: descendants,
+            positionId: parseInt(positionId),
+            count: descendants.length,
+            message: `${descendants.length} descendiente(s) encontrado(s)`
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo descendientes:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// POST /api/v1/organizational/hierarchy/can-approve - Verificar permiso de aprobación
+router.post('/hierarchy/can-approve', async (req, res) => {
+    try {
+        const { approverId, requesterId, daysRequested } = req.body;
+
+        if (!approverId || !requesterId) {
+            return res.status(400).json({
+                success: false,
+                message: 'approverId y requesterId son requeridos'
+            });
+        }
+
+        const result = await OrganizationalHierarchyService.canApproveRequest(
+            parseInt(approverId),
+            parseInt(requesterId),
+            parseInt(daysRequested) || 1
+        );
+
+        res.json({
+            success: true,
+            data: result,
+            message: result.canApprove ? 'Aprobación permitida' : 'Aprobación no permitida'
+        });
+    } catch (error) {
+        console.error('❌ Error verificando permiso de aprobación:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/v1/organizational/hierarchy/next-approver - Obtener siguiente aprobador en cadena
+router.get('/hierarchy/next-approver', async (req, res) => {
+    try {
+        const { currentApproverId, requesterId, daysRequested } = req.query;
+
+        if (!currentApproverId || !requesterId) {
+            return res.status(400).json({
+                success: false,
+                message: 'currentApproverId y requesterId son requeridos'
+            });
+        }
+
+        const nextApprover = await OrganizationalHierarchyService.getNextApprover(
+            parseInt(currentApproverId),
+            parseInt(requesterId),
+            parseInt(daysRequested) || 1
+        );
+
+        res.json({
+            success: true,
+            data: nextApprover,
+            hasNextApprover: nextApprover !== null,
+            message: nextApprover ? 'Siguiente aprobador encontrado' : 'No hay más aprobadores en la cadena'
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo siguiente aprobador:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// PUT /api/v1/organizational/hierarchy/paths - Actualizar paths de la empresa
+router.put('/hierarchy/paths', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.body.company_id;
+
+        if (!companyId) {
+            return res.status(400).json({ success: false, message: 'company_id requerido' });
+        }
+
+        await OrganizationalHierarchyService.updateCompanyPaths(companyId);
+
+        res.json({
+            success: true,
+            message: 'Paths del organigrama actualizados exitosamente'
+        });
+    } catch (error) {
+        console.error('❌ Error actualizando paths:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============================================================================
+// POSICIONES ORGANIZACIONALES (CRUD)
+// ============================================================================
+
+// GET /api/v1/organizational/positions - Listar posiciones
+router.get('/positions', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.query.company_id;
+        const { hierarchy_level, branch_code, include_employees } = req.query;
+
+        if (!companyId) {
+            return res.status(400).json({ success: false, message: 'company_id requerido' });
+        }
+
+        let query = `
+            SELECT op.*,
+                   parent.position_name as parent_position_name,
+                   (SELECT COUNT(*) FROM users u WHERE u.organizational_position_id = op.id AND u.is_active = true) as employee_count
+            FROM organizational_positions op
+            LEFT JOIN organizational_positions parent ON op.parent_position_id = parent.id
+            WHERE op.company_id = :companyId AND op.is_active = true
+        `;
+        const replacements = { companyId };
+
+        if (hierarchy_level !== undefined) {
+            query += ' AND op.hierarchy_level = :hierarchy_level';
+            replacements.hierarchy_level = parseInt(hierarchy_level);
+        }
+
+        if (branch_code) {
+            query += ' AND op.branch_code = :branch_code';
+            replacements.branch_code = branch_code;
+        }
+
+        query += ' ORDER BY op.hierarchy_level ASC, op.branch_code ASC, op.branch_order ASC, op.position_name ASC';
+
+        const [positions] = await sequelize.query(query, { replacements });
+
+        // Si se solicitan empleados, agregarlos
+        if (include_employees === 'true') {
+            const positionIds = positions.map(p => p.id);
+            if (positionIds.length > 0) {
+                const [employees] = await sequelize.query(`
+                    SELECT user_id, "firstName", "lastName", email, organizational_position_id
+                    FROM users
+                    WHERE organizational_position_id IN (:positionIds) AND is_active = true
+                `, { replacements: { positionIds } });
+
+                positions.forEach(pos => {
+                    pos.employees = employees.filter(e => e.organizational_position_id === pos.id);
+                });
+            }
+        }
+
+        res.json({
+            success: true,
+            data: positions,
+            count: positions.length
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo posiciones:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/v1/organizational/positions/:id - Obtener posición específica
+router.get('/positions/:id', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.query.company_id;
+        const { id } = req.params;
+
+        const [positions] = await sequelize.query(`
+            SELECT op.*,
+                   parent.position_name as parent_position_name,
+                   parent.position_code as parent_position_code
+            FROM organizational_positions op
+            LEFT JOIN organizational_positions parent ON op.parent_position_id = parent.id
+            WHERE op.id = :id AND op.company_id = :companyId
+        `, {
+            replacements: { id, companyId }
+        });
+
+        if (positions.length === 0) {
+            return res.status(404).json({ success: false, message: 'Posición no encontrada' });
+        }
+
+        // Obtener empleados en esta posición
+        const [employees] = await sequelize.query(`
+            SELECT user_id, "firstName", "lastName", email, photo_url
+            FROM users
+            WHERE organizational_position_id = :id AND is_active = true
+        `, { replacements: { id } });
+
+        res.json({
+            success: true,
+            data: {
+                ...positions[0],
+                employees,
+                employee_count: employees.length
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error obteniendo posición:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// POST /api/v1/organizational/positions - Crear posición
+router.post('/positions', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.body.company_id;
+        const {
+            position_code, position_name, description, parent_position_id,
+            hierarchy_level, branch_code, branch_order, color_hex,
+            is_escalation_point, can_approve_permissions, max_approval_days,
+            work_category, work_environment, physical_demand_level,
+            cognitive_demand_level, risk_exposure_level,
+            salary_category_id, payslip_template_id, payroll_template_id, department_id
+        } = req.body;
+
+        if (!companyId || !position_code || !position_name) {
+            return res.status(400).json({
+                success: false,
+                message: 'company_id, position_code y position_name son requeridos'
+            });
+        }
+
+        const [result] = await sequelize.query(`
+            INSERT INTO organizational_positions (
+                company_id, position_code, position_name, description, parent_position_id,
+                hierarchy_level, branch_code, branch_order, color_hex,
+                is_escalation_point, can_approve_permissions, max_approval_days,
+                work_category, work_environment, physical_demand_level,
+                cognitive_demand_level, risk_exposure_level,
+                salary_category_id, payslip_template_id, payroll_template_id, department_id,
+                is_active, created_at, updated_at
+            ) VALUES (
+                :company_id, :position_code, :position_name, :description, :parent_position_id,
+                :hierarchy_level, :branch_code, :branch_order, :color_hex,
+                :is_escalation_point, :can_approve_permissions, :max_approval_days,
+                :work_category, :work_environment, :physical_demand_level,
+                :cognitive_demand_level, :risk_exposure_level,
+                :salary_category_id, :payslip_template_id, :payroll_template_id, :department_id,
+                true, NOW(), NOW()
+            )
+            RETURNING *
+        `, {
+            replacements: {
+                company_id: companyId,
+                position_code,
+                position_name,
+                description: description || null,
+                parent_position_id: parent_position_id || null,
+                hierarchy_level: hierarchy_level ?? 99,
+                branch_code: branch_code || null,
+                branch_order: branch_order || 0,
+                color_hex: color_hex || '#3B82F6',
+                is_escalation_point: is_escalation_point || false,
+                can_approve_permissions: can_approve_permissions || false,
+                max_approval_days: max_approval_days || 0,
+                work_category: work_category || 'administrativo',
+                work_environment: work_environment || 'oficina',
+                physical_demand_level: physical_demand_level || 1,
+                cognitive_demand_level: cognitive_demand_level || 3,
+                risk_exposure_level: risk_exposure_level || 1,
+                salary_category_id: salary_category_id || null,
+                payslip_template_id: payslip_template_id || null,
+                payroll_template_id: payroll_template_id || null,
+                department_id: department_id || null
+            }
+        });
+
+        // Actualizar paths de la empresa
+        await OrganizationalHierarchyService.updateCompanyPaths(companyId);
+
+        res.status(201).json({
+            success: true,
+            data: result[0],
+            message: 'Posición creada exitosamente'
+        });
+    } catch (error) {
+        console.error('❌ Error creando posición:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// PUT /api/v1/organizational/positions/:id - Actualizar posición
+router.put('/positions/:id', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.body.company_id;
+        const { id } = req.params;
+
+        // Verificar que la posición existe y pertenece a la empresa
+        const [existing] = await sequelize.query(`
+            SELECT id FROM organizational_positions WHERE id = :id AND company_id = :companyId
+        `, { replacements: { id, companyId } });
+
+        if (existing.length === 0) {
+            return res.status(404).json({ success: false, message: 'Posición no encontrada' });
+        }
+
+        const {
+            position_code, position_name, description, parent_position_id,
+            hierarchy_level, branch_code, branch_order, color_hex,
+            is_escalation_point, can_approve_permissions, max_approval_days,
+            work_category, work_environment, physical_demand_level,
+            cognitive_demand_level, risk_exposure_level,
+            salary_category_id, payslip_template_id, payroll_template_id, department_id
+        } = req.body;
+
+        await sequelize.query(`
+            UPDATE organizational_positions SET
+                position_code = COALESCE(:position_code, position_code),
+                position_name = COALESCE(:position_name, position_name),
+                description = COALESCE(:description, description),
+                parent_position_id = COALESCE(:parent_position_id, parent_position_id),
+                hierarchy_level = COALESCE(:hierarchy_level, hierarchy_level),
+                branch_code = COALESCE(:branch_code, branch_code),
+                branch_order = COALESCE(:branch_order, branch_order),
+                color_hex = COALESCE(:color_hex, color_hex),
+                is_escalation_point = COALESCE(:is_escalation_point, is_escalation_point),
+                can_approve_permissions = COALESCE(:can_approve_permissions, can_approve_permissions),
+                max_approval_days = COALESCE(:max_approval_days, max_approval_days),
+                work_category = COALESCE(:work_category, work_category),
+                work_environment = COALESCE(:work_environment, work_environment),
+                physical_demand_level = COALESCE(:physical_demand_level, physical_demand_level),
+                cognitive_demand_level = COALESCE(:cognitive_demand_level, cognitive_demand_level),
+                risk_exposure_level = COALESCE(:risk_exposure_level, risk_exposure_level),
+                salary_category_id = COALESCE(:salary_category_id, salary_category_id),
+                payslip_template_id = COALESCE(:payslip_template_id, payslip_template_id),
+                payroll_template_id = COALESCE(:payroll_template_id, payroll_template_id),
+                department_id = COALESCE(:department_id, department_id),
+                updated_at = NOW()
+            WHERE id = :id
+        `, {
+            replacements: {
+                id,
+                position_code,
+                position_name,
+                description,
+                parent_position_id,
+                hierarchy_level,
+                branch_code,
+                branch_order,
+                color_hex,
+                is_escalation_point,
+                can_approve_permissions,
+                max_approval_days,
+                work_category,
+                work_environment,
+                physical_demand_level,
+                cognitive_demand_level,
+                risk_exposure_level,
+                salary_category_id,
+                payslip_template_id,
+                payroll_template_id,
+                department_id
+            }
+        });
+
+        // Actualizar paths de la empresa
+        await OrganizationalHierarchyService.updateCompanyPaths(companyId);
+
+        res.json({
+            success: true,
+            message: 'Posición actualizada exitosamente'
+        });
+    } catch (error) {
+        console.error('❌ Error actualizando posición:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// DELETE /api/v1/organizational/positions/:id - Eliminar posición (soft delete)
+router.delete('/positions/:id', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.query.company_id;
+        const { id } = req.params;
+
+        // Verificar que la posición existe
+        const [existing] = await sequelize.query(`
+            SELECT id, position_name,
+                   (SELECT COUNT(*) FROM users WHERE organizational_position_id = :id AND is_active = true) as employee_count,
+                   (SELECT COUNT(*) FROM organizational_positions WHERE parent_position_id = :id AND is_active = true) as child_count
+            FROM organizational_positions
+            WHERE id = :id AND company_id = :companyId
+        `, { replacements: { id, companyId } });
+
+        if (existing.length === 0) {
+            return res.status(404).json({ success: false, message: 'Posición no encontrada' });
+        }
+
+        const pos = existing[0];
+
+        // Verificar si tiene empleados asignados
+        if (parseInt(pos.employee_count) > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `No se puede eliminar la posición "${pos.position_name}" porque tiene ${pos.employee_count} empleado(s) asignado(s). Reasígnelos primero.`
+            });
+        }
+
+        // Verificar si tiene posiciones hijas
+        if (parseInt(pos.child_count) > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `No se puede eliminar la posición "${pos.position_name}" porque tiene ${pos.child_count} posición(es) subordinada(s). Elimínelas primero.`
+            });
+        }
+
+        // Soft delete
+        await sequelize.query(`
+            UPDATE organizational_positions SET is_active = false, updated_at = NOW() WHERE id = :id
+        `, { replacements: { id } });
+
+        // Actualizar paths de la empresa
+        await OrganizationalHierarchyService.updateCompanyPaths(companyId);
+
+        res.json({
+            success: true,
+            message: `Posición "${pos.position_name}" eliminada exitosamente`
+        });
+    } catch (error) {
+        console.error('❌ Error eliminando posición:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// PUT /api/v1/organizational/employees/:userId/position - Asignar posición organizacional
+router.put('/employees/:userId/position', async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || req.body.company_id;
+        const { userId } = req.params;
+        const { organizational_position_id } = req.body;
+
+        // Verificar que el usuario existe
+        const [users] = await sequelize.query(`
+            SELECT user_id, "firstName", "lastName" FROM users
+            WHERE user_id = :userId AND company_id = :companyId
+        `, { replacements: { userId, companyId } });
+
+        if (users.length === 0) {
+            return res.status(404).json({ success: false, message: 'Empleado no encontrado' });
+        }
+
+        // Si se asigna una posición, verificar que existe y pertenece a la empresa
+        if (organizational_position_id) {
+            const [positions] = await sequelize.query(`
+                SELECT id, position_name FROM organizational_positions
+                WHERE id = :posId AND company_id = :companyId AND is_active = true
+            `, { replacements: { posId: organizational_position_id, companyId } });
+
+            if (positions.length === 0) {
+                return res.status(400).json({ success: false, message: 'Posición no encontrada o no activa' });
+            }
+        }
+
+        await sequelize.query(`
+            UPDATE users SET organizational_position_id = :posId, "updatedAt" = NOW()
+            WHERE user_id = :userId
+        `, { replacements: { posId: organizational_position_id || null, userId } });
+
+        res.json({
+            success: true,
+            message: organizational_position_id
+                ? 'Posición organizacional asignada exitosamente'
+                : 'Posición organizacional removida exitosamente'
+        });
+    } catch (error) {
+        console.error('❌ Error asignando posición:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============================================================================
+// FIN JERARQUÍA ORGANIZACIONAL
+// ============================================================================
+
 // PUT /api/v1/organizational/shifts/:shiftId/holiday-settings - Actualizar configuración de feriados
 router.put('/shifts/:shiftId/holiday-settings', async (req, res) => {
     try {

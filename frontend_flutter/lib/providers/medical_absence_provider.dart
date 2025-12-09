@@ -159,8 +159,8 @@ class MedicalAbsenceProvider extends ChangeNotifier {
     // Validar cuestionario si está presente
     if (_currentQuestionnaire != null) {
       for (var question in _currentQuestionnaire!.questions) {
-        String questionId = question['id'];
-        if (question['required'] == true && 
+        String questionId = question.id;
+        if (question.required == true &&
             (_currentFormData['questionnaire'][questionId] == null ||
              _currentFormData['questionnaire'][questionId].toString().isEmpty)) {
           _setError('Debe completar todas las preguntas obligatorias');

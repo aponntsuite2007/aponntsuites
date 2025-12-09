@@ -877,6 +877,47 @@ app.get(`${API_PREFIX}/debug/system-modules`, async (req, res) => {
   }
 });
 
+// DEBUG: Crear usuario demo para testing
+app.post(`${API_PREFIX}/debug/create-demo-user`, async (req, res) => {
+  try {
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+
+    // Verificar si ya existe
+    const [existing] = await database.sequelize.query(
+      `SELECT user_id FROM users WHERE usuario = 'demo' AND company_id = 1`
+    );
+
+    if (existing.length > 0) {
+      return res.json({ success: true, action: 'EXISTS', message: 'Usuario demo ya existe' });
+    }
+
+    // Crear usuario demo
+    await database.sequelize.query(`
+      INSERT INTO users (
+        usuario, email, password, "firstName", "lastName",
+        role, company_id, is_active, created_at, updated_at
+      ) VALUES (
+        'demo', 'demo@aponnt.com', $1, 'Usuario', 'Demo',
+        'admin', 1, true, NOW(), NOW()
+      )
+    `, { bind: [hashedPassword] });
+
+    res.json({
+      success: true,
+      action: 'CREATED',
+      credentials: {
+        empresa: 'DEMO (o demo-corp)',
+        usuario: 'demo',
+        password: 'admin123',
+        rol: 'admin'
+      }
+    });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
 // DEBUG: Crear system_modules faltantes
 app.post(`${API_PREFIX}/debug/create-system-modules`, async (req, res) => {
   try {

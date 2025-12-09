@@ -40,6 +40,7 @@ class EnhancedAuthProvider extends ChangeNotifier {
   bool get isEmployee => _currentUser?.role == 'employee';
   bool get isMedicalStaff => _currentUser?.role == 'medical' || isAdmin;
   bool get hasAuthenticatedThisSession => _hasAuthenticatedThisSession;
+  ApiService get apiService => _apiService;
   
   /// Cargar autenticación almacenada
   Future<void> _loadStoredAuth() async {
@@ -331,12 +332,13 @@ class EnhancedAuthProvider extends ChangeNotifier {
   /// Refrescar datos del usuario
   Future<void> refreshUserData() async {
     if (!_isAuthenticated) return;
-    
+
     try {
       final response = await _apiService.getCurrentUser();
-      
+
       if (response.isSuccess && response.data != null) {
-        _currentUser = response.data!;
+        final userData = response.data as Map<String, dynamic>;
+        _currentUser = User.fromJson(userData);
         await _prefs.setString(StorageKeys.user, jsonEncode(_currentUser!.toJson()));
         notifyListeners();
       } else if (response.error?.contains('401') == true) {

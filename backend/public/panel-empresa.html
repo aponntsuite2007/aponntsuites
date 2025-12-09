@@ -4365,8 +4365,29 @@
                     window[moduleMetadata.init_function]();
                     initialized = true;
                 }
-                // Intento 3: Legacy pattern (showUsersContent, etc.)
+                // Intento 3: PascalCase pattern (AssociateMarketplace.init, RolesPermissionsModule.init, etc.)
                 else {
+                    // Convertir module-name a ModuleName (PascalCase)
+                    const pascalCaseName = moduleId.split('-').map(word =>
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join('');
+
+                    if (typeof window[pascalCaseName] === 'object' && typeof window[pascalCaseName].init === 'function') {
+                        console.log(`✅ [DYNAMIC-LOAD] Ejecutando window.${pascalCaseName}.init() [PASCALCASE]`);
+                        const containerId = `${moduleId}-container`;
+
+                        // Crear contenedor en mainContent
+                        if (!document.getElementById(containerId)) {
+                            mainContent.innerHTML = `<div id="${containerId}" style="padding:20px;"></div>`;
+                        }
+
+                        window[pascalCaseName].init(containerId);
+                        initialized = true;
+                    }
+                }
+
+                // Intento 4: Legacy pattern (showUsersContent, etc.)
+                if (!initialized) {
                     // Mapeo especial para módulos con guiones
                     const legacyFunctionMap = {
                         'legal-dashboard': 'showLegalDashboardContent',

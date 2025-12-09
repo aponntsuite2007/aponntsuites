@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BiometricService {
   final LocalAuthentication _localAuth = LocalAuthentication();
@@ -224,16 +227,23 @@ class BiometricService {
     try {
       print('🎯 [FLUTTER] Iniciando captura biométrica real...');
 
-      // TODO: Implementar captura real usando cámara + Face-API.js
-      // Por ahora, enviar solicitud al backend para procesamiento real
+      // Obtener configuración de SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final baseUrl = prefs.getString('server_url');
+      final authToken = prefs.getString('auth_token');
+
+      if (baseUrl == null) {
+        print('⚠️ [FLUTTER] No hay URL del servidor configurada');
+        return null;
+      }
 
       final response = await http.post(
-        Uri.parse('${_baseUrl}/api/v2/biometric/capture-real-template'),
+        Uri.parse('$baseUrl/api/v2/biometric/capture-real-template'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_authToken',
+          if (authToken != null) 'Authorization': 'Bearer $authToken',
         },
-        body: json.encode({
+        body: jsonEncode({
           'method': 'camera_face_detection',
           'quality_threshold': 0.8,
           'use_real_face_api': true,
@@ -242,7 +252,7 @@ class BiometricService {
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = jsonDecode(response.body);
         if (data['success'] == true && data['template'] != null) {
           print('✅ [FLUTTER] Template real obtenido del backend');
           return data['template'];
