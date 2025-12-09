@@ -18,8 +18,8 @@
     <!-- Configuración dinámica de puertos - DEBE CARGAR PRIMERO -->
     <script src="js/port-config.js"></script>
 
-    <!-- 🔌 SOCKET.IO - WebSocket Communication -->
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- 🔌 SOCKET.IO - WebSocket Communication (CDN para evitar 404) -->
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 
     <!-- 🔐 APONNT LOGIN - Sistema de Autenticación Staff + Partners -->
     <script src="js/modules/aponnt-login.js"></script>
@@ -3630,17 +3630,22 @@
                     </div>
                 </div>
 
-                <!-- Pestaña Precios -->
+                <!-- Pestaña Precios (SOLO LECTURA) -->
                 <div id="pricing" class="tab-content">
                     <div class="section-header">
-                        <h2 class="section-title">💰 Configuración de Precios</h2>
-                        <button class="btn btn-success" onclick="saveAllPricing()">
-                            💾 Guardar Cambios
+                        <h2 class="section-title">💰 Consulta de Precios (Solo Lectura)</h2>
+                        <button class="btn btn-primary" onclick="switchTab('engineering')">
+                            ✏️ Editar Precios (Ir a Ingeniería)
                         </button>
                     </div>
                     <div class="section-content">
+                        <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                            <p style="margin: 0; color: #1e40af; font-size: 14px;">
+                                ℹ️ <strong>Este tab es solo para consulta.</strong> Para editar precios, ve a <strong>Ingeniería → Módulos Comerciales → Gestión Comercial</strong>.
+                            </p>
+                        </div>
                         <div id="pricingContainer">
-                            <!-- Controles de precios se cargan aquí -->
+                            <!-- Controles de precios (solo lectura) se cargan aquí -->
                         </div>
                     </div>
                 </div>
@@ -4373,6 +4378,9 @@
                                 <button class="nav-tab-secondary" onclick="switchPartnerSubTab('ratings-list')">
                                     ⭐ Valoraciones
                                 </button>
+                                <button class="nav-tab-secondary" onclick="switchPartnerSubTab('workflow-panel')">
+                                    📊 Workflow
+                                </button>
                             </div>
 
                             <!-- Sub-Tab: Lista de Partners -->
@@ -4580,6 +4588,16 @@
                                                 </tr>
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-Tab: Workflow Panel (Aponnt) -->
+                            <div id="workflow-panel" class="partner-subtab-content">
+                                <div id="associateWorkflowContainer" style="margin: 20px 0;">
+                                    <div style="text-align: center; padding: 40px; color: #999;">
+                                        <div style="font-size: 48px; margin-bottom: 20px;">📊</div>
+                                        <p>Cargando datos de workflow...</p>
                                     </div>
                                 </div>
                             </div>
@@ -5893,6 +5911,9 @@
                 'psychological-assessment': { name: 'Evaluación Psicológica', icon: '🧠', color: '#9b59b6', basePrice: 2500.00, description: 'Sistema de evaluación psicológica integral con detección de estrés y violencia' },
                 'sanctions-management': { name: 'Gestión de Sanciones', icon: '⚖️', color: '#e74c3c', basePrice: 1800.00, description: 'Sistema completo de gestión disciplinaria y sanciones' },
                 'vacation-management': { name: 'Gestión de Vacaciones', icon: '🏖️', color: '#27ae60', basePrice: 2200.00, description: 'Sistema integral de gestión de vacaciones y licencias con programación automática' }
+            },
+            bundles: {
+                // Los bundles se cargarán dinámicamente desde la API
             }
         };
 
@@ -6676,7 +6697,7 @@
             }
         };
 
-        function openNewCompanyModal() {
+        async function openNewCompanyModal() {
             console.log("openNewCompanyModal ejecutado");
             document.getElementById('modalTitle').textContent = 'Nueva Empresa';
             document.getElementById('saveBtnText').textContent = '💾 Crear Empresa';
@@ -6684,16 +6705,16 @@
             document.getElementById('maxEmployees').value = '1';
             selectedModules.clear();
             currentEditingCompany = null;
-            
+
             // Resetear filtro a "todos" para nueva empresa
             currentModuleFilter = 'all';
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('filterAll').classList.add('active');
-            
+
             // Ocultar secciones específicas de edición
             document.getElementById('priceUpdateSection').style.display = 'none';
             document.getElementById('moduleModificationSection').style.display = 'none';
-            
+
             // Inicializar campos geográficos
             loadProvinces();
 
@@ -6705,6 +6726,16 @@
             document.getElementById('vendorDisplay').value = '';
             document.getElementById('vendorDisplay').placeholder = 'No asignado';
             document.getElementById('vendor').value = '';
+
+            // 🔥 ASEGURAR QUE LOS MÓDULOS COMERCIALES ESTÉN CARGADOS
+            const modulesCount = Object.keys(pricingConfig.modules || {}).length;
+            if (modulesCount < 20) {
+                console.log(`⚠️ Solo ${modulesCount} módulos cargados. Cargando módulos comerciales del SSOT...`);
+                await loadModulesFromAPI();
+                console.log(`✅ ${Object.keys(pricingConfig.modules).length} módulos comerciales ahora disponibles`);
+            } else {
+                console.log(`✅ ${modulesCount} módulos comerciales ya disponibles`);
+            }
 
             generateModulesGrid();
             updatePricingSummary();
@@ -6721,6 +6752,16 @@
 
             console.log(`📝 EDITANDO EMPRESA ${companyId}:`, company);
             console.log('📝 Datos disponibles en company object:', Object.keys(company));
+
+            // 🔥 ASEGURAR QUE LOS MÓDULOS COMERCIALES ESTÉN CARGADOS
+            const modulesCount = Object.keys(pricingConfig.modules || {}).length;
+            if (modulesCount < 20) {
+                console.log(`⚠️ Solo ${modulesCount} módulos cargados. Cargando módulos comerciales del SSOT...`);
+                await loadModulesFromAPI();
+                console.log(`✅ ${Object.keys(pricingConfig.modules).length} módulos comerciales ahora disponibles`);
+            } else {
+                console.log(`✅ ${modulesCount} módulos comerciales ya disponibles`);
+            }
 
             const modalTitle = document.getElementById('modalTitle');
             const saveBtnText = document.getElementById('saveBtnText');
@@ -6934,58 +6975,143 @@
             console.log('📦 Módulos contratados desde BD:', Array.from(contractedModules));
             console.log('📋 Módulos seleccionados actuales:', Array.from(selectedModules));
 
+            // 🎁 RENDERIZAR BUNDLES PRIMERO
+            if (pricingConfig.bundles && Object.keys(pricingConfig.bundles).length > 0) {
+                html += '<div style="margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;"><h4 style="margin: 0 0 10px 0;">🎁 Paquetes con Descuento</h4><p style="margin: 0; font-size: 13px; opacity: 0.9;">Selecciona un bundle para activar múltiples módulos con descuento</p></div>';
+
+                Object.entries(pricingConfig.bundles).forEach(([bundleKey, bundle]) => {
+                    // Verificar si todos los módulos del bundle están seleccionados
+                    const allModulesSelected = bundle.modules.every(m => selectedModules.has(m));
+                    const someModulesSelected = bundle.modules.some(m => selectedModules.has(m));
+
+                    let cardClass = 'module-card bundle-card';
+                    let statusIndicator = '';
+
+                    if (allModulesSelected) {
+                        cardClass += ' selected';
+                        statusIndicator = '<span class="status-badge contracted">✓ Seleccionado</span>';
+                    } else if (someModulesSelected) {
+                        cardClass += ' partial';
+                        statusIndicator = '<span class="status-badge available">Parcial</span>';
+                    } else {
+                        statusIndicator = '<span class="status-badge available">Disponible</span>';
+                    }
+
+                    html += `
+                        <div class="${cardClass}" onclick="toggleBundle('${bundleKey}')" data-bundle="${bundleKey}" style="border: 3px solid #667eea; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                            <div class="module-header">
+                                <div class="module-info">
+                                    <span class="module-icon" style="font-size: 24px;">${bundle.icon}</span>
+                                    <span class="module-name"><strong>${bundle.name}</strong></span>
+                                </div>
+                                <div class="module-price" style="color: #667eea; font-weight: bold;">U$S ${bundle.bundle_price.toFixed(2)}</div>
+                            </div>
+                            <div class="module-description">${bundle.description}</div>
+                            <div class="module-details">
+                                <span style="background: #667eea; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                    ${bundle.module_count} módulos
+                                </span>
+                                <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">
+                                    ${bundle.discount_percentage}% OFF
+                                </span>
+                            </div>
+                            <div class="module-status">${statusIndicator}</div>
+                        </div>
+                    `;
+                });
+
+                html += '<div style="margin: 20px 0; padding: 15px; background: #f3f4f6; border-radius: 8px;"><h4 style="margin: 0 0 10px 0;">📦 Módulos Individuales</h4></div>';
+            }
+
             Object.entries(pricingConfig.modules).forEach(([moduleId, module]) => {
-                const price = calculateModulePrice(module.basePrice, tier);
-                const isSelected = selectedModules.has(moduleId);
+                // 💰 CRITICAL PRICING LOGIC: Historical vs Current
+                let price;
                 const wasContracted = contractedModules.has(moduleId);
+
+                if (wasContracted && currentEditingCompany && currentEditingCompany.contractedModulesFromDB) {
+                    // EXISTING MODULE: Use HISTORICAL contracted price
+                    const contractedModule = currentEditingCompany.contractedModulesFromDB.find(m => m.moduleKey === moduleId);
+                    price = contractedModule ? (contractedModule.contractedPrice || contractedModule.tierPrice || module.basePrice) : calculateModulePrice(module.basePrice, tier);
+                    console.log(`💰 [GRID-HISTÓRICO] ${moduleId}: $${price} (precio contratado)`);
+                } else {
+                    // NEW MODULE: Use CURRENT price from SSOT (tier-adjusted)
+                    price = calculateModulePrice(module.basePrice, tier);
+                    console.log(`💰 [GRID-ACTUAL] ${moduleId}: $${price} (precio actual SSOT, tier ${tier.name})`);
+                }
+
+                const isSelected = selectedModules.has(moduleId);
                 const isNewSelection = isSelected && !wasContracted;
                 const isRemoving = !isSelected && wasContracted;
 
                 if (isSelected) {
                     console.log(`🔍 Módulo ${moduleId}: selected=${isSelected}, wasContracted=${wasContracted}, isNew=${isNewSelection}`);
                 }
-                
-                // Aplicar filtro
-                let shouldShow = true;
-                if (currentModuleFilter === 'contracted' && !wasContracted) shouldShow = false;
-                if (currentModuleFilter === 'available' && wasContracted) shouldShow = false;
-                
-                if (!shouldShow) return;
-                
+
+                // 🎨 SIEMPRE MOSTRAR TODOS LOS MÓDULOS - Solo cambiar el tono/estilo
+                // NO aplicar filtro - mostrar siempre los 25 módulos
+
                 let cardClass = 'module-card';
                 let statusIndicator = '';
                 let clickHandler = `toggleModule('${moduleId}')`;
-                
-                if (wasContracted && isSelected) {
-                    cardClass += ' contracted selected';
-                    statusIndicator = '<span class="status-badge contracted">✓ Contratado</span>';
-                } else if (wasContracted && !isSelected) {
-                    cardClass += ' contracted removing';
-                    statusIndicator = '<span class="status-badge removing">⚠ Se eliminará</span>';
-                } else if (isNewSelection) {
-                    cardClass += ' selected new';
-                    statusIndicator = '<span class="status-badge new">+ Nuevo</span>';
-                } else if (isSelected) {
-                    cardClass += ' selected';
-                } else {
-                    cardClass += ' available';
-                    statusIndicator = '<span class="status-badge available">Disponible</span>';
-                }
-                
-                // Los módulos contratados siempre permiten interacción
-                // Solo agregar clase visual para identificarlos como contratados
+                let cardStyle = ''; // Estilos inline para tonos diferentes
+
+                // 🎨 DETERMINAR TONO SEGÚN ESTADO
                 if (wasContracted) {
+                    // ✅ CONTRATADO - Tono verde
                     cardClass += ' contracted-module';
+                    cardStyle = 'background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #059669;';
+
+                    if (isSelected) {
+                        statusIndicator = '<span class="status-badge" style="background: #059669; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">✅ CONTRATADO</span>';
+                    } else {
+                        statusIndicator = '<span class="status-badge" style="background: #dc2626; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">⚠️ SE ELIMINARÁ</span>';
+                        cardStyle = 'background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border: 2px solid #dc2626;';
+                    }
+                } else if (isNewSelection) {
+                    // 🆕 NUEVO SELECCIONADO - Tono amarillo/naranja
+                    cardClass += ' new-selected';
+                    cardStyle = 'background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b;';
+                    statusIndicator = '<span class="status-badge" style="background: #f59e0b; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">🆕 AGREGAR</span>';
+                } else {
+                    // 📦 DISPONIBLE - Tono gris neutro
+                    cardClass += ' available';
+                    cardStyle = 'background: #f9fafb; border: 2px solid #e5e7eb;';
+                    statusIndicator = '<span class="status-badge" style="background: #9ca3af; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">📦 DISPONIBLE</span>';
                 }
                 
+                // 💰 Determinar qué precio(s) mostrar
+                let priceDisplay = '';
+                if (wasContracted && currentEditingCompany && currentEditingCompany.contractedModulesFromDB) {
+                    const contractedModule = currentEditingCompany.contractedModulesFromDB.find(m => m.moduleKey === moduleId);
+                    const contractedPrice = contractedModule ? (contractedModule.contractedPrice || contractedModule.tierPrice || 0) : 0;
+                    const currentPrice = calculateModulePrice(module.basePrice, tier);
+
+                    // Comparar precio contratado vs precio actual del SSOT
+                    if (Math.abs(contractedPrice - currentPrice) < 0.01) {
+                        // Son iguales → mostrar solo 1 precio
+                        priceDisplay = `<div class="module-price">$ ${contractedPrice.toFixed(2)}</div>`;
+                    } else {
+                        // Son diferentes → mostrar ambos
+                        priceDisplay = `
+                            <div class="module-price-dual">
+                                <div style="font-weight: 700; color: #1f2937;">Contratado: $ ${contractedPrice.toFixed(2)}</div>
+                                <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">Actual SSOT: $ ${currentPrice.toFixed(2)}</div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Módulo NUEVO → solo precio SSOT
+                    priceDisplay = `<div class="module-price">$ ${price.toFixed(2)}</div>`;
+                }
+
                 html += `
-                    <div class="${cardClass}" ${clickHandler ? `onclick="${clickHandler}"` : ''} data-module="${moduleId}">
+                    <div class="${cardClass}" ${clickHandler ? `onclick="${clickHandler}"` : ''} data-module="${moduleId}" style="${cardStyle} cursor: pointer; transition: all 0.3s;">
                         <div class="module-header">
                             <div class="module-info">
                                 <span class="module-icon"><i class="fas fa-${module.icon || 'cube'}"></i></span>
                                 <span class="module-name">${module.name}</span>
                             </div>
-                            <div class="module-price">U$S ${price.toFixed(2)}</div>
+                            ${priceDisplay}
                         </div>
                         <div class="module-description">${module.description}</div>
                         <div class="module-details">Precio por empleado/mes</div>
@@ -6993,11 +7119,8 @@
                     </div>
                 `;
             });
-            
-            if (html === '') {
-                html = '<div class="no-modules">No hay módulos para mostrar con el filtro actual</div>';
-            }
-            
+
+            // Siempre habrá módulos (los 25 comerciales del SSOT)
             grid.innerHTML = html;
             
             // Actualizar información del tier
@@ -7065,6 +7188,39 @@
             updatePricingSummaryForCurrentSelection();
 
             console.log('✅ toggleModule completado');
+        }
+
+        // Toggle all modules in a bundle
+        function toggleBundle(bundleKey) {
+            console.log('🎁 toggleBundle ejecutado para:', bundleKey);
+
+            const bundle = pricingConfig.bundles[bundleKey];
+            if (!bundle) {
+                console.error(`❌ Bundle ${bundleKey} not found`);
+                return;
+            }
+
+            // Check if all modules in the bundle are currently selected
+            const allSelected = bundle.modules.every(m => selectedModules.has(m));
+
+            if (allSelected) {
+                // Deselect all modules in the bundle
+                bundle.modules.forEach(m => selectedModules.delete(m));
+                console.log(`➖ Bundle ${bundle.name} deseleccionado (${bundle.modules.length} módulos)`);
+            } else {
+                // Select all modules in the bundle
+                bundle.modules.forEach(m => selectedModules.add(m));
+                console.log(`➕ Bundle ${bundle.name} seleccionado (${bundle.modules.length} módulos)`);
+            }
+
+            console.log('📊 Módulos seleccionados actuales:', Array.from(selectedModules));
+
+            // Refresh UI
+            generateModulesGrid();
+            updatePricingSummary();
+            updatePricingSummaryForCurrentSelection();
+
+            console.log('✅ toggleBundle completado');
         }
 
         // Sincronizar checkboxes de módulos con los datos reales cargados desde la BD
@@ -7464,36 +7620,131 @@
                         createdAt: new Date().toISOString().split('T')[0],
                         ...companyData
                     };
-                    
+
                     companies.push(newCompany);
                 } else {
-                    // Modo real - guardar en API
-                        console.log("Enviando POST a API:", companyData);
-                    try {
-                        const response = await fetch(`${API_BASE}/api/aponnt/dashboard/companies`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('aponnt_token')}`
-                            },
-                            body: JSON.stringify(companyData)
-                        });
+                    // 🎯 MODO REAL - Verificar si es PRESUPUESTO o EMPRESA DIRECTA
+                    const isQuote = companyData.status === 'cotizado';
 
-                        if (response.ok) {
-                            const result = await response.json();
-                            showNotification('✅ Empresa creada exitosamente en la base de datos', 'success');
-                            closeCompanyModal();
-                            // Actualizar solo la grilla sin recargar toda la página
-                            loadCompaniesFromAPI();
-                        } else {
-                            const error = await response.json();
-                            showNotification(`❌ Error creando empresa: ${error.error}`, 'error');
+                    if (isQuote) {
+                        // ✅ CREAR PRESUPUESTO (Budget) → Inicia el circuito de onboarding
+                        console.log("📋 Creando PRESUPUESTO (trace_id se genera automáticamente):", companyData);
+
+                        // Preparar datos del presupuesto
+                        const budgetData = {
+                            company_name: companyData.name,
+                            legal_name: companyData.legalName,
+                            tax_id: companyData.taxId,
+                            contact_email: companyData.contactEmail,
+                            contact_phone: companyData.contactPhone || '',
+                            address: companyData.address || '',
+                            country: companyData.country || 'Argentina',
+                            province: companyData.province || '',
+                            city: companyData.city || '',
+                            postal_code: companyData.postalCode || '',
+                            latitude: companyData.latitude,
+                            longitude: companyData.longitude,
+
+                            // Módulos seleccionados
+                            modules: Array.from(selectedModules).map(moduleId => ({
+                                module_key: moduleId,
+                                module_name: pricingConfig.modules[moduleId]?.name || moduleId,
+                                base_price: pricingConfig.modules[moduleId]?.basePrice || 0,
+                                tier_price: modulesPricing[moduleId]?.tierPrice || 0,
+                                quantity: employeeCount,
+                                total_price: modulesPricing[moduleId]?.totalPrice || 0
+                            })),
+
+                            // Pricing
+                            subtotal_usd: subtotal,
+                            tax_usd: tax,
+                            total_usd: total,
+                            employee_count: employeeCount,
+                            tier_name: tier.name,
+
+                            // Metadata
+                            license_type: companyData.licenseType,
+                            max_employees: companyData.maxEmployees,
+                            valid_until_days: 30, // Presupuesto válido por 30 días
+
+                            // Vendedor (se puede asignar después)
+                            vendor_id: companyData.vendor || null,
+
+                            // Notas internas
+                            internal_notes: `Presupuesto generado desde panel administrativo. Tier: ${tier.name}, ${selectedModules.size} módulos.`
+                        };
+
+                        try {
+                            const response = await fetch(`${API_BASE}/budgets`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('aponnt_token')}`
+                                },
+                                body: JSON.stringify(budgetData)
+                            });
+
+                            if (response.ok) {
+                                const result = await response.json();
+                                const budget = result.budget || result;
+
+                                showNotification(`✅ Presupuesto creado exitosamente!\n\nTrace ID: ${budget.trace_id}\nNº: ${budget.code || budget.budget_number}`, 'success');
+                                console.log("📋 Presupuesto creado:", budget);
+
+                                closeCompanyModal();
+
+                                // Recargar lista de presupuestos
+                                if (currentVendorSubTab === 'quotes-list') {
+                                    loadQuotes();
+                                }
+
+                                // Mostrar detalles del trace_id creado
+                                setTimeout(() => {
+                                    if (confirm(`✅ Presupuesto creado exitosamente!\n\n📋 Trace ID: ${budget.trace_id}\n💰 Total: $${total.toFixed(2)}\n\n¿Desea ver el estado del circuito de onboarding?`)) {
+                                        viewQuoteDetails(budget.trace_id);
+                                    }
+                                }, 500);
+                            } else {
+                                const error = await response.json();
+                                showNotification(`❌ Error creando presupuesto: ${error.error || error.message}`, 'error');
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('❌ Error creando presupuesto:', error);
+                            showNotification('❌ Error de conexión al crear presupuesto', 'error');
                             return;
                         }
-                    } catch (error) {
-                        console.error('Error guardando empresa:', error);
-                        showNotification('❌ Error de conexión al guardar la empresa', 'error');
-                        return;
+
+                    } else {
+                        // ✅ CREAR EMPRESA DIRECTA (sin presupuesto previo)
+                        console.log("🏢 Creando EMPRESA directa (sin presupuesto):", companyData);
+
+                        try {
+                            const response = await fetch(`${API_BASE}/api/aponnt/dashboard/companies`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('aponnt_token')}`
+                                },
+                                body: JSON.stringify(companyData)
+                            });
+
+                            if (response.ok) {
+                                const result = await response.json();
+                                showNotification('✅ Empresa creada exitosamente en la base de datos', 'success');
+                                closeCompanyModal();
+                                // Actualizar solo la grilla sin recargar toda la página
+                                loadCompaniesFromAPI();
+                            } else {
+                                const error = await response.json();
+                                showNotification(`❌ Error creando empresa: ${error.error}`, 'error');
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('Error guardando empresa:', error);
+                            showNotification('❌ Error de conexión al guardar la empresa', 'error');
+                            return;
+                        }
                     }
                 }
                 
@@ -7844,32 +8095,35 @@
 
         function generatePricingControls() {
             const container = document.getElementById('pricingContainer');
-            
-            console.log('🔄 Generando controles de precios con datos actuales');
-            
+
+            console.log('🔄 Generando vista de precios (SOLO LECTURA)');
+
             container.innerHTML = `
                 <div class="pricing-controls">
                     ${Object.entries(pricingConfig.modules).map(([moduleId, module]) => `
-                        <div class="module-pricing">
+                        <div class="module-pricing" style="background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                                <span style="font-size: 1.5rem;"><i class="fas fa-${module.icon || 'cube'}"></i></span>
-                                <strong>${module.name}</strong>
+                                <span style="font-size: 1.5rem;">${module.icon || '📦'}</span>
+                                <strong style="font-size: 16px; color: #1f2937;">${module.name}</strong>
                             </div>
-                            <div class="tier-selector">
-                                <button class="tier-btn active" onclick="selectTier('${moduleId}', 0)">1-50</button>
-                                <button class="tier-btn" onclick="selectTier('${moduleId}', 1)">51-100</button>
-                                <button class="tier-btn" onclick="selectTier('${moduleId}', 2)">101+</button>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px;">
+                                <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                    <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">TIER 1: 1-50 empleados</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #3b82f6;">$${(module.tierPrices?.tier1 || module.basePrice).toFixed(2)}</div>
+                                    <div style="font-size: 10px; color: #9ca3af; margin-top: 3px;">Sin descuento</div>
+                                </div>
+                                <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                    <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">TIER 2: 51-100 empleados</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #f59e0b;">$${(module.tierPrices?.tier2 || module.basePrice * 0.85).toFixed(2)}</div>
+                                    <div style="font-size: 10px; color: #9ca3af; margin-top: 3px;">15% descuento</div>
+                                </div>
+                                <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                    <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">TIER 3: 101+ empleados</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #10b981;">$${(module.tierPrices?.tier3 || module.basePrice * 0.70).toFixed(2)}</div>
+                                    <div style="font-size: 10px; color: #9ca3af; margin-top: 3px;">30% descuento</div>
+                                </div>
                             </div>
-                            <input type="number" class="price-input" id="price-${moduleId}-0" 
-                                   value="${(module.tierPrices?.tier1 || module.basePrice).toFixed(2)}" step="0.01" min="0" 
-                                   onchange="updateModulePrice('${moduleId}', 0, this.value)">
-                            <input type="number" class="price-input" id="price-${moduleId}-1" 
-                                   value="${(module.tierPrices?.tier2 || module.basePrice * 0.85).toFixed(2)}" step="0.01" min="0" style="display: none;"
-                                   onchange="updateModulePrice('${moduleId}', 1, this.value)">
-                            <input type="number" class="price-input" id="price-${moduleId}-2" 
-                                   value="${(module.tierPrices?.tier3 || module.basePrice * 0.70).toFixed(2)}" step="0.01" min="0" style="display: none;"
-                                   onchange="updateModulePrice('${moduleId}', 2, this.value)">
-                            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #666;">
+                            <div style="margin-top: 10px; font-size: 0.8rem; color: #6b7280; padding-top: 10px; border-top: 1px solid #e5e7eb;">
                                 ${module.description}
                             </div>
                         </div>
@@ -8030,38 +8284,75 @@
         // Función para cargar módulos desde la API
         async function loadModulesFromAPI() {
             try {
-                console.log('📦 Cargando módulos desde la API...');
-                const response = await fetch('/api/aponnt/dashboard/companies');
+                console.log('📦 Cargando módulos comerciales desde FUENTE ÚNICA DE VERDAD...');
+                const response = await fetch('/api/engineering/commercial-modules');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const data = await response.json();
+                const result = await response.json();
 
-                if (data.success && data.modules) {
-                    console.log(`✅ ${Object.keys(data.modules).length} módulos cargados desde la API`);
+                if (result.success && result.data && result.data.modules) {
+                    const modules = result.data.modules;
+                    console.log(`✅ ${Object.keys(modules).length} módulos comerciales cargados (ISI)`);
+                    console.log(`📊 Stats: ${result.data.stats.total} total, ${result.data.stats.core} CORE, ${result.data.stats.premium} PREMIUM`);
 
                     // Limpiar módulos existentes
                     pricingConfig.modules = {};
 
+                    // Mapeo de categorías a colores
+                    const categoryColors = {
+                        core: '#3b82f6',
+                        rrhh: '#8b5cf6',
+                        medical: '#ec4899',
+                        payroll: '#14b8a6',
+                        siac: '#f97316',
+                        hardware: '#84cc16',
+                        compliance: '#f59e0b',
+                        communication: '#10b981',
+                        analytics: '#6366f1',
+                        admin: '#64748b'
+                    };
+
                     // Convertir módulos de la API al formato del dashboard
-                    Object.entries(data.modules).forEach(([moduleKey, module]) => {
+                    Object.entries(modules).forEach(([moduleKey, module]) => {
                         pricingConfig.modules[moduleKey] = {
                             name: module.name,
                             icon: module.icon,
-                            color: module.color,
-                            basePrice: parseFloat(module.basePrice || module.tierPrices?.tier1 || 0),
+                            color: categoryColors[module.category] || '#9ca3af',
+                            basePrice: parseFloat(module.basePrice || 0),
                             description: module.description,
                             category: module.category || 'general',
-                            is_core: module.is_core || false,
-                            display_order: module.display_order || 0,
-                            features: module.features || [],
-                            requirements: module.requirements || []
+                            is_core: module.isCore || false,
+                            display_order: module.displayOrder || 999,
+                            features: [],
+                            requirements: module.dependencies?.required || [],
+                            technicalModule: module.technicalModule || {}
                         };
                     });
 
-                    console.log('🔄 Configuración de módulos actualizada desde la API');
+                    // 🎁 CARGAR BUNDLES TAMBIÉN
+                    const bundles = result.data.bundles || {};
+                    pricingConfig.bundles = {};
+
+                    Object.entries(bundles).forEach(([bundleKey, bundle]) => {
+                        pricingConfig.bundles[bundleKey] = {
+                            name: bundle.name,
+                            description: bundle.description,
+                            modules: bundle.modules || [],
+                            module_count: bundle.module_count || bundle.modules?.length || 0,
+                            bundle_price: bundle.bundle_price || 0,
+                            discount_percentage: bundle.discount_percentage || 0,
+                            category: bundle.category || 'custom',
+                            icon: '🎁' // Icono especial para bundles
+                        };
+                    });
+
+                    console.log('✅ Configuración de módulos actualizada desde engineering-metadata.js');
+                    console.log(`📌 Fuente: ${result.data.syncedFrom || 'system_modules'}`);
+                    console.log(`🔄 Última sincronización: ${result.data.lastSync}`);
+                    console.log(`🎁 Bundles cargados: ${Object.keys(pricingConfig.bundles).length}`);
                     return true;
                 } else {
                     throw new Error('Respuesta inválida de la API');
@@ -9548,59 +9839,136 @@
             }
 
             const employeeCount = parseInt(document.getElementById('contractedEmployees').value) || 1;
+            const tier = getCurrentTier(employeeCount);
             const pricingSidebar = document.querySelector('.pricing-sidebar');
             if (!pricingSidebar) return;
 
-            let realSubtotal = 0;
-            let selectedModulesList = '';
+            // Obtener módulos contratados desde BD
+            const contractedModuleKeys = currentEditingCompany.contractedModulesFromDB
+                ? new Set(currentEditingCompany.contractedModulesFromDB.map(m => m.moduleKey))
+                : new Set();
 
-            // Calcular precio de módulos seleccionados
-            selectedModules.forEach(moduleKey => {
-                const modulePrice = currentEditingCompany.modulesPricing && currentEditingCompany.modulesPricing[moduleKey]
-                    ? (currentEditingCompany.modulesPricing[moduleKey].tierPrice || currentEditingCompany.modulesPricing[moduleKey].basePrice)
-                    : (pricingConfig.modules[moduleKey] ? pricingConfig.modules[moduleKey].basePrice : 0);
+            // Separar en CONTRATADOS y NUEVOS
+            let contractedList = '';
+            let newList = '';
+            let contractedSubtotal = 0;
+            let newSubtotal = 0;
 
+            // 1️⃣ MÓDULOS CONTRATADOS (solo los que están en el contrato)
+            contractedModuleKeys.forEach(moduleKey => {
+                if (!selectedModules.has(moduleKey)) return; // Solo mostrar si sigue seleccionado
+
+                const contractedModule = currentEditingCompany.contractedModulesFromDB.find(m => m.moduleKey === moduleKey);
+                const modulePrice = contractedModule ? (contractedModule.contractedPrice || contractedModule.tierPrice || 0) : 0;
+                const moduleName = contractedModule ? contractedModule.name : moduleKey;
                 const totalPrice = modulePrice * employeeCount;
-                realSubtotal += totalPrice;
+                contractedSubtotal += totalPrice;
 
-                const moduleName = pricingConfig.modules[moduleKey] ? pricingConfig.modules[moduleKey].name : moduleKey;
-                selectedModulesList += `
-                    <div class="selected-module">
-                        <span>${moduleName}</span>
-                        <span>$ ${modulePrice.toFixed(2)} × ${employeeCount} = $ ${totalPrice.toFixed(2)}</span>
+                contractedList += `
+                    <div class="selected-module" style="padding: 8px; border-bottom: 1px solid #f3f4f6;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 500;">${moduleName}</span>
+                            <span style="color: #6b7280; font-size: 13px;">$ ${totalPrice.toFixed(2)}</span>
+                        </div>
+                        <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">
+                            $ ${modulePrice.toFixed(2)} × ${employeeCount} empleados
+                        </div>
                     </div>
                 `;
             });
 
-            const realTax = realSubtotal * 0.21;
-            const realTotal = realSubtotal + realTax;
+            // 2️⃣ MÓDULOS NUEVOS (los que NO están en el contrato pero SÍ seleccionados)
+            selectedModules.forEach(moduleKey => {
+                if (contractedModuleKeys.has(moduleKey)) return; // Skip contratados
+
+                const module = pricingConfig.modules[moduleKey];
+                if (!module) return;
+
+                const modulePrice = calculateModulePrice(module.basePrice, tier);
+                const moduleName = module.name;
+                const totalPrice = modulePrice * employeeCount;
+                newSubtotal += totalPrice;
+
+                newList += `
+                    <div class="selected-module" style="padding: 8px; border-bottom: 1px solid #f3f4f6; background: #fef3c7;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 500;">🆕 ${moduleName}</span>
+                            <span style="color: #92400e; font-size: 13px;">$ ${totalPrice.toFixed(2)}</span>
+                        </div>
+                        <div style="font-size: 11px; color: #92400e; margin-top: 2px;">
+                            $ ${modulePrice.toFixed(2)} × ${employeeCount} empleados (SSOT)
+                        </div>
+                    </div>
+                `;
+            });
+
+            const totalSubtotal = contractedSubtotal + newSubtotal;
+            const totalTax = totalSubtotal * 0.21;
+            const totalGeneral = totalSubtotal + totalTax;
 
             pricingSidebar.innerHTML = `
-                <h4>💰 Resumen de Precios (Módulos Seleccionados)</h4>
-                <div class="selected-modules">
-                    <h5>Módulos Seleccionados (${selectedModules.size}):</h5>
-                    ${selectedModulesList || '<p style="color: #999;">Sin módulos seleccionados</p>'}
-                </div>
-                <div class="pricing-breakdown">
-                    <div class="pricing-item">
+                <h4 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">💰 Resumen de Presupuesto</h4>
+
+                <!-- CONTRATADOS -->
+                ${contractedList ? `
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="margin: 0 0 10px 0; color: #059669; font-size: 14px; font-weight: 600;">
+                            ✅ CONTRATADOS (${Array.from(contractedModuleKeys).filter(k => selectedModules.has(k)).length})
+                        </h5>
+                        ${contractedList}
+                        <div style="padding: 8px; background: #d1fae5; border-radius: 4px; margin-top: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #065f46;">
+                                <span>Subtotal contratados:</span>
+                                <span>$ ${contractedSubtotal.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- NUEVOS -->
+                ${newList ? `
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="margin: 0 0 10px 0; color: #d97706; font-size: 14px; font-weight: 600;">
+                            🆕 A AGREGAR (${Array.from(selectedModules).filter(k => !contractedModuleKeys.has(k)).length})
+                        </h5>
+                        ${newList}
+                        <div style="padding: 8px; background: #fef3c7; border-radius: 4px; margin-top: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #92400e;">
+                                <span>Subtotal nuevos:</span>
+                                <span>$ ${newSubtotal.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- TOTAL GENERAL -->
+                <div style="border-top: 2px solid #e5e7eb; padding-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
                         <span>Subtotal:</span>
-                        <span>$ ${realSubtotal.toFixed(2)}</span>
+                        <span style="font-weight: 600;">$ ${totalSubtotal.toFixed(2)}</span>
                     </div>
-                    <div class="pricing-item">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
                         <span>IVA (21%):</span>
-                        <span>$ ${realTax.toFixed(2)}</span>
+                        <span style="font-weight: 600;">$ ${totalTax.toFixed(2)}</span>
                     </div>
-                    <div class="pricing-item total">
-                        <span><strong>Total Mensual:</strong></span>
-                        <span><strong>$ ${realTotal.toFixed(2)}</strong></span>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 8px; margin-top: 10px;">
+                        <span style="color: white; font-weight: 700; font-size: 16px;">TOTAL MENSUAL:</span>
+                        <span style="color: white; font-weight: 700; font-size: 18px;">$ ${totalGeneral.toFixed(2)}</span>
                     </div>
                 </div>
-                <div class="calculation-info">
-                    <small>✅ Precios históricos × ${employeeCount} empleado${employeeCount !== 1 ? 's' : ''} + IVA 21%</small>
+
+                <div style="margin-top: 12px; padding: 10px; background: #eff6ff; border-radius: 6px; font-size: 12px; color: #1e40af;">
+                    💡 Cálculo: ${employeeCount} empleado${employeeCount !== 1 ? 's' : ''} × precio por módulo + IVA 21%
                 </div>
             `;
 
-            console.log('💰 Resumen actualizado:', { realSubtotal, realTax, realTotal, selectedModules: selectedModules.size });
+            console.log('💰 Resumen actualizado:', {
+                contratados: contractedSubtotal,
+                nuevos: newSubtotal,
+                subtotal: totalSubtotal,
+                iva: totalTax,
+                total: totalGeneral
+            });
         }
 
         function updatePricingSummaryWithHistoricalPrices() {
@@ -13298,6 +13666,850 @@ ${vendor.notes || 'Sin notas adicionales'}
         }
 
         // ============================================
+        // FUNCIONES DEL CIRCUITO COMERCIAL (ONBOARDING)
+        // ============================================
+
+        // Variables globales para el circuito comercial (prefijo vendor_ para evitar conflicto)
+        let vendorQuotes = [];
+        let vendorContracts = [];
+        let vendorInvoices = [];
+        let vendorCommissions = [];
+        let currentVendorSubTab = 'vendors-list';
+
+        /**
+         * Cambiar entre sub-tabs de vendedores/circuito comercial
+         */
+        function switchVendorSubTab(subTabName) {
+            console.log(`🔄 Cambiando a sub-tab: ${subTabName}`);
+
+            // Ocultar todos los sub-tabs
+            document.querySelectorAll('.vendor-subtab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remover clase active de todos los botones
+            document.querySelectorAll('.nav-tab-secondary').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Mostrar el sub-tab seleccionado
+            const targetTab = document.getElementById(subTabName);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+
+            // Activar el botón correspondiente
+            const activeBtn = document.querySelector(`[onclick="switchVendorSubTab('${subTabName}')"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+
+            currentVendorSubTab = subTabName;
+
+            // Cargar datos según el sub-tab
+            switch (subTabName) {
+                case 'quotes-list':
+                    loadQuotes();
+                    break;
+                case 'contracts-list':
+                    loadContracts();
+                    break;
+                case 'invoices-list':
+                    loadInvoices();
+                    break;
+                case 'payments-list':
+                    loadPayments();
+                    break;
+                case 'commissions-list':
+                    loadCommissions();
+                    break;
+            }
+        }
+
+        /**
+         * Cargar presupuestos desde API
+         */
+        async function loadQuotes() {
+            try {
+                console.log('📋 Cargando presupuestos...');
+
+                const filterStatus = document.getElementById('quoteFilterStatus')?.value || '';
+                const filterMonth = document.getElementById('quoteFilterMonth')?.value || '';
+
+                const params = new URLSearchParams();
+                if (filterStatus) params.append('status', filterStatus);
+                if (filterMonth) {
+                    const [year, month] = filterMonth.split('-');
+                    params.append('year', year);
+                    params.append('month', month);
+                }
+
+                const response = await fetch(`${API_BASE}/budgets?${params.toString()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                    }
+                });
+
+                if (response.ok) {
+                    quotes = await response.json();
+                    renderQuotes();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando presupuestos:', error);
+                showNotification('❌ Error cargando presupuestos', 'error');
+
+                // Mostrar mensaje en tabla
+                document.getElementById('quotesTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
+                            No se pudieron cargar los presupuestos
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        /**
+         * Renderizar tabla de presupuestos
+         */
+        function renderQuotes() {
+            const tbody = document.getElementById('quotesTableBody');
+            if (!tbody) return;
+
+            if (!quotes || quotes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
+                            No hay presupuestos para mostrar
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = quotes.map(quote => {
+                const statusBadge = {
+                    'draft': '<span class="status-badge status-trial">Borrador</span>',
+                    'sent': '<span class="status-badge status-active">Enviado</span>',
+                    'accepted': '<span class="status-badge status-active">Aceptado</span>',
+                    'rejected': '<span class="status-badge status-suspended">Rechazado</span>',
+                    'expired': '<span class="status-badge status-suspended">Vencido</span>'
+                }[quote.status] || quote.status;
+
+                return `
+                    <tr>
+                        <td>${quote.code || quote.budget_number || '-'}</td>
+                        <td>${quote.company_name || 'N/A'}</td>
+                        <td>${quote.vendor_name || 'N/A'}</td>
+                        <td>${quote.created_at ? new Date(quote.created_at).toLocaleDateString() : '-'}</td>
+                        <td>${quote.valid_until ? new Date(quote.valid_until).toLocaleDateString() : '-'}</td>
+                        <td><strong>$${(quote.total_usd || 0).toFixed(2)}</strong></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="viewQuoteDetails('${quote.trace_id || quote.id}')">
+                                👁️ Ver
+                            </button>
+                            ${quote.status === 'draft' ? `
+                            <button class="btn btn-sm btn-success" onclick="sendQuote('${quote.trace_id || quote.id}')">
+                                📤 Enviar
+                            </button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        /**
+         * Cargar contratos desde API
+         */
+        async function loadContracts() {
+            try {
+                console.log('📜 Cargando contratos...');
+
+                const filterStatus = document.getElementById('contractFilterStatus')?.value || '';
+                const filterCountry = document.getElementById('contractFilterCountry')?.value || '';
+
+                const params = new URLSearchParams();
+                if (filterStatus) params.append('status', filterStatus);
+                if (filterCountry) params.append('country', filterCountry);
+
+                const response = await fetch(`${API_BASE}/contracts?${params.toString()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                    }
+                });
+
+                if (response.ok) {
+                    contracts = await response.json();
+                    renderContracts();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando contratos:', error);
+                showNotification('❌ Error cargando contratos', 'error');
+
+                document.getElementById('contractsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
+                            No se pudieron cargar los contratos
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        /**
+         * Renderizar tabla de contratos
+         */
+        function renderContracts() {
+            const tbody = document.getElementById('contractsTableBody');
+            if (!tbody) return;
+
+            if (!contracts || contracts.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
+                            No hay contratos para mostrar
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = contracts.map(contract => {
+                const statusBadge = {
+                    'pending_signature': '<span class="status-badge status-trial">Pendiente Firma</span>',
+                    'active': '<span class="status-badge status-active">Activo</span>',
+                    'expired': '<span class="status-badge status-suspended">Vencido</span>',
+                    'cancelled': '<span class="status-badge status-suspended">Cancelado</span>'
+                }[contract.status] || contract.status;
+
+                return `
+                    <tr>
+                        <td>${contract.contract_number || '-'}</td>
+                        <td>${contract.company_name || 'N/A'}</td>
+                        <td>${contract.country || '-'}</td>
+                        <td>${contract.start_date ? new Date(contract.start_date).toLocaleDateString() : '-'}</td>
+                        <td>${contract.end_date ? new Date(contract.end_date).toLocaleDateString() : '-'}</td>
+                        <td><strong>$${(contract.monthly_amount || 0).toFixed(2)}</strong></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="viewContractDetails('${contract.id}')">
+                                👁️ Ver
+                            </button>
+                            ${contract.status === 'pending_signature' ? `
+                            <button class="btn btn-sm btn-success" onclick="approveContract('${contract.id}')">
+                                ✅ Aprobar
+                            </button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        /**
+         * Cargar facturas desde API
+         */
+        async function loadInvoices() {
+            try {
+                console.log('📄 Cargando facturas...');
+
+                const filterStatus = document.getElementById('invoiceFilterStatus')?.value || '';
+                const filterMonth = document.getElementById('invoiceFilterMonth')?.value || '';
+
+                const params = new URLSearchParams();
+                if (filterStatus) params.append('status', filterStatus);
+                if (filterMonth) {
+                    const [year, month] = filterMonth.split('-');
+                    params.append('year', year);
+                    params.append('month', month);
+                }
+
+                const response = await fetch(`${API_BASE}/invoices?${params.toString()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                    }
+                });
+
+                if (response.ok) {
+                    invoices = await response.json();
+                    renderInvoices();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando facturas:', error);
+                showNotification('❌ Error cargando facturas', 'error');
+
+                document.getElementById('invoicesTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
+                            No se pudieron cargar las facturas
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        /**
+         * Renderizar tabla de facturas
+         */
+        function renderInvoices() {
+            const tbody = document.getElementById('invoicesTableBody');
+            if (!tbody) return;
+
+            if (!invoices || invoices.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
+                            No hay facturas para mostrar
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = invoices.map(invoice => {
+                const statusBadge = {
+                    'pending': '<span class="status-badge status-trial">Pendiente</span>',
+                    'paid': '<span class="status-badge status-active">Pagada</span>',
+                    'overdue': '<span class="status-badge status-suspended">Vencida</span>',
+                    'cancelled': '<span class="status-badge status-suspended">Cancelada</span>'
+                }[invoice.status] || invoice.status;
+
+                const totalAmount = parseFloat(invoice.total_amount || 0);
+                const paidAmount = parseFloat(invoice.paid_amount || 0);
+                const balance = totalAmount - paidAmount;
+
+                return `
+                    <tr>
+                        <td>${invoice.invoice_number || '-'}</td>
+                        <td>${invoice.company_name || 'N/A'}</td>
+                        <td>${invoice.issue_date ? new Date(invoice.issue_date).toLocaleDateString() : '-'}</td>
+                        <td>${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : '-'}</td>
+                        <td><strong>$${totalAmount.toFixed(2)}</strong></td>
+                        <td>$${paidAmount.toFixed(2)}</td>
+                        <td>$${balance.toFixed(2)}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="viewInvoiceDetails('${invoice.id}')">
+                                👁️ Ver
+                            </button>
+                            ${invoice.status === 'pending' ? `
+                            <button class="btn btn-sm btn-success" onclick="markInvoiceAsPaid('${invoice.id}')">
+                                💳 Marcar Pagada
+                            </button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        /**
+         * Cargar comisiones desde API
+         */
+        async function loadCommissions() {
+            try {
+                console.log('💰 Cargando comisiones...');
+
+                const filterType = document.getElementById('commissionFilterType')?.value || '';
+                const filterStatus = document.getElementById('commissionFilterStatus')?.value || '';
+
+                const params = new URLSearchParams();
+                if (filterType) params.append('commission_type', filterType);
+                if (filterStatus) params.append('status', filterStatus);
+
+                // Cargar liquidaciones de comisiones
+                const response = await fetch(`${API_BASE}/commissions/liquidations?${params.toString()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                    }
+                });
+
+                if (response.ok) {
+                    const liquidations = await response.json();
+
+                    // Expandir liquidaciones a pagos individuales para mostrar en tabla
+                    commissions = [];
+                    for (const liq of liquidations) {
+                        // Obtener pagos de cada liquidación
+                        const paymentsResp = await fetch(`${API_BASE}/commissions/liquidations/${liq.id}/payments`, {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                            }
+                        });
+
+                        if (paymentsResp.ok) {
+                            const payments = await paymentsResp.json();
+                            commissions.push(...payments.map(p => ({
+                                ...p,
+                                liquidation_id: liq.id,
+                                liquidation_status: liq.status
+                            })));
+                        }
+                    }
+
+                    renderCommissions();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando comisiones:', error);
+                showNotification('❌ Error cargando comisiones', 'error');
+
+                document.getElementById('commissionsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
+                            No se pudieron cargar las comisiones
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        /**
+         * Renderizar tabla de comisiones
+         */
+        function renderCommissions() {
+            const tbody = document.getElementById('commissionsTableBody');
+            if (!tbody) return;
+
+            if (!commissions || commissions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
+                            No hay comisiones para mostrar
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = commissions.map(comm => {
+                const statusBadge = {
+                    'pending': '<span class="status-badge status-trial">Pendiente</span>',
+                    'approved': '<span class="status-badge status-active">Aprobada</span>',
+                    'paid': '<span class="status-badge status-active">Pagada</span>'
+                }[comm.status || comm.liquidation_status] || 'Desconocido';
+
+                const typeBadge = {
+                    'DIRECT_SALES': '<span class="commission-badge sales">Venta Directa</span>',
+                    'SUPPORT_MONTHLY': '<span class="commission-badge support">Soporte Mensual</span>',
+                    'MANAGER_OVERRIDE': '<span class="commission-badge leader">Override Gerente</span>'
+                }[comm.commission_type] || comm.commission_type;
+
+                return `
+                    <tr>
+                        <td><input type="checkbox" class="commission-checkbox" value="${comm.id}"></td>
+                        <td>${comm.id}</td>
+                        <td>${comm.created_at ? new Date(comm.created_at).toLocaleDateString() : '-'}</td>
+                        <td>${comm.vendor_name || 'N/A'}</td>
+                        <td>${typeBadge}</td>
+                        <td>${comm.company_name || 'N/A'}</td>
+                        <td><strong>$${(comm.commission_amount || 0).toFixed(2)}</strong></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="viewCommissionDetails('${comm.id}')">
+                                👁️ Ver
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        /**
+         * Marcar comisiones seleccionadas como pagadas
+         */
+        async function markSelectedCommissionsAsPaid() {
+            const checkboxes = document.querySelectorAll('.commission-checkbox:checked');
+            if (checkboxes.length === 0) {
+                showNotification('⚠️ Selecciona al menos una comisión', 'warning');
+                return;
+            }
+
+            if (!confirm(`¿Marcar ${checkboxes.length} comisiones como pagadas?`)) {
+                return;
+            }
+
+            try {
+                let successCount = 0;
+                for (const checkbox of checkboxes) {
+                    const paymentId = checkbox.value;
+                    const response = await fetch(`${API_BASE}/commissions/payments/${paymentId}/execute`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                        },
+                        body: JSON.stringify({
+                            confirmation_code: `EXEC-${Date.now()}`,
+                            transaction_id: `TXN-${Date.now()}`,
+                            notes: 'Pago ejecutado desde panel administrativo'
+                        })
+                    });
+
+                    if (response.ok) {
+                        successCount++;
+                    }
+                }
+
+                showNotification(`✅ ${successCount} comisiones marcadas como pagadas`, 'success');
+                loadCommissions(); // Recargar lista
+            } catch (error) {
+                console.error('❌ Error marcando comisiones:', error);
+                showNotification('❌ Error procesando comisiones', 'error');
+            }
+        }
+
+        /**
+         * Seleccionar/deseleccionar todas las comisiones
+         */
+        function toggleAllCommissions() {
+            const masterCheckbox = document.getElementById('selectAllCommissions');
+            const checkboxes = document.querySelectorAll('.commission-checkbox');
+
+            checkboxes.forEach(cb => {
+                cb.checked = masterCheckbox.checked;
+            });
+        }
+
+        /**
+         * Abrir modal para generar presupuesto
+         * REUTILIZA el modal de empresas (#companyModal) que ya tiene:
+         * - FUENTE ÚNICA DE VERDAD: loadModulesFromAPI() → /api/engineering/commercial-modules
+         * - Sistema de BUNDLES con descuentos automáticos
+         * - Sistema de SUCURSALES (gestionadas por empresa)
+         * - Cálculo de pricing por tiers de empleados
+         * - Preview en tiempo real
+         */
+        async function openQuoteGenerator() {
+            try {
+                console.log('📋 Abriendo generador de presupuestos...');
+
+                // 1. Cargar módulos comerciales desde FUENTE ÚNICA DE VERDAD
+                console.log('📦 Cargando módulos comerciales desde engineering-metadata...');
+                await loadModulesFromAPI();
+
+                // 2. Resetear modal de empresa para usarlo como generador de presupuesto
+                currentEditingCompany = null;
+                selectedModules = new Set();
+
+                // 3. Abrir modal de empresa
+                const modal = document.getElementById('companyModal');
+                if (!modal) {
+                    throw new Error('Modal companyModal not found');
+                }
+
+                modal.style.display = 'flex';
+
+                // 4. Cambiar título del modal
+                const modalTitle = document.getElementById('modalTitle');
+                if (modalTitle) {
+                    modalTitle.textContent = '📋 Generar Presupuesto para Cliente';
+                }
+
+                // 5. Limpiar formulario
+                document.getElementById('companyForm').reset();
+                document.getElementById('companyName').value = '';
+                document.getElementById('legalName').value = '';
+                document.getElementById('taxId').value = '';
+                document.getElementById('contactEmail').value = '';
+                document.getElementById('contactPhone').value = '';
+                document.getElementById('address').value = '';
+                document.getElementById('country').value = 'Argentina';
+                document.getElementById('companyStatus').value = 'cotizado';
+                document.getElementById('licenseType').value = 'basic';
+                document.getElementById('contractedEmployees').value = '1';
+                document.getElementById('maxEmployees').value = '50';
+
+                // 6. Limpiar campos de vendedor (se asignará al guardar el presupuesto)
+                document.getElementById('vendorDisplay').value = 'Se asignará al guardar';
+                document.getElementById('vendor').value = '';
+
+                // 7. Renderizar módulos comerciales con bundles
+                console.log('🎨 Renderizando módulos comerciales...');
+                renderModules();
+
+                // 8. Actualizar pricing initial
+                updateModulePricing();
+
+                // 9. Cargar provincias de Argentina por defecto
+                await loadProvinces();
+
+                // 10. Scroll al top del modal
+                const modalBody = modal.querySelector('.modal-body');
+                if (modalBody) {
+                    modalBody.scrollTop = 0;
+                }
+
+                // 11. Focus en campo nombre de empresa
+                setTimeout(() => {
+                    document.getElementById('companyName')?.focus();
+                }, 200);
+
+                console.log('✅ Generador de presupuestos abierto');
+                showNotification('📋 Selecciona módulos y completa datos del cliente', 'info');
+
+            } catch (error) {
+                console.error('❌ Error abriendo generador de presupuestos:', error);
+                showNotification('❌ Error abriendo generador de presupuestos', 'error');
+            }
+        }
+
+        /**
+         * Ver detalles de presupuesto
+         */
+        async function viewQuoteDetails(traceId) {
+            try {
+                const response = await fetch(`${API_BASE}/onboarding/status/${traceId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                    }
+                });
+
+                if (response.ok) {
+                    const status = await response.json();
+                    showOnboardingStatusModal(status);
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando detalles:', error);
+                showNotification('❌ Error cargando detalles', 'error');
+            }
+        }
+
+        /**
+         * Ver detalles de contrato
+         */
+        async function viewContractDetails(contractId) {
+            try {
+                const response = await fetch(`${API_BASE}/contracts/${contractId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                    }
+                });
+
+                if (response.ok) {
+                    const contract = await response.json();
+                    showNotification(`Contrato ${contract.contract_number} - ${contract.company_name}`, 'info');
+                    // TODO: Implementar modal completo con detalles
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando contrato:', error);
+                showNotification('❌ Error cargando contrato', 'error');
+            }
+        }
+
+        /**
+         * Ver detalles de factura
+         */
+        async function viewInvoiceDetails(invoiceId) {
+            try {
+                const response = await fetch(`${API_BASE}/invoices/${invoiceId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                    }
+                });
+
+                if (response.ok) {
+                    const invoice = await response.json();
+                    showNotification(`Factura ${invoice.invoice_number} - Total: $${invoice.total_amount}`, 'info');
+                    // TODO: Implementar modal completo con detalles
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando factura:', error);
+                showNotification('❌ Error cargando factura', 'error');
+            }
+        }
+
+        /**
+         * Ver detalles de comisión
+         */
+        function viewCommissionDetails(commissionId) {
+            const comm = commissions.find(c => c.id === commissionId);
+            if (comm) {
+                showNotification(`Comisión ${comm.commission_type} - $${comm.commission_amount} para ${comm.vendor_name}`, 'info');
+                // TODO: Implementar modal completo con detalles
+            }
+        }
+
+        /**
+         * Mostrar modal con estado completo de onboarding
+         */
+        function showOnboardingStatusModal(status) {
+            const modalHtml = `
+                <div class="modal" id="onboardingStatusModal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 800px;">
+                        <div class="modal-header">
+                            <h3>📊 Estado de Onboarding: ${status.trace_id}</h3>
+                            <button class="close-btn" onclick="closeOnboardingModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                                <div class="stat-card">
+                                    <div class="stat-label">Presupuesto</div>
+                                    <div class="stat-value">${status.budget?.status || 'N/A'}</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-label">Contrato</div>
+                                    <div class="stat-value">${status.contract?.status || 'N/A'}</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-label">Factura</div>
+                                    <div class="stat-value">${status.invoice?.status || 'N/A'}</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <h4>Detalles</h4>
+                                <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+${JSON.stringify(status, null, 2)}
+                                </pre>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="closeOnboardingModal()">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        /**
+         * Cerrar modal de onboarding
+         */
+        function closeOnboardingModal() {
+            const modal = document.getElementById('onboardingStatusModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        /**
+         * Enviar presupuesto al cliente
+         */
+        async function sendQuote(traceId) {
+            if (!confirm('¿Enviar presupuesto al cliente?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/budgets/${traceId}/send`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('✅ Presupuesto enviado', 'success');
+                    loadQuotes();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Error enviando presupuesto:', error);
+                showNotification('❌ Error enviando presupuesto', 'error');
+            }
+        }
+
+        /**
+         * Aprobar contrato
+         */
+        async function approveContract(contractId) {
+            if (!confirm('¿Aprobar contrato?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/contracts/${contractId}/approve`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        approved_by_user_id: localStorage.getItem('aponnt_user_id') || 'admin'
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('✅ Contrato aprobado', 'success');
+                    loadContracts();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Error aprobando contrato:', error);
+                showNotification('❌ Error aprobando contrato', 'error');
+            }
+        }
+
+        /**
+         * Marcar factura como pagada
+         */
+        async function markInvoiceAsPaid(invoiceId) {
+            if (!confirm('¿Marcar factura como pagada?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/invoices/${invoiceId}/mark-paid`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('aponnt_token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        paid_at: new Date().toISOString(),
+                        payment_method: 'transferencia',
+                        amount: 0 // El backend lo calculará
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('✅ Factura marcada como pagada. Liquidando comisiones...', 'success');
+                    loadInvoices();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Error marcando factura:', error);
+                showNotification('❌ Error marcando factura como pagada', 'error');
+            }
+        }
+
+        /**
+         * Cargar pagos (placeholder)
+         */
+        function loadPayments() {
+            const tbody = document.querySelector('#payments-list tbody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
+                            Módulo de pagos - Próximamente
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // ============================================
         // FUNCIONES DE GESTIÓN DE STAFF APONNT
         // ============================================
 
@@ -15422,6 +16634,7 @@ ${vendor.notes || 'Sin notas adicionales'}
         </script>
 
     <!-- Partners Admin Panel Module -->
+    <script src="js/modules/associate-workflow-panel.js"></script>
     <script src="js/modules/partners-admin-panel.js"></script>
 
     <!-- Phase 4 Integrated Manager Module (ÚNICO SISTEMA DE TESTING) -->

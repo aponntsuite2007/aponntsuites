@@ -332,6 +332,10 @@ function showMedicaldashboardContent() {
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
                     Legajos 360°
                 </button>
+                <button class="me-nav-item" data-view="notifications" onclick="MedicalEngine.showView('notifications')" style="padding: 12px 20px; border-left: 3px solid #9b59b6;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                    <span id="medical-notifications-badge-container">Notificaciones</span>
+                </button>
             </nav>
 
             <!-- Main Content Area -->
@@ -540,6 +544,9 @@ function initMedicalEngineNav() {
                     break;
                 case 'employees':
                     this.renderEmployeesView(contentArea);
+                    break;
+                case 'notifications':
+                    this.renderNotificationsView(contentArea);
                     break;
             }
         },
@@ -1606,6 +1613,127 @@ function initMedicalEngineNav() {
                     </div>
                 </div>
             `;
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // VISTA NOTIFICACIONES MÉDICAS - Integración con sistema central
+        // ═══════════════════════════════════════════════════════════════════════════
+        renderNotificationsView: function(container) {
+            console.log('[MEDICAL-ENGINE] Cargando vista de Notificaciones Médicas...');
+
+            // Limpiar container y crear estructura para inbox
+            container.innerHTML = `
+                <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); padding: 30px; border-radius: 12px; margin-bottom: 24px; color: white;">
+                    <div style="display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+                        <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 12px;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                            </svg>
+                        </div>
+                        <div style="flex: 1; min-width: 300px;">
+                            <h2 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">NOTIFICACIONES MÉDICAS</h2>
+                            <p style="margin: 0; opacity: 0.9; font-size: 15px; line-height: 1.6;">
+                                Centro de notificaciones médicas integrado. Visualiza todos los avisos, alertas y comunicados
+                                relacionados con salud ocupacional, exámenes, certificados y casos médicos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contenedor para el módulo Inbox -->
+                <div id="medical-inbox-container" style="min-height: 400px;">
+                    <div style="text-align: center; padding: 40px; color: var(--me-text-secondary);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 16px; opacity: 0.5;">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        <p>Cargando notificaciones médicas...</p>
+                    </div>
+                </div>
+            `;
+
+            // Cargar el módulo inbox con contexto médico
+            setTimeout(() => {
+                this.loadMedicalNotifications();
+            }, 100);
+        },
+
+        // Cargar módulo inbox con filtro de contexto médico
+        loadMedicalNotifications: function() {
+            console.log('[MEDICAL-ENGINE] Integrando módulo Inbox con contexto médico...');
+
+            const inboxContainer = document.getElementById('medical-inbox-container');
+            if (!inboxContainer) {
+                console.error('[MEDICAL-ENGINE] Container no encontrado');
+                return;
+            }
+
+            // Establecer flags de contexto médico para que inbox filtre las notificaciones
+            window.medicalDashboardContext = true;
+            window.notificationModuleFilter = 'medical'; // Filtro por módulo médico
+
+            // Cargar el módulo inbox usando ModuleLoader si está disponible
+            if (window.ModuleLoader && typeof window.ModuleLoader.loadModule === 'function') {
+                console.log('[MEDICAL-ENGINE] Cargando inbox via ModuleLoader...');
+
+                // Preparar container para inbox
+                inboxContainer.innerHTML = '<div id="inbox-module-target"></div>';
+
+                // Cargar módulo inbox
+                window.ModuleLoader.loadModule('inbox')
+                    .then(() => {
+                        console.log('✅ [MEDICAL-ENGINE] Módulo Inbox cargado correctamente');
+
+                        // Si el módulo inbox tiene método init, llamarlo con opciones
+                        if (window.InboxModule && typeof window.InboxModule.init === 'function') {
+                            window.InboxModule.init({
+                                container: '#medical-inbox-container',
+                                moduleFilter: 'medical',
+                                contextType: 'medical_dashboard'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[MEDICAL-ENGINE] Error cargando Inbox:', error);
+                        inboxContainer.innerHTML = `
+                            <div style="text-align: center; padding: 40px;">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" style="margin-bottom: 16px;">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="15" y1="9" x2="9" y2="15"/>
+                                    <line x1="9" y1="9" x2="15" y2="15"/>
+                                </svg>
+                                <p style="color: var(--me-text-secondary);">Error al cargar el módulo de notificaciones</p>
+                                <button onclick="MedicalEngine.loadMedicalNotifications()" class="me-btn me-btn-secondary" style="margin-top: 16px;">
+                                    Reintentar
+                                </button>
+                            </div>
+                        `;
+                    });
+            } else {
+                // Fallback: mostrar mensaje indicando que se necesita el módulo inbox
+                console.warn('[MEDICAL-ENGINE] ModuleLoader no disponible');
+                inboxContainer.innerHTML = `
+                    <div class="me-card">
+                        <div class="me-card-body" style="text-align: center; padding: 40px;">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 16px; opacity: 0.5;">
+                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                            </svg>
+                            <h3 style="color: var(--me-text-primary); margin-bottom: 8px;">Sistema de Notificaciones</h3>
+                            <p style="color: var(--me-text-secondary); max-width: 500px; margin: 0 auto 24px;">
+                                Las notificaciones médicas se integran con el sistema central de notificaciones.
+                                Para acceder, utilice el módulo <strong>Inbox</strong> desde el menú principal.
+                            </p>
+                            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                                <button onclick="MedicalEngine.showView('overview')" class="me-btn me-btn-secondary">
+                                    Volver al Dashboard
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         },
 
         // Funciones auxiliares para cargar datos de cada capitulo

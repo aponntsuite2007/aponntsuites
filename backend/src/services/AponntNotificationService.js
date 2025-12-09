@@ -34,8 +34,8 @@ class AponntNotificationService {
     _getEmailService() {
         if (!this.emailService) {
             try {
-                const EmailService = require('./EmailService');
-                this.emailService = new EmailService();
+                // EmailService exporta un singleton (instancia), no la clase
+                this.emailService = require('./EmailService');
             } catch (error) {
                 console.error('❌ [APONNT-NOTIF] Error cargando EmailService:', error.message);
                 this.emailService = null;

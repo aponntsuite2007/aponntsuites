@@ -332,7 +332,8 @@ router.post('/login', async (req, res) => {
  * - page: número de página (default: 1)
  * - limit: resultados por página (default: 20)
  */
-router.get('/', authenticate, async (req, res) => {
+// Rutas públicas para panel administrativo (sin JWT auth, igual que aponntDashboard.js)
+router.get('/', async (req, res) => {
   try {
     const {
       status,
@@ -363,11 +364,10 @@ router.get('/', authenticate, async (req, res) => {
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
+    // TEMP FIX: Remove PartnerRole include due to UUID/INTEGER type mismatch in DB
     const { count, rows: partners } = await Partner.findAndCountAll({
       where,
-      include: [
-        { model: PartnerRole, as: 'role' }
-      ],
+      // include: [ { model: PartnerRole, as: 'role' } ], // DISABLED - fix partner_roles.id type in DB
       order: [['rating', 'DESC'], ['created_at', 'DESC']],
       limit: parseInt(limit),
       offset
@@ -383,7 +383,8 @@ router.get('/', authenticate, async (req, res) => {
         phone: p.phone,
         city: p.city,
         province: p.province,
-        role: p.role,
+        // role: p.role, // DISABLED - PartnerRole include commented out
+        roleId: p.partner_role_id, // Use role ID instead
         rating: p.rating,
         totalReviews: p.total_reviews,
         totalServices: p.total_services,

@@ -222,7 +222,13 @@ router.post('/', auth, supervisorOrAdmin, async (req, res) => {
  */
 router.put('/:id', auth, supervisorOrAdmin, async (req, res) => {
   try {
-    const shift = await Shift.findByPk(req.params.id);
+    // Multi-tenant: Buscar turno solo de la empresa del usuario
+    const shift = await Shift.findOne({
+      where: {
+        id: req.params.id,
+        company_id: req.user.company_id
+      }
+    });
 
     if (!shift) {
       return res.status(404).json({
@@ -257,7 +263,13 @@ router.put('/:id', auth, supervisorOrAdmin, async (req, res) => {
  */
 router.delete('/:id', auth, supervisorOrAdmin, async (req, res) => {
   try {
-    const shift = await Shift.findByPk(req.params.id);
+    // Multi-tenant: Buscar turno solo de la empresa del usuario
+    const shift = await Shift.findOne({
+      where: {
+        id: req.params.id,
+        company_id: req.user.company_id
+      }
+    });
 
     if (!shift) {
       return res.status(404).json({

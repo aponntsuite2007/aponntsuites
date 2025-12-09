@@ -1,0 +1,237 @@
+{
+  "timestamp": "2025-12-08T16:21:21.161Z",
+  "scenarios": [
+    {
+      "name": "Obtener 100 empleados aleatorios",
+      "passed": true,
+      "details": "100 empleados",
+      "duration": 140
+    },
+    {
+      "name": "Verificar estructura tabla attendances",
+      "passed": true,
+      "details": "55 columnas",
+      "duration": 32
+    },
+    {
+      "name": "Cálculo de asistencias del día",
+      "passed": true,
+      "details": "Esperados: 1000, Presentes: 2, Ausentes: 998",
+      "duration": 201
+    },
+    {
+      "name": "Tabla vacation_requests existe",
+      "passed": true,
+      "details": null,
+      "duration": 3
+    },
+    {
+      "name": "Campos de aprobación existen",
+      "passed": true,
+      "details": "2 campos encontrados",
+      "duration": 7
+    },
+    {
+      "name": "Consulta solicitudes pendientes",
+      "passed": true,
+      "details": "0 solicitudes",
+      "duration": 17
+    },
+    {
+      "name": "Cálculo de balance de vacaciones",
+      "passed": true,
+      "details": "5 empleados verificados",
+      "duration": 19
+    },
+    {
+      "name": "Tabla medical_certificates existe",
+      "passed": true,
+      "details": null,
+      "duration": 2
+    },
+    {
+      "name": "Tabla absence_cases existe",
+      "passed": true,
+      "details": null,
+      "duration": 4
+    },
+    {
+      "name": "Tabla user_medical_exams existe",
+      "passed": true,
+      "details": null,
+      "duration": 6
+    },
+    {
+      "name": "Query médica corregida funciona",
+      "passed": true,
+      "details": "20 empleados",
+      "duration": 20
+    },
+    {
+      "name": "Casos que requieren auditoría",
+      "passed": true,
+      "details": "0 casos > 7 días",
+      "duration": 22
+    },
+    {
+      "name": "Headcount por departamento",
+      "passed": true,
+      "details": "12ms",
+      "duration": 12
+    },
+    {
+      "name": "Asistencia del día",
+      "passed": true,
+      "details": "1ms",
+      "duration": 1
+    },
+    {
+      "name": "Vacaciones pendientes",
+      "passed": true,
+      "details": "1ms",
+      "duration": 1
+    },
+    {
+      "name": "Certificados médicos activos",
+      "passed": true,
+      "details": "1ms",
+      "duration": 1
+    },
+    {
+      "name": "Notificaciones no leídas",
+      "passed": true,
+      "details": "6ms",
+      "duration": 6
+    },
+    {
+      "name": "Turnos activos",
+      "passed": true,
+      "details": "5ms",
+      "duration": 5
+    },
+    {
+      "name": "Dashboard carga completa",
+      "passed": true,
+      "details": "Tiempo total: 26ms",
+      "duration": 26
+    },
+    {
+      "name": "50 consultas concurrentes",
+      "passed": true,
+      "details": "50 éxito, 0 fallos, 9ms promedio",
+      "duration": 446
+    },
+    {
+      "name": "Pool de conexiones estable",
+      "passed": true,
+      "details": null,
+      "duration": 447
+    },
+    {
+      "name": "READ users",
+      "passed": true,
+      "details": "5 registros",
+      "duration": 6
+    },
+    {
+      "name": "READ departments",
+      "passed": true,
+      "details": "5 registros",
+      "duration": 13
+    },
+    {
+      "name": "READ shifts",
+      "passed": true,
+      "details": "5 registros",
+      "duration": 8
+    },
+    {
+      "name": "READ attendances",
+      "passed": true,
+      "details": "5 registros",
+      "duration": 12
+    },
+    {
+      "name": "READ notifications",
+      "passed": true,
+      "details": "1 registros",
+      "duration": 7
+    },
+    {
+      "name": "READ vacation_requests",
+      "passed": true,
+      "details": "0 registros",
+      "duration": 9
+    },
+    {
+      "name": "READ medical_certificates",
+      "passed": true,
+      "details": "0 registros",
+      "duration": 6
+    },
+    {
+      "name": "READ absence_cases",
+      "passed": true,
+      "details": "3 registros",
+      "duration": 6
+    },
+    {
+      "name": "Foreign Keys validadas",
+      "passed": true,
+      "details": "17 FKs encontradas",
+      "duration": 1194
+    },
+    {
+      "name": "Cadena Usuario→Departamento→Empresa",
+      "passed": true,
+      "details": "0 huérfanos",
+      "duration": 21
+    },
+    {
+      "name": "Cadena Asistencia→Usuario",
+      "passed": true,
+      "details": "0 huérfanos",
+      "duration": 29
+    },
+    {
+      "name": "Cadena Certificado→Usuario",
+      "passed": true,
+      "details": "0 huérfanos",
+      "duration": 31
+    },
+    {
+      "name": "Cadena Ausencia→Usuario",
+      "passed": true,
+      "details": "0 huérfanos",
+      "duration": 34
+    },
+    {
+      "name": "Check-out no antes de check-in",
+      "passed": true,
+      "details": "0 violaciones",
+      "duration": 2
+    },
+    {
+      "name": "Vacaciones con días positivos",
+      "passed": true,
+      "details": "0 violaciones",
+      "duration": 3
+    },
+    {
+      "name": "Certificados con fechas coherentes",
+      "passed": true,
+      "details": "0 violaciones",
+      "duration": 4
+    },
+    {
+      "name": "Empleados activos con turno",
+      "passed": true,
+      "details": "Todos con turno",
+      "duration": 7
+    }
+  ],
+  "totalScenarios": 38,
+  "passed": 38,
+  "failed": 0,
+  "duration": 1957
+}

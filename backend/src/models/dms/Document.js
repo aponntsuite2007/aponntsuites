@@ -21,7 +21,7 @@ module.exports = (sequelize) => {
         as: 'company'
       });
 
-      Document.belongsTo(Document, {
+      Document.belongsTo(models.Folder, {
         foreignKey: 'folder_id',
         as: 'folder'
       });

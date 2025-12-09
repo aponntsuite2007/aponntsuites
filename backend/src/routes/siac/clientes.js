@@ -58,13 +58,13 @@ router.get('/', simpleAuth, async (req, res) => {
                 {
                     model: ClienteDireccion,
                     as: 'direcciones',
-                    where: { esPrincipal: true },
+                    where: { esDireccionPrincipal: true },
                     required: false
                 },
                 {
                     model: ClienteContacto,
                     as: 'contactos',
-                    where: { esPrincipal: true },
+                    where: { esContactoPrincipal: true },
                     required: false
                 }
             ],
@@ -169,22 +169,22 @@ router.post('/', simpleAuth, async (req, res) => {
         const taxConfig = await CompanyTaxConfig.getCompanyConfig(companyId);
 
         // Generar código automático si no se proporciona
-        if (!clienteData.codigo) {
+        if (!clienteData.codigoCliente) {
             const ultimoCliente = await Cliente.findOne({
                 where: { companyId },
                 order: [['id', 'DESC']]
             });
 
-            const siguienteNumero = ultimoCliente ?
-                parseInt(ultimoCliente.codigo.replace(/\D/g, '')) + 1 : 1;
+            const siguienteNumero = (ultimoCliente && ultimoCliente.codigoCliente) ?
+                parseInt(ultimoCliente.codigoCliente.replace(/\D/g, '')) + 1 : 1;
 
-            clienteData.codigo = `CLI${siguienteNumero.toString().padStart(6, '0')}`;
+            clienteData.codigoCliente = `CLI${siguienteNumero.toString().padStart(6, '0')}`;
         }
 
         // Formatear documento según configuración fiscal
-        if (clienteData.documento && taxConfig) {
-            clienteData.documento = Cliente.formatearDocumento(
-                clienteData.documento,
+        if (clienteData.documentoNumero && taxConfig) {
+            clienteData.documentoFormateado = Cliente.formatearDocumento(
+                clienteData.documentoNumero,
                 taxConfig.template
             );
         }

@@ -1,0 +1,391 @@
+{
+  "total": 49,
+  "passed": 49,
+  "failed": 0,
+  "errors": [],
+  "moduleResults": {
+    "users": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "users_list_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "user_detail_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "departments": {
+      "passed": 1,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "departments_list_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "shifts": {
+      "passed": 1,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "shifts_list_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "attendance": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "attendance_list_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "attendance_analytics_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "vacations": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "vacations_requests_api",
+          "passed": true,
+          "message": "Solicitudes de vacaciones obtenidas exitosamente"
+        },
+        {
+          "testName": "vacations_config_api",
+          "passed": true,
+          "message": "Configuración de vacaciones obtenida exitosamente"
+        }
+      ]
+    },
+    "medical": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "medical_templates_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "medical_records_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "kiosks": {
+      "passed": 1,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "kiosks_list_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "payroll": {
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "payroll_templates_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "payroll_runs_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "payroll_entities_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "organizational": {
+      "passed": 4,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "org_structure_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "org_categories_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "branches_list_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "positions_list_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "notifications": {
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "my_notifications_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "inbox_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "notifications_stats_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "legal": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "legal_communications_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "legal_comm_types_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "sanctions": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "sanctions_list_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "sanction_types_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "procedures": {
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "procedures_list_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "procedures_stats_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "procedures_tree_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "hse": {
+      "passed": 4,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "hse_categories_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "hse_catalog_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "hse_requirements_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "hse_deliveries_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "risk-intelligence": {
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "risk_dashboard_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "risk_config_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "violations_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "dms": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "dms_documents_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "dms_folders_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "biometric-consent": {
+      "passed": 1,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "consent_list_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "job-postings": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "job_postings_offers_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "job_postings_stats_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "company-account": {
+      "passed": 1,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "company_comms_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "support": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "support_tickets_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "support_stats_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "employee-360": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "employee_360_dashboard_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "employee_360_summary_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "help": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "help_module_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "help_walkthrough_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    },
+    "compliance": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "testName": "compliance_departments_api",
+          "passed": true,
+          "message": ""
+        },
+        {
+          "testName": "compliance_trends_api",
+          "passed": true,
+          "message": ""
+        }
+      ]
+    }
+  }
+}

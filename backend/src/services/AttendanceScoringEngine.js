@@ -1,5 +1,6 @@
 const { Sequelize, Op } = require('sequelize');
 const { sequelize, AttendanceProfile, Attendance, User, Company, Department, Shift, Branch } = require('../config/database');
+const ShiftCalculatorService = require('./ShiftCalculatorService');
 
 /**
  * AttendanceScoringEngine
@@ -57,8 +58,8 @@ class AttendanceScoringEngine {
 
       console.log(`   📅 Asistencias en período: ${attendances.length}`);
 
-      // 3. Calcular métricas base
-      const metrics = this._calculateBaseMetrics(attendances, startDate, endDate);
+      // 3. Calcular métricas base (usando SSOT de turnos)
+      const metrics = await this._calculateBaseMetrics(attendances, startDate, endDate, userId);
 
       // 4. Calcular componentes de scoring
       const scoringPunctuality = this._calculatePunctualityScore(metrics);
@@ -150,11 +151,50 @@ class AttendanceScoringEngine {
 
   /**
    * Calcular métricas base desde asistencias
+   *
+   * REFACTORIZADO: Ahora usa ShiftCalculatorService como SSOT
+   * para determinar qué días debía trabajar el usuario.
+   *
+   * Flujo:
+   * 1. Usuario → user_shift_assignments
+   * 2. Turno → tipo (standard, rotative, permanent, flash)
+   * 3. Si rotativo → calcula días de trabajo según ciclo
+   * 4. Si no tiene turno → fallback a lunes-viernes
+   *
    * @private
    */
-  static _calculateBaseMetrics(attendances, startDate, endDate) {
-    // Calcular días laborables en el período (lunes a viernes)
-    const totalDays = this._calculateWorkingDays(startDate, endDate);
+  static async _calculateBaseMetrics(attendances, startDate, endDate, userId) {
+    // Calcular días laborables usando ShiftCalculatorService (SSOT)
+    let totalDays = 0;
+    let workingDatesExpected = new Set();
+    let usedFallback = false;
+
+    try {
+      // Usar ShiftCalculatorService para obtener calendario de trabajo
+      const calendar = await ShiftCalculatorService.generateUserCalendar(userId, startDate, endDate);
+
+      // Contar días que el usuario DEBERÍA trabajar
+      for (const day of calendar) {
+        if (day.shouldWork) {
+          totalDays++;
+          workingDatesExpected.add(day.date);
+        }
+      }
+
+      // Si no tiene asignación de turno, todos los días del calendario tendrán hasAssignment=false
+      const hasShiftAssignment = calendar.some(d => d.hasAssignment);
+
+      if (!hasShiftAssignment) {
+        console.log(`   ⚠️ [SCORING] Usuario ${userId} sin turno asignado, usando fallback lunes-viernes`);
+        totalDays = this._calculateWorkingDaysFallback(startDate, endDate);
+        usedFallback = true;
+      }
+    } catch (error) {
+      // Fallback si falla el cálculo de turnos
+      console.error(`   ⚠️ [SCORING] Error calculando turno, usando fallback:`, error.message);
+      totalDays = this._calculateWorkingDaysFallback(startDate, endDate);
+      usedFallback = true;
+    }
 
     let presentDays = 0;
     let absentDays = 0;
@@ -197,7 +237,7 @@ class AttendanceScoringEngine {
     });
 
     // Calcular ausencias (días laborables - días presentes)
-    absentDays = totalDays - presentDays;
+    absentDays = Math.max(0, totalDays - presentDays);
 
     // Tasa de uso de tolerancia (% de veces que llegó tarde dentro de la tolerancia)
     const toleranceUsageRate = lateArrivalsCount > 0
@@ -218,19 +258,24 @@ class AttendanceScoringEngine {
       toleranceUsageRate,
       avgLateMinutes,
       overtimeHoursTotal,
-      toleranceUsageCount
+      toleranceUsageCount,
+      // Metadata SSOT
+      calculationMethod: usedFallback ? 'FALLBACK_MON_FRI' : 'SHIFT_CALCULATOR_SSOT',
+      workingDatesExpected: Array.from(workingDatesExpected)
     };
   }
 
   /**
-   * Calcular días laborables entre dos fechas (lunes a viernes)
+   * FALLBACK: Calcular días laborables entre dos fechas (lunes a viernes)
+   * Se usa cuando el usuario no tiene turno asignado
    * @private
    */
-  static _calculateWorkingDays(startDate, endDate) {
+  static _calculateWorkingDaysFallback(startDate, endDate) {
     let count = 0;
     const currentDate = new Date(startDate);
+    const end = new Date(endDate);
 
-    while (currentDate <= endDate) {
+    while (currentDate <= end) {
       const dayOfWeek = currentDate.getDay();
       // 0 = Domingo, 6 = Sábado
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {

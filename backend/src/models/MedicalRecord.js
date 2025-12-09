@@ -468,7 +468,7 @@ module.exports = (sequelize) => {
             include: [{
                 model: sequelize.models.User,
                 as: 'employee',
-                attributes: ['user_id', 'name', 'email']
+                attributes: ['user_id', 'firstName', 'lastName', 'email']
             }]
         });
     };

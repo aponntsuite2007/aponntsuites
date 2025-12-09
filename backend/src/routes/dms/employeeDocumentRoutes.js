@@ -29,9 +29,19 @@ module.exports = (workflowService, authMiddleware) => {
    */
   router.get('/pending', authMiddleware, async (req, res) => {
     try {
+      // DEBUG - Ver qué contiene req.user
+      console.log('[EMPLOYEE-DOCS DEBUG] req.user:', JSON.stringify(req.user, null, 2));
+      console.log('[EMPLOYEE-DOCS DEBUG] req.user keys:', req.user ? Object.keys(req.user) : 'req.user is null/undefined');
+
+      // Soportar ambos formatos: user_id (desde modelo) o id (desde JWT directo)
+      const userId = req.user.user_id || req.user.id;
+      const companyId = req.user.company_id || req.user.companyId;
+
+      console.log('[EMPLOYEE-DOCS DEBUG] userId:', userId, 'companyId:', companyId);
+
       const requests = await workflowService.getEmployeePendingRequests(
-        req.user.id,
-        req.user.company_id
+        userId,
+        companyId
       );
 
       res.json({
@@ -52,12 +62,13 @@ module.exports = (workflowService, authMiddleware) => {
    */
   router.get('/requests/:id', authMiddleware, async (req, res) => {
     try {
+      const userId = req.user.user_id || req.user.id;
       const { DocumentRequest, Document } = workflowService.models;
 
       const request = await DocumentRequest.findOne({
         where: {
           id: req.params.id,
-          requested_from_id: req.user.id
+          requested_from_id: userId
         },
         include: [{
           model: Document,
@@ -87,6 +98,8 @@ module.exports = (workflowService, authMiddleware) => {
    */
   router.post('/upload/:requestId', authMiddleware, upload.single('file'), async (req, res) => {
     try {
+      const userId = req.user.user_id || req.user.id;
+
       if (!req.file) {
         return res.status(400).json({
           success: false,
@@ -96,7 +109,7 @@ module.exports = (workflowService, authMiddleware) => {
 
       const result = await workflowService.uploadRequestedDocument({
         request_id: req.params.requestId,
-        employee_id: req.user.id,
+        employee_id: userId,
         file: req.file,
         notes: req.body.notes || ''
       });
@@ -115,15 +128,17 @@ module.exports = (workflowService, authMiddleware) => {
    */
   router.get('/my-documents', authMiddleware, async (req, res) => {
     try {
+      const userId = req.user.user_id || req.user.id;
+      const companyId = req.user.company_id || req.user.companyId;
       const { Document } = workflowService.models;
       const { Op } = require('sequelize');
 
       const documents = await Document.findAll({
         where: {
-          company_id: req.user.company_id,
+          company_id: companyId,
           [Op.or]: [
-            { owner_id: req.user.id },
-            { created_by: req.user.id }
+            { owner_id: userId },
+            { created_by: userId }
           ],
           is_deleted: false
         },
@@ -148,13 +163,16 @@ module.exports = (workflowService, authMiddleware) => {
    */
   router.get('/thread/:threadId', authMiddleware, async (req, res) => {
     try {
+      const userId = req.user.user_id || req.user.id;
+      const companyId = req.user.company_id || req.user.companyId;
+
       const history = await workflowService.getThreadHistory(
         req.params.threadId,
-        req.user.company_id
+        companyId
       );
 
       // Verificar que el empleado es parte del thread
-      if (history.request?.requested_from_id !== req.user.id) {
+      if (history.request?.requested_from_id !== userId) {
         return res.status(403).json({
           success: false,
           message: 'No tiene acceso a este thread'
@@ -175,6 +193,8 @@ module.exports = (workflowService, authMiddleware) => {
    */
   router.get('/expiring', authMiddleware, async (req, res) => {
     try {
+      const userId = req.user.user_id || req.user.id;
+      const companyId = req.user.company_id || req.user.companyId;
       const { Document } = workflowService.models;
       const { Op } = require('sequelize');
       const daysAhead = parseInt(req.query.days) || 60;
@@ -184,8 +204,8 @@ module.exports = (workflowService, authMiddleware) => {
 
       const documents = await Document.findAll({
         where: {
-          company_id: req.user.company_id,
-          owner_id: req.user.id,
+          company_id: companyId,
+          owner_id: userId,
           is_deleted: false,
           expiration_date: {
             [Op.between]: [new Date(), futureDate]

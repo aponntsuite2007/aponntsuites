@@ -64,7 +64,7 @@ const authenticate = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret');
 
     req.user = {
-      user_id: decoded.user_id,
+      user_id: decoded.id || decoded.user_id,  // JWT usa 'id', no 'user_id'
       company_id: decoded.company_id,
       role: decoded.role,
       email: decoded.email
@@ -140,13 +140,6 @@ router.get('/', async (req, res) => {
 
     const notifications = await Notification.findAll({
       where,
-      include: [
-        {
-          model: User,
-          as: 'relatedUser',
-          attributes: ['user_id', 'firstName', 'lastName', 'email']
-        }
-      ],
       order: [
         ['priority', 'DESC'],
         ['created_at', 'DESC']

@@ -44,14 +44,14 @@ module.exports = (sequelize, authMiddleware) => {
    */
   router.get('/types', authMiddleware, async (req, res) => {
     try {
-      const { category_id } = req.query;
+      const { category_code } = req.query;
 
       let whereClause = 'WHERE dt.is_active = true';
       const replacements = {};
 
-      if (category_id) {
-        whereClause += ' AND dt.category_id = :category_id';
-        replacements.category_id = parseInt(category_id);
+      if (category_code) {
+        whereClause += ' AND dt.category_code = :category_code';
+        replacements.category_code = category_code;
       }
 
       const [types] = await sequelize.query(`
@@ -60,20 +60,19 @@ module.exports = (sequelize, authMiddleware) => {
           dt.code,
           dt.name,
           dt.description,
-          dt.category_id,
+          dt.category_code,
           dc.name as category_name,
           dc.color as category_color,
-          dt.required_fields,
-          dt.optional_fields,
-          dt.retention_days,
+          dt.required_metadata as required_fields,
+          dt.optional_metadata as optional_fields,
+          dt.retention_years,
           dt.requires_signature,
-          dt.requires_approval,
+          dt.requires_expiration as requires_approval,
           dt.max_file_size_mb,
           dt.allowed_extensions,
-          dt.template_url,
           dt.is_active
         FROM document_types dt
-        LEFT JOIN document_categories dc ON dt.category_id = dc.id
+        LEFT JOIN document_categories dc ON dt.category_code = dc.code
         ${whereClause}
         ORDER BY dc.sort_order, dt.name
       `, { replacements });
@@ -98,7 +97,7 @@ module.exports = (sequelize, authMiddleware) => {
           dc.color as category_color,
           dc.icon as category_icon
         FROM document_types dt
-        LEFT JOIN document_categories dc ON dt.category_id = dc.id
+        LEFT JOIN document_categories dc ON dt.category_code = dc.code
         WHERE dt.id = :id
       `, {
         replacements: { id: parseInt(req.params.id) }
@@ -211,8 +210,8 @@ module.exports = (sequelize, authMiddleware) => {
           dc.name as category_name,
           dc.color as category_color
         FROM document_types dt
-        LEFT JOIN document_categories dc ON dt.category_id = dc.id
-        WHERE dt.is_active = true AND dt.template_url IS NOT NULL
+        LEFT JOIN document_categories dc ON dt.category_code = dc.code
+        WHERE dt.is_active = true
         ORDER BY dc.sort_order, dt.name
       `);
 

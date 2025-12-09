@@ -1,0 +1,252 @@
+{
+  "companyId": 11,
+  "executionId": "ESC-1765202763668",
+  "timestamp": "2025-12-08T14:06:03.743Z",
+  "totalTests": 20,
+  "passed": 20,
+  "failed": 0,
+  "successRate": "100.0",
+  "categories": [
+    {
+      "category": "ssot_validation",
+      "tests": [
+        {
+          "test": "employee_one_department",
+          "passed": true,
+          "details": "✅ Todos los empleados tienen exactamente un departamento",
+          "violations": []
+        },
+        {
+          "test": "employee_one_active_shift",
+          "passed": true,
+          "details": "✅ Todos los empleados tienen máximo un turno activo",
+          "violations": []
+        },
+        {
+          "test": "unique_legajos",
+          "passed": true,
+          "details": "✅ Todos los legajos son únicos",
+          "violations": []
+        }
+      ],
+      "passed": true,
+      "timestamp": "2025-12-08T14:06:03.688Z"
+    },
+    {
+      "category": "duplicate_detection",
+      "tests": [
+        {
+          "test": "duplicate_attendances",
+          "passed": true,
+          "details": "✅ No hay asistencias duplicadas",
+          "duplicates": []
+        },
+        {
+          "test": "duplicate_notifications",
+          "passed": true,
+          "details": "✅ No hay notificaciones duplicadas",
+          "duplicates": []
+        },
+        {
+          "test": "duplicate_documents",
+          "passed": true,
+          "details": "✅ Documentos duplicados dentro del rango aceptable (0)",
+          "duplicates": []
+        }
+      ],
+      "passed": true,
+      "timestamp": "2025-12-08T14:06:03.699Z"
+    },
+    {
+      "category": "referential_integrity",
+      "tests": [
+        {
+          "test": "attendance_user_fk",
+          "passed": true,
+          "details": "✅ Todas las asistencias tienen usuario válido",
+          "orphans": []
+        },
+        {
+          "test": "user_department_fk",
+          "passed": true,
+          "details": "✅ Todos los usuarios tienen departamento válido",
+          "orphans": []
+        },
+        {
+          "test": "vacation_user_fk",
+          "passed": true,
+          "details": "✅ Todas las vacaciones tienen usuario válido",
+          "orphans": []
+        }
+      ],
+      "passed": true,
+      "timestamp": "2025-12-08T14:06:03.710Z"
+    },
+    {
+      "category": "vacation_balance",
+      "tests": [
+        {
+          "test": "vacation_balance_exceeded",
+          "passed": true,
+          "details": "✅ Todas las solicitudes respetan el balance disponible",
+          "violations": []
+        },
+        {
+          "test": "vacation_negative_days",
+          "passed": true,
+          "details": "✅ No hay solicitudes con días negativos o cero",
+          "violations": []
+        }
+      ],
+      "passed": true,
+      "timestamp": "2025-12-08T14:06:03.716Z"
+    },
+    {
+      "category": "attendance_chain",
+      "tests": [
+        {
+          "test": "checkout_without_checkin",
+          "passed": true,
+          "details": "✅ Todos los check-outs tienen check-in previo",
+          "violations": []
+        },
+        {
+          "test": "checkout_before_checkin",
+          "passed": true,
+          "details": "✅ Todos los horarios son coherentes",
+          "violations": []
+        },
+        {
+          "test": "excessive_shift_hours",
+          "passed": true,
+          "details": "✅ No hay jornadas excesivamente largas",
+          "warnings": []
+        }
+      ],
+      "passed": true,
+      "timestamp": "2025-12-08T14:06:03.720Z"
+    },
+    {
+      "category": "notification_consistency",
+      "tests": [
+        {
+          "test": "notification_valid_recipient",
+          "passed": true,
+          "details": "✅ Todas las notificaciones tienen destinatario válido",
+          "violations": []
+        },
+        {
+          "test": "notification_read_rate",
+          "passed": true,
+          "details": "📊 Tasa de lectura: 100.0% (1/1)",
+          "metrics": {
+            "readRate": "100.0",
+            "total": "1",
+            "read": "1"
+          }
+        }
+      ],
+      "passed": true,
+      "timestamp": "2025-12-08T14:06:03.725Z"
+    },
+    {
+      "category": "shift_assignment",
+      "tests": [
+        {
+          "test": "employees_with_shift",
+          "passed": true,
+          "details": "✅ Todos los empleados tienen turno asignado",
+          "warnings": []
+        },
+        {
+          "test": "active_shifts_inactive_users",
+          "passed": true,
+          "details": "✅ No hay turnos activos para usuarios inactivos",
+          "violations": []
+        }
+      ],
+      "passed": true,
+      "timestamp": "2025-12-08T14:06:03.732Z"
+    },
+    {
+      "category": "report_consistency",
+      "tests": [
+        {
+          "test": "headcount_consistency",
+          "passed": true,
+          "details": "📊 Headcount total: 1000 empleados en 13 departamentos",
+          "metrics": {
+            "total": 1000,
+            "byDepartment": [
+              {
+                "department": "Ventas - ISI",
+                "count": "91"
+              },
+              {
+                "department": "Recursos Humanos",
+                "count": "84"
+              },
+              {
+                "department": "Atención al Cliente - ISI",
+                "count": "82"
+              },
+              {
+                "department": "Logística - ISI",
+                "count": "80"
+              },
+              {
+                "department": "Compras - ISI",
+                "count": "78"
+              },
+              {
+                "department": "Producción",
+                "count": "78"
+              },
+              {
+                "department": "Sistemas",
+                "count": "76"
+              },
+              {
+                "department": "Operaciones",
+                "count": "75"
+              },
+              {
+                "department": "Contabilidad - ISI",
+                "count": "75"
+              },
+              {
+                "department": "Calidad - ISI",
+                "count": "73"
+              },
+              {
+                "department": "Administración - ISI",
+                "count": "72"
+              },
+              {
+                "department": "Mantenimiento - ISI",
+                "count": "69"
+              },
+              {
+                "department": "Seguridad e Higiene - ISI",
+                "count": "67"
+              }
+            ]
+          }
+        },
+        {
+          "test": "absence_rate",
+          "passed": true,
+          "isMetric": true,
+          "details": "📊 Tasa de ausentismo: 99.91% (métrica informativa)",
+          "metrics": {
+            "expected_records": "19960",
+            "actual_records": "17",
+            "absence_rate": "99.91"
+          }
+        }
+      ],
+      "passed": true,
+      "timestamp": "2025-12-08T14:06:03.743Z"
+    }
+  ]
+}

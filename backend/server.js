@@ -2380,6 +2380,20 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'panel-administrativo.html'));
 });
 
+// Portal de Asociados (www.aponnt.com/associates)
+app.get('/associates', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'panel-asociados.html'));
+});
+
+// Alias para portal de asociados
+app.get('/partners', (req, res) => {
+  res.redirect('/associates');
+});
+
+app.get('/asociados', (req, res) => {
+  res.redirect('/associates');
+});
+
 // Rutas legacy para compatibilidad
 app.get('/admin.html', (req, res) => {
   res.redirect('/admin');
@@ -2437,6 +2451,7 @@ const userRoutes = require('./src/routes/userRoutes');
 const userCalendarRoutes = require('./src/routes/user-calendar-routes'); // ✅ Calendario personal del empleado
 const shiftRoutes = require('./src/routes/shiftRoutes');
 const shiftCalendarRoutes = require('./src/routes/shift-calendar-routes'); // ✅ Calendario visual de turnos rotativos
+const branchRoutes = require('./src/routes/branchRoutes'); // ✅ Rutas de sucursales multi-tenant
 const departmentRoutes = require('./src/routes/departmentRoutes'); // ✅ Rutas de departamentos con auth multi-tenant
 const usersSimpleRoutes = require('./src/routes/usersSimple');
 const authorizationRoutes = require('./src/routes/authorizationRoutes');
@@ -2463,6 +2478,7 @@ const userSalaryConfigRoutes = require('./src/routes/userSalaryConfigRoutes'); /
 // 🆕 Sistema Médico Avanzado y Salarial V2 (Noviembre 2025)
 const medicalAdvancedRoutes = require('./src/routes/medicalAdvancedRoutes'); // Antropométricos, Cirugías, Psiquiatría, Deportes
 const medicalCaseRoutes = require('./src/routes/medicalCaseRoutes'); // Sistema Completo de Gestión Médica (Enero 2025)
+const medicalDoctorRoutes = require('./src/routes/medicalDoctorRoutes'); // 🆕 APK Médico: Auth, Selección Empresa (Dic 2025) // Sistema Completo de Gestión Médica (Enero 2025)
 // ELIMINADO: occupationalHealthRoutes - Módulo eliminado, funcionalidad en medical-dashboard-professional.js
 // 🏥 Sistema Médico Profesional con Inmutabilidad (Diciembre 2025) - Ley 19.587, SRT
 const medicalRecordsRoutes = require('./src/routes/medicalRecordsRoutes'); // Registros con firma digital y bloqueo
@@ -2492,8 +2508,19 @@ const companyPanelRoutes = require('./src/routes/companyPanel');
 const vendorRoutes = require('./src/routes/vendorRoutes');
 const vendorAutomationRoutes = require('./src/routes/vendorAutomationRoutes');
 const vendorCommissionsRoutes = require('./src/routes/vendorCommissionsRoutes'); // Sistema de Roles y Comisiones (Enero 2025)
+const partnerCommissionRoutes = require('./src/routes/partnerCommissionRoutes'); // 💰 Sistema de Comisiones Partner-Aponnt (Dic 2025)
+const partnerRoutes = require('./src/routes/partnerRoutes'); // 🤝 Partners Marketplace (Dic 2025)
 const pricingRoutes = require('./src/routes/pricingRoutes');
 const companyAccountRoutes = require('./src/routes/companyAccountRoutes'); // 💼 Cuenta Comercial APONNT <-> Empresa
+
+// 💼 CIRCUITO COMERCIAL COMPLETO (6 FASES - Enero 2025)
+const onboardingRoutes = require('./src/routes/onboardingRoutes'); // ✅ Orchestrator principal (Alta de Empresa)
+const budgetRoutes = require('./src/routes/budgetRoutes'); // ✅ Gestión de Presupuestos
+const contractRoutes = require('./src/routes/contractRoutes'); // ✅ Gestión de Contratos EULA
+const invoiceRoutes = require('./src/routes/invoiceRoutes'); // ✅ Facturación Mensual Automática
+const commissionRoutes = require('./src/routes/commissionRoutes'); // ✅ Liquidación de Comisiones Piramidales
+const billingRoutes = require('./src/routes/billingRoutes'); // ✅ Sistema de Facturación 3 Modos (MANUAL, OCASIONAL, RECURRENTE) - Enero 2025
+const afipRoutes = require('./src/routes/afipRoutes'); // ✅ Integración AFIP - Facturación Electrónica Multi-Tenant (Enero 2025)
 
 // 💼 IMPORTAR RUTAS DE POSTULACIONES LABORALES
 const jobPostingsRoutes = require('./src/routes/jobPostingsRoutes');
@@ -2539,6 +2566,7 @@ app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exit
 app.use('/api/v1/users', userCalendarRoutes); // ✅ Calendario personal del empleado
 app.use('/api/v1/shifts', shiftRoutes);
 app.use('/api/v1/shifts', shiftCalendarRoutes); // ✅ Calendario visual de turnos rotativos
+app.use('/api/v1/branches', branchRoutes); // ✅ Rutas de sucursales multi-tenant
 app.use('/api/v1/departments', departmentRoutes); // ✅ Rutas de departamentos con auth multi-tenant
 app.use('/api/v1/authorization', authorizationRoutes); // Sistema de autorizaciones de llegadas tardías
 app.use('/api/v1/diagnostic', diagnosticRoutes); // Endpoint de diagnóstico para verificar schema
@@ -2593,7 +2621,23 @@ app.use('/api/company-account', companyAccountRoutes); // 💼 Cuenta Comercial 
 app.use('/api/vendor-automation', vendorRoutes);
 app.use('/api/vendor-automation-advanced', vendorAutomationRoutes);
 app.use('/api/vendors', vendorCommissionsRoutes); // Sistema de Roles y Comisiones (Enero 2025)
+app.use('/api/partners/commissions', partnerCommissionRoutes); // 💰 Comisiones Partner-Aponnt (Dic 2025)
+app.use('/api/partners', partnerRoutes); // 🤝 Partners Marketplace (Dic 2025)
 app.use('/api', pricingRoutes);
+
+// 💼 CIRCUITO COMERCIAL COMPLETO - 6 FASES (Enero 2025)
+app.use('/api/onboarding', onboardingRoutes); // ✅ Orchestrator: Alta de Empresa (Presupuesto → Contrato → Factura → Comisión)
+app.use('/api/budgets', budgetRoutes); // ✅ Gestión de Presupuestos (CRUD + accept/reject)
+app.use('/api/contracts', contractRoutes); // ✅ Gestión de Contratos EULA (sign + modify modules)
+app.use('/api/invoices', invoiceRoutes); // ✅ Facturación Mensual Automática (generate + mark-paid)
+app.use('/api/commissions', commissionRoutes); // ✅ Liquidación de Comisiones Piramidales (L1-L4)
+app.use('/api/billing', billingRoutes); // ✅ Sistema de Facturación 3 Modos: MANUAL, OCASIONAL, RECURRENTE (Enero 2025)
+app.use('/api/afip', afipRoutes); // ✅ Integración AFIP - CAE, Certificados, Config Fiscal Multi-Tenant (Enero 2025)
+
+// 📬 CONFIGURAR RUTAS DE FORMULARIO DE CONTACTO (index.html)
+const contactFormRoutes = require('./src/routes/contactFormRoutes');
+app.use('/api', contactFormRoutes);
+console.log('📬 [CONTACT-FORM] Formulario de contacto web configurado (aponntcomercial@gmail.com + notificaciones staff)');
 
 // 💼 CONFIGURAR RUTAS DE POSTULACIONES LABORALES
 app.use('/api/job-postings', jobPostingsRoutes);
@@ -2716,6 +2760,10 @@ async function initializeDMS() {
 // 📟 CONFIGURAR API DE KIOSKS
 const kioskRoutes = require('./src/routes/kioskRoutes');
 app.use('/api/v1/kiosks', kioskRoutes);
+
+// 🧪 KIOSK TEST BYPASS - Testing sin biometria real
+const kioskTestBypassRoutes = require('./src/routes/kiosk-test-bypass')(require('./src/config/database'));
+app.use('/api/kiosk-test', kioskTestBypassRoutes);
 
 // 🚨 CONFIGURAR API DE SANCIONES
 const sanctionRoutes = require('./src/routes/sanctionRoutes');
@@ -2943,6 +2991,9 @@ const contextualHelpRoutes = require('./src/routes/contextualHelpRoutes');
 
 app.use('/api/v1/access-control', accessControlRoutes);
 app.use('/api/v1/associates', associateRoutes);
+app.use('/api/associates', associateRoutes); // Alias sin /v1 para Portal de Asociados
+const associateWorkflowRoutes = require('./src/routes/associateWorkflowRoutes');
+app.use('/api/associates/admin/workflow', associateWorkflowRoutes); // Workflow view para Aponnt
 app.use('/api/v1/help', contextualHelpRoutes);
 
 console.log('🔐 [ACCESS-CONTROL] Sistema Enterprise de Control de Acceso ACTIVO:');
@@ -3086,6 +3137,7 @@ app.use('/api/v1/facial-biometric', facialBiometricRoutes);
 
 // 🏥 CONFIGURAR API MÉDICA (eliminado medicalRoutes-simple - mockup)
 app.use('/api/medical-cases', medicalCaseRoutes); // Sistema completo de gestión médica
+app.use('/api/medical/doctor', medicalDoctorRoutes); // 🆕 APK Médico: Login, Selección de Empresa, Dashboard // Sistema completo de gestión médica
 // ELIMINADO: occupationalHealthRoutes - Módulo retirado (Dic 2025), usar medical-dashboard-professional.js
 // ELIMINADO: occupationalHealthPhase2Routes - Funcionalidad ahora en /api/medical-cases
 
@@ -3126,18 +3178,19 @@ app.use('/api/siac/facturacion', siacFacturacionRoutes);
 
 // 📧 FORMULARIO DE CONTACTO PUBLICO (Landing Page)
 const contactRoutes = require('./src/routes/contactRoutes');
-// ✅ ROUTES - Workflow Alta de Empresa
+// ✅ ROUTES - Workflow Alta de Empresa (BILLING namespace para evitar conflictos)
 const budgetOnboardingRoutes = require("./src/routes/budgetOnboardingRoutes");
 const contractOnboardingRoutes = require("./src/routes/contractOnboardingRoutes");
 const commissionOnboardingRoutes = require("./src/routes/commissionOnboardingRoutes");
-app.use('/api/budgets', budgetOnboardingRoutes);
-console.log('💼 [BUDGETS ONBOARDING] Rutas configuradas: /api/budgets/onboarding/*');
 
-app.use('/api/contracts', contractOnboardingRoutes);
-console.log('📄 [CONTRACTS ONBOARDING] Rutas configuradas: /api/contracts/onboarding/*');
+app.use('/api/billing/presupuestos', budgetOnboardingRoutes);
+console.log('💼 [BILLING] Presupuestos Onboarding: /api/billing/presupuestos/onboarding/*');
 
-app.use('/api/commissions', commissionOnboardingRoutes);
-console.log('💰 [COMMISSIONS ONBOARDING] Rutas configuradas: /api/commissions/onboarding/*');
+app.use('/api/billing/contratos', contractOnboardingRoutes);
+console.log('📄 [BILLING] Contratos Onboarding: /api/billing/contratos/onboarding/*');
+
+app.use('/api/billing/comisiones-liquidacion', commissionOnboardingRoutes);
+console.log('💰 [BILLING] Comisiones Liquidación: /api/billing/comisiones-liquidacion/onboarding/*');
 
 app.use('/api/contact', contactRoutes);
 console.log('📧 [CONTACT] Ruta de contacto publico configurada: /api/contact');
@@ -3498,6 +3551,27 @@ async function startServer() {
     } catch (ollamaError) {
       console.warn('⚠️  [OLLAMA-ANALYZER] Error iniciando servicio de IA:', ollamaError.message);
       console.warn('⚠️  [OLLAMA-ANALYZER] El servidor continuará sin análisis inteligente.\n');
+    }
+
+    // ✅ INICIALIZAR CRON JOBS DE FACTURACIÓN AUTOMÁTICA
+    console.log('⏰ [BILLING-CRON] Inicializando cron jobs de facturación automática...');
+    try {
+      const billingCronJobs = require('./src/cron/billingCronJobs');
+      billingCronJobs.initBillingCronJobs();
+
+      // Hacer disponible en toda la aplicación
+      app.locals.billingCronJobs = billingCronJobs;
+      global.billingCronJobs = billingCronJobs;
+
+      console.log('✅ [BILLING-CRON] Cron jobs de facturación iniciados correctamente');
+      console.log('   • Job 1: Facturación RECURRENTE - Diario 2:00 AM');
+      console.log('   • Job 2: Facturación contratos Aponnt - Día 1 de mes, 3:00 AM');
+      console.log('   • API Manual: POST /api/billing/invoices/recurring/process-all');
+      console.log('   • API Manual: POST /api/billing/invoices/contracts/process-monthly');
+      console.log('   • Zona horaria: America/Argentina/Buenos_Aires\n');
+    } catch (billingCronError) {
+      console.warn('⚠️  [BILLING-CRON] Error iniciando cron jobs de facturación:', billingCronError.message);
+      console.warn('⚠️  [BILLING-CRON] El servidor continuará sin facturación automática.\n');
     }
 
     // Iniciar servidor HTTP

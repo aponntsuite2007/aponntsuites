@@ -1,0 +1,561 @@
+{
+  "total": 58,
+  "passed": 58,
+  "failed": 0,
+  "skipped": 1,
+  "modules": {
+    "departments": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "LIST departments",
+          "status": "PASSED",
+          "details": "(19 departamentos)",
+          "error": null
+        },
+        {
+          "name": "CREATE department",
+          "status": "PASSED",
+          "details": "(ID: undefined)",
+          "error": null
+        }
+      ]
+    },
+    "shifts": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "LIST shifts",
+          "status": "PASSED",
+          "details": "(10 turnos)",
+          "error": null
+        },
+        {
+          "name": "CREATE shift",
+          "status": "PASSED",
+          "details": "(ID: 29717bae-1dd2-4f84-b271-e2f634848fbc)",
+          "error": null
+        },
+        {
+          "name": "UPDATE shift",
+          "status": "PASSED",
+          "details": "(turno no filtrado por company - endpoint funciona)",
+          "error": null
+        },
+        {
+          "name": "DELETE shift",
+          "status": "PASSED",
+          "details": "(turno no filtrado por company - endpoint funciona)",
+          "error": null
+        }
+      ]
+    },
+    "users": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "LIST users",
+          "status": "PASSED",
+          "details": "(1023 usuarios)",
+          "error": null
+        },
+        {
+          "name": "CREATE user",
+          "status": "PASSED",
+          "details": "(ID: undefined)",
+          "error": null
+        }
+      ]
+    },
+    "attendance": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "LIST attendances",
+          "status": "PASSED",
+          "details": "(10 registros)",
+          "error": null
+        },
+        {
+          "name": "GET attendance stats",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET attendance analytics",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "vacation-management": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET vacation config",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "LIST vacation requests",
+          "status": "PASSED",
+          "details": "(1 solicitudes)",
+          "error": null
+        },
+        {
+          "name": "GET vacation balance",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "sanctions-management": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "LIST sanctions",
+          "status": "PASSED",
+          "details": "(0 sanciones)",
+          "error": null
+        },
+        {
+          "name": "GET sanction types",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "employee-360": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET employee 360 dashboard",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET employee 360 summary",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET user work history",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET user medical exams",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "organizational-structure": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET org structure",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET sectors",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET categories",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "employee-map": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET employee locations",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "kiosks": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "LIST kiosks",
+          "status": "PASSED",
+          "details": "(7 kioscos)",
+          "error": null
+        },
+        {
+          "name": "GET kiosks available",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "biometric-consent": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET consents list",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET consent roles",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET privacy countries",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "notification-center": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "LIST notifications",
+          "status": "PASSED",
+          "details": "(1 notificaciones)",
+          "error": null
+        },
+        {
+          "name": "GET pending notifications",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET notification stats",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET inbox",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "medical": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET chronic conditions catalog",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET sports catalog",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "training-management": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "Module availability check",
+          "status": "PASSED",
+          "details": "(verificado en registry)",
+          "error": null
+        }
+      ]
+    },
+    "art-management": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "Module availability check",
+          "status": "PASSED",
+          "details": "(verificado en registry)",
+          "error": null
+        }
+      ]
+    },
+    "hse-management": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET HSE dashboard",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET requirements",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET EPP deliveries",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "job-postings": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "LIST job offers",
+          "status": "PASSED",
+          "details": "(1 búsquedas)",
+          "error": null
+        }
+      ]
+    },
+    "dms-dashboard": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET DMS folders",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET DMS documents",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "legal-dashboard": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET legal communications",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "procedures-manual": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET procedures",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "payroll-liquidation": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET payroll countries",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET payroll concept-types",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET payroll runs",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "compliance-dashboard": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET compliance dashboard",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "GET SLA dashboard",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "company-account": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET company summary",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "clientes": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET clientes SIAC",
+          "status": "PASSED",
+          "details": "(API funcionando)",
+          "error": null
+        }
+      ]
+    },
+    "facturacion": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET facturas SIAC",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "plantillas-fiscales": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "GET tax templates",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    },
+    "mi-espacio": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "Module availability check",
+          "status": "PASSED",
+          "details": "(frontend-only module)",
+          "error": null
+        }
+      ]
+    },
+    "ssot-relations": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 1,
+      "tests": [
+        {
+          "name": "User -> Department FK",
+          "status": "SKIPPED",
+          "details": "Usuario sin departamento",
+          "error": null
+        },
+        {
+          "name": "User -> Shift assignment",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        },
+        {
+          "name": "Attendance -> User FK",
+          "status": "PASSED",
+          "details": "(relación User verificada)",
+          "error": null
+        },
+        {
+          "name": "Notification -> User recipient",
+          "status": "PASSED",
+          "details": "",
+          "error": null
+        }
+      ]
+    }
+  },
+  "errors": [],
+  "startTime": "2025-12-08T13:26:53.953Z",
+  "endTime": "2025-12-08T13:26:58.163Z"
+}

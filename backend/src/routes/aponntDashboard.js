@@ -735,18 +735,45 @@ router.post('/companies', async (req, res) => {
     const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
     
     console.log(`💰 Guardando precios - Total: ${pricing?.monthlyTotal}, Módulos:`, modules, modulesPricing);
-    
-    // Preparar módulos activos
-    const activeModules = {};
-    if (modules && Array.isArray(modules)) {
-      modules.forEach(module => {
-        activeModules[module] = true;
+
+    // 🎁 DESCOMPOSICIÓN DE BUNDLES DESDE ENGINEERING-METADATA.JS (SSOT)
+    const metadata = require('../../engineering-metadata.js');
+    const bundles = metadata.commercialModules?.bundles || {};
+
+    let decomposedModules = [];
+    const bundlesUsed = [];
+
+    (modules || []).forEach(moduleKey => {
+      if (moduleKey.startsWith('bundle-') && bundles[moduleKey]) {
+        // Es un bundle → descomponer en módulos individuales
+        const bundle = bundles[moduleKey];
+        console.log(`🎁 [BUNDLE] Descomponiendo bundle "${bundle.name}" (${moduleKey})`);
+        console.log(`   → ${bundle.modules.length} módulos: ${bundle.modules.join(', ')}`);
+
+        decomposedModules.push(...bundle.modules);
+        bundlesUsed.push({ key: moduleKey, name: bundle.name, modules: bundle.modules });
+      } else {
+        // Es un módulo individual
+        decomposedModules.push(moduleKey);
+      }
+    });
+
+    if (bundlesUsed.length > 0) {
+      console.log(`✅ [BUNDLE] Descompuestos ${bundlesUsed.length} bundles en ${decomposedModules.length} módulos individuales`);
+      bundlesUsed.forEach(b => {
+        console.log(`   - ${b.name}: ${b.modules.length} módulos`);
       });
     }
-    
+
+    // Preparar módulos activos (USAR MÓDULOS DESCOMPUESTOS, NO BUNDLES)
+    const activeModules = {};
+    decomposedModules.forEach(module => {
+      activeModules[module] = true;
+    });
+
     // Usar PostgreSQL unificado
     console.log('💾 Creando empresa en PostgreSQL');
-    
+
     const newCompany = await Company.create({
       name: name,
       slug: slug,
@@ -756,7 +783,7 @@ router.post('/companies', async (req, res) => {
       address: address || '',
       taxId: taxId,
       maxEmployees: maxEmployees || 50,
-      activeModules: activeModules,
+      activeModules: activeModules, // Módulos descompuestos, sin bundles
       modulesPricing: modulesPricing || {},
       licenseType: licenseType || 'basic',
       isActive: true,
@@ -764,16 +791,53 @@ router.post('/companies', async (req, res) => {
     });
     console.log('✅ PostgreSQL: Empresa creada exitosamente');
 
-    console.log(`✅ Nueva empresa creada: ${newCompany.name} (ID: ${newCompany.id})`);
+    console.log(`✅ Nueva empresa creada: ${newCompany.name} (ID: ${newCompany.company_id})`);
+
+    // 📊 CREAR REGISTROS EN COMPANY_MODULES (MULTI-TENANT)
+    console.log(`🔄 Creando registros en company_modules para ${decomposedModules.length} módulos...`);
+
+    try {
+      for (const moduleKey of decomposedModules) {
+        // Obtener system_module_id del moduleKey
+        const moduleInfo = await sequelize.query(`
+          SELECT id FROM system_modules WHERE module_key = :moduleKey
+        `, {
+          replacements: { moduleKey },
+          type: sequelize.QueryTypes.SELECT
+        });
+
+        if (moduleInfo.length > 0) {
+          const systemModuleId = moduleInfo[0].id;
+          const modulePrice = modulesPricing[moduleKey]?.totalPrice || 0;
+
+          await sequelize.query(`
+            INSERT INTO company_modules (id, company_id, system_module_id, precio_mensual, activo, fecha_asignacion, created_at, updated_at)
+            VALUES (uuid_generate_v4(), :companyId, :systemModuleId, :price, true, NOW(), NOW(), NOW())
+          `, {
+            replacements: {
+              companyId: newCompany.company_id,
+              systemModuleId: systemModuleId,
+              price: modulePrice
+            }
+          });
+          console.log(`➕ Creado módulo: ${moduleKey} con precio $${modulePrice}`);
+        } else {
+          console.warn(`⚠️ Módulo no encontrado en system_modules: ${moduleKey}`);
+        }
+      }
+      console.log(`✅ ${decomposedModules.length} módulos creados en company_modules`);
+    } catch (companyModulesError) {
+      console.error('⚠️ Error creando company_modules (empresa creada exitosamente):', companyModulesError.message);
+    }
 
     // 🏢 CREAR SUCURSAL CENTRAL AUTOMÁTICAMENTE (OBLIGATORIA)
     // Esta sucursal es necesaria para el sistema de feriados y no puede ser eliminada
     try {
       const centralBranch = await Branch.create({
         name: 'CENTRAL',
-        code: `CENTRAL-${newCompany.id}`,
+        code: `CENTRAL-${newCompany.company_id}`,
         address: newCompany.address || '',
-        company_id: newCompany.id,
+        company_id: newCompany.company_id,
         is_main: true, // Marca como sucursal principal (no borrable)
         isActive: true
       });
@@ -786,7 +850,7 @@ router.post('/companies', async (req, res) => {
     // 🔔 ENVIAR NOTIFICACIONES AUTOMÁTICAS (APONNT → EMPRESA)
     try {
       const notificationData = {
-        id: newCompany.id,
+        id: newCompany.company_id,
         name: newCompany.name,
         contactEmail: newCompany.contact_email,
         licenseType: newCompany.licenseType,
@@ -811,14 +875,14 @@ router.post('/companies', async (req, res) => {
 
       // 1. Usuario ADMIN - Para el cliente
       const adminUser = await User.create({
-        employeeId: 'ADM-' + String(newCompany.id).padStart(3, '0'),
+        employeeId: 'ADM-' + String(newCompany.company_id).padStart(3, '0'),
         usuario: 'admin',
         firstName: 'Administrador',
         lastName: 'Principal',
         email: contactEmail,
         password: hashedPassword,
         role: 'admin',
-        company_id: newCompany.id,
+        company_id: newCompany.company_id,
         isActive: true
       });
 
@@ -826,14 +890,14 @@ router.post('/companies', async (req, res) => {
 
       // 2. Usuario SOPORTE - Para auditoría y soporte técnico (OCULTO)
       const supportUser = await User.create({
-        employeeId: 'SUPPORT-' + String(newCompany.id).padStart(3, '0'),
+        employeeId: 'SUPPORT-' + String(newCompany.company_id).padStart(3, '0'),
         usuario: 'soporte',
         firstName: 'Soporte',
         lastName: 'Técnico Sistema',
-        email: 'soporte' + newCompany.id + '@sistema.local',
+        email: 'soporte' + newCompany.company_id + '@sistema.local',
         password: hashedPassword, // Misma contraseña: admin123
         role: 'admin',
-        company_id: newCompany.id,
+        company_id: newCompany.company_id,
         isActive: true
       });
 
@@ -849,7 +913,7 @@ router.post('/companies', async (req, res) => {
       success: true,
       message: 'Empresa creada exitosamente',
       company: {
-        id: newCompany.id,
+        id: newCompany.company_id,
         name: newCompany.name,
         legalName: newCompany.name,
         taxId: newCompany.taxId,
@@ -935,7 +999,7 @@ router.put('/companies/:id', async (req, res) => {
           modules_pricing = :modulesPricing,
           updated_at = NOW()
         WHERE company_id = :id
-        RETURNING id, name, max_employees, contracted_employees, monthly_total
+        RETURNING company_id, name, max_employees, contracted_employees, monthly_total
       `, {
         replacements: {
           id: id,
@@ -974,7 +1038,38 @@ router.put('/companies/:id', async (req, res) => {
       });
 
       const currentModuleKeys = new Set(currentModules.map(m => m.module_key));
-      const newModuleKeys = new Set(modules || []);
+
+      // 🎁 DESCOMPOSICIÓN DE BUNDLES
+      // Si algún módulo es un bundle (empieza con "bundle-"), descomponerlo en módulos individuales
+      const metadata = require('../../engineering-metadata.js');
+      const bundles = metadata.commercialModules?.bundles || {};
+
+      let decomposedModules = [];
+      const bundlesUsed = [];
+
+      (modules || []).forEach(moduleKey => {
+        if (moduleKey.startsWith('bundle-') && bundles[moduleKey]) {
+          // Es un bundle → descomponer en módulos individuales
+          const bundle = bundles[moduleKey];
+          console.log(`🎁 [BUNDLE] Descomponiendo bundle "${bundle.name}" (${moduleKey})`);
+          console.log(`   → ${bundle.modules.length} módulos: ${bundle.modules.join(', ')}`);
+
+          decomposedModules.push(...bundle.modules);
+          bundlesUsed.push({ key: moduleKey, name: bundle.name, modules: bundle.modules });
+        } else {
+          // Es un módulo individual
+          decomposedModules.push(moduleKey);
+        }
+      });
+
+      if (bundlesUsed.length > 0) {
+        console.log(`✅ [BUNDLE] Descompuestos ${bundlesUsed.length} bundles en ${decomposedModules.length} módulos individuales`);
+        bundlesUsed.forEach(b => {
+          console.log(`   - ${b.name}: ${b.modules.length} módulos`);
+        });
+      }
+
+      const newModuleKeys = new Set(decomposedModules);
 
       // Identificar módulos que se deben DESACTIVAR
       const modulesToDeactivate = currentModules
@@ -1472,11 +1567,18 @@ function getTierFromEmployees(maxEmployees) {
   return 'enterprise';
 }
 
-// POST /companies - Crear empresa (solo admin)
+// ❌ ENDPOINT DUPLICADO DESACTIVADO - NO USAR
+// Este endpoint POST duplicado nunca se ejecutaba porque Express ya registró
+// el primer POST /companies en la línea 704 que SÍ incluye:
+//   - Descomposición de bundles desde engineering-metadata.js (SSOT)
+//   - Creación de registros en company_modules
+//   - Guardado de pricing histórico
+// IMPORTANTE: NO eliminar aún para referencia histórica
+/*
 router.post('/companies', async (req, res) => {
   try {
     const companyData = req.body;
-    
+
     // Validaciones básicas
     if (!companyData.name || !companyData.taxId || !companyData.contactEmail) {
       return res.status(400).json({
@@ -1499,7 +1601,7 @@ router.post('/companies', async (req, res) => {
     const baseSlug = companyData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
     let slug = baseSlug;
     let counter = 1;
-    
+
     while (await Company.findOne({ where: { slug } })) {
       slug = `${baseSlug}-${counter}`;
       counter++;
@@ -1509,7 +1611,7 @@ router.post('/companies', async (req, res) => {
     const baseSchema = `company_${slug}`.substring(0, 45);
     let databaseSchema = baseSchema;
     let schemaCounter = 1;
-    
+
     while (await Company.findOne({ where: { databaseSchema } })) {
       databaseSchema = `${baseSchema}_${schemaCounter}`;
       schemaCounter++;
@@ -1594,6 +1696,7 @@ router.post('/companies', async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
+*/
 
 // PUT /companies/:id - Actualizar empresa (solo admin para todos los campos, operadores para campos limitados)
 router.put('/companies/:id', async (req, res) => {

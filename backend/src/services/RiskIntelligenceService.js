@@ -805,7 +805,7 @@ class RiskIntelligenceService {
                 SELECT
                     d.id,
                     d.name,
-                    COUNT(u.id) as employee_count
+                    COUNT(u.user_id) as employee_count
                 FROM departments d
                 LEFT JOIN users u ON u.department_id = d.id AND u.is_active = true
                 WHERE d.company_id = :companyId

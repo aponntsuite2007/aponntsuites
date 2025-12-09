@@ -84,20 +84,20 @@ router.get('/communications', authenticateToken, async (req, res) => {
         }
         
         const [communications] = await sequelize.query(`
-            SELECT 
+            SELECT
                 lc.*,
                 lct.name as type_name,
                 lct.category,
                 lct.severity,
                 lct.legal_basis,
-                u.firstName as employee_first_name,
-                u.lastName as employee_last_name,
-                u.employeeId as employee_code,
-                creator.firstName as created_by_name
+                u."firstName" as employee_first_name,
+                u."lastName" as employee_last_name,
+                u."employeeId" as employee_code,
+                creator."firstName" as created_by_name
             FROM legal_communications lc
             JOIN legal_communication_types lct ON lc.type_id = lct.id
-            JOIN users u ON lc.employee_id = u.id
-            JOIN users creator ON lc.created_by = creator.id
+            JOIN users u ON lc.employee_id = u.user_id
+            JOIN users creator ON lc.created_by = creator.user_id
             WHERE ${whereClause}
             ORDER BY lc.created_at DESC
             LIMIT ? OFFSET ?

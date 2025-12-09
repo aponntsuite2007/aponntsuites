@@ -390,6 +390,131 @@ router.post('/calculate-trimmed-mean', (req, res) => {
 });
 
 /**
+ * GET /api/attendance-stats/absences/:companyId/:date
+ *
+ * Obtiene empleados ausentes para una fecha específica
+ * Compara turno asignado vs fichaje real (SSOT)
+ *
+ * Query params:
+ * - department_id: Filtrar por departamento
+ * - branch_id: Filtrar por sucursal
+ * - shift_id: Filtrar por turno específico
+ */
+router.get('/absences/:companyId/:date', async (req, res) => {
+    try {
+        const { companyId, date } = req.params;
+        const { department_id, branch_id, shift_id } = req.query;
+
+        const filters = {};
+        if (department_id) filters.department_id = parseInt(department_id);
+        if (branch_id) filters.branch_id = parseInt(branch_id);
+        if (shift_id) filters.shift_id = parseInt(shift_id);
+
+        const result = await req.statsService.getAbsentEmployees(
+            parseInt(companyId),
+            date,
+            filters
+        );
+
+        res.json(result);
+
+    } catch (error) {
+        console.error('❌ Error obteniendo ausentes:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            details: 'Error obteniendo lista de ausentes'
+        });
+    }
+});
+
+/**
+ * GET /api/attendance-stats/absenteeism-report/:companyId
+ *
+ * Obtiene reporte de ausentismo para un rango de fechas
+ * Incluye tendencias por día de semana, días críticos
+ *
+ * Query params:
+ * - startDate: Fecha inicio (YYYY-MM-DD)
+ * - endDate: Fecha fin (YYYY-MM-DD)
+ * - department_id: Filtrar por departamento
+ * - branch_id: Filtrar por sucursal
+ * - shift_id: Filtrar por turno
+ * - includeWeekends: true para incluir fines de semana
+ */
+router.get('/absenteeism-report/:companyId', async (req, res) => {
+    try {
+        const { companyId } = req.params;
+        const { startDate, endDate, department_id, branch_id, shift_id, includeWeekends } = req.query;
+
+        if (!startDate || !endDate) {
+            return res.status(400).json({
+                success: false,
+                error: 'Se requieren startDate y endDate'
+            });
+        }
+
+        const filters = {};
+        if (department_id) filters.department_id = parseInt(department_id);
+        if (branch_id) filters.branch_id = parseInt(branch_id);
+        if (shift_id) filters.shift_id = parseInt(shift_id);
+        if (includeWeekends === 'true') filters.includeWeekends = true;
+
+        const result = await req.statsService.getAbsenteeismReport(
+            parseInt(companyId),
+            startDate,
+            endDate,
+            filters
+        );
+
+        res.json(result);
+
+    } catch (error) {
+        console.error('❌ Error en reporte de ausentismo:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            details: 'Error generando reporte de ausentismo'
+        });
+    }
+});
+
+/**
+ * GET /api/attendance-stats/absences-today/:companyId
+ *
+ * Atajo para obtener ausentes de HOY
+ */
+router.get('/absences-today/:companyId', async (req, res) => {
+    try {
+        const { companyId } = req.params;
+        const { department_id, branch_id, shift_id } = req.query;
+
+        const today = new Date().toISOString().split('T')[0];
+
+        const filters = {};
+        if (department_id) filters.department_id = parseInt(department_id);
+        if (branch_id) filters.branch_id = parseInt(branch_id);
+        if (shift_id) filters.shift_id = parseInt(shift_id);
+
+        const result = await req.statsService.getAbsentEmployees(
+            parseInt(companyId),
+            today,
+            filters
+        );
+
+        res.json(result);
+
+    } catch (error) {
+        console.error('❌ Error obteniendo ausentes de hoy:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            details: 'Error obteniendo lista de ausentes de hoy'
+        });
+    }
+});
+
+/**
  * GET /api/attendance-stats/health
  *
  * Health check del servicio de estadísticas avanzadas
@@ -398,7 +523,7 @@ router.get('/health', (req, res) => {
     res.json({
         success: true,
         service: 'AttendanceAdvancedStatsService',
-        version: '1.0.0',
+        version: '2.0.0',
         features: [
             'Trimmed Mean (Media Acotada)',
             'Standard Deviation',
@@ -408,9 +533,17 @@ router.get('/health', (req, res) => {
             'Climate Zone Segmentation',
             'Temporal Pattern Analysis',
             'Same-Zone Branch Comparison',
-            'Department Rankings by Zone'
+            'Department Rankings by Zone',
+            '🆕 Shift-Based Absences (SSOT)',
+            '🆕 Absenteeism Report with Trends',
+            '🆕 Today Absences Quick Endpoint'
         ],
-        climateZones: ['NORTH_WARM', 'CENTER_TEMPERATE', 'SOUTH_COLD'],
+        endpoints: {
+            absences: 'GET /api/attendance-stats/absences/:companyId/:date',
+            absencesToday: 'GET /api/attendance-stats/absences-today/:companyId',
+            absenteeismReport: 'GET /api/attendance-stats/absenteeism-report/:companyId'
+        },
+        climateZones: ['TROPICAL', 'SUBTROPICAL', 'TEMPERATE', 'COLD'],
         timestamp: new Date().toISOString()
     });
 });

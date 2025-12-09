@@ -61,12 +61,13 @@ const auth = async (req, res, next) => {
       });
     }
 
-    // Agregar usuario al request
-    req.user = user;
+    // Agregar usuario al request - incluir alias 'id' para compatibilidad
+    req.user = user.toJSON();
+    req.user.id = req.user.user_id; // Alias para compatibilidad con código que usa 'id'
     console.log('✅ [AUTH] Usuario autenticado correctamente:', {
-      id: user.user_id,
-      email: user.email,
-      company_id: user.company_id
+      id: req.user.user_id,
+      email: req.user.email,
+      company_id: req.user.company_id
     });
     next();
 
@@ -377,5 +378,8 @@ module.exports = {
   adminOnly,
   supervisorOrAdmin,
   authorizeModule,
-  canViewEmployee
+  canViewEmployee,
+  // Aliases para compatibilidad
+  authenticateJWT: auth,
+  requireRole: authorize
 };

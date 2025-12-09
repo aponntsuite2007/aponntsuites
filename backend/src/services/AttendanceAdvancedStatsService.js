@@ -20,6 +20,7 @@
  */
 
 const { Op, fn, col, literal } = require('sequelize');
+const ShiftCalculatorService = require('./ShiftCalculatorService');
 
 // ============================================================================
 // ZONIFICACIÓN CLIMÁTICA DINÁMICA POR LATITUD
@@ -1089,6 +1090,301 @@ class AttendanceAdvancedStatsService {
                 scoringFormula: 'score = presentRate - (lateRate * 0.5) - (absentRate * 1.5)',
                 minimumRecords: 20,
                 climateZoning: 'Basada en latitud GPS del kiosk'
+            }
+        };
+    }
+
+    // ========================================================================
+    // ANÁLISIS DE AUSENTES BASADO EN TURNOS (SSOT)
+    // ========================================================================
+
+    /**
+     * Obtiene los empleados ausentes para una fecha específica
+     * Compara quiénes DEBERÍAN haber trabajado (según turno) vs quiénes asistieron
+     *
+     * @param {number} companyId - ID de la empresa
+     * @param {string|Date} date - Fecha a consultar
+     * @param {Object} filters - Filtros opcionales (department_id, branch_id, shift_id)
+     * @returns {Object} Lista de ausentes con detalles de turno
+     */
+    async getAbsentEmployees(companyId, date, filters = {}) {
+        const dateString = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+
+        try {
+            // 1. Obtener quiénes DEBERÍAN haber trabajado según su turno
+            const expectedToWork = await ShiftCalculatorService.getUsersExpectedToWork(
+                companyId,
+                dateString,
+                filters
+            );
+
+            if (expectedToWork.length === 0) {
+                return {
+                    success: true,
+                    date: dateString,
+                    companyId,
+                    message: 'No hay empleados programados para trabajar en esta fecha',
+                    summary: {
+                        expectedCount: 0,
+                        presentCount: 0,
+                        absentCount: 0,
+                        absentRate: 0
+                    },
+                    absents: [],
+                    presents: []
+                };
+            }
+
+            // 2. Obtener quiénes efectivamente asistieron ese día
+            const { Attendance } = this.db;
+            const attendances = await Attendance.findAll({
+                where: {
+                    company_id: companyId,
+                    date: dateString,
+                    [Op.or]: [
+                        { checkInTime: { [Op.ne]: null } },
+                        { check_in: { [Op.ne]: null } }
+                    ]
+                },
+                attributes: ['id', 'UserId', 'user_id', 'checkInTime', 'check_in', 'checkOutTime', 'check_out', 'status'],
+                raw: true
+            });
+
+            // 3. Crear set de user_ids que asistieron
+            const presentUserIds = new Set(
+                attendances.map(a => a.UserId || a.user_id)
+            );
+
+            // 4. Separar ausentes y presentes
+            const absents = [];
+            const presents = [];
+
+            for (const expected of expectedToWork) {
+                const userId = expected.user?.user_id || expected.assignment?.user_id;
+                const userData = {
+                    userId,
+                    firstName: expected.user?.firstName || '',
+                    lastName: expected.user?.lastName || '',
+                    legajo: expected.user?.legajo || '',
+                    departmentId: expected.user?.departmentId || expected.user?.department_id,
+                    departmentName: expected.user?.department?.name || '',
+                    branchId: expected.user?.branch_id,
+                    shift: {
+                        id: expected.shift?.id,
+                        name: expected.shift?.name,
+                        type: expected.shift?.type,
+                        startTime: expected.shift?.start_time,
+                        endTime: expected.shift?.end_time
+                    },
+                    shiftCalculation: {
+                        phase: expected.phase,
+                        dayInCycle: expected.dayInCycle,
+                        isWorkingDay: expected.isWorkingDay,
+                        shiftType: expected.shiftType
+                    }
+                };
+
+                if (presentUserIds.has(userId)) {
+                    const attendance = attendances.find(a => (a.UserId || a.user_id) === userId);
+                    presents.push({
+                        ...userData,
+                        attendance: {
+                            id: attendance?.id,
+                            checkIn: attendance?.checkInTime || attendance?.check_in,
+                            checkOut: attendance?.checkOutTime || attendance?.check_out,
+                            status: attendance?.status
+                        }
+                    });
+                } else {
+                    absents.push({
+                        ...userData,
+                        absenceReason: 'NO_CHECKIN', // Default - podría extenderse con justificaciones
+                        absenceJustified: false
+                    });
+                }
+            }
+
+            // 5. Calcular métricas
+            const expectedCount = expectedToWork.length;
+            const presentCount = presents.length;
+            const absentCount = absents.length;
+            const absentRate = expectedCount > 0 ? (absentCount / expectedCount) * 100 : 0;
+
+            // 6. Agrupar ausentes por departamento
+            const absentsByDepartment = absents.reduce((acc, emp) => {
+                const deptName = emp.departmentName || 'Sin Departamento';
+                if (!acc[deptName]) {
+                    acc[deptName] = {
+                        name: deptName,
+                        count: 0,
+                        employees: []
+                    };
+                }
+                acc[deptName].count++;
+                acc[deptName].employees.push({
+                    userId: emp.userId,
+                    name: `${emp.firstName} ${emp.lastName}`,
+                    legajo: emp.legajo,
+                    shift: emp.shift.name
+                });
+                return acc;
+            }, {});
+
+            // 7. Agrupar ausentes por turno
+            const absentsByShift = absents.reduce((acc, emp) => {
+                const shiftName = emp.shift?.name || 'Sin Turno';
+                if (!acc[shiftName]) {
+                    acc[shiftName] = {
+                        name: shiftName,
+                        type: emp.shift?.type || 'unknown',
+                        count: 0,
+                        employees: []
+                    };
+                }
+                acc[shiftName].count++;
+                acc[shiftName].employees.push({
+                    userId: emp.userId,
+                    name: `${emp.firstName} ${emp.lastName}`,
+                    legajo: emp.legajo,
+                    department: emp.departmentName
+                });
+                return acc;
+            }, {});
+
+            return {
+                success: true,
+                date: dateString,
+                companyId,
+                calculatedAt: new Date().toISOString(),
+                source: 'SHIFT_CALCULATOR_SSOT',
+                summary: {
+                    expectedCount,
+                    presentCount,
+                    absentCount,
+                    absentRate: Math.round(absentRate * 100) / 100,
+                    presentRate: Math.round((100 - absentRate) * 100) / 100
+                },
+                absents,
+                presents,
+                byDepartment: Object.values(absentsByDepartment).sort((a, b) => b.count - a.count),
+                byShift: Object.values(absentsByShift).sort((a, b) => b.count - a.count),
+                methodology: {
+                    description: 'Ausentes calculados comparando turno esperado vs check-in real',
+                    shiftSource: 'user_shift_assignments + shifts',
+                    attendanceSource: 'attendances table',
+                    note: 'Solo considera ausentes a quienes tenían turno asignado y no ficharon'
+                }
+            };
+
+        } catch (error) {
+            console.error('❌ Error en getAbsentEmployees:', error);
+            return {
+                success: false,
+                date: dateString,
+                companyId,
+                error: error.message,
+                absents: [],
+                presents: []
+            };
+        }
+    }
+
+    /**
+     * Obtiene resumen de ausentes para un rango de fechas
+     *
+     * @param {number} companyId - ID de la empresa
+     * @param {string|Date} startDate - Fecha inicio
+     * @param {string|Date} endDate - Fecha fin
+     * @param {Object} filters - Filtros opcionales
+     * @returns {Object} Resumen con tendencias de ausentismo
+     */
+    async getAbsenteeismReport(companyId, startDate, endDate, filters = {}) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const dailyData = [];
+
+        const current = new Date(start);
+        while (current <= end) {
+            const dateStr = current.toISOString().split('T')[0];
+
+            // Saltar fines de semana si no hay filtro específico de turno
+            const dayOfWeek = current.getDay();
+            if (!filters.includeWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+                current.setDate(current.getDate() + 1);
+                continue;
+            }
+
+            const dayResult = await this.getAbsentEmployees(companyId, dateStr, filters);
+
+            if (dayResult.success && dayResult.summary.expectedCount > 0) {
+                dailyData.push({
+                    date: dateStr,
+                    dayOfWeek,
+                    ...dayResult.summary
+                });
+            }
+
+            current.setDate(current.getDate() + 1);
+        }
+
+        // Calcular métricas agregadas
+        const totalExpected = dailyData.reduce((sum, d) => sum + d.expectedCount, 0);
+        const totalAbsent = dailyData.reduce((sum, d) => sum + d.absentCount, 0);
+        const avgAbsentRate = dailyData.length > 0
+            ? dailyData.reduce((sum, d) => sum + d.absentRate, 0) / dailyData.length
+            : 0;
+
+        // Detectar días críticos (alto ausentismo)
+        const criticalDays = dailyData
+            .filter(d => d.absentRate > 10) // Más del 10% de ausentes
+            .sort((a, b) => b.absentRate - a.absentRate);
+
+        // Tendencia por día de semana
+        const weekdayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const byWeekday = dailyData.reduce((acc, d) => {
+            if (!acc[d.dayOfWeek]) {
+                acc[d.dayOfWeek] = {
+                    day: d.dayOfWeek,
+                    name: weekdayNames[d.dayOfWeek],
+                    totalExpected: 0,
+                    totalAbsent: 0,
+                    count: 0
+                };
+            }
+            acc[d.dayOfWeek].totalExpected += d.expectedCount;
+            acc[d.dayOfWeek].totalAbsent += d.absentCount;
+            acc[d.dayOfWeek].count++;
+            return acc;
+        }, {});
+
+        const weekdayTrend = Object.values(byWeekday).map(w => ({
+            ...w,
+            avgAbsentRate: w.totalExpected > 0
+                ? Math.round((w.totalAbsent / w.totalExpected) * 10000) / 100
+                : 0
+        })).sort((a, b) => b.avgAbsentRate - a.avgAbsentRate);
+
+        return {
+            success: true,
+            companyId,
+            period: {
+                startDate: start.toISOString().split('T')[0],
+                endDate: end.toISOString().split('T')[0],
+                totalDays: dailyData.length
+            },
+            summary: {
+                totalExpected,
+                totalAbsent,
+                totalPresent: totalExpected - totalAbsent,
+                avgAbsentRate: Math.round(avgAbsentRate * 100) / 100,
+                avgPresentRate: Math.round((100 - avgAbsentRate) * 100) / 100
+            },
+            dailyData,
+            criticalDays,
+            weekdayTrend,
+            methodology: {
+                source: 'SHIFT_CALCULATOR_SSOT',
+                description: 'Ausentismo calculado según turnos asignados vs fichajes reales'
             }
         };
     }

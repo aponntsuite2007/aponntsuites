@@ -4045,6 +4045,31 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
             </button>
           </div>
 
+          <!-- SUBTABS: Catálogo vs Gestión Comercial -->
+          <div style="background: white; border-radius: 12px; padding: 15px 25px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <div style="display: flex; gap: 10px; border-bottom: 2px solid #f3f4f6; padding-bottom: 15px;">
+              <button
+                class="commercial-subtab-btn active"
+                data-subtab="catalog"
+                onclick="EngineeringDashboard.switchCommercialSubTab('catalog')"
+                style="padding: 10px 24px; border: none; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s;"
+              >
+                📋 Catálogo (Solo Lectura)
+              </button>
+              <button
+                class="commercial-subtab-btn"
+                data-subtab="management"
+                onclick="EngineeringDashboard.switchCommercialSubTab('management')"
+                style="padding: 10px 24px; border: 2px solid #e5e7eb; background: white; color: #6b7280; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s;"
+              >
+                ✏️ Gestión Comercial (Editar Precios & Bundles)
+              </button>
+            </div>
+          </div>
+
+          <!-- Contenido del subtab CATALOG -->
+          <div id="commercial-subtab-catalog" class="commercial-subtab-content" style="display: block;">
+
           <!-- Tabs por categoría -->
           <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
             <div style="border-bottom: 2px solid #f3f4f6; padding: 20px 25px;">
@@ -4179,6 +4204,49 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
               </div>
             </div>
           ` : ''}
+
+          </div><!-- Fin subtab CATALOG -->
+
+          <!-- Contenido del subtab MANAGEMENT -->
+          <div id="commercial-subtab-management" class="commercial-subtab-content" style="display: none;">
+            <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+              <h2 style="margin: 0 0 10px 0; color: #1f2937; font-size: 24px;">✏️ Gestión Comercial</h2>
+              <p style="margin: 0 0 30px 0; color: #6b7280;">Editar precios por tier de empleados y gestionar bundles</p>
+
+              <!-- Tabs internos: Precios | Bundles -->
+              <div style="border-bottom: 2px solid #f3f4f6; margin-bottom: 30px;">
+                <div style="display: flex; gap: 10px;">
+                  <button
+                    class="management-tab-btn active"
+                    data-tab="pricing"
+                    onclick="EngineeringDashboard.switchManagementTab('pricing')"
+                    style="padding: 10px 20px; border: none; background: transparent; color: #3b82f6; font-weight: 600; cursor: pointer; border-bottom: 3px solid #3b82f6;"
+                  >
+                    💰 Editor de Precios
+                  </button>
+                  <button
+                    class="management-tab-btn"
+                    data-tab="bundles"
+                    onclick="EngineeringDashboard.switchManagementTab('bundles')"
+                    style="padding: 10px 20px; border: none; background: transparent; color: #6b7280; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent;"
+                  >
+                    🎁 Constructor de Bundles
+                  </button>
+                </div>
+              </div>
+
+              <!-- Contenido: Editor de Precios -->
+              <div id="management-tab-pricing" class="management-tab-content" style="display: block;">
+                <p style="color: #6b7280; text-align: center; padding: 40px;">Cargando editor de precios...</p>
+              </div>
+
+              <!-- Contenido: Constructor de Bundles -->
+              <div id="management-tab-bundles" class="management-tab-content" style="display: none;">
+                <p style="color: #6b7280; text-align: center; padding: 40px;">Cargando constructor de bundles...</p>
+              </div>
+            </div>
+          </div><!-- Fin subtab MANAGEMENT -->
+
         </div>
       `;
 
@@ -4226,6 +4294,630 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
           </button>
         </div>
       `;
+    }
+  },
+
+  /**
+   * Alternar entre subtabs: Catálogo vs Gestión Comercial
+   */
+  switchCommercialSubTab(subtab) {
+    console.log('🔄 [COMMERCIAL] Switching to subtab:', subtab);
+
+    // Actualizar botones
+    const subtabButtons = document.querySelectorAll('.commercial-subtab-btn');
+    subtabButtons.forEach(btn => {
+      const isActive = btn.dataset.subtab === subtab;
+      if (isActive) {
+        btn.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.classList.add('active');
+      } else {
+        btn.style.background = 'white';
+        btn.style.color = '#6b7280';
+        btn.style.border = '2px solid #e5e7eb';
+        btn.classList.remove('active');
+      }
+    });
+
+    // Alternar contenido
+    document.getElementById('commercial-subtab-catalog').style.display =
+      subtab === 'catalog' ? 'block' : 'none';
+    document.getElementById('commercial-subtab-management').style.display =
+      subtab === 'management' ? 'block' : 'none';
+
+    // Si cambiamos a "management", cargar los editores
+    if (subtab === 'management') {
+      this.loadManagementEditors();
+    }
+  },
+
+  /**
+   * Cargar editores de gestión comercial
+   */
+  async loadManagementEditors() {
+    // Cargar editor de precios por defecto
+    await this.renderPricingEditor();
+  },
+
+  /**
+   * Alternar entre tabs de management: Pricing vs Bundles
+   */
+  switchManagementTab(tab) {
+    console.log('🔄 [MANAGEMENT] Switching to tab:', tab);
+
+    // Actualizar botones
+    const tabButtons = document.querySelectorAll('.management-tab-btn');
+    tabButtons.forEach(btn => {
+      const isActive = btn.dataset.tab === tab;
+      btn.style.color = isActive ? '#3b82f6' : '#6b7280';
+      btn.style.borderBottom = isActive ? '3px solid #3b82f6' : '3px solid transparent';
+      if (isActive) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Alternar contenido
+    document.getElementById('management-tab-pricing').style.display =
+      tab === 'pricing' ? 'block' : 'none';
+    document.getElementById('management-tab-bundles').style.display =
+      tab === 'bundles' ? 'block' : 'none';
+
+    // Cargar contenido según tab
+    if (tab === 'pricing') {
+      this.renderPricingEditor();
+    } else if (tab === 'bundles') {
+      this.renderBundlesConstructor();
+    }
+  },
+
+  /**
+   * Renderizar editor de precios por tier
+   */
+  async renderPricingEditor() {
+    const container = document.getElementById('management-tab-pricing');
+
+    container.innerHTML = '<p style="text-align: center; padding: 40px;">Cargando editor...</p>';
+
+    try {
+      // Fetch módulos comerciales
+      const response = await fetch('/api/engineering/commercial-modules');
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      const modules = Object.values(result.data.modules);
+
+      container.innerHTML = `
+        <div>
+          <h3 style="margin: 0 0 20px 0; color: #1f2937;">💰 Editor de Precios por Tier de Empleados</h3>
+
+          <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 30px; border-radius: 4px;">
+            <p style="margin: 0 0 8px 0; color: #1e40af; font-size: 14px; font-weight: 600;">
+              ℹ️ Los precios se ajustan automáticamente según la cantidad de empleados de la empresa:
+            </p>
+            <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 13px;">
+              <li><strong>Tier 1 (1-50 empleados):</strong> Sin descuento</li>
+              <li><strong>Tier 2 (51-100 empleados):</strong> 15% descuento</li>
+              <li><strong>Tier 3 (101+ empleados):</strong> 30% descuento</li>
+            </ul>
+          </div>
+
+          <!-- Grid de módulos -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 25px;">
+            ${modules.map(module => this.renderModulePricingCard(module)).join('')}
+          </div>
+        </div>
+      `;
+
+      // Agregar event listeners a todos los formularios
+      modules.forEach(module => {
+        const form = document.getElementById(`pricing-form-${module.key}`);
+        if (form) {
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.savePricing(module.key, new FormData(e.target));
+          });
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ [PRICING] Error:', error);
+      container.innerHTML = `
+        <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 20px; border-radius: 4px;">
+          <p style="margin: 0; color: #991b1b;">❌ Error cargando editor: ${error.message}</p>
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * Renderizar tarjeta de pricing de un módulo individual
+   */
+  renderModulePricingCard(module) {
+    return `
+      <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: box-shadow 0.3s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)'">
+        <!-- Header -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f3f4f6;">
+          <div style="font-size: 32px;">${module.icon}</div>
+          <div style="flex: 1;">
+            <h4 style="margin: 0 0 3px 0; color: #1f2937; font-size: 16px; font-weight: 600;">${module.name}</h4>
+            <p style="margin: 0; color: #9ca3af; font-size: 12px;">${module.category.toUpperCase()}</p>
+          </div>
+        </div>
+
+        <!-- Formulario -->
+        <form id="pricing-form-${module.key}">
+          <!-- Tier 1 -->
+          <div style="margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="font-size: 12px; font-weight: 600; color: #6b7280;">1-50 empleados</label>
+              <span style="background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600;">0%</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="color: #9ca3af; font-size: 18px;">$</span>
+              <input
+                type="number"
+                name="tier1_price"
+                value="${module.pricingTiers.tier1.price}"
+                step="0.01"
+                min="0"
+                style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+              />
+            </div>
+          </div>
+
+          <!-- Tier 2 -->
+          <div style="margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="font-size: 12px; font-weight: 600; color: #6b7280;">51-100 empleados</label>
+              <span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600;">-15%</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="color: #9ca3af; font-size: 18px;">$</span>
+              <input
+                type="number"
+                name="tier2_price"
+                value="${module.pricingTiers.tier2.price}"
+                step="0.01"
+                min="0"
+                style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+              />
+            </div>
+          </div>
+
+          <!-- Tier 3 -->
+          <div style="margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="font-size: 12px; font-weight: 600; color: #6b7280;">101+ empleados</label>
+              <span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600;">-30%</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="color: #9ca3af; font-size: 18px;">$</span>
+              <input
+                type="number"
+                name="tier3_price"
+                value="${module.pricingTiers.tier3.price}"
+                step="0.01"
+                min="0"
+                style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+              />
+            </div>
+          </div>
+
+          <!-- Botón Guardar -->
+          <button
+            type="submit"
+            style="width: 100%; padding: 10px; border: none; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); transition: transform 0.2s;"
+            onmouseover="this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.transform='translateY(0)'"
+          >
+            💾 Guardar
+          </button>
+        </form>
+      </div>
+    `;
+  },
+
+  /**
+   * Guardar precios de un módulo
+   */
+  async savePricing(moduleKey, formData) {
+    console.log('💾 [PRICING] Guardando precios para:', moduleKey);
+
+    const pricing = {
+      tier1: parseFloat(formData.get('tier1_price')),
+      tier2: parseFloat(formData.get('tier2_price')),
+      tier3: parseFloat(formData.get('tier3_price'))
+    };
+
+    try {
+      const response = await fetch(`/api/engineering/commercial-modules/${moduleKey}/pricing`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pricing })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('✅ Precios guardados correctamente');
+        // Recargar vista
+        await this.loadCommercialModulesView();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('❌ [PRICING] Error guardando:', error);
+      alert('❌ Error guardando precios: ' + error.message);
+    }
+  },
+
+  /**
+   * Renderizar constructor de bundles
+   */
+  async renderBundlesConstructor() {
+    const container = document.getElementById('management-tab-bundles');
+
+    container.innerHTML = '<p style="text-align: center; padding: 40px;">Cargando constructor de bundles...</p>';
+
+    try {
+      // Fetch módulos y bundles
+      const response = await fetch('/api/engineering/commercial-modules');
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      const modules = Object.values(result.data.modules);
+      const bundles = result.data.bundles || {};
+
+      container.innerHTML = `
+        <div>
+          <h3 style="margin: 0 0 20px 0; color: #1f2937;">🎁 Constructor de Bundles</h3>
+
+          <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 30px; border-radius: 4px;">
+            <p style="margin: 0; color: #1e40af; font-size: 14px;">
+              ℹ️ Los bundles son solo una presentación comercial. Al asignarlos a una empresa, se descomponen en módulos individuales.
+            </p>
+          </div>
+
+          <!-- Botón crear bundle -->
+          <div style="margin-bottom: 30px;">
+            <button
+              onclick="EngineeringDashboard.showBundleForm()"
+              style="padding: 12px 24px; border: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);"
+            >
+              ➕ Crear Nuevo Bundle
+            </button>
+          </div>
+
+          <!-- Lista de bundles existentes -->
+          <div>
+            <h4 style="margin: 0 0 15px 0; color: #374151;">Bundles Existentes (${Object.keys(bundles).length})</h4>
+            <div id="bundles-list" style="display: grid; gap: 15px;">
+              ${Object.keys(bundles).length === 0 ? `
+                <p style="text-align: center; color: #6b7280; padding: 40px;">No hay bundles creados</p>
+              ` : Object.entries(bundles).map(([bundleKey, bundle]) => `
+                <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px;">
+                  <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                    <div>
+                      <h5 style="margin: 0 0 5px 0; color: #1f2937; font-size: 18px;">${bundle.name}</h5>
+                      <p style="margin: 0; color: #6b7280; font-size: 14px;">${bundle.description || ''}</p>
+                    </div>
+                    <button
+                      onclick="EngineeringDashboard.editBundle('${bundleKey}')"
+                      style="padding: 8px 16px; border: 2px solid #3b82f6; background: white; color: #3b82f6; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;"
+                    >
+                      ✏️ Editar
+                    </button>
+                  </div>
+                  <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                    <div>
+                      <div style="color: #6b7280; font-size: 12px; margin-bottom: 4px;">Módulos</div>
+                      <div style="font-size: 20px; font-weight: 700; color: #3b82f6;">${bundle.modules.length}</div>
+                    </div>
+                    <div>
+                      <div style="color: #6b7280; font-size: 12px; margin-bottom: 4px;">Precio Regular</div>
+                      <div style="font-size: 20px; font-weight: 700; color: #6b7280; text-decoration: line-through;">$${bundle.regular_price}</div>
+                    </div>
+                    <div>
+                      <div style="color: #6b7280; font-size: 12px; margin-bottom: 4px;">Precio Bundle</div>
+                      <div style="font-size: 20px; font-weight: 700; color: #10b981;">$${bundle.bundle_price}</div>
+                    </div>
+                    <div>
+                      <div style="color: #6b7280; font-size: 12px; margin-bottom: 4px;">Descuento</div>
+                      <div style="font-size: 20px; font-weight: 700; color: #ef4444;">${bundle.discount_percentage}%</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    ${bundle.modules.map(modKey => {
+                      const mod = modules.find(m => m.key === modKey);
+                      return mod ? `
+                        <span style="background: #f3f4f6; padding: 4px 10px; border-radius: 12px; font-size: 12px; color: #374151;">
+                          ${mod.icon} ${mod.name}
+                        </span>
+                      ` : '';
+                    }).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Modal crear/editar bundle -->
+          <div id="bundle-form-modal" style="display: none;"></div>
+        </div>
+      `;
+
+    } catch (error) {
+      console.error('❌ [BUNDLES] Error:', error);
+      container.innerHTML = `
+        <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 20px; border-radius: 4px;">
+          <p style="margin: 0; color: #991b1b;">❌ Error cargando bundles: ${error.message}</p>
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * Mostrar formulario de bundle (crear)
+   */
+  async showBundleForm() {
+    try {
+      // Fetch módulos disponibles
+      const response = await fetch('/api/engineering/commercial-modules');
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      const modules = Object.entries(result.data.modules);
+
+      this.showBundleModal(null, modules);
+    } catch (error) {
+      console.error('❌ [BUNDLES] Error cargando módulos:', error);
+      alert('❌ Error cargando módulos: ' + error.message);
+    }
+  },
+
+  /**
+   * Editar bundle existente
+   */
+  async editBundle(bundleKey) {
+    try {
+      // Fetch bundle + módulos
+      const [bundleResponse, modulesResponse] = await Promise.all([
+        fetch('/api/engineering/bundles'),
+        fetch('/api/engineering/commercial-modules')
+      ]);
+
+      const bundleResult = await bundleResponse.json();
+      const modulesResult = await modulesResponse.json();
+
+      if (!bundleResult.success || !modulesResult.success) {
+        throw new Error('Error cargando datos');
+      }
+
+      const bundle = bundleResult.data[bundleKey];
+      if (!bundle) {
+        throw new Error(`Bundle "${bundleKey}" no encontrado`);
+      }
+
+      const modules = Object.entries(modulesResult.data.modules);
+
+      this.showBundleModal(bundle, modules);
+    } catch (error) {
+      console.error('❌ [BUNDLES] Error cargando bundle:', error);
+      alert('❌ Error cargando bundle: ' + error.message);
+    }
+  },
+
+  /**
+   * Mostrar modal de bundle (crear o editar)
+   */
+  showBundleModal(bundle, modules) {
+    const isEdit = !!bundle;
+
+    // Crear modal
+    const modalHtml = `
+      <div id="bundle-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+          <!-- Header -->
+          <div style="padding: 24px; border-bottom: 2px solid #e5e7eb;">
+            <h3 style="margin: 0; color: #1f2937;">${isEdit ? '✏️ Editar Bundle' : '➕ Crear Nuevo Bundle'}</h3>
+          </div>
+
+          <!-- Form -->
+          <div style="padding: 24px;">
+            <form id="bundle-form">
+              <!-- Nombre -->
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Nombre del Bundle</label>
+                <input type="text" name="name" value="${bundle?.name || ''}" required
+                  style="width: 100%; padding: 10px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+                  placeholder="Ej: Bundle RRHH Completo">
+              </div>
+
+              <!-- Descripción -->
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Descripción</label>
+                <textarea name="description" rows="3"
+                  style="width: 100%; padding: 10px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+                  placeholder="Descripción del bundle...">${bundle?.description || ''}</textarea>
+              </div>
+
+              <!-- Categoría -->
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Categoría</label>
+                <select name="category" required
+                  style="width: 100%; padding: 10px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                  <option value="core" ${bundle?.category === 'core' ? 'selected' : ''}>Core</option>
+                  <option value="rrhh" ${bundle?.category === 'rrhh' ? 'selected' : ''}>RRHH</option>
+                  <option value="operations" ${bundle?.category === 'operations' ? 'selected' : ''}>Operaciones</option>
+                  <option value="sales" ${bundle?.category === 'sales' ? 'selected' : ''}>Ventas</option>
+                  <option value="analytics" ${bundle?.category === 'analytics' ? 'selected' : ''}>Analíticas</option>
+                  <option value="custom" ${bundle?.category === 'custom' || !bundle ? 'selected' : ''}>Personalizado</option>
+                </select>
+              </div>
+
+              <!-- Descuento -->
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Descuento (%)</label>
+                <input type="number" name="discount_percentage" min="0" max="100" value="${bundle?.discount_percentage || 10}" required
+                  style="width: 100%; padding: 10px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+                  placeholder="10">
+                <small style="color: #6b7280;">Porcentaje de descuento sobre la suma de módulos individuales</small>
+              </div>
+
+              <!-- Selección de módulos -->
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #374151;">Módulos Incluidos (${bundle?.modules?.length || 0} seleccionados)</label>
+                <div style="max-height: 300px; overflow-y: auto; border: 2px solid #d1d5db; border-radius: 6px; padding: 12px;">
+                  ${modules.map(([key, module]) => `
+                    <label style="display: flex; align-items: center; padding: 8px; cursor: pointer; border-radius: 4px; transition: background 0.2s;"
+                      onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                      <input type="checkbox" name="modules" value="${key}"
+                        ${bundle?.modules?.includes(key) ? 'checked' : ''}
+                        style="margin-right: 12px; width: 18px; height: 18px;">
+                      <span style="flex: 1;">
+                        <span style="font-weight: 600;">${module.icon} ${module.name}</span>
+                        <span style="color: #6b7280; font-size: 13px; margin-left: 8px;">${module.category}</span>
+                      </span>
+                      <span style="color: #10b981; font-weight: 600;">$${module.basePrice}</span>
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Footer -->
+          <div style="padding: 24px; border-top: 2px solid #e5e7eb; display: flex; gap: 12px; justify-content: flex-end;">
+            ${isEdit ? `
+              <button onclick="EngineeringDashboard.deleteBundleConfirm('${bundle.key}')"
+                style="padding: 12px 24px; border: 2px solid #ef4444; background: white; color: #ef4444; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                🗑️ Eliminar
+              </button>
+            ` : ''}
+            <button onclick="EngineeringDashboard.closeBundleModal()"
+              style="padding: 12px 24px; border: 2px solid #d1d5db; background: white; color: #374151; border-radius: 8px; cursor: pointer; font-weight: 600;">
+              Cancelar
+            </button>
+            <button onclick="EngineeringDashboard.saveBundleModal(${isEdit ? `'${bundle.key}'` : 'null'})"
+              style="padding: 12px 24px; border: none; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);">
+              💾 Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Insertar modal en el DOM
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHtml;
+    document.body.appendChild(modalContainer);
+
+    // Click fuera del modal para cerrar
+    document.getElementById('bundle-modal-overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'bundle-modal-overlay') {
+        this.closeBundleModal();
+      }
+    });
+  },
+
+  /**
+   * Guardar bundle desde modal
+   */
+  async saveBundleModal(bundleKey) {
+    const form = document.getElementById('bundle-form');
+    const formData = new FormData(form);
+
+    // Validar que haya al menos un módulo seleccionado
+    const selectedModules = formData.getAll('modules');
+    if (selectedModules.length === 0) {
+      alert('⚠️ Debes seleccionar al menos un módulo');
+      return;
+    }
+
+    const bundleData = {
+      bundleKey: bundleKey || undefined, // null para nuevo, bundleKey para editar
+      name: formData.get('name'),
+      description: formData.get('description'),
+      category: formData.get('category'),
+      discount_percentage: parseFloat(formData.get('discount_percentage')),
+      modules: selectedModules
+    };
+
+    console.log('💾 [BUNDLES] Guardando bundle:', bundleData);
+
+    try {
+      const response = await fetch('/api/engineering/bundles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bundleData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('✅ Bundle guardado correctamente');
+        this.closeBundleModal();
+        // Recargar vista de bundles
+        await this.renderBundlesConstructor();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('❌ [BUNDLES] Error guardando:', error);
+      alert('❌ Error guardando bundle: ' + error.message);
+    }
+  },
+
+  /**
+   * Confirmar eliminación de bundle
+   */
+  async deleteBundleConfirm(bundleKey) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este bundle?\n\nEsta acción no se puede deshacer.')) {
+      return;
+    }
+
+    console.log('🗑️ [BUNDLES] Eliminando bundle:', bundleKey);
+
+    try {
+      const response = await fetch(`/api/engineering/bundles/${bundleKey}`, {
+        method: 'DELETE'
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('✅ Bundle eliminado correctamente');
+        this.closeBundleModal();
+        // Recargar vista de bundles
+        await this.renderBundlesConstructor();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('❌ [BUNDLES] Error eliminando:', error);
+      alert('❌ Error eliminando bundle: ' + error.message);
+    }
+  },
+
+  /**
+   * Cerrar modal de bundle
+   */
+  closeBundleModal() {
+    const overlay = document.getElementById('bundle-modal-overlay');
+    if (overlay) {
+      overlay.parentElement.remove();
     }
   },
 

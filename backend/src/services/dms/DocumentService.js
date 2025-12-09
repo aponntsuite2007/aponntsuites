@@ -23,11 +23,13 @@ class DocumentService {
     const {
       folder_id,
       document_type_id,
+      category_code,  // Nuevo: código de categoría (RRHH, LEGAL, etc.)
+      type_code,      // Nuevo: código de tipo de documento
       title,
       description,
       tags,
       metadata = {},
-      owner_type = 'system',
+      owner_type = 'user',
       owner_id = null,
       access_level = 'private',
       requires_signature = false,
@@ -39,8 +41,26 @@ class DocumentService {
     const t = transaction || await this.models.Document.sequelize.transaction();
 
     try {
+      // Determinar category_code y type_code
+      // Si se pasan los nuevos campos, usarlos; sino, usar defaults o buscar por document_type_id
+      let finalCategoryCode = category_code || 'GENERAL';
+      let finalTypeCode = type_code || 'GENERAL_DOC';
+
+      // Si se pasó document_type_id, intentar obtener los códigos del catálogo
+      if (document_type_id && !type_code) {
+        try {
+          const docType = await this.models.DocumentType?.findByPk(document_type_id);
+          if (docType) {
+            finalCategoryCode = docType.category_code || finalCategoryCode;
+            finalTypeCode = docType.code || finalTypeCode;
+          }
+        } catch (e) {
+          // Ignorar si no existe el modelo o tabla
+        }
+      }
+
       // Generar número de documento único
-      const documentNumber = await this.generateDocumentNumber(companyId, document_type_id);
+      const documentNumber = await this.generateDocumentNumber(companyId, finalTypeCode);
 
       // Si hay archivo, procesarlo
       let fileData = {};
@@ -48,24 +68,27 @@ class DocumentService {
         fileData = await this.storageService.uploadFile(file, companyId, documentNumber);
       }
 
-      // Crear documento
+      // Crear documento con nombres de campos correctos para el modelo
       const document = await this.models.Document.create({
         company_id: companyId,
         folder_id,
-        document_type_id,
+        category_code: finalCategoryCode,
+        type_code: finalTypeCode,
         document_number: documentNumber,
         title,
         description,
-        file_name: fileData.fileName || null,
-        file_path: fileData.filePath || null,
-        file_size: fileData.fileSize || 0,
-        mime_type: fileData.mimeType || null,
-        file_extension: fileData.extension || null,
-        checksum: fileData.checksum || null,
-        status: file ? 'draft' : 'pending_upload',
+        // Campos de archivo con nombres correctos para la BD
+        original_filename: fileData.fileName || file?.originalname || 'unknown',
+        stored_filename: fileData.storedFileName || fileData.fileName || `${documentNumber}_${Date.now()}`,
+        storage_path: fileData.filePath || fileData.storagePath || `/uploads/${companyId}/${documentNumber}`,
+        file_size_bytes: fileData.fileSize || file?.size || 0,
+        mime_type: fileData.mimeType || file?.mimetype || 'application/octet-stream',
+        file_extension: fileData.extension || path.extname(file?.originalname || '.bin').replace('.', ''),
+        checksum_sha256: fileData.checksum || this._calculateChecksum(file?.buffer) || 'pending',
+        status: file ? 'DRAFT' : 'PENDING_UPLOAD',
         owner_type,
-        owner_id,
-        access_level,
+        owner_id: owner_id || userId,
+        access_level: typeof access_level === 'string' ? 1 : access_level,
         tags: tags || [],
         requires_signature,
         signature_required_from,
@@ -73,7 +96,7 @@ class DocumentService {
         expiration_date,
         created_by: userId,
         updated_by: userId,
-        current_version: file ? 1 : 0
+        version: file ? 1 : 0
       }, { transaction: t });
 
       // Crear versión inicial si hay archivo
@@ -82,13 +105,17 @@ class DocumentService {
           document_id: document.id,
           company_id: companyId,
           version_number: 1,
-          file_name: fileData.fileName,
+          // Nombres correctos segun modelo DocumentVersion
+          original_filename: fileData.fileName || file?.originalname || 'unknown',
+          stored_filename: fileData.storedFileName || fileData.fileName || documentNumber + '_v1',
+          storage_path: fileData.filePath || fileData.storagePath || '/uploads/' + companyId + '/' + documentNumber,
           file_path: fileData.filePath,
           file_size: fileData.fileSize,
           mime_type: fileData.mimeType,
-          checksum: fileData.checksum,
+          file_size_bytes: fileData.fileSize || file?.size || 0,
+          checksum_sha256: fileData.checksum || this._calculateChecksum(file?.buffer) || 'pending',
           created_by: userId,
-          change_notes: 'Versión inicial'
+          change_summary: 'Version inicial'
         }, { transaction: t });
       }
 
@@ -136,12 +163,12 @@ class DocumentService {
       {
         model: this.models.User,
         as: 'creator',
-        attributes: ['id', 'first_name', 'last_name', 'email']
+        attributes: ['user_id', 'firstName', 'lastName', 'email']
       },
       {
         model: this.models.Folder,
         as: 'folder',
-        attributes: ['id', 'name', 'path']
+        attributes: ['id', 'name', 'full_path']
       }
     ];
 
@@ -153,7 +180,7 @@ class DocumentService {
         include: [{
           model: this.models.User,
           as: 'creator',
-          attributes: ['id', 'first_name', 'last_name']
+          attributes: ['user_id', 'firstName', 'lastName']
         }]
       });
     }
@@ -324,22 +351,30 @@ class DocumentService {
         document_id: documentId,
         company_id: companyId,
         version_number: newVersionNumber,
-        file_name: fileData.fileName,
+        // Nombres correctos segun modelo DocumentVersion
+          original_filename: fileData.fileName || file?.originalname || 'unknown',
+          stored_filename: fileData.storedFileName || fileData.fileName || documentNumber + '_v1',
+          storage_path: fileData.filePath || fileData.storagePath || '/uploads/' + companyId + '/' + documentNumber,
         file_path: fileData.filePath,
         file_size: fileData.fileSize,
         mime_type: fileData.mimeType,
-        checksum: fileData.checksum,
+        file_size_bytes: fileData.fileSize || file?.size || 0,
+          checksum_sha256: fileData.checksum || this._calculateChecksum(file?.buffer) || 'pending',
         created_by: userId,
         change_notes: notes || `Versión ${newVersionNumber}`
       }, { transaction: t });
 
       // Actualizar documento principal
       await document.update({
-        file_name: fileData.fileName,
+        // Nombres correctos segun modelo DocumentVersion
+          original_filename: fileData.fileName || file?.originalname || 'unknown',
+          stored_filename: fileData.storedFileName || fileData.fileName || documentNumber + '_v1',
+          storage_path: fileData.filePath || fileData.storagePath || '/uploads/' + companyId + '/' + documentNumber,
         file_path: fileData.filePath,
         file_size: fileData.fileSize,
         mime_type: fileData.mimeType,
-        checksum: fileData.checksum,
+        file_size_bytes: fileData.fileSize || file?.size || 0,
+          checksum_sha256: fileData.checksum || this._calculateChecksum(file?.buffer) || 'pending',
         current_version: newVersionNumber,
         updated_by: userId,
         status: document.status === 'pending_upload' ? 'draft' : document.status
@@ -701,12 +736,12 @@ class DocumentService {
         {
           model: this.models.User,
           as: 'creator',
-          attributes: ['id', 'first_name', 'last_name']
+          attributes: ['user_id', 'firstName', 'lastName']
         },
         {
           model: this.models.Folder,
           as: 'folder',
-          attributes: ['id', 'name', 'path']
+          attributes: ['id', 'name', 'full_path']
         }
       ],
       order: [[sort_by, sort_order]],
@@ -798,16 +833,16 @@ class DocumentService {
         group: ['status']
       }),
 
-      // Por tipo
+      // Por tipo (usando type_code que es el campo correcto en la BD)
       this.models.Document.findAll({
         where: baseWhere,
-        attributes: ['document_type_id', [fn('COUNT', col('id')), 'count']],
-        group: ['document_type_id'],
+        attributes: ['type_code', [fn('COUNT', col('id')), 'count']],
+        group: ['type_code'],
         limit: 10
       }),
 
-      // Almacenamiento usado
-      this.models.Document.sum('file_size', { where: baseWhere }),
+      // Almacenamiento usado (file_size_bytes es el campo correcto)
+      this.models.Document.sum('file_size_bytes', { where: baseWhere }),
 
       // Actividad reciente
       this.models.DocumentAccessLog.findAll({
@@ -980,6 +1015,15 @@ class DocumentService {
         message: `El documento "${document.title}" requiere su aprobación.`
       });
     }
+  }
+
+  /**
+   * Calcular checksum SHA256 de un buffer
+   * @private
+   */
+  _calculateChecksum(buffer) {
+    if (!buffer) return null;
+    return crypto.createHash('sha256').update(buffer).digest('hex');
   }
 }
 

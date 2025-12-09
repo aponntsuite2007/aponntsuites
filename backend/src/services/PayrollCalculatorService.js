@@ -20,6 +20,7 @@
 const { sequelize } = require('../config/database');
 const { Op } = require('sequelize');
 const conceptDependencyService = require('./ConceptDependencyService');
+const ShiftCalculatorService = require('./ShiftCalculatorService');
 
 class PayrollCalculatorService {
     constructor() {
@@ -803,13 +804,13 @@ class PayrollCalculatorService {
                 bind: [userId, companyId, startDate, endDate]
             });
 
-            vacations.forEach(v => {
+            for (const v of vacations) {
                 // Contar días que caen dentro del período
                 const vStart = new Date(v.start_date) < new Date(startDate) ? new Date(startDate) : new Date(v.start_date);
                 const vEnd = new Date(v.end_date) > new Date(endDate) ? new Date(endDate) : new Date(v.end_date);
-                const days = this.countWorkDays(vStart, vEnd);
+                const days = await this.countWorkDays(userId, vStart, vEnd);
                 vacationDays += days;
-            });
+            }
 
             // 2. LICENCIAS MÉDICAS APROBADAS
             const medicalQuery = `
@@ -828,12 +829,12 @@ class PayrollCalculatorService {
                 bind: [userId, companyId, startDate, endDate]
             });
 
-            medicals.forEach(m => {
+            for (const m of medicals) {
                 const mStart = new Date(m.start_date) < new Date(startDate) ? new Date(startDate) : new Date(m.start_date);
                 const mEnd = new Date(m.end_date) > new Date(endDate) ? new Date(endDate) : new Date(m.end_date);
-                const days = this.countWorkDays(mStart, mEnd);
+                const days = await this.countWorkDays(userId, mStart, mEnd);
                 medicalDays += days;
-            });
+            }
 
             // 3. OTROS PERMISOS APROBADOS (si existe la tabla)
             try {
@@ -853,12 +854,12 @@ class PayrollCalculatorService {
                     bind: [userId, companyId, startDate, endDate]
                 });
 
-                others.forEach(o => {
+                for (const o of others) {
                     const oStart = new Date(o.start_date) < new Date(startDate) ? new Date(startDate) : new Date(o.start_date);
                     const oEnd = new Date(o.end_date) > new Date(endDate) ? new Date(endDate) : new Date(o.end_date);
-                    const days = this.countWorkDays(oStart, oEnd);
+                    const days = await this.countWorkDays(userId, oStart, oEnd);
                     otherDays += days;
-                });
+                }
             } catch (e) {
                 // Tabla leave_requests no existe, ignorar
             }
@@ -872,9 +873,34 @@ class PayrollCalculatorService {
     }
 
     // =========================================================================
-    // CONTAR DÍAS LABORABLES ENTRE DOS FECHAS (excluyendo fines de semana)
+    // CONTAR DÍAS LABORABLES ENTRE DOS FECHAS
+    // REFACTORIZADO: Usa ShiftCalculatorService como SSOT
     // =========================================================================
-    countWorkDays(startDate, endDate) {
+    async countWorkDays(userId, startDate, endDate) {
+        try {
+            // Usar ShiftCalculatorService para calcular días laborables según turno
+            const calendar = await ShiftCalculatorService.generateUserCalendar(userId, startDate, endDate);
+
+            let count = 0;
+            const hasShiftAssignment = calendar.some(d => d.hasAssignment);
+
+            if (hasShiftAssignment) {
+                // Contar días que el usuario debería trabajar según su turno
+                count = calendar.filter(d => d.shouldWork).length;
+            } else {
+                // Fallback: lunes a viernes si no tiene turno asignado
+                count = this._countWorkDaysFallback(startDate, endDate);
+            }
+
+            return count;
+        } catch (error) {
+            console.log(`⚠️ [PAYROLL] Error calculando días laborables, usando fallback: ${error.message}`);
+            return this._countWorkDaysFallback(startDate, endDate);
+        }
+    }
+
+    // Fallback para cuando no se puede usar ShiftCalculatorService
+    _countWorkDaysFallback(startDate, endDate) {
         let count = 0;
         let current = new Date(startDate);
         const end = new Date(endDate);

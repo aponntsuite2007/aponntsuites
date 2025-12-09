@@ -817,4 +817,108 @@ class EmployeeApiService {
       return ApiResponse(success: false, error: e.toString(), statusCode: 0);
     }
   }
+
+  // ====================================================================
+  // PROCEDIMIENTOS - Manual de Procedimientos
+  // ====================================================================
+
+  /// Obtener procedimientos del empleado
+  Future<ApiResponse<dynamic>> getMyProcedures() async {
+    return get('/api/procedures/employee/my-procedures');
+  }
+
+  /// Obtener procedimientos pendientes de acuse
+  Future<ApiResponse<dynamic>> getMyPendingProcedures() async {
+    return get('/api/procedures/employee/my-pending');
+  }
+
+  /// Obtener resumen de procedimientos para Mi Espacio
+  Future<ApiResponse<dynamic>> getMyProceduresSummary() async {
+    return get('/api/procedures/employee/my-summary');
+  }
+
+  /// Registrar acuse de recibo de procedimiento
+  Future<ApiResponse<dynamic>> acknowledgeProcedure(String procedureId, {String method = 'mobile_app'}) async {
+    return post('/api/procedures/$procedureId/acknowledge', {'method': method});
+  }
+
+  /// Obtener detalle de un procedimiento
+  Future<ApiResponse<dynamic>> getProcedure(String procedureId) async {
+    return get('/api/procedures/$procedureId');
+  }
+
+  // ====================================================================
+  // HSE - Seguridad e Higiene (EPP Compliance)
+  // ====================================================================
+
+  /// Obtener cumplimiento HSE del empleado
+  Future<ApiResponse<dynamic>> getMyHseCompliance() async {
+    final userId = await _getUserId();
+    if (userId == null) {
+      return ApiResponse(success: false, error: 'Usuario no identificado', statusCode: 0);
+    }
+    return get('/api/v1/hse/compliance/$userId');
+  }
+
+  /// Obtener entregas de EPP del empleado
+  Future<ApiResponse<dynamic>> getMyEppDeliveries() async {
+    final userId = await _getUserId();
+    if (userId == null) {
+      return ApiResponse(success: false, error: 'Usuario no identificado', statusCode: 0);
+    }
+    return get('/api/v1/hse/deliveries/employee/$userId');
+  }
+
+  /// Firmar recepción de EPP
+  Future<ApiResponse<dynamic>> signEppDelivery(int deliveryId, {String signatureMethod = 'mobile_app'}) async {
+    return post('/api/v1/hse/deliveries/$deliveryId/sign', {'signatureMethod': signatureMethod});
+  }
+
+  /// Obtener categorías de EPP
+  Future<ApiResponse<dynamic>> getEppCategories() async {
+    return get('/api/v1/hse/categories');
+  }
+
+  /// Obtener dashboard HSE
+  Future<ApiResponse<dynamic>> getHseDashboard() async {
+    return get('/api/v1/hse/dashboard');
+  }
+
+  /// Helper para obtener userId
+  Future<String?> _getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_id');
+  }
+
+  // ====================================================================
+  // LEGAL - Comunicaciones e Información Legal
+  // ====================================================================
+
+  /// Obtener comunicaciones legales del empleado
+  Future<ApiResponse<dynamic>> getMyLegalCommunications() async {
+    final userId = await _getUserId();
+    if (userId == null) {
+      return ApiResponse(success: false, error: 'Usuario no identificado', statusCode: 0);
+    }
+    return get('/api/v1/legal/communications?employee_id=$userId');
+  }
+
+  /// Obtener expediente legal 360 del empleado
+  Future<ApiResponse<dynamic>> getMyLegal360() async {
+    final userId = await _getUserId();
+    if (userId == null) {
+      return ApiResponse(success: false, error: 'Usuario no identificado', statusCode: 0);
+    }
+    return get('/api/v1/legal/employee/$userId/legal-360');
+  }
+
+  /// Obtener jurisdicción legal de la empresa
+  Future<ApiResponse<dynamic>> getLegalJurisdiction() async {
+    return get('/api/v1/legal/jurisdiction');
+  }
+
+  /// Obtener detalle de comunicación legal
+  Future<ApiResponse<dynamic>> getLegalCommunication(String communicationId) async {
+    return get('/api/v1/legal/communications/$communicationId');
+  }
 }

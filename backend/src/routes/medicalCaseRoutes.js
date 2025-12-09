@@ -242,7 +242,7 @@ router.get('/:caseId', auth, async (req, res) => {
                 u.email as employee_email,
                 u.phone as employee_phone,
                 d.name as department,
-                s.name as shift,
+                
                 p.first_name || ' ' || p.last_name as doctor_name,
                 p.email as doctor_email,
                 p.specialty,
@@ -250,7 +250,6 @@ router.get('/:caseId', auth, async (req, res) => {
             FROM absence_cases ac
             JOIN users u ON ac.employee_id = u.user_id
             LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN shifts s ON u.shift_id = s.id
             LEFT JOIN partners p ON ac.assigned_doctor_id = p.id
             WHERE ac.id = :caseId
               AND ac.company_id = :companyId
@@ -259,7 +258,7 @@ router.get('/:caseId', auth, async (req, res) => {
             type: db.sequelize.QueryTypes.SELECT
         });
 
-        if (caseData.length === 0) {
+        if (!caseData || caseData.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Caso no encontrado'
@@ -398,19 +397,16 @@ router.get('/employee/:employeeId/medical-history', auth, async (req, res) => {
                 u.phone,
                 u.birth_date,
                 EXTRACT(YEAR FROM AGE(u.birth_date)) as age,
-                u.blood_type,
-                d.name as department,
-                s.name as shift
+                d.name as department
             FROM users u
             LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN shifts s ON u.shift_id = s.id
             WHERE u.user_id = :employeeId
         `, {
             replacements: { employeeId },
             type: db.sequelize.QueryTypes.SELECT
         });
 
-        if (employeeData.length === 0) {
+        if (!employeeData || employeeData.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Empleado no encontrado'
@@ -947,10 +943,11 @@ router.get('/employee/:employeeId/360', auth, async (req, res) => {
 
     try {
         // 1. DATOS PERSONALES DEL EMPLEADO
+        // Usando solo columnas que EXISTEN en la tabla users
         const [employeeData] = await db.sequelize.query(`
             SELECT
                 u.user_id,
-                u.employee_id,
+                u."employeeId" as employee_id,
                 u."firstName",
                 u."lastName",
                 u.email,
@@ -958,25 +955,15 @@ router.get('/employee/:employeeId/360', auth, async (req, res) => {
                 u.dni,
                 u.cuil,
                 u.birth_date,
-                u.gender,
                 u.address,
-                u.city,
-                u.province,
-                u.country,
-                u.blood_type,
-                u.emergency_contact_name,
-                u.emergency_contact_phone,
-                u.emergency_contact_relationship,
-                u.health_insurance_provider,
-                u.health_insurance_number,
-                u.health_insurance_plan,
-                u.health_insurance_expiry,
-                u.hire_date,
+                u."emergencyContact" as emergency_contact_name,
+                u."emergencyPhone" as emergency_contact_phone,
+                u."hireDate" as hire_date,
                 u.position,
                 u.department_id,
                 d.name as department_name,
-                u.photo_url,
-                u.created_at as fecha_alta
+                u.display_name as photo_url,
+                u."createdAt" as fecha_alta
             FROM users u
             LEFT JOIN departments d ON u.department_id = d.id
             WHERE u.user_id = :employeeId
@@ -1547,7 +1534,7 @@ router.get('/employee/:employeeId/fitness-status', auth, async (req, res) => {
                 start_date,
                 end_date,
                 is_permanent,
-                notes
+                accommodation_needed as notes
             FROM user_work_restrictions
             WHERE user_id = :employeeId
               AND (end_date IS NULL OR end_date >= CURRENT_DATE)
@@ -1592,7 +1579,8 @@ router.get('/employee/:employeeId/fitness-status', auth, async (req, res) => {
         }
 
         // Verificar si hay restricciones activas
-        const activeRestrictions = restrictions.filter(r => {
+        const restrictionsList = restrictions || [];
+        const activeRestrictions = restrictionsList.filter(r => {
             if (r.is_permanent) return true;
             if (!r.end_date) return true;
             return new Date(r.end_date) >= new Date();
@@ -1654,21 +1642,22 @@ router.get('/employees/with-medical-records', auth, async (req, res) => {
                 -- Último examen médico
                 (SELECT exam_date FROM user_medical_exams
                  WHERE user_id = u.user_id ORDER BY exam_date DESC LIMIT 1) as last_medical_check,
-                -- Conteo de certificados (activos, vencidos, por vencer)
-                (SELECT COUNT(*) FROM user_documents
-                 WHERE user_id = u.user_id AND document_type IN ('medical_certificate', 'disability_certificate')
-                 AND (expiration_date IS NULL OR expiration_date >= CURRENT_DATE)) as active_certificates,
-                (SELECT COUNT(*) FROM user_documents
-                 WHERE user_id = u.user_id AND document_type IN ('medical_certificate', 'disability_certificate')
-                 AND expiration_date < CURRENT_DATE) as expired_certificates,
-                (SELECT COUNT(*) FROM user_documents
-                 WHERE user_id = u.user_id AND document_type IN ('medical_certificate', 'disability_certificate')
-                 AND expiration_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days') as expiring_soon,
+                -- Conteo de certificados médicos (activos, vencidos, por vencer) - Tabla: medical_certificates
+                (SELECT COUNT(*) FROM medical_certificates
+                 WHERE user_id = u.user_id AND status IN ('approved', 'pending', 'under_review')
+                 AND (end_date IS NULL OR end_date >= CURRENT_DATE)) as active_certificates,
+                (SELECT COUNT(*) FROM medical_certificates
+                 WHERE user_id = u.user_id
+                 AND (status = 'expired' OR (end_date IS NOT NULL AND end_date < CURRENT_DATE))) as expired_certificates,
+                (SELECT COUNT(*) FROM medical_certificates
+                 WHERE user_id = u.user_id AND status IN ('approved', 'pending')
+                 AND end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days') as expiring_soon,
                 -- Casos médicos (pendientes y completados) - Tabla: absence_cases
+                -- Valores correctos: pending, under_review, awaiting_docs, needs_follow_up, justified, not_justified, closed
                 (SELECT COUNT(*) FROM absence_cases
-                 WHERE employee_id = u.user_id AND case_status IN ('new', 'in_progress', 'pending_documentation')) as pending_cases,
+                 WHERE employee_id = u.user_id AND case_status IN ('pending', 'under_review', 'awaiting_docs', 'needs_follow_up')) as pending_cases,
                 (SELECT COUNT(*) FROM absence_cases
-                 WHERE employee_id = u.user_id AND case_status = 'closed') as completed_cases,
+                 WHERE employee_id = u.user_id AND case_status IN ('justified', 'not_justified', 'closed')) as completed_cases,
                 -- Estado de aptitud del último examen
                 (SELECT result FROM user_medical_exams
                  WHERE user_id = u.user_id ORDER BY exam_date DESC LIMIT 1) as fitness_status,
@@ -1678,7 +1667,7 @@ router.get('/employees/with-medical-records', auth, async (req, res) => {
                 -- Requiere auditoría (tiene caso pendiente > 7 días)
                 (SELECT COUNT(*) > 0 FROM absence_cases
                  WHERE employee_id = u.user_id
-                 AND case_status IN ('new', 'in_progress', 'pending_documentation')
+                 AND case_status IN ('pending', 'under_review', 'awaiting_docs', 'needs_follow_up')
                  AND created_at < CURRENT_DATE - INTERVAL '7 days') as requires_audit
             FROM users u
             LEFT JOIN departments d ON u.department_id = d.id
@@ -1707,13 +1696,16 @@ router.get('/employees/with-medical-records', auth, async (req, res) => {
 
         query += ` ORDER BY u."firstName" ASC, u."lastName" ASC LIMIT 100`;
 
-        const [employees] = await db.sequelize.query(query, {
+        // Fix: QueryTypes.SELECT retorna array directamente, no [results, metadata]
+        const employees = await db.sequelize.query(query, {
             replacements,
             type: db.Sequelize.QueryTypes.SELECT
         });
 
+        console.log(`🔍 [DEBUG] Type of employees:`, typeof employees, `Is Array:`, Array.isArray(employees), `Length:`, employees?.length);
+
         // Formatear respuesta
-        const formattedEmployees = (employees || []).map(emp => ({
+        const formattedEmployees = (Array.isArray(employees) ? employees : []).map(emp => ({
             id: emp.id,
             name: emp.name,
             legajo: emp.legajo || 'N/A',

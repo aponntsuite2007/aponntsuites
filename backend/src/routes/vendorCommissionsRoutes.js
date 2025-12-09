@@ -70,7 +70,9 @@ router.get('/companies/:vendorId', requireAponntAuth, async (req, res) => {
 
     // Obtener rol del vendedor
     const vendor = await sequelize.query(
-      `SELECT role FROM aponnt_staff WHERE id = :vendorId`,
+      `SELECT r.role_code as role FROM aponnt_staff s
+       JOIN aponnt_staff_roles r ON s.role_id = r.role_id
+       WHERE s.staff_id = :vendorId`,
       {
         replacements: { vendorId },
         type: QueryTypes.SELECT
@@ -129,7 +131,9 @@ router.get('/subordinates/:vendorId', requireAponntAuth, async (req, res) => {
 
     // Obtener rol del vendedor
     const vendor = await sequelize.query(
-      `SELECT role FROM aponnt_staff WHERE id = :vendorId`,
+      `SELECT r.role_code as role FROM aponnt_staff s
+       JOIN aponnt_staff_roles r ON s.role_id = r.role_id
+       WHERE s.staff_id = :vendorId`,
       {
         replacements: { vendorId },
         type: QueryTypes.SELECT
@@ -155,10 +159,11 @@ router.get('/subordinates/:vendorId', requireAponntAuth, async (req, res) => {
 
     // Obtener datos completos de los subordinados
     const subordinates = await sequelize.query(
-      `SELECT id, first_name, last_name, email, role, is_active
-       FROM aponnt_staff
-       WHERE id = ANY(:subordinateIds)
-       ORDER BY first_name ASC, last_name ASC`,
+      `SELECT s.staff_id as id, s.first_name, s.last_name, s.email, r.role_name as role, s.is_active
+       FROM aponnt_staff s
+       JOIN aponnt_staff_roles r ON s.role_id = r.role_id
+       WHERE s.staff_id = ANY(:subordinateIds)
+       ORDER BY s.first_name ASC, s.last_name ASC`,
       {
         replacements: { subordinateIds },
         type: QueryTypes.SELECT
@@ -265,7 +270,9 @@ router.get('/can-view-company/:vendorId/:companyId', requireAponntAuth, async (r
 
     // Obtener rol del vendedor
     const vendor = await sequelize.query(
-      `SELECT role FROM aponnt_staff WHERE id = :vendorId`,
+      `SELECT r.role_code as role FROM aponnt_staff s
+       JOIN aponnt_staff_roles r ON s.role_id = r.role_id
+       WHERE s.staff_id = :vendorId`,
       {
         replacements: { vendorId },
         type: QueryTypes.SELECT
@@ -292,6 +299,413 @@ router.get('/can-view-company/:vendorId/:companyId', requireAponntAuth, async (r
       message: 'Error al verificar acceso',
       error: error.message
     });
+  }
+});
+
+// =====================================================================
+// ENDPOINTS PARA vendor-invoicing-system.js (Frontend)
+// =====================================================================
+
+/**
+ * GET /api/vendors/stats
+ * Estadísticas generales para el dashboard
+ */
+router.get('/stats', requireAponntAuth, async (req, res) => {
+  try {
+    const [stats] = await sequelize.query(`
+      SELECT
+        (SELECT COUNT(*) FROM aponnt_staff s JOIN aponnt_staff_roles r ON s.role_id = r.role_id WHERE s.is_active = true AND r.is_sales_role = true) as total_vendors,
+        (SELECT COUNT(*) FROM aponnt_staff s JOIN aponnt_staff_roles r ON s.role_id = r.role_id WHERE s.is_active = true AND r.is_sales_role = true) as active_vendors,
+        (SELECT COALESCE(SUM(monthly_total), 0) FROM companies WHERE is_active = true) as total_revenue,
+        (SELECT COUNT(*) FROM invoices WHERE status = 'pending') as pending_invoices,
+        (SELECT COUNT(*) FROM invoices WHERE status = 'overdue') as overdue_invoices
+    `, { type: QueryTypes.SELECT });
+
+    res.json({ success: true, stats: stats || {} });
+  } catch (error) {
+    console.error('Error getting vendor stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/vendors/partners
+ * Lista de vendedores/partners (type=seller)
+ */
+router.get('/partners', requireAponntAuth, async (req, res) => {
+  try {
+    const { type } = req.query;
+
+    let roleFilter = "r.is_sales_role = true";
+    if (type === 'seller') {
+      roleFilter = "r.role_code = 'VEND'";
+    }
+
+    const partners = await sequelize.query(`
+      SELECT
+        s.staff_id as id,
+        s.first_name || ' ' || s.last_name as name,
+        s.email,
+        s.phone,
+        r.role_name as role,
+        s.is_active,
+        (SELECT COUNT(*) FROM companies c WHERE c.vendor_id = s.staff_id) as total_companies,
+        COALESCE((SELECT SUM(vc.monthly_amount) FROM vendor_commissions vc WHERE vc.vendor_id = s.staff_id AND vc.is_active = true), 0) as total_commissions,
+        COALESCE(s.global_rating, 3.0) as current_score,
+        CASE WHEN s.is_active THEN 'activo' ELSE 'inactivo' END as status
+      FROM aponnt_staff s
+      JOIN aponnt_staff_roles r ON s.role_id = r.role_id
+      WHERE ${roleFilter}
+      ORDER BY s.first_name, s.last_name
+    `, { type: QueryTypes.SELECT });
+
+    res.json({ success: true, partners });
+  } catch (error) {
+    console.error('Error getting partners:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/vendors/quotes
+ * Lista de presupuestos
+ */
+router.get('/quotes', requireAponntAuth, async (req, res) => {
+  try {
+    const { status, month } = req.query;
+
+    let whereClause = 'WHERE 1=1';
+    if (status) whereClause += ` AND b.status = '${status}'`;
+    if (month) whereClause += ` AND EXTRACT(MONTH FROM b.created_at) = ${month}`;
+
+    const quotes = await sequelize.query(`
+      SELECT
+        b.id,
+        b.budget_code as quote_number,
+        c.name as company_name,
+        COALESCE(s.first_name || ' ' || s.last_name, 'Sin asignar') as seller_name,
+        b.created_at as issue_date,
+        b.valid_until,
+        b.total_monthly as total_amount,
+        b.status
+      FROM budgets b
+      LEFT JOIN companies c ON b.company_id = c.company_id
+      LEFT JOIN aponnt_staff s ON b.vendor_id = s.staff_id
+      ${whereClause}
+      ORDER BY b.created_at DESC
+      LIMIT 100
+    `, { type: QueryTypes.SELECT });
+
+    res.json({ success: true, quotes });
+  } catch (error) {
+    console.error('Error getting quotes:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/vendors/contracts
+ * Lista de contratos
+ */
+router.get('/contracts', requireAponntAuth, async (req, res) => {
+  try {
+    const { status, month } = req.query;
+
+    let whereClause = 'WHERE 1=1';
+    if (status) whereClause += ` AND ct.status = '${status}'`;
+    if (month) whereClause += ` AND EXTRACT(MONTH FROM ct.created_at) = ${month}`;
+
+    const contracts = await sequelize.query(`
+      SELECT
+        ct.id,
+        ct.contract_code as contract_number,
+        c.name as company_name,
+        COALESCE(s.first_name || ' ' || s.last_name, 'Sin asignar') as seller_name,
+        ct.contract_date as start_date,
+        ct.valid_until as end_date,
+        ct.total_monthly as total_amount,
+        ct.status
+      FROM contracts ct
+      LEFT JOIN companies c ON ct.company_id = c.company_id
+      LEFT JOIN budgets b ON ct.budget_id = b.id
+      LEFT JOIN aponnt_staff s ON b.vendor_id = s.staff_id
+      ${whereClause}
+      ORDER BY ct.created_at DESC
+      LIMIT 100
+    `, { type: QueryTypes.SELECT });
+
+    res.json({ success: true, contracts });
+  } catch (error) {
+    console.error('Error getting contracts:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/vendors/invoices
+ * Lista de facturas
+ */
+router.get('/invoices', requireAponntAuth, async (req, res) => {
+  try {
+    const { status, month } = req.query;
+
+    let whereClause = 'WHERE 1=1';
+    if (status) whereClause += ` AND i.status = '${status}'`;
+    if (month) whereClause += ` AND EXTRACT(MONTH FROM i.issue_date) = ${month}`;
+
+    const invoices = await sequelize.query(`
+      SELECT
+        i.id,
+        i.invoice_number,
+        c.name as company_name,
+        i.billing_period_month,
+        i.billing_period_year,
+        i.total_amount,
+        i.status,
+        i.due_date,
+        i.issue_date
+      FROM invoices i
+      LEFT JOIN companies c ON i.company_id = c.company_id
+      ${whereClause}
+      ORDER BY i.issue_date DESC
+      LIMIT 100
+    `, { type: QueryTypes.SELECT });
+
+    res.json({ success: true, invoices });
+  } catch (error) {
+    console.error('Error getting invoices:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/vendors/payments
+ * Lista de pagos
+ */
+router.get('/payments', requireAponntAuth, async (req, res) => {
+  try {
+    const { status, month } = req.query;
+
+    let whereClause = "WHERE i.status = 'paid'";
+    if (month) whereClause += ` AND EXTRACT(MONTH FROM i.paid_at) = ${month}`;
+
+    const payments = await sequelize.query(`
+      SELECT
+        i.id,
+        i.invoice_number,
+        c.name as company_name,
+        i.total_amount as amount,
+        'TRANSFERENCIA' as payment_method,
+        i.paid_at as payment_date,
+        '' as payment_proof_url
+      FROM invoices i
+      LEFT JOIN companies c ON i.company_id = c.company_id
+      ${whereClause}
+      ORDER BY i.paid_at DESC
+      LIMIT 100
+    `, { type: QueryTypes.SELECT });
+
+    res.json({ success: true, payments });
+  } catch (error) {
+    console.error('Error getting payments:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/vendors/commissions
+ * Lista de comisiones
+ */
+router.get('/commissions', requireAponntAuth, async (req, res) => {
+  try {
+    const { status, month } = req.query;
+
+    let whereClause = 'WHERE 1=1';
+    if (status) whereClause += ` AND pct.status = '${status}'`;
+    if (month) whereClause += ` AND EXTRACT(MONTH FROM pct.transaction_date) = ${month}`;
+
+    const commissions = await sequelize.query(`
+      SELECT
+        pct.id,
+        p.first_name || ' ' || p.last_name as partner_name,
+        c.name as company_name,
+        pct.billable_amount,
+        pct.commission_percentage,
+        pct.commission_amount,
+        pct.net_amount,
+        pct.status,
+        pct.transaction_date
+      FROM partner_commission_transactions pct
+      LEFT JOIN partners p ON pct.partner_id = p.id
+      LEFT JOIN companies c ON pct.company_id = c.company_id
+      ${whereClause}
+      ORDER BY pct.transaction_date DESC
+      LIMIT 100
+    `, { type: QueryTypes.SELECT });
+
+    res.json({ success: true, commissions });
+  } catch (error) {
+    console.error('Error getting commissions:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/vendors/quotes/:id/accept
+ * Aceptar presupuesto
+ */
+router.post('/quotes/:id/accept', requireAponntAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await sequelize.query(`
+      UPDATE budgets SET status = 'ACCEPTED', accepted_at = NOW(), updated_at = NOW()
+      WHERE id = :id
+    `, { replacements: { id }, type: QueryTypes.UPDATE });
+
+    res.json({ success: true, message: 'Presupuesto aceptado' });
+  } catch (error) {
+    console.error('Error accepting quote:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/vendors/quotes/:id/reject
+ * Rechazar presupuesto
+ */
+router.post('/quotes/:id/reject', requireAponntAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await sequelize.query(`
+      UPDATE budgets SET status = 'REJECTED', updated_at = NOW()
+      WHERE id = :id
+    `, { replacements: { id }, type: QueryTypes.UPDATE });
+
+    res.json({ success: true, message: 'Presupuesto rechazado' });
+  } catch (error) {
+    console.error('Error rejecting quote:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/vendors/quotes/:id/convert-to-contract
+ * Convertir presupuesto a contrato
+ */
+router.post('/quotes/:id/convert-to-contract', requireAponntAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Obtener datos del presupuesto
+    const [budget] = await sequelize.query(`
+      SELECT * FROM budgets WHERE id = :id
+    `, { replacements: { id }, type: QueryTypes.SELECT });
+
+    if (!budget) {
+      return res.status(404).json({ success: false, error: 'Presupuesto no encontrado' });
+    }
+
+    // Crear contrato
+    const contractNumber = `CTR-${Date.now()}`;
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 1);
+
+    await sequelize.query(`
+      INSERT INTO contracts (
+        company_id, vendor_id, contract_number, budget_id,
+        monthly_amount, start_date, end_date, status, created_at
+      ) VALUES (
+        :company_id, :vendor_id, :contract_number, :budget_id,
+        :monthly_amount, :start_date, :end_date, 'active', NOW()
+      )
+    `, {
+      replacements: {
+        company_id: budget.company_id,
+        vendor_id: budget.vendor_id,
+        contract_number: contractNumber,
+        budget_id: budget.id,
+        monthly_amount: budget.total_monthly,
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0]
+      },
+      type: QueryTypes.INSERT
+    });
+
+    // Actualizar presupuesto
+    await sequelize.query(`
+      UPDATE budgets SET status = 'CONVERTED', updated_at = NOW() WHERE id = :id
+    `, { replacements: { id }, type: QueryTypes.UPDATE });
+
+    res.json({ success: true, message: 'Contrato creado exitosamente', contract_number: contractNumber });
+  } catch (error) {
+    console.error('Error converting quote to contract:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/vendors/invoices/generate-monthly
+ * Generar facturas mensuales
+ */
+router.post('/invoices/generate-monthly', requireAponntAuth, async (req, res) => {
+  try {
+    const currentDate = new Date();
+    const month = currentDate.getMonth() + 1;
+    const year = currentDate.getFullYear();
+
+    // Obtener contratos activos
+    const contracts = await sequelize.query(`
+      SELECT ct.*, c.name as company_name
+      FROM contracts ct
+      JOIN companies c ON ct.company_id = c.company_id
+      WHERE ct.status = 'active'
+        AND NOT EXISTS (
+          SELECT 1 FROM invoices i
+          WHERE i.company_id = ct.company_id
+            AND i.billing_period_month = :month
+            AND i.billing_period_year = :year
+        )
+    `, { replacements: { month, year }, type: QueryTypes.SELECT });
+
+    let generated = 0;
+    for (const contract of contracts) {
+      const invoiceNumber = `INV-${year}${String(month).padStart(2, '0')}-${contract.company_id}`;
+      const dueDate = new Date(year, month, 15); // Vence el 15 del próximo mes
+
+      await sequelize.query(`
+        INSERT INTO invoices (
+          company_id, contract_id, invoice_number,
+          billing_period_month, billing_period_year,
+          amount_usd, currency, status, due_date, created_at
+        ) VALUES (
+          :company_id, :contract_id, :invoice_number,
+          :month, :year, :amount, 'USD', 'pending', :due_date, NOW()
+        )
+      `, {
+        replacements: {
+          company_id: contract.company_id,
+          contract_id: contract.id,
+          invoice_number: invoiceNumber,
+          month, year,
+          amount: contract.monthly_amount || 0,
+          due_date: dueDate.toISOString().split('T')[0]
+        },
+        type: QueryTypes.INSERT
+      });
+      generated++;
+    }
+
+    res.json({
+      success: true,
+      message: `${generated} facturas generadas para ${month}/${year}`,
+      generated
+    });
+  } catch (error) {
+    console.error('Error generating monthly invoices:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

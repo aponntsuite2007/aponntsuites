@@ -790,6 +790,39 @@ router.post('/verify-real', upload.single('biometricImage'), async (req, res) =>
     if (bestMatch && bestSimilarity >= threshold) {
       console.log(`✅ [MATCH] Success: ${bestMatch.employeeName} (${bestSimilarity.toFixed(3)})`);
 
+      // 🔒 VALIDAR PERMISO can_use_mobile_app SI ES MODO EMPLEADO (APK)
+      const isEmployeeMode = req.headers['x-employee-mode'] === 'true';
+
+      if (isEmployeeMode) {
+        const [employeePermission] = await sequelize.query(`
+          SELECT can_use_mobile_app, "firstName", "lastName"
+          FROM users
+          WHERE user_id = :employeeId AND company_id = :companyId
+          LIMIT 1
+        `, {
+          replacements: {
+            employeeId: bestMatch.employeeId,
+            companyId: companyId
+          },
+          type: sequelize.QueryTypes.SELECT
+        });
+
+        if (employeePermission && !employeePermission.can_use_mobile_app) {
+          console.log(`🚫 [MOBILE-APP] Empleado ${bestMatch.employeeName} NO autorizado para usar app móvil`);
+
+          return res.status(403).json({
+            success: false,
+            code: 'MOBILE_APP_NOT_AUTHORIZED',
+            message: 'No tienes autorización para fichar desde la aplicación móvil. Contacta a tu supervisor.',
+            employee_name: bestMatch.employeeName,
+            similarity: bestSimilarity,
+            processingTime: Date.now() - startTime
+          });
+        }
+
+        console.log(`✅ [MOBILE-APP] Empleado ${bestMatch.employeeName} autorizado para usar app móvil`);
+      }
+
       // 🔒 VALIDAR DEPARTAMENTO AUTORIZADO EN KIOSK
       const deviceId = req.headers['x-device-id'] || req.body.deviceId;
 

@@ -16,13 +16,16 @@
  * - Documentos (con vencimientos)
  * - Liquidaciones (recibos de sueldo)
  * - Vacaciones (solicitar y ver saldo)
- * - Sanciones (historial propio)
+ * - Permisos y solicitudes
  * - Capacitaciones (completar desde app)
  * - Tareas asignadas
- * - Permisos y solicitudes
+ * - Sanciones (historial propio)
+ * - Procedimientos (políticas y manuales) ⭐ NUEVO
+ * - HSE/Seguridad (EPP y cumplimiento) ⭐ NUEVO
+ * - Info Legal (comunicaciones legales) ⭐ NUEVO
  *
- * Fecha: 2025-11-30
- * Versión: 2.0.0
+ * Fecha: 2025-12-08
+ * Versión: 2.1.0
  *
  * ⚠️ ESTE ARCHIVO ES INDEPENDIENTE - NO MODIFICA NADA DEL KIOSK
  */
@@ -45,6 +48,9 @@ import 'employee_sanctions_screen.dart';
 import 'employee_trainings_screen.dart';
 import 'employee_tasks_screen.dart';
 import 'employee_permissions_screen.dart';
+import 'employee_procedures_screen.dart';
+import 'employee_hse_screen.dart';
+import 'employee_legal_screen.dart';
 
 class EmployeeMainNavigation extends StatefulWidget {
   const EmployeeMainNavigation({Key? key}) : super(key: key);
@@ -293,6 +299,27 @@ class _EmployeeMainNavigationState extends State<EmployeeMainNavigation> {
               title: 'Sanciones',
               subtitle: 'Historial de sanciones',
               onTap: () => _navigateTo(const EmployeeSanctionsScreen()),
+            ),
+            const Divider(color: Colors.white24),
+
+            // === SECCIÓN: Compliance y Legal ===
+            _buildDrawerItem(
+              icon: Icons.assignment,
+              title: 'Procedimientos',
+              subtitle: 'Políticas y manuales',
+              onTap: () => _navigateTo(const EmployeeProceduresScreen()),
+            ),
+            _buildDrawerItem(
+              icon: Icons.health_and_safety,
+              title: 'HSE / Seguridad',
+              subtitle: 'EPP y cumplimiento',
+              onTap: () => _navigateTo(const EmployeeHseScreen()),
+            ),
+            _buildDrawerItem(
+              icon: Icons.account_balance,
+              title: 'Info Legal',
+              subtitle: 'Comunicaciones legales',
+              onTap: () => _navigateTo(const EmployeeLegalScreen()),
             ),
             const Divider(color: Colors.white24),
 

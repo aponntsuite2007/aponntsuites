@@ -41,24 +41,24 @@ module.exports = (sequelize) => {
       };
     }
 
-    // Método estático para crear log
-    static async logAction(data) {
+    // Método estático para crear log (acepta snake_case y camelCase)
+    static async logAction(data, transaction = null) {
       return await DocumentAccessLog.create({
-        document_id: data.documentId,
-        document_version: data.version,
-        company_id: data.companyId,
-        user_id: data.userId,
-        user_name: data.userName,
-        user_role: data.userRole,
+        document_id: data.documentId || data.document_id,
+        document_version: data.version || data.version_number,
+        company_id: data.companyId || data.company_id,
+        user_id: data.userId || data.user_id,
+        user_name: data.userName || data.user_name,
+        user_role: data.userRole || data.user_role,
         action: data.action,
-        action_detail: data.detail,
-        ip_address: data.ipAddress,
-        user_agent: data.userAgent,
-        session_id: data.sessionId,
-        device_type: data.deviceType,
+        action_detail: data.detail || data.details ? JSON.stringify(data.detail || data.details) : null,
+        ip_address: data.ipAddress || data.ip_address,
+        user_agent: data.userAgent || data.user_agent,
+        session_id: data.sessionId || data.session_id,
+        device_type: data.deviceType || data.device_type,
         success: data.success !== false,
-        error_message: data.errorMessage
-      });
+        error_message: data.errorMessage || data.error_message
+      }, { transaction });
     }
   }
 

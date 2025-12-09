@@ -26,6 +26,7 @@
  */
 
 const { Pool } = require('pg');
+const ShiftCalculatorService = require('./ShiftCalculatorService');
 
 class OrganizationalSSOTService {
     constructor() {
@@ -1256,6 +1257,215 @@ class OrganizationalSSOTService {
             console.log('⚠️ Sistema necesita atención');
         } else {
             console.log('❌ Sistema tiene problemas críticos');
+        }
+    }
+
+    // ================================================================
+    // CÁLCULO DE DÍAS LABORALES - SSOT
+    // ================================================================
+
+    /**
+     * FUENTE ÚNICA DE VERDAD para calcular días laborables de un usuario.
+     *
+     * Esta función es la ÚNICA que debe usarse en todo el sistema para
+     * determinar cuántos días debe trabajar un empleado en un período.
+     *
+     * Flujo de cálculo:
+     * 1. Usuario → user_shift_assignments (turno asignado)
+     * 2. Turno → branches (sucursal)
+     * 3. Sucursal → country (país)
+     * 4. País → holidays (feriados nacionales)
+     * 5. Turno.respect_national_holidays → si se restan feriados
+     * 6. Turno.custom_non_working_days → días no laborables custom
+     *
+     * @param {UUID} userId - ID del usuario
+     * @param {Date|String} startDate - Fecha inicio del período
+     * @param {Date|String} endDate - Fecha fin del período
+     * @returns {Object} { total, breakdown, details }
+     */
+    async getExpectedWorkingDaysInPeriod(userId, startDate, endDate) {
+        try {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            // Usar ShiftCalculatorService.generateUserCalendar como fuente única
+            const calendar = await ShiftCalculatorService.generateUserCalendar(userId, start, end);
+
+            // Analizar resultados
+            const breakdown = {
+                totalDaysInPeriod: calendar.length,
+                workingDays: 0,
+                restDays: 0,
+                noAssignment: 0
+            };
+
+            const workingDatesList = [];
+            const restDatesList = [];
+
+            for (const day of calendar) {
+                if (!day.hasAssignment) {
+                    breakdown.noAssignment++;
+                } else if (day.shouldWork) {
+                    breakdown.workingDays++;
+                    workingDatesList.push({
+                        date: day.date,
+                        phase: day.userAssignedPhase || day.phase,
+                        reason: day.reason
+                    });
+                } else {
+                    breakdown.restDays++;
+                    restDatesList.push({
+                        date: day.date,
+                        reason: day.reason || (day.isRestDay ? 'Día de descanso' : 'No trabaja')
+                    });
+                }
+            }
+
+            // Verificar feriados (necesitamos info del turno para esto)
+            let holidaysOff = 0;
+            let customDaysOff = 0;
+
+            if (calendar.length > 0 && calendar[0].shift) {
+                const shift = calendar[0].shift;
+
+                // Si respeta feriados nacionales, verificar cuántos hay
+                if (shift.respect_national_holidays) {
+                    const holidaysResult = await this.pool.query(`
+                        SELECT COUNT(*) as count
+                        FROM holidays h
+                        JOIN branches b ON h.country_code = b.country
+                        JOIN shifts s ON s.branch_id = b.id
+                        WHERE s.id = $1
+                        AND h.date BETWEEN $2 AND $3
+                        AND h.is_active = true
+                    `, [shift.id, start.toISOString().split('T')[0], end.toISOString().split('T')[0]]);
+
+                    holidaysOff = parseInt(holidaysResult.rows[0]?.count || 0);
+                }
+
+                // Contar días no laborables custom
+                if (shift.custom_non_working_days && Array.isArray(shift.custom_non_working_days)) {
+                    for (const customDate of shift.custom_non_working_days) {
+                        const d = new Date(customDate);
+                        if (d >= start && d <= end) {
+                            customDaysOff++;
+                        }
+                    }
+                }
+            }
+
+            breakdown.holidaysOff = holidaysOff;
+            breakdown.customDaysOff = customDaysOff;
+
+            return {
+                userId,
+                period: {
+                    start: start.toISOString().split('T')[0],
+                    end: end.toISOString().split('T')[0]
+                },
+                total: breakdown.workingDays,
+                breakdown,
+                workingDates: workingDatesList,
+                restDates: restDatesList,
+                hasValidAssignment: breakdown.noAssignment === 0,
+                source: 'OrganizationalSSOTService.getExpectedWorkingDaysInPeriod',
+                calculatedAt: new Date().toISOString()
+            };
+
+        } catch (error) {
+            console.error('❌ [SSOT] Error calculando días laborales:', error);
+
+            // Fallback: cálculo simple lunes-viernes si falla
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            let workingDays = 0;
+            const current = new Date(start);
+
+            while (current <= end) {
+                const dayOfWeek = current.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    workingDays++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+
+            return {
+                userId,
+                period: {
+                    start: start.toISOString().split('T')[0],
+                    end: end.toISOString().split('T')[0]
+                },
+                total: workingDays,
+                breakdown: {
+                    workingDays,
+                    method: 'FALLBACK_MON_FRI'
+                },
+                hasValidAssignment: false,
+                error: error.message,
+                source: 'OrganizationalSSOTService.getExpectedWorkingDaysInPeriod (FALLBACK)',
+                calculatedAt: new Date().toISOString()
+            };
+        }
+    }
+
+    /**
+     * Obtener días laborables esperados para múltiples usuarios
+     * Útil para reportes de toda una empresa
+     *
+     * @param {Number} companyId - ID de la empresa
+     * @param {Date|String} startDate - Fecha inicio
+     * @param {Date|String} endDate - Fecha fin
+     * @returns {Array} Array de resultados por usuario
+     */
+    async getExpectedWorkingDaysForCompany(companyId, startDate, endDate) {
+        try {
+            // Obtener todos los usuarios activos de la empresa
+            const usersResult = await this.pool.query(`
+                SELECT user_id, "firstName", "lastName", legajo, department_id
+                FROM users
+                WHERE company_id = $1 AND "isActive" = true AND role = 'employee'
+            `, [companyId]);
+
+            const results = [];
+
+            for (const user of usersResult.rows) {
+                const workingDays = await this.getExpectedWorkingDaysInPeriod(
+                    user.user_id,
+                    startDate,
+                    endDate
+                );
+
+                results.push({
+                    user_id: user.user_id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    legajo: user.legajo,
+                    department_id: user.department_id,
+                    ...workingDays
+                });
+            }
+
+            // Resumen
+            const summary = {
+                totalUsers: results.length,
+                usersWithValidAssignment: results.filter(r => r.hasValidAssignment).length,
+                usersWithoutAssignment: results.filter(r => !r.hasValidAssignment).length,
+                totalWorkingDaysExpected: results.reduce((sum, r) => sum + r.total, 0),
+                avgWorkingDaysPerUser: results.length > 0
+                    ? (results.reduce((sum, r) => sum + r.total, 0) / results.length).toFixed(1)
+                    : 0
+            };
+
+            return {
+                companyId,
+                period: { startDate, endDate },
+                summary,
+                users: results
+            };
+
+        } catch (error) {
+            console.error('❌ [SSOT] Error calculando días para empresa:', error);
+            throw error;
         }
     }
 

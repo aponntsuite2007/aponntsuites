@@ -165,6 +165,8 @@ module.exports = (services, authMiddleware) => {
       const data = {
         folder_id: req.body.folder_id || null,
         document_type_id: req.body.document_type_id,
+        category_code: req.body.category_code,
+        type_code: req.body.type_code,
         title: req.body.title,
         description: req.body.description,
         tags: req.body.tags ? JSON.parse(req.body.tags) : [],

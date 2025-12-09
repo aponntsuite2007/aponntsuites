@@ -482,7 +482,7 @@ class DocumentAuditService {
       include: [{
         model: this.models.User,
         as: 'creator',
-        attributes: ['id', 'first_name', 'last_name', 'email']
+        attributes: ['user_id', 'firstName', 'lastName', 'email']
       }],
       order: [['expiration_date', 'ASC']]
     });

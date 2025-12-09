@@ -17,11 +17,14 @@
  * POST /api/engineering/reload           - Recargar metadata desde disco
  *
  * ⭐ COMMERCIAL MODULES (SINGLE SOURCE OF TRUTH):
- * GET  /api/engineering/commercial-modules              - Todos los módulos comerciales
- * GET  /api/engineering/commercial-modules/:moduleKey   - Módulo específico por key
- * GET  /api/engineering/commercial-modules/category/:category - Filtrar por categoría
- * GET  /api/engineering/bundles                         - Bundles comerciales
- * POST /api/engineering/sync-commercial-modules         - Sincronizar desde registry
+ * GET    /api/engineering/commercial-modules                        - Todos los módulos comerciales
+ * GET    /api/engineering/commercial-modules/:moduleKey             - Módulo específico por key
+ * GET    /api/engineering/commercial-modules/category/:category     - Filtrar por categoría
+ * PUT    /api/engineering/commercial-modules/:moduleKey/pricing     - Actualizar precios por tier
+ * GET    /api/engineering/bundles                                   - Listar bundles comerciales
+ * POST   /api/engineering/bundles                                   - Crear/editar bundle
+ * DELETE /api/engineering/bundles/:bundleKey                        - Eliminar bundle
+ * POST   /api/engineering/sync-commercial-modules                   - Sincronizar desde registry
  *
  * UTILITIES:
  * GET  /api/engineering/health           - Health check
@@ -233,34 +236,363 @@ router.get('/commercial-modules/category/:category', (req, res) => {
 });
 
 /**
+ * PUT /api/engineering/commercial-modules/:moduleKey/pricing
+ * Actualiza los precios por tier de un módulo comercial específico
+ * Body: { pricing: { tier1: number, tier2: number, tier3: number } }
+ */
+router.put('/commercial-modules/:moduleKey/pricing', (req, res) => {
+  try {
+    const { moduleKey } = req.params;
+    const { pricing } = req.body;
+
+    console.log(`💰 [ENGINEERING] Actualizando precios del módulo: ${moduleKey}`);
+
+    // Validar que el módulo existe
+    if (!metadata.commercialModules || !metadata.commercialModules.modules || !metadata.commercialModules.modules[moduleKey]) {
+      return res.status(404).json({
+        success: false,
+        error: `Módulo "${moduleKey}" no encontrado`,
+        availableModules: metadata.commercialModules?.modules ? Object.keys(metadata.commercialModules.modules) : []
+      });
+    }
+
+    // Validar que se enviaron los precios
+    if (!pricing || typeof pricing !== 'object') {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere objeto "pricing" con tier1, tier2, tier3'
+      });
+    }
+
+    const { tier1, tier2, tier3 } = pricing;
+
+    // Validar que los precios sean números válidos
+    if (typeof tier1 !== 'number' || typeof tier2 !== 'number' || typeof tier3 !== 'number') {
+      return res.status(400).json({
+        success: false,
+        error: 'Los precios deben ser números válidos'
+      });
+    }
+
+    if (tier1 < 0 || tier2 < 0 || tier3 < 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Los precios no pueden ser negativos'
+      });
+    }
+
+    // Actualizar precios en el metadata en memoria
+    const module = metadata.commercialModules.modules[moduleKey];
+
+    if (!module.pricingTiers) {
+      module.pricingTiers = {
+        tier1: { range: "1-50", price: 0 },
+        tier2: { range: "51-100", price: 0 },
+        tier3: { range: "101+", price: 0 }
+      };
+    }
+
+    module.pricingTiers.tier1.price = tier1;
+    module.pricingTiers.tier2.price = tier2;
+    module.pricingTiers.tier3.price = tier3;
+
+    // Actualizar basePrice con el tier1 (precio base por defecto)
+    module.basePrice = tier1;
+
+    // Guardar el archivo metadata actualizado
+    const fs = require('fs');
+    const metadataPath = path.join(__dirname, '../../engineering-metadata.js');
+
+    const content = `/**
+ * ENGINEERING METADATA - AUTO-UPDATED
+ * Last update: ${new Date().toISOString()}
+ */
+
+module.exports = ${JSON.stringify(metadata, null, 2)};
+`;
+
+    fs.writeFileSync(metadataPath, content, 'utf8');
+    console.log(`✅ [ENGINEERING] Archivo engineering-metadata.js actualizado`);
+
+    // Recargar metadata desde disco
+    const reloaded = reloadMetadata();
+
+    if (!reloaded) {
+      return res.status(500).json({
+        success: false,
+        error: 'Error recargando metadata después de actualización'
+      });
+    }
+
+    console.log(`✅ [ENGINEERING] Precios actualizados para módulo: ${moduleKey}`);
+    console.log(`   - Tier 1 (1-50): $${tier1}`);
+    console.log(`   - Tier 2 (51-100): $${tier2}`);
+    console.log(`   - Tier 3 (101+): $${tier3}`);
+
+    res.json({
+      success: true,
+      message: `Precios actualizados correctamente para módulo "${module.name}"`,
+      module: {
+        key: moduleKey,
+        name: module.name,
+        pricingTiers: module.pricingTiers,
+        basePrice: module.basePrice
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error actualizando precios:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/engineering/bundles
+ * Crea o edita un bundle comercial
+ * Body: {
+ *   bundleKey: string (opcional para editar),
+ *   name: string,
+ *   description: string,
+ *   modules: string[] (array de moduleKeys),
+ *   discount_percentage: number (0-100),
+ *   category: string
+ * }
+ */
+router.post('/bundles', (req, res) => {
+  try {
+    const { bundleKey, name, description, modules, discount_percentage, category } = req.body;
+
+    console.log(`🎁 [ENGINEERING] ${bundleKey ? 'Editando' : 'Creando'} bundle: ${name}`);
+
+    // Validaciones básicas
+    if (!name || !modules || !Array.isArray(modules) || modules.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere: name, modules (array no vacío)'
+      });
+    }
+
+    if (discount_percentage !== undefined && (discount_percentage < 0 || discount_percentage > 100)) {
+      return res.status(400).json({
+        success: false,
+        error: 'discount_percentage debe estar entre 0 y 100'
+      });
+    }
+
+    // Validar que todos los módulos existen
+    const commercialModules = metadata.commercialModules?.modules;
+    if (!commercialModules) {
+      return res.status(500).json({
+        success: false,
+        error: 'commercialModules no encontrado en metadata'
+      });
+    }
+
+    const invalidModules = modules.filter(moduleKey => !commercialModules[moduleKey]);
+    if (invalidModules.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Módulos no encontrados: ${invalidModules.join(', ')}`,
+        availableModules: Object.keys(commercialModules)
+      });
+    }
+
+    // Calcular precio total del bundle (suma de basePrice de cada módulo)
+    let totalPrice = 0;
+    modules.forEach(moduleKey => {
+      const module = commercialModules[moduleKey];
+      totalPrice += parseFloat(module.basePrice || 0);
+    });
+
+    // Aplicar descuento
+    const discountAmount = totalPrice * (discount_percentage || 0) / 100;
+    const bundlePrice = totalPrice - discountAmount;
+
+    // Generar bundleKey si es nuevo
+    const finalBundleKey = bundleKey || `bundle-${name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+
+    // Crear o actualizar bundle
+    if (!metadata.commercialModules.bundles) {
+      metadata.commercialModules.bundles = {};
+    }
+
+    const bundleData = {
+      key: finalBundleKey,
+      name,
+      description: description || '',
+      modules,
+      module_count: modules.length,
+      total_price_without_discount: totalPrice,
+      discount_percentage: discount_percentage || 0,
+      discount_amount: discountAmount,
+      bundle_price: bundlePrice,
+      category: category || 'custom',
+      created_at: metadata.commercialModules.bundles[finalBundleKey]?.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    metadata.commercialModules.bundles[finalBundleKey] = bundleData;
+
+    // Guardar el archivo metadata actualizado
+    const fs = require('fs');
+    const metadataPath = path.join(__dirname, '../../engineering-metadata.js');
+
+    const content = `/**
+ * ENGINEERING METADATA - AUTO-UPDATED
+ * Last update: ${new Date().toISOString()}
+ */
+
+module.exports = ${JSON.stringify(metadata, null, 2)};
+`;
+
+    fs.writeFileSync(metadataPath, content, 'utf8');
+    console.log(`✅ [ENGINEERING] Archivo engineering-metadata.js actualizado`);
+
+    // Recargar metadata desde disco
+    const reloaded = reloadMetadata();
+
+    if (!reloaded) {
+      return res.status(500).json({
+        success: false,
+        error: 'Error recargando metadata después de actualización'
+      });
+    }
+
+    console.log(`✅ [ENGINEERING] Bundle ${bundleKey ? 'editado' : 'creado'}: ${finalBundleKey}`);
+    console.log(`   - Nombre: ${name}`);
+    console.log(`   - Módulos: ${modules.length}`);
+    console.log(`   - Precio sin descuento: $${totalPrice}`);
+    console.log(`   - Descuento: ${discount_percentage}% ($${discountAmount})`);
+    console.log(`   - Precio final: $${bundlePrice}`);
+
+    res.json({
+      success: true,
+      message: `Bundle ${bundleKey ? 'editado' : 'creado'} correctamente: "${name}"`,
+      bundle: bundleData
+    });
+
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error gestionando bundle:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /api/engineering/bundles/:bundleKey
+ * Elimina un bundle comercial
+ */
+router.delete('/bundles/:bundleKey', (req, res) => {
+  try {
+    const { bundleKey } = req.params;
+
+    console.log(`🗑️ [ENGINEERING] Eliminando bundle: ${bundleKey}`);
+
+    if (!metadata.commercialModules?.bundles?.[bundleKey]) {
+      return res.status(404).json({
+        success: false,
+        error: `Bundle "${bundleKey}" no encontrado`,
+        availableBundles: metadata.commercialModules?.bundles ? Object.keys(metadata.commercialModules.bundles) : []
+      });
+    }
+
+    const bundleName = metadata.commercialModules.bundles[bundleKey].name;
+
+    // Eliminar bundle
+    delete metadata.commercialModules.bundles[bundleKey];
+
+    // Guardar el archivo metadata actualizado
+    const fs = require('fs');
+    const metadataPath = path.join(__dirname, '../../engineering-metadata.js');
+
+    const content = `/**
+ * ENGINEERING METADATA - AUTO-UPDATED
+ * Last update: ${new Date().toISOString()}
+ */
+
+module.exports = ${JSON.stringify(metadata, null, 2)};
+`;
+
+    fs.writeFileSync(metadataPath, content, 'utf8');
+    console.log(`✅ [ENGINEERING] Archivo engineering-metadata.js actualizado`);
+
+    // Recargar metadata desde disco
+    const reloaded = reloadMetadata();
+
+    if (!reloaded) {
+      return res.status(500).json({
+        success: false,
+        error: 'Error recargando metadata después de eliminación'
+      });
+    }
+
+    console.log(`✅ [ENGINEERING] Bundle eliminado: ${bundleKey}`);
+
+    res.json({
+      success: true,
+      message: `Bundle "${bundleName}" eliminado correctamente`
+    });
+
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error eliminando bundle:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
  * POST /api/engineering/sync-commercial-modules
- * Ejecuta el script de consolidación para sincronizar módulos comerciales
+ * Sincroniza módulos comerciales desde BD (system_modules) - FUENTE ÚNICA DE VERDAD
+ * Ejecuta: scripts/sync-commercial-modules-from-db.js
  */
 router.post('/sync-commercial-modules', (req, res) => {
   try {
-    const command = 'node scripts/consolidate-modules-simple.js';
+    const command = 'node scripts/sync-commercial-modules-from-db.js';
+
+    console.log('🔄 [ENGINEERING] Sincronizando módulos comerciales desde BD...');
 
     exec(command, { cwd: path.join(__dirname, '..', '..') }, (error, stdout, stderr) => {
       if (error) {
-        console.error('❌ [ENGINEERING] Error ejecutando consolidación:', error);
+        console.error('❌ [ENGINEERING] Error ejecutando sincronización:', error);
         return res.status(500).json({
           success: false,
           error: error.message,
-          stderr
+          stderr,
+          stdout
         });
       }
 
       // Recargar metadata después de sincronizar
-      reloadMetadata();
+      const reloaded = reloadMetadata();
+
+      if (!reloaded) {
+        return res.status(500).json({
+          success: false,
+          error: 'Error recargando metadata después de sincronización'
+        });
+      }
+
+      console.log('✅ [ENGINEERING] Módulos comerciales sincronizados desde BD');
 
       res.json({
         success: true,
-        message: 'Módulos comerciales sincronizados correctamente',
+        message: 'Módulos comerciales sincronizados desde BD (system_modules)',
         output: stdout,
-        stats: metadata.commercialModules?._stats
+        stats: metadata.commercialModules?._stats,
+        syncedFrom: metadata.commercialModules?._syncedFrom,
+        version: metadata.commercialModules?._version,
+        lastSync: metadata.commercialModules?._lastSync
       });
     });
   } catch (error) {
+    console.error('❌ [ENGINEERING] Error en sync-commercial-modules:', error);
     res.status(500).json({
       success: false,
       error: error.message
