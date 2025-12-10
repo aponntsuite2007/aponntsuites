@@ -36,20 +36,41 @@ router.get('/companies', async (req, res) => {
  */
 router.post('/login', async (req, res) => {
   try {
-    const { identifier, password, companyId } = req.body;
-    console.log('🔐 [DEBUG] Login attempt:', { identifier, companyId });
+    const { identifier, password, companyId, companySlug } = req.body;
+    console.log('🔐 [DEBUG] Login attempt:', { identifier, companyId, companySlug });
 
-    if (!identifier || !password || !companyId) {
+    if (!identifier || !password || (!companyId && !companySlug)) {
       return res.status(400).json({
         error: 'Usuario, contraseña y empresa son requeridos'
       });
+    }
+
+    // Si viene companySlug, buscar el companyId
+    let actualCompanyId = companyId;
+    if (companySlug && !companyId) {
+      const [company] = await sequelize.query(
+        'SELECT company_id FROM companies WHERE slug = ? AND is_active = true',
+        {
+          replacements: [companySlug],
+          type: sequelize.QueryTypes.SELECT
+        }
+      );
+
+      if (!company) {
+        return res.status(404).json({
+          error: 'Empresa no encontrada'
+        });
+      }
+
+      actualCompanyId = company.company_id;
+      console.log('🔐 [DEBUG] Company found:', { slug: companySlug, id: actualCompanyId });
     }
 
     // Buscar usuario por email, usuario o DNI
     const user = await sequelize.query(
       `SELECT * FROM users WHERE (email = :identifier OR usuario = :identifier OR dni = :identifier) AND is_active = true AND company_id = :companyId`,
       {
-        replacements: { identifier, companyId },
+        replacements: { identifier, companyId: actualCompanyId },
         type: sequelize.QueryTypes.SELECT,
         plain: true
       }
