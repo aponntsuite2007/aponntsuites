@@ -41,33 +41,16 @@
 
     <style>
         :root {
-            /* Dark Theme - GitHub Style */
-            --primary-color: #58a6ff;
-            --secondary-color: #7c3aed;
-            --success-color: #3fb950;
-            --warning-color: #d29922;
-            --danger-color: #f85149;
-            --info-color: #58a6ff;
-            --light-bg: #0d1117;
-            --white: #161b22;
-            --dark-text: #e6edf3;
-            --border-color: #30363d;
-
-            /* Extended Dark Palette */
-            --bg-primary: #0d1117;
-            --bg-secondary: #161b22;
-            --bg-tertiary: #21262d;
-            --bg-card: #161b22;
-            --text-primary: #e6edf3;
-            --text-secondary: #8b949e;
-            --text-muted: #6e7681;
-            --border-default: #30363d;
-            --border-muted: #21262d;
-            --accent-blue: #58a6ff;
-            --accent-green: #3fb950;
-            --accent-purple: #a371f7;
-            --accent-orange: #f0883e;
-            --shadow-dark: rgba(0,0,0,0.4);
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --info-color: #3498db;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --dark-text: #2c3e50;
+            --border-color: #e9ecef;
         }
 
         * {
@@ -78,17 +61,16 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0d1117;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
-            color: #e6edf3;
         }
 
         .dashboard-header {
-            background: linear-gradient(135deg, #161b22 0%, #21262d 100%);
-            color: #e6edf3;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #1e293b;
             padding: 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            border-bottom: 3px solid #58a6ff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-bottom: 3px solid #60a5fa;
         }
 
         .dashboard-title {
@@ -120,13 +102,12 @@
         }
 
         .stat-card {
-            background: #161b22;
+            background: white;
             padding: 1.5rem;
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
             transition: transform 0.3s ease;
-            border: 1px solid #30363d;
         }
 
         .stat-card:hover {
@@ -145,7 +126,7 @@
         }
 
         .stat-label {
-            color: #8b949e;
+            color: #666;
             font-size: 0.9em;
             margin-top: 0.5rem;
         }
@@ -159,21 +140,19 @@
         /* Wrapper para tabs con navegación */
         .tabs-navigation-wrapper {
             position: relative;
-            background: #161b22;
+            background: white;
             border-radius: 15px 15px 0 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            border: 1px solid #30363d;
-            border-bottom: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .nav-tabs {
             display: flex;
-            background: #161b22;
+            background: white;
             overflow-x: auto;
             overflow-y: hidden;
             scroll-behavior: smooth;
             scrollbar-width: thin;
-            scrollbar-color: #58a6ff #21262d;
+            scrollbar-color: #007bff #f8f9fa;
             margin-bottom: 0;
         }
 
@@ -182,7 +161,7 @@
         }
 
         .nav-tabs::-webkit-scrollbar-track {
-            background: #21262d;
+            background: #f8f9fa;
         }
 
         .nav-tabs::-webkit-scrollbar-thumb {
@@ -231,18 +210,17 @@
             flex: 0 0 auto;
             min-width: 140px;
             padding: 1rem 1.5rem;
-            background: #21262d;
+            background: #f8f9fa;
             border: none;
             cursor: pointer;
             font-weight: 400;
             transition: all 0.3s ease;
-            border-right: 1px solid #30363d;
+            border-right: 1px solid #e9ecef;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            color: #8b949e;
         }
 
         .nav-tab span {
@@ -259,8 +237,7 @@
         }
 
         .nav-tab:hover:not(.active) {
-            background: #30363d;
-            color: #e6edf3;
+            background: #e9ecef;
         }
 
         .tab-content {
@@ -274,12 +251,11 @@
         }
 
         .billing-card {
-            background: #161b22;
+            background: white;
             border-radius: 15px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: 1px solid #30363d;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .billing-header {
@@ -288,7 +264,7 @@
             align-items: center;
             margin-bottom: 1rem;
             padding-bottom: 1rem;
-            border-bottom: 2px solid #30363d;
+            border-bottom: 2px solid #f8f9fa;
         }
 
         .invoice-grid {
@@ -299,44 +275,42 @@
         }
 
         .invoice-card {
-            background: linear-gradient(135deg, #21262d, #161b22);
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border-radius: 10px;
             padding: 1rem;
             border-left: 4px solid var(--primary-color);
-            color: #e6edf3;
         }
 
         .invoice-card.overdue {
             border-left-color: var(--danger-color);
-            background: linear-gradient(135deg, #3d1f1f, #2d1515);
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
         }
 
         .invoice-card.paid {
             border-left-color: var(--success-color);
-            background: linear-gradient(135deg, #1a2e1a, #152615);
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
         }
 
         .qr-payment {
             text-align: center;
             padding: 2rem;
-            background: linear-gradient(135deg, #1a2744, #152033);
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
             border-radius: 15px;
             margin: 1rem 0;
-            border: 1px solid #30363d;
         }
 
         .qr-code {
             width: 200px;
             height: 200px;
-            background: #21262d;
-            border: 2px solid #30363d;
+            background: white;
+            border: 2px solid #ddd;
             border-radius: 10px;
             margin: 1rem auto;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 0.8rem;
-            color: #8b949e;
+            color: #666;
         }
 
         .pricing-controls {
@@ -347,11 +321,10 @@
         }
 
         .module-pricing {
-            background: #161b22;
+            background: white;
             border-radius: 10px;
             padding: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            border: 1px solid #30363d;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .tier-selector {
@@ -363,13 +336,12 @@
         .tier-btn {
             flex: 1;
             padding: 0.5rem;
-            border: 1px solid #30363d;
-            background: #21262d;
+            border: 1px solid var(--border-color);
+            background: white;
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.8rem;
             transition: all 0.3s ease;
-            color: #e6edf3;
         }
 
         .tier-btn.active {
@@ -380,11 +352,9 @@
         .price-input {
             width: 100%;
             padding: 8px 12px;
-            border: 1px solid #30363d;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
             font-size: 0.9rem;
-            background: #21262d;
-            color: #e6edf3;
         }
 
         .notification {
@@ -396,17 +366,16 @@
             gap: 0.5rem;
         }
 
-        .notification.success { background: #1a2e1a; color: #3fb950; border: 1px solid #238636; }
-        .notification.warning { background: #3d2e0f; color: #d29922; border: 1px solid #d29922; }
-        .notification.error { background: #3d1f1f; color: #f85149; border: 1px solid #da3633; }
-        .notification.info { background: #1a2744; color: #58a6ff; border: 1px solid #58a6ff; }
+        .notification.success { background: #d4edda; color: #155724; }
+        .notification.warning { background: #fff3cd; color: #856404; }
+        .notification.error { background: #f8d7da; color: #721c24; }
+        .notification.info { background: #d1ecf1; color: #0c5460; }
 
         .section-card {
-            background: #161b22;
+            background: white;
             border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
             overflow: hidden;
-            border: 1px solid #30363d;
         }
 
         .section-header {
@@ -434,10 +403,10 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
-            background: #161b22;
+            background: white;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
         .billing-table th {
@@ -452,22 +421,21 @@
         
         .billing-table td {
             padding: 0.75rem 1rem;
-            border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid #f0f0f0;
             font-size: 0.85rem;
             vertical-align: middle;
-            color: #e6edf3;
         }
         
         .billing-table tr:hover {
-            background-color: #21262d;
+            background-color: #f8f9fa;
         }
         
         .billing-table tr.unpaid {
-            background-color: #2d1f1f;
+            background-color: #fff5f5;
         }
         
         .billing-table tr.unpaid:hover {
-            background-color: #3d1f1f;
+            background-color: #ffebee;
         }
         
         .billing-table .amount {
@@ -493,25 +461,24 @@
         }
         
         .status.paid {
-            background: #1a2e1a;
-            color: #3fb950;
+            background: #e8f5e8;
+            color: #2e7d32;
         }
         
         .status.unpaid {
-            background: #3d1f1f;
-            color: #f85149;
+            background: #ffebee;
+            color: #d32f2f;
         }
         
         .btn-action {
-            background: #21262d;
-            border: 1px solid #30363d;
+            background: none;
+            border: 1px solid #ddd;
             border-radius: 5px;
             padding: 0.25rem 0.5rem;
             cursor: pointer;
             margin: 0 0.25rem;
             font-size: 0.9rem;
             transition: all 0.3s ease;
-            color: #e6edf3;
         }
         
         .btn-action:hover {
@@ -530,7 +497,7 @@
         .total-item {
             text-align: center;
             padding: 1rem;
-            background: linear-gradient(135deg, #21262d, #161b22);
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border-radius: 10px;
             border-left: 4px solid var(--primary-color);
         }
@@ -552,7 +519,7 @@
         
         .total-label {
             font-size: 0.85rem;
-            color: #8b949e;
+            color: #666;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -563,9 +530,8 @@
             gap: 1rem;
             margin-bottom: 1.5rem;
             padding: 1rem;
-            background: #21262d;
+            background: #f8f9fa;
             border-radius: 10px;
-            border: 1px solid #30363d;
         }
         
         .filter-group {
@@ -577,16 +543,14 @@
         .filter-label {
             font-size: 0.85rem;
             font-weight: 600;
-            color: #8b949e;
+            color: #666;
         }
         
         .filter-input {
             padding: 0.5rem;
-            border: 1px solid #30363d;
+            border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 0.9rem;
-            background: #161b22;
-            color: #e6edf3;
         }
         
         .btn-filter {
@@ -619,12 +583,11 @@
         }
         
         .billing-generation {
-            background: linear-gradient(135deg, #1a2744, #152033);
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
             border-radius: 10px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
             text-align: center;
-            border: 1px solid #30363d;
         }
         
         .generation-title {
@@ -635,7 +598,7 @@
         }
         
         .generation-description {
-            color: #8b949e;
+            color: #666;
             margin-bottom: 1rem;
             font-size: 0.9rem;
         }
@@ -654,7 +617,7 @@
         }
         
         .stat-card {
-            background: linear-gradient(135deg, #161b22, #21262d);
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border-radius: 10px;
             padding: 1.5rem;
             text-align: center;
@@ -670,22 +633,21 @@
         
         .stat-label {
             font-size: 0.9rem;
-            color: #8b949e;
+            color: #666;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
         .preliquidation-generator {
-            background: linear-gradient(135deg, #3d2e0f, #2d2105);
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
             border-radius: 10px;
             padding: 1.5rem;
             margin-bottom: 2rem;
-            border: 1px solid #d29922;
         }
         
         .preliquidation-generator h3 {
             margin: 0 0 1rem 0;
-            color: #d29922;
+            color: #b8860b;
         }
         
         .preliq-controls {
@@ -708,19 +670,17 @@
         }
         
         .vendor-card {
-            background: #161b22;
+            background: white;
             border-radius: 15px;
             padding: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             border-left: 4px solid var(--primary-color);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid #30363d;
-            border-left: 4px solid var(--primary-color);
         }
         
         .vendor-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
         
         .vendor-card.inactive {
@@ -743,7 +703,7 @@
         }
         
         .vendor-email {
-            color: #8b949e;
+            color: #666;
             font-size: 0.9rem;
         }
         
@@ -755,13 +715,13 @@
         }
         
         .vendor-status.active {
-            background: #1a2e1a;
-            color: #3fb950;
+            background: #e8f5e8;
+            color: #2e7d32;
         }
         
         .vendor-status.inactive {
-            background: #3d1f1f;
-            color: #f85149;
+            background: #ffebee;
+            color: #d32f2f;
         }
         
         .vendor-details {
@@ -778,22 +738,21 @@
         }
         
         .vendor-detail-label {
-            color: #8b949e;
+            color: #666;
             font-weight: 600;
             margin-bottom: 0.25rem;
         }
         
         .vendor-detail-value {
-            color: #e6edf3;
+            color: #333;
         }
         
         .vendor-commission {
-            background: linear-gradient(135deg, #1a2744, #152033);
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1rem;
             text-align: center;
-            border: 1px solid #30363d;
         }
         
         .commission-percentage {
@@ -804,7 +763,7 @@
         
         .commission-label {
             font-size: 0.8rem;
-            color: #8b949e;
+            color: #666;
             margin-top: 0.25rem;
         }
         
@@ -852,7 +811,7 @@
         }
         
         .preliq-item {
-            background: #21262d;
+            background: white;
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 0.5rem;
@@ -878,7 +837,7 @@
         
         .preliq-details {
             font-size: 0.85rem;
-            color: #8b949e;
+            color: #666;
         }
         
         .vendor-modal {
@@ -899,7 +858,7 @@
         }
         
         .vendor-modal-content {
-            background: #161b22;
+            background: white;
             border-radius: 15px;
             padding: 2rem;
             max-width: 800px;
@@ -907,8 +866,6 @@
             max-height: 95vh;
             overflow-y: auto;
             position: relative;
-            border: 1px solid #30363d;
-            color: #e6edf3;
         }
         
         .vendor-form {
@@ -934,16 +891,14 @@
         .form-label {
             font-weight: 600;
             margin-bottom: 0.5rem;
-            color: #e6edf3;
+            color: #333;
         }
         
         .form-input {
             padding: 0.75rem;
-            border: 1px solid #30363d;
+            border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 1rem;
-            background: #21262d;
-            color: #e6edf3;
         }
         
         .form-input:focus {
@@ -954,26 +909,26 @@
 
         .form-help {
             font-size: 0.8rem;
-            color: #8b949e;
+            color: #666;
             margin-top: 0.25rem;
             line-height: 1.3;
         }
 
         .vendor-section {
-            background: #21262d;
-            border: 1px solid #30363d;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .section-title {
             margin: 0 0 1.2rem 0;
-            color: #e6edf3;
+            color: #495057;
             font-size: 1.1rem;
             font-weight: 600;
-            border-bottom: 2px solid #30363d;
+            border-bottom: 2px solid #dee2e6;
             padding-bottom: 0.5rem;
             display: flex;
             align-items: center;
@@ -993,25 +948,24 @@
 
         .vendor-section .form-label {
             font-weight: 500;
-            color: #e6edf3;
+            color: #343a40;
             margin-bottom: 0.5rem;
         }
 
         .vendor-section .form-help {
-            color: #8b949e;
+            color: #6c757d;
             font-size: 0.75rem;
             margin-top: 0.25rem;
         }
 
         /* Estilos para tabla de vendedores */
         .vendors-table-container {
-            background: #161b22;
+            background: white;
             border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             margin: 1rem 0;
             width: 100%;
-            border: 1px solid #30363d;
         }
 
         .vendors-table-container .table-header {
@@ -1045,11 +999,11 @@
         }
 
         .vendors-table .table-cell.header {
-            background: #21262d;
+            background: #f8f9fa;
             padding: 1rem;
             font-weight: 600;
-            color: #e6edf3;
-            border-bottom: 2px solid #30363d;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
             font-size: 0.9rem;
         }
 
@@ -1058,7 +1012,7 @@
         }
 
         .vendors-table .table-row:hover .table-cell:not(.header) {
-            background-color: #21262d;
+            background-color: #f8f9fa;
         }
 
         .vendors-table .table-row.inactive-row .table-cell:not(.header) {
@@ -1068,7 +1022,7 @@
 
         .vendors-table .table-cell {
             padding: 1rem;
-            border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid #e9ecef;
             display: flex;
             align-items: center;
             font-size: 0.9rem;
@@ -1081,7 +1035,7 @@
         }
 
         .vendor-notes {
-            color: #8b949e;
+            color: #6c757d;
             font-size: 0.75rem;
             font-style: italic;
         }
@@ -1115,7 +1069,7 @@
         }
 
         .auction-badge.accepts {
-            background: #161b223cd;
+            background: #fff3cd;
             color: #856404;
             border: 1px solid #ffeaa7;
         }
@@ -1151,7 +1105,7 @@
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
-            color: #8b949e;
+            color: #6c757d;
         }
 
         .empty-icon {
@@ -1161,7 +1115,7 @@
 
         .empty-state h3 {
             margin: 1rem 0;
-            color: #e6edf3;
+            color: #495057;
         }
 
         .empty-state p {
@@ -1170,15 +1124,15 @@
         
         .form-select {
             padding: 0.75rem;
-            border: 1px solid #30363d;
+            border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 1rem;
-            background: #161b22;
+            background: white;
         }
         
         .form-textarea {
             padding: 0.75rem;
-            border: 1px solid #30363d;
+            border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 1rem;
             resize: vertical;
@@ -1191,7 +1145,7 @@
             justify-content: flex-end;
             margin-top: 2rem;
             padding-top: 2rem;
-            border-top: 1px solid #30363d;
+            border-top: 1px solid #f0f0f0;
         }
         
         .close-modal {
@@ -1206,7 +1160,7 @@
         }
         
         .close-modal:hover {
-            color: #e6edf3;
+            color: #333;
         }
 
         .btn {
@@ -1270,17 +1224,17 @@
         }
 
         .status-active { background: #d4edda; color: #155724; }
-        .status-trial { background: #161b223cd; color: #856404; }
+        .status-trial { background: #fff3cd; color: #856404; }
         .status-suspended { background: #f8d7da; color: #721c24; }
 
         /* Filtros de búsqueda */
         .filters-panel {
-            background: linear-gradient(135deg, #21262d 0%, #30363d 100%);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: calc(20px - 1cm);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .filters-header {
@@ -1335,7 +1289,7 @@
 
         .filter-input {
             padding: 8px 12px;
-            border: 1px solid #30363d;
+            border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 0.9rem;
             transition: border-color 0.2s, box-shadow 0.2s;
@@ -1412,7 +1366,7 @@
         }
 
         .modal-content {
-            background: #161b22;
+            background: white;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             width: 98%;
@@ -1534,7 +1488,7 @@
         }
 
         .module-card {
-            background: #161b22;
+            background: white;
             border: 2px solid var(--border-color);
             border-radius: 10px;
             padding: 12px;
@@ -1592,8 +1546,8 @@
         }
         
         .filter-btn {
-            background: #21262d;
-            border: 1px solid #30363d;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 0.85rem;
@@ -1633,7 +1587,7 @@
         
         .status-badge.new {
             background: rgba(76, 175, 80, 0.15);
-            color: #3fb950;
+            color: #2e7d32;
         }
         
         .status-badge.removing {
@@ -1649,7 +1603,7 @@
         .no-modules {
             text-align: center;
             padding: 2rem;
-            color: #8b949e;
+            color: #666;
             font-style: italic;
         }
 
@@ -1688,7 +1642,7 @@
 
         .module-description {
             font-size: 0.85rem;
-            color: #8b949e;
+            color: #666;
             margin-bottom: 4px;
         }
 
@@ -1718,10 +1672,10 @@
             width: 100%;
             max-width: none;
             border-collapse: collapse;
-            background: #161b22;
+            background: white;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             font-size: 0.45rem; /* Reducido a la mitad */
             margin-right: 0;
         }
@@ -1739,7 +1693,7 @@
 
         .vendors-simple-table td {
             padding: 5px 6px; /* Reducido a la mitad */
-            border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid #f0f0f0;
             vertical-align: middle;
             font-size: 0.44rem; /* Reducido a la mitad */
         }
@@ -1788,7 +1742,7 @@
         }
 
         .vendors-simple-table .vendor-info small {
-            color: #8b949e;
+            color: #666;
             font-size: 0.39rem; /* Reducido a la mitad */
         }
 
@@ -1803,7 +1757,7 @@
         }
 
         .btn-simple:hover {
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.1);
             transform: scale(1.1);
         }
 
@@ -1927,11 +1881,11 @@
         }
 
         .pricing-summary {
-            background: #161b22;
+            background: white;
             border-radius: 10px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
@@ -1965,11 +1919,11 @@
         }
 
         .pricing-breakdown {
-            background: #161b22;
+            background: white;
             border-radius: 8px;
             padding: 1rem;
             margin-top: 1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .pricing-item {
@@ -2077,10 +2031,10 @@
         /* ========================================= */
 
         .siac-company-selector {
-            background: #161b22;
+            background: white;
             padding: 1.5rem;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 2rem;
         }
 
@@ -2113,15 +2067,15 @@
         }
 
         .siac-config-container {
-            background: #161b22;
+            background: white;
             padding: 2rem;
             border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .siac-section {
             margin-bottom: 3rem;
-            border: 1px solid #30363d;
+            border: 1px solid #e9ecef;
             border-radius: 12px;
             overflow: hidden;
         }
@@ -2155,14 +2109,14 @@
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             padding: 2rem;
-            background: #21262d;
+            background: #f8f9fa;
         }
 
         .siac-config-group {
-            background: #161b22;
+            background: white;
             padding: 1.5rem;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         .siac-config-group h4 {
@@ -2177,14 +2131,14 @@
 
         .terminals-container, .sessions-container {
             padding: 2rem;
-            background: #21262d;
+            background: #f8f9fa;
         }
 
         .terminal-card, .session-card {
-            background: #161b22;
+            background: white;
             padding: 1.5rem;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 1rem;
             border-left: 4px solid var(--primary-color);
         }
@@ -2220,7 +2174,7 @@
         .session-stat {
             text-align: center;
             padding: 0.8rem;
-            background: #21262d;
+            background: #f8f9fa;
             border-radius: 8px;
         }
 
@@ -2232,7 +2186,7 @@
 
         .session-stat-label {
             font-size: 0.8em;
-            color: #8b949e;
+            color: #666;
             margin-top: 0.2rem;
         }
 
@@ -2241,7 +2195,7 @@
             gap: 1rem;
             justify-content: center;
             padding: 2rem;
-            border-top: 1px solid #30363d;
+            border-top: 1px solid #e9ecef;
             margin-top: 2rem;
         }
 
@@ -2312,17 +2266,17 @@
         }
 
         .tax-template-card {
-            background: #161b22;
+            background: white;
             border: 1px solid #e0e0e0;
             border-radius: 12px;
             padding: 1.5rem;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         .tax-template-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             border-color: #007bff;
         }
 
@@ -2339,7 +2293,7 @@
 
         .tax-template-title h3 {
             margin: 0;
-            color: #e6edf3;
+            color: #333;
             font-size: 1.2rem;
             display: flex;
             align-items: center;
@@ -2380,13 +2334,13 @@
 
         .info-label {
             font-size: 0.8rem;
-            color: #8b949e;
+            color: #666;
             font-weight: 500;
         }
 
         .info-value {
             font-weight: 600;
-            color: #e6edf3;
+            color: #333;
         }
 
         .tax-template-stats {
@@ -2395,7 +2349,7 @@
             gap: 2rem;
             margin: 1rem 0;
             padding: 1rem;
-            background: #21262d;
+            background: #f8f9fa;
             border-radius: 8px;
         }
 
@@ -2412,7 +2366,7 @@
 
         .stat-label {
             font-size: 0.8rem;
-            color: #8b949e;
+            color: #666;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -2435,7 +2389,7 @@
         }
 
         .detail-section h4 {
-            color: #e6edf3;
+            color: #333;
             border-bottom: 2px solid #007bff;
             padding-bottom: 0.5rem;
             margin-bottom: 1rem;
@@ -2449,14 +2403,14 @@
         }
 
         .detail-item {
-            background: #21262d;
+            background: #f8f9fa;
             padding: 0.75rem;
             border-radius: 8px;
         }
 
         .detail-label {
             font-size: 0.8rem;
-            color: #8b949e;
+            color: #666;
             font-weight: 500;
             display: block;
             margin-bottom: 0.25rem;
@@ -2464,7 +2418,7 @@
 
         .detail-value {
             font-weight: 600;
-            color: #e6edf3;
+            color: #333;
         }
 
         .conditions-list, .concepts-list {
@@ -2478,7 +2432,7 @@
             align-items: center;
             gap: 1rem;
             padding: 0.75rem;
-            background: #21262d;
+            background: #f8f9fa;
             border-radius: 8px;
             border-left: 4px solid #28a745;
         }
@@ -2498,7 +2452,7 @@
         }
 
         .concept-item {
-            background: #21262d;
+            background: #f8f9fa;
             border-radius: 8px;
             padding: 1rem;
             border-left: 4px solid #ffc107;
@@ -2513,12 +2467,12 @@
 
         .concept-name {
             font-weight: 600;
-            color: #e6edf3;
+            color: #333;
         }
 
         .concept-order {
             background: #ffc107;
-            color: #e6edf3;
+            color: #333;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             font-size: 0.8rem;
@@ -2530,7 +2484,7 @@
             gap: 1rem;
             margin-bottom: 0.75rem;
             font-size: 0.9rem;
-            color: #8b949e;
+            color: #666;
         }
 
         .rates-list {
@@ -2544,7 +2498,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem;
-            background: #161b22;
+            background: white;
             border-radius: 6px;
             border: 1px solid #e0e0e0;
         }
@@ -2592,7 +2546,7 @@
         /* Secondary Tabs (Tabs internos de Vendedores y Partners) */
         .nav-tabs-secondary {
             display: flex;
-            background: #21262d;
+            background: #f8f9fa;
             border-radius: 10px;
             padding: 5px;
             gap: 5px;
@@ -2604,18 +2558,18 @@
             flex: 1;
             min-width: 120px;
             padding: 0.75rem 1rem;
-            background: #161b22;
+            background: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 500;
             font-size: 0.9rem;
             transition: all 0.3s ease;
-            color: #e6edf3;
+            color: #495057;
         }
 
         .nav-tab-secondary:hover {
-            background: #30363d;
+            background: #e9ecef;
             transform: translateY(-2px);
         }
 
@@ -2646,10 +2600,10 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            background: #161b22;
+            background: white;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .data-table thead {
@@ -2665,12 +2619,12 @@
         }
 
         .data-table tbody tr {
-            border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid #e9ecef;
             transition: background 0.2s ease;
         }
 
         .data-table tbody tr:hover {
-            background: #21262d;
+            background: #f8f9fa;
         }
 
         .data-table tbody tr:last-child {
@@ -2680,7 +2634,7 @@
         .data-table tbody td {
             padding: 1rem;
             font-size: 0.9rem;
-            color: #e6edf3;
+            color: #495057;
         }
 
         /* Status Badges */
@@ -2694,7 +2648,7 @@
         }
 
         .status-badge.pending {
-            background: #161b223cd;
+            background: #fff3cd;
             color: #856404;
         }
 
@@ -2720,7 +2674,7 @@
 
         .status-badge.draft {
             background: #e7e7e7;
-            color: #8b949e;
+            color: #6c757d;
         }
 
         .status-badge.sent {
@@ -2770,7 +2724,7 @@
         }
 
         .score-badge.medium {
-            background: #161b223cd;
+            background: #fff3cd;
             color: #856404;
         }
 
@@ -2823,10 +2777,10 @@
 
         /* Partner Stats Dashboard */
         .partner-stats-dashboard {
-            background: #161b22;
+            background: white;
             padding: 1.5rem;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         /* Vendor Stats */
@@ -2862,7 +2816,7 @@
         }
 
         .commission-type.leader {
-            background: #161b223cd;
+            background: #fff3cd;
             color: #856404;
         }
 
@@ -2872,7 +2826,7 @@
             align-items: center;
             gap: 5px;
             padding: 0.4rem 0.8rem;
-            background: #161b223cd;
+            background: #fff3cd;
             color: #856404;
             border-radius: 20px;
             font-weight: 600;
@@ -2917,8 +2871,8 @@
 
         /* 🏗️ ENGINEERING DASHBOARD STYLES */
         .cube-layer {
-            background: #21262d;
-            border: 2px solid #30363d;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
             border-radius: 12px;
             padding: 20px;
             margin: 15px 0;
@@ -2926,7 +2880,7 @@
         }
 
         .cube-layer:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             transform: translateY(-2px);
         }
 
@@ -2936,12 +2890,12 @@
             align-items: center;
             margin-bottom: 15px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #30363d;
+            border-bottom: 2px solid #dee2e6;
         }
 
         .layer-header h3 {
             margin: 0;
-            color: #e6edf3;
+            color: #495057;
             font-size: 1.2rem;
         }
 
@@ -2968,34 +2922,34 @@
         }
 
         .preview-card {
-            background: #161b22;
+            background: white;
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid #30363d;
+            border: 1px solid #dee2e6;
         }
 
         .preview-card h4 {
             margin: 0 0 8px 0;
-            color: #e6edf3;
+            color: #343a40;
             font-size: 1rem;
         }
 
         .preview-card p {
             margin: 5px 0;
             font-size: 0.85rem;
-            color: #8b949e;
+            color: #6c757d;
         }
 
         .dependency-section {
             margin-top: 30px;
             padding: 20px;
-            background: #21262d;
+            background: #f8f9fa;
             border-radius: 12px;
         }
 
         .dependency-section h3 {
             margin: 0 0 20px 0;
-            color: #e6edf3;
+            color: #495057;
         }
 
     </style>
@@ -3030,7 +2984,7 @@
 
             <!-- Centro: Dashboard Administrativo -->
             <div class="admin-info-center" style="display: flex; justify-content: center; height: fit-content;">
-                <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); padding: 1rem 3rem; border-radius: 16px; border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); padding: 1rem 3rem; border-radius: 16px; border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <span style="font-size: 3.2rem;">🏢</span>
                     <div style="text-align: left;">
                         <div style="font-weight: 700; color: #1e40af; font-size: 2.6rem; line-height: 1.1; white-space: nowrap;">Dashboard Comercial, Administrativo y Ejecutivo</div>
@@ -3112,7 +3066,6 @@
                             <span id="tickets-badge" class="badge badge-danger" style="display:none; margin-left: 5px;">0</span>
                         </button>
                         <button class="nav-tab" onclick="switchTab('engineering')"><span>🏗️</span><br>Ingeniería</button>
-                        <button class="nav-tab" onclick="switchTab('knowledgeCenter')"><span>📚</span><br>Centro Conocimiento</button>
                     </div>
                 </div>
 
@@ -3530,11 +3483,11 @@
                     </div>
 
                     <!-- Filtros -->
-                    <div class="filters-container" style="margin: 20px 0; padding: 15px; background: #21262d; border-radius: 8px;">
+                    <div class="filters-container" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                         <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
                             <div>
-                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #8b949e;">Área:</label>
-                                <select id="staffFilterArea" class="filter-input" onchange="loadStaff()" style="padding: 8px; border-radius: 4px; border: 1px solid #30363d;">
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #666;">Área:</label>
+                                <select id="staffFilterArea" class="filter-input" onchange="loadStaff()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                                     <option value="">Todas las áreas</option>
                                     <option value="ventas">Ventas</option>
                                     <option value="admin">Administración</option>
@@ -3544,8 +3497,8 @@
                                 </select>
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #8b949e;">País:</label>
-                                <select id="staffFilterCountry" class="filter-input" onchange="loadStaff()" style="padding: 8px; border-radius: 4px; border: 1px solid #30363d;">
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #666;">País:</label>
+                                <select id="staffFilterCountry" class="filter-input" onchange="loadStaff()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                                     <option value="">Todos los países</option>
                                     <option value="AR">Argentina</option>
                                     <option value="BR">Brasil</option>
@@ -3556,8 +3509,8 @@
                                 </select>
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #8b949e;">Estado:</label>
-                                <select id="staffFilterStatus" class="filter-input" onchange="loadStaff()" style="padding: 8px; border-radius: 4px; border: 1px solid #30363d;">
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #666;">Estado:</label>
+                                <select id="staffFilterStatus" class="filter-input" onchange="loadStaff()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                                     <option value="">Todos</option>
                                     <option value="true">Activos</option>
                                     <option value="false">Inactivos</option>
@@ -3597,9 +3550,9 @@
                         <div id="staff-orgchart" class="vendor-subtab-content" style="display: none;">
                             <div style="margin: 20px 0;">
                                 <!-- Filtro de país para organigrama -->
-                                <div style="margin-bottom: 20px; padding: 15px; background: #21262d; border-radius: 8px;">
+                                <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                                     <label style="font-weight: bold; margin-right: 10px;">Filtrar por país:</label>
-                                    <select id="orgchartCountryFilter" onchange="renderOrgChart()" style="padding: 8px; border-radius: 4px; border: 1px solid #30363d;">
+                                    <select id="orgchartCountryFilter" onchange="renderOrgChart()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                                         <option value="">🌎 Todos los países</option>
                                         <option value="AR">🇦🇷 Argentina</option>
                                         <option value="BR">🇧🇷 Brasil</option>
@@ -3611,7 +3564,7 @@
                                 </div>
 
                                 <!-- Contenedor del organigrama -->
-                                <div id="orgchartContainer" style="padding: 20px; background: #161b22; border-radius: 8px; overflow-x: auto;">
+                                <div id="orgchartContainer" style="padding: 20px; background: white; border-radius: 8px; overflow-x: auto;">
                                     <!-- Se renderizará aquí -->
                                 </div>
                             </div>
@@ -3629,10 +3582,10 @@
                     </div>
 
                     <!-- Filtros -->
-                    <div class="filters-container" style="margin: 20px 0; padding: 15px; background: #21262d; border-radius: 8px;">
+                    <div class="filters-container" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                         <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
                             <div>
-                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #8b949e;">Área:</label>
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #666;">Área:</label>
                                 <select id="roleFilterArea" class="filter-input" onchange="loadStaffRoles()">
                                     <option value="">Todas las áreas</option>
                                     <option value="ventas">Ventas</option>
@@ -3643,7 +3596,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #8b949e;">Nivel:</label>
+                                <label style="display: block; font-size: 0.85rem; margin-bottom: 5px; color: #666;">Nivel:</label>
                                 <select id="roleFilterLevel" class="filter-input" onchange="loadStaffRoles()">
                                     <option value="">Todos los niveles</option>
                                     <option value="0">Nivel 0 - CEO</option>
@@ -3662,7 +3615,7 @@
                     </div>
 
                     <!-- Información sobre roles protegidos -->
-                    <div style="margin: 20px 0; padding: 15px; background: #161b223cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <div style="margin: 20px 0; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
                         <p style="margin: 0; color: #856404; font-size: 0.9rem;">
                             ⚠️ <strong>Roles base protegidos:</strong> Los 26 roles base del sistema no pueden ser eliminados, solo editados para traducciones i18n.
                         </p>
@@ -4026,7 +3979,7 @@
                                             <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
                                             <div>
                                                 <strong>Test en ejecución...</strong>
-                                                <div style="font-size: 0.9rem; color: #8b949e;">El navegador debe estar visible. Si no lo ves, revisa los logs.</div>
+                                                <div style="font-size: 0.9rem; color: #666;">El navegador debe estar visible. Si no lo ves, revisa los logs.</div>
                                             </div>
                                         </div>
                                     </div>
@@ -4091,7 +4044,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div style="margin-top: 15px; padding: 15px; background: #21262d; border-radius: 4px;">
+                                    <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
                                         <strong>📊 Detalles:</strong>
                                         <div id="lastTestDetails" style="margin-top: 10px; font-size: 0.9rem;"></div>
                                     </div>
@@ -4747,12 +4700,12 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Código Postal</label>
-                                <input type="text" class="form-input" id="postalCode" readonly style="background-color: #21262d;">
+                                <input type="text" class="form-input" id="postalCode" readonly style="background-color: #f8f9fa;">
                             </div>
 
                             <!-- Sección de Geolocalización para Empresa -->
-                            <div style="margin: 1rem 0; padding: 1rem; background: #21262d; border-radius: 6px; border: 1px solid #30363d;">
-                                <h6 style="color: #e6edf3; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                                <h6 style="color: #495057; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
                                     🌐 Geolocalización de la Empresa
                                 </h6>
                                 <div class="form-row">
@@ -4775,7 +4728,7 @@
                                         🗺️ Ver en mapa
                                     </button>
                                 </div>
-                                <div style="font-size: 0.8rem; color: #8b949e; margin-top: 0.5rem; text-align: center;">
+                                <div style="font-size: 0.8rem; color: #6c757d; margin-top: 0.5rem; text-align: center;">
                                     Las coordenadas se obtienen desde la dirección de la empresa ingresada arriba
                                 </div>
                             </div>
@@ -4798,7 +4751,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Vendedor</label>
-                                <input type="text" class="form-input" id="vendorDisplay" readonly style="background-color: #21262d; cursor: not-allowed;" placeholder="No asignado">
+                                <input type="text" class="form-input" id="vendorDisplay" readonly style="background-color: #f8f9fa; cursor: not-allowed;" placeholder="No asignado">
                                 <input type="hidden" id="vendor">
                             </div>
 
@@ -4807,17 +4760,17 @@
                                 <!-- Comisión de Venta - Porcentaje -->
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label class="form-label" style="font-size: 0.85rem;">% Comisión permanente por venta</label>
-                                    <input type="number" class="form-input" id="commissionPercentage" min="0" max="100" step="0.1" placeholder="10" readonly style="background-color: #21262d; cursor: not-allowed;">
+                                    <input type="number" class="form-input" id="commissionPercentage" min="0" max="100" step="0.1" placeholder="10" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
                                 </div>
                                 <!-- Comisión de Venta - Monto USD -->
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label class="form-label" style="font-size: 0.85rem;">💰 Comisión Venta (USD)</label>
-                                    <input type="text" class="form-input" id="salesCommissionUSD" readonly style="background-color: #e8f5e9; cursor: not-allowed; font-weight: 600; color: #3fb950;" placeholder="$0.00">
+                                    <input type="text" class="form-input" id="salesCommissionUSD" readonly style="background-color: #e8f5e9; cursor: not-allowed; font-weight: 600; color: #2e7d32;" placeholder="$0.00">
                                 </div>
                                 <!-- Comisión de Soporte - Porcentaje -->
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label class="form-label" style="font-size: 0.85rem;">% Comisión Temporal por soporte</label>
-                                    <input type="number" class="form-input" id="supportCommissionPercentage" min="0" max="100" step="0.1" placeholder="0" readonly style="background-color: #21262d; cursor: not-allowed;">
+                                    <input type="number" class="form-input" id="supportCommissionPercentage" min="0" max="100" step="0.1" placeholder="0" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
                                 </div>
                                 <!-- Comisión de Soporte - Monto USD -->
                                 <div class="form-group" style="margin-bottom: 0;">
@@ -4839,14 +4792,14 @@
                                     <div class="employee-counter" style="flex: 1;">
                                         <label class="form-label">Empleados Contratados (para facturación):</label>
                                         <input type="number" id="contractedEmployees" value="1" min="1" max="10000" onchange="updateModulePricing()">
-                                        <small style="color: #8b949e; font-size: 0.85em; margin-top: 4px; display: block;">
+                                        <small style="color: #666; font-size: 0.85em; margin-top: 4px; display: block;">
                                             Cantidad de empleados que la empresa paga mensualmente
                                         </small>
                                     </div>
                                     <div class="employee-counter" style="flex: 1;">
                                         <label class="form-label">Límite Máximo de Empleados:</label>
                                         <input type="number" id="maxEmployees" value="50" min="1" max="10000">
-                                        <small style="color: #8b949e; font-size: 0.85em; margin-top: 4px; display: block;">
+                                        <small style="color: #666; font-size: 0.85em; margin-top: 4px; display: block;">
                                             Límite técnico del sistema para esta empresa
                                         </small>
                                     </div>
@@ -4885,7 +4838,7 @@
                                 <div id="selectedModulesList" class="selected-modules"></div>
                             </div>
 
-                            <div id="priceUpdateSection" style="margin: 1rem 0; padding: 1rem; background: #161b223cd; border-radius: 8px; display: none;">
+                            <div id="priceUpdateSection" style="margin: 1rem 0; padding: 1rem; background: #fff3cd; border-radius: 8px; display: none;">
                                 <h5 style="color: #856404; margin-bottom: 0.5rem;">⚠️ Actualizar Precios</h5>
                                 <p style="font-size: 0.9rem; color: #856404; margin-bottom: 1rem;">Los precios de los módulos han cambiado desde la contratación. ¿Deseas aplicar los nuevos precios?</p>
                                 <label style="display: flex; align-items: center; gap: 0.5rem; color: #856404;">
@@ -4912,7 +4865,7 @@
                                     </button>
                                 </div>
                                 <div id="branchesContainer" style="margin-top: 1rem;">
-                                    <div class="no-branches" style="text-align: center; color: #8b949e; padding: 2rem; background: #161b22; border-radius: 8px; border: 1px dashed #30363d;">
+                                    <div class="no-branches" style="text-align: center; color: #666; padding: 2rem; background: white; border-radius: 8px; border: 1px dashed #ccc;">
                                         <div style="font-size: 2rem; margin-bottom: 1rem;">🏢</div>
                                         <h5>No hay sucursales registradas</h5>
                                         <p>Haz clic en "Nueva Sucursal" para agregar la primera</p>
@@ -4929,7 +4882,7 @@
                                     </button>
                                 </div>
                                 <div id="usersContainer" style="margin-top: 1rem;">
-                                    <div class="no-users" style="text-align: center; color: #8b949e; padding: 1rem;">
+                                    <div class="no-users" style="text-align: center; color: #666; padding: 1rem;">
                                         Haga clic en "Actualizar" para cargar usuarios
                                     </div>
                                 </div>
@@ -4940,7 +4893,7 @@
                 </form>
             </div>
             <!-- Footer del modal con botones -->
-            <div class="modal-footer" style="padding: 0.65rem 2rem; border-top: 1px solid #eee; display: flex; gap: 1rem; justify-content: flex-end; background: #21262d; border-radius: 0 0 20px 20px;">
+            <div class="modal-footer" style="padding: 0.65rem 2rem; border-top: 1px solid #eee; display: flex; gap: 1rem; justify-content: flex-end; background: #f8f9fa; border-radius: 0 0 20px 20px;">
                 <button type="button" class="btn" style="padding: 0.75rem 1.5rem; background: #6c757d; color: white; border: none; border-radius: 8px; font-weight: 600;" onclick="closeCompanyModal()">
                     ❌ Cancelar
                 </button>
@@ -5220,7 +5173,7 @@
                                 <input type="text" id="roleCode" class="form-input" required
                                        maxlength="20" style="text-transform: uppercase;"
                                        placeholder="Ej: GR-AR, JV-BR">
-                                <small style="color: #8b949e; font-size: 0.85rem;">
+                                <small style="color: #666; font-size: 0.85rem;">
                                     Formato sugerido: NIVEL-PAÍS (ej: GR-AR, JV-MX)
                                 </small>
                             </div>
@@ -5264,7 +5217,7 @@
                     <!-- Traducciones i18n (6 idiomas) -->
                     <div class="vendor-section">
                         <h4 class="section-title">🌍 Traducciones Multiidioma (i18n)</h4>
-                        <p style="color: #8b949e; font-size: 0.9rem; margin-bottom: 15px;">
+                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
                             Configurar el nombre del rol en los 6 idiomas soportados por el sistema.
                         </p>
 
@@ -5307,7 +5260,7 @@
                     </div>
 
                     <!-- Alerta si es un rol base protegido -->
-                    <div id="baseRoleWarning" style="display: none; margin: 20px 0; padding: 15px; background: #161b223cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <div id="baseRoleWarning" style="display: none; margin: 20px 0; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
                         <p style="margin: 0; color: #856404; font-size: 0.9rem;">
                             ⚠️ <strong>Rol base protegido:</strong> Este es un rol base del sistema. Solo puedes editar las traducciones i18n.
                         </p>
@@ -5335,7 +5288,7 @@
                 <div id="consents" class="tab-content">
                     <div class="section-header">
                         <h2 class="section-title">📜 Gestión de Consentimientos</h2>
-                        <p style="color: #8b949e; margin-top: 10px;">
+                        <p style="color: #666; margin-top: 10px;">
                             Sistema centralizado de gestión de consentimientos legales para empleados, vendedores y partners.
                             Cumplimiento GDPR/RGPD y normativas locales.
                         </p>
@@ -5381,7 +5334,7 @@
                             <div class="spinner-border text-primary" role="status">
                                 <span class="sr-only">Cargando consentimientos...</span>
                             </div>
-                            <p style="margin-top: 10px; color: #8b949e;">Cargando datos...</p>
+                            <p style="margin-top: 10px; color: #666;">Cargando datos...</p>
                         </div>
                     </div>
 
@@ -5397,7 +5350,7 @@
                 <div id="supportTickets" class="tab-content">
                     <div class="section-header">
                         <h2 class="section-title">🎫 Gestión de Tickets de Soporte</h2>
-                        <p style="color: #8b949e; margin-top: 10px;">
+                        <p style="color: #666; margin-top: 10px;">
                             Sistema avanzado de tickets de soporte con SLA, escalamiento automático y métricas de rendimiento.
                             Integrado con sistema de notificaciones en tiempo real.
                         </p>
@@ -5464,7 +5417,7 @@
                             <div class="spinner-border text-primary" role="status">
                                 <span class="sr-only">Cargando tickets...</span>
                             </div>
-                            <p style="margin-top: 10px; color: #8b949e;">Cargando datos...</p>
+                            <p style="margin-top: 10px; color: #666;">Cargando datos...</p>
                         </div>
                     </div>
                 </div>
@@ -5473,7 +5426,7 @@
                 <div id="engineering" class="tab-content">
                     <div class="section-header">
                         <h2 class="section-title">🏗️ Engineering Dashboard</h2>
-                        <p style="color: #8b949e; margin-top: 10px;">
+                        <p style="color: #666; margin-top: 10px;">
                             Panel de control de ingeniería con métricas, roadmap, y estado de módulos del sistema.
                         </p>
                     </div>
@@ -5482,28 +5435,13 @@
                             <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                                 <span class="sr-only">Cargando Engineering Dashboard...</span>
                             </div>
-                            <p style="margin-top: 20px; color: #8b949e;">Cargando metadata del sistema...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pestaña Centro de Conocimiento -->
-                <div id="knowledgeCenter" class="tab-content">
-                    <div id="knowledge-center-container">
-                        <div class="text-center" style="padding: 60px;">
-                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                                <span class="sr-only">Cargando Centro de Conocimiento...</span>
-                            </div>
-                            <p style="margin-top: 20px; color: #8b949e;">Inicializando sistema de soporte y capacitacion...</p>
+                            <p style="margin-top: 20px; color: #666;">Cargando metadata del sistema...</p>
                         </div>
                     </div>
                 </div>
 
         </div>
     </div>
-
-    <!-- SUPPORT BRAIN DASHBOARD MODULE -->
-    <script src="js/modules/support-brain-dashboard.js"></script>
 
     <script>
         // Configuración de la API y autenticación
@@ -5859,7 +5797,7 @@
             let html = `
                 <div style="margin-bottom: 1rem;">
                     <h4>👥 Usuarios Multi-Tenant (${operators.length} total)</h4>
-                    <p style="color: #8b949e; font-size: 0.9rem;">
+                    <p style="color: #666; font-size: 0.9rem;">
                         Usuarios distribuidos en ${Object.keys(usersByCompany).length} empresas activas
                     </p>
                 </div>
@@ -5886,8 +5824,8 @@
 
                 // Encabezado de empresa
                 html += `
-                    <tr style="background: #21262d; font-weight: bold;">
-                        <td colspan="8" style="padding: 0.75rem; border-top: 2px solid #30363d;">
+                    <tr style="background: #f8f9fa; font-weight: bold;">
+                        <td colspan="8" style="padding: 0.75rem; border-top: 2px solid #dee2e6;">
                             🏢 ${companyUsers[0].companyName || `Empresa ${companyId}`} (${companyUsers.length} usuarios)
                         </td>
                     </tr>
@@ -5906,7 +5844,7 @@
 
                     html += `
                         <tr>
-                            <td><strong>${user.usuario}</strong><br><small style="color: #8b949e;">${user.employeeId}</small></td>
+                            <td><strong>${user.usuario}</strong><br><small style="color: #666;">${user.employeeId}</small></td>
                             <td>${user.fullName}</td>
                             <td>${user.email || '-'}</td>
                             <td>
@@ -5914,8 +5852,8 @@
                                     ${user.role}
                                 </span>
                             </td>
-                            <td style="font-size: 0.9rem; color: #8b949e;">${user.companyName}</td>
-                            <td style="font-size: 0.9rem; color: #8b949e;">${user.departmentName || 'Sin asignar'}</td>
+                            <td style="font-size: 0.9rem; color: #666;">${user.companyName}</td>
+                            <td style="font-size: 0.9rem; color: #666;">${user.departmentName || 'Sin asignar'}</td>
                             <td>
                                 <span class="status-badge ${user.isActive ? 'status-active' : 'status-suspended'}">
                                     ${user.isActive ? 'Activo' : 'Inactivo'}
@@ -6283,48 +6221,6 @@
             if (tabName === 'users') loadOperators();
             if (tabName === 'staff') loadStaff();
             if (tabName === 'staffRoles') loadStaffRoles();
-            if (tabName === 'knowledgeCenter') loadKnowledgeCenter();
-        }
-
-        // Cargar Centro de Conocimiento con Brain Dashboard
-        let knowledgeCenterLoaded = false;
-        async function loadKnowledgeCenter() {
-            if (knowledgeCenterLoaded) return; // Solo cargar una vez
-
-            try {
-                console.log('📚 [KNOWLEDGE-CENTER] Inicializando Centro de Conocimiento...');
-
-                // Verificar que el modulo supportBrain este disponible
-                if (typeof supportBrain !== 'undefined' && supportBrain.render) {
-                    await supportBrain.render('knowledge-center-container');
-                    knowledgeCenterLoaded = true;
-                    console.log('✅ [KNOWLEDGE-CENTER] Dashboard renderizado exitosamente');
-                } else {
-                    console.warn('⚠️ [KNOWLEDGE-CENTER] Modulo supportBrain no disponible');
-                    document.getElementById('knowledge-center-container').innerHTML = `
-                        <div style="text-align: center; padding: 60px; color: #8b949e;">
-                            <span style="font-size: 48px;">📚</span>
-                            <h3 style="margin: 20px 0;">Centro de Conocimiento</h3>
-                            <p>El modulo de soporte esta cargando...</p>
-                            <button onclick="loadKnowledgeCenter()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; border: none; border-radius: 8px; color: white; cursor: pointer;">
-                                Reintentar
-                            </button>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('❌ [KNOWLEDGE-CENTER] Error:', error);
-                document.getElementById('knowledge-center-container').innerHTML = `
-                    <div style="text-align: center; padding: 60px; color: #e74c3c;">
-                        <span style="font-size: 48px;">⚠️</span>
-                        <h3 style="margin: 20px 0;">Error cargando Centro de Conocimiento</h3>
-                        <p>${error.message}</p>
-                        <button onclick="knowledgeCenterLoaded = false; loadKnowledgeCenter();" style="margin-top: 20px; padding: 10px 20px; background: #007bff; border: none; border-radius: 8px; color: white; cursor: pointer;">
-                            Reintentar
-                        </button>
-                    </div>
-                `;
-            }
         }
 
         async function loadDashboardData() {
@@ -6622,14 +6518,14 @@
                     <tr>
                         <td>
                             <div><strong>${company.name}</strong></div>
-                            <div style="font-size: 0.9em; color: #8b949e;">${company.legalName || 'N/A'}</div>
+                            <div style="font-size: 0.9em; color: #666;">${company.legalName || 'N/A'}</div>
                             <div style="font-size: 0.8em; color: #999;">${company.contactEmail || company.email || 'N/A'}</div>
                         </td>
                         <td><span style="font-family: monospace;">${company.taxId || 'N/A'}</span></td>
                         <td>
                             <div style="font-size: 0.9em;">
                                 <div><strong>${company.city || 'N/A'}</strong></div>
-                                <div style="color: #8b949e;">${company.state || 'N/A'}</div>
+                                <div style="color: #666;">${company.state || 'N/A'}</div>
                                 <div style="color: #999; font-size: 0.8em;">${company.country || 'N/A'}</div>
                             </div>
                         </td>
@@ -6639,22 +6535,22 @@
                             </span>
                         </td>
                         <td>
-                            <div style="font-weight: bold; color: #3fb950;">${company.currentEmployees || 0}</div>
-                            <div style="font-size: 0.8em; color: #8b949e;">empleados activos</div>
+                            <div style="font-weight: bold; color: #2e7d32;">${company.currentEmployees || 0}</div>
+                            <div style="font-size: 0.8em; color: #666;">empleados activos</div>
                         </td>
                         <td>
                             <div style="font-weight: bold; color: #1976d2;">
                                 ${company.licenseType || 'Básico'} (${company.maxEmployees || 50})
                             </div>
-                            <div style="font-size: 0.8em; color: #8b949e;">
+                            <div style="font-size: 0.8em; color: #666;">
                                 Plan de hasta ${company.maxEmployees || 50} empleados
                             </div>
                         </td>
                         <td>
-                            <div style="font-weight: bold; color: #3fb950;">
+                            <div style="font-weight: bold; color: #2e7d32;">
                                 ${company.modulesSummary ? `${company.modulesSummary.contractedModules}/${company.modulesSummary.totalSystemModules}` : 'N/A'}
                             </div>
-                            <div style="font-size: 0.8em; color: #8b949e;">
+                            <div style="font-size: 0.8em; color: #666;">
                                 Módulos contratados
                             </div>
                         </td>
@@ -6662,7 +6558,7 @@
                             <div style="font-weight: bold; color: var(--primary-color);">
                                 U$S ${company.pricing?.monthlyTotal ? Math.floor(company.pricing.monthlyTotal).toLocaleString('en-US') : '0'}<span style="font-size: 0.7em;">.${company.pricing?.monthlyTotal ? (company.pricing.monthlyTotal % 1).toFixed(2).substring(2) : '00'}</span>
                             </div>
-                            <div style="font-size: 0.8em; color: #8b949e;">
+                            <div style="font-size: 0.8em; color: #666;">
                                 Total mensual con IVA
                             </div>
                         </td>
@@ -7902,7 +7798,7 @@
                         <h3>📊 Resumen de Facturación</h3>
                         <div style="text-align: right;">
                             <div style="font-size: 1.2rem; color: var(--success-color);">Ingresos: U$S ${totalRevenue.toFixed(2)}</div>
-                            <div style="font-size: 0.9rem; color: #8b949e;">Pendientes: ${pendingInvoices.length} | Vencidas: ${overdueInvoices.length}</div>
+                            <div style="font-size: 0.9rem; color: #666;">Pendientes: ${pendingInvoices.length} | Vencidas: ${overdueInvoices.length}</div>
                         </div>
                     </div>
                     <div class="invoice-grid">
@@ -7916,7 +7812,7 @@
                                 </div>
                                 <div style="margin-bottom: 0.5rem;">
                                     <strong>${invoice.companyName}</strong><br>
-                                    <span style="color: #8b949e;">Vence: ${invoice.dueDate}</span>
+                                    <span style="color: #666;">Vence: ${invoice.dueDate}</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="font-size: 1.1rem; font-weight: bold; color: var(--primary-color);">U$S ${invoice.amount.toFixed(2)}</span>
@@ -8062,7 +7958,7 @@
                     <div class="qr-code">
                         QR Code\\n${invoice.qrCode}\\n[Código QR Aquí]
                     </div>
-                    <p style="margin-top: 1rem; color: #8b949e;">Escanea el código QR con tu app de pagos</p>
+                    <p style="margin-top: 1rem; color: #666;">Escanea el código QR con tu app de pagos</p>
                     <button class="btn btn-success" onclick="markAsPaid('${invoice.id}')" style="margin-top: 1rem;">✅ Marcar como Pagado</button>
                 </div>
             `;
@@ -8142,7 +8038,7 @@
                                 <div style="flex: 1;">
                                     <strong>${notification.title}</strong><br>
                                     <span>${notification.message}</span><br>
-                                    <small style="color: #8b949e;">${new Date(notification.date).toLocaleString()}</small>
+                                    <small style="color: #666;">${new Date(notification.date).toLocaleString()}</small>
                                 </div>
                                 <button class="btn btn-primary" onclick="viewCompany(${notification.companyId})">
                                     👁️ Ver Empresa
@@ -8211,17 +8107,17 @@
                                 <strong style="font-size: 16px; color: #1f2937;">${module.name}</strong>
                             </div>
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px;">
-                                <div style="background: #161b22; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;">
                                     <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">TIER 1: 1-50 empleados</div>
                                     <div style="font-size: 20px; font-weight: 700; color: #3b82f6;">$${(module.tierPrices?.tier1 || module.basePrice).toFixed(2)}</div>
                                     <div style="font-size: 10px; color: #9ca3af; margin-top: 3px;">Sin descuento</div>
                                 </div>
-                                <div style="background: #161b22; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;">
                                     <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">TIER 2: 51-100 empleados</div>
                                     <div style="font-size: 20px; font-weight: 700; color: #f59e0b;">$${(module.tierPrices?.tier2 || module.basePrice * 0.85).toFixed(2)}</div>
                                     <div style="font-size: 10px; color: #9ca3af; margin-top: 3px;">15% descuento</div>
                                 </div>
-                                <div style="background: #161b22; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;">
                                     <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">TIER 3: 101+ empleados</div>
                                     <div style="font-size: 20px; font-weight: 700; color: #10b981;">$${(module.tierPrices?.tier3 || module.basePrice * 0.70).toFixed(2)}</div>
                                     <div style="font-size: 10px; color: #9ca3af; margin-top: 3px;">30% descuento</div>
@@ -9929,7 +9825,7 @@
                         <span><strong>$ ${realTotal.toFixed(2)}</strong></span>
                     </div>
                 </div>
-                <div style="margin-top: 10px; padding: 10px; background: #1a2e1a; border-radius: 5px; font-size: 0.9em; color: #3fb950;">
+                <div style="margin-top: 10px; padding: 10px; background: #e8f5e8; border-radius: 5px; font-size: 0.9em; color: #2e7d32;">
                     ✅ <strong>Cálculo Correcto: Precios Históricos × Empleados Actuales</strong><br>
                     Precio por empleado contratado × ${currentEmployees} empleados + IVA 21%
                 </div>
@@ -10505,7 +10401,7 @@
                 } else {
                     // Formato card para modal clásico
                     container.innerHTML = `
-                        <div class="no-branches" style="text-align: center; color: #8b949e; padding: 1rem;">
+                        <div class="no-branches" style="text-align: center; color: #666; padding: 1rem;">
                             No hay sucursales registradas
                         </div>
                     `;
@@ -10541,14 +10437,14 @@
                         align-items: center;
                         justify-content: space-between;
                         padding: 0.75rem;
-                        border: 1px solid #30363d;
+                        border: 1px solid #ddd;
                         border-radius: 6px;
                         margin-bottom: 0.5rem;
-                        background: #161b22;
+                        background: white;
                     ">
                         <div style="flex: 1;">
-                            <div style="font-weight: 500; color: #e6edf3;">${branch.name}</div>
-                            <div style="font-size: 0.8rem; color: #8b949e; margin-top: 0.25rem;">
+                            <div style="font-weight: 500; color: #333;">${branch.name}</div>
+                            <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
                                 📍 ${branch.address}, ${branch.city}, ${branch.province}, ${branch.country}
                             </div>
                             ${branch.latitude && branch.longitude ?
@@ -10634,8 +10530,8 @@
                                     </div>
                                 </div>
 
-                                <div style="margin: 1rem 0; padding: 1rem; background: #21262d; border-radius: 6px;">
-                                    <h6 style="color: #e6edf3; margin-bottom: 0.75rem;">🌐 Geolocalización</h6>
+                                <div style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 6px;">
+                                    <h6 style="color: #495057; margin-bottom: 0.75rem;">🌐 Geolocalización</h6>
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label>Latitud</label>
@@ -10658,7 +10554,7 @@
                                             🗺️ Ver en mapa
                                         </button>
                                     </div>
-                                    <div style="font-size: 0.8rem; color: #8b949e; margin-top: 0.5rem; text-align: center;">
+                                    <div style="font-size: 0.8rem; color: #6c757d; margin-top: 0.5rem; text-align: center;">
                                         Las coordenadas se pueden obtener automáticamente desde la dirección o ingresar manualmente
                                     </div>
                                 </div>
@@ -11147,29 +11043,29 @@
 
             const modalHtml = `
                 <div id="mapModal" class="modal" style="display: block; z-index: 10000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
-                    <div class="modal-content" style="max-width: 900px; margin: 1% auto; height: 90vh; background: #161b22; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: relative;">
+                    <div class="modal-content" style="max-width: 900px; margin: 1% auto; height: 90vh; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: relative;">
                         <div class="modal-header" style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
                             <h4 style="margin: 0;">🗺️ Ubicación de ${type}: ${name}</h4>
                             <span class="close" onclick="closeMapModal()" style="cursor: pointer; font-size: 1.5rem; padding: 5px; hover: color: red;">&times;</span>
                         </div>
-                        <div class="modal-search" style="padding: 1rem; background: #21262d; border-bottom: 1px solid #eee;">
+                        <div class="modal-search" style="padding: 1rem; background: #f8f9fa; border-bottom: 1px solid #eee;">
                             <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
                                 <input type="text" id="mapSearchInput" placeholder="🔍 Buscar dirección en el mapa..."
-                                       style="flex: 1; padding: 0.5rem; border: 1px solid #30363d; border-radius: 4px; font-size: 0.9rem;">
+                                       style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
                                 <button onclick="searchLocationOnMap()" style="padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
                                     🔍 Buscar
                                 </button>
                             </div>
-                            <div style="font-size: 0.8rem; color: #8b949e;">
+                            <div style="font-size: 0.8rem; color: #666;">
                                 💡 <strong>Instrucciones:</strong> Puede buscar una dirección arriba O hacer clic directamente en el mapa para seleccionar una nueva ubicación
                             </div>
                         </div>
                         <div class="modal-body" style="padding: 0; height: calc(100% - 180px); position: relative;">
                             <div id="leafletMap" style="height: 100%; width: 100%; z-index: 1;"></div>
                         </div>
-                        <div class="modal-footer" style="padding: 1rem; background: #21262d; border-top: 1px solid #eee;">
+                        <div class="modal-footer" style="padding: 1rem; background: #f8f9fa; border-top: 1px solid #eee;">
                             <div id="mapCurrentLocation" style="margin-bottom: 0.5rem;">
-                                <p style="margin: 0; color: #8b949e; font-size: 0.9rem;">📍 <span id="mapCurrentAddress">${address}</span></p>
+                                <p style="margin: 0; color: #666; font-size: 0.9rem;">📍 <span id="mapCurrentAddress">${address}</span></p>
                                 <p style="margin: 0; color: #999; font-size: 0.8rem;">Coordenadas: <span id="mapCurrentCoords">${lat.toFixed(6)}, ${lng.toFixed(6)}</span></p>
                             </div>
                             <div style="text-align: center;">
@@ -12094,7 +11990,7 @@
             
             if (currentCompanyUsers.length === 0) {
                 container.innerHTML = `
-                    <div class="no-users" style="text-align: center; color: #8b949e; padding: 1rem;">
+                    <div class="no-users" style="text-align: center; color: #666; padding: 1rem;">
                         No hay usuarios administradores registrados
                     </div>
                 `;
@@ -12107,24 +12003,24 @@
                     align-items: center; 
                     justify-content: space-between; 
                     padding: 1rem; 
-                    border: 1px solid #30363d; 
+                    border: 1px solid #ddd; 
                     border-radius: 8px; 
                     margin-bottom: 0.75rem;
-                    background: #161b22;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    background: white;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                 ">
                     <div style="flex: 1;">
                         <div style="font-weight: 600; color: #1976d2; font-size: 1rem;">
                             👤 ${user.usuario}
                         </div>
-                        <div style="font-size: 0.85rem; color: #8b949e; margin-top: 0.25rem;">
+                        <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">
                             📧 ${user.email} | 👨‍💼 ${user.firstName} ${user.lastName}
                         </div>
                         <div style="font-size: 0.8rem; color: #999; margin-top: 0.25rem;">
                             🔑 Rol: ${user.role === 'company_admin' ? 'Administrador de Empresa' : user.role}
                             ${user.isCompanyAdmin ? ' | ⭐ Admin Principal' : ''}
                         </div>
-                        <div style="font-size: 0.75rem; color: #8b949e; margin-top: 0.5rem; padding: 0.5rem; background: #21262d; border-radius: 4px;">
+                        <div style="font-size: 0.75rem; color: #666; margin-top: 0.5rem; padding: 0.5rem; background: #f8f9fa; border-radius: 4px;">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <span>🔐 <strong>Contraseña actual:</strong></span>
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -12134,8 +12030,8 @@
                                            readonly 
                                            style="
                                                font-family: monospace; 
-                                               background: #161b22; 
-                                               border: 1px solid #30363d; 
+                                               background: #fff; 
+                                               border: 1px solid #ddd; 
                                                border-radius: 4px; 
                                                padding: 0.25rem 0.5rem; 
                                                font-size: 0.75rem;
@@ -12467,7 +12363,7 @@
             if (!billingData || billingData.length === 0) {
                 container.innerHTML = `
                     <div class="billing-card">
-                        <div style="text-align: center; padding: 2rem; color: #8b949e;">
+                        <div style="text-align: center; padding: 2rem; color: #666;">
                             📄 No hay facturas para mostrar
                             <br><br>
                             <button class="btn btn-primary" onclick="generateMonthlyCanon()">
@@ -13667,24 +13563,24 @@ ${vendor.notes || 'Sin notas adicionales'}
                             <div style="margin-top: 20px;">
                                 <h3>💰 Comisiones</h3>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                                    <div style="padding: 15px; border: 1px solid #30363d; border-radius: 8px;">
+                                    <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
                                         <h4 style="color: #10b981;">🏷️ Ventas</h4>
                                         <p><strong>Porcentaje:</strong> ${(vendor.salesCommission?.percentage || vendor.salesCommissionPercentage || vendor.commissionPercentage || 10).toFixed(1)}%</p>
                                         <p><strong>Monto:</strong> $${vendor.salesCommission?.amount?.toLocaleString('es-AR') || 0}</p>
                                     </div>
-                                    <div style="padding: 15px; border: 1px solid #30363d; border-radius: 8px;">
+                                    <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
                                         <h4 style="color: #3b82f6;">🛠️ Soporte</h4>
                                         <p><strong>Porcentaje:</strong> ${(vendor.supportCommission?.percentage || vendor.supportCommissionPercentage || 5).toFixed(1)}%</p>
                                         <p><strong>Monto:</strong> $${vendor.supportCommission?.amount?.toLocaleString('es-AR') || 0}</p>
                                     </div>
-                                    <div style="padding: 15px; border: 1px solid #30363d; border-radius: 8px;">
+                                    <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
                                         <h4 style="color: #8b5cf6;">👥 Referidos</h4>
                                         <p><strong>Cantidad:</strong> ${vendor.referralCommission?.referrals || 0}</p>
                                         <p><strong>Monto:</strong> $${vendor.referralCommission?.amount?.toLocaleString('es-AR') || 0}</p>
                                     </div>
                                 </div>
 
-                                <div style="margin-top: 15px; padding: 15px; background: #21262d; border-radius: 8px;">
+                                <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                                     <h4>💵 Totales</h4>
                                     <p><strong>Total Comisiones:</strong> <span style="color: #f59e0b; font-size: 1.2em;">$${vendor.totalCommission?.toLocaleString('es-AR') || 0}</span></p>
                                     <p><strong>Valor Total Módulos:</strong> <span style="color: #3b82f6;">$${vendor.totalModuleValue?.toLocaleString('es-AR') || 0}</span></p>
@@ -13867,7 +13763,7 @@ ${vendor.notes || 'Sin notas adicionales'}
                 // Mostrar mensaje en tabla
                 document.getElementById('quotesTableBody').innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: #8b949e;">
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
                             No se pudieron cargar los presupuestos
                         </td>
                     </tr>
@@ -13885,7 +13781,7 @@ ${vendor.notes || 'Sin notas adicionales'}
             if (!quotes || quotes.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: #8b949e;">
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
                             No hay presupuestos para mostrar
                         </td>
                     </tr>
@@ -13958,7 +13854,7 @@ ${vendor.notes || 'Sin notas adicionales'}
 
                 document.getElementById('contractsTableBody').innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: #8b949e;">
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
                             No se pudieron cargar los contratos
                         </td>
                     </tr>
@@ -13976,7 +13872,7 @@ ${vendor.notes || 'Sin notas adicionales'}
             if (!contracts || contracts.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: #8b949e;">
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
                             No hay contratos para mostrar
                         </td>
                     </tr>
@@ -14052,7 +13948,7 @@ ${vendor.notes || 'Sin notas adicionales'}
 
                 document.getElementById('invoicesTableBody').innerHTML = `
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 40px; color: #8b949e;">
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
                             No se pudieron cargar las facturas
                         </td>
                     </tr>
@@ -14070,7 +13966,7 @@ ${vendor.notes || 'Sin notas adicionales'}
             if (!invoices || invoices.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 40px; color: #8b949e;">
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
                             No hay facturas para mostrar
                         </td>
                     </tr>
@@ -14169,7 +14065,7 @@ ${vendor.notes || 'Sin notas adicionales'}
 
                 document.getElementById('commissionsTableBody').innerHTML = `
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 40px; color: #8b949e;">
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
                             No se pudieron cargar las comisiones
                         </td>
                     </tr>
@@ -14187,7 +14083,7 @@ ${vendor.notes || 'Sin notas adicionales'}
             if (!commissions || commissions.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 40px; color: #8b949e;">
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
                             No hay comisiones para mostrar
                         </td>
                     </tr>
@@ -14477,7 +14373,7 @@ ${vendor.notes || 'Sin notas adicionales'}
                             </div>
                             <div style="margin-top: 20px;">
                                 <h4>Detalles</h4>
-                                <pre style="background: #21262d; padding: 15px; border-radius: 5px; overflow-x: auto;">
+                                <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
 ${JSON.stringify(status, null, 2)}
                                 </pre>
                             </div>
@@ -14605,7 +14501,7 @@ ${JSON.stringify(status, null, 2)}
             if (tbody) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: #8b949e;">
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
                             Módulo de pagos - Próximamente
                         </td>
                     </tr>
@@ -15174,7 +15070,7 @@ ${JSON.stringify(status, null, 2)}
                                         </span>
                                     </td>
                                     <td>${areaIcon}</td>
-                                    <td style="max-width: 200px; font-size: 0.85rem; color: #8b949e;">
+                                    <td style="max-width: 200px; font-size: 0.85rem; color: #666;">
                                         ${role.role_description || '<em>Sin descripción</em>'}
                                     </td>
                                     <td>
@@ -15503,7 +15399,7 @@ ${JSON.stringify(status, null, 2)}
             const container = document.getElementById('orgchartContainer');
             const countryFilter = document.getElementById('orgchartCountryFilter').value;
 
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #8b949e;">⏳ Cargando organigrama...</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">⏳ Cargando organigrama...</div>';
 
             try {
                 // Cargar ROLES y STAFF en paralelo
@@ -15649,17 +15545,17 @@ ${JSON.stringify(status, null, 2)}
                     }
                     .orgchart-node {
                         width: 70px;
-                        border: 1px solid #30363d;
+                        border: 1px solid #ddd;
                         border-radius: 4px;
                         padding: 5px;
-                        background: #161b22;
-                        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                        background: white;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
                         transition: all 0.3s ease;
                         text-align: center;
                         position: relative;
                     }
                     .orgchart-node:hover {
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                         transform: translateY(-2px);
                     }
                     .orgchart-node.level-0 {
@@ -15737,7 +15633,7 @@ ${JSON.stringify(status, null, 2)}
                     <div style="text-align: center; padding: 40px; color: #dc2626;">
                         <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
                         <p>Error cargando organigrama</p>
-                        <p style="font-size: 0.9rem; color: #8b949e;">${error.message}</p>
+                        <p style="font-size: 0.9rem; color: #666;">${error.message}</p>
                     </div>
                 `;
             }
@@ -15885,7 +15781,7 @@ ${JSON.stringify(status, null, 2)}
                 showNotification('Error cargando plantillas fiscales', 'error');
 
                 document.getElementById('taxTemplatesContainer').innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: #8b949e;">
+                    <div style="text-align: center; padding: 2rem; color: #666;">
                         <h4>❌ Error cargando plantillas</h4>
                         <p>${error.message}</p>
                         <button class="btn btn-primary" onclick="loadTaxTemplates()">
@@ -15904,7 +15800,7 @@ ${JSON.stringify(status, null, 2)}
 
             if (taxTemplates.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: #8b949e;">
+                    <div style="text-align: center; padding: 2rem; color: #666;">
                         <h4>🏛️ No hay plantillas fiscales configuradas</h4>
                         <p>Cree plantillas para configurar la matriz impositiva por país</p>
                         <button class="btn btn-success" onclick="openNewTaxTemplateModal()" style="margin-top: 1rem;">
@@ -16446,7 +16342,7 @@ ${JSON.stringify(status, null, 2)}
                                     <div class="form-group">
                                         <label class="form-label">Orden de Cálculo *</label>
                                         <input type="number" class="form-input" id="calculationOrder" value="1" min="1" required>
-                                        <small style="color: #8b949e;">Orden en que se calcula (1 = primero)</small>
+                                        <small style="color: #666;">Orden en que se calcula (1 = primero)</small>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Base Imponible *</label>
@@ -16470,17 +16366,17 @@ ${JSON.stringify(status, null, 2)}
                                     <div class="form-group">
                                         <label class="form-label">Alícuota/Porcentaje (%)</label>
                                         <input type="number" class="form-input" id="defaultRate" step="0.01" min="0" max="100" placeholder="21.00">
-                                        <small style="color: #8b949e;">Porcentaje por defecto (ej: 21% para IVA)</small>
+                                        <small style="color: #666;">Porcentaje por defecto (ej: 21% para IVA)</small>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Monto Fijo (Opcional)</label>
                                         <input type="number" class="form-input" id="fixedAmount" step="0.01" min="0" placeholder="0.00">
-                                        <small style="color: #8b949e;">Si tiene monto fijo en lugar de %</small>
+                                        <small style="color: #666;">Si tiene monto fijo en lugar de %</small>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Nombre de Alícuota</label>
                                         <input type="text" class="form-input" id="rateName" placeholder="General">
-                                        <small style="color: #8b949e;">Nombre descriptivo (General, Reducida, etc.)</small>
+                                        <small style="color: #666;">Nombre descriptivo (General, Reducida, etc.)</small>
                                     </div>
                                 </div>
                             </form>
@@ -16635,7 +16531,7 @@ ${JSON.stringify(status, null, 2)}
                                     <div class="form-group">
                                         <label class="form-label">Orden de Visualización</label>
                                         <input type="number" class="form-input" id="displayOrder" value="1" min="1">
-                                        <small style="color: #8b949e;">Orden en la lista (1 = primero)</small>
+                                        <small style="color: #666;">Orden en la lista (1 = primero)</small>
                                     </div>
                                 </div>
                             </form>

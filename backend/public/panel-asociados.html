@@ -1603,7 +1603,29 @@
         // UTILITY FUNCTIONS
         // ============================================
         function getApiBaseUrl() {
-            return window.API_BASE_URL || `http://localhost:${window.API_PORT || 9998}`;
+            // Detect production environment
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+            const protocol = window.location.protocol;
+
+            // Production if: no port, or known hosting domains, or custom domain
+            const isProduction = !port ||
+                                hostname.includes('onrender.com') ||
+                                hostname.includes('railway.app') ||
+                                hostname.includes('herokuapp.com') ||
+                                hostname.includes('vercel.app') ||
+                                hostname.includes('aponnt.com');
+
+            if (isProduction) {
+                // PRODUCTION: Use current URL without port
+                console.log('[ASSOCIATES] Modo PRODUCCION - usando:', `${protocol}//${hostname}`);
+                return `${protocol}//${hostname}`;
+            }
+
+            // LOCAL: Use API_BASE_URL or fallback to localhost
+            const localUrl = window.API_BASE_URL || `http://localhost:${window.API_PORT || 9998}`;
+            console.log('[ASSOCIATES] Modo LOCAL - usando:', localUrl);
+            return localUrl;
         }
 
         function getInitials(firstName, lastName) {
