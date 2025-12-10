@@ -446,7 +446,8 @@ router.get('/companies', async (req, res) => {
         company_id as id, company_id, name, slug, email as contact_email, phone, address,
         tax_id, is_active, max_employees, contracted_employees,
         license_type,
-        city, country
+        city, country,
+        active_modules
       FROM companies
       WHERE is_active = true
       ORDER BY company_id DESC
