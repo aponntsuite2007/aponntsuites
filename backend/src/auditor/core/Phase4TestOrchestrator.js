@@ -55,7 +55,7 @@ const { getLogger } = require('../../logging');
 const http = require('http');
 
 class Phase4TestOrchestrator {
-    constructor(config = {}, database = null) {
+    constructor(config = {}, database = null, brainService = null) {
         // ⚡ AUTO-DETECCIÓN DE PUERTO: Detectar automáticamente qué servidor está corriendo
         // Esto es CRÍTICO para producción donde el puerto puede variar
         this.detectedPort = null; // Se llenará de forma asíncrona en start()
@@ -74,6 +74,9 @@ class Phase4TestOrchestrator {
         };
 
         this.database = database;
+
+        // 🧠 BRAIN INTEGRATION - Para testing basado en código LIVE
+        this.brainService = brainService;
 
         // Logger sistemático
         this.logger = getLogger({
@@ -165,6 +168,128 @@ class Phase4TestOrchestrator {
         } catch (error) {
             return false;
         }
+    }
+
+    // =========================================================================
+    // 🧠 BRAIN INTEGRATION - Testing basado en código LIVE
+    // =========================================================================
+
+    /**
+     * Inyectar Brain Service post-construcción
+     * Útil cuando el orchestrator se crea antes de que exista el Brain
+     */
+    setBrainService(brainService) {
+        this.brainService = brainService;
+        if (this.systemRegistry && brainService) {
+            this.systemRegistry.setBrainService(brainService);
+            console.log('🧠 [ORCHESTRATOR] Brain Service conectado dinámicamente');
+        }
+    }
+
+    /**
+     * Obtener plan de testing enriquecido con datos LIVE del Brain
+     *
+     * El Brain escanea el código en vivo y nos dice:
+     * - Qué archivos existen realmente para este módulo
+     * - Qué endpoints están implementados
+     * - Qué workflows tiene el módulo
+     *
+     * Esto permite testear lo que REALMENTE existe, no lo que el registry dice.
+     *
+     * @param {string} moduleName - Nombre del módulo a testear
+     * @returns {Promise<object>} Plan de testing con datos LIVE
+     */
+    async getModuleTestPlanWithBrain(moduleName) {
+        const plan = {
+            module: moduleName,
+            brainConnected: false,
+            staticData: null,
+            liveData: null,
+            drift: null,
+            testTargets: {
+                endpoints: [],
+                files: [],
+                workflows: []
+            }
+        };
+
+        // 1. Obtener datos estáticos del registry
+        if (this.systemRegistry) {
+            try {
+                const moduleData = await this.systemRegistry.getModule(moduleName);
+                plan.staticData = moduleData;
+
+                // Si Brain está conectado, enriquecer con datos LIVE
+                if (this.brainService) {
+                    const enrichedModule = await this.systemRegistry.getModuleWithLiveData(moduleName);
+
+                    if (enrichedModule) {
+                        plan.brainConnected = enrichedModule.brainConnected || false;
+                        plan.liveData = enrichedModule.liveData || null;
+                        plan.drift = enrichedModule.drift || null;
+
+                        // Construir testTargets desde datos LIVE
+                        if (enrichedModule.liveData) {
+                            plan.testTargets.endpoints = enrichedModule.liveData.endpoints || [];
+                            plan.testTargets.files = enrichedModule.liveData.files || [];
+                            plan.testTargets.workflows = enrichedModule.liveData.workflow ?
+                                [enrichedModule.liveData.workflow] : [];
+                        }
+
+                        // Si hay drift, priorizar endpoints nuevos (no testeados antes)
+                        if (enrichedModule.drift?.hasDrift) {
+                            console.log(`⚠️ [BRAIN] Drift detectado en ${moduleName}:`, enrichedModule.drift.summary);
+                            // Los endpoints nuevos van primero
+                            if (enrichedModule.drift.newEndpoints?.length > 0) {
+                                plan.testTargets.priorityEndpoints = enrichedModule.drift.newEndpoints;
+                            }
+                        }
+                    }
+                }
+
+                // Fallback a datos estáticos si no hay Brain o no hay liveData
+                if (!plan.testTargets.endpoints.length && moduleData?.apiEndpoints) {
+                    plan.testTargets.endpoints = moduleData.apiEndpoints.map(e =>
+                        typeof e === 'string' ? e : `${e.method || 'GET'} ${e.path}`
+                    );
+                }
+
+            } catch (error) {
+                console.error(`❌ [BRAIN] Error obteniendo plan para ${moduleName}:`, error.message);
+            }
+        }
+
+        return plan;
+    }
+
+    /**
+     * Ejecutar tests inteligentes basados en Brain
+     *
+     * En lugar de correr tests hardcodeados, consulta al Brain
+     * para saber qué endpoints/archivos testear.
+     *
+     * @param {string} moduleName - Módulo a testear
+     * @param {number} companyId - ID de empresa
+     */
+    async runBrainGuidedTest(moduleName, companyId) {
+        console.log(`\n🧠 [BRAIN-TEST] Iniciando test guiado por Brain para: ${moduleName}`);
+
+        // Obtener plan de testing con datos LIVE
+        const testPlan = await this.getModuleTestPlanWithBrain(moduleName);
+
+        if (!testPlan.brainConnected) {
+            console.log(`   ⚠️ Brain no conectado - usando datos estáticos del registry`);
+        } else {
+            console.log(`   ✅ Brain conectado - ${testPlan.testTargets.endpoints.length} endpoints detectados`);
+            console.log(`   📁 ${testPlan.testTargets.files.length} archivos encontrados`);
+
+            if (testPlan.testTargets.priorityEndpoints?.length) {
+                console.log(`   🆕 ${testPlan.testTargets.priorityEndpoints.length} endpoints NUEVOS (drift)`);
+            }
+        }
+
+        // El plan tiene la info, el collector real ejecuta los tests
+        return testPlan;
     }
 
     /**
@@ -368,8 +493,14 @@ class Phase4TestOrchestrator {
             // 6. Inicializar componentes avanzados (TechnicalReportGenerator y AutonomousRepairAgent)
             if (this.database) {
                 this.logger.debug('PHASE4', 'Inicializando componentes avanzados...');
-                this.systemRegistry = new SystemRegistry(this.database);
+
+                // 🧠 BRAIN INTEGRATION - SystemRegistry ahora usa datos LIVE del Brain
+                this.systemRegistry = new SystemRegistry(this.database, this.brainService);
                 await this.systemRegistry.initialize();
+
+                if (this.brainService) {
+                    this.logger.info('PHASE4', '🧠 Brain Service conectado al SystemRegistry');
+                }
 
                 this.technicalReportGenerator = new TechnicalReportGenerator(this.database, this.systemRegistry);
                 this.autonomousRepairAgent = new AutonomousRepairAgent(this.database, this.systemRegistry, this);

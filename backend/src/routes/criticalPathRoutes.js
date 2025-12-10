@@ -19,15 +19,29 @@ const CriticalPathAnalyzer = require('../services/CriticalPathAnalyzer');
 const fs = require('fs');
 const path = require('path');
 
+// Referencia al Brain Service (se inyecta desde server.js)
+let brainService = null;
+
+/**
+ * Middleware para obtener Brain Service del app
+ */
+router.use((req, res, next) => {
+  if (!brainService) {
+    brainService = req.app.get('brainService');
+  }
+  next();
+});
+
 /**
  * GET /api/critical-path/analyze
  * Calcula el camino crítico del roadmap completo
+ * AHORA ENRIQUECIDO con datos LIVE del Brain
  */
 router.get('/analyze', async (req, res) => {
   try {
-    console.log(`\n📥 [API] Solicitud de análisis de camino crítico`);
+    console.log(`\n📥 [API] Solicitud de análisis de camino crítico (con Brain)`);
 
-    // Leer metadata
+    // Leer metadata (PLAN)
     const metadataPath = path.join(__dirname, '../../engineering-metadata.js');
     delete require.cache[require.resolve(metadataPath)];
     const metadata = require(metadataPath);
@@ -39,8 +53,82 @@ router.get('/analyze', async (req, res) => {
       });
     }
 
-    // Analizar camino crítico
+    // Analizar camino crítico (PLAN base)
     const analysis = CriticalPathAnalyzer.analyze(metadata.roadmap);
+
+    // Enriquecer con datos LIVE del Brain si está disponible
+    if (brainService) {
+      try {
+        // Obtener archivos escaneados por el Brain
+        const backendFiles = await brainService.scanBackendFiles();
+        const frontendFiles = await brainService.scanFrontendFiles();
+
+        // Combinar todos los archivos escaneados (estructura: categories.X.files)
+        const allFiles = [
+          ...(backendFiles?.categories?.routes?.files || []),
+          ...(backendFiles?.categories?.services?.files || []),
+          ...(backendFiles?.categories?.models?.files || []),
+          ...(frontendFiles?.categories?.modules?.files || []),
+          ...(frontendFiles?.categories?.pages?.files || [])
+        ];
+
+        // Mapear nombres de archivos a un set para búsqueda rápida
+        const liveFileNames = new Set(
+          allFiles.map(f => {
+            const basename = path.basename(f.path || f.name || '', '.js').toLowerCase();
+            return basename;
+          })
+        );
+
+        // Enriquecer tareas con verificación LIVE
+        analysis.tasks = analysis.tasks.map(task => {
+          // Intentar detectar si el archivo relacionado existe
+          const taskNameLower = (task.name || '').toLowerCase();
+
+          // Patrones para detectar archivos relacionados
+          const filePatterns = [
+            // "ConsentRegionService.js" -> "consentregionservice"
+            taskNameLower.split(' ')[0].replace(/\.js$/i, '').replace(/[^a-z0-9]/gi, ''),
+            // Buscar por nombre de módulo
+            taskNameLower.includes('route') ? 'routes' : null,
+            taskNameLower.includes('service') ? 'service' : null,
+            taskNameLower.includes('model') ? 'model' : null
+          ].filter(Boolean);
+
+          // Verificar si algún archivo LIVE coincide
+          let liveVerified = false;
+          let liveFile = null;
+
+          for (const pattern of filePatterns) {
+            for (const fileName of liveFileNames) {
+              if (fileName.includes(pattern) || pattern.includes(fileName)) {
+                liveVerified = true;
+                liveFile = fileName;
+                break;
+              }
+            }
+            if (liveVerified) break;
+          }
+
+          return {
+            ...task,
+            liveVerified,
+            liveFile,
+            dataSource: liveVerified ? 'BRAIN_VERIFIED' : 'ROADMAP_ONLY'
+          };
+        });
+
+        analysis.brainConnected = true;
+        analysis.liveFilesScanned = liveFileNames.size;
+        console.log(`   🧠 Brain conectado: ${liveFileNames.size} archivos verificados`);
+
+      } catch (brainError) {
+        console.log(`   ⚠️ Brain no disponible: ${brainError.message}`);
+        analysis.brainConnected = false;
+      }
+    } else {
+      analysis.brainConnected = false;
+    }
 
     res.json({
       success: true,

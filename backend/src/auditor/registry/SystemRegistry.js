@@ -4,23 +4,45 @@
  * Contiene TODA la información sobre módulos, dependencias, relaciones
  * Permite análisis de impacto, validación de coherencia, bundles comerciales
  *
- * @version 1.0.0
- * @date 2025-01-19
+ * INTEGRACIÓN CON ECOSYSTEM BRAIN (v1.1.0):
+ * - Enriquece módulos con datos LIVE escaneados del código
+ * - Detecta drift entre registro y código real
+ * - Provee endpoints/archivos verificados
+ *
+ * @version 1.1.0
+ * @date 2025-12-09
  */
 
 const fs = require('fs').promises;
 const path = require('path');
 
+// Brain Service para datos LIVE (lazy load)
+let EcosystemBrainService = null;
+
 class SystemRegistry {
-  constructor(database) {
+  constructor(database, brainService = null) {
     this.database = database;
     this.modules = new Map();
     this.endpoints = new Map();
     this.businessFlows = new Map();
     this.dependencies = new Map();
 
+    // 🧠 BRAIN INTEGRATION - Para datos LIVE del código
+    this.brainService = brainService;
+    this.brainData = null; // Cache de datos del Brain
+    this.brainDataTimestamp = null;
+    this.brainCacheTTL = 60000; // 1 minuto de cache
+
     // Auto-cargamos el registry al inicializar
     this.loaded = false;
+  }
+
+  /**
+   * Inyectar Brain Service después de construcción
+   */
+  setBrainService(brainService) {
+    this.brainService = brainService;
+    console.log('🧠 [REGISTRY] Brain Service conectado');
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -641,6 +663,270 @@ class SystemRegistry {
     await fs.writeFile(registryPath, JSON.stringify(registry, null, 2));
 
     console.log(`💾 [REGISTRY] Guardado en ${registryPath}`);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🧠 BRAIN INTEGRATION - Datos LIVE del Código
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Obtener datos frescos del Brain (con cache)
+   */
+  async getBrainData(forceRefresh = false) {
+    if (!this.brainService) {
+      console.log('⚠️ [REGISTRY] Brain Service no disponible');
+      return null;
+    }
+
+    // Verificar cache
+    const now = Date.now();
+    if (!forceRefresh && this.brainData && this.brainDataTimestamp) {
+      if (now - this.brainDataTimestamp < this.brainCacheTTL) {
+        return this.brainData;
+      }
+    }
+
+    try {
+      console.log('🧠 [REGISTRY] Obteniendo datos LIVE del Brain...');
+
+      // Obtener escaneos del Brain
+      const [backendFiles, frontendFiles, workflows] = await Promise.all([
+        this.brainService.scanBackendFiles(),
+        this.brainService.scanFrontendFiles(),
+        this.brainService.getWorkflowsConnected ? this.brainService.getWorkflowsConnected() : null
+      ]);
+
+      this.brainData = {
+        backend: backendFiles,
+        frontend: frontendFiles,
+        workflows: workflows,
+        scannedAt: new Date().toISOString()
+      };
+      this.brainDataTimestamp = now;
+
+      console.log(`✅ [REGISTRY] Brain: ${backendFiles?.totalFiles || 0} backend, ${frontendFiles?.totalFiles || 0} frontend`);
+
+      return this.brainData;
+    } catch (error) {
+      console.error('❌ [REGISTRY] Error obteniendo datos del Brain:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Obtener un módulo ENRIQUECIDO con datos LIVE del Brain
+   *
+   * @param {string} moduleKey - Key del módulo (ej: 'users', 'attendance')
+   * @returns {Object} Módulo con datos estáticos + LIVE
+   */
+  async getModuleWithLiveData(moduleKey) {
+    await this.initialize();
+
+    const module = this.modules.get(moduleKey);
+    if (!module) {
+      return null;
+    }
+
+    // Obtener datos del Brain
+    const brainData = await this.getBrainData();
+    if (!brainData) {
+      // Sin Brain, retornar módulo sin enriquecer
+      return {
+        ...module,
+        liveData: null,
+        brainConnected: false
+      };
+    }
+
+    // Buscar archivos relacionados en el Brain
+    const liveFiles = this.findModuleFilesInBrain(moduleKey, brainData);
+    const liveEndpoints = this.findModuleEndpointsInBrain(moduleKey, brainData);
+    const liveWorkflow = this.findModuleWorkflowInBrain(moduleKey, brainData);
+
+    // Detectar drift (diferencias entre registro y código real)
+    const drift = this.detectDrift(module, liveFiles, liveEndpoints);
+
+    return {
+      ...module,
+      liveData: {
+        files: liveFiles,
+        endpoints: liveEndpoints,
+        workflow: liveWorkflow,
+        scannedAt: brainData.scannedAt
+      },
+      drift,
+      brainConnected: true
+    };
+  }
+
+  /**
+   * Buscar archivos del módulo en datos del Brain
+   */
+  findModuleFilesInBrain(moduleKey, brainData) {
+    const files = {
+      routes: [],
+      services: [],
+      models: [],
+      frontend: []
+    };
+
+    const keyLower = moduleKey.toLowerCase();
+    const variations = [
+      keyLower,
+      keyLower.replace(/-/g, ''),
+      keyLower.replace(/_/g, ''),
+      keyLower + 's', // plural
+      keyLower.slice(0, -1) // singular si termina en s
+    ];
+
+    // Buscar en backend
+    const backendCategories = brainData.backend?.categories || {};
+    for (const [category, data] of Object.entries(backendCategories)) {
+      const categoryFiles = data.files || [];
+      for (const file of categoryFiles) {
+        const fileName = (file.name || '').toLowerCase().replace('.js', '');
+        if (variations.some(v => fileName.includes(v) || v.includes(fileName))) {
+          if (category === 'routes') files.routes.push(file);
+          else if (category === 'services') files.services.push(file);
+          else if (category === 'models') files.models.push(file);
+        }
+      }
+    }
+
+    // Buscar en frontend
+    const frontendCategories = brainData.frontend?.categories || {};
+    for (const data of Object.values(frontendCategories)) {
+      const categoryFiles = data.files || [];
+      for (const file of categoryFiles) {
+        const fileName = (file.name || '').toLowerCase().replace('.js', '');
+        if (variations.some(v => fileName.includes(v))) {
+          files.frontend.push(file);
+        }
+      }
+    }
+
+    return files;
+  }
+
+  /**
+   * Buscar endpoints del módulo en datos del Brain
+   */
+  findModuleEndpointsInBrain(moduleKey, brainData) {
+    const endpoints = [];
+    const keyLower = moduleKey.toLowerCase();
+
+    const routes = brainData.backend?.categories?.routes?.files || [];
+    for (const routeFile of routes) {
+      const fileName = (routeFile.name || '').toLowerCase();
+      if (fileName.includes(keyLower)) {
+        // Agregar todos los endpoints de este archivo
+        const fileEndpoints = routeFile.endpoints || [];
+        endpoints.push(...fileEndpoints.map(ep => ({
+          ...ep,
+          sourceFile: routeFile.path
+        })));
+      }
+    }
+
+    return endpoints;
+  }
+
+  /**
+   * Buscar workflow del módulo en datos del Brain
+   */
+  findModuleWorkflowInBrain(moduleKey, brainData) {
+    if (!brainData.workflows?.workflows) return null;
+
+    const keyLower = moduleKey.toLowerCase();
+    return brainData.workflows.workflows.find(wf => {
+      const wfName = (wf.name || '').toLowerCase();
+      return wfName.includes(keyLower) || keyLower.includes(wfName.replace('workflow', ''));
+    }) || null;
+  }
+
+  /**
+   * Detectar drift entre registro estático y código real
+   */
+  detectDrift(module, liveFiles, liveEndpoints) {
+    const drift = {
+      hasDrift: false,
+      newEndpoints: [],
+      missingEndpoints: [],
+      newFiles: [],
+      summary: ''
+    };
+
+    // Comparar endpoints
+    const registeredEndpoints = module.api_endpoints || [];
+    const liveEndpointPaths = liveEndpoints.map(e => e.path);
+    const registeredPaths = registeredEndpoints.map(e => e.path || e);
+
+    // Endpoints en código pero no en registro
+    drift.newEndpoints = liveEndpointPaths.filter(p => !registeredPaths.includes(p));
+
+    // Endpoints en registro pero no en código
+    drift.missingEndpoints = registeredPaths.filter(p => !liveEndpointPaths.includes(p));
+
+    // Archivos nuevos no registrados
+    const allLiveFiles = [
+      ...liveFiles.routes,
+      ...liveFiles.services,
+      ...liveFiles.models,
+      ...liveFiles.frontend
+    ];
+    const registeredFiles = module.files || [];
+    drift.newFiles = allLiveFiles
+      .map(f => f.path)
+      .filter(p => !registeredFiles.some(rf => p.includes(rf) || rf.includes(p)));
+
+    // Hay drift si hay diferencias
+    drift.hasDrift = drift.newEndpoints.length > 0 ||
+                     drift.missingEndpoints.length > 0 ||
+                     drift.newFiles.length > 0;
+
+    if (drift.hasDrift) {
+      drift.summary = `Drift detectado: ${drift.newEndpoints.length} nuevos endpoints, ` +
+                      `${drift.missingEndpoints.length} faltantes, ${drift.newFiles.length} archivos nuevos`;
+    }
+
+    return drift;
+  }
+
+  /**
+   * Obtener todos los módulos con datos LIVE
+   */
+  async getAllModulesWithLiveData() {
+    await this.initialize();
+
+    const modules = [];
+    for (const moduleKey of this.modules.keys()) {
+      const enrichedModule = await this.getModuleWithLiveData(moduleKey);
+      modules.push(enrichedModule);
+    }
+
+    return modules;
+  }
+
+  /**
+   * Obtener resumen de estado del sistema con Brain
+   */
+  async getSystemStatusWithBrain() {
+    const brainData = await this.getBrainData();
+
+    return {
+      registry: {
+        modulesCount: this.modules.size,
+        endpointsCount: this.endpoints.size,
+        loaded: this.loaded
+      },
+      brain: {
+        connected: !!brainData,
+        backendFiles: brainData?.backend?.totalFiles || 0,
+        frontendFiles: brainData?.frontend?.totalFiles || 0,
+        workflowsDetected: brainData?.workflows?.stats?.total || 0,
+        scannedAt: brainData?.scannedAt || null
+      }
+    };
   }
 }
 

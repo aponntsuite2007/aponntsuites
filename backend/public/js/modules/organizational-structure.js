@@ -779,6 +779,14 @@ const OrgEngine = {
                         <span class="org-tab-icon">🏷️</span>
                         Roles
                     </button>
+                    <button class="org-tab" data-tab="orgchart" onclick="OrgEngine.showTab('orgchart')">
+                        <span class="org-tab-icon">📊</span>
+                        Organigrama
+                    </button>
+                    <button class="org-tab" data-tab="positions" onclick="OrgEngine.showTab('positions')">
+                        <span class="org-tab-icon">👔</span>
+                        Posiciones
+                    </button>
                 </div>
 
                 <!-- Content -->
@@ -811,6 +819,8 @@ const OrgEngine = {
                 case 'categories': await this.renderCategories(); break;
                 case 'shifts': await this.renderShifts(); break;
                 case 'roles': await this.renderRoles(); break;
+                case 'orgchart': await this.renderOrgChart(); break;
+                case 'positions': await this.renderPositions(); break;
             }
         } catch (error) {
             content.innerHTML = `<div class="org-empty"><div class="org-empty-icon">⚠️</div><p>Error: ${error.message}</p></div>`;
@@ -1329,6 +1339,420 @@ const OrgEngine = {
                 `}
             </div>
         `;
+    },
+
+    // ========================================================================
+    // ORGCHART TAB - Organigrama Visual
+    // ========================================================================
+    async renderOrgChart() {
+        const content = document.getElementById('org-tab-content');
+
+        content.innerHTML = `
+            <div class="org-content-header">
+                <h3 class="org-content-title">📊 Organigrama Empresarial</h3>
+                <div class="org-toolbar">
+                    <button class="org-btn org-btn-secondary" onclick="OrgEngine.refreshOrgChart()">
+                        🔄 Actualizar
+                    </button>
+                    <button class="org-btn org-btn-secondary" onclick="OrgEngine.exportOrgChart()">
+                        📥 Exportar SVG
+                    </button>
+                    <button class="org-btn org-btn-primary" onclick="OrgEngine.showTab('positions')">
+                        + Gestionar Posiciones
+                    </button>
+                </div>
+            </div>
+            <div id="orgchart-container" style="height: calc(100vh - 280px); min-height: 500px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; position: relative; overflow: hidden;">
+                <div class="org-loading" id="orgchart-loading">
+                    <div class="org-spinner"></div>
+                    <span>Cargando organigrama...</span>
+                </div>
+            </div>
+        `;
+
+        // Cargar y ejecutar el módulo de organigrama
+        await this.loadOrgChartModule();
+    },
+
+    async loadOrgChartModule() {
+        try {
+            // Verificar si ya está cargado
+            if (typeof window.orgchartModule !== 'undefined') {
+                console.log('📊 [ORGCHART] Módulo ya cargado, inicializando...');
+                await window.orgchartModule.init('orgchart-container');
+                return;
+            }
+
+            // Cargar script dinámicamente
+            const script = document.createElement('script');
+            script.src = '/js/modules/organizational-chart.js';
+            script.onload = async () => {
+                console.log('📊 [ORGCHART] Script cargado, inicializando...');
+                // Esperar un poco para que se defina el módulo
+                setTimeout(async () => {
+                    if (typeof window.orgchartModule !== 'undefined') {
+                        await window.orgchartModule.init('orgchart-container');
+                    } else {
+                        document.getElementById('orgchart-loading').innerHTML = `
+                            <div class="org-empty-icon">⚠️</div>
+                            <p>Error: Módulo de organigrama no disponible</p>
+                        `;
+                    }
+                }, 100);
+            };
+            script.onerror = () => {
+                document.getElementById('orgchart-loading').innerHTML = `
+                    <div class="org-empty-icon">❌</div>
+                    <p>Error cargando módulo de organigrama</p>
+                `;
+            };
+            document.head.appendChild(script);
+        } catch (error) {
+            console.error('[OrgEngine] Error cargando organigrama:', error);
+            document.getElementById('orgchart-loading').innerHTML = `
+                <div class="org-empty-icon">❌</div>
+                <p>Error: ${error.message}</p>
+            `;
+        }
+    },
+
+    refreshOrgChart() {
+        if (typeof window.orgchartModule !== 'undefined' && window.orgchartModule.loadData) {
+            window.orgchartModule.loadData();
+        } else {
+            this.renderOrgChart();
+        }
+    },
+
+    exportOrgChart() {
+        if (typeof window.orgchartModule !== 'undefined' && window.orgchartModule.exportSVG) {
+            window.orgchartModule.exportSVG();
+        } else {
+            alert('El organigrama no está disponible para exportar');
+        }
+    },
+
+    // ========================================================================
+    // POSITIONS TAB - Gestión de Posiciones (Cargos)
+    // ========================================================================
+    async renderPositions() {
+        const content = document.getElementById('org-tab-content');
+
+        // Cargar posiciones desde la API
+        let positions = [];
+        try {
+            const response = await fetch(`/api/v1/organizational/positions?company_id=${getCompanyId()}`, {
+                headers: { 'Authorization': `Bearer ${OrgAPI.getToken()}` }
+            });
+            const result = await response.json();
+            positions = result.data || result.positions || [];
+        } catch (e) {
+            console.error('[OrgEngine] Error cargando posiciones:', e);
+        }
+
+        // Organizar por nivel jerárquico
+        const byLevel = {};
+        positions.forEach(p => {
+            const level = p.hierarchy_level || 0;
+            if (!byLevel[level]) byLevel[level] = [];
+            byLevel[level].push(p);
+        });
+
+        const levelNames = {
+            0: '👑 CEO / Director General',
+            1: '🏛️ Gerentes / Directores',
+            2: '👔 Jefes de Área',
+            3: '📋 Supervisores / Coordinadores',
+            4: '👷 Personal Operativo'
+        };
+
+        content.innerHTML = `
+            <div class="org-content-header">
+                <h3 class="org-content-title">👔 Posiciones Organizacionales</h3>
+                <div class="org-toolbar">
+                    <button class="org-btn org-btn-secondary" onclick="OrgEngine.showTab('orgchart')">
+                        📊 Ver Organigrama
+                    </button>
+                    <button class="org-btn org-btn-primary" onclick="OrgEngine.openPositionModal()">
+                        + Nueva Posición
+                    </button>
+                </div>
+            </div>
+
+            ${positions.length === 0 ? `
+                <div class="org-empty">
+                    <div class="org-empty-icon">👔</div>
+                    <p>No hay posiciones configuradas</p>
+                    <p style="font-size: 12px; margin-top: 8px;">
+                        Cree posiciones para definir la jerarquía organizacional.<br>
+                        Nivel 0 = CEO, Nivel 1 = Gerentes, Nivel 2 = Jefes, etc.
+                    </p>
+                    <button class="org-btn org-btn-primary" onclick="OrgEngine.openPositionModal()" style="margin-top: 16px;">
+                        + Crear Primera Posición
+                    </button>
+                </div>
+            ` : `
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    ${Object.keys(byLevel).sort((a,b) => a - b).map(level => `
+                        <div class="org-positions-level" style="background: rgba(255,255,255,0.02); border-radius: 8px; padding: 16px;">
+                            <h4 style="color: var(--org-text-secondary); margin-bottom: 12px; font-size: 14px;">
+                                ${levelNames[level] || `Nivel ${level}`}
+                                <span style="color: var(--org-accent); margin-left: 8px;">(${byLevel[level].length})</span>
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+                                ${byLevel[level].map(pos => `
+                                    <div class="org-position-card" style="
+                                        background: rgba(255,255,255,0.05);
+                                        border-radius: 6px;
+                                        padding: 12px;
+                                        border-left: 3px solid ${this.getLevelColor(level)};
+                                        cursor: pointer;
+                                        transition: all 0.2s ease;
+                                    " onclick="OrgEngine.openPositionModal(${pos.id})" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                                            <div>
+                                                <strong style="color: var(--org-text-primary);">${pos.position_name}</strong>
+                                                <div style="font-size: 11px; color: var(--org-text-secondary); margin-top: 4px;">
+                                                    ${pos.department_name ? `🏢 ${pos.department_name}` : ''}
+                                                    ${pos.branch_code ? `<span style="margin-left: 8px;">🌳 Rama: ${pos.branch_code}</span>` : ''}
+                                                </div>
+                                            </div>
+                                            <span class="org-badge" style="font-size: 10px; padding: 2px 6px;">
+                                                ${pos.is_approver ? '✅ Aprobador' : ''}
+                                            </span>
+                                        </div>
+                                        ${pos.description ? `<div style="font-size: 11px; color: var(--org-text-muted); margin-top: 8px;">${pos.description.substring(0, 80)}...</div>` : ''}
+                                        <div style="display: flex; gap: 8px; margin-top: 8px; font-size: 11px;">
+                                            ${pos.parent_position_name ? `<span style="color: var(--org-text-secondary);">↳ Reporta a: ${pos.parent_position_name}</span>` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `}
+        `;
+    },
+
+    getLevelColor(level) {
+        const colors = {
+            0: '#1E40AF', // CEO - Dark blue
+            1: '#3B82F6', // Managers - Blue
+            2: '#10B981', // Chiefs - Green
+            3: '#F59E0B', // Supervisors - Yellow
+            4: '#6B7280', // Operatives - Gray
+        };
+        return colors[level] || '#6B7280';
+    },
+
+    async openPositionModal(id = null) {
+        // Cargar posición si es edición
+        let position = null;
+        let allPositions = [];
+
+        try {
+            const response = await fetch(`/api/v1/organizational/positions?company_id=${getCompanyId()}`, {
+                headers: { 'Authorization': `Bearer ${OrgAPI.getToken()}` }
+            });
+            const result = await response.json();
+            allPositions = result.data || result.positions || [];
+            if (id) {
+                position = allPositions.find(p => p.id === id);
+            }
+        } catch (e) {
+            console.error('[OrgEngine] Error cargando posición:', e);
+        }
+
+        const isEdit = !!position;
+
+        const modal = document.createElement('div');
+        modal.className = 'org-modal-overlay';
+        modal.id = 'org-modal';
+        modal.innerHTML = `
+            <div class="org-modal" style="max-width: 600px;">
+                <div class="org-modal-header">
+                    <h3 class="org-modal-title">${isEdit ? 'Editar' : 'Nueva'} Posición</h3>
+                    <button class="org-modal-close" onclick="OrgEngine.closeModal()">&times;</button>
+                </div>
+                <div class="org-modal-body">
+                    <form id="org-position-form">
+                        <input type="hidden" name="id" value="${position?.id || ''}">
+
+                        <div class="org-form-row">
+                            <div class="org-form-group" style="flex: 2;">
+                                <label class="org-form-label">Nombre del Cargo *</label>
+                                <input type="text" name="position_name" class="org-form-input"
+                                    value="${position?.position_name || ''}"
+                                    placeholder="Ej: Gerente de RRHH" required
+                                    oninput="this.form.position_code.value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')">
+                            </div>
+                            <div class="org-form-group" style="flex: 1;">
+                                <label class="org-form-label">Código *</label>
+                                <input type="text" name="position_code" class="org-form-input"
+                                    value="${position?.position_code || ''}"
+                                    placeholder="gerente_rrhh" required>
+                                <small style="color: var(--org-text-secondary); font-size: 10px;">Auto-generado</small>
+                            </div>
+                        </div>
+
+                        <div class="org-form-row">
+                            <div class="org-form-group">
+                                <label class="org-form-label">Nivel Jerárquico *</label>
+                                <select name="hierarchy_level" class="org-form-select" required>
+                                    <option value="0" ${position?.hierarchy_level === 0 ? 'selected' : ''}>0 - CEO / Director General</option>
+                                    <option value="1" ${position?.hierarchy_level === 1 ? 'selected' : ''}>1 - Gerente / Director</option>
+                                    <option value="2" ${position?.hierarchy_level === 2 ? 'selected' : ''}>2 - Jefe de Área</option>
+                                    <option value="3" ${position?.hierarchy_level === 3 ? 'selected' : ''}>3 - Supervisor / Coordinador</option>
+                                    <option value="4" ${position?.hierarchy_level === 4 ? 'selected' : ''}>4 - Personal Operativo</option>
+                                </select>
+                            </div>
+                            <div class="org-form-group">
+                                <label class="org-form-label">Código de Rama</label>
+                                <input type="text" name="branch_code" class="org-form-input"
+                                    value="${position?.branch_code || ''}"
+                                    placeholder="Ej: 1.2.3">
+                                <small style="color: var(--org-text-secondary); font-size: 10px;">Identifica la rama organizacional</small>
+                            </div>
+                        </div>
+
+                        <div class="org-form-group">
+                            <label class="org-form-label">Reporta a (Posición Superior)</label>
+                            <select name="parent_position_id" class="org-form-select">
+                                <option value="">-- Sin supervisor directo --</option>
+                                ${allPositions.filter(p => p.id !== position?.id).map(p => `
+                                    <option value="${p.id}" ${position?.parent_position_id === p.id ? 'selected' : ''}>
+                                        ${p.position_name} (Nivel ${p.hierarchy_level})
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+
+                        <div class="org-form-group">
+                            <label class="org-form-label">Departamento</label>
+                            <select name="department_id" class="org-form-select">
+                                <option value="">-- Opcional --</option>
+                                ${OrgState.departments.map(d => `
+                                    <option value="${d.id}" ${position?.department_id === d.id ? 'selected' : ''}>${d.name}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+
+                        <div class="org-form-group">
+                            <label class="org-form-label">Descripción</label>
+                            <textarea name="description" class="org-form-textarea" rows="2"
+                                placeholder="Responsabilidades principales del cargo">${position?.description || ''}</textarea>
+                        </div>
+
+                        <div class="org-form-row">
+                            <div class="org-form-group" style="flex: 0 0 auto;">
+                                <label class="org-form-label" style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" name="is_approver" ${position?.is_approver ? 'checked' : ''}>
+                                    Es aprobador de solicitudes
+                                </label>
+                            </div>
+                            <div class="org-form-group" style="flex: 1;">
+                                <label class="org-form-label">Nivel máximo de aprobación (días)</label>
+                                <input type="number" name="max_approval_days" class="org-form-input"
+                                    value="${position?.max_approval_days || ''}"
+                                    placeholder="Ej: 5" min="0">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="org-modal-footer">
+                    <button class="org-btn org-btn-secondary" onclick="OrgEngine.closeModal()">Cancelar</button>
+                    ${isEdit ? `<button class="org-btn org-btn-danger" onclick="OrgEngine.deletePosition(${position.id})">Eliminar</button>` : ''}
+                    <button class="org-btn org-btn-primary" onclick="OrgEngine.savePosition()">
+                        ${isEdit ? 'Guardar Cambios' : 'Crear Posición'}
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    async savePosition() {
+        const form = document.getElementById('org-position-form');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+
+        data.company_id = getCompanyId();
+        data.hierarchy_level = parseInt(data.hierarchy_level) || 0;
+        data.is_approver = form.querySelector('[name="is_approver"]').checked;
+        data.max_approval_days = parseInt(data.max_approval_days) || null;
+        data.parent_position_id = data.parent_position_id || null;
+        data.department_id = data.department_id || null;
+
+        try {
+            const isEdit = !!data.id;
+            const url = isEdit
+                ? `/api/v1/organizational/positions/${data.id}`
+                : '/api/v1/organizational/positions';
+
+            const response = await fetch(url, {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: {
+                    'Authorization': `Bearer ${OrgAPI.getToken()}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.message || 'Error guardando posición');
+            }
+
+            this.closeModal();
+            this.showTab('positions');
+            this.showToast(isEdit ? 'Posición actualizada' : 'Posición creada', 'success');
+        } catch (error) {
+            console.error('[OrgEngine] Error guardando posición:', error);
+            this.showToast(error.message, 'error');
+        }
+    },
+
+    async deletePosition(id) {
+        if (!confirm('¿Eliminar esta posición? Los empleados asignados quedarán sin posición.')) return;
+
+        try {
+            const response = await fetch(`/api/v1/organizational/positions/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${OrgAPI.getToken()}` }
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.message || 'Error eliminando posición');
+            }
+
+            this.closeModal();
+            this.showTab('positions');
+            this.showToast('Posición eliminada', 'success');
+        } catch (error) {
+            console.error('[OrgEngine] Error eliminando posición:', error);
+            this.showToast(error.message, 'error');
+        }
+    },
+
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `org-toast org-toast-${type}`;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
+            color: white;
+            border-radius: 6px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
     },
 
     // ========================================================================

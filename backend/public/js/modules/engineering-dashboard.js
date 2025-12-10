@@ -42,6 +42,31 @@ const EngineeringDashboard = {
   isInitializing: false,
 
   /**
+   * Helper: Obtener status de forma segura (evita undefined.toLowerCase())
+   */
+  safeStatus(obj, defaultStatus = 'unknown') {
+    if (!obj) return defaultStatus;
+    const status = obj.status || defaultStatus;
+    return typeof status === 'string' ? status.toLowerCase() : defaultStatus;
+  },
+
+  /**
+   * Helper: Obtener progreso de forma segura
+   */
+  safeProgress(obj, defaultProgress = 0) {
+    if (!obj) return defaultProgress;
+    return obj.progress !== undefined ? obj.progress : defaultProgress;
+  },
+
+  /**
+   * Helper: Obtener nombre de forma segura
+   */
+  safeName(obj, key, defaultName = 'Sin nombre') {
+    if (!obj) return key || defaultName;
+    return obj.name || key || defaultName;
+  },
+
+  /**
    * Inicializar dashboard
    */
   async init() {
@@ -427,6 +452,7 @@ const EngineeringDashboard = {
       case 'database':
         return this.renderDatabase();
       case 'workflows':
+        setTimeout(() => this.loadWorkflowsFromBrain(), 100);
         return this.renderWorkflows();
       default:
         return '<p>Vista no encontrada</p>';
@@ -825,21 +851,29 @@ const EngineeringDashboard = {
     const apps = Object.entries(applications).slice(0, 4); // Mostrar solo 4
     const total = Object.keys(applications).length;
 
+    if (apps.length === 0) {
+      return '<div class="preview-grid"><p style="color: #6b7280; text-align: center;">Sin aplicaciones</p></div>';
+    }
+
     return `
       <div class="preview-grid">
-        ${apps.map(([key, app]) => `
-          <div class="preview-card ${app.status.toLowerCase()}">
-            <div class="app-icon">${this.getAppIcon(app.type)}</div>
-            <div class="app-name">${app.name}</div>
-            <div class="app-status">${this.getStatusBadge(app.status)}</div>
+        ${apps.map(([key, app]) => {
+          const status = this.safeStatus(app, 'production');
+          const progress = this.safeProgress(app, 100);
+          const name = this.safeName(app, key);
+          return `
+          <div class="preview-card ${status}">
+            <div class="app-icon">${this.getAppIcon(app?.type)}</div>
+            <div class="app-name">${name}</div>
+            <div class="app-status">${this.getStatusBadge(app?.status || 'PRODUCTION')}</div>
             <div class="app-progress">
               <div class="progress-bar">
-                <div class="progress-fill" style="width: ${app.progress}%"></div>
+                <div class="progress-fill" style="width: ${progress}%"></div>
               </div>
-              <span class="progress-text">${app.progress}%</span>
+              <span class="progress-text">${progress}%</span>
             </div>
           </div>
-        `).join('')}
+        `}).join('')}
         ${total > 4 ? `<div class="preview-more">+${total - 4} más</div>` : ''}
       </div>
     `;
@@ -854,18 +888,23 @@ const EngineeringDashboard = {
 
     return `
       <div class="preview-grid">
-        ${mods.map(([key, mod]) => `
-          <div class="preview-card ${mod.status.toLowerCase()}">
-            <div class="module-name">${mod.name}</div>
-            <div class="module-status">${this.getStatusBadge(mod.status)}</div>
+        ${mods.map(([key, mod]) => {
+          // Protección: usar valores por defecto si faltan
+          const status = mod.status || 'PRODUCTION';
+          const progress = mod.progress !== undefined ? mod.progress : 100;
+          const name = mod.name || key;
+          return `
+          <div class="preview-card ${status.toLowerCase()}">
+            <div class="module-name">${name}</div>
+            <div class="module-status">${this.getStatusBadge(status)}</div>
             <div class="module-progress">
               <div class="progress-bar">
-                <div class="progress-fill" style="width: ${mod.progress}%"></div>
+                <div class="progress-fill" style="width: ${progress}%"></div>
               </div>
-              <span class="progress-text">${mod.progress}%</span>
+              <span class="progress-text">${progress}%</span>
             </div>
           </div>
-        `).join('')}
+        `}).join('')}
         ${total > 4 ? `<div class="preview-more">+${total - 4} más</div>` : ''}
       </div>
     `;
@@ -877,18 +916,27 @@ const EngineeringDashboard = {
   renderRoadmapPreview(roadmap) {
     const phases = Object.entries(roadmap).slice(0, 3);
 
+    if (phases.length === 0) {
+      return '<div class="preview-timeline"><p style="color: #6b7280; text-align: center;">Sin fases en roadmap</p></div>';
+    }
+
     return `
       <div class="preview-timeline">
-        ${phases.map(([key, phase]) => `
-          <div class="timeline-item ${phase.status.toLowerCase()}">
+        ${phases.map(([key, phase]) => {
+          // Protección: usar valores por defecto si faltan
+          const status = phase.status || 'IN_PROGRESS';
+          const progress = phase.progress !== undefined ? phase.progress : 0;
+          const name = phase.name || key;
+          return `
+          <div class="timeline-item ${status.toLowerCase()}">
             <div class="timeline-marker"></div>
             <div class="timeline-content">
-              <div class="phase-name">${phase.name}</div>
-              <div class="phase-status">${this.getStatusBadge(phase.status)}</div>
-              <div class="phase-progress">${phase.progress}%</div>
+              <div class="phase-name">${name}</div>
+              <div class="phase-status">${this.getStatusBadge(status)}</div>
+              <div class="phase-progress">${progress}%</div>
             </div>
           </div>
-        `).join('')}
+        `}).join('')}
       </div>
     `;
   },
@@ -931,7 +979,7 @@ const EngineeringDashboard = {
 
         <div class="applications-grid">
           ${Object.entries(filtered).map(([key, app]) => `
-            <div class="application-card ${app.status.toLowerCase()}" data-app="${key}">
+            <div class="application-card ${(app.status || 'unknown').toLowerCase()}" data-app="${key}">
               <!-- Header -->
               <div class="app-card-header">
                 <div class="app-icon-large">${this.getAppIcon(app.type)}</div>
@@ -1031,7 +1079,7 @@ const EngineeringDashboard = {
 
         <div class="modules-grid">
           ${Object.entries(filtered).map(([key, mod]) => `
-            <div class="module-card ${mod.status.toLowerCase()}" data-module="${key}">
+            <div class="module-card ${(mod.status || 'unknown').toLowerCase()}" data-module="${key}">
               <!-- Header -->
               <div class="module-card-header">
                 <div class="module-title">
@@ -1171,7 +1219,7 @@ const EngineeringDashboard = {
         <!-- Gantt Chart -->
         <div class="gantt-chart">
           ${Object.entries(roadmap).map(([key, phase], index) => `
-            <div class="gantt-phase ${phase.status.toLowerCase()}">
+            <div class="gantt-phase ${(phase.status || 'unknown').toLowerCase()}">
               <!-- Phase Info -->
               <div class="gantt-phase-info">
                 <div class="phase-number">Fase ${index + 1}</div>
@@ -1229,7 +1277,7 @@ const EngineeringDashboard = {
           <h3>Timeline del Proyecto</h3>
           <div class="timeline-container">
             ${Object.entries(roadmap).map(([key, phase], index) => `
-              <div class="timeline-phase ${phase.status.toLowerCase()}">
+              <div class="timeline-phase ${(phase.status || 'unknown').toLowerCase()}">
                 <div class="timeline-marker"></div>
                 <div class="timeline-content">
                   <div class="timeline-date">Fase ${index + 1}</div>
@@ -2060,87 +2108,324 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
   },
 
   /**
-   * VISTA: Workflows
+   * VISTA: Workflows - AHORA USA BRAIN API CON DATOS LIVE
    */
   renderWorkflows() {
-    if (!this.metadata) return '<p>Cargando...</p>';
-
-    const { workflows } = this.metadata;
-
+    // Mostrar loading mientras carga desde Brain
     return `
       <div class="workflows-container">
-        <h2>🔄 Workflows del Sistema</h2>
-
-        <div class="workflows-grid">
-          ${Object.entries(workflows).map(([key, workflow]) => `
-            <div class="workflow-card ${workflow.status.toLowerCase()}">
-              <!-- Header -->
-              <div class="workflow-header">
-                <h3>${workflow.name}</h3>
-                <div class="workflow-meta">
-                  <span class="workflow-status">${this.getStatusBadge(workflow.status)}</span>
-                  <span class="workflow-implemented">${workflow.implemented ? '✅ Implementado' : '⏸️ No Implementado'}</span>
-                  ${workflow.createdDate ? `<span class="workflow-date" style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">📅 ${workflow.createdDate}</span>` : ''}
-                </div>
-              </div>
-
-              <!-- Steps (directo) -->
-              ${workflow.steps ? `
-                <div class="workflow-steps">
-                  <h4>Pasos del Workflow:</h4>
-                  <ol>
-                    ${workflow.steps.map(step => `
-                      <li class="${step.status ? step.status.toLowerCase() : 'pending'}">
-                        <span class="step-number">Paso ${step.step}</span>
-                        <span class="step-name">${step.name}</span>
-                        ${step.lastModified ? `<span class="step-modified" style="font-size: 0.8em; color: #6b7280; margin-left: 8px;">(Modificado: ${step.lastModified})</span>` : ''}
-                        ${step.status ? `<span class="step-status">${this.getStatusBadge(step.status)}</span>` : ''}
-                      </li>
-                    `).join('')}
-                  </ol>
-                </div>
-              ` : ''}
-
-              <!-- Phases (para workflows con fases como altaEmpresa) -->
-              ${workflow.phases ? `
-                <div class="workflow-phases">
-                  <h4>Fases del Workflow:</h4>
-                  ${Object.entries(workflow.phases).map(([phaseKey, phase]) => `
-                    <div class="phase-section" style="margin-bottom: 20px; padding: 15px; background: rgba(59, 130, 246, 0.05); border-left: 3px solid #3b82f6; border-radius: 4px;">
-                      <h5 style="color: #3b82f6; margin-bottom: 10px;">${phase.name}</h5>
-                      ${phase.steps ? `
-                        <ol style="margin: 0; padding-left: 20px;">
-                          ${phase.steps.map(step => `
-                            <li class="${step.status ? step.status.toLowerCase() : 'pending'}" style="margin-bottom: 8px;">
-                              <span class="step-number" style="font-weight: 600;">Paso ${step.step}</span>
-                              <span class="step-name">${step.name}</span>
-                              ${step.lastModified ? `<span class="step-modified" style="font-size: 0.8em; color: #6b7280; margin-left: 8px;">(Modificado: ${step.lastModified})</span>` : ''}
-                              ${step.status ? `<span class="step-status">${this.getStatusBadge(step.status)}</span>` : ''}
-                            </li>
-                          `).join('')}
-                        </ol>
-                      ` : '<p style="color: #6b7280; font-style: italic;">Sin pasos definidos</p>'}
-                    </div>
-                  `).join('')}
-                </div>
-              ` : ''}
-
-              <!-- Database Impact (si existe) -->
-              ${workflow.databaseImpact ? `
-                <div class="workflow-db-impact">
-                  <h4>💾 Impacto en BD:</h4>
-                  <ul>
-                    ${workflow.databaseImpact.map(impact => `
-                      <li>${impact}</li>
-                    `).join('')}
-                  </ul>
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
+        <h2>🔄 Workflows del Sistema <span style="font-size: 0.7em; color: #10b981;">🧠 LIVE desde Brain</span></h2>
+        <div id="workflows-brain-content">
+          <p style="text-align: center; padding: 40px;">
+            <span style="font-size: 2em;">⏳</span><br>
+            Cargando workflows desde Brain Service...
+          </p>
         </div>
       </div>
     `;
+  },
+
+  /**
+   * Cargar workflows desde Brain API después de renderizar
+   */
+  async loadWorkflowsFromBrain() {
+    const container = document.getElementById('workflows-brain-content');
+    if (!container) return;
+
+    try {
+      const response = await fetch('/api/engineering/workflows');
+      const result = await response.json();
+
+      if (!result.success || !result.data) {
+        container.innerHTML = '<p style="color: red;">Error cargando workflows</p>';
+        return;
+      }
+
+      const { workflows, stats } = result.data;
+
+      container.innerHTML = `
+        <!-- Stats Panel -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
+          <div style="text-align: center; color: white;">
+            <div style="font-size: 2em; font-weight: bold;">${stats.total}</div>
+            <div style="font-size: 0.85em; opacity: 0.9;">Total Workflows</div>
+          </div>
+          <div style="text-align: center; color: white;">
+            <div style="font-size: 2em; font-weight: bold;">${stats.tutorialCapable}</div>
+            <div style="font-size: 0.85em; opacity: 0.9;">📚 Con Tutorial</div>
+          </div>
+          <div style="text-align: center; color: white;">
+            <div style="font-size: 2em; font-weight: bold;">${stats.totalStages}</div>
+            <div style="font-size: 0.85em; opacity: 0.9;">Etapas Totales</div>
+          </div>
+          <div style="text-align: center; color: white;">
+            <div style="font-size: 2em; font-weight: bold;">${stats.totalSteps}</div>
+            <div style="font-size: 0.85em; opacity: 0.9;">Pasos Totales</div>
+          </div>
+          <div style="text-align: center; color: white;">
+            <div style="font-size: 2em; font-weight: bold;">${stats.implemented}</div>
+            <div style="font-size: 0.85em; opacity: 0.9;">✅ Implementados</div>
+          </div>
+        </div>
+
+        <!-- Workflows Grid -->
+        <div class="workflows-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+          ${workflows.map(workflow => `
+            <div class="workflow-card" style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; border-left: 4px solid ${this.getWorkflowColor(workflow.status)};">
+              <!-- Header -->
+              <div style="padding: 15px; background: linear-gradient(135deg, ${this.getWorkflowColor(workflow.status)}22, transparent);">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                  <h3 style="margin: 0; font-size: 1.1em;">${workflow.displayName || workflow.name}</h3>
+                  <span style="background: ${this.getWorkflowColor(workflow.status)}; color: white; padding: 4px 10px; border-radius: 15px; font-size: 0.75em;">
+                    ${workflow.status?.toUpperCase() || 'UNKNOWN'}
+                  </span>
+                </div>
+                <div style="margin-top: 8px; font-size: 0.85em; color: #6b7280;">
+                  <span>📁 ${workflow.source}</span>
+                </div>
+              </div>
+
+              <!-- Stats -->
+              <div style="padding: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+                <div>
+                  <div style="font-size: 1.5em; font-weight: bold; color: #3b82f6;">${workflow.stageCount || 0}</div>
+                  <div style="font-size: 0.75em; color: #6b7280;">Etapas</div>
+                </div>
+                <div>
+                  <div style="font-size: 1.5em; font-weight: bold; color: #10b981;">${workflow.totalSteps || 0}</div>
+                  <div style="font-size: 0.75em; color: #6b7280;">Pasos</div>
+                </div>
+                <div>
+                  <div style="font-size: 1.5em; font-weight: bold; color: #8b5cf6;">${workflow.completeness || 0}%</div>
+                  <div style="font-size: 0.75em; color: #6b7280;">Completo</div>
+                </div>
+              </div>
+
+              <!-- Stages Preview -->
+              ${workflow.stages && workflow.stages.length > 0 ? `
+                <div style="padding: 15px;">
+                  <h4 style="margin: 0 0 10px 0; font-size: 0.9em; color: #374151;">📋 Etapas:</h4>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    ${workflow.stages.slice(0, 6).map((stage, idx) => `
+                      <span style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-size: 0.75em;">
+                        ${idx + 1}. ${stage.name} <span style="color: #10b981;">(${stage.stepCount || stage.subStatuses?.length || 0})</span>
+                      </span>
+                    `).join('')}
+                    ${workflow.stages.length > 6 ? `<span style="padding: 4px 8px; font-size: 0.75em; color: #6b7280;">+${workflow.stages.length - 6} más</span>` : ''}
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Connected Modules -->
+              ${workflow.connectedModules && workflow.connectedModules.length > 0 ? `
+                <div style="padding: 0 15px 15px;">
+                  <h4 style="margin: 0 0 8px 0; font-size: 0.85em; color: #374151;">🔗 Módulos conectados:</h4>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                    ${workflow.connectedModules.slice(0, 5).map(mod => `
+                      <span style="background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px; font-size: 0.7em;">${mod}</span>
+                    `).join('')}
+                    ${workflow.connectedModules.length > 5 ? `<span style="font-size: 0.7em; color: #6b7280;">+${workflow.connectedModules.length - 5}</span>` : ''}
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Actions -->
+              <div style="padding: 15px; background: #f9fafb; border-top: 1px solid #e5e7eb; display: flex; gap: 10px;">
+                ${workflow.tutorialCapable ? `
+                  <button onclick="window.EngineeringDashboard.showTutorial('${workflow.id}')"
+                    style="flex: 1; padding: 8px 12px; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85em;">
+                    📚 Ver Tutorial
+                  </button>
+                ` : `
+                  <span style="flex: 1; padding: 8px 12px; background: #e5e7eb; color: #6b7280; border-radius: 6px; text-align: center; font-size: 0.85em;">
+                    Sin tutorial disponible
+                  </span>
+                `}
+                <button onclick="window.EngineeringDashboard.showWorkflowDetails('${workflow.id}')"
+                  style="padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85em;">
+                  🔍 Detalles
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div style="margin-top: 20px; text-align: center; color: #6b7280; font-size: 0.85em;">
+          🧠 Datos escaneados EN VIVO desde el código • Última actualización: ${new Date(result.scannedAt).toLocaleString()}
+        </div>
+      `;
+    } catch (error) {
+      console.error('Error loading workflows from Brain:', error);
+      container.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+    }
+  },
+
+  /**
+   * Obtener color según status del workflow
+   */
+  getWorkflowColor(status) {
+    const colors = {
+      'implemented': '#10b981',
+      'partial': '#f59e0b',
+      'planned': '#6b7280',
+      'development': '#3b82f6'
+    };
+    return colors[status?.toLowerCase()] || '#6b7280';
+  },
+
+  /**
+   * Mostrar tutorial de un workflow
+   */
+  async showTutorial(workflowId) {
+    try {
+      const response = await fetch(`/api/engineering/workflows/${workflowId}/tutorial`);
+      const result = await response.json();
+
+      if (!result.success) {
+        alert('Error cargando tutorial: ' + result.error);
+        return;
+      }
+
+      const tutorial = result.data;
+
+      // Crear modal con el tutorial
+      const modal = document.createElement('div');
+      modal.id = 'tutorial-modal';
+      modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 20px;';
+
+      modal.innerHTML = `
+        <div style="background: white; border-radius: 12px; max-width: 900px; max-height: 90vh; overflow: auto; width: 100%;">
+          <!-- Header -->
+          <div style="padding: 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; position: sticky; top: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h2 style="margin: 0;">📚 ${tutorial.title}</h2>
+              <button onclick="document.getElementById('tutorial-modal').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer;">✕ Cerrar</button>
+            </div>
+            <div style="margin-top: 10px; display: flex; gap: 15px; flex-wrap: wrap; font-size: 0.9em;">
+              <span>⏱️ ${tutorial.overview.estimatedTime}</span>
+              <span>📊 ${tutorial.overview.difficulty}</span>
+              <span>📋 ${tutorial.overview.totalStages} etapas</span>
+              <span>📝 ${tutorial.overview.totalSteps} pasos</span>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div style="padding: 20px;">
+            <p style="color: #374151; margin-bottom: 20px;">${tutorial.overview.description}</p>
+
+            <!-- Prerequisites -->
+            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+              <h4 style="margin: 0 0 10px 0; color: #92400e;">⚠️ Prerequisitos</h4>
+              <ul style="margin: 0; padding-left: 20px; color: #92400e;">
+                ${tutorial.overview.prerequisites.map(p => `<li>${p}</li>`).join('')}
+              </ul>
+            </div>
+
+            <!-- Stages -->
+            ${tutorial.stages.map(stage => `
+              <div style="margin-bottom: 25px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                <div style="background: #f3f4f6; padding: 15px;">
+                  <h3 style="margin: 0; color: #374151;">
+                    <span style="background: #3b82f6; color: white; padding: 4px 10px; border-radius: 4px; margin-right: 10px;">${stage.number}</span>
+                    ${stage.title}
+                  </h3>
+                  <p style="margin: 8px 0 0 0; color: #6b7280; font-size: 0.9em;">${stage.description}</p>
+                </div>
+
+                <div style="padding: 15px;">
+                  ${stage.steps.map(step => `
+                    <div style="padding: 12px; margin-bottom: 10px; background: #f9fafb; border-radius: 6px; border-left: 3px solid #10b981;">
+                      <div style="font-weight: 600; color: #374151;">
+                        Paso ${step.number}: ${step.title}
+                      </div>
+                      <div style="color: #059669; font-size: 0.9em; margin-top: 4px;">
+                        🎯 ${step.action}
+                      </div>
+                      <div style="margin-top: 8px; font-size: 0.85em; color: #6b7280;">
+                        ${step.instructions.join('<br>')}
+                      </div>
+                      ${step.tips && step.tips.length > 0 ? `
+                        <div style="margin-top: 8px; padding: 8px; background: #ecfdf5; border-radius: 4px; font-size: 0.85em; color: #065f46;">
+                          ${step.tips.join('<br>')}
+                        </div>
+                      ` : ''}
+                      ${step.nextOptions && step.nextOptions.length > 0 ? `
+                        <div style="margin-top: 8px; font-size: 0.8em; color: #6b7280;">
+                          ➡️ Puede continuar a: ${step.nextOptions.map(n => n.name).join(', ')}
+                        </div>
+                      ` : ''}
+                    </div>
+                  `).join('')}
+
+                  ${stage.canTransitionTo && stage.canTransitionTo.length > 0 ? `
+                    <div style="padding: 10px; background: #dbeafe; border-radius: 6px; font-size: 0.85em; color: #1e40af;">
+                      🔄 Esta etapa puede transicionar a: ${stage.canTransitionTo.map(t => t.name).join(', ')}
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            `).join('')}
+
+            <!-- Summary -->
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 20px;">
+              <h4 style="margin: 0 0 15px 0; color: #166534;">📋 Resumen</h4>
+
+              <div style="margin-bottom: 15px;">
+                <strong style="color: #166534;">✅ Puntos Clave:</strong>
+                <ul style="margin: 5px 0 0 0; padding-left: 20px; color: #166534;">
+                  ${tutorial.summary.keyTakeaways.map(k => `<li>${k}</li>`).join('')}
+                </ul>
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <strong style="color: #dc2626;">❌ Errores Comunes:</strong>
+                <ul style="margin: 5px 0 0 0; padding-left: 20px; color: #dc2626;">
+                  ${tutorial.summary.commonMistakes.map(m => `<li>${m}</li>`).join('')}
+                </ul>
+              </div>
+
+              <div>
+                <strong style="color: #2563eb;">💡 Mejores Prácticas:</strong>
+                <ul style="margin: 5px 0 0 0; padding-left: 20px; color: #2563eb;">
+                  ${tutorial.summary.bestPractices.map(b => `<li>${b}</li>`).join('')}
+                </ul>
+              </div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center; color: #6b7280; font-size: 0.85em;">
+              🧠 Tutorial generado dinámicamente desde el código • ${new Date(tutorial.generatedAt).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+      modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+    } catch (error) {
+      console.error('Error showing tutorial:', error);
+      alert('Error cargando tutorial: ' + error.message);
+    }
+  },
+
+  /**
+   * Mostrar detalles de un workflow
+   */
+  async showWorkflowDetails(workflowId) {
+    try {
+      const response = await fetch(`/api/engineering/workflows/${workflowId}`);
+      const result = await response.json();
+
+      if (!result.success) {
+        alert('Error: ' + result.error);
+        return;
+      }
+
+      const workflow = result.data;
+      alert(`Workflow: ${workflow.displayName}\n\nEtapas: ${workflow.stageCount}\nPasos: ${workflow.totalSteps}\nCompleteness: ${workflow.completeness}%\nMódulos: ${(workflow.connectedModules || []).join(', ')}\n\nFuente: ${workflow.source}`);
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
   },
 
   /**
@@ -2984,7 +3269,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
                     ${new Date(phase.startDate).toLocaleDateString('es-AR')} - ${new Date(phase.estimatedCompletion).toLocaleDateString('es-AR')}
                   </div>
                 </div>
-                <span class="status-badge ${phase.status.toLowerCase()}">${this.getStatusBadge(phase.status)}</span>
+                <span class="status-badge ${(phase.status || 'unknown').toLowerCase()}">${this.getStatusBadge(phase.status)}</span>
               </div>
 
               <!-- Progress Bar -->

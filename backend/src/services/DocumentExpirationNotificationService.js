@@ -189,9 +189,9 @@ class DocumentExpirationNotificationService {
             });
         }
 
-        // Notificacion al supervisor
-        if (config.notifySupervisor && doc.department_id) {
-            const supervisor = await this.getDepartmentSupervisor(client, doc.department_id);
+        // Notificacion al supervisor (usando jerarquía organizacional)
+        if (config.notifySupervisor && doc.user_id) {
+            const supervisor = await this.getSupervisorByHierarchy(client, doc.user_id, companyId);
             if (supervisor) {
                 notifications.push({
                     user_id: supervisor.user_id,
@@ -200,6 +200,8 @@ class DocumentExpirationNotificationService {
                     message: `Empleado: ${doc.employee_name}\n${this.getNotificationMessage(escalationLevel, doc, daysUntilExpiration)}`,
                     priority: this.getPriority(escalationLevel)
                 });
+            } else {
+                console.log(`[DOC-EXPIRATION] No se encontró supervisor para empleado ${doc.user_id}`);
             }
         }
 
@@ -241,39 +243,89 @@ class DocumentExpirationNotificationService {
     }
 
     /**
-     * Obtener supervisor del departamento
+     * Obtener supervisor del empleado usando jerarquía organizacional
+     * Usa parent_position_id, NO rol genérico
      */
-    async getDepartmentSupervisor(client, departmentId) {
-        const result = await client.query(`
-            SELECT u.user_id, u.first_name || ' ' || u.last_name as name, u.email
-            FROM users u
-            WHERE u.department_id = $1
-              AND u.role IN ('supervisor', 'manager', 'admin')
-              AND u.is_active = true
-            ORDER BY
-                CASE u.role
-                    WHEN 'manager' THEN 1
-                    WHEN 'supervisor' THEN 2
-                    ELSE 3
-                END
-            LIMIT 1
-        `, [departmentId]);
+    async getSupervisorByHierarchy(client, userId, companyId) {
+        try {
+            // Obtener posición organizacional del empleado
+            const employeeResult = await client.query(`
+                SELECT u.user_id, u.first_name, u.last_name,
+                       op.parent_position_id
+                FROM users u
+                LEFT JOIN organizational_positions op ON u.organizational_position_id = op.id
+                WHERE u.user_id = $1 AND u.company_id = $2
+            `, [userId, companyId]);
 
-        return result.rows[0] || null;
+            if (employeeResult.rows.length === 0 || !employeeResult.rows[0].parent_position_id) {
+                console.log(`[DOC-EXPIRATION] Usuario ${userId} sin supervisor en jerarquía`);
+                return null;
+            }
+
+            const parentPositionId = employeeResult.rows[0].parent_position_id;
+
+            // Buscar usuario asignado a la posición del supervisor
+            const supervisorResult = await client.query(`
+                SELECT u.user_id, u.first_name || ' ' || u.last_name as name, u.email,
+                       op.position_name
+                FROM users u
+                JOIN organizational_positions op ON u.organizational_position_id = op.id
+                WHERE u.organizational_position_id = $1
+                  AND u.company_id = $2
+                  AND u.is_active = true
+                LIMIT 1
+            `, [parentPositionId, companyId]);
+
+            if (supervisorResult.rows.length === 0) {
+                console.log(`[DOC-EXPIRATION] Posición ${parentPositionId} sin usuario asignado`);
+                return null;
+            }
+
+            console.log(`[DOC-EXPIRATION] Supervisor encontrado: ${supervisorResult.rows[0].name}`);
+            return supervisorResult.rows[0];
+
+        } catch (error) {
+            console.error('[DOC-EXPIRATION] Error obteniendo supervisor:', error);
+            return null;
+        }
     }
 
     /**
-     * Obtener admins de RRHH de la empresa
+     * Obtener supervisor del departamento (legacy fallback)
+     * DEPRECADO: Usar getSupervisorByHierarchy() en su lugar
+     */
+    async getDepartmentSupervisor(client, departmentId) {
+        // Este método se mantiene por compatibilidad pero ya NO se usa
+        // La nueva lógica usa getSupervisorByHierarchy()
+        return null;
+    }
+
+    /**
+     * Obtener usuarios de RRHH por posición organizacional (NO por rol)
      */
     async getHRAdmins(client, companyId) {
         const result = await client.query(`
-            SELECT u.user_id, u.first_name || ' ' || u.last_name as name, u.email
+            SELECT u.user_id, u.first_name || ' ' || u.last_name as name, u.email,
+                   op.position_name, op.position_code
             FROM users u
+            JOIN organizational_positions op ON u.organizational_position_id = op.id
             WHERE u.company_id = $1
-              AND u.role = 'admin'
               AND u.is_active = true
+              AND (
+                UPPER(op.position_code) LIKE '%RRHH%'
+                OR UPPER(op.position_code) LIKE '%RH%'
+                OR UPPER(op.position_code) LIKE '%HR%'
+                OR UPPER(op.position_name) LIKE '%RECURSOS HUMANOS%'
+              )
+            ORDER BY op.level_order ASC
             LIMIT 5
         `, [companyId]);
+
+        if (result.rows.length === 0) {
+            console.log(`[DOC-EXPIRATION] No se encontró RRHH por posición para empresa ${companyId}`);
+        } else {
+            console.log(`[DOC-EXPIRATION] ${result.rows.length} usuarios RRHH encontrados por posición`);
+        }
 
         return result.rows;
     }

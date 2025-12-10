@@ -39,36 +39,154 @@ const router = express.Router();
 const { exec } = require('child_process');
 const path = require('path');
 
-// Cargar metadata
-let metadata = require('../../engineering-metadata');
+// ============================================================================
+// ECOSYSTEM BRAIN - Fuente de datos VIVOS
+// ============================================================================
+const EcosystemBrainService = require('../services/EcosystemBrainService');
+let brainService = null;
+
+// Intentar cargar metadata estático como FALLBACK
+let metadata = null;
+try {
+  metadata = require('../../engineering-metadata');
+  console.log('📦 [ENGINEERING] Metadata estático cargado como fallback');
+} catch (e) {
+  console.log('🧠 [ENGINEERING] Sin metadata estático - usando Brain Service exclusivamente');
+  metadata = { project: {}, modules: {}, commercialModules: { modules: {} }, applications: {} };
+}
+
+// Inicializar Brain Service
+function initBrainService(database) {
+  if (!brainService && database) {
+    brainService = new EcosystemBrainService(database);
+    console.log('🧠 [ENGINEERING] Brain Service inicializado - datos VIVOS activados');
+  }
+  return brainService;
+}
+
+// Middleware para inicializar Brain si hay database disponible
+router.use((req, res, next) => {
+  if (!brainService && req.app.get('database')) {
+    initBrainService(req.app.get('database'));
+  }
+  next();
+});
 
 /**
- * Función helper para recargar metadata (después de actualizaciones)
+ * Función helper para recargar metadata (DEPRECATED - usar Brain)
  */
 function reloadMetadata() {
   try {
-    delete require.cache[require.resolve('../../engineering-metadata')];
-    metadata = require('../../engineering-metadata');
-    console.log('✅ [ENGINEERING] Metadata recargado');
+    if (metadata) {
+      delete require.cache[require.resolve('../../engineering-metadata')];
+      metadata = require('../../engineering-metadata');
+      console.log('✅ [ENGINEERING] Metadata recargado (fallback)');
+    }
     return true;
   } catch (error) {
-    console.error('❌ [ENGINEERING] Error recargando metadata:', error);
-    return false;
+    console.warn('⚠️ [ENGINEERING] Metadata estático no disponible - usando Brain');
+    return true; // No es error, Brain es la fuente principal
   }
 }
 
 /**
  * GET /api/engineering/metadata
- * Retorna metadata completo
+ * Retorna metadata completo - AHORA USA BRAIN SERVICE (datos VIVOS)
  */
-router.get('/metadata', (req, res) => {
+router.get('/metadata', async (req, res) => {
   try {
+    // Si tenemos Brain Service, usar datos VIVOS
+    if (brainService) {
+      console.log('🧠 [ENGINEERING] Sirviendo metadata desde Brain (VIVO)');
+      const [overview, backend, frontend, commercial, technical, apps, roadmap, workflows] = await Promise.all([
+        brainService.getOverview(),
+        brainService.scanBackendFiles(),
+        brainService.scanFrontendFiles(),
+        brainService.getCommercialModules(),
+        brainService.getTechnicalModules(),
+        brainService.getApplications(),
+        brainService.getRoadmap(),
+        brainService.getWorkflows()
+      ]);
+
+      // Si roadmap del Brain está vacío, usar metadata estático como fallback
+      const roadmapData = (roadmap.phases && roadmap.phases.length > 0)
+        ? roadmap.phases
+        : (metadata?.roadmap || {});
+
+      // Si workflows del Brain está vacío, usar metadata estático
+      const workflowsData = (workflows.workflows && workflows.workflows.length > 0)
+        ? workflows.workflows
+        : (metadata?.workflows || []);
+
+      // Calcular stats del proyecto para el frontend
+      const roadmapForStats = metadata?.roadmap || {};
+      let totalTasks = 0;
+      let completedTasks = 0;
+      let currentPhase = 'DEVELOPMENT';
+
+      Object.values(roadmapForStats).forEach(phase => {
+        if (phase.status === 'IN_PROGRESS') {
+          currentPhase = phase.name || 'IN_PROGRESS';
+        }
+        if (phase.tasks) {
+          totalTasks += phase.tasks.length;
+          completedTasks += phase.tasks.filter(t => t.done).length;
+        }
+      });
+
+      const totalProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      // Construir project con todos los campos necesarios
+      const projectData = {
+        ...(overview.project || {}),
+        ...(metadata?.project || {}),
+        totalProgress,
+        currentPhase,
+        lastUpdated: new Date().toISOString()
+      };
+
+      return res.json({
+        success: true,
+        source: 'LIVE_BRAIN',
+        data: {
+          project: projectData,
+          scannedAt: new Date().toISOString(),
+          applications: apps.applications,
+          modules: technical.modules,
+          commercialModules: {
+            modules: commercial.modules.reduce((acc, m) => { acc[m.key] = m; return acc; }, {}),
+            _stats: commercial.stats,
+            byCategory: commercial.byCategory
+          },
+          backendFiles: backend.categories,
+          frontendFiles: frontend.categories,
+          roadmap: roadmapData,
+          workflows: workflowsData,
+          database: metadata?.database || null, // Usar metadata para database hasta que Brain lo tenga
+          techStack: metadata?.techStack || overview.project,
+          stats: overview.stats
+        }
+      });
+    }
+
+    // Fallback a metadata estático
+    console.log('📦 [ENGINEERING] Sirviendo metadata estático (fallback)');
     res.json({
       success: true,
+      source: 'STATIC_FILE',
       data: metadata
     });
   } catch (error) {
     console.error('❌ [ENGINEERING] Error en GET /metadata:', error);
+    // Si falla Brain, intentar fallback
+    if (metadata) {
+      return res.json({
+        success: true,
+        source: 'STATIC_FALLBACK',
+        data: metadata
+      });
+    }
     res.status(500).json({
       success: false,
       error: error.message
@@ -620,15 +738,162 @@ router.get('/roadmap', (req, res) => {
 
 /**
  * GET /api/engineering/workflows
- * Retorna solo workflows
+ * Retorna workflows - AHORA USA BRAIN SERVICE con workflows CONECTADOS
  */
-router.get('/workflows', (req, res) => {
+router.get('/workflows', async (req, res) => {
   try {
+    // Si tenemos Brain Service, usar workflows CONECTADOS
+    if (brainService) {
+      console.log('🧠 [ENGINEERING] Workflows desde Brain (CONECTADOS)');
+      const connectedWorkflows = await brainService.getWorkflowsConnected();
+
+      return res.json({
+        success: true,
+        source: 'BRAIN_CONNECTED',
+        scannedAt: connectedWorkflows.scannedAt,
+        data: {
+          workflows: connectedWorkflows.workflows,
+          stats: connectedWorkflows.stats
+        }
+      });
+    }
+
+    // Fallback a metadata estático
     res.json({
       success: true,
+      source: 'STATIC_METADATA',
       data: metadata.workflows
     });
   } catch (error) {
+    console.error('❌ [ENGINEERING] Error en workflows:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/engineering/workflows/:workflowId
+ * Retorna un workflow específico con detalles completos
+ */
+router.get('/workflows/:workflowId', async (req, res) => {
+  try {
+    const { workflowId } = req.params;
+
+    if (!brainService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Brain Service no disponible'
+      });
+    }
+
+    const { workflows } = await brainService.getWorkflowsConnected();
+    const workflow = workflows.find(w => w.id === workflowId);
+
+    if (!workflow) {
+      return res.status(404).json({
+        success: false,
+        error: `Workflow ${workflowId} no encontrado`,
+        available: workflows.map(w => ({ id: w.id, name: w.displayName }))
+      });
+    }
+
+    res.json({
+      success: true,
+      source: 'BRAIN_CONNECTED',
+      data: workflow
+    });
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error obteniendo workflow:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/engineering/workflows/:workflowId/tutorial
+ * Genera un tutorial dinámico para un workflow específico
+ * ESTA ES LA FUNCIONALIDAD CLAVE PARA TUTORIALES AUTÓNOMOS
+ */
+router.get('/workflows/:workflowId/tutorial', async (req, res) => {
+  try {
+    const { workflowId } = req.params;
+
+    if (!brainService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Brain Service no disponible para generar tutoriales'
+      });
+    }
+
+    console.log(`📚 [ENGINEERING] Generando tutorial para: ${workflowId}`);
+
+    const tutorial = await brainService.generateTutorialForWorkflow(workflowId);
+
+    if (tutorial.error) {
+      return res.status(404).json({
+        success: false,
+        error: tutorial.error,
+        suggestion: tutorial.suggestion,
+        available: tutorial.available
+      });
+    }
+
+    res.json({
+      success: true,
+      source: 'BRAIN_TUTORIAL_GENERATOR',
+      data: tutorial
+    });
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error generando tutorial:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/engineering/tutorials
+ * Lista todos los workflows que pueden generar tutoriales
+ */
+router.get('/tutorials', async (req, res) => {
+  try {
+    if (!brainService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Brain Service no disponible'
+      });
+    }
+
+    const { workflows, stats } = await brainService.getWorkflowsConnected();
+
+    // Filtrar solo los que pueden generar tutoriales
+    const tutorialCapable = workflows.filter(w => w.tutorialCapable);
+
+    res.json({
+      success: true,
+      source: 'BRAIN_TUTORIAL_GENERATOR',
+      data: {
+        totalWorkflows: stats.total,
+        tutorialCapable: stats.tutorialCapable,
+        tutorials: tutorialCapable.map(w => ({
+          id: w.id,
+          name: w.displayName,
+          stageCount: w.stageCount,
+          totalSteps: w.totalSteps,
+          connectedModules: w.connectedModules,
+          status: w.status,
+          completeness: w.completeness,
+          tutorialUrl: `/api/engineering/workflows/${w.id}/tutorial`
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error listando tutoriales:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -674,11 +939,98 @@ router.get('/applications', (req, res) => {
 
 /**
  * GET /api/engineering/stats
- * Retorna estadísticas agregadas
+ * Retorna estadísticas agregadas - AHORA USA BRAIN SERVICE con STATUS INFERIDO
  */
-router.get('/stats', (req, res) => {
+router.get('/stats', async (req, res) => {
   try {
-    // Validar que existan las propiedades necesarias
+    // Si tenemos Brain Service, usar datos VIVOS con STATUS INFERIDO
+    if (brainService) {
+      console.log('🧠 [ENGINEERING] Stats desde Brain (VIVO con inferencia)');
+
+      // Obtener datos del Brain con status inferido
+      const [overview, technical, workflows, apps] = await Promise.all([
+        brainService.getOverview(),
+        brainService.getTechnicalModules(),
+        brainService.getWorkflows(),
+        brainService.getApplications()
+      ]);
+
+      const brainStats = overview.stats || {};
+
+      // Obtener roadmap del metadata para calcular tareas (Brain usa BD para esto)
+      const roadmapData = metadata?.roadmap || {};
+      let totalTasks = 0;
+      let completedTasks = 0;
+      let inProgressPhases = 0;
+      let completedPhases = 0;
+
+      Object.values(roadmapData).forEach(phase => {
+        if (phase.status === 'IN_PROGRESS') inProgressPhases++;
+        if (phase.status === 'COMPLETE' || phase.status === 'COMPLETED') completedPhases++;
+        if (phase.tasks) {
+          totalTasks += phase.tasks.length;
+          completedTasks += phase.tasks.filter(t => t.done).length;
+        }
+      });
+
+      // ⭐ USAR MÓDULOS TÉCNICOS DEL BRAIN CON STATUS INFERIDO
+      const technicalStats = technical.stats || {};
+      const totalModules = technical.totalModules || 0;
+      const productionModules = technicalStats.production || 0;
+      const inProgressModules = technicalStats.in_progress || 0;
+      const developmentModules = technicalStats.development || 0;
+      const plannedModules = technicalStats.planned || 0;
+
+      // Construir respuesta en el formato esperado por el frontend
+      return res.json({
+        success: true,
+        source: 'LIVE_BRAIN_INFERRED',
+        data: {
+          ...brainStats,
+          // ⭐ Módulos técnicos con status inferido del código
+          modules: {
+            total: totalModules,
+            completed: productionModules,
+            inProgress: inProgressModules,
+            development: developmentModules,
+            planned: plannedModules,
+            completionRate: totalModules > 0 ? Math.round((productionModules / totalModules) * 100) : 0,
+            averageProgress: technicalStats.averageProgress || 0,
+            // Info comercial del Brain
+            commercial: brainStats.modules?.commercial || 45,
+            core: brainStats.modules?.core || 18,
+            premium: brainStats.modules?.premium || 27
+          },
+          // Roadmap desde metadata (hasta que Brain use BD)
+          roadmap: {
+            totalPhases: Object.keys(roadmapData).length,
+            completedPhases,
+            inProgressPhases,
+            totalTasks,
+            completedTasks,
+            taskCompletionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+          },
+          // ⭐ Workflows con status inferido
+          workflows: {
+            total: workflows.stats?.total || 0,
+            implemented: workflows.stats?.implemented || 0,
+            partial: workflows.stats?.partial || 0,
+            planned: workflows.stats?.planned || 0,
+            stateMachines: workflows.stats?.stateMachines || 0
+          },
+          // ⭐ Applications con status inferido
+          applications: {
+            total: apps.stats?.total || 0,
+            production: apps.stats?.production || 0,
+            inProgress: apps.stats?.in_progress || 0,
+            averageProgress: apps.stats?.averageProgress || 0
+          }
+        }
+      });
+    }
+
+    // Fallback a metadata estático
+    console.log('📦 [ENGINEERING] Stats desde metadata estático');
     const modules = metadata.modules || {};
     const roadmap = metadata.roadmap || {};
     const applications = metadata.applications || {};

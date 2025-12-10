@@ -198,10 +198,10 @@ window.AssociateMarketplace = (function() {
                     <select id="mp-filter-region" onchange="AssociateMarketplace.applyFilters()" style="
                         width: 100%;
                         padding: 10px;
-                        background: rgba(255,255,255,0.05);
-                        border: 1px solid rgba(255,255,255,0.1);
+                        background: rgba(255,255,255,0.08);
+                        border: 1px solid rgba(255,255,255,0.15);
                         border-radius: 8px;
-                        color: #e0e0e0;
+                        color: #000;
                     ">
                         <option value="">Todas las regiones</option>
                         <option value="CABA">CABA</option>
@@ -218,10 +218,10 @@ window.AssociateMarketplace = (function() {
                     <select id="mp-filter-rating" onchange="AssociateMarketplace.applyFilters()" style="
                         width: 100%;
                         padding: 10px;
-                        background: rgba(255,255,255,0.05);
-                        border: 1px solid rgba(255,255,255,0.1);
+                        background: rgba(255,255,255,0.08);
+                        border: 1px solid rgba(255,255,255,0.15);
                         border-radius: 8px;
-                        color: #e0e0e0;
+                        color: #000;
                     ">
                         <option value="0">Cualquier calificación</option>
                         <option value="3">3+ estrellas</option>
@@ -236,10 +236,10 @@ window.AssociateMarketplace = (function() {
                     <select id="mp-filter-remote" onchange="AssociateMarketplace.applyFilters()" style="
                         width: 100%;
                         padding: 10px;
-                        background: rgba(255,255,255,0.05);
-                        border: 1px solid rgba(255,255,255,0.1);
+                        background: rgba(255,255,255,0.08);
+                        border: 1px solid rgba(255,255,255,0.15);
                         border-radius: 8px;
-                        color: #e0e0e0;
+                        color: #000;
                     ">
                         <option value="">Cualquiera</option>
                         <option value="true">Disponible remoto</option>
@@ -664,7 +664,7 @@ window.AssociateMarketplace = (function() {
      * Cargar categorías
      */
     async function loadCategories() {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         try {
             const res = await fetch(`${config.apiBase}/categories`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -683,7 +683,7 @@ window.AssociateMarketplace = (function() {
      * Cargar contratos
      */
     async function loadContracts() {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         try {
             const res = await fetch(`${config.apiBase}/contracts/my-company`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -704,7 +704,7 @@ window.AssociateMarketplace = (function() {
         state.isLoading = true;
         renderAssociatesList();
 
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         const params = new URLSearchParams();
 
         if (state.filters.category) params.append('category', state.filters.category);
@@ -760,7 +760,7 @@ window.AssociateMarketplace = (function() {
      * Mostrar detalle de asociado
      */
     async function showAssociateDetail(associateId) {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
 
         try {
             const res = await fetch(`${config.apiBase}/${associateId}`, {
@@ -1087,7 +1087,7 @@ window.AssociateMarketplace = (function() {
      * Crear contrato
      */
     async function createContract(formData) {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         const data = {
             associateId: formData.get('associateId'),
             contractType: formData.get('contractType'),
@@ -1129,7 +1129,7 @@ window.AssociateMarketplace = (function() {
     async function pauseContract(contractId) {
         if (!confirm('¿Está seguro de pausar este contrato?')) return;
 
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         try {
             const res = await fetch(`${config.apiBase}/contracts/${contractId}/pause`, {
                 method: 'PUT',
@@ -1154,7 +1154,7 @@ window.AssociateMarketplace = (function() {
      * Activar contrato
      */
     async function activateContract(contractId) {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         try {
             const res = await fetch(`${config.apiBase}/contracts/${contractId}/activate`, {
                 method: 'PUT',
@@ -1182,7 +1182,7 @@ window.AssociateMarketplace = (function() {
         const reason = prompt('Ingrese el motivo de terminación:');
         if (reason === null) return;
 
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         try {
             const res = await fetch(`${config.apiBase}/contracts/${contractId}`, {
                 method: 'DELETE',

@@ -532,6 +532,126 @@ class NotificationUnifiedService {
     // ========================================================================
 
     /**
+     * Resuelve un approver_role a un user_id específico usando jerarquía organizacional
+     * @param {string} approverRole - Rol del aprobador (supervisor, rrhh, admin, etc)
+     * @param {number} requesterId - ID del usuario solicitante
+     * @param {number} companyId - ID de la empresa
+     * @returns {Promise<{userId: number, name: string, resolvedFrom: string}|null>}
+     */
+    async resolveApproverByHierarchy(approverRole, requesterId, companyId) {
+        try {
+            if (approverRole === 'supervisor') {
+                // Buscar supervisor por jerarquía organizacional
+                const supervisorQuery = `
+                    SELECT u.user_id, u."firstName", u."lastName",
+                           op.position_name
+                    FROM users requester
+                    JOIN organizational_positions requester_op ON requester.organizational_position_id = requester_op.id
+                    JOIN users u ON u.organizational_position_id = requester_op.parent_position_id
+                    JOIN organizational_positions op ON u.organizational_position_id = op.id
+                    WHERE requester.user_id = $1
+                      AND requester.company_id = $2
+                      AND u.company_id = $2
+                      AND u.is_active = true
+                    LIMIT 1
+                `;
+
+                const supervisorResult = await sequelize.query(supervisorQuery, {
+                    bind: [requesterId, companyId],
+                    type: QueryTypes.SELECT
+                });
+
+                if (supervisorResult.length > 0) {
+                    const supervisor = supervisorResult[0];
+                    console.log(`[WORKFLOW] Supervisor encontrado: ${supervisor.firstName} ${supervisor.lastName}`);
+                    return {
+                        userId: supervisor.user_id,
+                        name: `${supervisor.firstName} ${supervisor.lastName}`,
+                        resolvedFrom: 'hierarchy_supervisor'
+                    };
+                }
+            }
+
+            if (approverRole === 'rrhh' || approverRole === 'hr') {
+                // Buscar RRHH por posición organizacional
+                const rrhhQuery = `
+                    SELECT u.user_id, u."firstName", u."lastName",
+                           op.position_name, op.position_code
+                    FROM users u
+                    JOIN organizational_positions op ON u.organizational_position_id = op.id
+                    WHERE u.company_id = $1
+                      AND u.is_active = true
+                      AND (
+                        UPPER(op.position_code) LIKE '%RRHH%'
+                        OR UPPER(op.position_code) LIKE '%RH%'
+                        OR UPPER(op.position_code) LIKE '%HR%'
+                        OR UPPER(op.position_name) LIKE '%RECURSOS HUMANOS%'
+                      )
+                    ORDER BY op.level_order ASC
+                    LIMIT 1
+                `;
+
+                const rrhhResult = await sequelize.query(rrhhQuery, {
+                    bind: [companyId],
+                    type: QueryTypes.SELECT
+                });
+
+                if (rrhhResult.length > 0) {
+                    const rrhh = rrhhResult[0];
+                    console.log(`[WORKFLOW] RRHH encontrado: ${rrhh.firstName} ${rrhh.lastName}`);
+                    return {
+                        userId: rrhh.user_id,
+                        name: `${rrhh.firstName} ${rrhh.lastName}`,
+                        resolvedFrom: 'position_rrhh'
+                    };
+                }
+            }
+
+            if (approverRole === 'admin') {
+                // Buscar Admin por posición organizacional
+                const adminQuery = `
+                    SELECT u.user_id, u."firstName", u."lastName",
+                           op.position_name, op.position_code
+                    FROM users u
+                    JOIN organizational_positions op ON u.organizational_position_id = op.id
+                    WHERE u.company_id = $1
+                      AND u.is_active = true
+                      AND (
+                        UPPER(op.position_code) LIKE '%ADMIN%'
+                        OR UPPER(op.position_code) LIKE '%DIR%'
+                        OR UPPER(op.position_name) LIKE '%ADMINISTR%'
+                        OR UPPER(op.position_name) LIKE '%DIRECCI%'
+                      )
+                    ORDER BY op.level_order ASC
+                    LIMIT 1
+                `;
+
+                const adminResult = await sequelize.query(adminQuery, {
+                    bind: [companyId],
+                    type: QueryTypes.SELECT
+                });
+
+                if (adminResult.length > 0) {
+                    const admin = adminResult[0];
+                    console.log(`[WORKFLOW] Admin encontrado: ${admin.firstName} ${admin.lastName}`);
+                    return {
+                        userId: admin.user_id,
+                        name: `${admin.firstName} ${admin.lastName}`,
+                        resolvedFrom: 'position_admin'
+                    };
+                }
+            }
+
+            console.log(`[WORKFLOW] No se encontró aprobador para role: ${approverRole}, requester: ${requesterId}`);
+            return null;
+
+        } catch (error) {
+            console.error(`[WORKFLOW] Error resolviendo aprobador:`, error);
+            return null;
+        }
+    }
+
+    /**
      * Procesar paso de workflow
      */
     async processWorkflowStep(notification, action, userId) {
@@ -550,22 +670,56 @@ class NotificationUnifiedService {
             const nextStep = steps[currentStep]; // 0-indexed, currentStep ya tiene el siguiente
 
             if (nextStep) {
-                // Crear notificacion para siguiente aprobador
+                // Obtener el requester original del thread
+                const [thread] = await sequelize.query(`
+                    SELECT origin_id FROM notification_threads WHERE id = :threadId
+                `, { replacements: { threadId: notification.thread_id }, type: QueryTypes.SELECT });
+
+                const requesterId = thread?.origin_id || notification.origin_id || userId;
+
+                // Resolver el approver_role a un user_id específico usando jerarquía
+                const approver = await this.resolveApproverByHierarchy(
+                    nextStep.approver_role,
+                    requesterId,
+                    notification.company_id
+                );
+
+                if (!approver) {
+                    console.log(`[WORKFLOW] No se pudo resolver aprobador para rol: ${nextStep.approver_role}`);
+                    // Continuar workflow pero notificar error
+                    await this.send({
+                        companyId: notification.company_id,
+                        threadId: notification.thread_id,
+                        originType: 'system',
+                        originId: 'workflow',
+                        originName: 'Sistema de Workflows',
+                        recipientType: 'user',
+                        recipientId: requesterId,
+                        category: 'workflow_error',
+                        module: notification.module,
+                        priority: 'high',
+                        title: `Error en Workflow: No se encontró aprobador`,
+                        message: `No se pudo encontrar un aprobador con rol "${nextStep.approver_role}" para continuar el workflow. Por favor, contacte a RRHH.`,
+                        metadata: { workflow_step: currentStep + 1, error: 'approver_not_found' }
+                    });
+                    return;
+                }
+
+                // Crear notificacion para siguiente aprobador (CON USER_ID ESPECÍFICO)
                 await this.send({
                     companyId: notification.company_id,
                     threadId: notification.thread_id,
                     originType: 'system',
                     originId: 'workflow',
                     originName: 'Sistema de Workflows',
-                    recipientType: 'role',
-                    recipientId: null,
-                    recipientRole: nextStep.approver_role,
+                    recipientType: 'user',
+                    recipientId: approver.userId,
                     category: 'approval',
                     module: notification.module,
                     priority: notification.priority,
                     title: `[Paso ${currentStep + 1}] ${notification.title}`,
-                    message: notification.message,
-                    metadata: { ...notification.metadata, workflow_step: currentStep + 1 },
+                    message: `${notification.message}\n\n📍 Aprobador: ${approver.name} (${approver.resolvedFrom})`,
+                    metadata: { ...notification.metadata, workflow_step: currentStep + 1, approver_resolved_from: approver.resolvedFrom },
                     requiresAction: true,
                     actionType: 'approve_reject',
                     slaHours: nextStep.timeout_hours

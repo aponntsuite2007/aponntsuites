@@ -188,6 +188,193 @@ class EppExpirationNotificationService {
     }
 
     /**
+     * Busca el responsable HSE del área/departamento/branch del empleado
+     * Usa jerarquía organizacional y posición, NO rol genérico
+     */
+    async findHseResponsibleForEmployee(employeeId, companyId) {
+        try {
+            const { sequelize } = this.db;
+
+            // Obtener información del empleado (department, branch, posición)
+            const employeeQuery = `
+                SELECT u.user_id, u."firstName", u."lastName",
+                       u.department_id, u.branch,
+                       op.parent_position_id, op.branch_code
+                FROM users u
+                LEFT JOIN organizational_positions op ON u.organizational_position_id = op.id
+                WHERE u.user_id = $1 AND u.company_id = $2
+            `;
+
+            const employeeResult = await sequelize.query(employeeQuery, {
+                bind: [employeeId, companyId],
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            if (!employeeResult || employeeResult.length === 0) {
+                console.log(`⚠️ [EPP] Empleado ${employeeId} no encontrado`);
+                return [];
+            }
+
+            const employee = employeeResult[0];
+            const hseResponsibles = [];
+
+            // ESTRATEGIA 1: Buscar HSE manager del mismo branch (si tiene branch_code)
+            if (employee.branch_code) {
+                const branchHseQuery = `
+                    SELECT u.user_id, u."firstName", u."lastName", u.email,
+                           op.position_name, op.position_code
+                    FROM users u
+                    JOIN organizational_positions op ON u.organizational_position_id = op.id
+                    WHERE u.company_id = $1
+                      AND op.branch_code = $2
+                      AND u.is_active = true
+                      AND (
+                        UPPER(op.position_code) LIKE '%HSE%'
+                        OR UPPER(op.position_name) LIKE '%HSE%'
+                        OR UPPER(op.position_name) LIKE '%SEGURIDAD%'
+                        OR UPPER(op.position_name) LIKE '%HIGIENE%'
+                      )
+                    ORDER BY op.level_order ASC
+                    LIMIT 1
+                `;
+
+                const branchHse = await sequelize.query(branchHseQuery, {
+                    bind: [companyId, employee.branch_code],
+                    type: sequelize.QueryTypes.SELECT
+                });
+
+                if (branchHse.length > 0) {
+                    console.log(`✅ [EPP] HSE encontrado por branch: ${branchHse[0].firstName} ${branchHse[0].lastName}`);
+                    hseResponsibles.push({
+                        userId: branchHse[0].user_id,
+                        name: `${branchHse[0].firstName} ${branchHse[0].lastName}`,
+                        email: branchHse[0].email,
+                        position: branchHse[0].position_name,
+                        resolvedFrom: 'branch_hse'
+                    });
+                    return hseResponsibles; // Encontrado, retornar
+                }
+            }
+
+            // ESTRATEGIA 2: Buscar HSE manager del mismo department
+            if (employee.department_id) {
+                const deptHseQuery = `
+                    SELECT u.user_id, u."firstName", u."lastName", u.email,
+                           op.position_name, op.position_code
+                    FROM users u
+                    JOIN organizational_positions op ON u.organizational_position_id = op.id
+                    WHERE u.company_id = $1
+                      AND u.department_id = $2
+                      AND u.is_active = true
+                      AND (
+                        UPPER(op.position_code) LIKE '%HSE%'
+                        OR UPPER(op.position_name) LIKE '%HSE%'
+                        OR UPPER(op.position_name) LIKE '%SEGURIDAD%'
+                        OR UPPER(op.position_name) LIKE '%HIGIENE%'
+                      )
+                    ORDER BY op.level_order ASC
+                    LIMIT 1
+                `;
+
+                const deptHse = await sequelize.query(deptHseQuery, {
+                    bind: [companyId, employee.department_id],
+                    type: sequelize.QueryTypes.SELECT
+                });
+
+                if (deptHse.length > 0) {
+                    console.log(`✅ [EPP] HSE encontrado por departamento: ${deptHse[0].firstName} ${deptHse[0].lastName}`);
+                    hseResponsibles.push({
+                        userId: deptHse[0].user_id,
+                        name: `${deptHse[0].firstName} ${deptHse[0].lastName}`,
+                        email: deptHse[0].email,
+                        position: deptHse[0].position_name,
+                        resolvedFrom: 'department_hse'
+                    });
+                    return hseResponsibles;
+                }
+            }
+
+            // ESTRATEGIA 3: Buscar HSE manager de nivel company (sin branch ni department)
+            const companyHseQuery = `
+                SELECT u.user_id, u."firstName", u."lastName", u.email,
+                       op.position_name, op.position_code
+                FROM users u
+                JOIN organizational_positions op ON u.organizational_position_id = op.id
+                WHERE u.company_id = $1
+                  AND u.is_active = true
+                  AND (
+                    UPPER(op.position_code) LIKE '%HSE%'
+                    OR UPPER(op.position_name) LIKE '%HSE%'
+                    OR UPPER(op.position_name) LIKE '%SEGURIDAD%'
+                    OR UPPER(op.position_name) LIKE '%HIGIENE%'
+                  )
+                ORDER BY op.level_order ASC
+                LIMIT 3
+            `;
+
+            const companyHse = await sequelize.query(companyHseQuery, {
+                bind: [companyId],
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            if (companyHse.length > 0) {
+                console.log(`✅ [EPP] HSE encontrado a nivel company: ${companyHse.length} responsables`);
+                hseResponsibles.push(...companyHse.map(hse => ({
+                    userId: hse.user_id,
+                    name: `${hse.firstName} ${hse.lastName}`,
+                    email: hse.email,
+                    position: hse.position_name,
+                    resolvedFrom: 'company_hse'
+                })));
+                return hseResponsibles;
+            }
+
+            // ESTRATEGIA 4 (Fallback): Buscar RRHH por posición
+            console.log(`⚠️ [EPP] No se encontró HSE manager. Buscando RRHH...`);
+            const rrhhQuery = `
+                SELECT u.user_id, u."firstName", u."lastName", u.email,
+                       op.position_name, op.position_code
+                FROM users u
+                JOIN organizational_positions op ON u.organizational_position_id = op.id
+                WHERE u.company_id = $1
+                  AND u.is_active = true
+                  AND (
+                    UPPER(op.position_code) LIKE '%RRHH%'
+                    OR UPPER(op.position_code) LIKE '%RH%'
+                    OR UPPER(op.position_code) LIKE '%HR%'
+                    OR UPPER(op.position_name) LIKE '%RECURSOS HUMANOS%'
+                  )
+                ORDER BY op.level_order ASC
+                LIMIT 2
+            `;
+
+            const rrhhUsers = await sequelize.query(rrhhQuery, {
+                bind: [companyId],
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            if (rrhhUsers.length > 0) {
+                console.log(`✅ [EPP] RRHH encontrado como fallback: ${rrhhUsers[0].firstName} ${rrhhUsers[0].lastName}`);
+                hseResponsibles.push(...rrhhUsers.map(rrhh => ({
+                    userId: rrhh.user_id,
+                    name: `${rrhh.firstName} ${rrhh.lastName}`,
+                    email: rrhh.email,
+                    position: rrhh.position_name,
+                    resolvedFrom: 'rrhh_fallback'
+                })));
+                return hseResponsibles;
+            }
+
+            console.log(`❌ [EPP] No se encontró responsable HSE ni RRHH para empleado ${employeeId}`);
+            return [];
+
+        } catch (error) {
+            console.error(`❌ [EPP] Error buscando responsable HSE:`, error);
+            return [];
+        }
+    }
+
+    /**
      * Enviar notificacion de vencimiento de EPP
      */
     async sendExpirationNotification(delivery, daysRemaining, options) {
@@ -227,21 +414,16 @@ class EppExpirationNotificationService {
             });
         }
 
-        // Notificar al responsable HSE
-        if (notifyHseManager) {
-            // Buscar usuarios con rol hse_manager en la empresa
-            const hseManagers = await this.db.User.findAll({
-                where: {
-                    company_id: company.company_id,
-                    role: { [Op.in]: ['admin', 'hse_manager'] },
-                    isActive: true
-                },
-                attributes: ['user_id']
-            });
+        // Notificar al responsable HSE (usando jerarquía organizacional)
+        if (notifyHseManager && delivery.employee) {
+            const hseResponsibles = await this.findHseResponsibleForEmployee(
+                delivery.employee.user_id,
+                company.company_id
+            );
 
-            for (const manager of hseManagers) {
+            for (const responsible of hseResponsibles) {
                 notifications.push({
-                    recipient_id: manager.user_id,
+                    recipient_id: responsible.userId,
                     type: isExpired ? 'EPP_EXPIRED_ALERT' : 'EPP_EXPIRING_ALERT',
                     severity,
                     title: isExpired ?
@@ -257,7 +439,9 @@ class EppExpirationNotificationService {
                         employee_id: delivery.employee?.user_id,
                         employee_name: employeeName,
                         epp_name: eppName,
-                        days_remaining: daysRemaining
+                        days_remaining: daysRemaining,
+                        resolved_from: responsible.resolvedFrom,
+                        responsible_position: responsible.position
                     }
                 });
             }

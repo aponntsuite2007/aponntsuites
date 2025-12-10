@@ -12,6 +12,7 @@
 
 const { sequelize } = require('../config/database');
 const inboxService = require('./inboxService');
+const OrganizationalHierarchyService = require('./OrganizationalHierarchyService');
 const crypto = require('crypto');
 
 class ProactiveNotificationService {
@@ -628,6 +629,616 @@ class ProactiveNotificationService {
         if (recipients.includes('rrhh')) return 'role';
         if (recipients.includes('supervisor')) return 'role';
         return 'employee';
+    }
+
+    // ============================================================================
+    // INTEGRACIÓN CON JERARQUÍA ORGANIZACIONAL (SSOT)
+    // ============================================================================
+
+    /**
+     * Obtiene el supervisor inmediato de un empleado desde la jerarquía organizacional
+     * @param {number} userId - ID del empleado
+     * @returns {Promise<Object|null>} - Datos del supervisor o null
+     */
+    async getSupervisorFromHierarchy(userId) {
+        try {
+            const supervisor = await OrganizationalHierarchyService.getImmediateSupervisor(userId);
+            return supervisor;
+        } catch (error) {
+            console.error(`❌ [PROACTIVE] Error obteniendo supervisor para usuario ${userId}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Obtiene la cadena de escalamiento completa para un empleado
+     * @param {number} userId - ID del empleado
+     * @param {number} daysRequested - Días solicitados (para determinar nivel de aprobación)
+     * @returns {Promise<Array>} - Cadena de escalamiento ordenada
+     */
+    async getEscalationChainFromHierarchy(userId, daysRequested = 1) {
+        try {
+            const chain = await OrganizationalHierarchyService.getEscalationChain(userId, daysRequested);
+            return chain;
+        } catch (error) {
+            console.error(`❌ [PROACTIVE] Error obteniendo cadena de escalamiento:`, error);
+            return [];
+        }
+    }
+
+    /**
+     * Verifica si un supervisor está disponible (trabajando hoy)
+     * Chequea: vacaciones, licencias médicas, asistencia del día
+     * @param {number} userId - ID del supervisor
+     * @param {number} companyId - ID de la empresa
+     * @returns {Promise<Object>} - { isAvailable: boolean, reason: string }
+     */
+    async checkSupervisorAvailability(userId, companyId) {
+        try {
+            const query = `
+                SELECT
+                    u.user_id,
+                    u."firstName",
+                    u."lastName",
+                    EXISTS (
+                        SELECT 1 FROM attendances a
+                        WHERE a.user_id = u.user_id
+                          AND DATE(a.check_in) = CURRENT_DATE
+                    ) AS has_attendance_today,
+                    EXISTS (
+                        SELECT 1 FROM vacation_requests vr
+                        WHERE vr.user_id = u.user_id
+                          AND vr.status = 'approved'
+                          AND CURRENT_DATE BETWEEN vr.start_date AND vr.end_date
+                    ) AS is_on_vacation,
+                    EXISTS (
+                        SELECT 1 FROM medical_leaves ml
+                        WHERE ml.user_id = u.user_id
+                          AND ml.status = 'approved'
+                          AND CURRENT_DATE BETWEEN ml.start_date AND ml.end_date
+                    ) AS is_on_sick_leave
+                FROM users u
+                WHERE u.user_id = $1 AND u.company_id = $2
+            `;
+
+            const result = await sequelize.query(query, {
+                bind: [userId, companyId],
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            if (!result || result.length === 0) {
+                return { isAvailable: false, reason: 'Supervisor no encontrado' };
+            }
+
+            const supervisor = result[0];
+
+            // Verificar licencia médica (prioridad)
+            if (supervisor.is_on_sick_leave) {
+                return {
+                    isAvailable: false,
+                    reason: 'Supervisor con licencia médica',
+                    escalate: true
+                };
+            }
+
+            // Verificar vacaciones
+            if (supervisor.is_on_vacation) {
+                return {
+                    isAvailable: false,
+                    reason: 'Supervisor de vacaciones',
+                    escalate: true
+                };
+            }
+
+            // Verificar asistencia del día
+            if (!supervisor.has_attendance_today) {
+                return {
+                    isAvailable: false,
+                    reason: 'Supervisor ausente hoy',
+                    escalate: true
+                };
+            }
+
+            return {
+                isAvailable: true,
+                reason: 'Supervisor disponible'
+            };
+
+        } catch (error) {
+            console.error(`❌ [PROACTIVE] Error verificando disponibilidad de supervisor:`, error);
+            return { isAvailable: false, reason: 'Error al verificar disponibilidad' };
+        }
+    }
+
+    /**
+     * Busca usuarios de RRHH por posición organizacional (NO por rol genérico)
+     * @param {number} companyId - ID de la empresa
+     * @returns {Promise<Array>} - Lista de usuarios RRHH
+     */
+    async findRRHHByPosition(companyId) {
+        try {
+            const query = `
+                SELECT
+                    u.user_id,
+                    u."firstName",
+                    u."lastName",
+                    u.email,
+                    op.position_name,
+                    op.position_code
+                FROM users u
+                JOIN organizational_positions op ON u.organizational_position_id = op.id
+                WHERE op.company_id = $1
+                  AND u.company_id = $1
+                  AND u.is_active = true
+                  AND (
+                    UPPER(op.position_code) LIKE '%RRHH%'
+                    OR UPPER(op.position_code) LIKE '%RH%'
+                    OR UPPER(op.position_code) LIKE '%HR%'
+                    OR UPPER(op.position_name) LIKE '%RECURSOS HUMANOS%'
+                  )
+                ORDER BY op.level_order ASC
+                LIMIT 5
+            `;
+
+            const result = await sequelize.query(query, {
+                bind: [companyId],
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            return result.map(user => ({
+                userId: user.user_id,
+                name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+                email: user.email,
+                positionName: user.position_name,
+                positionCode: user.position_code,
+                resolvedFrom: 'position_code'
+            }));
+
+        } catch (error) {
+            console.error(`❌ [PROACTIVE] Error buscando RRHH por posición:`, error);
+            return [];
+        }
+    }
+
+    /**
+     * Resuelve el destinatario de notificación según la jerarquía
+     * Si recipient es 'supervisor', usa la jerarquía organizacional para encontrarlo
+     * CON VERIFICACIÓN DE DISPONIBILIDAD Y ESCALACIÓN AUTOMÁTICA
+     * @param {string} recipientType - Tipo de destinatario (supervisor, rrhh, employee, etc)
+     * @param {number} employeeId - ID del empleado afectado
+     * @param {number} companyId - ID de la empresa
+     * @returns {Promise<Object>} - { recipientId, recipientType, recipientInfo }
+     */
+    async resolveRecipientFromHierarchy(recipientType, employeeId, companyId) {
+        try {
+            // CASO 1: Buscar supervisor en jerarquía
+            if (recipientType === 'supervisor') {
+                console.log(`🔍 [PROACTIVE] Buscando supervisor para empleado ${employeeId}...`);
+
+                // Obtener posición organizacional del empleado
+                const employeeQuery = `
+                    SELECT u.user_id, u."firstName", u."lastName",
+                           op.parent_position_id, op.position_name
+                    FROM users u
+                    JOIN organizational_positions op ON u.organizational_position_id = op.id
+                    WHERE u.user_id = $1 AND u.company_id = $2
+                `;
+
+                const employeeResult = await sequelize.query(employeeQuery, {
+                    bind: [employeeId, companyId],
+                    type: sequelize.QueryTypes.SELECT
+                });
+
+                if (!employeeResult || employeeResult.length === 0) {
+                    console.log(`⚠️ [PROACTIVE] Empleado ${employeeId} sin posición organizacional`);
+                    // Buscar RRHH como última opción
+                    const rrhhUsers = await this.findRRHHByPosition(companyId);
+                    if (rrhhUsers.length > 0) {
+                        return {
+                            recipientId: rrhhUsers[0].userId,
+                            recipientType: 'employee',
+                            recipientInfo: {
+                                name: rrhhUsers[0].name,
+                                email: rrhhUsers[0].email,
+                                position: rrhhUsers[0].positionName,
+                                resolvedFrom: 'rrhh_fallback',
+                                reason: 'Empleado sin jerarquía'
+                            }
+                        };
+                    }
+                    return null; // No se pudo resolver
+                }
+
+                const employee = employeeResult[0];
+
+                if (!employee.parent_position_id) {
+                    console.log(`⚠️ [PROACTIVE] Empleado ${employeeId} sin supervisor inmediato`);
+                    // Buscar RRHH
+                    const rrhhUsers = await this.findRRHHByPosition(companyId);
+                    if (rrhhUsers.length > 0) {
+                        return {
+                            recipientId: rrhhUsers[0].userId,
+                            recipientType: 'employee',
+                            recipientInfo: {
+                                name: rrhhUsers[0].name,
+                                email: rrhhUsers[0].email,
+                                position: rrhhUsers[0].positionName,
+                                resolvedFrom: 'rrhh_no_supervisor',
+                                reason: 'Sin supervisor en jerarquía'
+                            }
+                        };
+                    }
+                    return null;
+                }
+
+                // Buscar supervisor inmediato
+                const supervisorQuery = `
+                    SELECT u.user_id, u."firstName", u."lastName", u.email,
+                           op.position_name, op.parent_position_id AS grandparent_position_id
+                    FROM users u
+                    JOIN organizational_positions op ON u.organizational_position_id = op.id
+                    WHERE u.organizational_position_id = $1
+                      AND u.company_id = $2
+                      AND u.is_active = true
+                `;
+
+                const supervisorResult = await sequelize.query(supervisorQuery, {
+                    bind: [employee.parent_position_id, companyId],
+                    type: sequelize.QueryTypes.SELECT
+                });
+
+                if (!supervisorResult || supervisorResult.length === 0) {
+                    console.log(`⚠️ [PROACTIVE] No hay usuario asignado a parent_position_id ${employee.parent_position_id}`);
+                    // Buscar RRHH
+                    const rrhhUsers = await this.findRRHHByPosition(companyId);
+                    if (rrhhUsers.length > 0) {
+                        return {
+                            recipientId: rrhhUsers[0].userId,
+                            recipientType: 'employee',
+                            recipientInfo: {
+                                name: rrhhUsers[0].name,
+                                email: rrhhUsers[0].email,
+                                position: rrhhUsers[0].positionName,
+                                resolvedFrom: 'rrhh_position_vacant',
+                                reason: 'Posición de supervisor vacante'
+                            }
+                        };
+                    }
+                    return null;
+                }
+
+                const supervisor = supervisorResult[0];
+
+                // Verificar disponibilidad del supervisor
+                const availability = await this.checkSupervisorAvailability(supervisor.user_id, companyId);
+
+                if (availability.isAvailable) {
+                    console.log(`✅ [PROACTIVE] Supervisor disponible: ${supervisor.firstName} ${supervisor.lastName}`);
+                    return {
+                        recipientId: supervisor.user_id,
+                        recipientType: 'employee',
+                        recipientInfo: {
+                            name: `${supervisor.firstName || ''} ${supervisor.lastName || ''}`.trim(),
+                            email: supervisor.email,
+                            position: supervisor.position_name,
+                            resolvedFrom: 'hierarchy_direct',
+                            availabilityChecked: true
+                        }
+                    };
+                }
+
+                // Supervisor NO disponible → Escalar a abuelo
+                console.log(`⚠️ [PROACTIVE] Supervisor NO disponible (${availability.reason}). Escalando...`);
+
+                if (supervisor.grandparent_position_id) {
+                    const grandparentQuery = `
+                        SELECT u.user_id, u."firstName", u."lastName", u.email,
+                               op.position_name
+                        FROM users u
+                        JOIN organizational_positions op ON u.organizational_position_id = op.id
+                        WHERE u.organizational_position_id = $1
+                          AND u.company_id = $2
+                          AND u.is_active = true
+                    `;
+
+                    const grandparentResult = await sequelize.query(grandparentQuery, {
+                        bind: [supervisor.grandparent_position_id, companyId],
+                        type: sequelize.QueryTypes.SELECT
+                    });
+
+                    if (grandparentResult && grandparentResult.length > 0) {
+                        const grandparent = grandparentResult[0];
+                        console.log(`📈 [PROACTIVE] Escalado a abuelo: ${grandparent.firstName} ${grandparent.lastName}`);
+                        return {
+                            recipientId: grandparent.user_id,
+                            recipientType: 'employee',
+                            recipientInfo: {
+                                name: `${grandparent.firstName || ''} ${grandparent.lastName || ''}`.trim(),
+                                email: grandparent.email,
+                                position: grandparent.position_name,
+                                resolvedFrom: 'hierarchy_escalated',
+                                escalatedFrom: supervisor.user_id,
+                                escalationReason: availability.reason
+                            }
+                        };
+                    }
+                }
+
+                // No hay abuelo → Buscar RRHH
+                console.log(`⚠️ [PROACTIVE] Sin abuelo disponible. Buscando RRHH...`);
+                const rrhhUsers = await this.findRRHHByPosition(companyId);
+                if (rrhhUsers.length > 0) {
+                    return {
+                        recipientId: rrhhUsers[0].userId,
+                        recipientType: 'employee',
+                        recipientInfo: {
+                            name: rrhhUsers[0].name,
+                            email: rrhhUsers[0].email,
+                            position: rrhhUsers[0].positionName,
+                            resolvedFrom: 'rrhh_escalation',
+                            reason: `Supervisor no disponible: ${availability.reason}`
+                        }
+                    };
+                }
+
+                // Última opción: no se pudo resolver
+                console.log(`❌ [PROACTIVE] No se pudo resolver destinatario para empleado ${employeeId}`);
+                return null;
+            }
+
+            // CASO 2: Buscar RRHH directamente
+            if (recipientType === 'rrhh') {
+                const rrhhUsers = await this.findRRHHByPosition(companyId);
+                if (rrhhUsers.length > 0) {
+                    return {
+                        recipientId: rrhhUsers[0].userId,
+                        recipientType: 'employee',
+                        recipientInfo: {
+                            name: rrhhUsers[0].name,
+                            email: rrhhUsers[0].email,
+                            position: rrhhUsers[0].positionName,
+                            resolvedFrom: 'rrhh_direct'
+                        }
+                    };
+                }
+                return null;
+            }
+
+            // Para otros tipos, retornar sin modificar
+            return {
+                recipientId: null,
+                recipientType: recipientType,
+                recipientInfo: {
+                    resolvedFrom: 'default'
+                }
+            };
+        } catch (error) {
+            console.error(`❌ [PROACTIVE] Error resolviendo destinatario:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Escala una notificación al siguiente nivel en la jerarquía
+     * @param {number} notificationId - ID de la notificación a escalar
+     * @param {number} currentApproverId - ID del aprobador actual
+     * @param {number} requesterId - ID del solicitante original
+     * @param {number} daysRequested - Días solicitados
+     * @returns {Promise<Object>} - Resultado del escalamiento
+     */
+    async escalateToNextLevel(notificationId, currentApproverId, requesterId, daysRequested = 1) {
+        try {
+            console.log(`📈 [PROACTIVE] Escalando notificación ${notificationId} al siguiente nivel...`);
+
+            // Obtener siguiente aprobador en la cadena
+            const nextApprover = await OrganizationalHierarchyService.getNextApprover(
+                currentApproverId,
+                requesterId,
+                daysRequested
+            );
+
+            if (!nextApprover) {
+                console.log(`⚠️ [PROACTIVE] No hay siguiente aprobador en la cadena para notificación ${notificationId}`);
+                return {
+                    success: false,
+                    reason: 'No hay más niveles de aprobación disponibles',
+                    escalated: false
+                };
+            }
+
+            // Crear nueva notificación para el siguiente nivel
+            const escalatedNotification = await this.createEscalatedNotification(
+                notificationId,
+                nextApprover,
+                requesterId,
+                daysRequested
+            );
+
+            console.log(`✅ [PROACTIVE] Notificación escalada a ${nextApprover.name} (${nextApprover.position_name})`);
+
+            return {
+                success: true,
+                escalated: true,
+                newNotificationId: escalatedNotification.id,
+                escalatedTo: {
+                    userId: nextApprover.id,
+                    name: nextApprover.name,
+                    position: nextApprover.position_name,
+                    maxDays: nextApprover.max_days
+                }
+            };
+
+        } catch (error) {
+            console.error(`❌ [PROACTIVE] Error escalando notificación:`, error);
+            return {
+                success: false,
+                reason: error.message,
+                escalated: false
+            };
+        }
+    }
+
+    /**
+     * Crea una notificación escalada para el siguiente aprobador
+     * @private
+     */
+    async createEscalatedNotification(originalNotificationId, nextApprover, requesterId, daysRequested) {
+        try {
+            // Obtener información de la notificación original
+            const [originalNotif] = await sequelize.query(`
+                SELECT n.*, u."firstName" as requester_first_name, u."lastName" as requester_last_name
+                FROM notifications n
+                LEFT JOIN users u ON n.sender_id = u.user_id
+                WHERE n.id = $1
+            `, { bind: [originalNotificationId] });
+
+            if (!originalNotif.length) {
+                throw new Error('Notificación original no encontrada');
+            }
+
+            const original = originalNotif[0];
+
+            // Crear nueva notificación escalada
+            const escalatedMessage = {
+                subject: `[ESCALADO] ${original.subject || 'Solicitud de aprobación'}`,
+                body: `**Notificación escalada desde nivel inferior**\n\n` +
+                      `Solicitante: ${original.requester_first_name || 'N/A'} ${original.requester_last_name || ''}\n` +
+                      `Días solicitados: ${daysRequested}\n` +
+                      `Razón de escalamiento: El aprobador anterior no tiene capacidad suficiente para aprobar ${daysRequested} días.\n\n` +
+                      `---\nMensaje original:\n${original.body || original.message || ''}`,
+                priority: 'high',
+                metadata: {
+                    escalated: true,
+                    original_notification_id: originalNotificationId,
+                    escalation_reason: 'max_days_exceeded',
+                    days_requested: daysRequested
+                }
+            };
+
+            // Usar inboxService para crear la notificación
+            const result = await inboxService.sendMessage({
+                companyId: original.company_id,
+                senderId: original.sender_id,
+                recipientType: 'employee',
+                recipientId: nextApprover.id,
+                subject: escalatedMessage.subject,
+                body: escalatedMessage.body,
+                priority: escalatedMessage.priority,
+                category: original.category || 'approval_request',
+                metadata: escalatedMessage.metadata
+            });
+
+            return result;
+
+        } catch (error) {
+            console.error(`❌ [PROACTIVE] Error creando notificación escalada:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Verifica si un usuario puede aprobar una solicitud según la jerarquía
+     * @param {number} approverId - ID del aprobador
+     * @param {number} requesterId - ID del solicitante
+     * @param {number} daysRequested - Días solicitados
+     * @returns {Promise<Object>} - Resultado de la verificación
+     */
+    async canApproveFromHierarchy(approverId, requesterId, daysRequested = 1) {
+        try {
+            const result = await OrganizationalHierarchyService.canApproveRequest(
+                approverId,
+                requesterId,
+                daysRequested
+            );
+            return result;
+        } catch (error) {
+            console.error(`❌ [PROACTIVE] Error verificando permiso de aprobación:`, error);
+            return {
+                canApprove: false,
+                reason: 'Error verificando permisos'
+            };
+        }
+    }
+
+    /**
+     * Obtiene los subordinados directos de un usuario (para enviar notificaciones de equipo)
+     * @param {number} userId - ID del usuario
+     * @returns {Promise<Array>} - Lista de subordinados
+     */
+    async getSubordinatesFromHierarchy(userId) {
+        try {
+            const subordinates = await OrganizationalHierarchyService.getDirectReports(userId);
+            return subordinates;
+        } catch (error) {
+            console.error(`❌ [PROACTIVE] Error obteniendo subordinados:`, error);
+            return [];
+        }
+    }
+
+    /**
+     * Envía notificación a toda la cadena de mando de un empleado
+     * Útil para alertas críticas que deben ser vistas por todos los niveles
+     * @param {number} companyId - ID de la empresa
+     * @param {number} employeeId - ID del empleado afectado
+     * @param {Object} notification - Datos de la notificación
+     * @returns {Promise<Object>} - Resultado del envío masivo
+     */
+    async notifyEntireChain(companyId, employeeId, notification) {
+        try {
+            console.log(`📢 [PROACTIVE] Notificando cadena completa para empleado ${employeeId}...`);
+
+            // Obtener cadena de escalamiento
+            const chain = await this.getEscalationChainFromHierarchy(employeeId, 0); // 0 = obtener toda la cadena
+
+            if (!chain.length) {
+                console.log(`⚠️ [PROACTIVE] No hay cadena de escalamiento para empleado ${employeeId}`);
+                return {
+                    success: false,
+                    reason: 'No hay cadena de escalamiento configurada',
+                    notificationsSent: 0
+                };
+            }
+
+            let notificationsSent = 0;
+
+            for (const approver of chain) {
+                if (approver.approver_user_id) {
+                    await inboxService.sendMessage({
+                        companyId,
+                        senderId: notification.senderId || null,
+                        recipientType: 'employee',
+                        recipientId: approver.approver_user_id,
+                        subject: notification.subject,
+                        body: notification.body,
+                        priority: notification.priority || 'high',
+                        category: notification.category || 'chain_alert',
+                        metadata: {
+                            ...notification.metadata,
+                            sent_to_chain: true,
+                            chain_level: approver.level,
+                            affected_employee_id: employeeId
+                        }
+                    });
+                    notificationsSent++;
+                }
+            }
+
+            console.log(`✅ [PROACTIVE] ${notificationsSent} notificaciones enviadas a la cadena de mando`);
+
+            return {
+                success: true,
+                notificationsSent,
+                chainLength: chain.length
+            };
+
+        } catch (error) {
+            console.error(`❌ [PROACTIVE] Error notificando cadena:`, error);
+            return {
+                success: false,
+                reason: error.message,
+                notificationsSent: 0
+            };
+        }
     }
 
     /**

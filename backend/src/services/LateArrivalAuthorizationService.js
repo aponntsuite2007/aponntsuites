@@ -288,7 +288,362 @@ class LateArrivalAuthorizationService {
   }
 
   /**
+   * 🆕 NUEVO: Buscar autorizadores usando ORGANIGRAMA (parent_position_id)
+   * Este es el método PRINCIPAL que reemplaza el lookup genérico por roles
+   *
+   * Lógica:
+   * 1. Obtener organizational_position_id del empleado
+   * 2. Buscar parent_position_id de esa posición (supervisor directo)
+   * 3. Verificar si el supervisor directo está DISPONIBLE (trabajando hoy)
+   * 4. Si NO está disponible → ESCALAR al supervisor del supervisor (grandparent_position_id)
+   * 5. Reportar escalación a RRHH
+   *
+   * @param {Object} employeeContext - Contexto del empleado (incluye organizational_position_id y parent_position_id)
+   * @param {number} companyId - ID de la empresa
+   * @param {boolean} includeRRHH - Si incluir RRHH además del supervisor directo
+   * @returns {Array} Lista de autorizadores (supervisor directo + RRHH si aplica)
+   */
+  async findAuthorizersByHierarchy(employeeContext, companyId, includeRRHH = true) {
+    try {
+      console.log(`🎯 [AUTH-HIERARCHY] Searching authorizers using ORGANIGRAMA...`);
+      console.log(`   Employee position: ${employeeContext.position_name || 'N/A'} (ID: ${employeeContext.organizational_position_id || 'N/A'})`);
+      console.log(`   Parent position ID: ${employeeContext.parent_position_id || 'N/A'}`);
+
+      const authorizers = [];
+      const escalationInfo = {
+        escalated: false,
+        reason: null,
+        fromSupervisor: null,
+        toSupervisor: null
+      };
+
+      // 1️⃣ SUPERVISOR DIRECTO: Buscar por parent_position_id
+      if (employeeContext.parent_position_id) {
+        const directSupervisorQuery = `
+          SELECT
+            u.user_id,
+            COALESCE(u.first_name, u.nombre) AS first_name,
+            COALESCE(u.last_name, u.apellido) AS last_name,
+            u.email,
+            u.whatsapp_number,
+            u.notification_preference_late_arrivals,
+            u.role,
+            u.organizational_position_id,
+            op.position_name,
+            op.position_code,
+            op.parent_position_id AS grandparent_position_id,
+            'DIRECT_SUPERVISOR' AS authorizer_type,
+            true AS is_direct_supervisor,
+            false AS is_rrhh,
+            999 AS match_score
+          FROM users u
+          JOIN organizational_positions op ON u.organizational_position_id = op.id
+          WHERE u.organizational_position_id = $1
+            AND u.company_id = $2
+            AND u.is_active = true
+            AND u.can_authorize_late_arrivals = true
+        `;
+
+        const directSupervisors = await sequelize.query(directSupervisorQuery, {
+          bind: [employeeContext.parent_position_id, companyId],
+          type: QueryTypes.SELECT
+        });
+
+        if (directSupervisors.length > 0) {
+          console.log(`✅ [AUTH-HIERARCHY] Found ${directSupervisors.length} direct supervisor(s):`);
+
+          // 🆕 VERIFICAR DISPONIBILIDAD de cada supervisor directo
+          for (const supervisor of directSupervisors) {
+            console.log(`   🔍 Checking availability: ${supervisor.first_name} ${supervisor.last_name} (${supervisor.position_name})`);
+
+            const availability = await this.checkSupervisorAvailability(supervisor.user_id, companyId);
+
+            if (availability.isAvailable) {
+              // Supervisor DISPONIBLE → agregar a la lista
+              console.log(`   ✅ ${supervisor.first_name} ${supervisor.last_name} is AVAILABLE`);
+              authorizers.push(supervisor);
+            } else {
+              // Supervisor NO DISPONIBLE → ESCALAR
+              console.log(`   ⚠️ ${supervisor.first_name} ${supervisor.last_name} is NOT AVAILABLE: ${availability.reason}`);
+
+              escalationInfo.escalated = true;
+              escalationInfo.reason = availability.reason;
+              escalationInfo.fromSupervisor = `${supervisor.first_name} ${supervisor.last_name} (${supervisor.position_name})`;
+
+              // 🔼 ESCALACIÓN: Buscar supervisor del supervisor (grandparent position)
+              if (supervisor.grandparent_position_id) {
+                console.log(`   🔼 [ESCALATION] Escalating to grandparent position ID: ${supervisor.grandparent_position_id}`);
+
+                const escalatedSupervisorQuery = `
+                  SELECT
+                    u.user_id,
+                    COALESCE(u.first_name, u.nombre) AS first_name,
+                    COALESCE(u.last_name, u.apellido) AS last_name,
+                    u.email,
+                    u.whatsapp_number,
+                    u.notification_preference_late_arrivals,
+                    u.role,
+                    op.position_name,
+                    op.position_code,
+                    'ESCALATED_SUPERVISOR' AS authorizer_type,
+                    true AS is_direct_supervisor,
+                    false AS is_rrhh,
+                    998 AS match_score
+                  FROM users u
+                  JOIN organizational_positions op ON u.organizational_position_id = op.id
+                  WHERE u.organizational_position_id = $1
+                    AND u.company_id = $2
+                    AND u.is_active = true
+                    AND u.can_authorize_late_arrivals = true
+                `;
+
+                const escalatedSupervisors = await sequelize.query(escalatedSupervisorQuery, {
+                  bind: [supervisor.grandparent_position_id, companyId],
+                  type: QueryTypes.SELECT
+                });
+
+                if (escalatedSupervisors.length > 0) {
+                  console.log(`   ✅ [ESCALATION] Found escalated supervisor: ${escalatedSupervisors[0].first_name} ${escalatedSupervisors[0].last_name}`);
+                  escalationInfo.toSupervisor = `${escalatedSupervisors[0].first_name} ${escalatedSupervisors[0].last_name} (${escalatedSupervisors[0].position_name})`;
+                  authorizers.push(...escalatedSupervisors);
+                } else {
+                  console.log(`   ⚠️ [ESCALATION] No escalated supervisor found at grandparent position`);
+                }
+              } else {
+                console.log(`   ⚠️ [ESCALATION] Supervisor has no grandparent position (top of hierarchy)`);
+              }
+            }
+          }
+        } else {
+          console.log(`⚠️ [AUTH-HIERARCHY] No user assigned to parent position ${employeeContext.parent_position_id}`);
+        }
+      } else {
+        console.log(`⚠️ [AUTH-HIERARCHY] Employee has no parent_position_id (no organigrama assigned)`);
+      }
+
+      // 2️⃣ RRHH: Buscar por posición específica (no por nombre de departamento)
+      if (includeRRHH) {
+        const rrhhUsers = await this.findRRHHByPosition(companyId);
+        if (rrhhUsers.length > 0) {
+          console.log(`✅ [AUTH-HIERARCHY] Found ${rrhhUsers.length} RRHH user(s):`);
+          rrhhUsers.forEach(rrhh => {
+            console.log(`   - ${rrhh.first_name} ${rrhh.last_name} (${rrhh.position_name})`);
+          });
+
+          // 🆕 Si hubo escalación, marcar RRHH para que reciba reporte
+          if (escalationInfo.escalated) {
+            rrhhUsers.forEach(rrhh => {
+              rrhh.notify_escalation = true;  // Flag para incluir info de escalación en email
+              rrhh.escalation_info = escalationInfo;
+            });
+            console.log(`📢 [ESCALATION] RRHH will be notified about escalation`);
+          }
+
+          authorizers.push(...rrhhUsers);
+        } else {
+          console.log(`⚠️ [AUTH-HIERARCHY] No RRHH users found by position`);
+        }
+      }
+
+      // 3️⃣ FALLBACK: Si no se encontró nadie, usar método antiguo
+      if (authorizers.length === 0) {
+        console.log(`⚠️ [AUTH-HIERARCHY] No authorizers found via hierarchy, using fallback...`);
+        return await this.findAuthorizersHierarchical({
+          companyId,
+          branchId: employeeContext.branch_id,
+          departmentId: employeeContext.department_id,
+          sector: employeeContext.sector,
+          shiftId: employeeContext.shift_id,
+          includeRRHH
+        });
+      }
+
+      console.log(`✅ [AUTH-HIERARCHY] Total authorizers found: ${authorizers.length}`);
+      if (escalationInfo.escalated) {
+        console.log(`📢 [ESCALATION SUMMARY]:`);
+        console.log(`   From: ${escalationInfo.fromSupervisor}`);
+        console.log(`   To: ${escalationInfo.toSupervisor || 'RRHH only'}`);
+        console.log(`   Reason: ${escalationInfo.reason}`);
+      }
+      return authorizers;
+
+    } catch (error) {
+      console.error('❌ [AUTH-HIERARCHY] Error in hierarchy lookup:', error);
+      // Fallback completo al método antiguo
+      return await this.findAuthorizersHierarchical({
+        companyId,
+        branchId: employeeContext.branch_id,
+        departmentId: employeeContext.department_id,
+        sector: employeeContext.sector,
+        shiftId: employeeContext.shift_id,
+        includeRRHH
+      });
+    }
+  }
+
+  /**
+   * 🆕 NUEVO: Verificar si un supervisor está DISPONIBLE para autorizar (está trabajando HOY)
+   * Verifica:
+   * 1. Tiene asistencia activa hoy (check-in sin check-out)
+   * 2. NO está de vacaciones
+   * 3. NO está con licencia médica
+   *
+   * @param {number} userId - ID del supervisor
+   * @param {number} companyId - ID de la empresa
+   * @returns {Object} { isAvailable: boolean, reason: string }
+   */
+  async checkSupervisorAvailability(userId, companyId) {
+    try {
+      const query = `
+        SELECT
+          u.user_id,
+          u.first_name,
+          u.last_name,
+          -- Check attendance today
+          EXISTS (
+            SELECT 1 FROM attendances a
+            WHERE a.user_id = u.user_id
+              AND DATE(a.check_in) = CURRENT_DATE
+              AND a.check_in IS NOT NULL
+          ) AS has_attendance_today,
+          -- Check vacation
+          EXISTS (
+            SELECT 1 FROM vacation_requests vr
+            WHERE vr.user_id = u.user_id
+              AND vr.status = 'approved'
+              AND CURRENT_DATE BETWEEN vr.start_date AND vr.end_date
+          ) AS is_on_vacation,
+          -- Check sick leave
+          EXISTS (
+            SELECT 1 FROM medical_leaves ml
+            WHERE ml.user_id = u.user_id
+              AND ml.status = 'approved'
+              AND CURRENT_DATE BETWEEN ml.start_date AND ml.end_date
+          ) AS is_on_sick_leave,
+          -- Check if scheduled to work today
+          EXISTS (
+            SELECT 1 FROM user_shift_assignments usa
+            JOIN shifts s ON usa.shift_id = s.id
+            WHERE usa.user_id = u.user_id
+              AND usa.is_active = true
+              AND EXTRACT(DOW FROM CURRENT_DATE) = ANY(s.days_of_week)
+          ) AS is_scheduled_today
+        FROM users u
+        WHERE u.user_id = $1 AND u.company_id = $2
+      `;
+
+      const result = await sequelize.query(query, {
+        bind: [userId, companyId],
+        type: QueryTypes.SELECT,
+        plain: true
+      });
+
+      if (!result) {
+        return { isAvailable: false, reason: 'Supervisor not found' };
+      }
+
+      // Si está de vacaciones
+      if (result.is_on_vacation) {
+        console.log(`⚠️ [AVAILABILITY] ${result.first_name} ${result.last_name} is ON VACATION`);
+        return {
+          isAvailable: false,
+          reason: 'on_vacation',
+          supervisorName: `${result.first_name} ${result.last_name}`
+        };
+      }
+
+      // Si está con licencia médica
+      if (result.is_on_sick_leave) {
+        console.log(`⚠️ [AVAILABILITY] ${result.first_name} ${result.last_name} is ON SICK LEAVE`);
+        return {
+          isAvailable: false,
+          reason: 'on_sick_leave',
+          supervisorName: `${result.first_name} ${result.last_name}`
+        };
+      }
+
+      // Si está programado para trabajar hoy pero NO tiene asistencia
+      if (result.is_scheduled_today && !result.has_attendance_today) {
+        console.log(`⚠️ [AVAILABILITY] ${result.first_name} ${result.last_name} is SCHEDULED but NOT AT WORK (no attendance)`);
+        return {
+          isAvailable: false,
+          reason: 'absent_today',
+          supervisorName: `${result.first_name} ${result.last_name}`
+        };
+      }
+
+      // Supervisor está disponible
+      console.log(`✅ [AVAILABILITY] ${result.first_name} ${result.last_name} is AVAILABLE`);
+      return {
+        isAvailable: true,
+        supervisorName: `${result.first_name} ${result.last_name}`
+      };
+
+    } catch (error) {
+      console.error('❌ [AVAILABILITY] Error checking supervisor availability:', error);
+      // En caso de error, asumir que está disponible (fail-safe)
+      return { isAvailable: true, reason: 'error_checking' };
+    }
+  }
+
+  /**
+   * 🆕 NUEVO: Buscar usuario(s) de RRHH por POSICIÓN específica (no por departamento)
+   * Busca por position_code que contenga 'RRHH', 'RH', 'HR'
+   *
+   * @param {number} companyId - ID de la empresa
+   * @returns {Array} Lista de usuarios de RRHH
+   */
+  async findRRHHByPosition(companyId) {
+    try {
+      const query = `
+        SELECT
+          u.user_id,
+          COALESCE(u.first_name, u.nombre) AS first_name,
+          COALESCE(u.last_name, u.apellido) AS last_name,
+          u.email,
+          u.whatsapp_number,
+          u.notification_preference_late_arrivals,
+          u.role,
+          op.position_name,
+          op.position_code,
+          op.level_order,
+          'RRHH' AS authorizer_type,
+          false AS is_direct_supervisor,
+          true AS is_rrhh,
+          800 AS match_score
+        FROM users u
+        JOIN organizational_positions op ON u.organizational_position_id = op.id
+        WHERE op.company_id = $1
+          AND u.company_id = $1
+          AND u.is_active = true
+          AND (
+            UPPER(op.position_code) LIKE '%RRHH%'
+            OR UPPER(op.position_code) LIKE '%RH%'
+            OR UPPER(op.position_code) LIKE '%HR%'
+            OR UPPER(op.position_name) LIKE '%RECURSOS HUMANOS%'
+            OR UPPER(op.position_name) LIKE '%RRHH%'
+            OR UPPER(op.position_name) LIKE '%HUMAN RESOURCES%'
+          )
+        ORDER BY op.level_order ASC, u.role DESC
+        LIMIT 5
+      `;
+
+      const rrhhUsers = await sequelize.query(query, {
+        bind: [companyId],
+        type: QueryTypes.SELECT
+      });
+
+      return rrhhUsers;
+
+    } catch (error) {
+      console.error('❌ [RRHH-POSITION] Error finding RRHH by position:', error);
+      return [];
+    }
+  }
+
+  /**
    * 🔍 Buscar datos completos del empleado para lookup jerárquico
+   * 🆕 INCLUYE organizational_position_id para lookup de parent_position_id
    */
   async _getEmployeeHierarchyContext(userId, companyId) {
     try {
@@ -297,17 +652,21 @@ class LateArrivalAuthorizationService {
           u.user_id,
           u.department_id,
           u.default_branch_id AS branch_id,
+          u.organizational_position_id,
           d.name AS department_name,
           b.name AS branch_name,
           usa.shift_id,
           usa.sector,
           usa.assigned_phase,
-          s.name AS shift_name
+          s.name AS shift_name,
+          op.position_name,
+          op.parent_position_id
         FROM users u
         LEFT JOIN departments d ON u.department_id = d.department_id
         LEFT JOIN branches b ON u.default_branch_id = b.branch_id
         LEFT JOIN user_shift_assignments usa ON u.user_id = usa.user_id AND usa.is_active = true
         LEFT JOIN shifts s ON usa.shift_id = s.id
+        LEFT JOIN organizational_positions op ON u.organizational_position_id = op.id
         WHERE u.user_id = $1 AND u.company_id = $2
       `;
 
@@ -327,7 +686,7 @@ class LateArrivalAuthorizationService {
 
   /**
    * Enviar solicitud de autorización multi-canal
-   * ACTUALIZADO: Usa lookup jerárquico (branch/sector/shift) + RRHH automático
+   * 🆕 ACTUALIZADO: Usa ORGANIGRAMA (parent_position_id) para encontrar supervisor directo
    * @param {Object} params - Parámetros de la solicitud
    * @returns {Object} Resultado del envío
    */
@@ -344,7 +703,7 @@ class LateArrivalAuthorizationService {
       console.log(`   Name: ${employeeData.first_name} ${employeeData.last_name}`);
       console.log(`   Legajo: ${employeeData.legajo || 'N/A'}`);
 
-      // 1. Obtener contexto jerárquico completo del empleado
+      // 1. Obtener contexto jerárquico completo del empleado (incluye organizational_position_id y parent_position_id)
       const employeeContext = await this._getEmployeeHierarchyContext(
         employeeData.user_id,
         companyId
@@ -355,16 +714,17 @@ class LateArrivalAuthorizationService {
       console.log(`   Department: ${employeeContext.department_name || employeeData.department_name || 'N/A'}`);
       console.log(`   Sector: ${employeeContext.sector || 'N/A'}`);
       console.log(`   Shift: ${employeeContext.shift_name || 'N/A'} (ID: ${employeeContext.shift_id || 'N/A'})`);
+      console.log(`   🆕 Position: ${employeeContext.position_name || 'N/A'} (ID: ${employeeContext.organizational_position_id || 'N/A'})`);
+      console.log(`   🆕 Parent Position ID: ${employeeContext.parent_position_id || 'N/A'}`);
 
-      // 2. Buscar autorizadores con lookup JERÁRQUICO + RRHH
-      const authorizers = await this.findAuthorizersHierarchical({
+      // 2. 🆕 BUSCAR AUTORIZADORES USANDO ORGANIGRAMA (parent_position_id)
+      // Este método usa el organigrama establecido para encontrar el supervisor DIRECTO
+      // Si no hay organigrama, hace fallback al método antiguo (role-based)
+      const authorizers = await this.findAuthorizersByHierarchy(
+        employeeContext,
         companyId,
-        branchId: employeeContext.branch_id || employeeData.branch_id,
-        departmentId: employeeContext.department_id || employeeData.department_id,
-        sector: employeeContext.sector,
-        shiftId: employeeContext.shift_id,
-        includeRRHH: true  // SIEMPRE incluir RRHH
-      });
+        true  // SIEMPRE incluir RRHH
+      );
 
       if (authorizers.length === 0) {
         // No hay autorizadores, usar fallback de empresa
@@ -477,6 +837,7 @@ class LateArrivalAuthorizationService {
 
   /**
    * Enviar notificación por Email con botones HTML
+   * 🆕 INCLUYE información de escalación si notify_escalation=true
    */
   async _sendEmailNotification({ authorizer, employeeData, authorizationToken, shiftData, lateMinutes }) {
     try {
@@ -497,13 +858,20 @@ class LateArrivalAuthorizationService {
         lateMinutes,
         approveUrl,
         rejectUrl,
-        currentTime: new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
+        currentTime: new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }),
+        escalationInfo: authorizer.notify_escalation ? authorizer.escalation_info : null  // 🆕 Info de escalación
       });
+
+      // 🆕 Subject diferente si hay escalación
+      let subject = `⚠️ Autorización Requerida - Llegada Tardía ${employeeData.first_name} ${employeeData.last_name}`;
+      if (authorizer.notify_escalation) {
+        subject = `🔼 ESCALACIÓN - ${subject}`;
+      }
 
       const mailOptions = {
         from: process.env.SMTP_FROM || process.env.SMTP_USER,
         to: authorizer.email,
-        subject: `⚠️ Autorización Requerida - Llegada Tardía ${employeeData.first_name} ${employeeData.last_name}`,
+        subject,
         html: htmlContent
       };
 
@@ -725,8 +1093,20 @@ class LateArrivalAuthorizationService {
 
   /**
    * Construir HTML para email con botones de autorización
+   * 🆕 INCLUYE bloque de escalación si escalationInfo está presente
    */
-  _buildEmailHTML({ authorizerName, employeeName, employeeLegajo, departmentName, shiftName, shiftStartTime, lateMinutes, approveUrl, rejectUrl, currentTime }) {
+  _buildEmailHTML({ authorizerName, employeeName, employeeLegajo, departmentName, shiftName, shiftStartTime, lateMinutes, approveUrl, rejectUrl, currentTime, escalationInfo }) {
+    // 🆕 Construir bloque de escalación si corresponde
+    const escalationBlock = escalationInfo ? `
+      <div class="escalation-box">
+        <strong>🔼 ESCALACIÓN AUTOMÁTICA</strong><br><br>
+        <strong>Supervisor directo NO DISPONIBLE:</strong><br>
+        ${escalationInfo.fromSupervisor || 'N/A'}<br><br>
+        <strong>Motivo:</strong> ${this._translateEscalationReason(escalationInfo.reason)}<br><br>
+        ${escalationInfo.toSupervisor ? `<strong>Escalado a:</strong><br>${escalationInfo.toSupervisor}` : '<strong>Escalado directamente a RRHH</strong>'}
+      </div>
+    ` : '';
+
     return `
 <!DOCTYPE html>
 <html lang="es">
@@ -777,6 +1157,18 @@ class LateArrivalAuthorizationService {
     }
     .alert-box strong {
       color: #856404;
+    }
+    .escalation-box {
+      background-color: #ffe0e0;
+      border-left: 4px solid #ff5722;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .escalation-box strong {
+      color: #c62828;
     }
     .info-table {
       width: 100%;
@@ -849,6 +1241,8 @@ class LateArrivalAuthorizationService {
 
     <div class="content">
       <p class="greeting">Hola <strong>${authorizerName}</strong>,</p>
+
+      ${escalationBlock}
 
       <div class="alert-box">
         <strong>Se requiere tu autorización para un ingreso fuera de horario</strong>
@@ -1301,6 +1695,21 @@ _Sistema de Asistencia Biométrico APONNT_`;
     }
 
     return formattedNumber;
+  }
+
+  /**
+   * 🆕 Traducir razón de escalación a texto legible en español
+   */
+  _translateEscalationReason(reason) {
+    const translations = {
+      'on_vacation': 'Está de vacaciones',
+      'on_sick_leave': 'Está con licencia médica',
+      'absent_today': 'No se encuentra trabajando hoy (sin asistencia registrada)',
+      'supervisor_not_found': 'Supervisor no encontrado en el sistema',
+      'error_checking': 'Error al verificar disponibilidad'
+    };
+
+    return translations[reason] || reason || 'No especificado';
   }
 }
 

@@ -22,9 +22,12 @@ const SystemRegistry = require('../auditor/registry/SystemRegistry');
 const AuditorEngine = require('../auditor/core/AuditorEngine');
 
 class AssistantService {
-  constructor(database) {
+  constructor(database, brainService = null) {
     // ✅ FIX 3: Guardar database para acceso a modelos
     this.database = database;
+
+    // 🧠 BRAIN INTEGRATION - Para respuestas con datos LIVE del código
+    this.brainService = brainService;
 
     // Configuración de Ollama desde environment variables
     this.ollamaBaseURL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
@@ -34,8 +37,9 @@ class AssistantService {
     this.timeout = parseInt(process.env.OLLAMA_TIMEOUT || '30000');
 
     // ✅ FIX: Inicializar SystemRegistry para acceso a metadata de módulos
+    // 🧠 Ahora con soporte Brain para datos LIVE
     try {
-      this.systemRegistry = new SystemRegistry(database);
+      this.systemRegistry = new SystemRegistry(database, brainService);
     } catch (e) {
       console.warn('⚠️ SystemRegistry no disponible:', e.message);
       this.systemRegistry = null;
@@ -44,6 +48,20 @@ class AssistantService {
     console.log('🤖 AssistantService inicializado');
     console.log(`   Ollama URL: ${this.ollamaBaseURL}`);
     console.log(`   Modelo: ${this.model}`);
+    if (brainService) {
+      console.log(`   🧠 Brain Service: Conectado`);
+    }
+  }
+
+  /**
+   * 🧠 Inyectar Brain Service post-construcción
+   */
+  setBrainService(brainService) {
+    this.brainService = brainService;
+    if (this.systemRegistry) {
+      this.systemRegistry.setBrainService(brainService);
+      console.log('🧠 [ASSISTANT] Brain Service conectado dinámicamente');
+    }
   }
 
   /**
@@ -210,6 +228,7 @@ class AssistantService {
 
   /**
    * Construye contexto completo para enviar a Ollama
+   * 🧠 Ahora con datos LIVE del Brain cuando está disponible
    */
   async buildContext(companyId, userContext, similarAnswers) {
     const context = {
@@ -217,13 +236,44 @@ class AssistantService {
       company: { id: companyId },
       modules: [],
       knowledgeBase: [],
-      currentContext: userContext
+      currentContext: userContext,
+      brainConnected: false,
+      liveCodeInfo: null
     };
 
     // Agregar información de módulos del SystemRegistry
+    // 🧠 Si Brain está conectado, enriquecer con datos LIVE
     if (userContext.module && this.systemRegistry) {
       try {
-        const moduleInfo = this.systemRegistry.getModule(userContext.module);
+        let moduleInfo;
+        let liveData = null;
+
+        // 🧠 Intentar obtener datos enriquecidos con Brain
+        if (this.brainService && this.systemRegistry.getModuleWithLiveData) {
+          const enrichedModule = await this.systemRegistry.getModuleWithLiveData(userContext.module);
+          if (enrichedModule) {
+            moduleInfo = enrichedModule;
+            liveData = enrichedModule.liveData;
+            context.brainConnected = enrichedModule.brainConnected || false;
+
+            // Si hay drift, avisar al sistema
+            if (enrichedModule.drift?.hasDrift) {
+              context.liveCodeInfo = {
+                hasDrift: true,
+                driftSummary: enrichedModule.drift.summary,
+                newEndpoints: enrichedModule.drift.newEndpoints?.length || 0,
+                missingEndpoints: enrichedModule.drift.missingEndpoints?.length || 0
+              };
+              console.log(`🧠 [CONTEXT] Drift detectado en ${userContext.module}: ${enrichedModule.drift.summary}`);
+            }
+          }
+        }
+
+        // Fallback a datos estáticos si no hay Brain
+        if (!moduleInfo) {
+          moduleInfo = this.systemRegistry.getModule(userContext.module);
+        }
+
         if (moduleInfo) {
           const moduleContext = {
             name: moduleInfo.name,
@@ -233,20 +283,25 @@ class AssistantService {
             help: moduleInfo.help
           };
 
-          // ✅ NUEVO: Incluir información específica de payroll-liquidation
+          // 🧠 BRAIN DATA: Agregar info LIVE si está disponible
+          if (liveData) {
+            moduleContext.liveStatus = {
+              filesFound: liveData.files?.length || 0,
+              endpointsActive: liveData.endpoints?.length || 0,
+              hasWorkflow: !!liveData.workflow,
+              scannedAt: liveData.scannedAt
+            };
+            // Incluir endpoints reales detectados
+            if (liveData.endpoints?.length > 0) {
+              moduleContext.activeEndpoints = liveData.endpoints.slice(0, 5); // Top 5
+            }
+          }
+
+          // ✅ Info específica de payroll-liquidation
           if (userContext.module === 'payroll-liquidation') {
-            // Incluir fórmulas disponibles
-            if (moduleInfo.formulas) {
-              moduleContext.formulas = moduleInfo.formulas;
-            }
-            // Incluir info de entidades
-            if (moduleInfo.entities) {
-              moduleContext.entities = moduleInfo.entities;
-            }
-            // Incluir workflow
-            if (moduleInfo.workflow) {
-              moduleContext.workflow = moduleInfo.workflow;
-            }
+            if (moduleInfo.formulas) moduleContext.formulas = moduleInfo.formulas;
+            if (moduleInfo.entities) moduleContext.entities = moduleInfo.entities;
+            if (moduleInfo.workflow) moduleContext.workflow = moduleInfo.workflow;
           }
 
           context.modules.push(moduleContext);
