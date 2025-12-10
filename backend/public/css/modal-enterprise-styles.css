@@ -21,7 +21,7 @@
     border-radius: 16px !important;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
     overflow: hidden !important;
-    background: white !important;
+    background: #161b22 !important;
 }
 
 @keyframes fadeIn {
@@ -31,7 +31,7 @@
 
 /* Header - Gradient Enterprise */
 #companyModal .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #58a6ff 0%, #7c3aed 100%) !important;
     padding: 20px 32px !important;
     border-bottom: none !important;
     display: flex !important;
@@ -83,7 +83,7 @@
 }
 
 #companyModal .modal-body::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #58a6ff 0%, #7c3aed 100%);
     border-radius: 4px;
 }
 
@@ -106,7 +106,7 @@
 #companyModal .form-label {
     font-size: 0.75rem !important; /* Letra chica */
     font-weight: 600 !important;
-    color: #495057 !important;
+    color: #e6edf3 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     margin-bottom: 6px !important;
@@ -131,8 +131,8 @@
 }
 
 /* Secciones - Con Headers Visuales */
-#companyModal .form-group > div[style*="background: #f8f9fa"] {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+#companyModal .form-group > div[style*="background: #21262d"] {
+    background: linear-gradient(135deg, #21262d 0%, #ffffff 100%) !important;
     border: 1px solid #e0e0e0 !important;
     border-radius: 12px !important;
     padding: 16px !important;
@@ -142,7 +142,7 @@
 #companyModal .form-group > div h6 {
     font-size: 0.9rem !important;
     font-weight: 700 !important;
-    color: #495057 !important;
+    color: #e6edf3 !important;
     margin-bottom: 12px !important;
 }
 
@@ -172,7 +172,7 @@
 }
 
 #companyModal .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #58a6ff 0%, #7c3aed 100%) !important;
     color: white !important;
 }
 
@@ -196,7 +196,7 @@
 }
 
 #companyModal .btn-outline-primary {
-    background: white !important;
+    background: #161b22 !important;
     color: #667eea !important;
     border: 1px solid #667eea !important;
 }
@@ -207,7 +207,7 @@
 }
 
 #companyModal .btn-outline-success {
-    background: white !important;
+    background: #161b22 !important;
     color: #28a745 !important;
     border: 1px solid #28a745 !important;
 }
@@ -220,7 +220,7 @@
 /* Footer - Alineado y Profesional */
 #companyModal .modal-footer {
     padding: 20px 32px !important;
-    background: #f8f9fa !important;
+    background: #21262d !important;
     border-top: 1px solid #e0e0e0 !important;
     display: flex !important;
     justify-content: flex-end !important;
@@ -229,7 +229,7 @@
 
 /* Pricing Sidebar - Más Compacto */
 #companyModal .pricing-sidebar {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+    background: linear-gradient(135deg, #21262d 0%, #ffffff 100%) !important;
     border: 1px solid #e0e0e0 !important;
     border-radius: 12px !important;
     padding: 20px !important;
@@ -238,7 +238,7 @@
 #companyModal .pricing-sidebar h4 {
     font-size: 1rem !important;
     font-weight: 700 !important;
-    color: #495057 !important;
+    color: #e6edf3 !important;
     margin-bottom: 16px !important;
 }
 
@@ -357,7 +357,7 @@
 }
 
 #companyModal .badge-trial {
-    background: #fff3cd;
+    background: #161b223cd;
     color: #856404;
 }
 

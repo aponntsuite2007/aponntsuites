@@ -60,8 +60,8 @@
 /* Modal header - siempre visible arriba */
 .modal-header {
     flex-shrink: 0;
-    border-bottom: 1px solid #dee2e6;
-    background: #f8f9fa;
+    border-bottom: 1px solid #30363d;
+    background: #21262d;
     position: sticky;
     top: 0;
     z-index: 1055;
@@ -98,8 +98,8 @@
 /* Modal footer - siempre visible abajo */
 .modal-footer {
     flex-shrink: 0;
-    border-top: 1px solid #dee2e6;
-    background: #f8f9fa;
+    border-top: 1px solid #30363d;
+    background: #21262d;
     position: sticky;
     bottom: 0;
     z-index: 1055;
@@ -283,7 +283,7 @@
 .modal-body.loading::after {
     content: "Cargando...";
     font-size: 1.2rem;
-    color: #6c757d;
+    color: #8b949e;
 }
 
 /* ============================================

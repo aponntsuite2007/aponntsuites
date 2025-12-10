@@ -2914,6 +2914,88 @@ console.log('🏗️ [ENGINEERING] Engineering Dashboard API ACTIVO:');
 console.log('   📊 GET  /api/engineering/metadata - Metadata completo del sistema');
 console.log('   📋 GET  /api/engineering/modules - Solo módulos');
 
+// ✅ CONFIGURAR ECOSYSTEM BRAIN - Cerebro del Ecosistema con datos VIVOS
+const brainRoutes = require('./src/routes/brainRoutes');
+app.set('database', database); // Pasar database para que Brain pueda usarla
+app.use('/api/brain', brainRoutes);
+
+console.log('🧠 [BRAIN] Ecosystem Brain API ACTIVO:');
+console.log('   🌍 GET  /api/brain/overview - Vista general (VIVO)');
+console.log('   📂 GET  /api/brain/backend-files - Archivos backend (VIVO)');
+console.log('   🎨 GET  /api/brain/frontend-files - Archivos frontend (VIVO)');
+console.log('   💰 GET  /api/brain/commercial-modules - Módulos comerciales (BD)');
+console.log('   📦 GET  /api/brain/technical-modules - Módulos técnicos (VIVO)');
+console.log('   🗺️ GET  /api/brain/roadmap - Roadmap (BD)');
+console.log('   🎯 GET  /api/brain/critical-path - Camino crítico (BD)');
+console.log('   🔄 GET  /api/brain/workflows - Workflows (VIVO)');
+console.log('   🗄️ GET  /api/brain/database - Schema BD (VIVO)');
+
+// ✅ CONFIGURAR BRAIN REACTIVE - Sistema Reactivo del Cerebro
+const brainReactiveRoutes = require('./src/routes/brainReactiveRoutes');
+const EcosystemBrainService = require('./src/services/EcosystemBrainService');
+const brainService = new EcosystemBrainService(database);
+app.set('brainService', brainService);
+app.use('/api/brain-reactive', brainReactiveRoutes);
+
+// Iniciar observación automática (opcional - solo en desarrollo)
+if (process.env.NODE_ENV !== 'production') {
+  const { initReactiveService } = brainReactiveRoutes;
+  const reactiveService = initReactiveService(brainService, database);
+  reactiveService.startWatching();
+}
+
+console.log('👁️ [BRAIN-REACTIVE] Sistema Reactivo del Cerebro ACTIVO:');
+console.log('   📊 GET  /api/brain-reactive/status - Estado del watcher');
+console.log('   ▶️  POST /api/brain-reactive/start - Iniciar observación');
+console.log('   ⏹️  POST /api/brain-reactive/stop - Detener observación');
+console.log('   📜 GET  /api/brain-reactive/changes - Log de cambios');
+console.log('   ✅ GET  /api/brain-reactive/tasks - Tareas auto-detectadas');
+console.log('   🔄 GET  /api/brain-reactive/workflows - Workflows detectados');
+
+// ✅ CONFIGURAR BRAIN ANALYZER - Analizador Avanzado del Cerebro
+const brainAnalyzerRoutes = require('./src/routes/brainAnalyzerRoutes');
+app.use('/api/brain-analyzer', brainAnalyzerRoutes);
+
+console.log('🔬 [BRAIN-ANALYZER] Analizador Avanzado del Cerebro ACTIVO:');
+console.log('   🔗 GET  /api/brain-analyzer/dependencies - Grafo de dependencias');
+console.log('   💀 GET  /api/brain-analyzer/dead-code - Código muerto');
+console.log('   📊 GET  /api/brain-analyzer/git/changes - Cambios Git recientes');
+console.log('   🎯 GET  /api/brain-analyzer/git/risk-priority - Prioridad por riesgo');
+console.log('   📐 GET  /api/brain-analyzer/complexity - Complejidad ciclomática');
+console.log('   🧪 POST /api/brain-analyzer/generate-tests/:module - Auto-generar tests');
+console.log('   📸 POST /api/brain-analyzer/contract/snapshot - Capturar contrato API');
+console.log('   🔍 POST /api/brain-analyzer/contract/compare - Comparar contrato');
+console.log('   🛡️ GET  /api/brain-analyzer/security - Security scan');
+console.log('   💚 GET  /api/brain-analyzer/health - Dashboard de salud');
+console.log('   🔬 GET  /api/brain-analyzer/full-analysis - Análisis COMPLETO');
+
+// ✅ CONFIGURAR BRAIN INTELLIGENT TESTING - Testing Inteligente basado en Brain
+const brainTestingRoutes = require('./src/routes/brainTestingRoutes');
+app.use('/api/brain-testing', brainTestingRoutes);
+
+console.log('🧪 [BRAIN-TESTING] Sistema de Testing Inteligente ACTIVO:');
+console.log('   📋 GET  /api/brain-testing/forms - Escanear formularios frontend');
+console.log('   🎯 GET  /api/brain-testing/plan/:moduleKey - Plan de tests inteligente');
+console.log('   📊 GET  /api/brain-testing/capabilities - Capacidades de testing');
+console.log('   🚀 POST /api/brain-testing/execute/:moduleKey - Ejecutar tests');
+console.log('   🔍 GET  /api/brain-testing/fields/:moduleKey - Análisis de campos');
+console.log('   🎲 POST /api/brain-testing/generate-data/:moduleKey - Generar datos');
+
+// ✅ CONFIGURAR TRAINING & KNOWLEDGE - Sistema de Capacitación Inteligente
+const trainingKnowledgeRoutes = require('./src/routes/trainingKnowledgeRoutes');
+app.use('/api/training', trainingKnowledgeRoutes);
+
+console.log('📚 [TRAINING] Sistema de Capacitación & Knowledge ACTIVO:');
+console.log('   📖 GET  /api/training/tutorial/:moduleKey - Tutorial por módulo');
+console.log('   📋 GET  /api/training/tutorials - Lista todos los tutoriales');
+console.log('   📝 GET  /api/training/quiz/:moduleKey - Quiz de autoevaluación');
+console.log('   ✅ POST /api/training/quiz/:moduleKey/submit - Enviar respuestas');
+console.log('   📈 GET  /api/training/progress/:userId - Progreso de capacitación');
+console.log('   🎫 POST /api/training/ticket-tutorial - Tutorial para ticket');
+console.log('   📢 POST /api/training/notify-feature - Notificar nueva feature');
+console.log('   📊 GET  /api/training/support-dashboard - Dashboard de soporte');
+console.log('   🧠 GET  /api/training/brain-status - Estado del Brain');
+
 // ✅ CONFIGURAR DATABASE SYNC - Sistema de Sincronización de BD
 const databaseSyncRoutes = require('./src/routes/databaseSyncRoutes');
 app.use('/api/database', databaseSyncRoutes);

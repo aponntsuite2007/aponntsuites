@@ -37,7 +37,7 @@
 [id*="modal"][style*="display: block"] > div:first-child,
 [id*="Modal"].show > div:first-child,
 [id*="modal"].show > div:first-child {
-    background: white !important;
+    background: #161b22 !important;
     border-radius: 8px !important;
     width: 98vw !important;
     height: 96vh !important;
@@ -67,7 +67,7 @@
     font-size: 0.75rem !important;
     margin: 0 !important;
     padding: 4px 10px !important;
-    background: #f8f9fa !important;
+    background: #21262d !important;
     border-bottom: 1px solid #dee2e6 !important;
     flex-shrink: 0 !important;
     font-weight: 600 !important;
@@ -221,7 +221,7 @@
 [id*="modal"].show .modal-footer {
     flex-shrink: 0 !important;
     padding: 5px 10px !important;
-    background: #f8f9fa !important;
+    background: #21262d !important;
     border-top: 1px solid #dee2e6 !important;
     display: flex !important;
     gap: 5px !important;
@@ -387,7 +387,7 @@
     overflow: hidden !important;
     padding: 0 !important;
     margin: 0 !important;
-    background: white !important;
+    background: #161b22 !important;
 }
 
 #employeeFileModal > div:first-child {

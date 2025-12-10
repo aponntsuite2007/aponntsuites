@@ -1,3 +1,22 @@
+/* ============================================
+   DARK THEME - Panel Empresa Profesional
+   Palette: GitHub Dark Style
+   ============================================ */
+
+:root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --border-color: #30363d;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-purple: #a371f7;
+    --accent-orange: #f0883e;
+    --accent-red: #f85149;
+}
+
 * { 
     margin: 0; 
     padding: 0; 
@@ -6,16 +25,16 @@
 
 body {
     font-family: 'Inter', 'Roboto', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    background-color: #f5f5f5;
+    background-color: #0d1117;
     line-height: 1.6;
 }
 
 .header {
-    background: linear-gradient(135deg, #a8d4f0 0%, #b8c6f0 100%);
-    color: #2c3e50;
+    background: linear-gradient(135deg, #161b22 0%, #21262d 100%);
+    color: #e6edf3;
     padding: 20px;
     text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .header h1 {
@@ -39,13 +58,13 @@ body {
 .logo-main {
     font-size: 2.5rem;
     font-weight: bold;
-    color: #2c3e50;
+    color: #e6edf3;
     margin-bottom: -5px;
 }
 
 .logo-sub {
     font-size: 1rem;
-    color: #6c757d;
+    color: #8b949e;
     font-weight: 500;
 }
 
@@ -74,10 +93,10 @@ body {
 
 .tabs {
     display: flex;
-    background: white;
+    background: #161b22;
     border-radius: 10px;
     margin-bottom: 30px;
-    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
     overflow: hidden;
     flex-wrap: wrap;
 }
@@ -88,11 +107,11 @@ body {
     text-align: center;
     cursor: pointer;
     border: none;
-    background: white;
+    background: #161b22;
     font-size: 14px;
     font-weight: 500;
     transition: all 0.3s ease;
-    border-right: 1px solid #eee;
+    border-right: 1px solid #30363d;
     min-width: 120px;
 }
 
@@ -101,11 +120,11 @@ body {
 }
 
 .tab:hover { 
-    background: #f8f9fa; 
+    background: #21262d; 
 }
 
 .tab.active {
-    background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
+    background: linear-gradient(135deg, #1f6feb 0%, #58a6ff 100%);
     color: white;
 }
 
@@ -118,15 +137,15 @@ body {
 }
 
 .card {
-    background: white;
+    background: #161b22;
     border-radius: 15px;
     padding: 30px;
     margin-bottom: 30px;
-    box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.3);
 }
 
 .card h2 {
-    color: #333;
+    color: #e6edf3;
     margin-bottom: 20px;
     font-size: 1.8rem;
     display: flex;
@@ -135,7 +154,7 @@ body {
 }
 
 .card h3 {
-    color: #555;
+    color: #c9d1d9;
     margin-bottom: 15px;
     font-size: 1.3rem;
 }
@@ -148,13 +167,13 @@ body {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
-    color: #555;
+    color: #c9d1d9;
 }
 
 .form-group input, .form-group select, .form-group textarea {
     width: 100%;
     padding: 12px;
-    border: 2px solid #e1e5e9;
+    border: 2px solid #30363d;
     border-radius: 8px;
     font-size: 16px;
     transition: border-color 0.3s;
@@ -180,7 +199,7 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
+    background: linear-gradient(135deg, #1f6feb 0%, #58a6ff 100%);
     color: white;
 }
 
@@ -211,7 +230,7 @@ body {
 
 .btn:hover { 
     transform: translateY(-2px); 
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4); 
 }
 
 .btn-sm {
@@ -237,7 +256,7 @@ body {
 
 .btn-mini:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
 }
 
 .btn-mini.btn-primary { background: #007bff; }
@@ -254,7 +273,7 @@ body {
 }
 
 .stat-item {
-    background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
+    background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
     color: white;
     padding: 20px;
     border-radius: 10px;
@@ -262,12 +281,13 @@ body {
 }
 
 .stat-card {
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border: 1px solid #30363d;
     border-radius: 12px;
     padding: 30px;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     min-height: 140px;
 }
 
@@ -285,7 +305,7 @@ body {
 .stat-number {
     font-size: 3.5rem;
     font-weight: bold;
-    color: #4682B4;
+    color: #58a6ff;
     margin-bottom: 10px;
 }
 
@@ -295,7 +315,7 @@ body {
 }
 
 .server-info {
-    background: #f8f9fa;
+    background: #21262d;
     padding: 20px;
     border-radius: 10px;
     margin: 20px 0;
@@ -313,17 +333,17 @@ body {
     overflow-x: auto;
     margin: 20px 0;
     border-radius: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid #30363d;
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
+    background: #161b22;
 }
 
 .data-table th {
-    background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
+    background: linear-gradient(135deg, #1f6feb 0%, #238636 100%);
     color: white;
     padding: 12px;
     text-align: left;
@@ -334,13 +354,13 @@ body {
 
 .data-table td {
     padding: 12px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid #30363d;
     font-size: 0.85rem;
     vertical-align: middle;
 }
 
 .data-table tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: #21262d;
 }
 
 .data-table tbody tr:last-child td {
@@ -356,18 +376,18 @@ body {
 }
 
 .status-badge.success {
-    background: #d4edda;
-    color: #155724;
+    background: #1a2e1a;
+    color: #3fb950;
 }
 
 .status-badge.warning {
-    background: #fff3cd;
-    color: #856404;
+    background: #3d2e0f;
+    color: #d29922;
 }
 
 .status-badge.error {
-    background: #f8d7da;
-    color: #721c24;
+    background: #3d1f1f;
+    color: #f85149;
 }
 
 .loading-indicator {
@@ -403,8 +423,8 @@ body {
 }
 
 .config-section {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
+    background: #21262d;
+    border: 1px solid #30363d;
     border-radius: 10px;
     padding: 25px;
 }
@@ -422,7 +442,7 @@ body {
 }
 
 .doctor-item, .certificate-type-item {
-    background: white;
+    background: #161b22;
     border: 1px solid #dee2e6;
     border-radius: 8px;
     padding: 15px;
@@ -459,7 +479,7 @@ body {
 .specialty {
     display: block;
     font-size: 0.9rem;
-    color: #6c757d;
+    color: #8b949e;
     margin-top: 5px;
 }
 
@@ -474,7 +494,7 @@ body {
 .duration {
     display: block;
     font-size: 0.9rem;
-    color: #6c757d;
+    color: #8b949e;
     margin-top: 5px;
 }
 
@@ -499,11 +519,11 @@ body {
 }
 
 .medical-employee-card {
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: #161b22;
+    border: 1px solid #30363d;
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     cursor: pointer;
     transition: all 0.3s ease;
 }
@@ -521,7 +541,7 @@ body {
 }
 
 .employee-header h4 {
-    color: #2c3e50;
+    color: #e6edf3;
     margin: 0;
 }
 
@@ -534,7 +554,7 @@ body {
 .employee-info {
     margin-bottom: 15px;
     font-size: 14px;
-    color: #6c757d;
+    color: #8b949e;
 }
 
 .employee-info div {
@@ -585,9 +605,9 @@ body {
 }
 
 .alert-warning {
-    background-color: #fff3cd;
+    background-color: #3d2e0f;
     border-color: #ffc107;
-    color: #856404;
+    color: #d29922;
 }
 
 .alert-info {
@@ -597,9 +617,9 @@ body {
 }
 
 .alert-danger {
-    background-color: #f8d7da;
+    background-color: #3d1f1f;
     border-color: #dc3545;
-    color: #721c24;
+    color: #f85149;
 }
 
 /* Responsive Design */
@@ -620,12 +640,12 @@ body {
 
 /* Medical Dashboard Advanced Styles */
 .employee-medical-card-improved {
-    border: 2px solid #e9ecef;
+    border: 2px solid #30363d;
     padding: 25px;
     margin-bottom: 20px;
     border-radius: 12px;
-    background: white;
-    box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+    background: #161b22;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.3);
     cursor: default;
     transition: all 0.3s ease;
 }
@@ -656,22 +676,22 @@ body {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 2px solid #f8f9fa;
+    border-bottom: 2px solid #21262d;
 }
 
 .medical-visual-summary {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    background: linear-gradient(135deg, #21262d 0%, #ffffff 100%);
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 20px;
 }
 
 .metric-card {
-    background: white;
+    background: #161b22;
     padding: 15px;
     border-radius: 8px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
 }
 
@@ -681,5 +701,5 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     padding-top: 15px;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid #30363d;
 }

@@ -23,7 +23,7 @@
     margin: 0 auto !important;
     border-radius: 0 !important;
     box-shadow: 0 24px 80px rgba(0,0,0,0.5) !important;
-    background: #f8f9fa !important;
+    background: #21262d !important;
     border: 2px solid #2c3e50 !important;
     display: flex !important;
     flex-direction: column !important;
@@ -110,7 +110,7 @@
 }
 
 .company-tab-btn.active {
-    background: #f8f9fa !important;
+    background: #21262d !important;
     color: #2c3e50 !important;
     border-bottom-color: #3498db !important;
 }
@@ -127,7 +127,7 @@
 .company-tab-content {
     display: none !important;
     padding: 20px 28px !important;
-    background: #f8f9fa !important;
+    background: #21262d !important;
     flex: 1 !important;
     overflow-y: auto !important;
 }
@@ -147,8 +147,8 @@
    ======================================== */
 
 .form-section {
-    background: white !important;
-    border: 2px solid #dee2e6 !important;
+    background: #161b22 !important;
+    border: 2px solid #30363d !important;
     border-radius: 10px !important;
     padding: 16px !important;
     margin-bottom: 16px !important;
@@ -161,7 +161,7 @@
     gap: 8px !important;
     margin-bottom: 12px !important;
     padding-bottom: 10px !important;
-    border-bottom: 2px solid #e9ecef !important;
+    border-bottom: 2px solid #30363d !important;
 }
 
 .form-section-icon {
@@ -247,7 +247,7 @@
     padding: 10px 14px !important;
     border: 2px solid #ced4da !important;
     border-radius: 6px !important;
-    background: white !important;
+    background: #161b22 !important;
     transition: all 0.3s ease !important;
     width: 100% !important;
     font-weight: 500 !important;
@@ -277,8 +277,8 @@
 }
 
 .module-card-enterprise {
-    background: white !important;
-    border: 2px solid #e9ecef !important;
+    background: #161b22 !important;
+    border: 2px solid #30363d !important;
     border-radius: 10px !important;
     padding: 18px !important;
     transition: all 0.3s ease !important;
@@ -350,8 +350,8 @@
    ======================================== */
 
 .branches-table-container {
-    background: white !important;
-    border: 2px solid #dee2e6 !important;
+    background: #161b22 !important;
+    border: 2px solid #30363d !important;
     border-radius: 10px !important;
     overflow: hidden !important;
     margin-top: 20px !important;
@@ -383,7 +383,7 @@
 }
 
 .branches-table tr:hover {
-    background: #f8f9fa !important;
+    background: #21262d !important;
 }
 
 /* ========================================
@@ -451,7 +451,7 @@
     border: none !important;
     cursor: pointer !important;
     transition: all 0.3s ease !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
 }
 
 #companyModal.tabs-redesign .btn-primary {

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Conocimiento & Soporte - APONNT</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+        }
+        #dashboard-container {
+            min-height: 100vh;
+        }
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            gap: 20px;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #21262d;
+            border-top-color: #58a6ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            color: #8b949e;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="dashboard-container">
+        <div class="loading-screen">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Cargando Centro de Conocimiento...</div>
+        </div>
+    </div>
+
+    <script src="/js/modules/support-brain-dashboard.js"></script>
+    <script>
+        // Initialize dashboard when script loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await supportBrain.render('dashboard-container');
+                console.log('[SUPPORT-BRAIN] Dashboard renderizado exitosamente');
+            } catch (error) {
+                console.error('[SUPPORT-BRAIN] Error:', error);
+                document.getElementById('dashboard-container').innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 20px; color: #f85149;">
+                        <span style="font-size: 48px;">!</span>
+                        <h2>Error cargando dashboard</h2>
+                        <p>${error.message}</p>
+                        <button onclick="location.reload()" style="padding: 10px 20px; background: #58a6ff; border: none; border-radius: 8px; color: white; cursor: pointer;">
+                            Reintentar
+                        </button>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

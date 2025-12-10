@@ -36,10 +36,10 @@
   --status-migration: #f59e0b;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.3);
 }
 
 /* ============================================
@@ -51,7 +51,7 @@
   margin: 0 auto;
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #ffffff;
+  background: #161b22;
   min-height: 100vh !important;
   height: auto !important;
   display: block !important;
@@ -159,7 +159,7 @@
 
 .stat-bar-fill {
   height: 100%;
-  background: white;
+  background: #161b22;
   border-radius: 3px;
   transition: width 0.5s ease;
 }
@@ -174,7 +174,7 @@
    TOOLBAR
    ============================================ */
 .dashboard-toolbar {
-  background: white;
+  background: #161b22;
   border: 1px solid var(--engineering-border);
   border-radius: 10px;
   padding: 20px;
@@ -245,7 +245,7 @@
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
-  background: white;
+  background: #161b22;
 }
 
 .toolbar-actions {
@@ -258,7 +258,7 @@
   padding: 10px 20px;
   border: 1px solid var(--engineering-border);
   border-radius: 6px;
-  background: white;
+  background: #161b22;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.3s ease;
@@ -286,7 +286,7 @@
 .navigation-tabs {
   display: flex;
   gap: 10px;
-  background: white;
+  background: #161b22;
   border: 1px solid var(--engineering-border);
   border-radius: 10px;
   padding: 10px;
@@ -334,7 +334,7 @@
    CONTENT CONTAINER
    ============================================ */
 .dashboard-content {
-  background: white;
+  background: #161b22;
   border: 1px solid var(--engineering-border);
   border-radius: 10px;
   padding: 30px;
@@ -405,7 +405,7 @@
   align-items: center;
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 2px solid rgba(0,0,0,0.3);
 }
 
 .layer-header h3 {
@@ -443,7 +443,7 @@
 }
 
 .preview-card {
-  background: white;
+  background: #161b22;
   border: 1px solid var(--engineering-border);
   border-radius: 8px;
   padding: 12px;
@@ -505,7 +505,7 @@
 
 .timeline-content {
   flex: 1;
-  background: white;
+  background: #161b22;
   border: 1px solid var(--engineering-border);
   border-radius: 6px;
   padding: 10px;
@@ -525,7 +525,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
+  background: #161b22;
   border: 1px solid var(--engineering-border);
   border-radius: 6px;
   padding: 10px;
@@ -548,7 +548,7 @@
 }
 
 .dependency-graph-placeholder {
-  background: white;
+  background: #161b22;
   border: 2px dashed var(--engineering-border);
   border-radius: 10px;
   padding: 60px;
@@ -566,7 +566,7 @@
 }
 
 .application-card {
-  background: white;
+  background: #161b22;
   border: 2px solid var(--engineering-border);
   border-radius: 12px;
   padding: 20px;
@@ -746,7 +746,7 @@
 }
 
 .module-card {
-  background: white;
+  background: #161b22;
   border: 2px solid var(--engineering-border);
   border-radius: 12px;
   padding: 20px;
@@ -874,7 +874,7 @@
 }
 
 .gantt-phase {
-  background: white;
+  background: #161b22;
   border: 2px solid var(--engineering-border);
   border-radius: 10px;
   padding: 20px;
@@ -941,7 +941,7 @@
   background: var(--engineering-light);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .gantt-tasks {
@@ -1094,7 +1094,7 @@
 }
 
 .timeline-phase .timeline-content {
-  background: white;
+  background: #161b22;
   border: 1px solid var(--engineering-border);
   border-radius: 8px;
   padding: 15px;
@@ -1164,7 +1164,7 @@
 }
 
 .table-card {
-  background: white;
+  background: #161b22;
   border: 2px solid var(--engineering-border);
   border-radius: 10px;
   padding: 20px;
@@ -1258,7 +1258,7 @@
 }
 
 .workflow-card {
-  background: white;
+  background: #161b22;
   border: 2px solid var(--engineering-border);
   border-radius: 10px;
   padding: 20px;
