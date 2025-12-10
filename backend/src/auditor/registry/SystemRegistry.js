@@ -928,6 +928,189 @@ class SystemRegistry {
       }
     };
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // BIDIRECTIONAL FEEDBACK LOOP - Recibir datos de tests
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Registrar ejecución de test y sus descubrimientos
+   * Este es el método que IntelligentUXTester llama para reportar hallazgos
+   *
+   * @param {string} moduleKey - Clave del módulo testeado
+   * @param {number} companyId - ID de la empresa (null para descubrimientos globales)
+   * @param {object} testData - Resultados y descubrimientos del test
+   */
+  async recordTestExecution(moduleKey, companyId, testData) {
+    console.log(`📥 [REGISTRY] Recibiendo descubrimientos de ${moduleKey}...`);
+
+    try {
+      const { QueryTypes } = require('sequelize');
+      const { results, discoveries, timestamp } = testData;
+
+      // 1. PERSISTIR BOTONES DESCUBIERTOS
+      if (discoveries.buttons && discoveries.buttons.length > 0) {
+        for (const button of discoveries.buttons) {
+          await this.persistDiscovery(moduleKey, companyId, 'button', button, timestamp);
+        }
+        console.log(`   ✅ ${discoveries.buttons.length} botones guardados`);
+      }
+
+      // 2. PERSISTIR MODALES DESCUBIERTOS
+      if (discoveries.modals && discoveries.modals.length > 0) {
+        for (const modal of discoveries.modals) {
+          await this.persistDiscovery(moduleKey, companyId, 'modal', modal, timestamp);
+        }
+        console.log(`   ✅ ${discoveries.modals.length} modales guardados`);
+      }
+
+      // 3. PERSISTIR CAMPOS DESCUBIERTOS
+      if (discoveries.fields && discoveries.fields.length > 0) {
+        for (const field of discoveries.fields) {
+          await this.persistDiscovery(moduleKey, companyId, 'field', field, timestamp);
+        }
+        console.log(`   ✅ ${discoveries.fields.length} campos guardados`);
+      }
+
+      // 4. PERSISTIR FLUJOS CRUD TESTEADOS
+      if (discoveries.flows && discoveries.flows.length > 0) {
+        for (const flow of discoveries.flows) {
+          await this.persistDiscovery(moduleKey, companyId, 'flow', flow, timestamp);
+        }
+        console.log(`   ✅ ${discoveries.flows.length} flujos guardados`);
+      }
+
+      // 5. PROPAGAR AL BRAIN (si está conectado)
+      if (this.brainService && typeof this.brainService.recordTestResults === 'function') {
+        await this.brainService.recordTestResults(moduleKey, results, discoveries);
+        console.log(`   🧠 Datos propagados al Brain`);
+      } else {
+        console.log(`   ⚠️  Brain no tiene método recordTestResults() - propagación incompleta`);
+      }
+
+      console.log(`✅ [REGISTRY] Descubrimientos procesados correctamente`);
+
+    } catch (error) {
+      console.error(`❌ [REGISTRY] Error guardando descubrimientos:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Persistir un descubrimiento individual en ux_discoveries
+   * Incluye deduplicación inteligente
+   */
+  async persistDiscovery(moduleKey, companyId, discoveryType, discoveryData, timestamp) {
+    try {
+      const { QueryTypes } = require('sequelize');
+
+      // Preparar datos para guardar
+      const data = discoveryData.data;
+      const context = discoveryData.context;
+      const screenLocation = discoveryData.screenLocation;
+      const worksCorrectly = discoveryData.worksCorrectly;
+
+      // Buscar descubrimientos similares (deduplicación)
+      const similar = await this.database.sequelize.query(
+        `SELECT * FROM find_similar_discovery(:moduleKey, :discoveryType, :data, :companyId)`,
+        {
+          replacements: {
+            moduleKey,
+            discoveryType,
+            data: JSON.stringify(data),
+            companyId: companyId || null
+          },
+          type: QueryTypes.SELECT
+        }
+      );
+
+      if (similar && similar.length > 0 && similar[0].similarity_score >= 0.8) {
+        // Ya existe, incrementar validation_count
+        await this.database.sequelize.query(
+          `SELECT increment_discovery_validation(:discoveryId)`,
+          {
+            replacements: { discoveryId: similar[0].id },
+            type: QueryTypes.SELECT
+          }
+        );
+        console.log(`      🔄 Validación incrementada (${discoveryType})`);
+      } else {
+        // Nuevo descubrimiento, insertar
+        await this.database.sequelize.query(
+          `INSERT INTO ux_discoveries
+           (module_key, company_id, discovery_type, discovery_data, context, screen_location,
+            works_correctly, test_execution_id, created_at, updated_at)
+           VALUES (:moduleKey, :companyId, :discoveryType, :data, :context, :screenLocation,
+                   :worksCorrectly, :executionId, NOW(), NOW())`,
+          {
+            replacements: {
+              moduleKey,
+              companyId: companyId || null,
+              discoveryType,
+              data: JSON.stringify(data),
+              context: context || null,
+              screenLocation: screenLocation || null,
+              worksCorrectly: worksCorrectly !== undefined ? worksCorrectly : null,
+              executionId: timestamp || new Date().toISOString()
+            },
+            type: QueryTypes.INSERT
+          }
+        );
+        console.log(`      ✨ Nuevo descubrimiento guardado (${discoveryType})`);
+      }
+
+    } catch (error) {
+      console.error(`   ❌ Error persistiendo ${discoveryType}:`, error.message);
+      // No lanzar error, solo loggear (no queremos que un fallo de persistencia rompa el test)
+    }
+  }
+
+  /**
+   * Obtener descubrimientos validados de un módulo
+   * Útil para que futuros tests sepan qué ya se ha encontrado
+   */
+  async getValidatedDiscoveries(moduleKey, minValidationCount = 3) {
+    try {
+      const { QueryTypes } = require('sequelize');
+
+      const discoveries = await this.database.sequelize.query(
+        `SELECT * FROM get_validated_discoveries(:moduleKey, :minValidationCount)`,
+        {
+          replacements: { moduleKey, minValidationCount },
+          type: QueryTypes.SELECT
+        }
+      );
+
+      return discoveries;
+
+    } catch (error) {
+      console.error(`Error obteniendo descubrimientos validados:`, error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Obtener estadísticas UX de un módulo
+   */
+  async getModuleUXStats(moduleKey) {
+    try {
+      const { QueryTypes } = require('sequelize');
+
+      const stats = await this.database.sequelize.query(
+        `SELECT * FROM get_module_ux_stats(:moduleKey)`,
+        {
+          replacements: { moduleKey },
+          type: QueryTypes.SELECT
+        }
+      );
+
+      return stats[0] || null;
+
+    } catch (error) {
+      console.error(`Error obteniendo stats UX:`, error.message);
+      return null;
+    }
+  }
 }
 
 module.exports = SystemRegistry;

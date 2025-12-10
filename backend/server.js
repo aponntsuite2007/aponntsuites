@@ -2877,6 +2877,7 @@ app.use('/api/audit', auditorRoutes);
 // ✅ CONFIGURAR PHASE 4: AUTONOMOUS REPAIR + TECHNICAL REPORTS
 const auditorPhase4Routes = require('./src/routes/auditorPhase4Routes')(database);
 app.use('/api/audit/phase4', auditorPhase4Routes);
+app.use('/api/engineering-live', engineeringMetadataRoutes); // 🧠 Metadata 100% VIVA desde código introspectivo
 
 // ============================================================================
 // DEPLOY MANAGER - Sistema de Migración Segura a Render
@@ -3305,6 +3306,7 @@ const contactRoutes = require('./src/routes/contactRoutes');
 const budgetOnboardingRoutes = require("./src/routes/budgetOnboardingRoutes");
 const contractOnboardingRoutes = require("./src/routes/contractOnboardingRoutes");
 const commissionOnboardingRoutes = require("./src/routes/commissionOnboardingRoutes");
+const engineeringMetadataRoutes = require("./src/routes/engineeringMetadataRoutes"); // 🧠 Metadata 100% viva desde código introspectivo
 
 app.use('/api/billing/presupuestos', budgetOnboardingRoutes);
 console.log('💼 [BILLING] Presupuestos Onboarding: /api/billing/presupuestos/onboarding/*');

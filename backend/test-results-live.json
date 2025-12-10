@@ -1,0 +1,832 @@
+{
+  "timestamp": "2025-12-10T22:35:57.773Z",
+  "duration": "3.69 minutes",
+  "summary": {
+    "total": 161,
+    "tested": 1,
+    "passed": 0,
+    "failed": 161,
+    "skipped": 0,
+    "details": [
+      {
+        "module": "absence",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "accessControl",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "admin-migrations",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "admin",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "afip",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "ai-analysis-api",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "apk",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "aponntAuth",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "aponntDashboard",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "aponntStaffAuth",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "aponntStaff",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "assistant",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "associate",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "associateWorkflow",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "attendanceAdvancedStats",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "attendanceAnalytics",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "attendance",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "attendance_stats_advanced",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "auditorPhase4",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "auditor",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "auditReports",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "authorization",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "auth",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "autoRepair",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "billing",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "biometric-attendance-api",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "biometric-enterprise-",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "biometricConsent",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "brainAnalyzer",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "brainReactive",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "brain",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "brainTesting",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "branch",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "budgetOnboarding",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "budget",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "commissionOnboarding",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "commission",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "companyAccount",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "companyModule",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "companyPanel",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "companyPricing",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "company",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "companyTask",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "compliance",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "conceptDependencies",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "config",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "contactForm",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "contact",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "contextualHelp",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "contractOnboarding",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "contract",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "contracts",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "coordination",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "criticalPath",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "databaseSchema",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "databaseSync",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "debug-db",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "department",
+        "status": "FAILED",
+        "testsPassed": 0,
+        "testsFailed": 6,
+        "testsTotal": 7
+      },
+      {
+        "module": "deploymentSync",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "deploy",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "diagnostic",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "documentExpiration",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "document",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "email",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "emailVerification",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "emotionalAnalysis",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "employee360",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "employeeDocument",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "engineeringMetadata",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "engineering",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "enterprise-scalability-api",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "faceAuth",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "facialBiometric",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "holidayApi",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "hoursCube",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "hse",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "inbox",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "invoice",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "invoicing",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "jobPostings",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "kiosk-enterprise",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "kiosk-test-bypass",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "kiosk",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "kiosks",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "legal",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "location",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "medicalAdvanced",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "medicalAuthorizations",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "medicalCase",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "medicalDoctor",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "medicalRecords",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "medicalRoutes-basic",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "medical",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "medicalTemplates",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "message",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "military-security-api",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "mobile",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "modules",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "multipleART",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "notification",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "notificationsEnterprise",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "notificationUnified",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "offlineSync",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "onboarding",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "organizational",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "partnerCommission",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "partner",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "payroll",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "payrollTemplates",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "permissions",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "postgresql-partitioning",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "pricing",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "privacyRegulation",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "proactive",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "procedures",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "quotes",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "report",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "resourceCenter",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "riskIntelligence",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "salaryAdvanced",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "sanction",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "seedDemo",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "shift-calendar-",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "shift",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "sla",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "staffCommissions",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "supportEscalation",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "supportRoutesV2",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "taskIntelligence",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "technologyStack",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "tempRegisterOHModule",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "testing-realtime",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "trainingKnowledge",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "training",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "transportFleet",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "transport",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "transportTrips",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "trials",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "unifiedHelp",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "upload",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "user-calendar-",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userAdmin",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userAssignedTask",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userDocuments",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userDriverLicense",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userLegalIssue",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userMedicalExams",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userMedical",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userProfessionalLicense",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userProfile",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "user",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userSalaryConfig",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "usersSimple",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userUnionAffiliation",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "userWorkHistory",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "vacation",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "vendorAutomation",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "vendorCommissions",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "vendor",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "visibleTesting",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      },
+      {
+        "module": "visitor",
+        "status": "ERROR",
+        "error": "orchestrator.testModule is not a function"
+      }
+    ]
+  },
+  "metadata": {
+    "totalModules": 161,
+    "averageProgress": 62,
+    "totalLinesOfCode": 297167,
+    "totalEndpoints": 1803,
+    "totalTables": 217,
+    "modulesByComplexity": {
+      "simple": 7,
+      "moderate": 39,
+      "complex": 115
+    }
+  }
+}

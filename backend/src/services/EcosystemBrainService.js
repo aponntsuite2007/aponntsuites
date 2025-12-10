@@ -2227,6 +2227,656 @@ class EcosystemBrainService {
     this.cache.clear();
     console.log('🧹 [BRAIN] Cache limpiado');
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // BIDIRECTIONAL FEEDBACK LOOP - Aprender de tests
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Registrar resultados de tests y descubrimientos
+   * Este es el método que SystemRegistry llama para que Brain aprenda
+   *
+   * @param {string} moduleKey - Clave del módulo testeado
+   * @param {object} results - Resultados del test (passed, failed, etc.)
+   * @param {object} discoveries - Descubrimientos UX (botones, modales, campos, flujos)
+   */
+  async recordTestResults(moduleKey, results, discoveries) {
+    console.log(`🧠 [BRAIN] Recibiendo feedback de tests de ${moduleKey}...`);
+
+    try {
+      // Por ahora, el Brain solo logguea los descubrimientos
+      // En el futuro, podría:
+      // 1. Actualizar su conocimiento interno sobre el módulo
+      // 2. Ajustar progress scores basados en tests reales
+      // 3. Detectar patrones de UX comunes entre módulos
+      // 4. Generar recomendaciones de mejora automáticas
+
+      console.log(`   📊 Tests: ${results.passed} passed, ${results.failed} failed`);
+
+      if (discoveries.buttons && discoveries.buttons.length > 0) {
+        console.log(`   🔘 ${discoveries.buttons.length} botones descubiertos`);
+
+        // Brain podría aprender patrones de nombres de botones
+        const buttonPatterns = discoveries.buttons.map(b => ({
+          text: b.data.text,
+          type: b.context
+        }));
+        console.log(`      Patrones: ${buttonPatterns.map(p => p.text).join(', ')}`);
+      }
+
+      if (discoveries.modals && discoveries.modals.length > 0) {
+        console.log(`   🪟 ${discoveries.modals.length} modales descubiertos`);
+
+        // Brain podría aprender tipos de selectores de modales
+        const modalSelectors = discoveries.modals.map(m => m.data.selector);
+        console.log(`      Selectores: ${modalSelectors.join(', ')}`);
+      }
+
+      if (discoveries.fields && discoveries.fields.length > 0) {
+        console.log(`   📝 ${discoveries.fields.length} campos descubiertos`);
+
+        // Brain podría aprender estructura de formularios
+        const fieldTypes = discoveries.fields.reduce((acc, f) => {
+          acc[f.data.type] = (acc[f.data.type] || 0) + 1;
+          return acc;
+        }, {});
+        console.log(`      Tipos: ${JSON.stringify(fieldTypes)}`);
+      }
+
+      if (discoveries.flows && discoveries.flows.length > 0) {
+        console.log(`   🔄 ${discoveries.flows.length} flujos testeados`);
+
+        // Brain podría actualizar su conocimiento de CRUD completeness
+        const flowsWorking = discoveries.flows.filter(f => f.worksCorrectly);
+        console.log(`      Funcionando: ${flowsWorking.length}/${discoveries.flows.length}`);
+      }
+
+      // Invalidar cache del módulo para forzar re-scan en próximo uso
+      const cacheKey = `module_${moduleKey}`;
+      if (this.cache.has(cacheKey)) {
+        this.cache.delete(cacheKey);
+        console.log(`   🔄 Cache de ${moduleKey} invalidado - forzará re-scan`);
+      }
+
+      console.log(`✅ [BRAIN] Feedback procesado correctamente`);
+
+    } catch (error) {
+      console.error(`❌ [BRAIN] Error procesando feedback:`, error.message);
+      // No lanzar error, solo loggear (no queremos que un fallo aquí rompa el flujo)
+    }
+  }
+
+  /**
+   * Obtener descubrimientos históricos de un módulo
+   * Consulta ux_discoveries para conocimiento acumulado
+   */
+  async getHistoricalDiscoveries(moduleKey) {
+    try {
+      if (!this.db || !this.db.sequelize) {
+        console.warn('⚠️  [BRAIN] Database no disponible para consultar discoveries');
+        return null;
+      }
+
+      const { QueryTypes } = require('sequelize');
+
+      // Consultar descubrimientos validados (vistos 3+ veces)
+      const discoveries = await this.db.sequelize.query(
+        `SELECT discovery_type, discovery_data, context, validation_count, works_correctly, last_seen_at
+         FROM ux_discoveries
+         WHERE module_key = :moduleKey
+           AND validation_status = 'validated'
+           AND validation_count >= 3
+         ORDER BY validation_count DESC, last_seen_at DESC`,
+        {
+          replacements: { moduleKey },
+          type: QueryTypes.SELECT
+        }
+      );
+
+      // Organizar por tipo
+      const organized = {
+        buttons: [],
+        modals: [],
+        fields: [],
+        flows: [],
+        lastUpdated: null,
+        totalDiscoveries: discoveries.length
+      };
+
+      discoveries.forEach(d => {
+        const parsed = {
+          ...d.discovery_data,
+          context: d.context,
+          validationCount: d.validation_count,
+          worksCorrectly: d.works_correctly,
+          lastSeen: d.last_seen_at
+        };
+
+        if (d.discovery_type === 'button') organized.buttons.push(parsed);
+        else if (d.discovery_type === 'modal') organized.modals.push(parsed);
+        else if (d.discovery_type === 'field') organized.fields.push(parsed);
+        else if (d.discovery_type === 'flow') organized.flows.push(parsed);
+
+        // Track most recent update
+        if (!organized.lastUpdated || d.last_seen_at > organized.lastUpdated) {
+          organized.lastUpdated = d.last_seen_at;
+        }
+      });
+
+      console.log(`📚 [BRAIN] Conocimiento histórico de ${moduleKey}:`, {
+        buttons: organized.buttons.length,
+        modals: organized.modals.length,
+        fields: organized.fields.length,
+        flows: organized.flows.length,
+        lastUpdated: organized.lastUpdated
+      });
+
+      return organized;
+
+    } catch (error) {
+      console.error(`Error obteniendo descubrimientos históricos:`, error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Obtener resultados de tests más recientes de un módulo
+   * Útil para ajustar progress scores con data real
+   */
+  async getLatestTestResults(moduleKey) {
+    try {
+      if (!this.db || !this.db.sequelize) return null;
+
+      const { QueryTypes } = require('sequelize');
+
+      // Consultar flows testeados (CRUD completeness real)
+      const flows = await this.db.sequelize.query(
+        `SELECT discovery_data->>'flowType' as flow_type,
+                works_correctly,
+                validation_count,
+                last_seen_at
+         FROM ux_discoveries
+         WHERE module_key = :moduleKey
+           AND discovery_type = 'flow'
+           AND validation_count >= 2
+         ORDER BY last_seen_at DESC
+         LIMIT 10`,
+        {
+          replacements: { moduleKey },
+          type: QueryTypes.SELECT
+        }
+      );
+
+      // Organizar por tipo de flow
+      const results = {
+        crud: {
+          create: { tested: false, passed: false },
+          read: { tested: false, passed: false },
+          update: { tested: false, passed: false },
+          delete: { tested: false, passed: false }
+        },
+        lastTested: null,
+        testCount: 0
+      };
+
+      flows.forEach(f => {
+        const flowType = f.flow_type;
+        if (results.crud[flowType]) {
+          results.crud[flowType].tested = true;
+          results.crud[flowType].passed = f.works_correctly;
+          results.testCount++;
+
+          if (!results.lastTested || f.last_seen_at > results.lastTested) {
+            results.lastTested = f.last_seen_at;
+          }
+        }
+      });
+
+      return results;
+
+    } catch (error) {
+      console.error(`Error obteniendo test results:`, error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Calcular progress score REAL basado en código + tests
+   * Combina análisis estático con resultados de tests reales
+   */
+  async calculateRealProgress(module) {
+    try {
+      // 1. Score base del código (análisis estático)
+      let score = this.calculateModuleProgress(module);  // Método existente
+
+      // 2. Ajustar con resultados de tests reales
+      const testResults = await this.getLatestTestResults(module.key);
+      if (testResults && testResults.testCount > 0) {
+        console.log(`📊 [BRAIN] Ajustando score de ${module.key} con ${testResults.testCount} tests reales`);
+
+        // Bonificación por flows que funcionan
+        if (testResults.crud.create.tested && testResults.crud.create.passed) score += 5;
+        if (testResults.crud.read.tested && testResults.crud.read.passed) score += 5;
+        if (testResults.crud.update.tested && testResults.crud.update.passed) score += 5;
+        if (testResults.crud.delete.tested && testResults.crud.delete.passed) score += 5;
+
+        // Penalización por flows que fallan
+        if (testResults.crud.create.tested && !testResults.crud.create.passed) score -= 10;
+        if (testResults.crud.update.tested && !testResults.crud.update.passed) score -= 10;
+        if (testResults.crud.delete.tested && !testResults.crud.delete.passed) score -= 10;
+      }
+
+      return Math.min(100, Math.max(0, score));
+
+    } catch (error) {
+      console.error(`Error calculando real progress:`, error.message);
+      return this.calculateModuleProgress(module);  // Fallback al método original
+    }
+  }
+
+  /**
+   * ============================================================================
+   * LIVE METADATA GENERATION - 100% Introspectivo, 0% Hardcoded
+   * ============================================================================
+   */
+
+  /**
+   * Detectar dependencies desde código real (requires/imports)
+   * @param {string} filePath - Ruta al archivo
+   * @returns {object} - { required: [], optional: [], providesTo: [] }
+   */
+  async detectDependenciesFromCode(filePath) {
+    try {
+      const content = await fs.readFile(filePath, 'utf8');
+      const dependencies = { required: [], optional: [], providesTo: [] };
+
+      // Detectar requires/imports
+      const requireRegex = /require\(['"]([^'"]+)['"]\)/g;
+      const importRegex = /import\s+.*?from\s+['"]([^'"]+)['"]/g;
+
+      let match;
+      while ((match = requireRegex.exec(content)) !== null) {
+        const dep = match[1];
+        // Solo módulos internos (./...), ignorar node_modules
+        if (dep.startsWith('./') || dep.startsWith('../')) {
+          const moduleName = path.basename(dep, path.extname(dep));
+          if (!dependencies.required.includes(moduleName)) {
+            dependencies.required.push(moduleName);
+          }
+        }
+      }
+
+      while ((match = importRegex.exec(content)) !== null) {
+        const dep = match[1];
+        if (dep.startsWith('./') || dep.startsWith('../')) {
+          const moduleName = path.basename(dep, path.extname(dep));
+          if (!dependencies.required.includes(moduleName)) {
+            dependencies.required.push(moduleName);
+          }
+        }
+      }
+
+      // Detectar optional dependencies (try/catch requires)
+      const tryRequireRegex = /try\s*{[^}]*require\(['"]([^'"]+)['"]\)/g;
+      while ((match = tryRequireRegex.exec(content)) !== null) {
+        const dep = match[1];
+        if ((dep.startsWith('./') || dep.startsWith('../'))) {
+          const moduleName = path.basename(dep, path.extname(dep));
+          if (!dependencies.optional.includes(moduleName)) {
+            dependencies.optional.push(moduleName);
+          }
+        }
+      }
+
+      return dependencies;
+    } catch (error) {
+      console.error(`Error detectando dependencies en ${filePath}:`, error.message);
+      return { required: [], optional: [], providesTo: [] };
+    }
+  }
+
+  /**
+   * Detectar API endpoints desde archivos de routes
+   * @param {string} moduleName - Nombre del módulo
+   * @returns {array} - Lista de endpoints
+   */
+  async detectAPIEndpoints(moduleName) {
+    const endpoints = [];
+
+    try {
+      // Buscar archivo de rutas del módulo
+      const routesDir = path.join(this.baseDir, 'src', 'routes');
+      const possibleFiles = [
+        `${moduleName}Routes.js`,
+        `${moduleName}-routes.js`,
+        `${moduleName}.js`
+      ];
+
+      for (const file of possibleFiles) {
+        const routePath = path.join(routesDir, file);
+        if (fsSync.existsSync(routePath)) {
+          const content = await fs.readFile(routePath, 'utf8');
+
+          // Detectar rutas: router.get/post/put/delete/patch('path', ...)
+          const routeRegex = /router\.(get|post|put|delete|patch)\s*\(\s*['"]([^'"]+)['"]/g;
+          let match;
+
+          while ((match = routeRegex.exec(content)) !== null) {
+            const method = match[1].toUpperCase();
+            const route = match[2];
+
+            endpoints.push({
+              method,
+              path: `/api/${moduleName}${route}`,
+              file: path.basename(routePath)
+            });
+          }
+
+          break;  // Encontrado archivo de rutas
+        }
+      }
+
+      return endpoints;
+    } catch (error) {
+      console.error(`Error detectando endpoints para ${moduleName}:`, error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Detectar tablas de BD desde modelos Sequelize
+   * @param {string} moduleName - Nombre del módulo
+   * @returns {array} - Lista de tablas
+   */
+  async detectDatabaseTables(moduleName) {
+    const tables = [];
+
+    try {
+      const modelsDir = path.join(this.baseDir, 'src', 'models');
+
+      // Buscar archivos de modelo relacionados
+      const files = this.scanDirectory(modelsDir, '.js', false);
+
+      for (const file of files) {
+        const fileName = path.basename(file, '.js');
+        const lowerFileName = fileName.toLowerCase();
+        const lowerModuleName = moduleName.toLowerCase();
+
+        // Verificar si el archivo de modelo pertenece a este módulo
+        if (lowerFileName.includes(lowerModuleName) ||
+            lowerModuleName.includes(lowerFileName.replace(/model$/i, ''))) {
+
+          const content = await fs.readFile(file, 'utf8');
+
+          // Detectar tableName: 'nombre' o tableName: "nombre"
+          const tableNameRegex = /tableName:\s*['"]([^'"]+)['"]/;
+          const match = content.match(tableNameRegex);
+
+          if (match) {
+            tables.push({
+              table: match[1],
+              model: fileName,
+              file: path.basename(file)
+            });
+          } else {
+            // Si no hay tableName explícito, usar nombre del modelo en plural
+            const inferredTable = fileName.toLowerCase().replace(/model$/i, '') + 's';
+            tables.push({
+              table: inferredTable,
+              model: fileName,
+              file: path.basename(file),
+              inferred: true
+            });
+          }
+        }
+      }
+
+      return tables;
+    } catch (error) {
+      console.error(`Error detectando tablas para ${moduleName}:`, error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Generar metadata VIVA para un módulo específico
+   * Escanea código real, tests UX, BD - NADA hardcodeado
+   * @param {string} moduleName - Nombre del módulo
+   * @returns {object} - Metadata completa generada en vivo
+   */
+  async generateLiveModuleMetadata(moduleName) {
+    console.log(`\n🔍 [BRAIN] Generando metadata VIVA para "${moduleName}"...`);
+
+    try {
+      const metadata = {
+        name: moduleName,
+        generatedAt: new Date().toISOString(),
+        source: 'live-introspection',
+
+        // Auto-detectar archivos backend
+        files: {
+          backend: [],
+          frontend: []
+        },
+
+        // Auto-detectar dependencies
+        dependencies: {
+          required: [],
+          optional: [],
+          integrates_with: [],
+          provides_to: []
+        },
+
+        // Auto-detectar API endpoints
+        apiEndpoints: [],
+
+        // Auto-detectar tablas BD
+        databaseTables: [],
+
+        // Progress desde tests UX reales
+        progress: 0,
+        uxTestResults: null,
+
+        // Metadata de código
+        linesOfCode: 0,
+        lastModified: null,
+        complexity: 'unknown'
+      };
+
+      // 1. ESCANEAR ARCHIVOS BACKEND
+      const backendFiles = this.scanDirectory(path.join(this.baseDir, 'src'), '.js');
+      metadata.files.backend = backendFiles
+        .filter(f => {
+          const fileName = path.basename(f).toLowerCase();
+          return fileName.includes(moduleName.toLowerCase());
+        })
+        .map(f => path.relative(this.baseDir, f));
+
+      // 2. ESCANEAR ARCHIVOS FRONTEND
+      const frontendFiles = this.scanDirectory(path.join(this.baseDir, '../public/js/modules'), '.js', false);
+      metadata.files.frontend = frontendFiles
+        .filter(f => {
+          const fileName = path.basename(f).toLowerCase();
+          return fileName.includes(moduleName.toLowerCase());
+        })
+        .map(f => path.relative(path.join(this.baseDir, '..'), f));
+
+      // 3. DETECTAR DEPENDENCIES DESDE CÓDIGO
+      if (metadata.files.backend.length > 0) {
+        const mainFile = path.join(this.baseDir, metadata.files.backend[0]);
+        const deps = await this.detectDependenciesFromCode(mainFile);
+        metadata.dependencies.required = deps.required;
+        metadata.dependencies.optional = deps.optional;
+      }
+
+      // 4. DETECTAR API ENDPOINTS
+      metadata.apiEndpoints = await this.detectAPIEndpoints(moduleName);
+
+      // 5. DETECTAR TABLAS BD
+      metadata.databaseTables = await this.detectDatabaseTables(moduleName);
+
+      // 6. PROGRESS DESDE UX DISCOVERIES (tests reales)
+      const uxResults = await this.getLatestTestResults(moduleName);
+      if (uxResults && uxResults.testCount > 0) {
+        metadata.uxTestResults = uxResults;
+
+        // Calcular progress basado en CRUD completeness real
+        let crudScore = 0;
+        const crud = uxResults.crud;
+        if (crud.create.tested && crud.create.passed) crudScore += 25;
+        if (crud.read.tested && crud.read.passed) crudScore += 25;
+        if (crud.update.tested && crud.update.passed) crudScore += 25;
+        if (crud.delete.tested && crud.delete.passed) crudScore += 25;
+
+        metadata.progress = crudScore;
+      } else {
+        // Fallback: análisis estático de archivos
+        const hasBackend = metadata.files.backend.length > 0;
+        const hasFrontend = metadata.files.frontend.length > 0;
+        const hasAPI = metadata.apiEndpoints.length > 0;
+        const hasDB = metadata.databaseTables.length > 0;
+
+        let staticProgress = 0;
+        if (hasBackend) staticProgress += 25;
+        if (hasFrontend) staticProgress += 25;
+        if (hasAPI) staticProgress += 25;
+        if (hasDB) staticProgress += 25;
+
+        metadata.progress = staticProgress;
+      }
+
+      // 7. LINES OF CODE (sumar todos los archivos)
+      let totalLines = 0;
+      let latestMod = null;
+
+      for (const file of metadata.files.backend) {
+        const filePath = path.join(this.baseDir, file);
+        try {
+          const content = await fs.readFile(filePath, 'utf8');
+          totalLines += content.split('\n').length;
+
+          const stats = await fs.stat(filePath);
+          if (!latestMod || stats.mtime > latestMod) {
+            latestMod = stats.mtime;
+          }
+        } catch (err) {
+          // Ignorar archivos que no se puedan leer
+        }
+      }
+
+      metadata.linesOfCode = totalLines;
+      metadata.lastModified = latestMod ? latestMod.toISOString() : null;
+
+      // 8. COMPLEJIDAD (basada en LOC y dependencies)
+      if (totalLines < 200 && metadata.dependencies.required.length < 3) {
+        metadata.complexity = 'simple';
+      } else if (totalLines < 500 && metadata.dependencies.required.length < 7) {
+        metadata.complexity = 'moderate';
+      } else {
+        metadata.complexity = 'complex';
+      }
+
+      console.log(`✅ [BRAIN] Metadata viva generada: ${metadata.progress}% complete, ${totalLines} LOC`);
+
+      return metadata;
+
+    } catch (error) {
+      console.error(`❌ [BRAIN] Error generando metadata para ${moduleName}:`, error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Generar TODA la metadata de ingeniería en vivo
+   * Escanea TODOS los módulos del sistema
+   * @returns {object} - Engineering metadata completa 100% viva
+   */
+  async generateFullEngineeringMetadata() {
+    console.log('\n╔══════════════════════════════════════════════════════╗');
+    console.log('║  GENERANDO ENGINEERING METADATA 100% VIVA            ║');
+    console.log('╚══════════════════════════════════════════════════════╝\n');
+
+    const fullMetadata = {
+      generatedAt: new Date().toISOString(),
+      source: 'live-introspection',
+      generator: 'EcosystemBrainService',
+      version: '2.0.0-live',
+      modules: {}
+    };
+
+    try {
+      // Auto-detectar módulos desde archivos routes
+      const routesDir = path.join(this.baseDir, 'src', 'routes');
+      const routeFiles = this.scanDirectory(routesDir, '.js', false);
+
+      const moduleNames = new Set();
+
+      for (const routeFile of routeFiles) {
+        let moduleName = path.basename(routeFile, '.js');
+
+        // Limpiar nombres: usersRoutes → users, user-routes → user
+        moduleName = moduleName
+          .replace(/Routes?$/i, '')
+          .replace(/-routes?$/i, '');
+
+        if (moduleName && moduleName !== 'index') {
+          moduleNames.add(moduleName);
+        }
+      }
+
+      console.log(`📋 [BRAIN] ${moduleNames.size} módulos detectados automáticamente\n`);
+
+      // Generar metadata para cada módulo
+      let count = 0;
+      for (const moduleName of Array.from(moduleNames)) {
+        count++;
+        console.log(`[${count}/${moduleNames.size}] Procesando ${moduleName}...`);
+
+        const moduleMetadata = await this.generateLiveModuleMetadata(moduleName);
+        if (moduleMetadata) {
+          fullMetadata.modules[moduleName] = moduleMetadata;
+        }
+      }
+
+      // Calcular estadísticas globales
+      const stats = {
+        totalModules: Object.keys(fullMetadata.modules).length,
+        averageProgress: 0,
+        totalLinesOfCode: 0,
+        totalEndpoints: 0,
+        totalTables: 0,
+        modulesByComplexity: { simple: 0, moderate: 0, complex: 0 }
+      };
+
+      for (const [name, mod] of Object.entries(fullMetadata.modules)) {
+        stats.averageProgress += mod.progress;
+        stats.totalLinesOfCode += mod.linesOfCode;
+        stats.totalEndpoints += mod.apiEndpoints.length;
+        stats.totalTables += mod.databaseTables.length;
+        stats.modulesByComplexity[mod.complexity]++;
+      }
+
+      stats.averageProgress = Math.round(stats.averageProgress / stats.totalModules);
+
+      fullMetadata.stats = stats;
+
+      console.log('\n╔══════════════════════════════════════════════════════╗');
+      console.log('║  METADATA VIVA GENERADA CON ÉXITO                    ║');
+      console.log('╠══════════════════════════════════════════════════════╣');
+      console.log(`║  Módulos: ${stats.totalModules}`);
+      console.log(`║  Progress promedio: ${stats.averageProgress}%`);
+      console.log(`║  Total LOC: ${stats.totalLinesOfCode.toLocaleString()}`);
+      console.log(`║  Total endpoints: ${stats.totalEndpoints}`);
+      console.log(`║  Total tablas: ${stats.totalTables}`);
+      console.log('╚══════════════════════════════════════════════════════╝\n');
+
+      return fullMetadata;
+
+    } catch (error) {
+      console.error('❌ [BRAIN] Error generando full metadata:', error.message);
+      throw error;
+    }
+  }
 }
 
 module.exports = EcosystemBrainService;
