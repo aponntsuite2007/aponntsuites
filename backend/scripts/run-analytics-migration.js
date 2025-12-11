@@ -1,95 +1,79 @@
 /**
- * Script para ejecutar migración del sistema Analytics
- * Usa pg directamente (no requiere psql instalado)
+ * Script para ejecutar migración de Process Chain Analytics
  */
 
-const fs = require('fs');
+const { execSync } = require('child_process');
 const path = require('path');
-const { Client } = require('pg');
+const fs = require('fs');
 
-async function runMigration() {
-    console.log('📊 ATTENDANCE ANALYTICS SYSTEM - Migración');
-    console.log('===========================================\n');
+const database = require('../src/config/database');
 
-    // Configuración PostgreSQL
-    const client = new Client({
-        user: process.env.POSTGRES_USER || 'postgres',
-        password: process.env.POSTGRES_PASSWORD || 'Aedr15150302',
-        host: process.env.POSTGRES_HOST || 'localhost',
-        port: process.env.POSTGRES_PORT || 5432,
-        database: process.env.POSTGRES_DB || 'attendance_system'
-    });
+console.log('╔════════════════════════════════════════════════════════════╗');
+console.log('║  MIGRACIÓN - Process Chain Analytics                      ║');
+console.log('╚════════════════════════════════════════════════════════════╝\n');
 
+(async () => {
     try {
-        // Conectar
-        console.log('🔌 Conectando a PostgreSQL...');
-        await client.connect();
-        console.log('✅ Conectado\n');
+        const sequelize = database.sequelize;
 
-        // Leer migración
-        const migrationPath = path.join(__dirname, '..', 'migrations', '20251121_create_attendance_analytics_system.sql');
-        console.log(`📄 Leyendo migración: ${path.basename(migrationPath)}`);
+        // Path a la migración
+        const migrationPath = path.join(__dirname, '../migrations/20251211_create_process_chain_analytics.sql');
 
-        const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
-        console.log(`📏 Tamaño: ${(migrationSQL.length / 1024).toFixed(2)} KB\n`);
-
-        // Ejecutar migración
-        console.log('⏳ Ejecutando migración (puede tomar 10-30 segundos)...\n');
-
-        const startTime = Date.now();
-        const result = await client.query(migrationSQL);
-        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-
-        console.log(`✅ Migración ejecutada en ${duration} segundos\n`);
-
-        // Verificar tablas creadas
-        console.log('🔍 Verificando objetos creados...\n');
-
-        const verifyQuery = `
-            SELECT
-                (SELECT COUNT(*) FROM information_schema.tables
-                 WHERE table_schema = 'public' AND table_name IN (
-                     'attendance_profiles', 'attendance_patterns',
-                     'attendance_analytics_cache', 'comparative_analytics',
-                     'scoring_history'
-                 )) as tables_count,
-                (SELECT COUNT(*) FROM pg_matviews
-                 WHERE schemaname = 'public' AND matviewname = 'attendance_rankings') as views_count,
-                (SELECT COUNT(*) FROM pg_proc
-                 WHERE proname IN ('refresh_attendance_profiles', 'refresh_all_profiles_batch',
-                                   'detect_tolerance_abuser_pattern')) as functions_count
-        `;
-
-        const verification = await client.query(verifyQuery);
-        const { tables_count, views_count, functions_count } = verification.rows[0];
-
-        console.log(`📊 Tablas creadas: ${tables_count} / 5`);
-        console.log(`📈 Materialized views: ${views_count} / 1`);
-        console.log(`⚙️  Stored procedures: ${functions_count} / 3\n`);
-
-        if (tables_count == 5 && views_count == 1 && functions_count == 3) {
-            console.log('✅✅✅ MIGRACIÓN COMPLETADA EXITOSAMENTE ✅✅✅');
-            console.log('\n🎯 Sistema Analytics listo para usar');
-            console.log('📝 Próximo paso: Crear modelos Sequelize\n');
-            process.exit(0);
-        } else {
-            console.error('⚠️ ADVERTENCIA: Algunos objetos no se crearon');
-            console.error('Revisar logs de PostgreSQL para detalles');
+        if (!fs.existsSync(migrationPath)) {
+            console.error(\`❌ ERROR: No se encontró el archivo de migración en \${migrationPath}\`);
             process.exit(1);
         }
 
-    } catch (error) {
-        console.error('\n❌ ERROR EJECUTANDO MIGRACIÓN:');
-        console.error('Mensaje:', error.message);
-        console.error('\nStack:', error.stack);
-        process.exit(1);
-    } finally {
-        await client.end();
-    }
-}
+        console.log('📄 Archivo de migración encontrado:', migrationPath);
+        console.log('📊 Leyendo SQL...\n');
 
-// Ejecutar
-runMigration().catch(err => {
-    console.error('Error fatal:', err);
-    process.exit(1);
-});
+        const sql = fs.readFileSync(migrationPath, 'utf8');
+
+        console.log('🔧 Ejecutando migración...\n');
+
+        await sequelize.query(sql);
+
+        console.log('✅ Migración ejecutada exitosamente!\n');
+
+        // Verificar que la tabla fue creada
+        const [tables] = await sequelize.query(\`
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+            AND table_name = 'process_chain_analytics'
+        \`);
+
+        if (tables.length > 0) {
+            console.log('✅ Tabla process_chain_analytics creada correctamente\n');
+
+            // Verificar funciones PostgreSQL
+            const [functions] = await sequelize.query(\`
+                SELECT proname
+                FROM pg_proc
+                WHERE proname IN (
+                    'get_top_requested_actions',
+                    'get_module_usage_stats',
+                    'get_time_trends',
+                    'identify_bottlenecks'
+                )
+            \`);
+
+            console.log(\`✅ \${functions.length}/4 funciones PostgreSQL creadas:\n\`);
+            functions.forEach(f => {
+                console.log(\`   - \${f.proname}()\`);
+            });
+        } else {
+            console.error('❌ ERROR: La tabla no fue creada');
+            process.exit(1);
+        }
+
+        console.log('\n🎉 MIGRACIÓN COMPLETADA - Sistema de Analytics listo\n');
+
+        process.exit(0);
+
+    } catch (error) {
+        console.error('\n❌ ERROR ejecutando migración:', error.message);
+        console.error(error.stack);
+        process.exit(1);
+    }
+})();

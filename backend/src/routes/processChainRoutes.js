@@ -22,10 +22,12 @@ const { authenticateToken } = require('../middleware/auth');
 const { database } = require('../config/database');
 const ProcessChainGenerator = require('../services/ProcessChainGenerator');
 const ContextValidatorService = require('../services/ContextValidatorService');
+const ProcessChainAnalyticsService = require('../services/ProcessChainAnalyticsService');
 
 // Inicializar servicios (brainService se inyecta dinámicamente)
 let processChainGenerator = null;
 let contextValidator = null;
+let analyticsService = null;
 
 /**
  * Inyectar dependencias (llamado desde server.js)
@@ -33,7 +35,8 @@ let contextValidator = null;
 function initializeServices(sequelize, brainService = null) {
   processChainGenerator = new ProcessChainGenerator(sequelize, brainService);
   contextValidator = new ContextValidatorService(sequelize, brainService);
-  console.log('🔗 [PROCESS CHAIN ROUTES] Servicios inicializados');
+  analyticsService = new ProcessChainAnalyticsService(sequelize);
+  console.log('🔗 [PROCESS CHAIN ROUTES] Servicios inicializados (incluye Analytics)');
 }
 
 /**
@@ -280,6 +283,416 @@ router.get('/actions', authenticateToken, async (req, res) => {
 });
 
 /**
+ * ========================================================================
+ * ANALYTICS ENDPOINTS - Tracking y métricas de process chains
+ * ========================================================================
+ */
+
+/**
+ * POST /api/process-chains/analytics/track
+ * Track generation de un process chain (llamado automáticamente por /generate)
+ */
+router.post('/analytics/track', authenticateToken, async (req, res) => {
+  try {
+    const {
+      companyId,
+      userId,
+      actionKey,
+      actionName,
+      moduleName,
+      processChain,
+      userAgent,
+      ipAddress,
+      referrerModule
+    } = req.body;
+
+    if (!analyticsService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Analytics service no disponible'
+      });
+    }
+
+    const record = await analyticsService.trackGeneration({
+      companyId,
+      userId,
+      actionKey,
+      actionName,
+      moduleName,
+      processChain,
+      userAgent,
+      ipAddress,
+      referrerModule
+    });
+
+    res.json({
+      success: true,
+      analyticsId: record.id,
+      message: 'Analytics tracked successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error en /analytics/track:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * PATCH /api/process-chains/analytics/:id/start
+ * Track cuando usuario EMPIEZA un process chain
+ */
+router.patch('/analytics/:id/start', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!analyticsService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Analytics service no disponible'
+      });
+    }
+
+    await analyticsService.trackStart(parseInt(id));
+
+    res.json({
+      success: true,
+      message: 'Start tracked successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error en /analytics/start:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * PATCH /api/process-chains/analytics/:id/complete
+ * Track cuando usuario COMPLETA un process chain
+ */
+router.patch('/analytics/:id/complete', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!analyticsService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Analytics service no disponible'
+      });
+    }
+
+    await analyticsService.trackCompletion(parseInt(id));
+
+    res.json({
+      success: true,
+      message: 'Completion tracked successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error en /analytics/complete:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * PATCH /api/process-chains/analytics/:id/abandon
+ * Track cuando usuario ABANDONA un process chain
+ */
+router.patch('/analytics/:id/abandon', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!analyticsService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Analytics service no disponible'
+      });
+    }
+
+    await analyticsService.trackAbandonment(parseInt(id));
+
+    res.json({
+      success: true,
+      message: 'Abandonment tracked successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error en /analytics/abandon:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/process-chains/analytics/:id/feedback
+ * Submit user feedback (rating + comment)
+ */
+router.post('/analytics/:id/feedback', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating, comment } = req.body;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Rating debe ser entre 1 y 5'
+      });
+    }
+
+    if (!analyticsService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Analytics service no disponible'
+      });
+    }
+
+    await analyticsService.submitFeedback(parseInt(id), rating, comment);
+
+    res.json({
+      success: true,
+      message: 'Feedback submitted successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error en /analytics/feedback:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/process-chains/analytics/dashboard
+ * Obtiene TODA la data del dashboard de analytics
+ * Query params: days (default: 30)
+ */
+router.get('/analytics/dashboard', authenticateToken, async (req, res) => {
+  try {
+    const companyId = parseInt(req.query.companyId);
+    const days = parseInt(req.query.days) || 30;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'companyId es requerido'
+      });
+    }
+
+    if (!analyticsService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Analytics service no disponible'
+      });
+    }
+
+    const dashboardData = await analyticsService.getDashboardData(companyId, { days });
+
+    res.json({
+      success: true,
+      data: dashboardData
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error en /analytics/dashboard:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/process-chains/analytics/top-actions
+ * Top N acciones más solicitadas
+ * Query params: companyId, limit (default: 10), days (default: 30)
+ */
+router.get('/analytics/top-actions', authenticateToken, async (req, res) => {
+  try {
+    const companyId = parseInt(req.query.companyId);
+    const limit = parseInt(req.query.limit) || 10;
+    const days = parseInt(req.query.days) || 30;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'companyId es requerido'
+      });
+    }
+
+    if (!analyticsService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Analytics service no disponible'
+      });
+    }
+
+    const topActions = await analyticsService.getTopRequestedActions(companyId, { limit, days });
+
+    res.json({
+      success: true,
+      data: topActions,
+      metadata: {
+        companyId,
+        limit,
+        days
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error en /analytics/top-actions:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/process-chains/analytics/module-stats
+ * Estadísticas por módulo
+ * Query params: companyId, days (default: 30)
+ */
+router.get('/analytics/module-stats', authenticateToken, async (req, res) => {
+  try {
+    const companyId = parseInt(req.query.companyId);
+    const days = parseInt(req.query.days) || 30;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'companyId es requerido'
+      });
+    }
+
+    if (!analyticsService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Analytics service no disponible'
+      });
+    }
+
+    const moduleStats = await analyticsService.getModuleUsageStats(companyId, { days });
+
+    res.json({
+      success: true,
+      data: moduleStats,
+      metadata: {
+        companyId,
+        days
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error en /analytics/module-stats:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/process-chains/analytics/bottlenecks
+ * Identifica bottlenecks (acciones problemáticas)
+ * Query params: companyId, minRequests (default: 5), days (default: 30)
+ */
+router.get('/analytics/bottlenecks', authenticateToken, async (req, res) => {
+  try {
+    const companyId = parseInt(req.query.companyId);
+    const minRequests = parseInt(req.query.minRequests) || 5;
+    const days = parseInt(req.query.days) || 30;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'companyId es requerido'
+      });
+    }
+
+    if (!analyticsService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Analytics service no disponible'
+      });
+    }
+
+    const bottlenecks = await analyticsService.identifyBottlenecks(companyId, { minRequests, days });
+
+    res.json({
+      success: true,
+      data: bottlenecks,
+      metadata: {
+        companyId,
+        minRequests,
+        days
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error en /analytics/bottlenecks:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/process-chains/analytics/trends
+ * Tendencias temporales (por día)
+ * Query params: companyId, days (default: 30)
+ */
+router.get('/analytics/trends', authenticateToken, async (req, res) => {
+  try {
+    const companyId = parseInt(req.query.companyId);
+    const days = parseInt(req.query.days) || 30;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'companyId es requerido'
+      });
+    }
+
+    if (!analyticsService) {
+      return res.status(503).json({
+        success: false,
+        error: 'Analytics service no disponible'
+      });
+    }
+
+    const trends = await analyticsService.getTimeTrends(companyId, { days });
+
+    res.json({
+      success: true,
+      data: trends,
+      metadata: {
+        companyId,
+        days
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error en /analytics/trends:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
  * GET /api/process-chains/health
  * Health check del servicio
  */
@@ -289,7 +702,8 @@ router.get('/health', async (req, res) => {
     status: 'ok',
     services: {
       processChainGenerator: !!processChainGenerator,
-      contextValidator: !!contextValidator
+      contextValidator: !!contextValidator,
+      analyticsService: !!analyticsService
     },
     actionsRegistered: contextValidator ? Object.keys(contextValidator.actionPrerequisites).length : 0,
     timestamp: new Date().toISOString()

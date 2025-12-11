@@ -159,6 +159,10 @@ const AuditLog = require('../models/AuditLog')(sequelize);
 // ✅ MODELO - Sistema de Asistente IA (Ollama + Llama 3.1)
 const AssistantKnowledgeBase = require('../models/AssistantKnowledgeBase')(sequelize);
 const AssistantConversation = require('../models/AssistantConversation')(sequelize);
+
+// ✅ MODELO - Process Chain Analytics (Tracking y métricas)
+const ProcessChainAnalytics = require('../models/ProcessChainAnalytics')(sequelize);
+
 // ✅ MODELOS - Workflow Alta de Empresa (FASE 1-5)
 // TEMP: const Budget = require('../models/Budget')(sequelize);
 // TEMP: const ContractOnboarding = require('../models/ContractOnboarding')(sequelize);
@@ -1034,6 +1038,16 @@ AssistantConversation.belongsTo(AssistantKnowledgeBase, { foreignKey: 'knowledge
 AssistantKnowledgeBase.hasMany(AssistantConversation, { foreignKey: 'knowledge_entry_id', sourceKey: 'id', as: 'conversations' });
 
 // ============================================================================
+// ASOCIACIONES - Process Chain Analytics
+// ============================================================================
+
+Company.hasMany(ProcessChainAnalytics, { foreignKey: 'company_id', sourceKey: 'company_id', as: 'processChainAnalytics' });
+ProcessChainAnalytics.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'company_id', as: 'company' });
+
+User.hasMany(ProcessChainAnalytics, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'processChainAnalytics' });
+ProcessChainAnalytics.belongsTo(User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'user' });
+
+// ============================================================================
 // ASOCIACIONES - Email Verification & Consent Management System
 // ============================================================================
 
@@ -1612,6 +1626,8 @@ module.exports = {
   // ✅ EXPORT - Sistema de Asistente IA
   AssistantKnowledgeBase,
   AssistantConversation,
+  // ✅ EXPORT - Process Chain Analytics
+  ProcessChainAnalytics,
   // ✅ EXPORTS - Workflow Alta de Empresa (FASE 1-5)
   // TEMP: Budget,
   // TEMP: ContractOnboarding,

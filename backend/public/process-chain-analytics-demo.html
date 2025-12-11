@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Process Chain Analytics Dashboard - Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f3f4f6;
+      padding: 20px;
+    }
+
+    .page-header {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-header h1 {
+      font-size: 24px;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .theme-toggle {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .theme-toggle button {
+      padding: 10px 20px;
+      border: 1px solid #d1d5db;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle button:hover {
+      background: #f3f4f6;
+    }
+
+    .theme-toggle button.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+
+    #analytics-container {
+      min-height: 600px;
+    }
+
+    /* Loading placeholder */
+    .initial-loading {
+      background: white;
+      padding: 60px 20px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .initial-loading h2 {
+      color: #6b7280;
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>📊 Process Chain Analytics Dashboard</h1>
+    <p>Visualización profesional de métricas y analytics de Process Chains</p>
+  </div>
+
+  <div class="theme-toggle">
+    <button id="theme-light" class="active">☀️ Light Mode</button>
+    <button id="theme-dark">🌙 Dark Mode</button>
+  </div>
+
+  <div id="analytics-container">
+    <div class="initial-loading">
+      <div class="spinner"></div>
+      <h2>Inicializando dashboard...</h2>
+      <p>Cargando componente de analytics</p>
+    </div>
+  </div>
+
+  <!-- Component Script -->
+  <script src="/js/components/ProcessChainAnalyticsDashboard.js"></script>
+
+  <!-- Initialization Script -->
+  <script>
+    // Configuración
+    const CONFIG = {
+      companyId: 1, // Cambiar según la empresa
+      theme: 'light',
+      refreshInterval: 60000 // 1 minuto
+    };
+
+    // Global dashboard instance
+    let dashboardInstance = null;
+
+    /**
+     * Inicializar dashboard
+     */
+    function initDashboard() {
+      console.log('🚀 Inicializando Process Chain Analytics Dashboard...');
+
+      dashboardInstance = new ProcessChainAnalyticsDashboard('analytics-container', {
+        companyId: CONFIG.companyId,
+        theme: CONFIG.theme,
+        refreshInterval: CONFIG.refreshInterval
+      });
+
+      // Exponer globalmente para debugging
+      window.processChainAnalytics = dashboardInstance;
+
+      console.log('✅ Dashboard inicializado. Accesible en: window.processChainAnalytics');
+    }
+
+    /**
+     * Cambiar tema
+     */
+    function setTheme(theme) {
+      CONFIG.theme = theme;
+
+      // Actualizar botones
+      document.getElementById('theme-light').classList.toggle('active', theme === 'light');
+      document.getElementById('theme-dark').classList.toggle('active', theme === 'dark');
+
+      // Si el dashboard ya está inicializado, cambiar tema
+      if (dashboardInstance) {
+        dashboardInstance.theme = theme;
+        dashboardInstance.container.setAttribute('data-theme', theme);
+        console.log(`🎨 Tema cambiado a: ${theme}`);
+      }
+    }
+
+    /**
+     * Event listeners
+     */
+    document.getElementById('theme-light').addEventListener('click', () => {
+      setTheme('light');
+    });
+
+    document.getElementById('theme-dark').addEventListener('click', () => {
+      setTheme('dark');
+    });
+
+    /**
+     * Auto-init cuando el DOM esté listo
+     */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDashboard);
+    } else {
+      initDashboard();
+    }
+
+    /**
+     * Debugging helpers
+     */
+    window.debugAnalytics = {
+      // Recargar data manualmente
+      reload: () => {
+        if (dashboardInstance) {
+          dashboardInstance.loadData();
+        }
+      },
+
+      // Cambiar período
+      setPeriod: (days) => {
+        if (dashboardInstance) {
+          dashboardInstance.state.selectedPeriod = days;
+          dashboardInstance.loadData();
+        }
+      },
+
+      // Ver estado actual
+      getState: () => {
+        return dashboardInstance ? dashboardInstance.state : null;
+      },
+
+      // Ver config
+      getConfig: () => {
+        return CONFIG;
+      },
+
+      // Cambiar companyId
+      setCompanyId: (companyId) => {
+        CONFIG.companyId = companyId;
+        if (dashboardInstance) {
+          dashboardInstance.companyId = companyId;
+          dashboardInstance.loadData();
+        }
+      }
+    };
+
+    console.log('✅ Debug helpers disponibles en: window.debugAnalytics');
+    console.log('Ejemplos:');
+    console.log('  - window.debugAnalytics.reload()');
+    console.log('  - window.debugAnalytics.setPeriod(7)');
+    console.log('  - window.debugAnalytics.getState()');
+    console.log('  - window.debugAnalytics.setCompanyId(2)');
+  </script>
+
+</body>
+</html>
