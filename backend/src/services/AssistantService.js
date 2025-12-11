@@ -20,6 +20,8 @@ const axios = require('axios');
 const { database } = require('../config/database');
 const SystemRegistry = require('../auditor/registry/SystemRegistry');
 const AuditorEngine = require('../auditor/core/AuditorEngine');
+const ProcessChainGenerator = require('./ProcessChainGenerator');
+const ContextValidatorService = require('./ContextValidatorService');
 
 class AssistantService {
   constructor(database, brainService = null) {
@@ -28,6 +30,17 @@ class AssistantService {
 
     // 🧠 BRAIN INTEGRATION - Para respuestas con datos LIVE del código
     this.brainService = brainService;
+
+    // 🔗 PROCESS CHAIN INTEGRATION - Autoconocimiento integral
+    try {
+      this.processChainGenerator = new ProcessChainGenerator(database, brainService);
+      this.contextValidator = new ContextValidatorService(database);
+      console.log('🔗 ProcessChainGenerator & ContextValidator inicializados');
+    } catch (e) {
+      console.warn('⚠️ Process Chain Services no disponibles:', e.message);
+      this.processChainGenerator = null;
+      this.contextValidator = null;
+    }
 
     // Configuración de Ollama desde environment variables
     this.ollamaBaseURL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';

@@ -2878,6 +2878,15 @@ app.use('/api/audit', auditorRoutes);
 const auditorPhase4Routes = require('./src/routes/auditorPhase4Routes')(database);
 app.use('/api/audit/phase4', auditorPhase4Routes);
 app.use('/api/engineering-live', engineeringMetadataRoutes); // 🧠 Metadata 100% VIVA desde código introspectivo
+app.use('/api/process-chain', processChainRoutes); // 🔗 Process Chain Generator - Autoconocimiento Integral
+
+console.log('🔗 [PROCESS-CHAIN] Sistema de Autoconocimiento Integral ACTIVO:');
+console.log('   📊 POST /api/process-chain/generate - Generar cadena de procesos');
+console.log('   🔍 GET  /api/process-chain/validate-context/:userId/:companyId/:action - Validar prerequisitos');
+console.log('   📋 GET  /api/process-chain/user-actions/:userId/:companyId - Acciones disponibles');
+console.log('   🧠 POST /api/process-chain/interpret-intent - Interpretar intent de usuario');
+console.log('   ✅ GET  /api/process-chain/health - Health check');
+console.log('');
 
 // ============================================================================
 // DEPLOY MANAGER - Sistema de Migración Segura a Render
@@ -3307,6 +3316,7 @@ const budgetOnboardingRoutes = require("./src/routes/budgetOnboardingRoutes");
 const contractOnboardingRoutes = require("./src/routes/contractOnboardingRoutes");
 const commissionOnboardingRoutes = require("./src/routes/commissionOnboardingRoutes");
 const engineeringMetadataRoutes = require("./src/routes/engineeringMetadataRoutes"); // 🧠 Metadata 100% viva desde código introspectivo
+const processChainRoutes = require("./src/routes/processChainRoutes"); // 🔗 Process Chain Generator - Autoconocimiento Integral
 
 app.use('/api/billing/presupuestos', budgetOnboardingRoutes);
 console.log('💼 [BILLING] Presupuestos Onboarding: /api/billing/presupuestos/onboarding/*');
