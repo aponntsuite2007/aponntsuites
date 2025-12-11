@@ -1,0 +1,2995 @@
+{
+  "generated_at": "2025-12-11T02:50:30.980Z",
+  "total_actions": 108,
+  "prerequisites": {
+    "create-employee": {
+      "name": "Create Employee",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "users"
+      ],
+      "alternativeModules": null
+    },
+    "edit-employee-data": {
+      "name": "Edit Employee Data",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "users"
+      ],
+      "alternativeModules": null
+    },
+    "request-data-change": {
+      "name": "Request Data Change",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "users"
+      ],
+      "alternativeModules": null
+    },
+    "request-password-reset": {
+      "name": "Request Password Reset",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "users"
+      ],
+      "alternativeModules": null
+    },
+    "onboarding-new-employee": {
+      "name": "Onboarding New Employee",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "users"
+      ],
+      "alternativeModules": null
+    },
+    "check-in": {
+      "name": "Check In",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "attendance"
+      ],
+      "alternativeModules": null
+    },
+    "check-out": {
+      "name": "Check Out",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "attendance"
+      ],
+      "alternativeModules": null
+    },
+    "request-attendance-correction": {
+      "name": "Request Attendance Correction",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "attendance"
+      ],
+      "alternativeModules": null
+    },
+    "view-my-attendance": {
+      "name": "View My Attendance",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "attendance"
+      ],
+      "alternativeModules": null
+    },
+    "report-late-arrival": {
+      "name": "Report Late Arrival",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "attendance"
+      ],
+      "alternativeModules": null
+    },
+    "shift-swap": {
+      "name": "Shift Swap",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "shifts"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo shifts. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "request-shift-change": {
+      "name": "Request Shift Change",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "shifts"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo shifts. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "view-my-shifts": {
+      "name": "View My Shifts",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "shifts"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo shifts. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "request-permanent-schedule-change": {
+      "name": "Request Permanent Schedule Change",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "shifts"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo shifts. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "vacation-request": {
+      "name": "Vacation Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "vacation"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo vacation. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "cancel-vacation": {
+      "name": "Cancel Vacation",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "vacation"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo vacation. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "view-vacation-balance": {
+      "name": "View Vacation Balance",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "vacation"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo vacation. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "time-off-request": {
+      "name": "Time Off Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "time-off-requests"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo time-off-requests. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "sick-leave-request": {
+      "name": "Sick Leave Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "time-off-requests"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo time-off-requests. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "personal-day-request": {
+      "name": "Personal Day Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "time-off-requests"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo time-off-requests. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "overtime-request": {
+      "name": "Overtime Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "overtime-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo overtime-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "overtime-cancellation": {
+      "name": "Overtime Cancellation",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "overtime-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo overtime-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "view-overtime-hours": {
+      "name": "View Overtime Hours",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "sector",
+          "field": "id",
+          "description": "Sector asignado",
+          "table": "sectors",
+          "userField": "sector_id"
+        },
+        {
+          "entity": "shift",
+          "field": "id",
+          "description": "Turno asignado",
+          "table": "shifts",
+          "userField": "shift_id"
+        }
+      ],
+      "requiredModules": [
+        "overtime-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo overtime-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "medical-appointment": {
+      "name": "Medical Appointment",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "medical"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo medical. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "medical-emergency-request": {
+      "name": "Medical Emergency Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "medical"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo medical. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "medical-certificate-upload": {
+      "name": "Medical Certificate Upload",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "medical"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo medical. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "payroll-request": {
+      "name": "Payroll Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "payroll-liquidation"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo payroll-liquidation. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "payslip-download": {
+      "name": "Payslip Download",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "payroll-liquidation"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo payroll-liquidation. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "payroll-dispute": {
+      "name": "Payroll Dispute",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "payroll-liquidation"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo payroll-liquidation. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "apply-to-job": {
+      "name": "Apply To Job",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "job-postings"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo job-postings. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "create-job-posting": {
+      "name": "Create Job Posting",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "job-postings"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo job-postings. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "edit-job-posting": {
+      "name": "Edit Job Posting",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "job-postings"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo job-postings. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "close-job-posting": {
+      "name": "Close Job Posting",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "job-postings"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo job-postings. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "schedule-interview": {
+      "name": "Schedule Interview",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "applicant-tracking"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo applicant-tracking. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "submit-interview-feedback": {
+      "name": "Submit Interview Feedback",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "applicant-tracking"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo applicant-tracking. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "change-candidate-status": {
+      "name": "Change Candidate Status",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "applicant-tracking"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo applicant-tracking. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "training-request": {
+      "name": "Training Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "training-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo training-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "enroll-in-training": {
+      "name": "Enroll In Training",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "training-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo training-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "cancel-training": {
+      "name": "Cancel Training",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "training-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo training-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "training-certificate-request": {
+      "name": "Training Certificate Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "training-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo training-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "start-evaluation": {
+      "name": "Start Evaluation",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "performance-evaluations"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo performance-evaluations. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "submit-self-evaluation": {
+      "name": "Submit Self Evaluation",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "performance-evaluations"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo performance-evaluations. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "submit-peer-evaluation": {
+      "name": "Submit Peer Evaluation",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "performance-evaluations"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo performance-evaluations. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "view-evaluation-results": {
+      "name": "View Evaluation Results",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "performance-evaluations"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo performance-evaluations. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "career-path-request": {
+      "name": "Career Path Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "career-development"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo career-development. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "promotion-request": {
+      "name": "Promotion Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "career-development"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo career-development. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "transfer-request": {
+      "name": "Transfer Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "career-development"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo career-development. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "asset-request": {
+      "name": "Asset Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "asset-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo asset-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "asset-return": {
+      "name": "Asset Return",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "asset-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo asset-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "asset-repair-request": {
+      "name": "Asset Repair Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "asset-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo asset-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "asset-inventory-check": {
+      "name": "Asset Inventory Check",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "asset-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo asset-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "expense-submit": {
+      "name": "Expense Submit",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "expense-reimbursement"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo expense-reimbursement. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "expense-approve": {
+      "name": "Expense Approve",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "expense-reimbursement"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo expense-reimbursement. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "expense-dispute": {
+      "name": "Expense Dispute",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "expense-reimbursement"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo expense-reimbursement. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "create-project": {
+      "name": "Create Project",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "project-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo project-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "add-milestone": {
+      "name": "Add Milestone",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "project-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo project-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "assign-task": {
+      "name": "Assign Task",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "project-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo project-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "update-project-status": {
+      "name": "Update Project Status",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "project-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo project-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "remote-work-request": {
+      "name": "Remote Work Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "remote-work-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo remote-work-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "remote-work-cancellation": {
+      "name": "Remote Work Cancellation",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "remote-work-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo remote-work-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "remote-work-extension": {
+      "name": "Remote Work Extension",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "remote-work-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo remote-work-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "create-ticket": {
+      "name": "Create Ticket",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "it-support"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo it-support. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "escalate-ticket": {
+      "name": "Escalate Ticket",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "it-support"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo it-support. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "hardware-request": {
+      "name": "Hardware Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "it-support"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo it-support. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "software-request": {
+      "name": "Software Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "it-support"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo it-support. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "access-request": {
+      "name": "Access Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "security-access-control"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo security-access-control. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "labor-contract-review": {
+      "name": "Labor Contract Review",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "legal-labor-compliance"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo legal-labor-compliance. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "compliance-report-request": {
+      "name": "Compliance Report Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "legal-labor-compliance"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo legal-labor-compliance. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "legal-consultation-request": {
+      "name": "Legal Consultation Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "legal-labor-compliance"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo legal-labor-compliance. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "report-incident": {
+      "name": "Report Incident",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "incident-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo incident-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "report-accident": {
+      "name": "Report Accident",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "incident-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo incident-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "report-hazard": {
+      "name": "Report Hazard",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "incident-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo incident-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "send-notification": {
+      "name": "Send Notification",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "notifications-enterprise"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo notifications-enterprise. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "create-announcement": {
+      "name": "Create Announcement",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "notifications-enterprise"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo notifications-enterprise. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "emergency-broadcast": {
+      "name": "Emergency Broadcast",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "notifications-enterprise"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo notifications-enterprise. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "mark-notification-read": {
+      "name": "Mark Notification Read",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "notification-center"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo notification-center. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "notification-settings-update": {
+      "name": "Notification Settings Update",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "notification-center"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo notification-center. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "create-department": {
+      "name": "Create Department",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "departments"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo departments. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "edit-department": {
+      "name": "Edit Department",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "departments"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo departments. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "transfer-to-department": {
+      "name": "Transfer To Department",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "departments"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo departments. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "org-chart-update": {
+      "name": "Org Chart Update",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "organizational-structure"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo organizational-structure. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "reporting-line-change": {
+      "name": "Reporting Line Change",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "organizational-structure"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo organizational-structure. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "position-creation": {
+      "name": "Position Creation",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "organizational-structure"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo organizational-structure. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "create-branch": {
+      "name": "Create Branch",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "branches"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo branches. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "edit-branch": {
+      "name": "Edit Branch",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "branches"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo branches. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "transfer-to-branch": {
+      "name": "Transfer To Branch",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "branches"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo branches. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "enroll-biometric": {
+      "name": "Enroll Biometric",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "real-biometric-enterprise"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo real-biometric-enterprise. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "update-biometric": {
+      "name": "Update Biometric",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "real-biometric-enterprise"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo real-biometric-enterprise. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "re-enroll-biometric": {
+      "name": "Re Enroll Biometric",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "real-biometric-enterprise"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo real-biometric-enterprise. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "temporary-access-request": {
+      "name": "Temporary Access Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "security-access-control"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo security-access-control. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "access-revocation-request": {
+      "name": "Access Revocation Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "security-access-control"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo security-access-control. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "kiosk-registration": {
+      "name": "Kiosk Registration",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "kiosks-professional"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo kiosks-professional. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "kiosk-check-in": {
+      "name": "Kiosk Check In",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "kiosks-professional"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo kiosks-professional. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "book-room": {
+      "name": "Book Room",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "room-booking"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo room-booking. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "cancel-booking": {
+      "name": "Cancel Booking",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "room-booking"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo room-booking. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "modify-booking": {
+      "name": "Modify Booking",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "room-booking"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo room-booking. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "parking-spot-request": {
+      "name": "Parking Spot Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "parking-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo parking-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "visitor-parking-request": {
+      "name": "Visitor Parking Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "parking-management"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo parking-management. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "wellness-program-enrollment": {
+      "name": "Wellness Program Enrollment",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "wellness-programs"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo wellness-programs. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "wellness-activity-log": {
+      "name": "Wellness Activity Log",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "wellness-programs"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo wellness-programs. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "wellness-reward-claim": {
+      "name": "Wellness Reward Claim",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        }
+      ],
+      "requiredModules": [
+        "wellness-programs"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo wellness-programs. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "benefit-enrollment": {
+      "name": "Benefit Enrollment",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "benefits-administration"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo benefits-administration. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "benefit-change": {
+      "name": "Benefit Change",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "benefits-administration"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo benefits-administration. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "benefit-claim": {
+      "name": "Benefit Claim",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "branch",
+          "field": "id",
+          "description": "Sucursal asignada",
+          "table": "branches",
+          "userField": "branch_id"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        },
+        {
+          "entity": "organizational_position",
+          "field": "id",
+          "description": "Posición en organigrama",
+          "table": "organizational_structure",
+          "userField": "position_id"
+        }
+      ],
+      "requiredModules": [
+        "benefits-administration"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo benefits-administration. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "upload-document": {
+      "name": "Upload Document",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "dms-dashboard"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo dms-dashboard. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "request-document": {
+      "name": "Request Document",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "dms-dashboard"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo dms-dashboard. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "share-document": {
+      "name": "Share Document",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "dms-dashboard"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo dms-dashboard. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    },
+    "document-approval-request": {
+      "name": "Document Approval Request",
+      "requiredChain": [
+        {
+          "entity": "company",
+          "field": "id",
+          "description": "Empresa activa"
+        },
+        {
+          "entity": "department",
+          "field": "id",
+          "description": "Departamento asignado",
+          "table": "departments",
+          "userField": "department_id"
+        }
+      ],
+      "requiredModules": [
+        "dms-dashboard"
+      ],
+      "alternativeModules": {
+        "fallback": "notifications-enterprise",
+        "message": "Su empresa no tiene contratado el módulo dms-dashboard. Puede usar el sistema de Notificaciones para enviar su solicitud."
+      }
+    }
+  }
+}

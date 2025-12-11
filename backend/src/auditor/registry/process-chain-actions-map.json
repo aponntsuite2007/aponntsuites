@@ -1,0 +1,182 @@
+{
+  "generated_at": "2025-12-11T02:48:44.663Z",
+  "total_actions": 109,
+  "total_modules": 33,
+  "actions_by_module": {
+    "users": [
+      "create-employee",
+      "edit-employee-data",
+      "request-data-change",
+      "request-password-reset",
+      "onboarding-new-employee"
+    ],
+    "attendance": [
+      "check-in",
+      "check-out",
+      "request-attendance-correction",
+      "view-my-attendance",
+      "report-late-arrival"
+    ],
+    "shifts": [
+      "shift-swap",
+      "request-shift-change",
+      "view-my-shifts",
+      "request-permanent-schedule-change"
+    ],
+    "vacation": [
+      "vacation-request",
+      "cancel-vacation",
+      "view-vacation-balance"
+    ],
+    "time-off-requests": [
+      "time-off-request",
+      "sick-leave-request",
+      "personal-day-request"
+    ],
+    "overtime-management": [
+      "overtime-request",
+      "overtime-cancellation",
+      "view-overtime-hours"
+    ],
+    "medical": [
+      "medical-appointment",
+      "medical-emergency-request",
+      "medical-certificate-upload"
+    ],
+    "payroll-liquidation": [
+      "payroll-request",
+      "payslip-download",
+      "payroll-dispute"
+    ],
+    "job-postings": [
+      "apply-to-job",
+      "create-job-posting",
+      "edit-job-posting",
+      "close-job-posting"
+    ],
+    "applicant-tracking": [
+      "schedule-interview",
+      "submit-interview-feedback",
+      "change-candidate-status"
+    ],
+    "training-management": [
+      "training-request",
+      "enroll-in-training",
+      "cancel-training",
+      "training-certificate-request"
+    ],
+    "performance-evaluations": [
+      "start-evaluation",
+      "submit-self-evaluation",
+      "submit-peer-evaluation",
+      "view-evaluation-results"
+    ],
+    "career-development": [
+      "career-path-request",
+      "promotion-request",
+      "transfer-request"
+    ],
+    "asset-management": [
+      "asset-request",
+      "asset-return",
+      "asset-repair-request",
+      "asset-inventory-check"
+    ],
+    "expense-reimbursement": [
+      "expense-submit",
+      "expense-approve",
+      "expense-dispute"
+    ],
+    "project-management": [
+      "create-project",
+      "add-milestone",
+      "assign-task",
+      "update-project-status"
+    ],
+    "remote-work-management": [
+      "remote-work-request",
+      "remote-work-cancellation",
+      "remote-work-extension"
+    ],
+    "it-support": [
+      "create-ticket",
+      "escalate-ticket",
+      "hardware-request",
+      "software-request",
+      "access-request"
+    ],
+    "legal-labor-compliance": [
+      "labor-contract-review",
+      "compliance-report-request",
+      "legal-consultation-request"
+    ],
+    "incident-management": [
+      "report-incident",
+      "report-accident",
+      "report-hazard"
+    ],
+    "notifications-enterprise": [
+      "send-notification",
+      "create-announcement",
+      "emergency-broadcast"
+    ],
+    "notification-center": [
+      "mark-notification-read",
+      "notification-settings-update"
+    ],
+    "departments": [
+      "create-department",
+      "edit-department",
+      "transfer-to-department"
+    ],
+    "organizational-structure": [
+      "org-chart-update",
+      "reporting-line-change",
+      "position-creation"
+    ],
+    "branches": [
+      "create-branch",
+      "edit-branch",
+      "transfer-to-branch"
+    ],
+    "real-biometric-enterprise": [
+      "enroll-biometric",
+      "update-biometric",
+      "re-enroll-biometric"
+    ],
+    "security-access-control": [
+      "access-request",
+      "temporary-access-request",
+      "access-revocation-request"
+    ],
+    "kiosks-professional": [
+      "kiosk-registration",
+      "kiosk-check-in"
+    ],
+    "room-booking": [
+      "book-room",
+      "cancel-booking",
+      "modify-booking"
+    ],
+    "parking-management": [
+      "parking-spot-request",
+      "visitor-parking-request"
+    ],
+    "wellness-programs": [
+      "wellness-program-enrollment",
+      "wellness-activity-log",
+      "wellness-reward-claim"
+    ],
+    "benefits-administration": [
+      "benefit-enrollment",
+      "benefit-change",
+      "benefit-claim"
+    ],
+    "dms-dashboard": [
+      "upload-document",
+      "request-document",
+      "share-document",
+      "document-approval-request"
+    ]
+  }
+}

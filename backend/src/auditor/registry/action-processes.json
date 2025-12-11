@@ -1,0 +1,3290 @@
+{
+  "generated_at": "2025-12-11T02:50:30.986Z",
+  "total_actions": 108,
+  "processes": {
+    "create-employee": {
+      "name": "Create Employee",
+      "module": "users",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "users",
+          "description": "Ir a Módulo de Users"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "create-button",
+          "description": "Click en botón \"Crear\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 8,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "edit-employee-data": {
+      "name": "Edit Employee Data",
+      "module": "users",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "users",
+          "description": "Ir a Módulo de Users"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "request-data-change": {
+      "name": "Request Data Change",
+      "module": "users",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "users",
+          "description": "Ir a Módulo de Users"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "request-password-reset": {
+      "name": "Request Password Reset",
+      "module": "users",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "users",
+          "description": "Ir a Módulo de Users"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "onboarding-new-employee": {
+      "name": "Onboarding New Employee",
+      "module": "users",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "users",
+          "description": "Ir a Módulo de Users"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "check-in": {
+      "name": "Check In",
+      "module": "attendance",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "attendance",
+          "description": "Ir a Módulo de Attendance"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "check-out": {
+      "name": "Check Out",
+      "module": "attendance",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "attendance",
+          "description": "Ir a Módulo de Attendance"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "request-attendance-correction": {
+      "name": "Request Attendance Correction",
+      "module": "attendance",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "attendance",
+          "description": "Ir a Módulo de Attendance"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "view-my-attendance": {
+      "name": "View My Attendance",
+      "module": "attendance",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "attendance",
+          "description": "Ir a Módulo de Attendance"
+        },
+        {
+          "step": 2,
+          "action": "select",
+          "description": "Seleccionar View My Attendance"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "report-late-arrival": {
+      "name": "Report Late Arrival",
+      "module": "attendance",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "attendance",
+          "description": "Ir a Módulo de Attendance"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "shift-swap": {
+      "name": "Shift Swap",
+      "module": "shifts",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "shifts",
+          "description": "Ir a Módulo de Shifts"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "request-shift-change": {
+      "name": "Request Shift Change",
+      "module": "shifts",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "shifts",
+          "description": "Ir a Módulo de Shifts"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "view-my-shifts": {
+      "name": "View My Shifts",
+      "module": "shifts",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "shifts",
+          "description": "Ir a Módulo de Shifts"
+        },
+        {
+          "step": 2,
+          "action": "select",
+          "description": "Seleccionar View My Shifts"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "request-permanent-schedule-change": {
+      "name": "Request Permanent Schedule Change",
+      "module": "shifts",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "shifts",
+          "description": "Ir a Módulo de Shifts"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "vacation-request": {
+      "name": "Vacation Request",
+      "module": "vacation",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "vacation",
+          "description": "Ir a Módulo de Vacation"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "cancel-vacation": {
+      "name": "Cancel Vacation",
+      "module": "vacation",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "vacation",
+          "description": "Ir a Módulo de Vacation"
+        },
+        {
+          "step": 2,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 4,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "view-vacation-balance": {
+      "name": "View Vacation Balance",
+      "module": "vacation",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "vacation",
+          "description": "Ir a Módulo de Vacation"
+        },
+        {
+          "step": 2,
+          "action": "select",
+          "description": "Seleccionar View Vacation Balance"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "time-off-request": {
+      "name": "Time Off Request",
+      "module": "time-off-requests",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "time-off-requests",
+          "description": "Ir a Módulo de Time Off Requests"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "sick-leave-request": {
+      "name": "Sick Leave Request",
+      "module": "time-off-requests",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "time-off-requests",
+          "description": "Ir a Módulo de Time Off Requests"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "personal-day-request": {
+      "name": "Personal Day Request",
+      "module": "time-off-requests",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "time-off-requests",
+          "description": "Ir a Módulo de Time Off Requests"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "overtime-request": {
+      "name": "Overtime Request",
+      "module": "overtime-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "overtime-management",
+          "description": "Ir a Módulo de Overtime Management"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "overtime-cancellation": {
+      "name": "Overtime Cancellation",
+      "module": "overtime-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "overtime-management",
+          "description": "Ir a Módulo de Overtime Management"
+        },
+        {
+          "step": 2,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 4,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "view-overtime-hours": {
+      "name": "View Overtime Hours",
+      "module": "overtime-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "overtime-management",
+          "description": "Ir a Módulo de Overtime Management"
+        },
+        {
+          "step": 2,
+          "action": "select",
+          "description": "Seleccionar View Overtime Hours"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "medical-appointment": {
+      "name": "Medical Appointment",
+      "module": "medical",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "medical",
+          "description": "Ir a Módulo de Medical"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "medical-emergency-request": {
+      "name": "Medical Emergency Request",
+      "module": "medical",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "medical",
+          "description": "Ir a Módulo de Medical"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "medical-certificate-upload": {
+      "name": "Medical Certificate Upload",
+      "module": "medical",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "medical",
+          "description": "Ir a Módulo de Medical"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "payroll-request": {
+      "name": "Payroll Request",
+      "module": "payroll-liquidation",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "payroll-liquidation",
+          "description": "Ir a Módulo de Payroll Liquidation"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "payslip-download": {
+      "name": "Payslip Download",
+      "module": "payroll-liquidation",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "payroll-liquidation",
+          "description": "Ir a Módulo de Payroll Liquidation"
+        },
+        {
+          "step": 2,
+          "action": "select",
+          "description": "Seleccionar Payslip Download"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "payroll-dispute": {
+      "name": "Payroll Dispute",
+      "module": "payroll-liquidation",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "payroll-liquidation",
+          "description": "Ir a Módulo de Payroll Liquidation"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 4,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2888,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "apply-to-job": {
+      "name": "Apply To Job",
+      "module": "job-postings",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "job-postings",
+          "description": "Ir a Módulo de Job Postings"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 4,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2888,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "create-job-posting": {
+      "name": "Create Job Posting",
+      "module": "job-postings",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "job-postings",
+          "description": "Ir a Módulo de Job Postings"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "create-button",
+          "description": "Click en botón \"Crear\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 8,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "edit-job-posting": {
+      "name": "Edit Job Posting",
+      "module": "job-postings",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "job-postings",
+          "description": "Ir a Módulo de Job Postings"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "close-job-posting": {
+      "name": "Close Job Posting",
+      "module": "job-postings",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "job-postings",
+          "description": "Ir a Módulo de Job Postings"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "schedule-interview": {
+      "name": "Schedule Interview",
+      "module": "applicant-tracking",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "applicant-tracking",
+          "description": "Ir a Módulo de Applicant Tracking"
+        },
+        {
+          "step": 2,
+          "action": "select",
+          "description": "Seleccionar Schedule Interview"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "submit-interview-feedback": {
+      "name": "Submit Interview Feedback",
+      "module": "applicant-tracking",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "applicant-tracking",
+          "description": "Ir a Módulo de Applicant Tracking"
+        },
+        {
+          "step": 2,
+          "action": "select",
+          "description": "Seleccionar Submit Interview Feedback"
+        },
+        {
+          "step": 3,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 4,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2888,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "change-candidate-status": {
+      "name": "Change Candidate Status",
+      "module": "applicant-tracking",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "applicant-tracking",
+          "description": "Ir a Módulo de Applicant Tracking"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "training-request": {
+      "name": "Training Request",
+      "module": "training-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "training-management",
+          "description": "Ir a Módulo de Training Management"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "enroll-in-training": {
+      "name": "Enroll In Training",
+      "module": "training-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "training-management",
+          "description": "Ir a Módulo de Training Management"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "cancel-training": {
+      "name": "Cancel Training",
+      "module": "training-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "training-management",
+          "description": "Ir a Módulo de Training Management"
+        },
+        {
+          "step": 2,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 4,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "training-certificate-request": {
+      "name": "Training Certificate Request",
+      "module": "training-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "training-management",
+          "description": "Ir a Módulo de Training Management"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "start-evaluation": {
+      "name": "Start Evaluation",
+      "module": "performance-evaluations",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "performance-evaluations",
+          "description": "Ir a Módulo de Performance Evaluations"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "submit-self-evaluation": {
+      "name": "Submit Self Evaluation",
+      "module": "performance-evaluations",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "performance-evaluations",
+          "description": "Ir a Módulo de Performance Evaluations"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 4,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2888,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "submit-peer-evaluation": {
+      "name": "Submit Peer Evaluation",
+      "module": "performance-evaluations",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "performance-evaluations",
+          "description": "Ir a Módulo de Performance Evaluations"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 4,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2888,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "view-evaluation-results": {
+      "name": "View Evaluation Results",
+      "module": "performance-evaluations",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "performance-evaluations",
+          "description": "Ir a Módulo de Performance Evaluations"
+        },
+        {
+          "step": 2,
+          "action": "select",
+          "description": "Seleccionar View Evaluation Results"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "career-path-request": {
+      "name": "Career Path Request",
+      "module": "career-development",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "career-development",
+          "description": "Ir a Módulo de Career Development"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "promotion-request": {
+      "name": "Promotion Request",
+      "module": "career-development",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "career-development",
+          "description": "Ir a Módulo de Career Development"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "transfer-request": {
+      "name": "Transfer Request",
+      "module": "career-development",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "career-development",
+          "description": "Ir a Módulo de Career Development"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "asset-request": {
+      "name": "Asset Request",
+      "module": "asset-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "asset-management",
+          "description": "Ir a Módulo de Asset Management"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "asset-return": {
+      "name": "Asset Return",
+      "module": "asset-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "asset-management",
+          "description": "Ir a Módulo de Asset Management"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "asset-repair-request": {
+      "name": "Asset Repair Request",
+      "module": "asset-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "asset-management",
+          "description": "Ir a Módulo de Asset Management"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "asset-inventory-check": {
+      "name": "Asset Inventory Check",
+      "module": "asset-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "asset-management",
+          "description": "Ir a Módulo de Asset Management"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "expense-submit": {
+      "name": "Expense Submit",
+      "module": "expense-reimbursement",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "expense-reimbursement",
+          "description": "Ir a Módulo de Expense Reimbursement"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 4,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2888,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "expense-approve": {
+      "name": "Expense Approve",
+      "module": "expense-reimbursement",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "expense-reimbursement",
+          "description": "Ir a Módulo de Expense Reimbursement"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "expense-dispute": {
+      "name": "Expense Dispute",
+      "module": "expense-reimbursement",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "expense-reimbursement",
+          "description": "Ir a Módulo de Expense Reimbursement"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 4,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2888,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "create-project": {
+      "name": "Create Project",
+      "module": "project-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "project-management",
+          "description": "Ir a Módulo de Project Management"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "create-button",
+          "description": "Click en botón \"Crear\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 8,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "add-milestone": {
+      "name": "Add Milestone",
+      "module": "project-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "project-management",
+          "description": "Ir a Módulo de Project Management"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "assign-task": {
+      "name": "Assign Task",
+      "module": "project-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "project-management",
+          "description": "Ir a Módulo de Project Management"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "update-project-status": {
+      "name": "Update Project Status",
+      "module": "project-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "project-management",
+          "description": "Ir a Módulo de Project Management"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "remote-work-request": {
+      "name": "Remote Work Request",
+      "module": "remote-work-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "remote-work-management",
+          "description": "Ir a Módulo de Remote Work Management"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "remote-work-cancellation": {
+      "name": "Remote Work Cancellation",
+      "module": "remote-work-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "remote-work-management",
+          "description": "Ir a Módulo de Remote Work Management"
+        },
+        {
+          "step": 2,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 4,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "remote-work-extension": {
+      "name": "Remote Work Extension",
+      "module": "remote-work-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "remote-work-management",
+          "description": "Ir a Módulo de Remote Work Management"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "create-ticket": {
+      "name": "Create Ticket",
+      "module": "it-support",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "it-support",
+          "description": "Ir a Módulo de It Support"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "create-button",
+          "description": "Click en botón \"Crear\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 8,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "escalate-ticket": {
+      "name": "Escalate Ticket",
+      "module": "it-support",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "it-support",
+          "description": "Ir a Módulo de It Support"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 4,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2888,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "hardware-request": {
+      "name": "Hardware Request",
+      "module": "it-support",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "it-support",
+          "description": "Ir a Módulo de It Support"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "software-request": {
+      "name": "Software Request",
+      "module": "it-support",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "it-support",
+          "description": "Ir a Módulo de It Support"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "access-request": {
+      "name": "Access Request",
+      "module": "security-access-control",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "security-access-control",
+          "description": "Ir a Módulo de Security Access Control"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "labor-contract-review": {
+      "name": "Labor Contract Review",
+      "module": "legal-labor-compliance",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "legal-labor-compliance",
+          "description": "Ir a Módulo de Legal Labor Compliance"
+        },
+        {
+          "step": 2,
+          "action": "select",
+          "description": "Seleccionar Labor Contract Review"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "compliance-report-request": {
+      "name": "Compliance Report Request",
+      "module": "legal-labor-compliance",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "legal-labor-compliance",
+          "description": "Ir a Módulo de Legal Labor Compliance"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "legal-consultation-request": {
+      "name": "Legal Consultation Request",
+      "module": "legal-labor-compliance",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "legal-labor-compliance",
+          "description": "Ir a Módulo de Legal Labor Compliance"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "report-incident": {
+      "name": "Report Incident",
+      "module": "incident-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "incident-management",
+          "description": "Ir a Módulo de Incident Management"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "report-accident": {
+      "name": "Report Accident",
+      "module": "incident-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "incident-management",
+          "description": "Ir a Módulo de Incident Management"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "report-hazard": {
+      "name": "Report Hazard",
+      "module": "incident-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "incident-management",
+          "description": "Ir a Módulo de Incident Management"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "send-notification": {
+      "name": "Send Notification",
+      "module": "notifications-enterprise",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "notifications-enterprise",
+          "description": "Ir a Módulo de Notifications Enterprise"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "create-announcement": {
+      "name": "Create Announcement",
+      "module": "notifications-enterprise",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "notifications-enterprise",
+          "description": "Ir a Módulo de Notifications Enterprise"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "create-button",
+          "description": "Click en botón \"Crear\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 8,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "emergency-broadcast": {
+      "name": "Emergency Broadcast",
+      "module": "notifications-enterprise",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "notifications-enterprise",
+          "description": "Ir a Módulo de Notifications Enterprise"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "mark-notification-read": {
+      "name": "Mark Notification Read",
+      "module": "notification-center",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "notification-center",
+          "description": "Ir a Módulo de Notification Center"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "notification-settings-update": {
+      "name": "Notification Settings Update",
+      "module": "notification-center",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "notification-center",
+          "description": "Ir a Módulo de Notification Center"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "create-department": {
+      "name": "Create Department",
+      "module": "departments",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "departments",
+          "description": "Ir a Módulo de Departments"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "create-button",
+          "description": "Click en botón \"Crear\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 8,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "edit-department": {
+      "name": "Edit Department",
+      "module": "departments",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "departments",
+          "description": "Ir a Módulo de Departments"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "transfer-to-department": {
+      "name": "Transfer To Department",
+      "module": "departments",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "departments",
+          "description": "Ir a Módulo de Departments"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "org-chart-update": {
+      "name": "Org Chart Update",
+      "module": "organizational-structure",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "organizational-structure",
+          "description": "Ir a Módulo de Organizational Structure"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "reporting-line-change": {
+      "name": "Reporting Line Change",
+      "module": "organizational-structure",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "organizational-structure",
+          "description": "Ir a Módulo de Organizational Structure"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "position-creation": {
+      "name": "Position Creation",
+      "module": "organizational-structure",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "organizational-structure",
+          "description": "Ir a Módulo de Organizational Structure"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "create-branch": {
+      "name": "Create Branch",
+      "module": "branches",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "branches",
+          "description": "Ir a Módulo de Branches"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "create-button",
+          "description": "Click en botón \"Crear\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 8,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "edit-branch": {
+      "name": "Edit Branch",
+      "module": "branches",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "branches",
+          "description": "Ir a Módulo de Branches"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "transfer-to-branch": {
+      "name": "Transfer To Branch",
+      "module": "branches",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "branches",
+          "description": "Ir a Módulo de Branches"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "enroll-biometric": {
+      "name": "Enroll Biometric",
+      "module": "real-biometric-enterprise",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "real-biometric-enterprise",
+          "description": "Ir a Módulo de Real Biometric Enterprise"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "update-biometric": {
+      "name": "Update Biometric",
+      "module": "real-biometric-enterprise",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "real-biometric-enterprise",
+          "description": "Ir a Módulo de Real Biometric Enterprise"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "re-enroll-biometric": {
+      "name": "Re Enroll Biometric",
+      "module": "real-biometric-enterprise",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "real-biometric-enterprise",
+          "description": "Ir a Módulo de Real Biometric Enterprise"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "temporary-access-request": {
+      "name": "Temporary Access Request",
+      "module": "security-access-control",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "security-access-control",
+          "description": "Ir a Módulo de Security Access Control"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "access-revocation-request": {
+      "name": "Access Revocation Request",
+      "module": "security-access-control",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "security-access-control",
+          "description": "Ir a Módulo de Security Access Control"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "kiosk-registration": {
+      "name": "Kiosk Registration",
+      "module": "kiosks-professional",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "kiosks-professional",
+          "description": "Ir a Módulo de Kiosks Professional"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "kiosk-check-in": {
+      "name": "Kiosk Check In",
+      "module": "kiosks-professional",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "kiosks-professional",
+          "description": "Ir a Módulo de Kiosks Professional"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "book-room": {
+      "name": "Book Room",
+      "module": "room-booking",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "room-booking",
+          "description": "Ir a Módulo de Room Booking"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "cancel-booking": {
+      "name": "Cancel Booking",
+      "module": "room-booking",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "room-booking",
+          "description": "Ir a Módulo de Room Booking"
+        },
+        {
+          "step": 2,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 4,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "modify-booking": {
+      "name": "Modify Booking",
+      "module": "room-booking",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "room-booking",
+          "description": "Ir a Módulo de Room Booking"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "parking-spot-request": {
+      "name": "Parking Spot Request",
+      "module": "parking-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "parking-management",
+          "description": "Ir a Módulo de Parking Management"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "visitor-parking-request": {
+      "name": "Visitor Parking Request",
+      "module": "parking-management",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "parking-management",
+          "description": "Ir a Módulo de Parking Management"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "wellness-program-enrollment": {
+      "name": "Wellness Program Enrollment",
+      "module": "wellness-programs",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "wellness-programs",
+          "description": "Ir a Módulo de Wellness Programs"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "wellness-activity-log": {
+      "name": "Wellness Activity Log",
+      "module": "wellness-programs",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "wellness-programs",
+          "description": "Ir a Módulo de Wellness Programs"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "wellness-reward-claim": {
+      "name": "Wellness Reward Claim",
+      "module": "wellness-programs",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "wellness-programs",
+          "description": "Ir a Módulo de Wellness Programs"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 4,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2888,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "benefit-enrollment": {
+      "name": "Benefit Enrollment",
+      "module": "benefits-administration",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "benefits-administration",
+          "description": "Ir a Módulo de Benefits Administration"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "benefit-change": {
+      "name": "Benefit Change",
+      "module": "benefits-administration",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "benefits-administration",
+          "description": "Ir a Módulo de Benefits Administration"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "benefit-claim": {
+      "name": "Benefit Claim",
+      "module": "benefits-administration",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "benefits-administration",
+          "description": "Ir a Módulo de Benefits Administration"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 4,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2888,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "upload-document": {
+      "name": "Upload Document",
+      "module": "dms-dashboard",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "dms-dashboard",
+          "description": "Ir a Módulo de Dms Dashboard"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "request-document": {
+      "name": "Request Document",
+      "module": "dms-dashboard",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "dms-dashboard",
+          "description": "Ir a Módulo de Dms Dashboard"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    },
+    "share-document": {
+      "name": "Share Document",
+      "module": "dms-dashboard",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "dms-dashboard",
+          "description": "Ir a Módulo de Dms Dashboard"
+        },
+        {
+          "step": 2,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 3,
+          "action": "save",
+          "description": "Guardar cambios"
+        }
+      ],
+      "estimatedTimeMinutes": 6,
+      "requiresApproval": false,
+      "autoRouteable": true
+    },
+    "document-approval-request": {
+      "name": "Document Approval Request",
+      "module": "dms-dashboard",
+      "steps": [
+        {
+          "step": 1,
+          "action": "navigate",
+          "module": "dms-dashboard",
+          "description": "Ir a Módulo de Dms Dashboard"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "request-button",
+          "description": "Click en \"Nueva Solicitud\""
+        },
+        {
+          "step": 3,
+          "action": "fill-form",
+          "description": "Completar formulario con datos requeridos",
+          "validation": "Todos los campos obligatorios deben estar completos"
+        },
+        {
+          "step": 4,
+          "action": "submit",
+          "description": "Enviar solicitud para aprobación",
+          "routingType": "hierarchical"
+        },
+        {
+          "step": 5,
+          "action": "wait-approval",
+          "description": "Esperar aprobación",
+          "estimatedTime": "2-3 días hábiles"
+        }
+      ],
+      "estimatedTimeMinutes": 2890,
+      "requiresApproval": true,
+      "autoRouteable": true
+    }
+  }
+}
