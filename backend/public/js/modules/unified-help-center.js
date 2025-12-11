@@ -914,6 +914,9 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
                                 </button>
                             </div>
                         ` : ''}
+                        ${msg.processChain ? `
+                            <div class="uhc-process-chain-container" id="process-chain-${index}"></div>
+                        ` : ''}
                     ` : ''}
                 </div>
             `;
@@ -921,6 +924,18 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
 
         html += '</div>';
         content.innerHTML = html;
+
+        // 🔥 RENDERIZAR PROCESS CHAINS si existen
+        state.chatHistory.forEach((msg, index) => {
+            if (msg.processChain && window.ProcessChainVisualizer) {
+                const container = document.getElementById(`process-chain-${index}`);
+                if (container) {
+                    const visualizer = new ProcessChainVisualizer({ theme: 'dark' });
+                    visualizer.render(container, msg.processChain);
+                    console.log(`[UNIFIED-HELP] Process Chain renderizado para mensaje ${index}`);
+                }
+            }
+        });
 
         // Scroll al final
         content.scrollTop = content.scrollHeight;
@@ -1121,28 +1136,51 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
         state.isLoading = true;
 
         try {
-            const result = await apiCall('/ask', {
+            // 🔥 USAR ASSISTANT SERVICE con soporte para Process Chains
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            const companyData = JSON.parse(sessionStorage.getItem('companyData') || '{}');
+            const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+
+            const response = await fetch('/api/assistant/chat', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     question,
                     context: {
-                        moduleContext: getCurrentModule(),
-                        screenContext: document.title
+                        module: getCurrentModule(),
+                        screen: document.title,
+                        action: null
                     }
                 })
             });
 
-            state.chatHistory.push({
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            // Guardar en historial con processChain si existe
+            const assistantMessage = {
                 role: 'assistant',
                 content: result.answer || 'Lo siento, no pude procesar tu pregunta.',
                 source: result.source,
                 confidence: result.confidence,
                 suggestTicket: result.suggestTicket,
                 suggestTicketMessage: result.suggestTicketMessage,
-                id: result.interactionId || Date.now().toString()
-            });
+                id: result.id || Date.now().toString(),
+                // 🔥 PROCESS CHAIN - Incluir si existe
+                processChain: result.processChain || null,
+                actionIntent: result.actionIntent || null
+            };
+
+            state.chatHistory.push(assistantMessage);
 
         } catch (error) {
+            console.error('[UNIFIED-HELP] Error en chat:', error);
             state.chatHistory.push({
                 role: 'assistant',
                 content: 'Error al conectar con el servidor. ¿Deseas crear un ticket de soporte?',

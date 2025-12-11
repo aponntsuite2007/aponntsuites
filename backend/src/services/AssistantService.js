@@ -78,6 +78,94 @@ class AssistantService {
   }
 
   /**
+   * Detecta si la pregunta del usuario es una INTENCIÓN DE ACCIÓN
+   * (ej: "quiero pedir vacaciones", "necesito cambiar mi turno", etc.)
+   *
+   * @param {string} question - Pregunta del usuario
+   * @returns {Object|null} { isActionIntent: true, actionKey, confidence, keywords } o null
+   */
+  detectActionIntent(question) {
+    const lowerQuestion = question.toLowerCase();
+
+    // Mapeo de keywords → actionKey
+    // 🔥 Usar las 108 acciones cargadas dinámicamente
+    const intentPatterns = [
+      // VACACIONES
+      { keywords: ['vacaciones', 'vacacione', 'descanso', 'pedir vacaciones', 'solicitar vacaciones'], actionKey: 'vacation-request' },
+      { keywords: ['días libres', 'dia libre', 'ausencia', 'permiso'], actionKey: 'time-off-request' },
+
+      // TURNOS
+      { keywords: ['cambiar turno', 'cambio de turno', 'intercambiar turno', 'swap turno', 'cambiar mi turno'], actionKey: 'shift-swap' },
+      { keywords: ['consultar turno', 'ver mi turno', 'mi turno', 'horario turno'], actionKey: 'shift-check' },
+
+      // HORAS EXTRA
+      { keywords: ['horas extra', 'hora extra', 'overtime', 'trabajar extra', 'solicitar horas extra'], actionKey: 'overtime-request' },
+
+      // MÉDICO
+      { keywords: ['turno médico', 'turno medico', 'consulta médica', 'consulta medica', 'cita médica', 'doctor'], actionKey: 'medical-appointment' },
+
+      // REPORTES/PROBLEMAS
+      { keywords: ['reportar problema', 'problema con', 'no funciona', 'roto', 'error en'], actionKey: 'report-issue' },
+
+      // NOTIFICACIONES
+      { keywords: ['enviar notificación', 'notificar', 'avisar', 'comunicar'], actionKey: 'send-notification' }
+    ];
+
+    // Buscar match con mejor confidence
+    let bestMatch = null;
+    let maxConfidence = 0;
+
+    for (const pattern of intentPatterns) {
+      let matchCount = 0;
+      const matchedKeywords = [];
+
+      for (const keyword of pattern.keywords) {
+        if (lowerQuestion.includes(keyword)) {
+          matchCount++;
+          matchedKeywords.push(keyword);
+        }
+      }
+
+      if (matchCount > 0) {
+        const confidence = matchCount / pattern.keywords.length;
+
+        if (confidence > maxConfidence) {
+          maxConfidence = confidence;
+          bestMatch = {
+            isActionIntent: true,
+            actionKey: pattern.actionKey,
+            confidence: Math.min(confidence, 1.0),
+            matchedKeywords
+          };
+        }
+      }
+    }
+
+    // Detectar intenciones generales (quiero, necesito, etc.)
+    const generalIntentKeywords = ['quiero', 'necesito', 'puedo', 'cómo hago para', 'como hago para', 'pedir', 'solicitar'];
+    const hasGeneralIntent = generalIntentKeywords.some(k => lowerQuestion.includes(k));
+
+    if (bestMatch && bestMatch.confidence >= 0.3) {
+      console.log(`🎯 [INTENT DETECTION] Detectada intención: ${bestMatch.actionKey} (confidence: ${bestMatch.confidence.toFixed(2)})`);
+      console.log(`   Keywords matched: ${bestMatch.matchedKeywords.join(', ')}`);
+      return bestMatch;
+    }
+
+    if (hasGeneralIntent) {
+      console.log(`🎯 [INTENT DETECTION] Intención general detectada, pero sin acción específica`);
+      return {
+        isActionIntent: true,
+        actionKey: null, // No sabemos qué acción específica
+        confidence: 0.5,
+        matchedKeywords: generalIntentKeywords.filter(k => lowerQuestion.includes(k)),
+        needsClarification: true
+      };
+    }
+
+    return null;
+  }
+
+  /**
    * Método principal: Responder pregunta del usuario
    *
    * @param {Object} params
@@ -87,7 +175,7 @@ class AssistantService {
    * @param {string} params.question - Pregunta del usuario
    * @param {Object} params.context - Contexto: { module, submodule, screen, action }
    *
-   * @returns {Promise<Object>} { answer, source, confidence, suggestions, diagnosticTriggered }
+   * @returns {Promise<Object>} { answer, source, confidence, suggestions, diagnosticTriggered, processChain }
    */
   async chat(params) {
     const { companyId, userId, userRole, question, context = {} } = params;
@@ -100,11 +188,50 @@ class AssistantService {
       console.log(`   Pregunta: "${question}"`);
       console.log(`   Contexto: ${JSON.stringify(context)}`);
 
+      // PASO 0.5: 🔥 DETECTAR INTENCIÓN DE ACCIÓN
+      const actionIntent = this.detectActionIntent(question);
+      let processChain = null;
+
+      if (actionIntent && actionIntent.isActionIntent && actionIntent.actionKey) {
+        console.log(`🔗 [PROCESS CHAIN] Generando cadena para: ${actionIntent.actionKey}`);
+
+        // Generar process chain automáticamente
+        if (this.processChainGenerator) {
+          try {
+            processChain = await this.processChainGenerator.generateProcessChain(
+              userId,
+              companyId,
+              actionIntent.actionKey,
+              question // Pasar la pregunta original como contexto
+            );
+
+            console.log(`✅ [PROCESS CHAIN] Cadena generada con ${processChain.processSteps?.length || 0} pasos`);
+
+          } catch (chainError) {
+            console.error(`❌ [PROCESS CHAIN] Error generando cadena:`, chainError.message);
+            // Continuar sin process chain
+          }
+        } else {
+          console.warn(`⚠️ [PROCESS CHAIN] ProcessChainGenerator no disponible`);
+        }
+      }
+
       // PASO 1: Buscar en knowledge base (RAG - Retrieval)
       const similarAnswers = await this.searchKnowledgeBase(question, companyId, context.module);
 
-      // PASO 2: Construir contexto completo
+      // PASO 2: Construir contexto completo (incluir process chain si existe)
       const fullContext = await this.buildContext(companyId, context, similarAnswers);
+
+      // Agregar info del process chain al contexto para Ollama
+      if (processChain) {
+        fullContext.processChain = {
+          action: processChain.action,
+          canProceed: processChain.canProceed,
+          stepsCount: processChain.processSteps?.length || 0,
+          hasPrerequisites: (processChain.prerequisiteSteps?.length || 0) > 0,
+          hasAlternativeRoute: !!processChain.alternativeRoute
+        };
+      }
 
       // PASO 3: Verificar si necesita diagnóstico técnico
       const needsDiagnostic = this.shouldTriggerDiagnostic(question);
@@ -116,7 +243,7 @@ class AssistantService {
       }
 
       // PASO 4: Generar respuesta con Ollama (Augmented Generation)
-      const generatedAnswer = await this.generateAnswer(question, fullContext, diagnosticResults);
+      const generatedAnswer = await this.generateAnswer(question, fullContext, diagnosticResults, processChain);
 
       // PASO 5: Guardar en knowledge base GLOBAL (para aprendizaje compartido)
       const savedEntry = await this.saveToKnowledgeBase({
@@ -166,7 +293,10 @@ class AssistantService {
         quickReplies: generatedAnswer.quickReplies,
         diagnosticTriggered: needsDiagnostic,
         diagnosticSummary: diagnosticResults ? this.summarizeDiagnostic(diagnosticResults) : null,
-        responseTimeMs: Date.now() - startTime
+        responseTimeMs: Date.now() - startTime,
+        // 🔥 PROCESS CHAIN - Incluir en respuesta
+        processChain: processChain || null,
+        actionIntent: actionIntent || null
       };
 
     } catch (error) {
@@ -339,10 +469,10 @@ class AssistantService {
   /**
    * Genera respuesta usando Ollama
    */
-  async generateAnswer(question, context, diagnosticResults = null) {
+  async generateAnswer(question, context, diagnosticResults = null, processChain = null) {
     try {
-      // Construir prompt con contexto
-      const systemPrompt = this.buildSystemPrompt(context, diagnosticResults);
+      // Construir prompt con contexto (incluir process chain si existe)
+      const systemPrompt = this.buildSystemPrompt(context, diagnosticResults, processChain);
       const userPrompt = question;
 
       console.log('📤 Enviando request a Ollama...');
@@ -405,9 +535,70 @@ class AssistantService {
 
   /**
    * Construye el system prompt con todo el contexto
+   * 🔥 INCLUYE PROCESS CHAIN si está disponible
    */
-  buildSystemPrompt(context, diagnosticResults) {
+  buildSystemPrompt(context, diagnosticResults, processChain = null) {
     let prompt = context.system + '\n\n';
+
+    // 🔥 PROCESS CHAIN - Agregar PRIMERO si existe
+    if (processChain) {
+      prompt += '## 🔗 CADENA DE PROCESOS GENERADA:\n\n';
+      prompt += `**Acción solicitada:** ${processChain.action}\n`;
+      prompt += `**¿Puede proceder?** ${processChain.canProceed ? '✅ SÍ' : '❌ NO'}\n\n`;
+
+      // Si hay prerequisitos faltantes
+      if (processChain.prerequisiteSteps && processChain.prerequisiteSteps.length > 0) {
+        prompt += `### ⚠️ PREREQUISITOS FALTANTES:\n`;
+        prompt += `El usuario NO puede realizar esta acción porque le faltan los siguientes datos:\n\n`;
+        processChain.prerequisiteSteps.forEach((prereq, idx) => {
+          prompt += `${idx + 1}. **${prereq.missing}**: ${prereq.description}\n`;
+          prompt += `   - Razón: ${prereq.reason}\n`;
+          prompt += `   - Cómo solucionarlo: ${prereq.howToFix}\n\n`;
+        });
+        prompt += `**IMPORTANTE:** En tu respuesta, explica al usuario QUÉ le falta y CÓMO puede completarlo.\n\n`;
+      }
+
+      // Si puede proceder, mostrar pasos
+      if (processChain.canProceed && processChain.processSteps && processChain.processSteps.length > 0) {
+        prompt += `### ✅ PASOS A SEGUIR (${processChain.processSteps.length} pasos):\n\n`;
+        processChain.processSteps.forEach((step, idx) => {
+          prompt += `**Paso ${step.step || idx + 1}:** ${step.description}\n`;
+          if (step.validation) prompt += `   ⚠️ Validación: ${step.validation}\n`;
+          if (step.expectedTime) prompt += `   ⏱️ Tiempo estimado: ${step.expectedTime}\n`;
+          prompt += '\n';
+        });
+
+        if (processChain.estimatedTime) {
+          prompt += `**Tiempo total estimado:** ${processChain.estimatedTime}\n\n`;
+        }
+
+        if (processChain.expectedOutcome) {
+          prompt += `**Resultado esperado:** ${processChain.expectedOutcome}\n\n`;
+        }
+      }
+
+      // Ruta alternativa
+      if (processChain.alternativeRoute) {
+        prompt += `### 🔄 RUTA ALTERNATIVA:\n`;
+        prompt += `${processChain.warnings.join('\n')}\n\n`;
+      }
+
+      // Warnings
+      if (processChain.warnings && processChain.warnings.length > 0) {
+        prompt += `### ⚠️ ADVERTENCIAS:\n`;
+        processChain.warnings.forEach(w => prompt += `- ${w}\n`);
+        prompt += '\n';
+      }
+
+      // Tips del Brain
+      if (processChain.tips && processChain.tips.length > 0) {
+        prompt += `### 💡 TIPS ACUMULADOS:\n`;
+        processChain.tips.forEach(t => prompt += `- ${t}\n`);
+        prompt += '\n';
+      }
+
+      prompt += '---\n\n';
+    }
 
     // Agregar información de módulos
     if (context.modules.length > 0) {
@@ -448,9 +639,16 @@ class AssistantService {
     prompt += '1. Responde en español de forma clara y concisa\n';
     prompt += '2. Si hay respuestas previas relevantes, úsalas como referencia\n';
     prompt += '3. Si hay diagnóstico técnico, incorpóralo en tu respuesta\n';
-    prompt += '4. Sugiere acciones concretas cuando sea posible\n';
-    prompt += '5. Usa formato Markdown para mejor legibilidad\n';
-    prompt += '6. Si no estás seguro, dilo honestamente\n';
+    if (processChain) {
+      prompt += '4. **IMPORTANTE:** Si hay una CADENA DE PROCESOS generada arriba, tu respuesta DEBE:\n';
+      prompt += '   - Explicar los pasos de forma amigable y clara\n';
+      prompt += '   - Si faltan prerequisitos, explicar QUÉ falta y CÓMO solucionarlo\n';
+      prompt += '   - Si hay ruta alternativa, explicarla claramente\n';
+      prompt += '   - Mencionar el tiempo estimado total\n';
+    }
+    prompt += '5. Sugiere acciones concretas cuando sea posible\n';
+    prompt += '6. Usa formato Markdown para mejor legibilidad\n';
+    prompt += '7. Si no estás seguro, dilo honestamente\n';
 
     return prompt;
   }

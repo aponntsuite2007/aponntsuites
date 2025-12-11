@@ -3117,6 +3117,21 @@ console.log('   🔧 /api/audit/bundles - Sugerencias comerciales');
 console.log('   🌱 /api/audit/seed/:module - Generar datos de prueba');
 console.log('   🔥 Auto-diagnóstico, Auto-reparación híbrida, Análisis de dependencias');
 
+// 🔗 CONFIGURAR SISTEMA DE PROCESS CHAINS (Cadenas de Procesos Dinámicas)
+const { router: processChainRoutes, initializeServices: initProcessChainServices } = require('./src/routes/processChainRoutes');
+app.use('/api/process-chains', processChainRoutes);
+
+// Inicializar servicios de Process Chain con Brain
+initProcessChainServices(database.sequelize, brainService);
+
+console.log('🔗 [PROCESS CHAINS] Sistema de Cadenas de Procesos ACTIVO:');
+console.log('   📋 POST /api/process-chains/generate - Generar cadena para una acción');
+console.log('   ✅ GET  /api/process-chains/available/:userId - Acciones disponibles para usuario');
+console.log('   🔍 POST /api/process-chains/validate - Validar contexto del usuario');
+console.log('   📚 GET  /api/process-chains/actions - Listar 108 acciones registradas');
+console.log('   🏥 GET  /api/process-chains/health - Health check del servicio');
+console.log('   🧠 Integrado con: Brain + ContextValidator + Organigrama (SSOT)');
+
 // ✅ CONFIGURAR SISTEMA DE CONTROL DE ACCESO ENTERPRISE (RBAC + SSOT) - Diciembre 2025
 const accessControlRoutes = require('./src/routes/accessControlRoutes');
 const associateRoutes = require('./src/routes/associateRoutes');
