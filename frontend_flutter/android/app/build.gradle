@@ -42,11 +42,51 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.attendance_system"
+        applicationId "com.aponnt.attendance.admin"
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+    }
+
+    // 🎯 PRODUCT FLAVORS - 4 APKs INDEPENDIENTES
+    flavorDimensions "app"
+    productFlavors {
+        employee {
+            dimension "app"
+            applicationId "com.aponnt.attendance.employee"
+            versionCode flutterVersionCode.toInteger()
+            versionName flutterVersionName
+            resValue "string", "app_name", "Aponnt Ecosistema Inteligente"
+            resValue "string", "app_subtitle", "Empleados"
+        }
+
+        kiosk {
+            dimension "app"
+            applicationId "com.aponnt.attendance.kiosk"
+            versionCode flutterVersionCode.toInteger()
+            versionName flutterVersionName
+            resValue "string", "app_name", "Aponnt Ecosistema Inteligente"
+            resValue "string", "app_subtitle", "Kiosco Biométrico"
+        }
+
+        medical {
+            dimension "app"
+            applicationId "com.aponnt.attendance.medical"
+            versionCode flutterVersionCode.toInteger()
+            versionName flutterVersionName
+            resValue "string", "app_name", "Aponnt Ecosistema Inteligente"
+            resValue "string", "app_subtitle", "Área Médica"
+        }
+
+        admin {
+            dimension "app"
+            applicationId "com.aponnt.attendance.admin"
+            versionCode flutterVersionCode.toInteger()
+            versionName flutterVersionName
+            resValue "string", "app_name", "Aponnt Ecosistema Inteligente"
+            resValue "string", "app_subtitle", "Administrador"
+        }
     }
 
     buildTypes {

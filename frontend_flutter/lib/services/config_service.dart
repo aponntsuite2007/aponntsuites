@@ -9,10 +9,10 @@ class ConfigService {
   static const String _companyIdKey = 'config_company_id';
   static const String _isConfiguredKey = 'config_is_configured';
 
-  // VALORES POR DEFECTO - Render production server
-  static const String DEFAULT_BASE_URL = 'aponntsuites.onrender.com';
-  static const String DEFAULT_PORT = ''; // Render usa HTTPS sin puerto específico
-  static const String DEFAULT_COMPANY_ID = '11'; // MLK IT company
+  // VALORES HARDCODEADOS - www.aponnt.com
+  static const String DEFAULT_BASE_URL = 'www.aponnt.com';
+  static const String DEFAULT_PORT = ''; // HTTPS estándar (puerto 443)
+  static const String DEFAULT_COMPANY_ID = '1'; // Default, usuario debe especificar
 
   // Obtener configuración actual (retorna valores guardados o valores por defecto de Render)
   static Future<Map<String, String>> getConfig() async {
@@ -40,37 +40,28 @@ class ConfigService {
     await prefs.setBool(_isConfiguredKey, true);
   }
 
-  // Verificar si ya está configurado
+  // SIEMPRE configurado - hardcoded a www.aponnt.com
   static Future<bool> isConfigured() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_isConfiguredKey) ?? false;
+    // Siempre retorna true porque está hardcodeado
+    return true;
   }
 
-  // Obtener URL completa para API
+  // Obtener URL completa para API (HARDCODED)
   static Future<String> getApiBaseUrl() async {
-    final config = await getConfig();
-    final isRender = config['baseUrl']!.contains('.onrender.com');
-    final protocol = isRender ? 'https' : 'http';
-    final port = config['port']!.isEmpty ? '' : ':${config['port']}';
-    return '$protocol://${config['baseUrl']}$port/api/v1';
+    // Hardcoded a www.aponnt.com
+    return 'https://www.aponnt.com/api/v1';
   }
 
-  // Obtener URL base para WebSocket
+  // Obtener URL base para WebSocket (HARDCODED)
   static Future<String> getWebSocketUrl() async {
-    final config = await getConfig();
-    final isRender = config['baseUrl']!.contains('.onrender.com');
-    final protocol = isRender ? 'https' : 'http';
-    final port = config['port']!.isEmpty ? '' : ':${config['port']}';
-    return '$protocol://${config['baseUrl']}$port';
+    // Hardcoded a www.aponnt.com
+    return 'https://www.aponnt.com';
   }
 
-  // Obtener URL completa del servidor (para kiosk_screen.dart)
+  // Obtener URL completa del servidor (HARDCODED)
   static Future<String> getServerUrl() async {
-    final config = await getConfig();
-    final isRender = config['baseUrl']!.contains('.onrender.com');
-    final protocol = isRender ? 'https' : 'http';
-    final port = config['port']!.isEmpty ? '' : ':${config['port']}';
-    return '$protocol://${config['baseUrl']}$port';
+    // Hardcoded a www.aponnt.com
+    return 'https://www.aponnt.com';
   }
 
   // Resetear configuración

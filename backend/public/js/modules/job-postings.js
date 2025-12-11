@@ -805,8 +805,11 @@ const TalentEngine = {
                 TalentAPI.getBranches()
             ]);
 
-            TalentState.departments = deptResponse.data || deptResponse || [];
-            TalentState.branches = branchResponse.data || branchResponse || [];
+            // Normalize to array (handle multiple response formats)
+            TalentState.departments = Array.isArray(deptResponse) ? deptResponse :
+                                      (deptResponse.departments || deptResponse.data || []);
+            TalentState.branches = Array.isArray(branchResponse) ? branchResponse :
+                                   (branchResponse.branches || branchResponse.data || []);
 
             // Load view-specific data
             await this.loadViewData();
@@ -841,8 +844,10 @@ const TalentEngine = {
                     this.renderApplications(contentDiv);
                     break;
                 case 'pipeline':
-                    const pipeline = await TalentAPI.getPipeline();
-                    TalentState.pipeline = pipeline.data || pipeline || [];
+                    const pipelineResponse = await TalentAPI.getPipeline();
+                    // Pipeline endpoint returns {pipeline: [...]} not {data: [...]}
+                    TalentState.pipeline = Array.isArray(pipelineResponse) ? pipelineResponse :
+                                          (pipelineResponse.pipeline || pipelineResponse.data || []);
                     this.renderPipeline(contentDiv);
                     break;
                 case 'interviews':

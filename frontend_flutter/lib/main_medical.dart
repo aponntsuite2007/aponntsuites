@@ -45,7 +45,7 @@ class MedicalApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => MedicalAppProvider(prefs),
       child: MaterialApp(
-        title: 'Panel Médico - Sistema de Asistencia',
+        title: 'Aponnt Ecosistema Inteligente - Área Médica',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.teal,

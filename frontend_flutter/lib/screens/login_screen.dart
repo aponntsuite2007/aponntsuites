@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/config_service.dart';
 import '../screens/biometric_selector_screen.dart';
-import '../screens/config_screen.dart';
 
 /// 🔐 NUEVA PANTALLA DE LOGIN CON CONFIGURACIÓN DINÁMICA
 class NewLoginScreen extends StatefulWidget {
@@ -15,36 +14,18 @@ class NewLoginScreen extends StatefulWidget {
 }
 
 class _NewLoginScreenState extends State<NewLoginScreen> {
+  final TextEditingController _companySlugController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String _selectedCompanyId = '1';
   bool _isLoading = false;
   String _errorMessage = '';
-  Map<String, String> _currentConfig = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _loadConfiguration();
-  }
 
   @override
   void dispose() {
+    _companySlugController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadConfiguration() async {
-    try {
-      final config = await ConfigService.getConfig();
-      setState(() {
-        _currentConfig = config;
-        _selectedCompanyId = config['companyId'] ?? '1';
-      });
-    } catch (e) {
-      print('Error cargando configuración: $e');
-    }
   }
 
   Future<void> _login() async {
@@ -60,9 +41,9 @@ class _NewLoginScreenState extends State<NewLoginScreen> {
         Uri.parse('$apiBaseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
+          'companySlug': _companySlugController.text,
           'identifier': _usernameController.text,
           'password': _passwordController.text,
-          'companyId': _selectedCompanyId,
         }),
       );
 
@@ -73,10 +54,7 @@ class _NewLoginScreenState extends State<NewLoginScreen> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', data['token']);
         await prefs.setString('user_data', json.encode(data['user']));
-        await prefs.setString('config_company_id', _selectedCompanyId);
-
-        print('✅ [LOGIN-DEBUG] Guardado company ID: $_selectedCompanyId');
-        print('✅ [LOGIN-DEBUG] Verificando: ${prefs.getString('config_company_id')}');
+        await prefs.setString('config_company_slug', _companySlugController.text);
 
         // Ir directamente al kiosk (no necesita login en modo kiosk)
         if (mounted) {
@@ -106,28 +84,13 @@ class _NewLoginScreenState extends State<NewLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
-      appBar: AppBar(
-        title: const Text('Iniciar Sesión'),
-        backgroundColor: Colors.blue.shade900,
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const ConfigScreen()),
-              );
-            },
-            icon: const Icon(Icons.settings),
-            tooltip: 'Configurar Servidor',
-          ),
-        ],
-      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo y configuración actual
+              // Logo
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -138,22 +101,14 @@ class _NewLoginScreenState extends State<NewLoginScreen> {
                   children: [
                     const Icon(Icons.security, size: 64, color: Colors.white),
                     const SizedBox(height: 12),
-                    Text(
-                      _currentConfig['companyName'] ?? 'Sistema de Asistencia',
-                      style: const TextStyle(
+                    const Text(
+                      'Aponnt Ecosistema Inteligente',
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Servidor: ${_currentConfig['baseUrl']}:${_currentConfig['port']}',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
                     ),
                   ],
                 ),
@@ -179,6 +134,30 @@ class _NewLoginScreenState extends State<NewLoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
+
+                    // Empresa (slug)
+                    TextField(
+                      controller: _companySlugController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Empresa',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        prefixIcon: const Icon(Icons.business, color: Colors.white70),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Colors.white30),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Colors.white30),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Colors.blue),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
                     // Usuario
                     TextField(

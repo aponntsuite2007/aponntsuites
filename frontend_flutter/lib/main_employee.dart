@@ -43,7 +43,7 @@ class EmployeeApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => EmployeeAppProvider(prefs),
       child: MaterialApp(
-        title: 'App Empleado - Sistema de Asistencia',
+        title: 'Aponnt Ecosistema Inteligente - Empleados',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,

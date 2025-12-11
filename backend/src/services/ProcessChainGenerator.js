@@ -25,15 +25,52 @@
 
 const { QueryTypes } = require('sequelize');
 const ContextValidatorService = require('./ContextValidatorService');
+const path = require('path');
+const fs = require('fs');
 
 class ProcessChainGenerator {
     constructor(sequelize, brainService = null) {
         this.db = sequelize;
-        this.validator = new ContextValidatorService(sequelize);
+        this.validator = new ContextValidatorService(sequelize, brainService);
         this.brain = brainService;
 
-        // DEFINICIÓN DE CADENAS DE PROCESOS POR ACCIÓN
-        this.processDefinitions = {
+        // 🔥 CARGAR DEFINICIONES DINÁMICAMENTE DESDE JSON (108 PROCESOS)
+        this.processDefinitions = this.loadProcessDefinitions();
+
+        console.log(`🔗 [PROCESS CHAIN] Cargadas ${Object.keys(this.processDefinitions).length} definiciones de procesos`);
+
+        if (this.brain) {
+            console.log('🧠 [PROCESS CHAIN] Integrado con EcosystemBrainService');
+        }
+    }
+
+    /**
+     * Carga las definiciones de procesos desde JSON
+     * 🔥 INTEGRACIÓN REAL - No hardcoding
+     */
+    loadProcessDefinitions() {
+        try {
+            const jsonPath = path.join(__dirname, '../auditor/registry/action-processes.json');
+
+            if (!fs.existsSync(jsonPath)) {
+                console.warn('⚠️  [PROCESS CHAIN] No se encontró action-processes.json, usando definiciones por defecto');
+                return this.getDefaultProcessDefinitions();
+            }
+
+            const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+            return data.processes;
+
+        } catch (error) {
+            console.error('❌ [PROCESS CHAIN] Error cargando procesos:', error.message);
+            return this.getDefaultProcessDefinitions();
+        }
+    }
+
+    /**
+     * Definiciones por defecto (fallback) - Solo las 3 originales
+     */
+    getDefaultProcessDefinitions() {
+        return {
             'shift-swap': {
                 name: 'Cambio de Turno',
                 steps: [
@@ -211,6 +248,13 @@ class ProcessChainGenerator {
                 notificationChannels: ['in-app']
             }
         };
+    }
+
+    /**
+     * Obtiene una acción del proceso cargado dinámicamente
+     */
+    getProcessDefinition(actionKey) {
+        return this.processDefinitions[actionKey] || null;
     }
 
     /**

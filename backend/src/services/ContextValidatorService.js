@@ -22,13 +22,51 @@
  */
 
 const { QueryTypes } = require('sequelize');
+const path = require('path');
+const fs = require('fs');
 
 class ContextValidatorService {
-    constructor(sequelize) {
+    constructor(sequelize, brainService = null) {
         this.db = sequelize;
+        this.brainService = brainService;
 
-        // DEFINICIÓN DE PREREQUISITOS POR ACCIÓN
-        this.actionPrerequisites = {
+        // 🔥 CARGAR DEFINICIONES DINÁMICAMENTE DESDE JSON (108 ACCIONES)
+        this.actionPrerequisites = this.loadActionPrerequisites();
+
+        console.log(`🔗 [CONTEXT VALIDATOR] Cargadas ${Object.keys(this.actionPrerequisites).length} definiciones de acciones`);
+
+        if (this.brainService) {
+            console.log('🧠 [CONTEXT VALIDATOR] Integrado con EcosystemBrainService');
+        }
+    }
+
+    /**
+     * Carga las definiciones de prerequisitos desde JSON
+     * 🔥 INTEGRACIÓN REAL - No hardcoding
+     */
+    loadActionPrerequisites() {
+        try {
+            const jsonPath = path.join(__dirname, '../auditor/registry/action-prerequisites.json');
+
+            if (!fs.existsSync(jsonPath)) {
+                console.warn('⚠️  [CONTEXT VALIDATOR] No se encontró action-prerequisites.json, usando definiciones por defecto');
+                return this.getDefaultPrerequisites();
+            }
+
+            const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+            return data.prerequisites;
+
+        } catch (error) {
+            console.error('❌ [CONTEXT VALIDATOR] Error cargando prerequisites:', error.message);
+            return this.getDefaultPrerequisites();
+        }
+    }
+
+    /**
+     * Definiciones por defecto (fallback) - Solo las 5 originales
+     */
+    getDefaultPrerequisites() {
+        return {
             'shift-swap': {
                 name: 'Cambio de Turno',
                 requiredChain: [

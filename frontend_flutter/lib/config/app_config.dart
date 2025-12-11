@@ -8,9 +8,9 @@ class AppConfig {
   static const String companyName = 'Mi Empresa';
   
   // API Configuration
-  static const String baseUrl = 'http://localhost:3001'; // Para web y desarrollo
-  // PRODUCCIÓN: URL de Render pre-configurada
-  static const String baseUrlProd = 'https://aponntsuites.onrender.com'; // Producción Render
+  static const String baseUrl = 'http://localhost:9998'; // Para web y desarrollo
+  // PRODUCCIÓN: URL de Render - Backend en www.aponnt.com
+  static const String baseUrlProd = 'https://www.aponnt.com'; // Producción Render
   static const String apiVersion = 'v1';
   static String get apiBaseUrl => '${getBaseUrl()}/api/$apiVersion';
   
