@@ -1,7 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { multiTenantDB } = require('../config/multiTenantDatabase');
 const { auth, requireRole } = require('../middleware/auth');
+
+// multiTenantDB es opcional - puede no existir en todas las instalaciones
+let multiTenantDB = null;
+try {
+  multiTenantDB = require('../config/multiTenantDatabase').multiTenantDB;
+} catch (e) {
+  console.log('⚠️ [COMPANY-ROUTES] multiTenantDatabase no disponible - endpoints multi-tenant deshabilitados');
+}
 
 /**
  * Company Management Routes
@@ -26,7 +33,7 @@ router.get('/public-list', async (req, res) => {
     // Obtener empresas activas con información mínima
     const [companies] = await sequelize.query(`
       SELECT
-        id,
+        company_id as id,
         name,
         slug,
         COALESCE(contact_email, '') as email,
