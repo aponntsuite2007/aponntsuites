@@ -41,17 +41,37 @@ router.get('/available', async (req, res) => {
 
     console.log(`📟 [KIOSKS-AVAILABLE] Consultando kioscos disponibles para empresa ${company_id}`);
 
-    const kiosks = await Kiosk.findAll({
-      where: {
-        company_id: parseInt(company_id),
-        is_active: false // Solo kioscos NO activos
-      },
-      order: [['name', 'ASC']]
+    // Usar raw SQL para evitar problemas con columnas faltantes en Render
+    const { sequelize } = require('../config/database');
+    const [kiosks] = await sequelize.query(`
+      SELECT id, name, description, location, device_id,
+             gps_lat, gps_lng, is_configured, is_active,
+             created_at, updated_at, company_id
+      FROM kiosks
+      WHERE company_id = :companyId AND is_active = false
+      ORDER BY name ASC
+    `, {
+      replacements: { companyId: parseInt(company_id) }
     });
 
     console.log(`✅ [KIOSKS-AVAILABLE] Encontrados ${kiosks.length} kioscos disponibles`);
 
-    const formattedKiosks = kiosks.map(formatKiosk);
+    const formattedKiosks = kiosks.map(kiosk => ({
+      id: kiosk.id,
+      name: kiosk.name,
+      description: kiosk.description,
+      location: kiosk.location,
+      deviceId: kiosk.device_id,
+      gpsLocation: {
+        lat: kiosk.gps_lat,
+        lng: kiosk.gps_lng
+      },
+      isConfigured: kiosk.is_configured,
+      isActive: kiosk.is_active,
+      createdAt: kiosk.created_at,
+      updatedAt: kiosk.updated_at,
+      companyId: kiosk.company_id
+    }));
 
     res.json({
       success: true,
