@@ -491,7 +491,8 @@ router.get('/:slug/stats', auth, async (req, res) => {
     });
   }
 });
-n/**
+
+/**
  * POST /api/companies/:id/onboarding/activate
  * Activar empresa al finalizar onboarding (FASE 4)
  * Crea usuario CORE inmutable "administrador"
