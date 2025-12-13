@@ -983,4 +983,62 @@ router.post('/:id/activate', async (req, res) => {
   }
 });
 
+/**
+ * @route POST /api/v1/kiosks/seed-demo
+ * @desc Crear kioscos de prueba para DEMO company (SIN AUTH - Solo para testing)
+ */
+router.post('/seed-demo', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+
+    console.log('🌱 [KIOSKS] Creando kioscos de demo...');
+
+    // Verificar si ya existen
+    const [existing] = await sequelize.query(`
+      SELECT COUNT(*) as count FROM kiosks WHERE company_id = 1
+    `);
+
+    if (parseInt(existing[0].count) > 0) {
+      const [kiosks] = await sequelize.query(`
+        SELECT id, name, location, is_active FROM kiosks WHERE company_id = 1
+      `);
+      return res.json({
+        success: true,
+        message: 'Ya existen kioscos de demo',
+        kiosks: kiosks
+      });
+    }
+
+    // Crear 2 kioscos de demo para company_id = 1 (DEMO)
+    await sequelize.query(`
+      INSERT INTO kiosks (name, description, location, company_id, is_active, is_configured, created_at, updated_at)
+      VALUES
+        ('Kiosko Entrada Principal', 'Kiosko de entrada principal para registro de asistencia', 'Recepción - Planta Baja', 1, false, false, NOW(), NOW()),
+        ('Kiosko Administración', 'Kiosko del área administrativa', 'Oficinas Administrativas - Piso 2', 1, false, false, NOW(), NOW())
+    `);
+
+    // Obtener los kioscos creados
+    const [kiosks] = await sequelize.query(`
+      SELECT id, name, description, location, is_active, is_configured
+      FROM kiosks WHERE company_id = 1
+    `);
+
+    console.log(`✅ [KIOSKS] ${kiosks.length} kioscos de demo creados`);
+
+    res.json({
+      success: true,
+      message: `${kiosks.length} kioscos de demo creados`,
+      kiosks: kiosks
+    });
+
+  } catch (error) {
+    console.error('❌ [KIOSKS] Error creando kioscos de demo:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error creando kioscos de demo',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
