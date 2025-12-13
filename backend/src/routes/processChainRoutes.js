@@ -18,7 +18,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { auth: authenticateToken } = require('../middleware/auth');
 const { database } = require('../config/database');
 const ProcessChainGenerator = require('../services/ProcessChainGenerator');
 const ContextValidatorService = require('../services/ContextValidatorService');
