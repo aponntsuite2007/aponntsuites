@@ -1,8 +1,8 @@
 {
-  "version": "2.0.0",
-  "generated_at": "2025-11-20",
-  "description": "Registry COMPLETO del sistema APONNT Suite - 45 módulos multi-tenant",
-  "total_modules": 48,
+  "version": "3.0.0",
+  "generated_at": "2025-12-11",
+  "description": "Registry COMPLETO del sistema APONNT Suite - Estructura Organizacional Unificada",
+  "total_modules": 46,
   "modules": [
     {
       "id": "users",
@@ -17,8 +17,7 @@
         ],
         "optional": [
           "real-biometric-enterprise",
-          "departments",
-          "shifts"
+          "organizational-structure"
         ],
         "integrates_with": [
           "attendance",
@@ -50,7 +49,36 @@
             "solution": "Necesitas rol admin o RRHH para resetear contraseñas"
           }
         ]
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:18:03.210Z"
+          },
+          {
+            "text": "Agregar Usuario",
+            "action": "create",
+            "discoveredAt": "2025-12-12T00:18:03.210Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:03.210Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:18:03.210Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-13T19:13:47.482Z",
+      "autoHealedGaps": 4
     },
     {
       "id": "attendance",
@@ -67,7 +95,7 @@
         "optional": [
           "kiosks-professional",
           "real-biometric-enterprise",
-          "shifts",
+          "organizational-structure",
           "notification-center"
         ],
         "integrates_with": [
@@ -92,7 +120,86 @@
             "solution": "Verifica: 1) Usuario activo 2) Biometría registrada 3) GPS habilitado"
           }
         ]
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:16:50.637Z"
+          },
+          {
+            "text": "Dashboard",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:16:50.637Z"
+          },
+          {
+            "text": "Registros",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:16:50.637Z"
+          },
+          {
+            "text": "Analytics",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:16:50.637Z"
+          },
+          {
+            "text": "Alertas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:16:50.638Z"
+          },
+          {
+            "text": "Insights",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:16:50.638Z"
+          },
+          {
+            "text": "Panel Ejecutivo",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:16:50.638Z"
+          },
+          {
+            "text": "Nuevo Registro",
+            "action": "create",
+            "discoveredAt": "2025-12-12T00:16:50.638Z"
+          },
+          {
+            "text": "Ver Registros",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:16:50.638Z"
+          },
+          {
+            "text": "Exportar CSV",
+            "action": "export",
+            "discoveredAt": "2025-12-12T00:16:50.638Z"
+          },
+          {
+            "text": "Ver Alertas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:16:50.638Z"
+          },
+          {
+            "text": "Ver todos →",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:16:50.638Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:16:50.638Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:16:50.638Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:34:47.182Z",
+      "autoHealedGaps": 14
     },
     {
       "id": "dashboard",
@@ -118,7 +225,31 @@
       "commercial": {
         "is_core": true,
         "standalone": false
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:17:22.161Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:22.161Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:17:22.161Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:35:18.773Z",
+      "autoHealedGaps": 3
     },
     {
       "id": "settings",
@@ -131,8 +262,7 @@
           "companies"
         ],
         "optional": [
-          "departments",
-          "shifts"
+          "organizational-structure"
         ],
         "integrates_with": [
           "ALL"
@@ -147,55 +277,263 @@
       }
     },
     {
-      "id": "departments",
-      "name": "Departamentos",
+      "id": "organizational-structure",
+      "name": "Estructura Organizacional Enterprise",
       "category": "organization",
-      "version": "1.0.0",
-      "description": "Organización en departamentos/áreas con ubicación GPS y radio de cobertura",
+      "version": "3.0.0",
+      "description": "Sistema completo de estructura organizacional: Departamentos, Sectores, Turnos rotativos, Convenios laborales, Categorías salariales, Jerarquía organizacional, Posiciones, Escalamiento de permisos, Calendarios de turnos con feriados, Branches multi-país",
       "dependencies": {
         "required": [
-          "companies"
-        ],
-        "optional": [],
-        "integrates_with": [
-          "users",
-          "attendance"
-        ],
-        "provides_to": [
+          "companies",
           "users"
-        ]
-      },
-      "commercial": {
-        "is_core": true,
-        "standalone": false
-      }
-    },
-    {
-      "id": "shifts",
-      "name": "Gestión de Turnos",
-      "category": "scheduling",
-      "version": "2.0.0",
-      "description": "Turnos rotativos, horarios flexibles, asignación por usuario o departamento",
-      "dependencies": {
-        "required": [
-          "users",
-          "companies"
         ],
         "optional": [
-          "attendance"
+          "attendance",
+          "vacation",
+          "payroll-liquidation",
+          "branches"
         ],
         "integrates_with": [
+          "users",
           "attendance",
-          "users"
+          "vacation",
+          "payroll-liquidation",
+          "medical"
         ],
         "provides_to": [
-          "attendance"
+          "users",
+          "attendance",
+          "vacation-approvals",
+          "payroll-liquidation"
+        ]
+      },
+      "api": {
+        "base_path": "/api/v1/organizational",
+        "endpoints": [
+          "/sectors",
+          "/agreements",
+          "/categories",
+          "/roles",
+          "/structure",
+          "/countries",
+          "/positions",
+          "/hierarchy/tree",
+          "/hierarchy/flat",
+          "/hierarchy/flowchart",
+          "/hierarchy/stats",
+          "/hierarchy/escalation/:userId",
+          "/hierarchy/supervisor/:userId",
+          "/hierarchy/subordinates/:userId",
+          "/hierarchy/can-approve",
+          "/shifts/:shiftId/holidays",
+          "/shifts/:shiftId/calendar",
+          "/holidays"
+        ]
+      },
+      "database": {
+        "tables": [
+          "departments",
+          "sectors",
+          "shifts",
+          "labor_agreements_v2",
+          "salary_categories_v2",
+          "additional_role_types",
+          "organizational_positions",
+          "branches",
+          "holidays"
+        ],
+        "modifications": [
+          "users.department_id",
+          "users.sector_id",
+          "users.shift_id",
+          "users.salary_category_id",
+          "users.organizational_position_id",
+          "users.additional_roles"
+        ]
+      },
+      "business_flows": [
+        {
+          "name": "Creación de Departamento",
+          "steps": [
+            "Admin crea departamento con ubicación GPS",
+            "Asigna radio de cobertura para asistencia GPS",
+            "Crea sectores dentro del departamento",
+            "Asigna supervisor a cada sector",
+            "Asocia empleados al departamento/sector"
+          ]
+        },
+        {
+          "name": "Configuración de Turnos",
+          "steps": [
+            "Crear turno con horarios de entrada/salida",
+            "Asignar branch (sucursal) para feriados por país",
+            "Configurar días de trabajo (L-V, rotativos, etc)",
+            "Definir si respeta feriados nacionales/provinciales",
+            "Agregar días no laborables personalizados",
+            "Asignar turno a empleados o departamentos"
+          ]
+        },
+        {
+          "name": "Aprobación Jerárquica de Vacaciones",
+          "steps": [
+            "Empleado solicita vacaciones (X días)",
+            "Sistema consulta jerarquía organizacional",
+            "Si X <= max_approval_days del supervisor → aprueba directo",
+            "Si X > max_approval_days → escala al siguiente nivel",
+            "Notifica a cada nivel de la cadena de aprobación",
+            "Registra trazabilidad completa de aprobadores"
+          ]
+        },
+        {
+          "name": "Asignación de Categoría Salarial",
+          "steps": [
+            "Admin selecciona convenio laboral (país/industria)",
+            "Elige categoría dentro del convenio",
+            "Asigna categoría a empleado",
+            "Sistema calcula sueldo base automáticamente",
+            "Payroll usa categoría para liquidación"
+          ]
+        }
+      ],
+      "help": {
+        "quickStart": "1. Crear departamentos con GPS\n2. Crear sectores dentro de departamentos\n3. Configurar turnos con horarios y feriados\n4. Definir convenios y categorías salariales\n5. Construir organigrama con posiciones jerárquicas\n6. Asignar empleados a posiciones, departamentos y turnos",
+        "commonIssues": [
+          {
+            "problem": "Turnos no respetan feriados",
+            "solution": "Verificar: 1) Turno tiene branch asignado 2) Branch tiene país configurado 3) respect_national_holidays está habilitado 4) Existen feriados para ese país en la tabla holidays"
+          },
+          {
+            "problem": "Vacaciones no escalan correctamente",
+            "solution": "Verificar: 1) Empleado tiene organizational_position_id asignado 2) Posiciones tienen parent_position_id correcto 3) Supervisor tiene can_approve_permissions = true y max_approval_days configurado"
+          },
+          {
+            "problem": "No puedo ver sectores de un departamento",
+            "solution": "Sectores solo aparecen si: 1) Departamento está activo (is_active=true) 2) Sector pertenece al mismo company_id 3) Usuario tiene permisos para ver ese departamento"
+          }
         ]
       },
       "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
+        "is_core": true,
+        "standalone": false,
+        "included_in": "Plan Básico y superiores",
+        "description": "Módulo core unificado de estructura organizacional. Integra lo que antes eran módulos separados (departments + shifts) en un solo sistema enterprise."
+      },
+      "aliases": [
+        "departments",
+        "shifts",
+        "organigrama",
+        "jerarquia",
+        "estructura"
+      ],
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "🏢\n                        Departamentos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "🏬\n                        Sectores",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "📜\n                        Convenios",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "💼\n                        Categorías",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "⏰\n                        Turnos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "🏷️\n                        Roles",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "📊\n                        Organigrama",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "👔\n                        Posiciones",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "+ Nuevo Departamento",
+            "action": "create",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "🗑️",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "🏢",
+            "id": "tab-🏢",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "🏬",
+            "id": "tab-🏬",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "📜",
+            "id": "tab-📜",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "💼",
+            "id": "tab-💼",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "⏰",
+            "id": "tab-⏰",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "🏷️",
+            "id": "tab-🏷️",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "📊",
+            "id": "tab-📊",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "👔",
+            "id": "tab-👔",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:38:20.929Z",
+      "autoHealedGaps": 20
     },
     {
       "id": "real-biometric-enterprise",
@@ -271,7 +609,81 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "📊 Exportar",
+            "action": "export",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "📧 Solicitar Pendientes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "👥 Empleados y Consentimientos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "📄 Documento Legal",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "🌐 Regulaciones Multi-Pais",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "📊 Reportes PDF",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "👥 Todos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "✅ Activos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "⏳ Pendientes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "🚫 Revocados",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:39:34.128Z",
+      "autoHealedGaps": 13
     },
     {
       "id": "evaluacion-biometrica",
@@ -351,7 +763,106 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Actualizar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Vista General",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Candidatos RRHH",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "PRE-Ocupacional",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Ocupacional",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "POST-Ocupacional",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Legajos 360°",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Notificaciones",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Buscar",
+            "action": "search",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Diagnosticar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Cerrar",
+            "action": "cancel",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Fotos Solicitadas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Ver Estudios",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Auditorías Pendientes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Reporte General",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:36:45.203Z",
+      "autoHealedGaps": 18
     },
     {
       "id": "vacation",
@@ -432,7 +943,66 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "➕ Nueva Solicitud",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "📥 Mis Pendientes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "📋 Todas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "🚨 Activas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "⛔ Suspensiones",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "📜 Historial",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "📂 Catálogo",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:38:48.316Z",
+      "autoHealedGaps": 10
     },
     {
       "id": "compliance-dashboard",
@@ -458,7 +1028,51 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          },
+          {
+            "text": "🔍 Analizar Todo",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          },
+          {
+            "text": "🔄 Actualizar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          },
+          {
+            "text": "⚙️ Configurar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          },
+          {
+            "text": "📥 Exportar ▾",
+            "action": "export",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:39:50.748Z",
+      "autoHealedGaps": 7
     },
     {
       "id": "sla-tracking",
@@ -479,7 +1093,36 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:22:50.455Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:22:50.455Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:22:50.455Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:22:50.455Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:40:46.400Z",
+      "autoHealedGaps": 4
     },
     {
       "id": "resource-center",
@@ -502,7 +1145,46 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
+          },
+          {
+            "text": "Cargar Período",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
+          },
+          {
+            "text": "Registrar Horas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
+          },
+          {
+            "text": "Comparar con Período Anterior",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:41:13.938Z",
+      "autoHealedGaps": 6
     },
     {
       "id": "audit-reports",
@@ -527,7 +1209,36 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:23:31.690Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:31.690Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:31.690Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:23:31.690Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:41:27.685Z",
+      "autoHealedGaps": 4
     },
     {
       "id": "payroll-liquidation",
@@ -576,58 +1287,299 @@
         "description": "Sistema de fórmulas para cálculo automático de conceptos",
         "availableVariables": {
           "salary": [
-            {"name": "baseSalary", "description": "Sueldo básico mensual del empleado", "example": "{baseSalary} * 0.11"},
-            {"name": "dailySalary", "description": "Sueldo diario (baseSalary/30)", "example": "{dailySalary} * {workedDays}"},
-            {"name": "hourlySalary", "description": "Sueldo por hora (baseSalary/200)", "example": "{hourlySalary} * {workedHours}"},
-            {"name": "grossSalary", "description": "Total bruto calculado", "example": "{grossSalary} * 0.03"}
+            {
+              "name": "baseSalary",
+              "description": "Sueldo básico mensual del empleado",
+              "example": "{baseSalary} * 0.11"
+            },
+            {
+              "name": "dailySalary",
+              "description": "Sueldo diario (baseSalary/30)",
+              "example": "{dailySalary} * {workedDays}"
+            },
+            {
+              "name": "hourlySalary",
+              "description": "Sueldo por hora (baseSalary/200)",
+              "example": "{hourlySalary} * {workedHours}"
+            },
+            {
+              "name": "grossSalary",
+              "description": "Total bruto calculado",
+              "example": "{grossSalary} * 0.03"
+            }
           ],
           "time": [
-            {"name": "workedDays", "description": "Días efectivamente trabajados en el período", "example": "{dailySalary} * {workedDays}"},
-            {"name": "workedHours", "description": "Horas trabajadas totales", "example": "{hourlySalary} * {workedHours}"},
-            {"name": "overtime50Hours", "description": "Horas extras al 50%", "example": "{hourlySalary} * {overtime50Hours} * 1.5"},
-            {"name": "overtime100Hours", "description": "Horas extras al 100%", "example": "{hourlySalary} * {overtime100Hours} * 2"},
-            {"name": "absenceDays", "description": "Días de ausencia", "example": "{dailySalary} * {absenceDays}"},
-            {"name": "vacationDays", "description": "Días de vacaciones gozadas", "example": "{dailySalary} * {vacationDays}"}
+            {
+              "name": "workedDays",
+              "description": "Días efectivamente trabajados en el período",
+              "example": "{dailySalary} * {workedDays}"
+            },
+            {
+              "name": "workedHours",
+              "description": "Horas trabajadas totales",
+              "example": "{hourlySalary} * {workedHours}"
+            },
+            {
+              "name": "overtime50Hours",
+              "description": "Horas extras al 50%",
+              "example": "{hourlySalary} * {overtime50Hours} * 1.5"
+            },
+            {
+              "name": "overtime100Hours",
+              "description": "Horas extras al 100%",
+              "example": "{hourlySalary} * {overtime100Hours} * 2"
+            },
+            {
+              "name": "absenceDays",
+              "description": "Días de ausencia",
+              "example": "{dailySalary} * {absenceDays}"
+            },
+            {
+              "name": "vacationDays",
+              "description": "Días de vacaciones gozadas",
+              "example": "{dailySalary} * {vacationDays}"
+            }
           ],
           "employee": [
-            {"name": "seniority", "description": "Antigüedad en años", "example": "{baseSalary} * 0.01 * {seniority}"},
-            {"name": "age", "description": "Edad del empleado", "example": "Solo para cálculos especiales"},
-            {"name": "dependents", "description": "Cantidad de personas a cargo", "example": "Para asignaciones familiares"}
+            {
+              "name": "seniority",
+              "description": "Antigüedad en años",
+              "example": "{baseSalary} * 0.01 * {seniority}"
+            },
+            {
+              "name": "age",
+              "description": "Edad del empleado",
+              "example": "Solo para cálculos especiales"
+            },
+            {
+              "name": "dependents",
+              "description": "Cantidad de personas a cargo",
+              "example": "Para asignaciones familiares"
+            }
           ]
         },
         "commonFormulas": [
-          {"name": "Jubilación 11%", "formula": "{baseSalary} * 0.11", "type": "deduction", "entity": "AFIP"},
-          {"name": "Obra Social 3%", "formula": "{baseSalary} * 0.03", "type": "deduction", "entity": "Obra Social"},
-          {"name": "PAMI 3%", "formula": "{baseSalary} * 0.03", "type": "deduction", "entity": "AFIP"},
-          {"name": "Ley 19.032 3%", "formula": "{baseSalary} * 0.03", "type": "deduction", "entity": "AFIP"},
-          {"name": "Presentismo 8.33%", "formula": "{baseSalary} * 0.0833", "type": "earning", "entity": null},
-          {"name": "Antigüedad 1% por año", "formula": "{baseSalary} * 0.01 * {seniority}", "type": "earning", "entity": null},
-          {"name": "Horas Extras 50%", "formula": "{hourlySalary} * {overtime50Hours} * 1.5", "type": "earning", "entity": null},
-          {"name": "Horas Extras 100%", "formula": "{hourlySalary} * {overtime100Hours} * 2", "type": "earning", "entity": null}
+          {
+            "name": "Jubilación 11%",
+            "formula": "{baseSalary} * 0.11",
+            "type": "deduction",
+            "entity": "AFIP"
+          },
+          {
+            "name": "Obra Social 3%",
+            "formula": "{baseSalary} * 0.03",
+            "type": "deduction",
+            "entity": "Obra Social"
+          },
+          {
+            "name": "PAMI 3%",
+            "formula": "{baseSalary} * 0.03",
+            "type": "deduction",
+            "entity": "AFIP"
+          },
+          {
+            "name": "Ley 19.032 3%",
+            "formula": "{baseSalary} * 0.03",
+            "type": "deduction",
+            "entity": "AFIP"
+          },
+          {
+            "name": "Presentismo 8.33%",
+            "formula": "{baseSalary} * 0.0833",
+            "type": "earning",
+            "entity": null
+          },
+          {
+            "name": "Antigüedad 1% por año",
+            "formula": "{baseSalary} * 0.01 * {seniority}",
+            "type": "earning",
+            "entity": null
+          },
+          {
+            "name": "Horas Extras 50%",
+            "formula": "{hourlySalary} * {overtime50Hours} * 1.5",
+            "type": "earning",
+            "entity": null
+          },
+          {
+            "name": "Horas Extras 100%",
+            "formula": "{hourlySalary} * {overtime100Hours} * 2",
+            "type": "earning",
+            "entity": null
+          }
         ],
-        "operators": ["+", "-", "*", "/", "(", ")"],
+        "operators": [
+          "+",
+          "-",
+          "*",
+          "/",
+          "(",
+          ")"
+        ],
         "syntax": "Usar {nombreVariable} para referenciar variables. Ejemplo: {baseSalary} * 0.11"
       },
       "entities": {
         "description": "Entidades de destino para aportes y contribuciones",
         "categories": [
-          {"code": "FISCAL", "name": "Organismos Fiscales", "examples": ["AFIP", "ARBA", "AGIP"]},
-          {"code": "OS", "name": "Obras Sociales", "examples": ["OSECAC", "OSPACA", "OSPLAD"]},
-          {"code": "SINDICATO", "name": "Sindicatos", "examples": ["UOCRA", "UOM", "COMERCIO"]},
-          {"code": "ART", "name": "Aseguradoras de Riesgos", "examples": ["EXPERTA", "GALENO ART"]},
-          {"code": "SEGURO", "name": "Seguros de Vida", "examples": ["SMG", "MAPFRE"]}
+          {
+            "code": "FISCAL",
+            "name": "Organismos Fiscales",
+            "examples": [
+              "AFIP",
+              "ARBA",
+              "AGIP"
+            ]
+          },
+          {
+            "code": "OS",
+            "name": "Obras Sociales",
+            "examples": [
+              "OSECAC",
+              "OSPACA",
+              "OSPLAD"
+            ]
+          },
+          {
+            "code": "SINDICATO",
+            "name": "Sindicatos",
+            "examples": [
+              "UOCRA",
+              "UOM",
+              "COMERCIO"
+            ]
+          },
+          {
+            "code": "ART",
+            "name": "Aseguradoras de Riesgos",
+            "examples": [
+              "EXPERTA",
+              "GALENO ART"
+            ]
+          },
+          {
+            "code": "SEGURO",
+            "name": "Seguros de Vida",
+            "examples": [
+              "SMG",
+              "MAPFRE"
+            ]
+          }
         ],
         "purpose": "Consolidar aportes por entidad para generar archivos de pago y declaraciones juradas"
       },
       "workflow": {
         "steps": [
-          {"number": 1, "name": "Validar", "description": "Verifica datos de empleados, plantillas asignadas y configuración"},
-          {"number": 2, "name": "Calcular", "description": "Ejecuta fórmulas y genera montos para cada empleado"},
-          {"number": 3, "name": "Revisar", "description": "Muestra alertas, anomalías y permite correcciones manuales"},
-          {"number": 4, "name": "Aprobar", "description": "Autorización final por supervisor/RRHH"},
-          {"number": 5, "name": "Pagar", "description": "Genera archivos bancarios, recibos PDF y actualiza estados"}
+          {
+            "number": 1,
+            "name": "Validar",
+            "description": "Verifica datos de empleados, plantillas asignadas y configuración"
+          },
+          {
+            "number": 2,
+            "name": "Calcular",
+            "description": "Ejecuta fórmulas y genera montos para cada empleado"
+          },
+          {
+            "number": 3,
+            "name": "Revisar",
+            "description": "Muestra alertas, anomalías y permite correcciones manuales"
+          },
+          {
+            "number": 4,
+            "name": "Aprobar",
+            "description": "Autorización final por supervisor/RRHH"
+          },
+          {
+            "number": 5,
+            "name": "Pagar",
+            "description": "Genera archivos bancarios, recibos PDF y actualiza estados"
+          }
         ]
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Dashboard",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Proceso",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Empleados",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Plantillas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Entidades",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Reportes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Recibos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Iniciar Liquidacion",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Ver Empleados",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Plantillas RRHH",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Exportar Reporte",
+            "action": "export",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "Auditar Configuracion",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:19:02.048Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:36:58.809Z",
+      "autoHealedGaps": 15
     },
     {
       "id": "training-management",
@@ -651,7 +1603,116 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📊 Dashboard",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📚 Capacitaciones",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📋 Evaluaciones (Capacitaciones)",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "🎯 Evaluaciones Independientes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "👥 Seguimiento Empleados",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📈 Reportes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📅 Calendario",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "➕ Nueva Capacitación",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📋 Nueva Evaluación",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📢 Enviar Recordatorios",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📊 Reporte Cumplimiento",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "💾 Guardar Datos",
+            "action": "save",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📤 Exportar Datos",
+            "action": "export",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "🗑️ Limpiar Todo",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "👁️ Ver",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T13:29:41.253Z"
+          },
+          {
+            "text": "✏️ Editar",
+            "action": "edit",
+            "discoveredAt": "2025-12-12T13:29:41.253Z"
+          },
+          {
+            "text": "👥 Participantes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T13:29:41.253Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:38:52.602Z",
+      "autoHealedGaps": 20
     },
     {
       "id": "psychological-assessment",
@@ -697,7 +1758,36 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:35:03.491Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:35:03.491Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:35:03.491Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:35:03.491Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:43:17.135Z",
+      "autoHealedGaps": 4
     },
     {
       "id": "visitors",
@@ -718,7 +1808,36 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:18:30.591Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:30.591Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:30.591Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:18:30.591Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:36:27.174Z",
+      "autoHealedGaps": 4
     },
     {
       "id": "document-management",
@@ -769,7 +1888,116 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "🏢 Aseguradoras",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "🩺 Exámenes Médicos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "🚨 Accidentes Laborales",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "📞 Comunicación ART",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "📜 Legislación Vigente",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "📊 Reportes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "➕ Nueva ART",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "🔄 Sincronizar con SRT",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "✅ Validar Cumplimiento",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "✏️ Editar",
+            "action": "edit",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "👁️ Ver Detalles",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "🔄 Renovar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "🏢 Aseguradoras",
+            "id": "tab-🏢 aseguradoras",
+            "discoveredAt": "2025-12-12T00:18:34.818Z"
+          },
+          {
+            "label": "🩺 Exámenes Médicos",
+            "id": "tab-🩺 exámenes médicos",
+            "discoveredAt": "2025-12-12T00:18:34.819Z"
+          },
+          {
+            "label": "🚨 Accidentes Laborales",
+            "id": "tab-🚨 accidentes laborales",
+            "discoveredAt": "2025-12-12T00:18:34.819Z"
+          },
+          {
+            "label": "📞 Comunicación ART",
+            "id": "tab-📞 comunicación art",
+            "discoveredAt": "2025-12-12T00:18:34.819Z"
+          },
+          {
+            "label": "📜 Legislación Vigente",
+            "id": "tab-📜 legislación vigente",
+            "discoveredAt": "2025-12-12T00:18:34.819Z"
+          },
+          {
+            "label": "📊 Reportes",
+            "id": "tab-📊 reportes",
+            "discoveredAt": "2025-12-12T00:18:34.819Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:36:31.476Z",
+      "autoHealedGaps": 20
     },
     {
       "id": "job-postings",
@@ -788,7 +2016,71 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          },
+          {
+            "text": "❓ Ayuda",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          },
+          {
+            "text": "➕ Nueva Oferta Laboral",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          },
+          {
+            "text": "📊 Dashboard\n                        ?",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          },
+          {
+            "text": "📋 Ofertas Laborales\n                        ?",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          },
+          {
+            "text": "👥 Postulaciones\n                        ?",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          },
+          {
+            "text": "🔄 Pipeline\n                        ?",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          },
+          {
+            "text": "🗣️ Entrevistas\n                        ?",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          },
+          {
+            "text": "Ver Todas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:20:10.239Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:38:07.216Z",
+      "autoHealedGaps": 11
     },
     {
       "id": "licensing-management",
@@ -809,7 +2101,36 @@
       "commercial": {
         "is_core": true,
         "standalone": false
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:34:08.976Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:34:08.976Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:34:08.976Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:34:08.976Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:42:22.422Z",
+      "autoHealedGaps": 4
     },
     {
       "id": "employee-map",
@@ -832,7 +2153,61 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Geofence",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Heatmap",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Multi-Sucursal",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Cluster",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Visitantes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Actualizar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:41:41.394Z",
+      "autoHealedGaps": 9
     },
     {
       "id": "facturacion",
@@ -856,7 +2231,86 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "← Volver a Módulos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "🧾\n                        Facturación\n                        3 Modos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "📜\n                        Facturas Emitidas\n                        Historial + CAE",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "⚙️\n                        Configuración AFIP\n                        Certificados + Ptos Venta",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "📝\n                MODO MANUAL\n                Factura directa sin presupuesto",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "📋\n                MODO OCASIONAL\n                Presupuesto → Factura 1 vez",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "🔄\n                MODO RECURRENTE\n                Presupuesto → Facturas periódicas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "📝 Nueva Factura Manual",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "🧾\n                        Facturación\n                        3 Modos\n                    \n                    \n                        📜\n                        Facturas Emitidas\n                        Historial + CAE\n                    \n                    \n                        ⚙️\n                        Configuración AFIP\n                        Certificados + Ptos Venta",
+            "id": "tab-🧾\n                        facturación\n                        3 modos\n                    \n                    \n                        📜\n                        facturas emitidas\n                        historial + cae\n                    \n                    \n                        ⚙️\n                        configuración afip\n                        certificados + ptos venta",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "label": "🧾\n                        Facturación\n                        3 Modos",
+            "id": "tabFacturacion",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "label": "📜\n                        Facturas Emitidas\n                        Historial + CAE",
+            "id": "tabFacturasEmitidas",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "label": "⚙️\n                        Configuración AFIP\n                        Certificados + Ptos Venta",
+            "id": "tabConfigAfip",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:37:25.996Z",
+      "autoHealedGaps": 14
     },
     {
       "id": "clientes",
@@ -879,7 +2333,66 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "← Volver a Módulos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "👤 Nuevo Cliente",
+            "action": "create",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "📤 Importar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "📊 Exportar",
+            "action": "export",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "📈 Reportes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "✏️ Editar",
+            "action": "edit",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "👁️ Ver",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:37:12.437Z",
+      "autoHealedGaps": 10
     },
     {
       "id": "plantillas-fiscales",
@@ -902,7 +2415,96 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "📋 Plantillas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "🏷️ Condiciones IVA",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "💰 Conceptos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "📊 Alícuotas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "⚙️ Configuración",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "➕ Nueva Plantilla",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "← Volver a Módulos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T13:28:28.526Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "📋 Plantillas",
+            "id": "tab-📋 plantillas",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "label": "🏷️ Condiciones IVA",
+            "id": "tab-🏷️ condiciones iva",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "label": "💰 Conceptos",
+            "id": "tab-💰 conceptos",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "label": "📊 Alícuotas",
+            "id": "tab-📊 alícuotas",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "label": "⚙️ Configuración",
+            "id": "tab-⚙️ configuración",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T13:28:28.526Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:37:39.728Z",
+      "autoHealedGaps": 16
     },
     {
       "id": "company-account",
@@ -929,7 +2531,56 @@
       },
       "aliases": [
         "terms-conditions"
-      ]
+      ],
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "📊 Dashboard",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "📝 Presupuestos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "📄 Contratos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "💳 Facturas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "💬 Comunicaciones",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:35:14.535Z",
+      "autoHealedGaps": 8
     },
     {
       "id": "authentication",
@@ -991,7 +2642,36 @@
         "is_core": true,
         "can_work_standalone": false,
         "base_price_usd": 0
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:17:04.224Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:04.224Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:04.224Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:17:04.224Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:35:00.837Z",
+      "autoHealedGaps": 4
     },
     {
       "id": "kiosks",
@@ -1021,7 +2701,36 @@
         "is_core": true,
         "can_work_standalone": false,
         "base_price_usd": 0
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:21:22.509Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:22.509Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:22.509Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:21:22.509Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:39:19.979Z",
+      "autoHealedGaps": 4
     },
     {
       "id": "notifications",
@@ -1085,7 +2794,36 @@
         "is_core": false,
         "can_work_standalone": false,
         "base_price_usd": 0
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:34:22.605Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:34:22.605Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:34:22.605Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:34:22.605Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:42:36.021Z",
+      "autoHealedGaps": 4
     },
     {
       "id": "aiAssistant",
@@ -1149,7 +2887,36 @@
         "is_core": false,
         "can_work_standalone": false,
         "base_price_usd": 0
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:33:55.344Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:33:55.344Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:33:55.344Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:33:55.344Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:42:08.852Z",
+      "autoHealedGaps": 4
     },
     {
       "id": "vendorsCommissions",
@@ -1360,7 +3127,36 @@
         "provides_to": [
           "ALL"
         ]
-      }
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:22:36.809Z"
+          },
+          {
+            "text": "Actualizar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:22:36.809Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:22:36.809Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:22:36.809Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:40:32.681Z",
+      "autoHealedGaps": 4
     }
   ],
   "categories": {
@@ -1368,6 +3164,11 @@
       "name": "Sistema Core",
       "description": "Módulos fundamentales incluidos en todos los planes",
       "color": "#2196f3"
+    },
+    "organization": {
+      "name": "Estructura Organizacional",
+      "description": "Departamentos, turnos, jerarquía, convenios y estructura empresarial",
+      "color": "#3f51b5"
     },
     "rrhh": {
       "name": "Recursos Humanos",

@@ -57,11 +57,8 @@ class SystemRegistry {
     // Cargar registry desde base de datos (ahora es la fuente principal)
     await this.loadFromDatabase();
 
-    // Fallback a archivo JSON si la BD falla
-    if (this.modules.size === 0) {
-      console.warn('⚠️  [REGISTRY] BD vacía, intentando cargar desde archivo JSON...');
-      await this.loadFromFile();
-    }
+    // SIEMPRE enriquecer con datos del archivo JSON (contiene UI metadata)
+    await this.enrichWithFileData();
 
     // Auto-detectar endpoints
     await this.autoDetectEndpoints();
@@ -91,55 +88,7 @@ class SystemRegistry {
 
       // Registrar cada módulo
       for (const mod of modules) {
-        const moduleData = {
-          id: mod.moduleKey,
-          name: mod.name,
-          category: mod.category,
-          version: mod.version,
-          description: mod.description,
-
-          // Características
-          features: mod.features || [],
-          objectives: [], // No existe en BD aún
-
-          // Datos técnicos (no existen en BD aún, se pueden agregar después)
-          files: [],
-          database_tables: [],
-          api_endpoints: [],
-
-          // DEPENDENCIAS - Mapeadas desde BD
-          dependencies: {
-            required: mod.requirements || [],
-            optional: [], // Se puede inferir de integrates_with
-            bundled: mod.bundledModules || [], // Módulos incluidos gratis
-            integrates_with: mod.integratesWith || [],
-            provides_to: mod.providesTo || []
-          },
-
-          // Relaciones (no existen en BD aún)
-          relationships: [],
-
-          // Health indicators (no existen en BD aún)
-          health_indicators: {
-            critical: [],
-            performance: []
-          },
-
-          // Metadata comercial
-          commercial: {
-            is_core: mod.isCore,
-            standalone: !mod.isCore && (!mod.bundledModules || mod.bundledModules.length === 0),
-            base_price: parseFloat(mod.basePrice),
-            bundled_modules: mod.bundledModules || [],
-            available_in: mod.availableIn,
-            suggested_bundles: [], // Se puede calcular dinámicamente
-            enhances_modules: mod.integratesWith || []
-          },
-
-          // Metadata adicional
-          metadata: mod.metadata || {}
-        };
-
+        const moduleData = this._buildModuleData(mod);
         this.registerModule(moduleData);
       }
 
@@ -149,6 +98,98 @@ class SystemRegistry {
       console.error('❌ [REGISTRY] Error cargando desde BD:', error.message);
       console.warn('   Usando fallback a archivo JSON o defaults');
     }
+  }
+
+  /**
+   * 🔄 Refresca un módulo específico desde BD (para Auto-Healing)
+   * @param {String} moduleKey - Clave del módulo a refrescar
+   */
+  async refreshModule(moduleKey) {
+    try {
+      const { SystemModule } = this.database;
+
+      const mod = await SystemModule.findOne({
+        where: { moduleKey, isActive: true }
+      });
+
+      if (!mod) {
+        console.warn(`⚠️  [REGISTRY] Módulo ${moduleKey} no encontrado en BD para refresh`);
+        return false;
+      }
+
+      const moduleData = this._buildModuleData(mod);
+      this.registerModule(moduleData);
+
+      console.log(`🔄 [REGISTRY] Módulo ${moduleKey} refrescado desde BD`);
+      return true;
+
+    } catch (error) {
+      console.error(`❌ [REGISTRY] Error refrescando módulo ${moduleKey}:`, error.message);
+      return false;
+    }
+  }
+
+  /**
+   * 🏗️  Construye objeto moduleData desde modelo Sequelize
+   * @private
+   */
+  _buildModuleData(mod) {
+    return {
+      id: mod.moduleKey,
+      name: mod.name,
+      category: mod.category,
+      version: mod.version,
+      description: mod.description,
+
+      // Características
+      features: mod.features || [],
+      objectives: [], // No existe en BD aún
+
+      // Datos técnicos (no existen en BD aún, se pueden agregar después)
+      files: [],
+      database_tables: [],
+      api_endpoints: [],
+
+      // DEPENDENCIAS - Mapeadas desde BD
+      dependencies: {
+        required: mod.requirements || [],
+        optional: [], // Se puede inferir de integrates_with
+        bundled: mod.bundledModules || [], // Módulos incluidos gratis
+        integrates_with: mod.integratesWith || [],
+        provides_to: mod.providesTo || []
+      },
+
+      // Relaciones (no existen en BD aún)
+      relationships: [],
+
+      // Health indicators (no existen en BD aún)
+      health_indicators: {
+        critical: [],
+        performance: []
+      },
+
+      // ✅ UI METADATA - Ahora se lee desde BD (SSOT)
+      ui: mod.uiMetadata || {
+        mainButtons: [],
+        tabs: [],
+        inputs: [],
+        modals: []
+      },
+
+      // Metadata comercial
+      commercial: {
+        is_core: mod.isCore,
+        standalone: !mod.isCore && (!mod.bundledModules || mod.bundledModules.length === 0),
+        base_price: parseFloat(mod.basePrice),
+        bundled_modules: mod.bundledModules || [],
+        available_in: mod.availableIn,
+        suggested_bundles: [], // Se puede calcular dinámicamente
+        enhances_modules: mod.integratesWith || []
+      },
+
+      // Metadata adicional
+      metadata: mod.metadata || {}
+    };
   }
 
   async loadFromFile() {
@@ -173,6 +214,58 @@ class SystemRegistry {
     }
   }
 
+  /**
+   * Enriquecer módulos desde base de datos con UI metadata del archivo JSON
+   * Esto asegura que módulos cargados desde BD tengan la metadata UI del Brain
+   */
+  async enrichWithFileData() {
+    try {
+      const registryPath = path.join(__dirname, 'modules-registry.json');
+      const data = await fs.readFile(registryPath, 'utf8');
+      const registry = JSON.parse(data);
+
+      let enriched = 0;
+
+      for (const fileModule of registry.modules) {
+        const existingModule = this.modules.get(fileModule.id);
+
+        if (existingModule) {
+          // Módulo ya existe (cargado desde BD), enriquecer con UI metadata
+          if (fileModule.ui && Object.keys(fileModule.ui).length > 0) {
+            existingModule.ui = fileModule.ui;
+            enriched++;
+          }
+
+          // También enriquecer otros campos que la BD no tiene
+          if (fileModule.objectives && fileModule.objectives.length > 0) {
+            existingModule.objectives = fileModule.objectives;
+          }
+          if (fileModule.help) {
+            existingModule.help = fileModule.help;
+          }
+        } else {
+          // Módulo no existe en BD, registrarlo desde archivo
+          this.registerModule(fileModule);
+        }
+      }
+
+      if (enriched > 0) {
+        console.log(`✅ [REGISTRY] ${enriched} módulos enriquecidos con UI metadata desde archivo`);
+      }
+
+      // También cargar flujos de negocio
+      for (const flow of registry.businessFlows || []) {
+        if (!this.businessFlows.has(flow.id)) {
+          this.businessFlows.set(flow.id, flow);
+        }
+      }
+
+    } catch (error) {
+      console.warn('⚠️  [REGISTRY] No se pudo enriquecer con archivo JSON:', error.message);
+      // No es crítico, los módulos ya están cargados desde BD
+    }
+  }
+
   // ═══════════════════════════════════════════════════════════
   // MODULE REGISTRATION
   // ═══════════════════════════════════════════════════════════
@@ -193,6 +286,14 @@ class SystemRegistry {
       files: moduleData.files || [],
       database_tables: moduleData.database_tables || [],
       api_endpoints: moduleData.api_endpoints || [],
+
+      // UI METADATA - Para Auto-Healing y Discovery
+      ui: moduleData.ui || {
+        mainButtons: [],
+        tabs: [],
+        inputs: [],
+        modals: []
+      },
 
       // DEPENDENCIAS - LO MÁS IMPORTANTE
       dependencies: {
