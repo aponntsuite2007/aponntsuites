@@ -8,6 +8,57 @@ const { auth, requireRole } = require('../middleware/auth');
  * Handles multi-tenant company operations
  */
 
+// =====================================================
+// 📱 ENDPOINTS PÚBLICOS (Sin autenticación - Para APK Kiosko)
+// =====================================================
+
+/**
+ * @route GET /api/v1/companies/public-list
+ * @desc Lista empresas activas para dropdown en APK Kiosko (SIN AUTH)
+ * @access Public
+ */
+router.get('/public-list', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/database');
+
+    console.log('📱 [COMPANIES] APK solicitando lista de empresas disponibles');
+
+    // Obtener empresas activas con información mínima
+    const [companies] = await sequelize.query(`
+      SELECT
+        id,
+        name,
+        slug,
+        COALESCE(contact_email, '') as email,
+        COALESCE(city, '') as city,
+        COALESCE(province, '') as province
+      FROM companies
+      WHERE is_active = true
+      ORDER BY name ASC
+    `);
+
+    console.log(`✅ [COMPANIES] ${companies.length} empresas disponibles para kiosko`);
+
+    res.json({
+      success: true,
+      companies: companies,
+      count: companies.length
+    });
+
+  } catch (error) {
+    console.error('❌ [COMPANIES] Error obteniendo lista pública:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error obteniendo empresas',
+      companies: []
+    });
+  }
+});
+
+// =====================================================
+// 🔐 ENDPOINTS PROTEGIDOS (Requieren autenticación)
+// =====================================================
+
 // 📋 Get all companies (Super Admin only)
 router.get('/', auth, requireRole(['super_admin']), async (req, res) => {
   try {

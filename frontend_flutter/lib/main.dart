@@ -4,8 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import 'screens/config_screen.dart';
-import 'screens/login_screen.dart';
+import 'screens/kiosk_setup_screen.dart';
 import 'screens/biometric_selector_screen.dart';
 import 'services/config_service.dart';
 import 'services/hardware_profile_service.dart';
@@ -27,7 +26,7 @@ class EnterpriseKioskApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => KioskProvider(prefs),
       child: MaterialApp(
-        title: 'Sistema de Asistencia Biométrico',
+        title: 'Kiosko Biométrico - Aponnt',
         theme: ThemeData(
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -42,56 +41,69 @@ class EnterpriseKioskApp extends StatelessWidget {
 class KioskProvider with ChangeNotifier {
   final SharedPreferences _prefs;
   String? _companyId;
+  String? _companyName;
   String? _kioskId;
-  String? _serverUrl;
-  String? _authToken;
+  String? _kioskName;
 
   KioskProvider(this._prefs) {
     _loadKioskConfig();
   }
 
   String? get companyId => _companyId;
+  String? get companyName => _companyName;
   String? get kioskId => _kioskId;
-  String? get serverUrl => _serverUrl;
-  String? get authToken => _authToken;
+  String? get kioskName => _kioskName;
+  String get serverUrl => ConfigService.BACKEND_URL;
 
   void _loadKioskConfig() {
-    _companyId = _prefs.getString('config_company_id');
-    _authToken = _prefs.getString('auth_token');
+    _companyId = _prefs.getString('kiosk_company_id');
+    _companyName = _prefs.getString('kiosk_company_name');
     _kioskId = _prefs.getString('kiosk_id');
-    _serverUrl = _prefs.getString('server_url');
+    _kioskName = _prefs.getString('kiosk_name');
     notifyListeners();
   }
 
   Future<void> setKioskConfig({
     required String companyId,
+    required String companyName,
     required String kioskId,
-    required String serverUrl,
+    required String kioskName,
   }) async {
-    await _prefs.setString('config_company_id', companyId);
+    await _prefs.setString('kiosk_company_id', companyId);
+    await _prefs.setString('kiosk_company_name', companyName);
     await _prefs.setString('kiosk_id', kioskId);
-    await _prefs.setString('config_baseUrl', serverUrl.split(':')[0].replaceAll('http://', ''));
-    await _prefs.setString('config_port', serverUrl.split(':').last);
+    await _prefs.setString('kiosk_name', kioskName);
+    await _prefs.setBool('kiosk_is_configured', true);
 
     _companyId = companyId;
+    _companyName = companyName;
     _kioskId = kioskId;
-    _serverUrl = serverUrl;
+    _kioskName = kioskName;
 
     notifyListeners();
   }
 
-  bool get isConfigured {
-    final hasToken = _prefs.getString('auth_token') != null;
-    final hasCompany = _prefs.getString('config_company_id') != null;
-    return hasToken && hasCompany;
+  Future<void> clearConfig() async {
+    await ConfigService.resetKioskConfig();
+    _companyId = null;
+    _companyName = null;
+    _kioskId = null;
+    _kioskName = null;
+    notifyListeners();
   }
 
-  bool get hasServerConfig {
-    return _prefs.getBool('config_is_configured') ?? false;
+  bool get isConfigured {
+    return _companyId != null && _kioskId != null;
   }
 }
 
-/// 🚀 PANTALLA DE INICIO - Decide si mostrar configuración, login o kiosk
+/// 🚀 PANTALLA DE INICIO - Decide si mostrar configuración o kiosk
+///
+/// FLUJO SIMPLIFICADO:
+/// - Si NO está configurado → KioskSetupScreen (empresa + kiosko + GPS)
+/// - Si SÍ está configurado → BiometricSelectorScreen (directo)
+///
+/// URL del servidor está HARDCODEADA - No se pide al usuario
 class StartupScreen extends StatefulWidget {
   @override
   _StartupScreenState createState() => _StartupScreenState();
@@ -105,13 +117,13 @@ class _StartupScreenState extends State<StartupScreen> {
   }
 
   Future<void> _checkConfigurationAndNavigate() async {
-    // Esperar un momento para mostrar la pantalla de splash
+    // Mostrar splash por 1.5 segundos
     await Future.delayed(const Duration(milliseconds: 1500));
 
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // 🖥️ PASO 0: Detectar hardware profile del dispositivo (una sola vez)
+      // 🖥️ PASO 1: Detectar hardware profile del dispositivo (una sola vez)
       final hasHardwareProfile = prefs.getString('hardware_profile_id') != null;
 
       if (!hasHardwareProfile) {
@@ -122,16 +134,13 @@ class _StartupScreenState extends State<StartupScreen> {
         if (profileResult.success && profileResult.profile != null) {
           final profile = profileResult.profile!;
 
-          // Guardar perfil detectado
           await prefs.setString('hardware_profile_id', profile.id);
           await prefs.setString('hardware_profile_name', profile.name);
           await prefs.setString('hardware_profile_brand', profile.brand);
           await prefs.setInt('hardware_performance_score', profile.performanceScore);
           await prefs.setString('hardware_profile_json', jsonEncode(profile.toJson()));
 
-          print('✅ [STARTUP] Hardware detectado: ${profile.name} (${profile.performanceScore}/100)');
-          print('   Walk-through: ${profile.supportsWalkthrough}');
-          print('   Liveness: ${profile.supportsLiveness}');
+          print('✅ [STARTUP] Hardware: ${profile.name} (${profile.performanceScore}/100)');
         } else {
           print('⚠️ [STARTUP] No se pudo detectar hardware: ${profileResult.message}');
         }
@@ -140,42 +149,31 @@ class _StartupScreenState extends State<StartupScreen> {
         print('✅ [STARTUP] Hardware ya detectado: $profileName');
       }
 
-      // 💾 Inicializar servicio de cola offline
+      // 💾 PASO 2: Inicializar cola offline
       final offlineQueue = OfflineQueueService();
       final stats = await offlineQueue.getStats();
-      print('💾 [STARTUP] Cola offline: ${stats.pending} pendientes, ${stats.synced} sincronizados');
+      print('💾 [STARTUP] Cola offline: ${stats.pending} pendientes');
 
-      // 1. Verificar si tiene servidor configurado
-      final isConfigured = await ConfigService.isConfigured();
+      // 🔧 PASO 3: Verificar si el KIOSKO está configurado
+      final isKioskConfigured = await ConfigService.isKioskConfigured();
 
-      if (!isConfigured) {
-        print('🔧 [STARTUP] No hay configuración, ir a ConfigScreen');
+      if (!isKioskConfigured) {
+        // Primera vez - Mostrar pantalla de configuración
+        print('🔧 [STARTUP] Kiosko no configurado → KioskSetupScreen');
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => ConfigScreen()),
+            MaterialPageRoute(builder: (_) => const KioskSetupScreen()),
           );
         }
         return;
       }
 
-      // 2. Verificar si tiene token de autenticación
-      final authToken = prefs.getString('auth_token');
-      final companyId = prefs.getString('config_company_id');
+      // ✅ PASO 4: Kiosko configurado - Ir directo al selector biométrico
+      final kioskConfig = await ConfigService.getKioskConfig();
+      print('✅ [STARTUP] Kiosko configurado: ${kioskConfig['kioskName']} (${kioskConfig['companyName']})');
+      print('📡 [STARTUP] Servidor: ${ConfigService.BACKEND_URL}');
 
-      if (authToken == null || companyId == null) {
-        print('🔐 [STARTUP] No hay sesión, ir a LoginScreen');
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => NewLoginScreen()),
-          );
-        }
-        return;
-      }
-
-      // 3. Si tiene todo, ir directo al selector biométrico
-      print('✅ [STARTUP] Sesión activa, ir a BiometricSelectorScreen');
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -188,7 +186,7 @@ class _StartupScreenState extends State<StartupScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => ConfigScreen()),
+          MaterialPageRoute(builder: (_) => const KioskSetupScreen()),
         );
       }
     }
@@ -197,7 +195,7 @@ class _StartupScreenState extends State<StartupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue,
+      backgroundColor: Colors.blue[700],
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -211,7 +209,7 @@ class _StartupScreenState extends State<StartupScreen> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withOpacity(0.2),
                     spreadRadius: 5,
                     blurRadius: 15,
                   ),
@@ -220,15 +218,15 @@ class _StartupScreenState extends State<StartupScreen> {
               child: Icon(
                 Icons.fingerprint,
                 size: 60,
-                color: Colors.blue,
+                color: Colors.blue[700],
               ),
             ),
 
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
 
             // App name
-            Text(
-              'Sistema de Asistencia',
+            const Text(
+              'Kiosko Biométrico',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -236,10 +234,10 @@ class _StartupScreenState extends State<StartupScreen> {
               ),
             ),
 
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
 
             Text(
-              'Kiosk Biométrico',
+              'Aponnt Suite',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w300,
@@ -247,15 +245,15 @@ class _StartupScreenState extends State<StartupScreen> {
               ),
             ),
 
-            SizedBox(height: 50),
+            const SizedBox(height: 50),
 
             // Loading indicator
-            CircularProgressIndicator(
+            const CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               strokeWidth: 3,
             ),
 
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             Text(
               'Iniciando sistema...',
@@ -265,10 +263,10 @@ class _StartupScreenState extends State<StartupScreen> {
               ),
             ),
 
-            SizedBox(height: 100),
+            const SizedBox(height: 100),
 
             Text(
-              'v2.0.0 - Kiosk Pro',
+              'v2.1.0',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.white.withOpacity(0.6),

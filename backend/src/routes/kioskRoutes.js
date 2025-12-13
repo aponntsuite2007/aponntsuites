@@ -903,4 +903,64 @@ router.post('/password-auth', upload.single('securityPhoto'), async (req, res) =
   }
 });
 
+/**
+ * @route POST /api/v1/kiosks/:id/activate
+ * @desc Activar un kiosko desde la APK (registrar device_id, GPS, etc.) - SIN AUTH
+ */
+router.post('/:id/activate', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { device_id, company_id, gps_lat, gps_lng, activated_at } = req.body;
+
+    if (!device_id || !company_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'device_id y company_id son requeridos'
+      });
+    }
+
+    console.log(`📱 [KIOSKS] Activando kiosko ${id} con device: ${device_id}`);
+
+    const kiosk = await Kiosk.findOne({
+      where: {
+        id: parseInt(id),
+        company_id: parseInt(company_id)
+      }
+    });
+
+    if (!kiosk) {
+      return res.status(404).json({
+        success: false,
+        error: 'Kiosko no encontrado'
+      });
+    }
+
+    // Actualizar kiosko con información del dispositivo
+    await kiosk.update({
+      device_id: device_id,
+      is_active: true,
+      is_configured: true,
+      gps_lat: gps_lat || kiosk.gps_lat,
+      gps_lng: gps_lng || kiosk.gps_lng,
+      last_seen: new Date()
+    });
+
+    console.log(`✅ [KIOSKS] Kiosko ${kiosk.name} activado exitosamente`);
+
+    res.json({
+      success: true,
+      message: 'Kiosko activado exitosamente',
+      kiosk: formatKiosk(kiosk)
+    });
+
+  } catch (error) {
+    console.error('❌ [KIOSKS] Error activando kiosko:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error activando kiosko',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;

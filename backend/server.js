@@ -2514,6 +2514,7 @@ const userLegalIssueRoutes = require('./src/routes/userLegalIssueRoutes'); // As
 const userUnionAffiliationRoutes = require('./src/routes/userUnionAffiliationRoutes'); // Afiliación sindical
 // 🆕 TAB 8 - Config. Tareas y Salario (Modal Ver Usuario - Enero 2025)
 const companyTaskRoutes = require('./src/routes/companyTaskRoutes'); // Catálogo de tareas de la empresa
+const companyRoutes = require('./src/routes/companyRoutes'); // 📱 Gestión de empresas + endpoint público para APK Kiosko
 const userAssignedTaskRoutes = require('./src/routes/userAssignedTaskRoutes'); // Tareas asignadas a usuarios
 const userSalaryConfigRoutes = require('./src/routes/userSalaryConfigRoutes'); // Configuración salarial
 // 🆕 Sistema Médico Avanzado y Salarial V2 (Noviembre 2025)
@@ -2633,6 +2634,7 @@ app.use('/api/v1/users', userLegalIssueRoutes); // GET/POST/PUT/DELETE /:userId/
 app.use('/api/v1/users', userUnionAffiliationRoutes); // GET/POST/PUT/DELETE /:userId/union-affiliation
 
 // 🆕 TAB 8 - Config. Tareas y Salario Modal Ver Usuario (Enero 2025)
+app.use('/api/v1/companies', companyRoutes); // 📱 Gestión de empresas + /public-list para APK Kiosko
 app.use('/api/v1/companies', companyTaskRoutes); // GET/POST/PUT/DELETE /:companyId/tasks
 app.use('/api/v1/users', userAssignedTaskRoutes); // GET/POST/PUT/DELETE /:userId/assigned-tasks
 app.use('/api/v1/users', userSalaryConfigRoutes); // GET/POST/PUT/DELETE /:userId/salary-config
@@ -2877,8 +2879,11 @@ app.use('/api/audit', auditorRoutes);
 // ✅ CONFIGURAR PHASE 4: AUTONOMOUS REPAIR + TECHNICAL REPORTS
 const auditorPhase4Routes = require('./src/routes/auditorPhase4Routes')(database);
 app.use('/api/audit/phase4', auditorPhase4Routes);
-app.use('/api/engineering-live', engineeringMetadataRoutes); // 🧠 Metadata 100% VIVA desde código introspectivo
-app.use('/api/process-chain', processChainRoutes); // 🔗 Process Chain Generator - Autoconocimiento Integral
+// ✅ CONFIGURAR AUTO-HEALING CYCLE - Universal Discovery + Brain Update
+const autoHealingRoutes = require('./src/routes/autoHealingRoutes');
+app.use('/api/auto-healing', autoHealingRoutes);
+// app.use('/api/engineering-live', engineeringMetadataRoutes); // Moved to line 3342+ area
+// app.use('/api/process-chain', processChainRoutes); // Moved to line 3131 (after declaration)
 
 console.log('🔗 [PROCESS-CHAIN] Sistema de Autoconocimiento Integral ACTIVO:');
 console.log('   📊 POST /api/process-chain/generate - Generar cadena de procesos');
@@ -2915,6 +2920,12 @@ console.log('🔍 [AUDITOR] Sistema de Auditoría y Auto-Diagnóstico ACTIVO:');
 console.log('   🔍 /api/audit/run - Ejecutar auditoría completa');
 console.log('   📊 /api/audit/status - Estado actual');
 console.log('   📋 /api/audit/registry - Ver módulos del sistema');
+
+console.log('🔄 [AUTO-HEALING] Sistema de Auto-Healing Cycle ACTIVO:');
+console.log('   🚀 POST /api/auto-healing/run - Ejecutar ciclo de auto-healing');
+console.log('   📊 GET  /api/auto-healing/status - Estado de ejecución actual');
+console.log('   📋 GET  /api/auto-healing/reports - Reportes históricos');
+console.log('   📈 GET  /api/auto-healing/metrics - Métricas agregadas');
 
 // ✅ CONFIGURAR ENGINEERING DASHBOARD - Metadata del sistema
 const engineeringRoutes = require('./src/routes/engineeringRoutes');
@@ -3189,8 +3200,9 @@ app.use('/api/testing', visibleTestingRoutes);
 // app.use('/api/phase4', phase4Routes);
 
 // ✅ CONFIGURAR AUTO-REPAIR SERVICE - Sistema Persistente de Auto-Reparación
-const autoRepairRoutes = require('./src/routes/autoRepairRoutes');
-app.use('/api/auto-repair', autoRepairRoutes);
+// DISABLED - autoRepairRoutes depends on deleted ClaudeCodeAutoRepairService
+// const autoRepairRoutes = require('./src/routes/autoRepairRoutes');
+// app.use('/api/auto-repair', autoRepairRoutes);
 
 console.log('👁️ [VISIBLE-TESTING] Sistema de Testing Visible Phase 4 ACTIVO:');
 console.log('   📍 POST /api/testing/run-visible - Iniciar test E2E con navegador visible');
@@ -3331,7 +3343,6 @@ const budgetOnboardingRoutes = require("./src/routes/budgetOnboardingRoutes");
 const contractOnboardingRoutes = require("./src/routes/contractOnboardingRoutes");
 const commissionOnboardingRoutes = require("./src/routes/commissionOnboardingRoutes");
 const engineeringMetadataRoutes = require("./src/routes/engineeringMetadataRoutes"); // 🧠 Metadata 100% viva desde código introspectivo
-const processChainRoutes = require("./src/routes/processChainRoutes"); // 🔗 Process Chain Generator - Autoconocimiento Integral
 
 app.use('/api/billing/presupuestos', budgetOnboardingRoutes);
 console.log('💼 [BILLING] Presupuestos Onboarding: /api/billing/presupuestos/onboarding/*');

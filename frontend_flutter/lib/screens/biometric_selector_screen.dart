@@ -4,6 +4,8 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'kiosk_screen.dart';
 import 'fingerprint_kiosk_screen.dart';
 import 'fingerprint_enrollment_screen.dart';
+import 'kiosk_setup_screen.dart';
+import '../services/config_service.dart';
 
 /// 🔐 SELECTOR DE MÉTODO BIOMÉTRICO
 /// =================================
@@ -25,6 +27,10 @@ class _BiometricSelectorScreenState extends State<BiometricSelectorScreen> with 
   bool _hasFingerprintSensor = false;
   bool _isCheckingCapabilities = true;
 
+  // Info del kiosko configurado
+  String? _kioskName;
+  String? _companyName;
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -34,6 +40,17 @@ class _BiometricSelectorScreenState extends State<BiometricSelectorScreen> with 
     _initializeTts();
     _checkBiometricCapabilities();
     _initializeAnimations();
+    _loadKioskInfo();
+  }
+
+  Future<void> _loadKioskInfo() async {
+    final config = await ConfigService.getKioskConfig();
+    if (mounted) {
+      setState(() {
+        _kioskName = config['kioskName'];
+        _companyName = config['companyName'];
+      });
+    }
   }
 
   void _initializeAnimations() {
@@ -103,6 +120,142 @@ class _BiometricSelectorScreenState extends State<BiometricSelectorScreen> with 
     super.dispose();
   }
 
+  // Mostrar diálogo de login de admin para acceder a configuración
+  void _showAdminLoginDialog() {
+    final usernameController = TextEditingController();
+    final passwordController = TextEditingController();
+    bool isLoading = false;
+    String? errorMessage;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.admin_panel_settings, color: Colors.blue[700]),
+              const SizedBox(width: 8),
+              const Text('Acceso Administrador'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Ingrese credenciales de administrador para modificar la configuración del kiosko.',
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Usuario',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Contraseña',
+                  prefixIcon: Icon(Icons.lock),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              if (errorMessage != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error, color: Colors.red[700], size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          errorMessage!,
+                          style: TextStyle(color: Colors.red[700], fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
+                        setDialogState(() => errorMessage = 'Complete todos los campos');
+                        return;
+                      }
+
+                      setDialogState(() {
+                        isLoading = true;
+                        errorMessage = null;
+                      });
+
+                      // Obtener company_id actual
+                      final config = await ConfigService.getKioskConfig();
+                      final companyId = config['companyId'];
+
+                      if (companyId == null) {
+                        setDialogState(() {
+                          isLoading = false;
+                          errorMessage = 'No hay empresa configurada';
+                        });
+                        return;
+                      }
+
+                      // Validar credenciales de admin
+                      final result = await ConfigService.validateAdminCredentials(
+                        companyId: companyId,
+                        username: usernameController.text,
+                        password: passwordController.text,
+                      );
+
+                      if (result?['success'] == true) {
+                        Navigator.pop(context);
+                        // Navegar a pantalla de configuración en modo edición
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const KioskSetupScreen(isEditMode: true),
+                          ),
+                        );
+                      } else {
+                        setDialogState(() {
+                          isLoading = false;
+                          errorMessage = result?['error'] ?? 'Error de autenticación';
+                        });
+                      }
+                    },
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Ingresar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,9 +272,60 @@ class _BiometricSelectorScreenState extends State<BiometricSelectorScreen> with 
           ),
         ),
         child: SafeArea(
-          child: _isCheckingCapabilities
-              ? _buildLoadingScreen()
-              : _buildSelectorScreen(),
+          child: Stack(
+            children: [
+              _isCheckingCapabilities
+                  ? _buildLoadingScreen()
+                  : _buildSelectorScreen(),
+
+              // Botón de configuración (esquina superior derecha)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.settings, color: Colors.white70, size: 28),
+                  onPressed: _showAdminLoginDialog,
+                  tooltip: 'Configuración (Admin)',
+                ),
+              ),
+
+              // Info del kiosko (esquina superior izquierda)
+              if (_kioskName != null || _companyName != null)
+                Positioned(
+                  top: 12,
+                  left: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.storefront, color: Colors.white70, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          _kioskName ?? 'Kiosko',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (_companyName != null) ...[
+                          const Text(' | ', style: TextStyle(color: Colors.white54)),
+                          Text(
+                            _companyName!,
+                            style: const TextStyle(color: Colors.white70, fontSize: 11),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
