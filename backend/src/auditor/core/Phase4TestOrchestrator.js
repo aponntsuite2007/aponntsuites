@@ -55,6 +55,10 @@ const { getLogger } = require('../../logging');
 const http = require('http');
 const axios = require('axios');
 
+// 🧪 INTEGRATION TEST COLLECTORS (2025-12-14)
+const FlutterIntegrationCollector = require('../collectors/FlutterIntegrationCollector');
+const StressTestCollector = require('../collectors/StressTestCollector');
+
 class Phase4TestOrchestrator {
     constructor(config = {}, database = null, brainService = null) {
         // ⚡ AUTO-DETECCIÓN DE PUERTO: Detectar automáticamente qué servidor está corriendo
@@ -1357,9 +1361,9 @@ class Phase4TestOrchestrator {
      * Login al sistema (3 pasos) - Usando usuario configurable
      */
     async login(companySlug = 'isi', username = null, password = 'admin123') {
-        // ✨ Usuario configurable: usa el pasado o 'admin1' por defecto para empresa ISI
+        // ✨ Usuario SOPORTE por defecto: inmutable, password fijo, existe en TODAS las empresas
         if (!username) {
-            username = 'admin1'; // admin1 tiene acceso completo a módulos en ISI
+            username = 'soporte'; // Usuario soporte tiene acceso completo y password fijo (admin123)
         }
 
         console.log('\n\n🔥🔥🔥 ===== MÉTODO LOGIN() EJECUTÁNDOSE ===== 🔥🔥🔥');
@@ -1367,7 +1371,7 @@ class Phase4TestOrchestrator {
         console.log(`🔥 Usuario: ${username}`);
         console.log(`🔥 Password: ${password}\n`);
 
-        this.logger.info('BROWSER', '🔐 Iniciando login (3 pasos) con usuario soporte', {
+        this.logger.info('BROWSER', `🔐 Iniciando login (3 pasos) con usuario ${username}`, {
             baseUrl: this.config.baseUrl,
             companySlug,
             username
@@ -1378,6 +1382,12 @@ class Phase4TestOrchestrator {
             timeout: 60000 // 60 segundos
         });
         await this.wait(1000);
+
+        // 🔧 FIX: Esperar a que JavaScript muestre el login container (panel-empresa.html línea 310: showLogin())
+        // El #loginContainer está oculto por defecto (display: none) y solo se muestra cuando DOMContentLoaded ejecuta showLogin()
+        console.log('   🔍 Esperando a que JavaScript muestre el login container...');
+        await this.page.waitForSelector('#loginContainer', { state: 'visible', timeout: 15000 });
+        console.log('   ✅ Login container visible');
 
         try {
             // Paso 1: Empresa (SELECT DROPDOWN)
@@ -5531,12 +5541,60 @@ class Phase4TestOrchestrator {
      * 🔍 Descubre TODOS los botones visibles en la página
      * @returns {Array} Lista de botones con metadata
      */
-    async discoverAllButtons() {
-        return await this.page.evaluate(() => {
-            const allButtons = Array.from(document.querySelectorAll('button, a.btn, [role="button"], a[onclick]'));
-            return allButtons
-                .filter(btn => btn.offsetParent !== null) // Solo visibles
-                .map(btn => ({
+    /**
+     * 🔍 Descubre todos los botones - CON SCOPE CORRECTO
+     * @param {String} scopeSelector - Selector CSS del contenedor (opcional)
+     * @param {Boolean} includeScrollHidden - Incluir elementos debajo del scroll (default: true)
+     * @returns {Array} Lista de botones encontrados
+     */
+    async discoverAllButtons(scopeSelector = null, includeScrollHidden = true) {
+        return await this.page.evaluate(({ scopeSelector, includeScrollHidden }) => {
+            // ═══════════════════════════════════════════════════════════════════════════
+            // ✅ FIX 1: SCOPE - Buscar SOLO en contenedor especificado o en módulo activo
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            let searchContainer = document;
+
+            if (scopeSelector) {
+                // Si se pasó un selector específico, usarlo
+                searchContainer = document.querySelector(scopeSelector);
+                if (!searchContainer) {
+                    console.warn(`⚠️  Contenedor "${scopeSelector}" no encontrado, usando document completo`);
+                    searchContainer = document;
+                }
+            } else {
+                // Auto-detectar contenedor del módulo activo
+                // Prioridad: .module-container.active > #moduleContent > #mainContent > document
+                const possibleContainers = [
+                    document.querySelector('.module-container.active'),
+                    document.querySelector('#moduleContent'),
+                    document.querySelector('#mainContent'),
+                    document.querySelector('[data-module-active="true"]')
+                ];
+
+                for (const container of possibleContainers) {
+                    if (container) {
+                        searchContainer = container;
+                        console.log(`✅ Auto-detectado contenedor: ${container.id || container.className}`);
+                        break;
+                    }
+                }
+            }
+
+            const allButtons = Array.from(searchContainer.querySelectorAll('button, a.btn, [role="button"], a[onclick]'));
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // ✅ FIX 2: SCROLL - Detectar elementos debajo del viewport en modales
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            const buttons = allButtons.map(btn => {
+                const rect = btn.getBoundingClientRect();
+                const isVisibleInViewport = btn.offsetParent !== null;
+
+                // Detectar si el elemento está debajo del scroll
+                const isScrollHidden = rect.top > window.innerHeight || rect.bottom < 0;
+
+                return {
                     text: btn.textContent.trim(),
                     classes: btn.className,
                     id: btn.id,
@@ -5545,11 +5603,25 @@ class Phase4TestOrchestrator {
                     dataAction: btn.getAttribute('data-action'),
                     type: btn.type,
                     position: {
-                        x: Math.round(btn.getBoundingClientRect().left),
-                        y: Math.round(btn.getBoundingClientRect().top)
-                    }
-                }));
-        });
+                        x: Math.round(rect.left),
+                        y: Math.round(rect.top)
+                    },
+                    isVisible: isVisibleInViewport,
+                    isScrollHidden: isScrollHidden,
+                    inViewport: !isScrollHidden
+                };
+            });
+
+            // Filtrar según configuración
+            if (includeScrollHidden) {
+                // Incluir TODOS (visibles + ocultos por scroll)
+                return buttons.filter(btn => btn.isVisible); // Solo filtrar por offsetParent
+            } else {
+                // Solo elementos actualmente en viewport
+                return buttons.filter(btn => btn.isVisible && btn.inViewport);
+            }
+
+        }, { scopeSelector, includeScrollHidden });
     }
 
     /**
@@ -5605,13 +5677,15 @@ class Phase4TestOrchestrator {
 
     /**
      * 💬 Descubre modal abierto y extrae su estructura (con reintentos y más selectores)
+     * ✅ AHORA CON SCROLL AUTOMÁTICO para descubrir elementos ocultos
      * @param {Number} maxRetries - Máximo de reintentos (default: 5)
      * @param {Number} retryDelay - Delay entre reintentos en ms (default: 1000)
+     * @param {Boolean} discoverWithScroll - Hacer scroll para descubrir elementos ocultos (default: true)
      * @returns {Object} Estructura del modal (inputs, buttons, etc)
      */
-    async discoverModalStructure(maxRetries = 5, retryDelay = 1000) {
+    async discoverModalStructure(maxRetries = 5, retryDelay = 1000, discoverWithScroll = true) {
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            const modal = await this.page.evaluate(() => {
+            const modal = await this.page.evaluate(({ discoverWithScroll }) => {
                 // Lista EXTENDIDA de selectores para cubrir todos los casos
                 const selectors = [
                     // Bootstrap modals
@@ -5663,29 +5737,84 @@ class Phase4TestOrchestrator {
                         );
 
                         if (isVisible) {
-                            // Modal encontrado!
+                            // ═══════════════════════════════════════════════════════════════
+                            // ✅ FIX: SCROLL INTELIGENTE dentro del modal
+                            // ═══════════════════════════════════════════════════════════════
+                            let scrollableContainer = modal;
+
+                            // Buscar contenedor scrollable dentro del modal
+                            const possibleScrollContainers = [
+                                modal.querySelector('.modal-body'),
+                                modal.querySelector('.modal-content'),
+                                modal.querySelector('[style*="overflow"]'),
+                                modal
+                            ];
+
+                            for (const container of possibleScrollContainers) {
+                                if (container) {
+                                    const style = window.getComputedStyle(container);
+                                    if (style.overflowY === 'auto' || style.overflowY === 'scroll' || container.scrollHeight > container.clientHeight) {
+                                        scrollableContainer = container;
+                                        console.log(`✅ Contenedor scrollable detectado: ${container.className || container.tagName}`);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // Hacer scroll incremental para descubrir TODOS los elementos
+                            if (discoverWithScroll && scrollableContainer.scrollHeight > scrollableContainer.clientHeight) {
+                                console.log(`🔍 Modal tiene scroll (height: ${scrollableContainer.scrollHeight}px, visible: ${scrollableContainer.clientHeight}px)`);
+
+                                const scrollStep = 100; // Scroll de 100px por paso
+                                let currentScroll = 0;
+                                const maxScroll = scrollableContainer.scrollHeight - scrollableContainer.clientHeight;
+
+                                // Scroll hasta el final
+                                while (currentScroll < maxScroll) {
+                                    currentScroll += scrollStep;
+                                    scrollableContainer.scrollTop = currentScroll;
+                                    console.log(`📜 Scroll: ${currentScroll}/${maxScroll}`);
+                                }
+
+                                // Volver al inicio
+                                scrollableContainer.scrollTop = 0;
+                                console.log(`✅ Scroll completado, ahora en el top`);
+                            }
+
+                            // AHORA sí, descubrir TODOS los elementos (incluyendo los que estaban ocultos)
                             const inputs = Array.from(modal.querySelectorAll('input, select, textarea'));
                             const buttons = Array.from(modal.querySelectorAll('button'));
 
-                            return {
+                            const result = {
                                 found: true,
                                 selector,
                                 matchedElement: modal.className,
                                 inputCount: inputs.length,
-                                inputs: inputs.map(inp => ({
-                                    name: inp.name,
-                                    id: inp.id,
-                                    type: inp.type,
-                                    placeholder: inp.placeholder,
-                                    required: inp.required,
-                                    value: inp.value
-                                })),
-                                buttons: buttons.map(btn => ({
-                                    text: btn.textContent.trim(),
-                                    type: btn.type,
-                                    classes: btn.className,
-                                    onclick: btn.getAttribute('onclick')
-                                })),
+                                hasScroll: scrollableContainer.scrollHeight > scrollableContainer.clientHeight,
+                                scrollHeight: scrollableContainer.scrollHeight,
+                                clientHeight: scrollableContainer.clientHeight,
+                                inputs: inputs.map(inp => {
+                                    const inpRect = inp.getBoundingClientRect();
+                                    return {
+                                        name: inp.name,
+                                        id: inp.id,
+                                        type: inp.type,
+                                        placeholder: inp.placeholder,
+                                        required: inp.required,
+                                        value: inp.value,
+                                        isScrollHidden: inpRect.top > window.innerHeight || inpRect.bottom < 0
+                                    };
+                                }),
+                                buttons: buttons.map(btn => {
+                                    const btnRect = btn.getBoundingClientRect();
+                                    return {
+                                        text: btn.textContent.trim(),
+                                        type: btn.type,
+                                        classes: btn.className,
+                                        onclick: btn.getAttribute('onclick'),
+                                        isScrollHidden: btnRect.top > window.innerHeight || btnRect.bottom < 0
+                                    };
+                                }),
                                 dimensions: {
                                     width: Math.round(rect.width),
                                     height: Math.round(rect.height),
@@ -5693,12 +5822,18 @@ class Phase4TestOrchestrator {
                                     y: Math.round(rect.y)
                                 }
                             };
+
+                            console.log(`✅ Modal descubierto: ${inputs.length} inputs, ${buttons.length} buttons`);
+                            console.log(`   - Inputs ocultos por scroll: ${result.inputs.filter(i => i.isScrollHidden).length}`);
+                            console.log(`   - Buttons ocultos por scroll: ${result.buttons.filter(b => b.isScrollHidden).length}`);
+
+                            return result;
                         }
                     }
                 }
 
                 return { found: false };
-            });
+            }, { discoverWithScroll });
 
             if (modal.found) {
                 return modal;
@@ -6106,8 +6241,10 @@ class Phase4TestOrchestrator {
         };
 
         try {
-            // 1. Descubrir botones
-            const buttons = await this.discoverAllButtons();
+            // 1. Descubrir botones - ✅ FIX: CON SCOPE CORRECTO DEL CONTENEDOR REAL
+            // Los módulos se cargan en #mainContent (ver panel-empresa.html:4305)
+            // NO en un contenedor específico con id del módulo
+            const buttons = await this.discoverAllButtons('#mainContent', true);  // ✅ includeScrollHidden=true
             discovery.structure.buttons = {
                 count: buttons.length,
                 items: buttons
@@ -6342,13 +6479,13 @@ class Phase4TestOrchestrator {
             this.logger.info(`[AUTO-HEAL] 🔧 Actualizando Brain metadata para ${moduleKey}...`);
 
             // 1. Leer UI metadata actual desde BD
-            const [currentModule] = await this.db.query(`
+            const [currentModule] = await this.sequelize.query(`
                 SELECT ui_metadata
                 FROM system_modules
                 WHERE module_key = :moduleKey
             `, {
                 replacements: { moduleKey },
-                type: this.db.QueryTypes.SELECT
+                type: this.sequelize.QueryTypes.SELECT
             });
 
             if (!currentModule) {
@@ -6426,7 +6563,7 @@ class Phase4TestOrchestrator {
             });
 
             // 4. ✅ SSOT: Guardar UI metadata en BD (no en JSON)
-            await this.db.query(`
+            await this.sequelize.query(`
                 UPDATE system_modules
                 SET ui_metadata = :uiMetadata::jsonb,
                     updated_at = NOW()
@@ -6514,7 +6651,7 @@ class Phase4TestOrchestrator {
         const {
             maxIterations = 5,
             companySlug = 'isi',
-            username = 'admin',
+            username = 'administrador',  // ✨ FIX: Usuario administrador YA EXISTE en todas las empresas
             password = 'admin123',
             moduleKeys = null,
             onlyWithGaps = false
@@ -6600,6 +6737,8 @@ class Phase4TestOrchestrator {
                             name: module.name,
                             gapsFound: gapsCount,
                             gapsHealed: 0,
+                            crudTestPassed: 0,
+                            crudTestFailed: 0,
                             status: 'success'
                         };
 
@@ -6624,6 +6763,48 @@ class Phase4TestOrchestrator {
                             }
                         } else {
                             this.logger.info(`   ✅ Sin gaps - perfecto!`);
+                        }
+
+                        // 4.5. 🎯 DYNAMIC CRUD TESTING (PASO 3 - UNIVERSAL)
+                        // Solo ejecutar en primera iteración para no saturar
+                        if (iteration === 1) {
+                            try {
+                                this.logger.info(`   🧪 Ejecutando Dynamic CRUD Test...`);
+
+                                // Obtener companyId desde el slug
+                                const [companyData] = await this.sequelize.query(`
+                                    SELECT id FROM companies WHERE slug = :slug LIMIT 1
+                                `, {
+                                    replacements: { slug: companySlug },
+                                    type: this.sequelize.QueryTypes.SELECT
+                                });
+
+                                const companyId = companyData?.id;
+
+                                if (!companyId) {
+                                    this.logger.warn(`   ⚠️  No se pudo obtener companyId para ${companySlug}, skipping CRUD test`);
+                                } else {
+                                    const crudResults = await this.runDynamicCRUDTest(
+                                        moduleKey,
+                                        companyId,
+                                        companySlug,
+                                        username,
+                                        password
+                                    );
+
+                                    moduleResult.crudTestPassed = crudResults.passed;
+                                    moduleResult.crudTestFailed = crudResults.failed;
+
+                                    const crudRate = crudResults.tests.length > 0
+                                        ? ((crudResults.passed / crudResults.tests.length) * 100).toFixed(0)
+                                        : 0;
+
+                                    this.logger.info(`   ✅ CRUD Test: ${crudResults.passed}/${crudResults.tests.length} PASSED (${crudRate}%)`);
+                                }
+                            } catch (crudError) {
+                                this.logger.error(`   ❌ CRUD Test Error: ${crudError.message}`);
+                                moduleResult.crudTestFailed = 1;
+                            }
                         }
 
                         iterationResult.totalGaps += gapsCount;
@@ -6678,6 +6859,26 @@ class Phase4TestOrchestrator {
             cycleResults.completedAt = new Date().toISOString();
             cycleResults.finalGapsCount = currentGapsCount;
 
+            // Calcular estadísticas CRUD
+            let totalCrudPassed = 0;
+            let totalCrudFailed = 0;
+            let modulesWithCrudTests = 0;
+
+            for (const iter of cycleResults.iterations) {
+                for (const mod of iter.modules) {
+                    if (mod.crudTestPassed !== undefined || mod.crudTestFailed !== undefined) {
+                        modulesWithCrudTests++;
+                        totalCrudPassed += mod.crudTestPassed || 0;
+                        totalCrudFailed += mod.crudTestFailed || 0;
+                    }
+                }
+            }
+
+            const totalCrudTests = totalCrudPassed + totalCrudFailed;
+            const crudSuccessRate = totalCrudTests > 0
+                ? ((totalCrudPassed / totalCrudTests) * 100).toFixed(1)
+                : 0;
+
             this.logger.info('');
             this.logger.info('╔════════════════════════════════════════════════════════════╗');
             this.logger.info('║          AUTO-HEALING CYCLE COMPLETADO                     ║');
@@ -6688,6 +6889,12 @@ class Phase4TestOrchestrator {
             this.logger.info(`   Total gaps sanados: ${cycleResults.totalGapsHealed}`);
             this.logger.info(`   Gaps restantes: ${currentGapsCount}`);
             this.logger.info(`   Status: ${currentGapsCount === 0 ? '✅ PERFECTO - 0 gaps' : '⚠️  Aún hay gaps'}`);
+            this.logger.info('');
+            this.logger.info(`🧪 DYNAMIC CRUD TESTING (PASO 3):`);
+            this.logger.info(`   Módulos testeados: ${modulesWithCrudTests}`);
+            this.logger.info(`   Tests PASSED: ${totalCrudPassed} ✅`);
+            this.logger.info(`   Tests FAILED: ${totalCrudFailed} ❌`);
+            this.logger.info(`   Success Rate: ${crudSuccessRate}%`);
             this.logger.info('');
 
             // 9. Guardar reporte
@@ -6860,7 +7067,7 @@ class Phase4TestOrchestrator {
      * @param {String} password - Password para login (default: 'admin123')
      * @returns {Object} Resultados del test con passed/failed
      */
-    async runDynamicCRUDTest(moduleKey, companyId, companySlug, username = 'admin', password = 'admin123') {
+    async runDynamicCRUDTest(moduleKey, companyId, companySlug, username = 'administrador', password = 'admin123') {  // ✅ Usuario administrador verificado en super_users
         const results = {
             moduleKey,
             companyId,
@@ -6876,9 +7083,25 @@ class Phase4TestOrchestrator {
             this.logger.info('╔══════════════════════════════════════════════════════════════╗');
             this.logger.info('║         🚀 DYNAMIC CRUD TEST - SISTEMA INTELIGENTE           ║');
             this.logger.info('╠══════════════════════════════════════════════════════════════╣');
-            this.logger.info(`║  Módulo:   ${moduleKey.padEnd(48)} ║`);
-            this.logger.info(`║  Empresa:  ${companySlug.padEnd(48)} ║`);
+            this.logger.info(`║  Módulo:   ${(moduleKey || 'N/A').padEnd(48)} ║`);
+            this.logger.info(`║  Empresa:  ${(companySlug || 'N/A').padEnd(48)} ║`);
             this.logger.info('╚══════════════════════════════════════════════════════════════╝');
+            this.logger.info('');
+
+            // ═════════════════════════════════════════════════════════════════════
+            // FASE 0: PREPARACIÓN - Login y navegación al módulo
+            // ═════════════════════════════════════════════════════════════════════
+
+            this.logger.info('🔐 [FASE 0/5] PREPARACIÓN - Login y navegación al módulo...');
+            this.logger.info('');
+
+            await this.login(companySlug, username, password);
+            await this.navigateToModule(moduleKey);
+
+            // ⏳ FIX: Esperar a que el módulo termine de cargar completamente
+            await this.wait(2500); // Dar tiempo extra para que botones/inputs se rendericen
+
+            this.logger.info('   ✅ Módulo cargado, listo para DISCOVERY');
             this.logger.info('');
 
             // ═════════════════════════════════════════════════════════════════════
@@ -6962,17 +7185,45 @@ class Phase4TestOrchestrator {
                 });
             } else {
                 try {
-                    // 1. Buscar botón "Agregar", "Nuevo", "Crear"
+                    // 1. 🔧 FIX: Buscar botón "Agregar", "Nuevo", "Crear" - MEJORADO para buscar en múltiples atributos
                     const createButton = buttons?.items?.find(btn => {
                         const text = btn.text.toLowerCase();
-                        return text.includes('agregar') ||
-                               text.includes('nuevo') ||
-                               text.includes('crear') ||
-                               text.includes('add') ||
-                               text.includes('new');
+                        const onclick = (btn.onclick || '').toLowerCase();
+                        const dataAction = (btn.dataAction || '').toLowerCase();
+                        const classes = (btn.classes || '').toLowerCase();
+
+                        // Buscar en texto
+                        const matchesText = text.includes('agregar') ||
+                                           text.includes('nuevo') ||
+                                           text.includes('crear') ||
+                                           text.includes('add') ||
+                                           text.includes('new') ||
+                                           text === '+'; // Botón icono "+"
+
+                        // Buscar en atributos onclick y data-action
+                        const matchesAction = onclick.includes('agregar') ||
+                                             onclick.includes('nuevo') ||
+                                             onclick.includes('crear') ||
+                                             onclick.includes('add') ||
+                                             onclick.includes('create') ||
+                                             dataAction.includes('create') ||
+                                             dataAction.includes('add') ||
+                                             dataAction.includes('new');
+
+                        // Buscar en classes
+                        const matchesClasses = classes.includes('btn-create') ||
+                                              classes.includes('btn-add') ||
+                                              classes.includes('btn-new');
+
+                        return matchesText || matchesAction || matchesClasses;
                     });
 
                     if (!createButton) {
+                        // 🔍 DEBUGGING: Loggear qué botones se encontraron para ayudar a diagnosticar
+                        this.logger.warn(`   ⚠️  Botones encontrados en DISCOVERY (${buttons?.items?.length || 0}):`);
+                        buttons?.items?.forEach((btn, idx) => {
+                            this.logger.warn(`      [${idx + 1}] text="${btn.text}" onclick="${btn.onclick || 'N/A'}" data-action="${btn.dataAction || 'N/A'}" classes="${btn.classes || 'N/A'}"`);
+                        });
                         throw new Error('No se encontró botón para abrir modal de creación');
                     }
 
@@ -7021,9 +7272,15 @@ class Phase4TestOrchestrator {
                             continue;
                         }
 
+                        // ✅ FIX CRÍTICO V2: Usar locator().first() que automáticamente filtra invisibles
+                        // Playwright's locator espera a que el elemento sea visible sin necesidad de selectores modal-specific
                         const selector = input.name ? `[name="${input.name}"]` : `#${input.id}`;
 
                         try {
+                            // Esperar a que el input esté visible antes de interactuar
+                            const locator = this.page.locator(selector).first();
+                            await locator.waitFor({ state: 'visible', timeout: 5000 });
+
                             switch (input.type) {
                                 case 'text':
                                 case 'email':
@@ -7032,33 +7289,33 @@ class Phase4TestOrchestrator {
                                 case 'textarea':
                                 case 'date':
                                 case 'time':
-                                    await this.page.fill(selector, value.toString());
+                                    await locator.fill(value.toString());
                                     fieldsFilled++;
-                                    this.logger.debug(`      ✓ ${input.label}: "${value}"`);
+                                    this.logger.info(`      ✓ ${input.label}: "${value}"`);
                                     break;
 
                                 case 'select-one':
                                 case 'select':
-                                    await this.page.selectOption(selector, value.toString());
+                                    await locator.selectOption(value.toString());
                                     fieldsFilled++;
-                                    this.logger.debug(`      ✓ ${input.label}: "${value}"`);
+                                    this.logger.info(`      ✓ ${input.label}: "${value}"`);
                                     break;
 
                                 case 'checkbox':
                                     if (value === true || value === 'true') {
-                                        await this.page.check(selector);
+                                        await locator.check();
                                     } else {
-                                        await this.page.uncheck(selector);
+                                        await locator.uncheck();
                                     }
                                     fieldsFilled++;
-                                    this.logger.debug(`      ✓ ${input.label}: ${value}`);
+                                    this.logger.info(`      ✓ ${input.label}: ${value}`);
                                     break;
                             }
 
                             await this.wait(100); // Small delay
                         } catch (fillError) {
                             fieldsFailed++;
-                            this.logger.debug(`      ✗ ${input.label}: ${fillError.message}`);
+                            this.logger.warn(`      ✗ ${input.label}: ${fillError.message}`);
                         }
                     }
 
@@ -7218,16 +7475,58 @@ class Phase4TestOrchestrator {
                     this.logger.info(`   📋 Contenedor encontrado (${tableData.type}): ${tableData.rowCount || tableData.count || 'full page'} registros`);
 
                     // 2. Buscar el registro creado usando un valor único
-                    // Priorizar: email > name > legajo > cualquier campo único
-                    const uniqueFields = ['newUserEmail', 'email', 'newUserName', 'name', 'newUserLegajo', 'legajo'];
+                    // ✅ FIX: DETECCIÓN INTELIGENTE de campo único (no hardcodeado)
                     let uniqueValue = null;
                     let uniqueField = null;
 
-                    for (const field of uniqueFields) {
-                        if (results.testData[field]) {
-                            uniqueValue = results.testData[field];
-                            uniqueField = field;
+                    // Prioridad 1: Campos que suelen ser únicos
+                    const priorityPatterns = [
+                        /email/i,           // email, newUserEmail, correo_electronico
+                        /mail/i,            // e-mail, mail
+                        /usuario/i,         // usuario, username, user
+                        /legajo/i,          // legajo, numero_legajo
+                        /document/i,        // document_id, documento, dni
+                        /dni/i,             // dni, document_number
+                        /codigo/i,          // codigo, code
+                        /id/i               // id (como último recurso)
+                    ];
+
+                    // Buscar campo con patrón prioritario
+                    for (const pattern of priorityPatterns) {
+                        const matchingField = Object.keys(results.testData).find(key =>
+                            pattern.test(key) && results.testData[key] && typeof results.testData[key] === 'string' && results.testData[key].trim().length > 0
+                        );
+
+                        if (matchingField) {
+                            uniqueValue = results.testData[matchingField];
+                            uniqueField = matchingField;
                             break;
+                        }
+                    }
+
+                    // ✅ FIX CRÍTICO V3: Si encontró legajo o usuario (campos autogenerados),
+                    // intentar usar email en su lugar (más confiable para verificación)
+                    if (uniqueField && (/legajo/i.test(uniqueField) || /usuario/i.test(uniqueField))) {
+                        const emailField = Object.keys(results.testData).find(key =>
+                            /email/i.test(key) && results.testData[key] && typeof results.testData[key] === 'string' && results.testData[key].trim().length > 0
+                        );
+
+                        if (emailField) {
+                            this.logger.info(`   ⚠️  ${uniqueField} puede ser autogenerado, usando ${emailField} en su lugar`);
+                            uniqueField = emailField;
+                            uniqueValue = results.testData[emailField];
+                        }
+                    }
+
+                    // Prioridad 2: Si no hay campo prioritario, usar CUALQUIER campo con valor
+                    if (!uniqueValue) {
+                        const anyField = Object.entries(results.testData).find(([key, value]) =>
+                            typeof value === 'string' && value.trim().length > 3 && key !== 'password' // ignorar password
+                        );
+
+                        if (anyField) {
+                            uniqueField = anyField[0];
+                            uniqueValue = anyField[1];
                         }
                     }
 
@@ -7331,31 +7630,118 @@ class Phase4TestOrchestrator {
                 });
             } else {
                 try {
-                    // 1. Obtener nombre de tabla desde SystemRegistry o usar moduleKey como fallback
+                    // 1. Obtener nombre de tabla desde SystemRegistry o mapping hardcodeado
                     let tableName = null;
                     const module = this.systemRegistry.getModule(moduleKey);
 
-                    if (module && module.tables && module.tables.length > 0) {
-                        tableName = module.tables[0]; // Tabla principal desde registry
-                        this.logger.info(`   📦 Tabla (desde registry): ${tableName}`);
+                    // MAPPING TEMPORAL: moduleKey → tableName
+                    // TODO: Agregar estos mappings a system_modules.database_tables en BD
+                    const moduleTableMapping = {
+                        'organizational-structure': 'departments',
+                        'users': 'users',
+                        'attendance': 'attendance',
+                        'visitors': 'visitors',
+                        'temporary-access': 'temporary_accesses',
+                        'dms-dashboard': 'dms_documents',
+                        'inbox': 'inbox_messages',
+                        'associate-marketplace': 'associates',
+                        'employee-360': 'employees',
+                        'job-postings': 'job_postings',
+                        'sanctions-management': 'sanctions',
+                        'training-management': 'trainings',
+                        'vacation-management': 'vacation_requests',
+                        'kiosks': 'kiosks',
+                        'art-management': 'art_records',
+                        'medical': 'medical_records',
+                        'payroll-liquidation': 'payroll_liquidations',
+                        'procedures-manual': 'procedures',
+                        'hse-management': 'hse_incidents',
+                        'legal-dashboard': 'legal_cases',
+                        'knowledge-base': 'kb_articles',
+                        'hours-cube-dashboard': 'attendance',
+                        'vendors': 'vendors',
+                        'partners': 'partners',
+                        'ai-assistant': 'assistant_conversations',
+                        'support-ai': 'support_tickets',
+                        'companies': 'companies'
+                    };
+
+                    if (module && module.database && module.database.tables && module.database.tables.length > 0) {
+                        // Módulos con metadata completa tienen database.tables
+                        tableName = module.database.tables[0]; // Tabla principal desde registry
+                        this.logger.info(`   📦 Tabla (desde registry.database.tables): ${tableName}`);
+                    } else if (module && module.tables && module.tables.length > 0) {
+                        // Fallback: algunos módulos tienen tables directamente
+                        tableName = module.tables[0];
+                        this.logger.info(`   📦 Tabla (desde registry.tables): ${tableName}`);
+                    } else if (moduleTableMapping[moduleKey]) {
+                        // Fallback: usar mapping hardcodeado
+                        tableName = moduleTableMapping[moduleKey];
+                        this.logger.info(`   📦 Tabla (desde mapping hardcodeado): ${tableName}`);
                     } else {
-                        // Fallback: usar moduleKey como nombre de tabla
-                        // La convención es que la mayoría de módulos tienen tabla = moduleKey
+                        // Último fallback: usar moduleKey como nombre de tabla
                         tableName = moduleKey;
-                        this.logger.info(`   📦 Tabla (usando moduleKey como fallback): ${tableName}`);
-                        this.logger.warn(`   ⚠️  SystemRegistry no tiene definida tabla para ${moduleKey}, usando fallback`);
+                        this.logger.info(`   📦 Tabla (usando moduleKey como último fallback): ${tableName}`);
+                        this.logger.warn(`   ⚠️  SystemRegistry y mapping no tienen definida tabla para ${moduleKey}`);
                     }
 
+                    // 1b. Si tableName contiene guiones, PostgreSQL requiere comillas dobles
+                    const tableNameQuoted = tableName.includes('-') ? `"${tableName}"` : tableName;
+                    this.logger.info(`   📦 Nombre de tabla SQL: ${tableNameQuoted}`);
+
                     // 2. Determinar campo único y valor para buscar
-                    const uniqueFields = ['newUserEmail', 'email', 'newUserName', 'name', 'newUserLegajo', 'legajo'];
+                    // ✅ FIX: DETECCIÓN INTELIGENTE de campo único (igual que en READ)
                     let uniqueValue = null;
                     let uniqueField = null;
 
-                    for (const field of uniqueFields) {
-                        if (results.testData[field]) {
-                            uniqueValue = results.testData[field];
-                            uniqueField = field;
+                    // Prioridad 1: Campos que suelen ser únicos
+                    const priorityPatterns = [
+                        /email/i,           // email, newUserEmail, correo_electronico
+                        /mail/i,            // e-mail, mail
+                        /usuario/i,         // usuario, username, user
+                        /legajo/i,          // legajo, numero_legajo
+                        /document/i,        // document_id, documento, dni
+                        /dni/i,             // dni, document_number
+                        /codigo/i,          // codigo, code
+                        /id/i               // id (como último recurso)
+                    ];
+
+                    // Buscar campo con patrón prioritario
+                    for (const pattern of priorityPatterns) {
+                        const matchingField = Object.keys(results.testData).find(key =>
+                            pattern.test(key) && results.testData[key] && typeof results.testData[key] === 'string' && results.testData[key].trim().length > 0
+                        );
+
+                        if (matchingField) {
+                            uniqueValue = results.testData[matchingField];
+                            uniqueField = matchingField;
                             break;
+                        }
+                    }
+
+                    // ✅ FIX CRÍTICO V3: Si encontró legajo o usuario (campos autogenerados),
+                    // intentar usar email en su lugar (más confiable para verificación)
+                    if (uniqueField && (/legajo/i.test(uniqueField) || /usuario/i.test(uniqueField))) {
+                        const emailField = Object.keys(results.testData).find(key =>
+                            /email/i.test(key) && results.testData[key] && typeof results.testData[key] === 'string' && results.testData[key].trim().length > 0
+                        );
+
+                        if (emailField) {
+                            this.logger.info(`   ⚠️  ${uniqueField} puede ser autogenerado, usando ${emailField} en su lugar`);
+                            uniqueField = emailField;
+                            uniqueValue = results.testData[emailField];
+                        }
+                    }
+
+                    // Prioridad 2: Si no hay campo prioritario, usar CUALQUIER campo con valor
+                    if (!uniqueValue) {
+                        const anyField = Object.entries(results.testData).find(([key, value]) =>
+                            typeof value === 'string' && value.trim().length > 3 && key !== 'password' // ignorar password
+                        );
+
+                        if (anyField) {
+                            uniqueField = anyField[0];
+                            uniqueValue = anyField[1];
                         }
                     }
 
@@ -7364,28 +7750,54 @@ class Phase4TestOrchestrator {
                     }
 
                     // Mapear nombre de campo testData → BD
-                    const fieldMapping = {
-                        'newUserEmail': 'email',
-                        'newUserName': 'name',
-                        'newUserLegajo': 'employee_number',
-                        'newUserRole': 'role',
-                        'newUserDept': 'department_id',
-                        'email': 'email',
-                        'name': 'name',
-                        'legajo': 'employee_number'
+                    // ✅ FIX: Mapeo inteligente de campos (remover prefijos comunes)
+                    let dbFieldName = uniqueField;
+
+                    // 1. Intentar quitar prefijos comunes: "newUser", "search", "new", "user"
+                    const prefixesToRemove = ['newUser', 'search', 'new', 'user'];
+                    for (const prefix of prefixesToRemove) {
+                        if (uniqueField.startsWith(prefix) && uniqueField.length > prefix.length) {
+                            const withoutPrefix = uniqueField.slice(prefix.length);
+                            // Convertir primera letra a minúscula
+                            dbFieldName = withoutPrefix.charAt(0).toLowerCase() + withoutPrefix.slice(1);
+                            break;
+                        }
+                    }
+
+                    // 2. Mapeos específicos conocidos (como fallback)
+                    const specificMappings = {
+                        // ✅ FIX: 'legajo' exists as-is in users table, no need to map
+                        'dept': 'department_id'
+                        // Other fields keep as-is if not listed here
                     };
 
-                    const dbFieldName = fieldMapping[uniqueField] || uniqueField;
+                    if (specificMappings[dbFieldName]) {
+                        dbFieldName = specificMappings[dbFieldName];
+                    } else if (specificMappings[uniqueField]) {
+                        dbFieldName = specificMappings[uniqueField];
+                    }
 
                     this.logger.info(`   🔍 Buscando en BD: ${dbFieldName} = "${uniqueValue}"...`);
 
-                    // 3. Ejecutar query
+                    // 3. Determinar nombre de primary key column (puede ser 'id', 'user_id', etc.)
+                    const primaryKeyMapping = {
+                        'users': 'user_id',
+                        'departments': 'id',
+                        'companies': 'id',
+                        'attendance': 'id',
+                        'organizational-structure': 'id' // Fallback si usa guiones
+                        // Agregar más mapeos según sea necesario
+                    };
+
+                    const primaryKeyColumn = primaryKeyMapping[tableName] || 'id'; // Default: 'id'
+
+                    // 4. Ejecutar query - IMPORTANTE: Usar tableNameQuoted para SQL
                     const query = `
                         SELECT *
-                        FROM ${tableName}
+                        FROM ${tableNameQuoted}
                         WHERE ${dbFieldName} = :uniqueValue
                             AND company_id = :companyId
-                        ORDER BY id DESC
+                        ORDER BY ${primaryKeyColumn} DESC
                         LIMIT 1
                     `;
 
@@ -7401,33 +7813,102 @@ class Phase4TestOrchestrator {
                     }
 
                     const record = records[0];
-                    this.logger.info(`   ✅ Registro encontrado en BD (ID: ${record.id})`);
+                    const recordId = record[primaryKeyColumn];
+                    this.logger.info(`   ✅ Registro encontrado en BD (${primaryKeyColumn}: ${recordId})`);
 
-                    // 4. Comparar datos en BD con testData
-                    const fieldsToVerify = {
-                        'newUserName': 'name',
-                        'newUserEmail': 'email',
-                        'newUserLegajo': 'employee_number',
-                        'newUserRole': 'role'
-                    };
-
+                    // 4. Comparar datos en BD con testData - TOTALMENTE DINÁMICO
+                    // En lugar de mapeos hardcodeados, comparar TODOS los campos que existan en ambos
                     let fieldsMatch = 0;
                     let fieldsMismatch = 0;
+                    let fieldsNotFoundInDB = 0;
 
-                    for (const [testKey, dbKey] of Object.entries(fieldsToVerify)) {
-                        const testValue = results.testData[testKey];
-                        const dbValue = record[dbKey];
+                    // Mapeo común para normalizar nombres (test → BD)
+                    const commonMappings = {
+                        // Users
+                        'newUserName': 'usuario',
+                        'newUserEmail': 'email',
+                        'newUserLegajo': 'legajo',
+                        'newUserRole': 'role',
+                        'newUserDept': 'department_id',
 
-                        if (!testValue) continue; // Skip si no existe en testData
+                        // Generic fallbacks
+                        'email': 'email',
+                        'name': 'name',
+                        'description': 'description',
+                        'legajo': 'employee_number',
 
-                        const match = testValue.toString().trim() === (dbValue?.toString() || '').trim();
+                        // Departments/Organizational
+                        'deptName': 'name',
+                        'deptDescription': 'description',
+                        'departmentName': 'name',
+                        'departmentDescription': 'description'
+                    };
+
+                    // Obtener todas las columnas del record de BD
+                    const dbColumns = Object.keys(record);
+
+                    this.logger.info(`   📋 Columnas en BD: ${dbColumns.join(', ')}`);
+                    this.logger.info(`   📋 Datos de test generados: ${Object.keys(results.testData).join(', ')}`);
+
+                    // Para cada campo en testData, intentar encontrarlo en BD
+                    for (const [testKey, testValue] of Object.entries(results.testData)) {
+                        // Skip campos vacíos, null, undefined
+                        if (testValue === null || testValue === undefined || testValue === '') {
+                            continue;
+                        }
+
+                        // Intentar múltiples mappings
+                        let dbKey = null;
+                        let dbValue = null;
+
+                        // 1. Probar mapping común
+                        if (commonMappings[testKey]) {
+                            dbKey = commonMappings[testKey];
+                            dbValue = record[dbKey];
+                        }
+
+                        // 2. Probar nombre exacto (testKey == dbKey)
+                        if (dbValue === undefined && record.hasOwnProperty(testKey)) {
+                            dbKey = testKey;
+                            dbValue = record[dbKey];
+                        }
+
+                        // 3. Probar sin prefijos (newUserName → name, userName → name)
+                        if (dbValue === undefined) {
+                            const withoutPrefix = testKey.replace(/^(new|user|dept|department|employee)/, '').toLowerCase();
+                            if (record.hasOwnProperty(withoutPrefix)) {
+                                dbKey = withoutPrefix;
+                                dbValue = record[dbKey];
+                            }
+                        }
+
+                        // 4. Probar lowercase del testKey
+                        if (dbValue === undefined) {
+                            const lowerKey = testKey.toLowerCase();
+                            if (record.hasOwnProperty(lowerKey)) {
+                                dbKey = lowerKey;
+                                dbValue = record[dbKey];
+                            }
+                        }
+
+                        // Si NO encontramos el campo en BD, skipear (no es error)
+                        if (dbValue === undefined) {
+                            fieldsNotFoundInDB++;
+                            this.logger.debug(`      ⊘ ${testKey}: no existe en BD, skipping`);
+                            continue;
+                        }
+
+                        // Comparar valores
+                        const testValueStr = testValue.toString().trim();
+                        const dbValueStr = (dbValue?.toString() || '').trim();
+                        const match = testValueStr === dbValueStr;
 
                         if (match) {
                             fieldsMatch++;
-                            this.logger.debug(`      ✓ ${dbKey}: "${dbValue}"`);
+                            this.logger.debug(`      ✓ ${dbKey}: "${dbValueStr}"`);
                         } else {
                             fieldsMismatch++;
-                            this.logger.warn(`      ✗ ${dbKey}: esperado "${testValue}", obtenido "${dbValue}"`);
+                            this.logger.warn(`      ✗ ${dbKey}: esperado "${testValueStr}", obtenido "${dbValueStr}"`);
                         }
                     }
 
@@ -7438,7 +7919,8 @@ class Phase4TestOrchestrator {
                         status: 'PASSED',
                         details: {
                             tableName,
-                            recordId: record.id,
+                            recordId,
+                            primaryKeyColumn,
                             dbFieldName,
                             uniqueValue,
                             fieldsMatch,
@@ -7446,7 +7928,7 @@ class Phase4TestOrchestrator {
                         }
                     });
                     results.passed++;
-                    results.dbRecordId = record.id; // Guardar para posible DELETE futuro
+                    results.dbRecordId = recordId; // Guardar para posible DELETE futuro
 
                 } catch (dbError) {
                     this.logger.error(`   ❌ Error en VERIFICACIÓN BD: ${dbError.message}`);
@@ -7490,6 +7972,163 @@ class Phase4TestOrchestrator {
     }
 
     // ════════════════════════════════════════════════════════════════════════════
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // 🧪 INTEGRATION TEST METHODS (2025-12-14)
+    // ════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Ejecutar Integration Tests de Flutter
+     * Valida que la APK puede comunicarse correctamente con el backend
+     */
+    async runFlutterIntegrationTests(options = {}) {
+        this.logger.info('');
+        this.logger.info('╔══════════════════════════════════════════════════════════════╗');
+        this.logger.info('║          🧪 FLUTTER INTEGRATION TESTS                        ║');
+        this.logger.info('╚══════════════════════════════════════════════════════════════╝');
+
+        try {
+            const collector = new FlutterIntegrationCollector(options);
+            const flutterAvailable = await collector.checkFlutterAvailable();
+
+            if (!flutterAvailable) {
+                this.logger.warn('⚠️ Flutter no está disponible en el sistema');
+                return { success: false, error: 'Flutter not available' };
+            }
+
+            const results = await collector.collect();
+
+            this.logger.info(`📊 Resultados: ${results.summary.passed}/${results.summary.total} tests pasados`);
+            this.logger.info(`   Pass Rate: ${results.summary.passRate}%`);
+
+            return { success: results.status === 'passed', collector: 'FlutterIntegrationCollector', ...results };
+
+        } catch (error) {
+            this.logger.error(`❌ Error en Flutter Integration Tests: ${error.message}`);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Ejecutar Stress Test de Fichajes
+     * Simula escenarios realistas de producción con múltiples usuarios
+     */
+    async runStressTest(config = {}) {
+        this.logger.info('');
+        this.logger.info('╔══════════════════════════════════════════════════════════════╗');
+        this.logger.info('║          🔥 STRESS TEST - FICHAJES REALISTAS                 ║');
+        this.logger.info('╚══════════════════════════════════════════════════════════════╝');
+
+        try {
+            const collector = new StressTestCollector({
+                totalAttendances: config.totalAttendances || 200,
+                totalUsers: config.totalUsers || 100,
+                daysToSimulate: config.daysToSimulate || 7,
+                timeout: config.timeout || 600000
+            });
+
+            let results;
+            switch (config.mode) {
+                case 'quick':
+                    this.logger.info('   Modo: QUICK (50 fichajes)');
+                    results = await collector.collectQuick();
+                    break;
+                case 'full':
+                    this.logger.info('   Modo: FULL (1000 fichajes)');
+                    results = await collector.collectFull();
+                    break;
+                default:
+                    this.logger.info(`   Modo: NORMAL (${config.totalAttendances || 200} fichajes)`);
+                    results = await collector.collect();
+            }
+
+            this.logger.info('📊 Métricas del Stress Test:');
+            this.logger.info(`   Total procesados: ${results.summary.totalProcessed}`);
+            this.logger.info(`   Check-ins exitosos: ${results.summary.successfulCheckIns}`);
+            this.logger.info(`   Health Score: ${results.summary.healthScore}%`);
+
+            return { success: results.status === 'passed' || results.status === 'warning', collector: 'StressTestCollector', ...results };
+
+        } catch (error) {
+            this.logger.error(`❌ Error en Stress Test: ${error.message}`);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Ejecutar Full Integration Suite (Flutter + Stress + E2E)
+     */
+    async runFullIntegrationSuite(options = {}) {
+        this.logger.info('');
+        this.logger.info('╔══════════════════════════════════════════════════════════════╗');
+        this.logger.info('║          🚀 FULL INTEGRATION SUITE                           ║');
+        this.logger.info('╚══════════════════════════════════════════════════════════════╝');
+
+        const startTime = Date.now();
+        const results = { timestamp: new Date().toISOString(), suites: {}, summary: { totalSuites: 0, passedSuites: 0, failedSuites: 0 } };
+
+        // 1. Flutter Integration Tests
+        if (options.includeFlutter !== false) {
+            this.logger.info('\n📱 [1/3] Flutter Integration Tests...');
+            try {
+                results.suites.flutter = await this.runFlutterIntegrationTests(options.flutter || {});
+                results.summary.totalSuites++;
+                if (results.suites.flutter.success) results.summary.passedSuites++;
+                else results.summary.failedSuites++;
+            } catch (e) {
+                results.suites.flutter = { success: false, error: e.message };
+                results.summary.totalSuites++;
+                results.summary.failedSuites++;
+            }
+        }
+
+        // 2. Stress Test
+        if (options.includeStress !== false) {
+            this.logger.info('\n🔥 [2/3] Stress Test...');
+            try {
+                results.suites.stress = await this.runStressTest({ mode: options.stressMode || 'quick', ...options.stress });
+                results.summary.totalSuites++;
+                if (results.suites.stress.success) results.summary.passedSuites++;
+                else results.summary.failedSuites++;
+            } catch (e) {
+                results.suites.stress = { success: false, error: e.message };
+                results.summary.totalSuites++;
+                results.summary.failedSuites++;
+            }
+        }
+
+        // 3. E2E Tests (si Playwright disponible)
+        if (options.includeE2E !== false && chromium) {
+            this.logger.info('\n🎭 [3/3] E2E Tests (Playwright)...');
+            try {
+                if (typeof this.runModuleTest === 'function') {
+                    results.suites.e2e = await this.runModuleTest(options.e2eModule || 'users');
+                    results.summary.totalSuites++;
+                    if (results.suites.e2e && results.suites.e2e.passed > 0) results.summary.passedSuites++;
+                    else results.summary.failedSuites++;
+                }
+            } catch (e) {
+                results.suites.e2e = { success: false, error: e.message };
+                results.summary.totalSuites++;
+                results.summary.failedSuites++;
+            }
+        }
+
+        results.duration = Date.now() - startTime;
+        results.success = results.summary.failedSuites === 0;
+
+        this.logger.info('');
+        this.logger.info('╔══════════════════════════════════════════════════════════════╗');
+        this.logger.info('║                 RESUMEN INTEGRATION SUITE                    ║');
+        this.logger.info('╠══════════════════════════════════════════════════════════════╣');
+        this.logger.info(`║  Suites ejecutadas: ${results.summary.totalSuites}`.padEnd(64) + '║');
+        this.logger.info(`║  Suites PASSED: ${results.summary.passedSuites}`.padEnd(64) + '║');
+        this.logger.info(`║  Suites FAILED: ${results.summary.failedSuites}`.padEnd(64) + '║');
+        this.logger.info(`║  Duración total: ${(results.duration / 1000).toFixed(2)}s`.padEnd(64) + '║');
+        this.logger.info('╚══════════════════════════════════════════════════════════════╝');
+
+        return results;
+    }
 
 }
 

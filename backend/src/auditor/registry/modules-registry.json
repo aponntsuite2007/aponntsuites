@@ -2,7 +2,7 @@
   "version": "3.0.0",
   "generated_at": "2025-12-11",
   "description": "Registry COMPLETO del sistema APONNT Suite - Estructura Organizacional Unificada",
-  "total_modules": 46,
+  "total_modules": 48,
   "modules": [
     {
       "id": "users",
@@ -198,8 +198,149 @@
         ],
         "inputs": []
       },
-      "lastBrainUpdate": "2025-12-12T13:34:47.182Z",
-      "autoHealedGaps": 14
+      "lastBrainUpdate": "2025-12-15T01:17:04.747Z",
+      "autoHealedGaps": 14,
+      "workflows": {
+        "clock_in": {
+          "service": "AttendanceWorkflowService",
+          "file": "src/services/AttendanceWorkflowService.js",
+          "stages_count": 18,
+          "entry_point": "BIOMETRIC_CAPTURE",
+          "final_states": [
+            "REGISTERED",
+            "REJECTED_*"
+          ],
+          "has_authorization": true,
+          "uses_organigrama": true,
+          "multi_channel_notifications": true,
+          "documentation": "docs/WORKFLOW-FICHAJE-COMPLETO.md",
+          "features": {
+            "rotating_shifts": true,
+            "shift_coupling": true,
+            "holiday_by_country": true,
+            "late_authorization": true,
+            "escalation_chain": true
+          }
+        },
+        "late_arrival_authorization": {
+          "service": "LateArrivalAuthorizationService",
+          "file": "src/services/LateArrivalAuthorizationService.js",
+          "description": "Sistema completo de autorización de llegadas tardías con verificación jerárquica",
+          "entry_point": "sendAuthorizationRequest",
+          "integrates_with": [
+            "NotificationUnifiedService",
+            "WebSocket",
+            "Email"
+          ],
+          "uses_organigrama": true,
+          "multi_channel_notifications": true,
+          "stages": [
+            {
+              "name": "SAME_SHIFT_VERIFICATION",
+              "method": "checkSupervisorSameShift",
+              "description": "Verifica que el supervisor tenga el MISMO TURNO que el empleado",
+              "on_fail": "ESCALATE_TO_NEXT_LEVEL"
+            },
+            {
+              "name": "AVAILABILITY_CHECK",
+              "method": "checkSupervisorAvailability",
+              "description": "Verifica que supervisor no esté: vacaciones, licencia médica, ausente",
+              "checks": [
+                "vacation_requests",
+                "medical_leaves",
+                "attendances"
+              ],
+              "on_fail": "ESCALATE_TO_NEXT_LEVEL"
+            },
+            {
+              "name": "HIERARCHY_ESCALATION",
+              "method": "_findSupervisorWithSameShift",
+              "description": "Busca recursivamente en cadena de mando (hasta 5 niveles)",
+              "max_levels": 5,
+              "notifies_rrhh": true
+            },
+            {
+              "name": "SEND_NOTIFICATIONS",
+              "method": "_sendViaUnifiedNotificationSystem",
+              "description": "Envía notificaciones vía sistema central",
+              "channels": [
+                "email",
+                "websocket",
+                "app"
+              ],
+              "creates_thread": true,
+              "recipients": [
+                "supervisor_same_shift",
+                "rrhh_on_escalation",
+                "employee"
+              ]
+            },
+            {
+              "name": "EMPLOYEE_REALTIME_UPDATE",
+              "method": "_notifyEmployeeRequestSent",
+              "description": "Notifica al empleado en tiempo real mientras espera",
+              "websocket_event": "authorization_status"
+            },
+            {
+              "name": "AUTHORIZATION_RESULT",
+              "method": "notifyAuthorizationResult",
+              "description": "Procesa aprobación/rechazo y notifica a todos los niveles",
+              "creates_authorization_window": true,
+              "window_minutes": 5
+            }
+          ],
+          "business_rules": {
+            "supervisor_must_have_same_shift": true,
+            "supervisor_must_be_available": true,
+            "auto_escalation_on_unavailable": true,
+            "rrhh_notified_on_escalation": true,
+            "employee_notified_realtime": true,
+            "authorization_window_minutes": 5
+          },
+          "help": {
+            "quickStart": "1. Empleado llega tarde\n2. Sistema busca supervisor con MISMO TURNO\n3. Si no disponible, escala automáticamente\n4. Supervisor aprueba/rechaza\n5. Empleado tiene 5 min para completar fichaje",
+            "commonIssues": [
+              {
+                "problem": "Supervisor tiene turno diferente",
+                "solution": "Sistema escala automáticamente al siguiente nivel en cadena de mando"
+              },
+              {
+                "problem": "Supervisor de vacaciones",
+                "solution": "Sistema detecta y escala, notifica a RRHH"
+              },
+              {
+                "problem": "No llega notificación",
+                "solution": "Verificar preferencia de notificación del supervisor (email/whatsapp/both)"
+              }
+            ]
+          },
+          "updated_at": "2025-12-14",
+          "updated_by": "claude_code_session"
+        },
+        "attendance_workflow": {
+          "service": "Attendance Workflow",
+          "file": "src/workflows/generated/LateArrivalAuthorizationServiceGenerated.js",
+          "stages_count": 54,
+          "entry_point": "BIOMETRIC_CAPTURE",
+          "final_states": [
+            "REGISTERED",
+            "REJECTED_QUALITY",
+            "REJECTED_NO_MATCH",
+            "REJECTED_SUSPENDED",
+            "REJECTED_NO_SHIFT",
+            "REJECTED_LATE_NO_AUTH"
+          ],
+          "auto_generated": true,
+          "generated_at": "2025-12-15T01:17:04.740Z",
+          "stats": {
+            "total": 54,
+            "core": 3,
+            "existing": 0,
+            "autoGenerated": 45,
+            "outcomes": 6
+          }
+        }
+      }
     },
     {
       "id": "dashboard",
@@ -915,7 +1056,30 @@
       "commercial": {
         "is_core": false,
         "standalone": true
-      }
+      },
+      "workflows": {
+        "legal_workflow": {
+          "service": "Legal Case Workflow",
+          "file": "src/workflows/generated/LegalWorkflowServiceGenerated.js",
+          "stages_count": 43,
+          "entry_point": "CASE_RECEIVED",
+          "final_states": [
+            "CASE_CLOSED_SUCCESS",
+            "CASE_CLOSED_FAILURE",
+            "CASE_ARCHIVED"
+          ],
+          "auto_generated": true,
+          "generated_at": "2025-12-15T01:17:04.757Z",
+          "stats": {
+            "total": 43,
+            "core": 3,
+            "existing": 6,
+            "autoGenerated": 31,
+            "outcomes": 3
+          }
+        }
+      },
+      "lastBrainUpdate": "2025-12-15T01:17:04.762Z"
     },
     {
       "id": "sanctions-management",
@@ -2764,7 +2928,30 @@
         "is_core": false,
         "can_work_standalone": false,
         "base_price_usd": 0
-      }
+      },
+      "workflows": {
+        "notifications_workflow": {
+          "service": "Notification Workflow",
+          "file": "src/workflows/generated/NotificationUnifiedServiceGenerated.js",
+          "stages_count": 47,
+          "entry_point": "NOTIFICATION_CREATED",
+          "final_states": [
+            "DELIVERED",
+            "FAILED",
+            "EXPIRED"
+          ],
+          "auto_generated": true,
+          "generated_at": "2025-12-15T01:17:04.791Z",
+          "stats": {
+            "total": 47,
+            "core": 4,
+            "existing": 0,
+            "autoGenerated": 40,
+            "outcomes": 3
+          }
+        }
+      },
+      "lastBrainUpdate": "2025-12-15T01:17:04.796Z"
     },
     {
       "id": "partners",
@@ -3157,6 +3344,159 @@
       },
       "lastBrainUpdate": "2025-12-12T13:40:32.681Z",
       "autoHealedGaps": 4
+    },
+    {
+      "id": "flutter-integration-tests",
+      "key": "flutter-integration-tests",
+      "name": "Flutter Integration Tests",
+      "icon": "📱",
+      "category": "testing",
+      "is_core": false,
+      "base_price": 0,
+      "description": "Tests de integración Flutter para validar comunicación APK ↔ Backend antes de compilar",
+      "isCommercial": false,
+      "isAdministrative": true,
+      "hasImplementation": true,
+      "backend_file": "src/auditor/collectors/FlutterIntegrationCollector.js",
+      "frontend_file": "frontend_flutter/test/integration/",
+      "status": "COMPLETE",
+      "progress": 100,
+      "version": "1.0.0",
+      "aliases": [
+        "flutter-tests",
+        "apk-tests",
+        "integration-tests-flutter"
+      ],
+      "dependencies": {
+        "required": [
+          "database",
+          "companies"
+        ],
+        "optional": [
+          "attendance",
+          "kiosks-professional"
+        ],
+        "integrates_with": [
+          "phase4-orchestrator",
+          "stress-test"
+        ],
+        "provides_to": [
+          "phase4-orchestrator"
+        ]
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "help": {
+        "quickStart": "1. Asegurar backend corriendo en puerto 9998\n2. Ejecutar: flutter test test/integration/\n3. Revisar resultados en consola",
+        "commonIssues": [
+          {
+            "problem": "Tests fallan por conexión",
+            "solution": "Verificar que backend esté corriendo y accesible en localhost:9998"
+          },
+          {
+            "problem": "Flutter no encontrado",
+            "solution": "Instalar Flutter SDK y agregarlo al PATH"
+          }
+        ]
+      },
+      "testsIncluded": [
+        "backend_api_test.dart - Conectividad con backend",
+        "attendance_workflow_test.dart - Flujo de fichaje completo",
+        "run_all_integration_tests.dart - Runner con JSON output"
+      ],
+      "metrics": [
+        "Tests passed/failed",
+        "Pass rate %",
+        "Duration (ms)"
+      ],
+      "lastBrainUpdate": "2025-12-14T12:00:00.000Z"
+    },
+    {
+      "id": "stress-test",
+      "key": "stress-test",
+      "name": "Stress Test de Asistencias",
+      "icon": "🧪",
+      "category": "testing",
+      "is_core": false,
+      "base_price": 0,
+      "description": "Test de estrés realista: simula 1000+ fichajes con llegadas tardías, autorizaciones y biometría",
+      "isCommercial": false,
+      "isAdministrative": true,
+      "hasImplementation": true,
+      "backend_file": "src/auditor/collectors/StressTestCollector.js",
+      "script_file": "scripts/test-realistic-attendance-stress.js",
+      "status": "COMPLETE",
+      "progress": 100,
+      "version": "1.0.0",
+      "aliases": [
+        "stress-testing",
+        "load-test",
+        "attendance-stress-test"
+      ],
+      "dependencies": {
+        "required": [
+          "database",
+          "users",
+          "companies",
+          "attendance"
+        ],
+        "optional": [
+          "late-arrival-authorizations",
+          "organizational-structure"
+        ],
+        "integrates_with": [
+          "phase4-orchestrator",
+          "flutter-integration-tests"
+        ],
+        "provides_to": [
+          "phase4-orchestrator"
+        ]
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "help": {
+        "quickStart": "1. Ejecutar: node scripts/test-realistic-attendance-stress.js\n2. O usar StressTestCollector desde Phase4Orchestrator\n3. Revisar métricas en output",
+        "commonIssues": [
+          {
+            "problem": "Test muy lento",
+            "solution": "Reducir STRESS_TEST_ATTENDANCES en variables de entorno"
+          },
+          {
+            "problem": "Errores de BD",
+            "solution": "Verificar conexión PostgreSQL y que existan usuarios de prueba"
+          }
+        ]
+      },
+      "modes": {
+        "quick": {
+          "attendances": 50,
+          "days": 3,
+          "description": "Test rápido para desarrollo"
+        },
+        "normal": {
+          "attendances": 200,
+          "days": 7,
+          "description": "Test estándar para CI/CD"
+        },
+        "full": {
+          "attendances": 1000,
+          "days": 30,
+          "description": "Test completo para QA/Production"
+        }
+      },
+      "metrics": [
+        "Total fichajes procesados",
+        "Check-ins/Check-outs exitosos",
+        "Llegadas tardías (aprobadas/rechazadas)",
+        "Intentos biométricos por fichaje",
+        "Fichajes por segundo (performance)",
+        "Health Score (0-100)"
+      ],
+      "lastBrainUpdate": "2025-12-14T12:00:00.000Z"
     }
   ],
   "categories": {
@@ -3214,6 +3554,11 @@
       "name": "Sistema",
       "description": "Administración y configuración",
       "color": "#607d8b"
+    },
+    "testing": {
+      "name": "Testing & QA",
+      "description": "Pruebas automatizadas, stress tests e integración",
+      "color": "#795548"
     }
   }
 }

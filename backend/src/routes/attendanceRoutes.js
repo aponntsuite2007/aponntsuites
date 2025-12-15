@@ -328,14 +328,20 @@ router.get('/', auth, async (req, res) => {
 
     const count = parseInt(countResult.total || 0);
 
-    // Query de datos
+    // Query de datos - campos mapeados para frontend
     const attendances = await sequelize.query(`
       SELECT
-        a.id, a."checkInTime" as "checkInTime", a."checkOutTime" as "checkOutTime",
-        a.status, a.kiosk_id as "kioskId",
-        u.user_id as "User.id", u."firstName" as "User.firstName",
-        u."lastName" as "User.lastName", u."employeeId" as "User.employeeId",
-        u.email as "User.email"
+        a.id,
+        a.date,
+        a."checkInTime" as check_in,
+        a."checkOutTime" as check_out,
+        a.status,
+        a.is_late,
+        a.kiosk_id as "kioskId",
+        CONCAT(u."firstName", ' ', u."lastName") as user_name,
+        u."employeeId" as legajo,
+        u.user_id,
+        u.email as user_email
       FROM attendances a
       INNER JOIN users u ON a."UserId" = u.user_id
       WHERE 1=1 ${sqlWhere}
@@ -370,25 +376,45 @@ router.get('/', auth, async (req, res) => {
 /**
  * @route GET /api/v1/attendance/stats
  * @desc Obtener estadísticas básicas - DEBE estar antes de /:id
+ * @query startDate - Fecha inicio (opcional, default: hace 30 días)
+ * @query endDate - Fecha fin (opcional, default: hoy)
  */
 router.get('/stats', auth, async (req, res) => {
   try {
-    console.log('📊 [ATTENDANCE STATS] Obteniendo estadísticas para empresa:', req.user.company_id);
-    const today = new Date().toISOString().split('T')[0];
+    const { startDate, endDate } = req.query;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    // Si no se especifica rango, usar últimos 30 días
+    let dateStart = startDate;
+    let dateEnd = endDate || new Date().toISOString().split('T')[0];
+
+    if (!startDate) {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      dateStart = thirtyDaysAgo.toISOString().split('T')[0];
+    }
+
+    console.log('📊 [ATTENDANCE STATS] Empresa:', companyId, '| Rango:', dateStart, 'a', dateEnd);
+
     const [stats] = await sequelize.query(`
       SELECT
         COUNT(a.id) as total,
         COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present,
-        COUNT(CASE WHEN a.status = 'late' THEN 1 END) as late,
-        COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent
+        COUNT(CASE WHEN a.status = 'late' OR a.is_late = true THEN 1 END) as late,
+        COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent,
+        COUNT(CASE WHEN a.status = 'present' AND a.is_late = false THEN 1 END) as "onTime"
       FROM attendances a
       INNER JOIN users u ON a."UserId" = u.user_id
-      WHERE u.company_id = :companyId AND a.date >= :today
+      WHERE u.company_id = :companyId
+        AND a.date >= :dateStart
+        AND a.date <= :dateEnd
     `, {
-      replacements: { companyId: req.user.company_id, today },
+      replacements: { companyId, dateStart, dateEnd },
       type: QueryTypes.SELECT
     });
-    res.json(stats || { total: 0, present: 0, late: 0, absent: 0 });
+
+    console.log('✅ [ATTENDANCE STATS] Resultado:', stats);
+    res.json(stats || { total: 0, present: 0, late: 0, absent: 0, onTime: 0 });
   } catch (error) {
     console.error('❌ [ATTENDANCE STATS] Error:', error);
     res.status(500).json({ success: false, error: error.message });
