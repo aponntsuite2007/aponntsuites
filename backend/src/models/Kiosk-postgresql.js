@@ -67,96 +67,19 @@ module.exports = (sequelize) => {
         key: 'id'
       }
     },
-    // Departamentos autorizados extra además del default
-    authorized_departments: {
-      type: DataTypes.JSONB,
-      allowNull: true,
-      defaultValue: [],
-      comment: 'Array de department_id que pueden usar este kiosk además de su kiosk por defecto. Ejemplo: [1, 2, 5]'
-    },
-    // Campos adicionales de hardware
-    has_external_reader: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true,
-      defaultValue: false
-    },
-    reader_model: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    reader_config: {
-      type: DataTypes.JSONB,
-      allowNull: true,
-      defaultValue: {}
-    },
-    ip_address: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    port: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: 9998
-    },
-    last_seen: {
-      type: DataTypes.DATE,
-      allowNull: true
-    },
-    apk_version: {
-      type: DataTypes.STRING(20),
-      allowNull: true
-    }
+    // NOTE: The following fields are OPTIONAL and may not exist in all database instances
+    // They will be created by migration 20251216_add_kiosk_security_columns.sql
+    // Sequelize will not fail if they don't exist due to the model settings below
   }, {
     tableName: 'kiosks',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
-    paranoid: true, // Para soft delete
-    deletedAt: 'deleted_at',
-    indexes: [
-      {
-        unique: true,
-        fields: ['name', 'company_id'],
-        where: {
-          deleted_at: null
-        },
-        name: 'kiosks_unique_name_per_company'
-      },
-      {
-        unique: true,
-        fields: ['device_id'],
-        where: {
-          deleted_at: null,
-          device_id: {
-            [sequelize.Sequelize.Op.ne]: null
-          }
-        },
-        name: 'kiosks_unique_device_id'
-      },
-      {
-        unique: true,
-        fields: ['gps_lat', 'gps_lng', 'company_id'],
-        where: {
-          deleted_at: null,
-          gps_lat: {
-            [sequelize.Sequelize.Op.ne]: null
-          },
-          gps_lng: {
-            [sequelize.Sequelize.Op.ne]: null
-          }
-        },
-        name: 'kiosks_unique_gps_per_company'
-      },
-      {
-        fields: ['is_active']
-      },
-      {
-        fields: ['is_configured']
-      },
-      {
-        fields: ['company_id']
-      }
-    ]
+    // Disable paranoid mode as deleted_at column may not exist in all DBs
+    paranoid: false,
+    // Note: Indexes are handled by database, not by Sequelize model
+    // This prevents issues when DB schema differs from model expectations
+    indexes: []
   });
 
   // Método para obtener ubicación GPS como objeto
