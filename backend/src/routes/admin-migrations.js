@@ -200,6 +200,74 @@ router.post('/migrate-attendance-justification', authenticateMigrationToken, asy
     }
 });
 
+// Endpoint para agregar columnas de seguridad a kiosks
+router.post('/migrate-kiosk-security', authenticateMigrationToken, async (req, res) => {
+    try {
+        console.log('🔄 Agregando columnas de seguridad a kiosks...');
+
+        const results = [];
+
+        // Columnas a agregar
+        const columnsToAdd = [
+            { name: 'has_external_reader', sql: 'has_external_reader BOOLEAN DEFAULT false' },
+            { name: 'reader_model', sql: 'reader_model VARCHAR(100)' },
+            { name: 'reader_config', sql: "reader_config JSONB DEFAULT '{}'" },
+            { name: 'authorized_departments', sql: "authorized_departments JSONB DEFAULT '[]'" },
+            { name: 'ip_address', sql: 'ip_address VARCHAR(50)' },
+            { name: 'port', sql: 'port INTEGER DEFAULT 9998' },
+            { name: 'last_seen', sql: 'last_seen TIMESTAMP WITH TIME ZONE' },
+            { name: 'apk_version', sql: 'apk_version VARCHAR(20)' },
+            { name: 'deleted_at', sql: 'deleted_at TIMESTAMP WITH TIME ZONE' }
+        ];
+
+        for (const col of columnsToAdd) {
+            try {
+                // Check if column exists
+                const [exists] = await database.sequelize.query(`
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'kiosks' AND column_name = '${col.name}'
+                `);
+
+                if (exists.length > 0) {
+                    results.push(`${col.name}: already exists`);
+                } else {
+                    await database.sequelize.query(`ALTER TABLE kiosks ADD COLUMN ${col.sql}`);
+                    results.push(`${col.name}: added`);
+                }
+            } catch(e) {
+                results.push(`${col.name}: ${e.message.substring(0, 50)}`);
+            }
+        }
+
+        // Verify final columns
+        const [cols] = await database.sequelize.query(`
+            SELECT column_name, data_type
+            FROM information_schema.columns
+            WHERE table_name = 'kiosks'
+            ORDER BY ordinal_position
+        `);
+
+        console.log('✅ Kiosk security migration completed');
+
+        res.json({
+            success: true,
+            message: 'Kiosk security columns migration completed',
+            results: results,
+            totalColumns: cols.length,
+            columns: cols.map(c => c.column_name),
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('❌ Error in kiosk security migration:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error in kiosk security migration',
+            error: error.message
+        });
+    }
+});
+
 // Endpoint para ampliar columna de íconos
 router.post('/fix-icon-column', authenticateMigrationToken, async (req, res) => {
     try {
