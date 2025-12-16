@@ -13,6 +13,7 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const crypto = require('crypto');
+const NotificationRecipientResolver = require('./NotificationRecipientResolver');
 
 // ============================================================================
 // NOTIFICATION TYPES FOR SANCTIONS
@@ -1220,10 +1221,28 @@ class SanctionWorkflowService {
 
     /**
      * Obtener usuarios por rol para notificaciones
+     * 🆕 ACTUALIZADO: Usa NotificationRecipientResolver para RRHH como SSOT
      * @private
      */
     static async _getUsersByRole(companyId, role, transaction = null) {
         try {
+            // Para RRHH, usar NotificationRecipientResolver como SSOT
+            if (role === 'rrhh' || role === 'RRHH' || role === 'hr') {
+                const recipients = await NotificationRecipientResolver.resolveRRHH(companyId, {
+                    maxRecipients: 10,
+                    includeUserDetails: true,
+                    fallbackToAdmins: true
+                });
+
+                return recipients.map(r => ({
+                    user_id: r.userId,
+                    firstName: r.name?.split(' ')[0] || '',
+                    lastName: r.name?.split(' ').slice(1).join(' ') || '',
+                    email: r.email
+                }));
+            }
+
+            // Para otros roles, usar query directa
             const users = await sequelize.query(`
                 SELECT user_id, "firstName", "lastName", email
                 FROM users

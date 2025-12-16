@@ -1301,6 +1301,9 @@
                     <div class="e360-tab" data-tab="compatibility">
                         <i class="fas fa-people-arrows"></i> Reemplazos
                     </div>
+                    <div class="e360-tab" data-tab="hour-bank">
+                        <i class="fas fa-piggy-bank"></i> Banco Horas
+                    </div>
                 </div>
 
                 <!-- Contenido de tabs - EXPEDIENTE 360° COMPLETO -->
@@ -1316,6 +1319,7 @@
                 <div id="tab-ai-analysis" class="e360-tab-content" style="display: none;"></div>
                 <div id="tab-biometric" class="e360-tab-content" style="display: none;"></div>
                 <div id="tab-compatibility" class="e360-tab-content" style="display: none;"></div>
+                <div id="tab-hour-bank" class="e360-tab-content" style="display: none;"></div>
             `;
 
             // Reasignar event listeners a las tabs
@@ -1339,6 +1343,7 @@
         renderAIAnalysisTab(report);
         renderBiometricTab(report);        // ENTERPRISE: Análisis Biométrico Emocional
         renderCompatibilityTab(report);    // ENTERPRISE: Compatibilidad y Reemplazos
+        renderHourBankTab(report);         // ENTERPRISE: Banco de Horas
 
         // Mostrar tab activa
         showTab('overview');
@@ -3064,6 +3069,294 @@
                 ` : ''}
             </div>
         `;
+    }
+
+    // =========================================================================
+    // ENTERPRISE: TAB BANCO DE HORAS
+    // =========================================================================
+
+    async function renderHourBankTab(report) {
+        const container = document.getElementById('tab-hour-bank');
+        if (!container) return;
+
+        const emp = report.employee || {};
+        const userId = emp.user_id || emp.id;
+
+        // Mostrar loading inicial
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Cargando...</span>
+                </div>
+                <p class="mt-3 text-muted">Cargando datos del banco de horas...</p>
+            </div>
+        `;
+
+        try {
+            // Cargar datos del banco de horas desde API
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            const response = await fetch(`/api/hour-bank/employee-summary/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudo cargar el banco de horas');
+            }
+
+            const data = await response.json();
+            const summary = data.data || {};
+            const health = summary.health || {};
+            const transactions = summary.transactions || [];
+            const trends = summary.trends || {};
+
+            container.innerHTML = `
+                <div style="padding: 20px;">
+                    <!-- Header Enterprise -->
+                    <div style="background: linear-gradient(135deg, #00897b 0%, #00695c 50%, #004d40 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,137,123,0.3);">
+                        <h3><i class="fas fa-piggy-bank"></i> Banco de Horas - ${emp.first_name || ''} ${emp.last_name || ''}</h3>
+                        <p style="margin: 0; opacity: 0.9;">Cuenta corriente de horas extras: acumulación, devolución y tendencias</p>
+                    </div>
+
+                    <!-- Métricas Principales -->
+                    <div class="row mb-4">
+                        <!-- Balance Actual -->
+                        <div class="col-md-3">
+                            <div class="card h-100" style="background: rgba(0,200,150,0.1); border: 1px solid rgba(0,200,150,0.3);">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-wallet fa-2x mb-2" style="color: #00e5a0;"></i>
+                                    <h2 style="color: #00e5a0; margin: 0;">${(summary.balance || 0).toFixed(1)}h</h2>
+                                    <small class="text-muted">Balance Actual</small>
+                                    ${summary.balance > 0 ? `
+                                        <div class="mt-2">
+                                            <span class="badge badge-success">
+                                                <i class="fas fa-arrow-up"></i> A favor
+                                            </span>
+                                        </div>
+                                    ` : summary.balance < 0 ? `
+                                        <div class="mt-2">
+                                            <span class="badge badge-danger">
+                                                <i class="fas fa-arrow-down"></i> En deuda
+                                            </span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Salud de la Cuenta -->
+                        <div class="col-md-3">
+                            <div class="card h-100" style="background: ${getHealthColor(health.health_score, 0.1)}; border: 1px solid ${getHealthColor(health.health_score, 0.3)};">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-heartbeat fa-2x mb-2" style="color: ${getHealthTextColor(health.health_score)};"></i>
+                                    <h2 style="color: ${getHealthTextColor(health.health_score)}; margin: 0;">${health.health_score || 0}/100</h2>
+                                    <small class="text-muted">Salud de Cuenta</small>
+                                    <div class="mt-2">
+                                        <span class="badge" style="background: ${getHealthTextColor(health.health_score)}20; color: ${getHealthTextColor(health.health_score)};">
+                                            ${health.status || 'Sin evaluar'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total Acumulado -->
+                        <div class="col-md-3">
+                            <div class="card h-100" style="background: rgba(33,150,243,0.1); border: 1px solid rgba(33,150,243,0.3);">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-plus-circle fa-2x mb-2" style="color: #64b5f6;"></i>
+                                    <h2 style="color: #64b5f6; margin: 0;">${(summary.total_accrued || 0).toFixed(1)}h</h2>
+                                    <small class="text-muted">Total Acumulado</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total Usado -->
+                        <div class="col-md-3">
+                            <div class="card h-100" style="background: rgba(255,152,0,0.1); border: 1px solid rgba(255,152,0,0.3);">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-minus-circle fa-2x mb-2" style="color: #ffb74d;"></i>
+                                    <h2 style="color: #ffb74d; margin: 0;">${(summary.total_used || 0).toFixed(1)}h</h2>
+                                    <small class="text-muted">Total Usado</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tendencias y Análisis -->
+                    <div class="row mb-4">
+                        <!-- Gráfico de Tendencia -->
+                        <div class="col-md-8">
+                            <div class="card h-100" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);">
+                                <div class="card-header" style="background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <i class="fas fa-chart-line"></i> Tendencia de Uso (Últimos 6 meses)
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-4">
+                                            <div class="p-3" style="background: rgba(0,200,150,0.1); border-radius: 8px;">
+                                                <h4 style="color: #00e5a0;">${trends.avg_monthly_accrual?.toFixed(1) || '0.0'}h</h4>
+                                                <small class="text-muted">Prom. Mensual Acumulado</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="p-3" style="background: rgba(255,152,0,0.1); border-radius: 8px;">
+                                                <h4 style="color: #ffb74d;">${trends.avg_monthly_usage?.toFixed(1) || '0.0'}h</h4>
+                                                <small class="text-muted">Prom. Mensual Usado</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="p-3" style="background: ${(trends.net_trend || 0) >= 0 ? 'rgba(0,200,150,0.1)' : 'rgba(255,82,82,0.1)'}; border-radius: 8px;">
+                                                <h4 style="color: ${(trends.net_trend || 0) >= 0 ? '#00e5a0' : '#ff5252'};">
+                                                    ${(trends.net_trend || 0) >= 0 ? '+' : ''}${trends.net_trend?.toFixed(1) || '0.0'}h
+                                                </h4>
+                                                <small class="text-muted">Tendencia Neta</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <h6 class="text-muted"><i class="fas fa-chart-pie"></i> Distribución HE Generadas</h6>
+                                        <div class="progress" style="height: 30px; border-radius: 15px;">
+                                            <div class="progress-bar" style="width: ${trends.percent_to_bank || 50}%; background: linear-gradient(90deg, #00897b, #00e5a0);">
+                                                🏦 ${trends.percent_to_bank?.toFixed(0) || 50}% Banco
+                                            </div>
+                                            <div class="progress-bar" style="width: ${trends.percent_to_pay || 50}%; background: linear-gradient(90deg, #2196f3, #64b5f6);">
+                                                💵 ${trends.percent_to_pay?.toFixed(0) || 50}% Pago
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alertas y Recomendaciones -->
+                        <div class="col-md-4">
+                            <div class="card h-100" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);">
+                                <div class="card-header" style="background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <i class="fas fa-exclamation-triangle"></i> Estado y Alertas
+                                </div>
+                                <div class="card-body">
+                                    ${health.factors && health.factors.length > 0 ? `
+                                        <ul class="list-unstyled mb-3">
+                                            ${health.factors.map(factor => `
+                                                <li class="mb-2">
+                                                    <i class="fas fa-info-circle text-info"></i> ${factor}
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    ` : '<p class="text-muted">Sin factores de riesgo detectados</p>'}
+
+                                    ${health.recommendations && health.recommendations.length > 0 ? `
+                                        <hr>
+                                        <h6><i class="fas fa-lightbulb text-warning"></i> Recomendaciones</h6>
+                                        <ul class="list-unstyled">
+                                            ${health.recommendations.map(rec => `
+                                                <li class="mb-2 text-muted">
+                                                    <i class="fas fa-chevron-right"></i> ${rec}
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    ` : ''}
+
+                                    ${summary.vicious_cycle_risk ? `
+                                        <div class="alert ${summary.vicious_cycle_risk.is_vicious_cycle ? 'alert-danger' : 'alert-warning'} mt-3" style="border-radius: 8px;">
+                                            <strong><i class="fas fa-sync-alt"></i> Ciclo Vicioso</strong>
+                                            <p class="mb-1 small">Ratio: ${summary.vicious_cycle_risk.ratio?.toFixed(2) || 'N/A'}</p>
+                                            <p class="mb-0 small">${summary.vicious_cycle_risk.recommendation || ''}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historial de Transacciones -->
+                    <div class="card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);">
+                        <div class="card-header" style="background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <i class="fas fa-history"></i> Últimas Transacciones
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover mb-0">
+                                    <thead>
+                                        <tr style="background: rgba(0,0,0,0.3);">
+                                            <th>Fecha</th>
+                                            <th>Tipo</th>
+                                            <th>Horas</th>
+                                            <th>Motivo</th>
+                                            <th>Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${transactions.length > 0 ? transactions.slice(0, 10).map(tx => `
+                                            <tr>
+                                                <td>${formatDate(tx.transaction_date || tx.created_at)}</td>
+                                                <td>
+                                                    ${tx.transaction_type === 'accrual' ?
+                                                        '<span class="badge badge-success"><i class="fas fa-plus"></i> Acumulación</span>' :
+                                                        tx.transaction_type === 'usage' ?
+                                                        '<span class="badge badge-warning"><i class="fas fa-minus"></i> Uso</span>' :
+                                                        tx.transaction_type === 'adjustment' ?
+                                                        '<span class="badge badge-info"><i class="fas fa-edit"></i> Ajuste</span>' :
+                                                        '<span class="badge badge-secondary">' + tx.transaction_type + '</span>'
+                                                    }
+                                                </td>
+                                                <td style="color: ${tx.hours_amount >= 0 ? '#00e5a0' : '#ff5252'};">
+                                                    ${tx.hours_amount >= 0 ? '+' : ''}${tx.hours_amount?.toFixed(1) || 0}h
+                                                </td>
+                                                <td class="text-muted">${tx.description || tx.reason || '-'}</td>
+                                                <td><strong>${tx.balance_after?.toFixed(1) || '-'}h</strong></td>
+                                            </tr>
+                                        `).join('') : `
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4 text-muted">
+                                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                                    Sin transacciones registradas
+                                                </td>
+                                            </tr>
+                                        `}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Error cargando banco de horas:', error);
+            container.innerHTML = `
+                <div class="alert alert-warning" style="margin: 20px; padding: 30px; text-align: center;">
+                    <i class="fas fa-piggy-bank fa-3x mb-3" style="color: #6c757d;"></i>
+                    <h4>Banco de Horas No Disponible</h4>
+                    <p>No se pudo cargar la información del banco de horas para este empleado.</p>
+                    <p class="text-muted small">${error.message || 'Error desconocido'}</p>
+                </div>
+            `;
+        }
+    }
+
+    // Helpers para el tab de banco de horas
+    function getHealthColor(score, opacity) {
+        if (score >= 80) return `rgba(0, 200, 150, ${opacity})`;
+        if (score >= 60) return `rgba(255, 193, 7, ${opacity})`;
+        if (score >= 40) return `rgba(255, 152, 0, ${opacity})`;
+        return `rgba(255, 82, 82, ${opacity})`;
+    }
+
+    function getHealthTextColor(score) {
+        if (score >= 80) return '#00e5a0';
+        if (score >= 60) return '#ffc107';
+        if (score >= 40) return '#ff9800';
+        return '#ff5252';
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        try {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        } catch {
+            return dateStr;
+        }
     }
 
     // =========================================================================

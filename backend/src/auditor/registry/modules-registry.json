@@ -1,53 +1,401 @@
 {
   "version": "3.0.0",
-  "generated_at": "2025-12-11",
-  "description": "Registry COMPLETO del sistema APONNT Suite - Estructura Organizacional Unificada",
-  "total_modules": 48,
+  "generated_at": "2025-12-16",
+  "description": "Registry SINCRONIZADO con system_modules (BD es SSOT)",
+  "total_modules": 46,
   "modules": [
     {
-      "id": "users",
-      "name": "Gestión de Usuarios (Empleados de Empresas)",
-      "category": "core",
-      "version": "6.0.0",
-      "description": "Módulo CORE para crear, editar y gestionar usuarios con biometría, paginación profesional",
+      "id": "licensing-management",
+      "name": "Gestión de Licencias",
+      "category": "admin",
+      "version": "1.0.0",
+      "description": "Administración de licencias y subscripciones del sistema",
       "dependencies": {
         "required": [
-          "database",
           "companies"
         ],
-        "optional": [
-          "real-biometric-enterprise",
-          "organizational-structure"
-        ],
+        "optional": [],
         "integrates_with": [
-          "attendance",
-          "notification-center",
-          "medical",
-          "vacation"
+          "ALL"
         ],
-        "provides_to": [
-          "attendance",
-          "medical",
-          "vacation",
-          "legal",
-          "reports"
-        ]
+        "provides_to": []
       },
       "commercial": {
         "is_core": true,
         "standalone": false
       },
-      "help": {
-        "quickStart": "1. Click 'Agregar Usuario'\n2. Completa datos básicos (email, nombre)\n3. Asigna rol y departamento\n4. Guarda",
-        "commonIssues": [
+      "ui": {
+        "mainButtons": [
           {
-            "problem": "No puedo ver usuarios de otra empresa",
-            "solution": "Sistema multi-tenant: Solo ves usuarios de tu empresa"
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:34:08.976Z"
           },
           {
-            "problem": "No puedo resetear contraseña",
-            "solution": "Necesitas rol admin o RRHH para resetear contraseñas"
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:34:08.976Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:34:08.976Z"
           }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:34:08.976Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:42:22.422Z",
+      "autoHealedGaps": 4
+    },
+    {
+      "id": "vendors",
+      "name": "Vendedores",
+      "category": "admin",
+      "version": "1.0.0",
+      "description": "Gestión de vendedores y comisiones",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": true,
+        "standalone": false,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
+    },
+    {
+      "id": "ai-assistant",
+      "name": "Asistente IA",
+      "category": "ai",
+      "version": "1.0.0",
+      "description": "Asistente conversacional con Ollama",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [
+          "support-ai"
+        ],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.310Z"
+    },
+    {
+      "id": "emotional-analysis",
+      "name": "Análisis Emocional",
+      "category": "ai",
+      "version": "1.0.0",
+      "description": "Detección de emociones y bienestar del personal",
+      "dependencies": {
+        "required": [
+          "users"
+        ],
+        "optional": [
+          "biometric-enterprise"
+        ],
+        "integrates_with": [
+          "real-biometric-enterprise",
+          "users"
+        ],
+        "provides_to": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:35:03.491Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:35:03.491Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:35:03.491Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:35:03.491Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:43:17.135Z",
+      "autoHealedGaps": 4
+    },
+    {
+      "id": "support-ai",
+      "name": "Soporte con IA",
+      "category": "ai",
+      "version": "1.0.0",
+      "description": "Soporte inteligente con Ollama antes de escalar a humano",
+      "dependencies": {
+        "required": [
+          "support-base"
+        ],
+        "optional": [],
+        "integrates_with": [
+          "support-base"
+        ],
+        "provides_to": [],
+        "bundled": [
+          "ai-assistant"
+        ]
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
+    },
+    {
+      "id": "employee-map",
+      "name": "Mapa de Empleados",
+      "category": "analytics",
+      "version": "1.0.0",
+      "description": "Visualización geográfica de empleados en tiempo real",
+      "dependencies": {
+        "required": [
+          "users"
+        ],
+        "optional": [
+          "attendance"
+        ],
+        "integrates_with": [
+          "attendance"
+        ],
+        "provides_to": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Geofence",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Heatmap",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Multi-Sucursal",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Cluster",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Visitantes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "Actualizar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:23:45.411Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:41:41.394Z",
+      "autoHealedGaps": 9
+    },
+    {
+      "id": "hours-cube-dashboard",
+      "name": "Panel Ejecutivo de Horas",
+      "category": "analytics",
+      "version": "1.0.0",
+      "description": "Panel ejecutivo con cubo de horas, costos de reposición y optimizador de vacaciones. Basado en LCT Argentina.",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": true,
+        "standalone": false,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
+    },
+    {
+      "id": "sla-tracking",
+      "name": "Seguimiento de SLA",
+      "category": "analytics",
+      "version": "1.0.0",
+      "description": "Tracking de SLAs y métricas de performance",
+      "dependencies": {
+        "required": [
+          "companies"
+        ],
+        "optional": [],
+        "integrates_with": [
+          "notification-center"
+        ],
+        "provides_to": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:22:50.455Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:22:50.455Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:22:50.455Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:22:50.455Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:40:46.400Z",
+      "autoHealedGaps": 4
+    },
+    {
+      "id": "notification-center",
+      "key": "notification-center",
+      "name": "Centro de Notificaciones",
+      "icon": "🔔",
+      "category": "communication",
+      "is_core": true,
+      "base_price": 0,
+      "description": "Sistema unificado de notificaciones con IA, threads, workflows y multi-canal (Aponnt ↔ Empresa ↔ APKs)",
+      "isCommercial": true,
+      "isAdministrative": false,
+      "hasImplementation": true,
+      "frontend_file": "/js/modules/notification-center.js",
+      "init_function": "showNotificationCenterContent",
+      "status": "COMPLETE",
+      "progress": 100,
+      "aliases": [
+        "notifications-enterprise",
+        "notifications-complete",
+        "inbox"
+      ],
+      "dependencies": {
+        "required": [
+          "users"
+        ],
+        "optional": [
+          "ai-assistant"
+        ],
+        "provides_to": [
+          "ALL"
         ]
       },
       "ui": {
@@ -55,34 +403,379 @@
           {
             "text": "🚪 Salir",
             "action": "exit",
-            "discoveredAt": "2025-12-12T00:18:03.210Z"
+            "discoveredAt": "2025-12-12T00:22:36.809Z"
           },
           {
-            "text": "Agregar Usuario",
-            "action": "create",
-            "discoveredAt": "2025-12-12T00:18:03.210Z"
+            "text": "Actualizar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:22:36.809Z"
           },
           {
             "text": "🔔\n        1",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:03.210Z"
+            "discoveredAt": "2025-12-12T00:22:36.809Z"
           }
         ],
         "tabs": [
           {
             "label": "0",
             "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:18:03.210Z"
+            "discoveredAt": "2025-12-12T00:22:36.809Z"
           }
         ],
         "inputs": []
       },
-      "lastBrainUpdate": "2025-12-13T19:13:47.482Z",
+      "lastBrainUpdate": "2025-12-12T13:40:32.681Z",
       "autoHealedGaps": 4
     },
     {
+      "id": "audit-reports",
+      "name": "Reportes de Auditoría",
+      "category": "compliance",
+      "version": "1.0.0",
+      "description": "Generación de reportes con validez legal para auditorías",
+      "dependencies": {
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "legal",
+          "attendance"
+        ],
+        "integrates_with": [
+          "legal",
+          "compliance-dashboard"
+        ],
+        "provides_to": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:23:31.690Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:31.690Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:31.690Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:23:31.690Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:41:27.685Z",
+      "autoHealedGaps": 4
+    },
+    {
+      "id": "biometric-consent",
+      "name": "Consentimientos y Privacidad",
+      "category": "compliance",
+      "version": "1.0.0",
+      "description": "Sistema legal de consentimientos para uso de datos biométricos (Ley 25.326 Argentina)",
+      "dependencies": {
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "legal"
+        ],
+        "integrates_with": [
+          "real-biometric-enterprise",
+          "legal"
+        ],
+        "provides_to": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "📊 Exportar",
+            "action": "export",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "📧 Solicitar Pendientes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "👥 Empleados y Consentimientos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "📄 Documento Legal",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "🌐 Regulaciones Multi-Pais",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "📊 Reportes PDF",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "👥 Todos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "✅ Activos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "⏳ Pendientes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "🚫 Revocados",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:21:36.378Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:39:34.128Z",
+      "autoHealedGaps": 13
+    },
+    {
+      "id": "compliance-dashboard",
+      "name": "Risk Intelligence Dashboard",
+      "category": "compliance",
+      "version": "1.0.0",
+      "description": "Monitoreo de cumplimiento normativo y reglas LCT (Ley de Contrato de Trabajo)",
+      "dependencies": {
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "legal",
+          "attendance"
+        ],
+        "integrates_with": [
+          "legal",
+          "attendance",
+          "notification-center"
+        ],
+        "provides_to": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          },
+          {
+            "text": "🔍 Analizar Todo",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          },
+          {
+            "text": "🔄 Actualizar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          },
+          {
+            "text": "⚙️ Configurar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          },
+          {
+            "text": "📥 Exportar ▾",
+            "action": "export",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:21:55.822Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:39:50.748Z",
+      "autoHealedGaps": 7
+    },
+    {
+      "id": "hse-management",
+      "name": "Seguridad e Higiene Laboral (HSE)",
+      "category": "compliance",
+      "version": "1.0.0",
+      "description": "Sistema completo de gestion de Seguridad e Higiene Laboral con estandares ISO 45001, OSHA, EU-OSHA y SRT. Gestion de EPP, matriz rol-EPP, entregas, inspecciones y notificaciones automaticas de vencimiento.",
+      "dependencies": {
+        "required": [
+          "users",
+          "organizational-structure"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true,
+        "rubro": "Seguridad Industrial"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
+    },
+    {
+      "id": "legal-dashboard",
+      "name": "Gestión Legal",
+      "category": "compliance",
+      "version": "1.0.0",
+      "description": "Gestión de aspectos legales y normativos",
+      "dependencies": {
+        "required": [
+          "users",
+          "document-management"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true,
+        "rubro": "Legal y Normativo"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z",
+      "workflows": {
+        "legal_workflow": {
+          "service": "Legal Case Workflow",
+          "file": "src/workflows/generated/LegalWorkflowServiceGenerated.js",
+          "stages_count": 43,
+          "entry_point": "CASE_RECEIVED",
+          "final_states": [
+            "CASE_CLOSED_SUCCESS",
+            "CASE_CLOSED_FAILURE",
+            "CASE_ARCHIVED"
+          ],
+          "auto_generated": true,
+          "generated_at": "2025-12-16T04:05:17.407Z",
+          "stats": {
+            "total": 43,
+            "core": 3,
+            "existing": 6,
+            "autoGenerated": 31,
+            "outcomes": 3
+          }
+        }
+      },
+      "lastBrainUpdate": "2025-12-16T04:05:17.410Z"
+    },
+    {
+      "id": "associate-marketplace",
+      "name": "Asociados APONNT",
+      "category": "core",
+      "version": "1.0.0",
+      "description": "Marketplace para contratar asociados APONNT",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": true,
+        "standalone": false,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
+    },
+    {
       "id": "attendance",
-      "name": "Módulo de Asistencias",
+      "name": "Control de Asistencia",
       "category": "core",
       "version": "5.0.0",
       "description": "Registro y control de asistencia biométrica con GPS, notificaciones automáticas por llegadas tarde",
@@ -198,7 +891,7 @@
         ],
         "inputs": []
       },
-      "lastBrainUpdate": "2025-12-15T01:17:04.747Z",
+      "lastBrainUpdate": "2025-12-16T04:05:17.399Z",
       "autoHealedGaps": 14,
       "workflows": {
         "clock_in": {
@@ -320,27 +1013,157 @@
         "attendance_workflow": {
           "service": "Attendance Workflow",
           "file": "src/workflows/generated/LateArrivalAuthorizationServiceGenerated.js",
-          "stages_count": 54,
+          "stages_count": 152,
           "entry_point": "BIOMETRIC_CAPTURE",
-          "final_states": [
-            "REGISTERED",
-            "REJECTED_QUALITY",
-            "REJECTED_NO_MATCH",
-            "REJECTED_SUSPENDED",
-            "REJECTED_NO_SHIFT",
-            "REJECTED_LATE_NO_AUTH"
-          ],
+          "final_states": [],
           "auto_generated": true,
-          "generated_at": "2025-12-15T01:17:04.740Z",
+          "generated_at": "2025-12-16T04:05:17.392Z",
           "stats": {
-            "total": 54,
-            "core": 3,
-            "existing": 0,
-            "autoGenerated": 45,
-            "outcomes": 6
+            "total": 152,
+            "core": 37,
+            "existing": 21,
+            "autoGenerated": 94,
+            "outcomes": 0
           }
         }
       }
+    },
+    {
+      "id": "companies",
+      "name": "Gestión de Empresas",
+      "category": "core",
+      "version": "1.0.0",
+      "description": "",
+      "dependencies": [
+        "aponnt_staff",
+        "vendor_statistics"
+      ],
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": [
+          {
+            "solution": "Contactar a soporte técnico"
+          }
+        ]
+      },
+      "commercial": {
+        "is_core": true,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:17:04.224Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:04.224Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:04.224Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:17:04.224Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:35:00.837Z",
+      "autoHealedGaps": 4
+    },
+    {
+      "id": "company-account",
+      "name": "Cuenta Comercial",
+      "category": "core",
+      "version": "1.0.0",
+      "description": "Relacion comercial APONNT-Empresa: Presupuestos, Contratos, Facturas, Comunicaciones",
+      "dependencies": {
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "legal"
+        ],
+        "integrates_with": [
+          "legal",
+          "biometric-consent"
+        ],
+        "provides_to": []
+      },
+      "commercial": {
+        "is_core": true,
+        "standalone": true
+      },
+      "aliases": [
+        "terms-conditions"
+      ],
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "📊 Dashboard",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "📝 Presupuestos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "📄 Contratos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "💳 Facturas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "💬 Comunicaciones",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:17:17.976Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:35:14.535Z",
+      "autoHealedGaps": 8
     },
     {
       "id": "dashboard",
@@ -393,864 +1216,484 @@
       "autoHealedGaps": 3
     },
     {
-      "id": "settings",
-      "name": "Configuración del Sistema",
+      "id": "dms-dashboard",
+      "name": "Gestión Documental (DMS)",
       "category": "core",
-      "version": "2.0.0",
-      "description": "Configuración de empresa, horarios, permisos, parámetros generales",
+      "version": "1.0.0",
+      "description": "Sistema de Gestión Documental - Fuente Única de Verdad",
       "dependencies": {
-        "required": [
-          "companies"
-        ],
-        "optional": [
-          "organizational-structure"
-        ],
-        "integrates_with": [
-          "ALL"
-        ],
-        "provides_to": [
-          "ALL"
-        ]
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [],
+        "bundled": []
       },
       "commercial": {
         "is_core": true,
-        "standalone": false
-      }
+        "standalone": false,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
     },
     {
-      "id": "organizational-structure",
-      "name": "Estructura Organizacional Enterprise",
-      "category": "organization",
+      "id": "inbox",
+      "name": "Bandeja Notificaciones",
+      "category": "core",
       "version": "3.0.0",
-      "description": "Sistema completo de estructura organizacional: Departamentos, Sectores, Turnos rotativos, Convenios laborales, Categorías salariales, Jerarquía organizacional, Posiciones, Escalamiento de permisos, Calendarios de turnos con feriados, Branches multi-país",
+      "description": "Sistema de notificaciones - Bandeja Notificaciones",
       "dependencies": {
-        "required": [
-          "companies",
-          "users"
-        ],
-        "optional": [
-          "attendance",
-          "vacation",
-          "payroll-liquidation",
-          "branches"
-        ],
-        "integrates_with": [
-          "users",
-          "attendance",
-          "vacation",
-          "payroll-liquidation",
-          "medical"
-        ],
-        "provides_to": [
-          "users",
-          "attendance",
-          "vacation-approvals",
-          "payroll-liquidation"
-        ]
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": true,
+        "standalone": false,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
+    },
+    {
+      "id": "kiosks",
+      "name": "Gestión de Kioscos",
+      "category": "core",
+      "version": "1.0.0",
+      "description": "",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
       },
       "api": {
-        "base_path": "/api/v1/organizational",
-        "endpoints": [
-          "/sectors",
-          "/agreements",
-          "/categories",
-          "/roles",
-          "/structure",
-          "/countries",
-          "/positions",
-          "/hierarchy/tree",
-          "/hierarchy/flat",
-          "/hierarchy/flowchart",
-          "/hierarchy/stats",
-          "/hierarchy/escalation/:userId",
-          "/hierarchy/supervisor/:userId",
-          "/hierarchy/subordinates/:userId",
-          "/hierarchy/can-approve",
-          "/shifts/:shiftId/holidays",
-          "/shifts/:shiftId/calendar",
-          "/holidays"
-        ]
+        "base_path": "",
+        "endpoints": []
       },
       "database": {
-        "tables": [
-          "departments",
-          "sectors",
-          "shifts",
-          "labor_agreements_v2",
-          "salary_categories_v2",
-          "additional_role_types",
-          "organizational_positions",
-          "branches",
-          "holidays"
-        ],
-        "modifications": [
-          "users.department_id",
-          "users.sector_id",
-          "users.shift_id",
-          "users.salary_category_id",
-          "users.organizational_position_id",
-          "users.additional_roles"
-        ]
+        "tables": [],
+        "modifications": []
       },
-      "business_flows": [
-        {
-          "name": "Creación de Departamento",
-          "steps": [
-            "Admin crea departamento con ubicación GPS",
-            "Asigna radio de cobertura para asistencia GPS",
-            "Crea sectores dentro del departamento",
-            "Asigna supervisor a cada sector",
-            "Asocia empleados al departamento/sector"
-          ]
-        },
-        {
-          "name": "Configuración de Turnos",
-          "steps": [
-            "Crear turno con horarios de entrada/salida",
-            "Asignar branch (sucursal) para feriados por país",
-            "Configurar días de trabajo (L-V, rotativos, etc)",
-            "Definir si respeta feriados nacionales/provinciales",
-            "Agregar días no laborables personalizados",
-            "Asignar turno a empleados o departamentos"
-          ]
-        },
-        {
-          "name": "Aprobación Jerárquica de Vacaciones",
-          "steps": [
-            "Empleado solicita vacaciones (X días)",
-            "Sistema consulta jerarquía organizacional",
-            "Si X <= max_approval_days del supervisor → aprueba directo",
-            "Si X > max_approval_days → escala al siguiente nivel",
-            "Notifica a cada nivel de la cadena de aprobación",
-            "Registra trazabilidad completa de aprobadores"
-          ]
-        },
-        {
-          "name": "Asignación de Categoría Salarial",
-          "steps": [
-            "Admin selecciona convenio laboral (país/industria)",
-            "Elige categoría dentro del convenio",
-            "Asigna categoría a empleado",
-            "Sistema calcula sueldo base automáticamente",
-            "Payroll usa categoría para liquidación"
-          ]
-        }
-      ],
       "help": {
-        "quickStart": "1. Crear departamentos con GPS\n2. Crear sectores dentro de departamentos\n3. Configurar turnos con horarios y feriados\n4. Definir convenios y categorías salariales\n5. Construir organigrama con posiciones jerárquicas\n6. Asignar empleados a posiciones, departamentos y turnos",
-        "commonIssues": [
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": true,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      },
+      "ui": {
+        "mainButtons": [
           {
-            "problem": "Turnos no respetan feriados",
-            "solution": "Verificar: 1) Turno tiene branch asignado 2) Branch tiene país configurado 3) respect_national_holidays está habilitado 4) Existen feriados para ese país en la tabla holidays"
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:21:22.509Z"
           },
           {
-            "problem": "Vacaciones no escalan correctamente",
-            "solution": "Verificar: 1) Empleado tiene organizational_position_id asignado 2) Posiciones tienen parent_position_id correcto 3) Supervisor tiene can_approve_permissions = true y max_approval_days configurado"
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:22.509Z"
           },
           {
-            "problem": "No puedo ver sectores de un departamento",
-            "solution": "Sectores solo aparecen si: 1) Departamento está activo (is_active=true) 2) Sector pertenece al mismo company_id 3) Usuario tiene permisos para ver ese departamento"
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:21:22.509Z"
           }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:21:22.509Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:39:19.979Z",
+      "autoHealedGaps": 4
+    },
+    {
+      "id": "mi-espacio",
+      "name": "Mi Espacio",
+      "category": "core",
+      "version": "1.0.0",
+      "description": "Tu dashboard personal: documentos, asistencia, vacaciones, notificaciones y perfil",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": true,
+        "standalone": false,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
+    },
+    {
+      "id": "support-base",
+      "name": "Soporte Básico",
+      "category": "core",
+      "version": "1.0.0",
+      "description": "Sistema de tickets con Knowledge Base y Fallback",
+      "dependencies": {
+        "required": [
+          "users"
+        ],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [],
+        "bundled": [
+          "knowledge-base"
         ]
       },
       "commercial": {
         "is_core": true,
         "standalone": false,
-        "included_in": "Plan Básico y superiores",
-        "description": "Módulo core unificado de estructura organizacional. Integra lo que antes eran módulos separados (departments + shifts) en un solo sistema enterprise."
+        "rubro": "General"
       },
-      "aliases": [
-        "departments",
-        "shifts",
-        "organigrama",
-        "jerarquia",
-        "estructura"
-      ],
-      "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "🏢\n                        Departamentos",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "🏬\n                        Sectores",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "📜\n                        Convenios",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "💼\n                        Categorías",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "⏰\n                        Turnos",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "🏷️\n                        Roles",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "📊\n                        Organigrama",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "👔\n                        Posiciones",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "+ Nuevo Departamento",
-            "action": "create",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "🗑️",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "🏢",
-            "id": "tab-🏢",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "label": "🏬",
-            "id": "tab-🏬",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "label": "📜",
-            "id": "tab-📜",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "label": "💼",
-            "id": "tab-💼",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "label": "⏰",
-            "id": "tab-⏰",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "label": "🏷️",
-            "id": "tab-🏷️",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "label": "📊",
-            "id": "tab-📊",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          },
-          {
-            "label": "👔",
-            "id": "tab-👔",
-            "discoveredAt": "2025-12-12T00:20:23.845Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:38:20.929Z",
-      "autoHealedGaps": 20
-    },
-    {
-      "id": "real-biometric-enterprise",
-      "name": "Biometría Enterprise (Real + Verificable)",
-      "category": "security",
-      "version": "5.0.0",
-      "description": "Tecnologías REALES: Face-API.js, MediaPipe, OpenCV.js, Azure Face API, encriptación AES-256",
-      "dependencies": {
-        "required": [
-          "users",
-          "companies"
-        ],
-        "optional": [
-          "kiosks"
-        ],
-        "integrates_with": [
-          "attendance"
-        ],
-        "provides_to": [
-          "attendance"
-        ]
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
-    },
-    {
-      "id": "professional-biometric-registration",
-      "name": "Registro Biométrico Profesional",
-      "category": "security",
-      "version": "3.0.0",
-      "description": "Módulo dedicado al registro de biometría con validaciones profesionales",
-      "dependencies": {
-        "required": [
-          "users"
-        ],
-        "optional": [
-          "biometric-enterprise"
-        ],
-        "integrates_with": [
-          "users"
-        ],
-        "provides_to": [
-          "attendance"
-        ]
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": false
-      }
-    },
-    {
-      "id": "biometric-consent",
-      "name": "Consentimientos Biométricos",
-      "category": "compliance",
-      "version": "1.0.0",
-      "description": "Sistema legal de consentimientos para uso de datos biométricos (Ley 25.326 Argentina)",
-      "dependencies": {
-        "required": [
-          "users",
-          "companies"
-        ],
-        "optional": [
-          "legal"
-        ],
-        "integrates_with": [
-          "real-biometric-enterprise",
-          "legal"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
       },
       "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "📊 Exportar",
-            "action": "export",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "📧 Solicitar Pendientes",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "👥 Empleados y Consentimientos",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "📄 Documento Legal",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "🌐 Regulaciones Multi-Pais",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "📊 Reportes PDF",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "👥 Todos",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "✅ Activos",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "⏳ Pendientes",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "🚫 Revocados",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:21:36.378Z"
-          }
-        ],
-        "inputs": []
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
       },
-      "lastBrainUpdate": "2025-12-12T13:39:34.128Z",
-      "autoHealedGaps": 13
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
     },
     {
-      "id": "evaluacion-biometrica",
-      "name": "Evaluación Biométrica",
-      "category": "security",
-      "version": "1.0.0",
-      "description": "Sistema de evaluación y auditoría de calidad biométrica",
+      "id": "users",
+      "name": "Gestión de Usuarios",
+      "category": "core",
+      "version": "6.0.0",
+      "description": "Módulo CORE para crear, editar y gestionar usuarios con biometría, paginación profesional",
       "dependencies": {
         "required": [
-          "users"
-        ],
-        "optional": [
-          "biometric-enterprise"
-        ],
-        "integrates_with": [
-          "users",
-          "biometric"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": false
-      }
-    },
-    {
-      "id": "kiosks-professional",
-      "name": "Gestión de Kioscos Biométricos",
-      "category": "hardware",
-      "version": "2.0.0",
-      "description": "Administración de kioscos con perfiles de hardware (36 perfiles: tablets, phones, enterprise)",
-      "dependencies": {
-        "required": [
+          "database",
           "companies"
         ],
         "optional": [
           "real-biometric-enterprise",
-          "attendance"
+          "organizational-structure"
         ],
         "integrates_with": [
           "attendance",
-          "biometric-enterprise"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
-    },
-    {
-      "id": "medical",
-      "name": "Módulo Médico",
-      "category": "rrhh",
-      "version": "5.8.0",
-      "description": "Certificados médicos, prescripciones, ausentismos, historial clínico completo",
-      "dependencies": {
-        "required": [
-          "users",
-          "companies"
-        ],
-        "optional": [
           "notification-center",
-          "document-management",
-          "art-management"
+          "medical",
+          "vacation"
         ],
-        "integrates_with": [
+        "provides_to": [
           "attendance",
+          "medical",
           "vacation",
-          "dashboard",
-          "legal"
-        ],
-        "provides_to": [
-          "legal"
+          "legal",
+          "reports"
         ]
       },
       "commercial": {
-        "is_core": false,
-        "standalone": true
+        "is_core": true,
+        "standalone": false
       },
-      "ui": {
-        "mainButtons": [
+      "help": {
+        "quickStart": "1. Click 'Agregar Usuario'\n2. Completa datos básicos (email, nombre)\n3. Asigna rol y departamento\n4. Guarda",
+        "commonIssues": [
           {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
+            "problem": "No puedo ver usuarios de otra empresa",
+            "solution": "Sistema multi-tenant: Solo ves usuarios de tu empresa"
           },
           {
-            "text": "Actualizar",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Vista General",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Candidatos RRHH",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "PRE-Ocupacional",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Ocupacional",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "POST-Ocupacional",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Legajos 360°",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Notificaciones",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Buscar",
-            "action": "search",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Diagnosticar",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Cerrar",
-            "action": "cancel",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Fotos Solicitadas",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Ver Estudios",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Auditorías Pendientes",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "Reporte General",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
+            "problem": "No puedo resetear contraseña",
+            "solution": "Necesitas rol admin o RRHH para resetear contraseñas"
           }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:18:48.365Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:36:45.203Z",
-      "autoHealedGaps": 18
-    },
-    {
-      "id": "vacation",
-      "name": "Módulo de Vacaciones",
-      "category": "rrhh",
-      "version": "2.0.0",
-      "description": "Solicitudes, aprobaciones, balance de vacaciones, tipos regular y extraordinario",
-      "dependencies": {
-        "required": [
-          "users",
-          "companies"
-        ],
-        "optional": [
-          "notification-center",
-          "dashboard"
-        ],
-        "integrates_with": [
-          "attendance",
-          "medical",
-          "payroll-liquidation"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
-    },
-    {
-      "id": "legal",
-      "name": "Módulo Legal",
-      "category": "compliance",
-      "version": "2.0.0",
-      "description": "Comunicaciones fehacientes, sanciones, compliance, avisos legales",
-      "dependencies": {
-        "required": [
-          "users",
-          "companies"
-        ],
-        "optional": [
-          "notification-center",
-          "document-management"
-        ],
-        "integrates_with": [
-          "medical",
-          "attendance"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      },
-      "workflows": {
-        "legal_workflow": {
-          "service": "Legal Case Workflow",
-          "file": "src/workflows/generated/LegalWorkflowServiceGenerated.js",
-          "stages_count": 43,
-          "entry_point": "CASE_RECEIVED",
-          "final_states": [
-            "CASE_CLOSED_SUCCESS",
-            "CASE_CLOSED_FAILURE",
-            "CASE_ARCHIVED"
-          ],
-          "auto_generated": true,
-          "generated_at": "2025-12-15T01:17:04.757Z",
-          "stats": {
-            "total": 43,
-            "core": 3,
-            "existing": 6,
-            "autoGenerated": 31,
-            "outcomes": 3
-          }
-        }
-      },
-      "lastBrainUpdate": "2025-12-15T01:17:04.762Z"
-    },
-    {
-      "id": "sanctions-management",
-      "name": "Gestión de Sanciones",
-      "category": "rrhh",
-      "version": "1.0.0",
-      "description": "Registro y seguimiento de sanciones disciplinarias",
-      "dependencies": {
-        "required": [
-          "users",
-          "companies"
-        ],
-        "optional": [
-          "legal",
-          "notification-center"
-        ],
-        "integrates_with": [
-          "legal",
-          "attendance"
-        ],
-        "provides_to": [
-          "legal"
         ]
       },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      },
       "ui": {
         "mainButtons": [
           {
             "text": "🚪 Salir",
             "action": "exit",
-            "discoveredAt": "2025-12-12T00:20:51.020Z"
+            "discoveredAt": "2025-12-12T00:18:03.210Z"
           },
           {
-            "text": "➕ Nueva Solicitud",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:51.020Z"
-          },
-          {
-            "text": "📥 Mis Pendientes",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:51.020Z"
-          },
-          {
-            "text": "📋 Todas",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:51.020Z"
-          },
-          {
-            "text": "🚨 Activas",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:51.020Z"
-          },
-          {
-            "text": "⛔ Suspensiones",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:51.020Z"
-          },
-          {
-            "text": "📜 Historial",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:51.020Z"
-          },
-          {
-            "text": "📂 Catálogo",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:51.020Z"
+            "text": "Agregar Usuario",
+            "action": "create",
+            "discoveredAt": "2025-12-12T00:18:03.210Z"
           },
           {
             "text": "🔔\n        1",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:51.020Z"
+            "discoveredAt": "2025-12-12T00:18:03.210Z"
           }
         ],
         "tabs": [
           {
             "label": "0",
             "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:20:51.020Z"
+            "discoveredAt": "2025-12-12T00:18:03.210Z"
           }
         ],
         "inputs": []
       },
-      "lastBrainUpdate": "2025-12-12T13:38:48.316Z",
-      "autoHealedGaps": 10
+      "lastBrainUpdate": "2025-12-13T19:13:47.482Z",
+      "autoHealedGaps": 4
     },
     {
-      "id": "compliance-dashboard",
-      "name": "Dashboard de Cumplimiento",
-      "category": "compliance",
+      "id": "auditor",
+      "name": "Auditor y Testing",
+      "category": "enterprise",
       "version": "1.0.0",
-      "description": "Monitoreo de cumplimiento normativo y reglas LCT (Ley de Contrato de Trabajo)",
+      "description": "Testing automático, auto-healing, data seeding",
       "dependencies": {
-        "required": [
-          "companies"
-        ],
-        "optional": [
-          "legal",
-          "attendance"
-        ],
-        "integrates_with": [
-          "legal",
-          "attendance",
-          "notification-center"
-        ],
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
         "provides_to": []
       },
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
       "commercial": {
         "is_core": false,
-        "standalone": true
+        "can_work_standalone": false,
+        "base_price_usd": 0
       },
       "ui": {
         "mainButtons": [
           {
             "text": "🚪 Salir",
             "action": "exit",
-            "discoveredAt": "2025-12-12T00:21:55.822Z"
+            "discoveredAt": "2025-12-12T00:33:55.344Z"
           },
           {
-            "text": "🔍 Analizar Todo",
+            "text": "🔄 Recargar Página",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:55.822Z"
-          },
-          {
-            "text": "🔄 Actualizar",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:55.822Z"
-          },
-          {
-            "text": "⚙️ Configurar",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:55.822Z"
-          },
-          {
-            "text": "📥 Exportar ▾",
-            "action": "export",
-            "discoveredAt": "2025-12-12T00:21:55.822Z"
+            "discoveredAt": "2025-12-12T00:33:55.344Z"
           },
           {
             "text": "🔔\n        1",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:55.822Z"
+            "discoveredAt": "2025-12-12T00:33:55.344Z"
           }
         ],
         "tabs": [
           {
             "label": "0",
             "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:21:55.822Z"
+            "discoveredAt": "2025-12-12T00:33:55.344Z"
           }
         ],
         "inputs": []
       },
-      "lastBrainUpdate": "2025-12-12T13:39:50.748Z",
-      "autoHealedGaps": 7
+      "lastBrainUpdate": "2025-12-12T13:42:08.852Z",
+      "autoHealedGaps": 4
     },
     {
-      "id": "sla-tracking",
-      "name": "Seguimiento de SLA",
-      "category": "analytics",
+      "id": "partners",
+      "name": "Asociados",
+      "category": "enterprise",
       "version": "1.0.0",
-      "description": "Tracking de SLAs y métricas de performance",
+      "description": "Médicos, abogados, ingenieros, etc. que proveen servicios a empresas",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": []
+      },
+      "api": {
+        "base_path": "",
+        "endpoints": []
+      },
+      "database": {
+        "tables": [],
+        "modifications": []
+      },
+      "help": {
+        "quickStart": "Tutorial pendiente",
+        "commonIssues": []
+      },
+      "commercial": {
+        "is_core": false,
+        "can_work_standalone": false,
+        "base_price_usd": 0
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:34:22.605Z"
+          },
+          {
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:34:22.605Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:34:22.605Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:34:22.605Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:42:36.021Z",
+      "autoHealedGaps": 4
+    },
+    {
+      "id": "clientes",
+      "name": "Clientes SIAC",
+      "category": "erp",
+      "version": "1.0.0",
+      "description": "Módulo de gestión de clientes del ERP SIAC",
       "dependencies": {
         "required": [
           "companies"
         ],
         "optional": [],
         "integrates_with": [
-          "notification-center"
+          "facturacion"
+        ],
+        "provides_to": [
+          "facturacion"
+        ]
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "← Volver a Módulos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "👤 Nuevo Cliente",
+            "action": "create",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "📤 Importar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "📊 Exportar",
+            "action": "export",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "📈 Reportes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "✏️ Editar",
+            "action": "edit",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "👁️ Ver",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:19:15.676Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:37:12.437Z",
+      "autoHealedGaps": 10
+    },
+    {
+      "id": "facturacion",
+      "name": "Facturación SIAC",
+      "category": "erp",
+      "version": "1.0.0",
+      "description": "Módulo de facturación del ERP SIAC con triple aislación multi-tenant",
+      "dependencies": {
+        "required": [
+          "companies",
+          "clientes"
+        ],
+        "optional": [
+          "plantillas-fiscales"
+        ],
+        "integrates_with": [
+          "clientes"
         ],
         "provides_to": []
       },
@@ -1263,146 +1706,387 @@
           {
             "text": "🚪 Salir",
             "action": "exit",
-            "discoveredAt": "2025-12-12T00:22:50.455Z"
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "← Volver a Módulos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "🧾\n                        Facturación\n                        3 Modos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "📜\n                        Facturas Emitidas\n                        Historial + CAE",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "⚙️\n                        Configuración AFIP\n                        Certificados + Ptos Venta",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "📝\n                MODO MANUAL\n                Factura directa sin presupuesto",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "📋\n                MODO OCASIONAL\n                Presupuesto → Factura 1 vez",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "🔄\n                MODO RECURRENTE\n                Presupuesto → Facturas periódicas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "📝 Nueva Factura Manual",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "🧾\n                        Facturación\n                        3 Modos\n                    \n                    \n                        📜\n                        Facturas Emitidas\n                        Historial + CAE\n                    \n                    \n                        ⚙️\n                        Configuración AFIP\n                        Certificados + Ptos Venta",
+            "id": "tab-🧾\n                        facturación\n                        3 modos\n                    \n                    \n                        📜\n                        facturas emitidas\n                        historial + cae\n                    \n                    \n                        ⚙️\n                        configuración afip\n                        certificados + ptos venta",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "label": "🧾\n                        Facturación\n                        3 Modos",
+            "id": "tabFacturacion",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "label": "📜\n                        Facturas Emitidas\n                        Historial + CAE",
+            "id": "tabFacturasEmitidas",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          },
+          {
+            "label": "⚙️\n                        Configuración AFIP\n                        Certificados + Ptos Venta",
+            "id": "tabConfigAfip",
+            "discoveredAt": "2025-12-12T00:19:29.340Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:37:25.996Z",
+      "autoHealedGaps": 14
+    },
+    {
+      "id": "plantillas-fiscales",
+      "name": "Plantillas Fiscales",
+      "category": "erp",
+      "version": "1.0.0",
+      "description": "Plantillas fiscales por país para facturación",
+      "dependencies": {
+        "required": [
+          "companies"
+        ],
+        "optional": [],
+        "integrates_with": [
+          "facturacion"
+        ],
+        "provides_to": [
+          "facturacion"
+        ]
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "📋 Plantillas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "🏷️ Condiciones IVA",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "💰 Conceptos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "📊 Alícuotas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "⚙️ Configuración",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "➕ Nueva Plantilla",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "← Volver a Módulos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
           },
           {
             "text": "🔄 Recargar Página",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:22:50.455Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:22:50.455Z"
+            "discoveredAt": "2025-12-12T13:28:28.526Z"
           }
         ],
         "tabs": [
           {
+            "label": "📋 Plantillas",
+            "id": "tab-📋 plantillas",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "label": "🏷️ Condiciones IVA",
+            "id": "tab-🏷️ condiciones iva",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "label": "💰 Conceptos",
+            "id": "tab-💰 conceptos",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "label": "📊 Alícuotas",
+            "id": "tab-📊 alícuotas",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
+            "label": "⚙️ Configuración",
+            "id": "tab-⚙️ configuración",
+            "discoveredAt": "2025-12-12T00:19:42.982Z"
+          },
+          {
             "label": "0",
             "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:22:50.455Z"
+            "discoveredAt": "2025-12-12T13:28:28.526Z"
           }
         ],
         "inputs": []
       },
-      "lastBrainUpdate": "2025-12-12T13:40:46.400Z",
-      "autoHealedGaps": 4
+      "lastBrainUpdate": "2025-12-12T13:37:39.728Z",
+      "autoHealedGaps": 16
     },
     {
-      "id": "resource-center",
-      "name": "Centro de Recursos",
-      "category": "support",
+      "id": "hour-bank",
+      "name": "Banco de Horas",
+      "category": "finance",
       "version": "1.0.0",
-      "description": "Biblioteca de recursos, documentación y tutoriales",
+      "description": "Sistema de acumulación de horas extras con plantillas multi-país (ARG, BRA, URY, CHL, MEX, ESP, DEU). Permite a empleados elegir entre cobrar o acumular horas extras, con conversión por tipo (normal, feriado, nocturno, finde), vencimientos configurables y uso para salidas anticipadas, tardanzas o días libres.",
       "dependencies": {
         "required": [
-          "companies"
-        ],
-        "optional": [
-          "document-management"
-        ],
-        "integrates_with": [
-          "notification-center"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      },
-      "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:23:17.922Z"
-          },
-          {
-            "text": "Cargar Período",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:17.922Z"
-          },
-          {
-            "text": "Registrar Horas",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:17.922Z"
-          },
-          {
-            "text": "Comparar con Período Anterior",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:17.922Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:17.922Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:23:17.922Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:41:13.938Z",
-      "autoHealedGaps": 6
-    },
-    {
-      "id": "audit-reports",
-      "name": "Reportes de Auditoría",
-      "category": "compliance",
-      "version": "1.0.0",
-      "description": "Generación de reportes con validez legal para auditorías",
-      "dependencies": {
-        "required": [
-          "companies"
-        ],
-        "optional": [
-          "legal",
+          "users",
+          "companies",
           "attendance"
         ],
-        "integrates_with": [
-          "legal",
-          "compliance-dashboard"
+        "optional": [
+          "payroll-liquidation",
+          "organizational-structure",
+          "branches"
         ],
-        "provides_to": []
+        "integrates_with": [
+          "attendance",
+          "payroll-liquidation",
+          "shifts"
+        ],
+        "provides_to": [
+          "payroll-liquidation"
+        ]
+      },
+      "api": {
+        "base_path": "/api/hour-bank",
+        "endpoints": [
+          "/templates",
+          "/templates/:id",
+          "/templates/init-defaults",
+          "/templates/defaults",
+          "/balance",
+          "/balance/:userId",
+          "/transactions",
+          "/requests",
+          "/requests/:id/approve",
+          "/requests/:id/reject",
+          "/decisions/pending",
+          "/decisions/:id",
+          "/config",
+          "/clock/process-overtime",
+          "/clock/validate-early-departure"
+        ]
+      },
+      "database": {
+        "tables": [
+          "hour_bank_templates",
+          "hour_bank_balances",
+          "hour_bank_transactions",
+          "hour_bank_requests",
+          "hour_bank_pending_decisions",
+          "hour_bank_blackout_dates",
+          "hour_bank_agreements"
+        ],
+        "functions": [
+          "get_applicable_hour_bank_template",
+          "calculate_hour_bank_balance",
+          "create_default_hour_bank_templates"
+        ]
       },
       "commercial": {
         "is_core": false,
-        "standalone": true
+        "standalone": false,
+        "bundles": [
+          "rrhh-pro",
+          "attendance-pro"
+        ]
       },
-      "ui": {
-        "mainButtons": [
+      "help": {
+        "quickStart": "1. Crear plantilla con código país (ARG, BRA, etc.)\n2. Configurar tasas de conversión por tipo de hora\n3. Definir límites de acumulación y vencimiento\n4. Empleados eligen cobrar/acumular al fichar\n5. Usar horas para salidas anticipadas o días libres",
+        "commonIssues": [
           {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:23:31.690Z"
+            "problem": "Empleado no puede acumular horas",
+            "solution": "Verificar: 1) Existe plantilla para la sucursal/país del empleado 2) employee_choice_enabled = true 3) No superó max_accumulation_hours"
           },
           {
-            "text": "🔄 Recargar Página",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:31.690Z"
+            "problem": "Horas vencieron antes de tiempo",
+            "solution": "Revisar expiration_months en la plantilla. Las horas vencen por FIFO (las más antiguas primero)"
           },
           {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:31.690Z"
+            "problem": "No puede solicitar uso de horas",
+            "solution": "Verificar: 1) Tiene saldo suficiente 2) No está en fecha de blackout 3) advance_notice_days cumplido"
           }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:23:31.690Z"
-          }
-        ],
-        "inputs": []
+        ]
       },
-      "lastBrainUpdate": "2025-12-12T13:41:27.685Z",
-      "autoHealedGaps": 4
+      "templates": {
+        "description": "Plantillas de configuración por país/sucursal con SSOT",
+        "presetCountries": [
+          {
+            "code": "ARG",
+            "name": "Argentina - LCT",
+            "maxHours": 120,
+            "expirationMonths": 12
+          },
+          {
+            "code": "BRA",
+            "name": "Brasil - CLT",
+            "maxHours": 160,
+            "expirationMonths": 6
+          },
+          {
+            "code": "URY",
+            "name": "Uruguay - Decreto 143/012",
+            "maxHours": 100,
+            "expirationMonths": 12
+          },
+          {
+            "code": "CHL",
+            "name": "Chile - Código del Trabajo",
+            "maxHours": 96,
+            "expirationMonths": 6
+          },
+          {
+            "code": "MEX",
+            "name": "México - LFT",
+            "maxHours": 72,
+            "expirationMonths": 3
+          },
+          {
+            "code": "ESP",
+            "name": "España - Estatuto Trabajadores",
+            "maxHours": 80,
+            "expirationMonths": 4
+          },
+          {
+            "code": "DEU",
+            "name": "Alemania - Arbeitszeitgesetz",
+            "maxHours": 150,
+            "expirationMonths": 12
+          }
+        ],
+        "configFields": [
+          {
+            "name": "conversion_rate_normal",
+            "type": "decimal",
+            "default": 1,
+            "description": "Multiplicador para HE normales"
+          },
+          {
+            "name": "conversion_rate_weekend",
+            "type": "decimal",
+            "default": 1.5,
+            "description": "Multiplicador para HE fin de semana"
+          },
+          {
+            "name": "conversion_rate_holiday",
+            "type": "decimal",
+            "default": 2,
+            "description": "Multiplicador para HE feriados"
+          },
+          {
+            "name": "conversion_rate_night",
+            "type": "decimal",
+            "default": 1.2,
+            "description": "Multiplicador para HE nocturnas"
+          },
+          {
+            "name": "max_accumulation_hours",
+            "type": "decimal",
+            "default": 120,
+            "description": "Máximo de horas acumulables"
+          },
+          {
+            "name": "expiration_months",
+            "type": "integer",
+            "default": 12,
+            "description": "Meses hasta vencimiento"
+          },
+          {
+            "name": "employee_choice_enabled",
+            "type": "boolean",
+            "default": true,
+            "description": "Empleado elige cobrar/acumular"
+          },
+          {
+            "name": "choice_timeout_hours",
+            "type": "integer",
+            "default": 24,
+            "description": "Horas para decidir antes de default"
+          },
+          {
+            "name": "default_action",
+            "type": "enum",
+            "options": [
+              "bank",
+              "pay"
+            ],
+            "default": "bank",
+            "description": "Acción si vence timeout"
+          }
+        ]
+      }
     },
     {
       "id": "payroll-liquidation",
@@ -1746,289 +2430,296 @@
       "autoHealedGaps": 15
     },
     {
-      "id": "training-management",
-      "name": "Gestión de Capacitaciones",
-      "category": "rrhh",
+      "id": "kiosks-apk",
+      "name": "APK Kiosko Android",
+      "category": "hardware",
       "version": "1.0.0",
-      "description": "Cursos, certificaciones, seguimiento de formación del personal",
+      "description": "Aplicación Android para kioscos",
       "dependencies": {
-        "required": [
-          "users",
-          "companies"
-        ],
-        "optional": [
-          "document-management"
-        ],
-        "integrates_with": [
-          "users"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      },
-      "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "📊 Dashboard",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "📚 Capacitaciones",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "📋 Evaluaciones (Capacitaciones)",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "🎯 Evaluaciones Independientes",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "👥 Seguimiento Empleados",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "📈 Reportes",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "📅 Calendario",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "➕ Nueva Capacitación",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "📋 Nueva Evaluación",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "📢 Enviar Recordatorios",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "📊 Reporte Cumplimiento",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "💾 Guardar Datos",
-            "action": "save",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "📤 Exportar Datos",
-            "action": "export",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "🗑️ Limpiar Todo",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          },
-          {
-            "text": "👁️ Ver",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T13:29:41.253Z"
-          },
-          {
-            "text": "✏️ Editar",
-            "action": "edit",
-            "discoveredAt": "2025-12-12T13:29:41.253Z"
-          },
-          {
-            "text": "👥 Participantes",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T13:29:41.253Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:20:55.207Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:38:52.602Z",
-      "autoHealedGaps": 20
-    },
-    {
-      "id": "psychological-assessment",
-      "name": "Evaluación Psicológica",
-      "category": "rrhh",
-      "version": "1.0.0",
-      "description": "Tests psicométricos y evaluaciones de personal",
-      "dependencies": {
-        "required": [
-          "users",
-          "companies"
-        ],
+        "required": [],
         "optional": [],
-        "integrates_with": [
-          "users"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
-    },
-    {
-      "id": "emotional-analysis",
-      "name": "Análisis Emocional",
-      "category": "ai",
-      "version": "1.0.0",
-      "description": "Detección de emociones y bienestar del personal",
-      "dependencies": {
-        "required": [
-          "users"
-        ],
-        "optional": [
-          "biometric-enterprise"
-        ],
-        "integrates_with": [
-          "real-biometric-enterprise",
-          "users"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      },
-      "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:35:03.491Z"
-          },
-          {
-            "text": "🔄 Recargar Página",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:35:03.491Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:35:03.491Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:35:03.491Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:43:17.135Z",
-      "autoHealedGaps": 4
-    },
-    {
-      "id": "visitors",
-      "name": "Control de Visitantes",
-      "category": "security",
-      "version": "1.0.0",
-      "description": "Registro y control de ingreso de visitantes",
-      "dependencies": {
-        "required": [
-          "companies"
-        ],
-        "optional": [
-          "real-biometric-enterprise"
-        ],
         "integrates_with": [],
-        "provides_to": []
+        "provides_to": [
+          "attendance"
+        ],
+        "bundled": []
       },
       "commercial": {
         "is_core": false,
-        "standalone": true
+        "standalone": true,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
       },
       "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:18:30.591Z"
-          },
-          {
-            "text": "🔄 Recargar Página",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:30.591Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:30.591Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:18:30.591Z"
-          }
-        ],
-        "inputs": []
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
       },
-      "lastBrainUpdate": "2025-12-12T13:36:27.174Z",
-      "autoHealedGaps": 4
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
     },
     {
-      "id": "document-management",
-      "name": "Gestión Documental",
-      "category": "documents",
-      "version": "1.0.0",
-      "description": "Almacenamiento y gestión de documentos digitales",
+      "id": "organizational-structure",
+      "name": "Estructura Organizacional",
+      "category": "organization",
+      "version": "3.0.0",
+      "description": "Sistema completo de estructura organizacional: Departamentos, Sectores, Turnos rotativos, Convenios laborales, Categorías salariales, Jerarquía organizacional, Posiciones, Escalamiento de permisos, Calendarios de turnos con feriados, Branches multi-país",
       "dependencies": {
         "required": [
-          "companies"
-        ],
-        "optional": [],
-        "integrates_with": [
-          "medical",
-          "legal",
+          "companies",
           "users"
+        ],
+        "optional": [
+          "attendance",
+          "vacation",
+          "payroll-liquidation",
+          "branches"
+        ],
+        "integrates_with": [
+          "users",
+          "attendance",
+          "vacation",
+          "payroll-liquidation",
+          "medical"
         ],
         "provides_to": [
-          "medical",
-          "legal",
-          "resource-center"
+          "users",
+          "attendance",
+          "vacation-approvals",
+          "payroll-liquidation"
+        ]
+      },
+      "api": {
+        "base_path": "/api/v1/organizational",
+        "endpoints": [
+          "/sectors",
+          "/agreements",
+          "/categories",
+          "/roles",
+          "/structure",
+          "/countries",
+          "/positions",
+          "/hierarchy/tree",
+          "/hierarchy/flat",
+          "/hierarchy/flowchart",
+          "/hierarchy/stats",
+          "/hierarchy/escalation/:userId",
+          "/hierarchy/supervisor/:userId",
+          "/hierarchy/subordinates/:userId",
+          "/hierarchy/can-approve",
+          "/shifts/:shiftId/holidays",
+          "/shifts/:shiftId/calendar",
+          "/holidays"
+        ]
+      },
+      "database": {
+        "tables": [
+          "departments",
+          "sectors",
+          "shifts",
+          "labor_agreements_v2",
+          "salary_categories_v2",
+          "additional_role_types",
+          "organizational_positions",
+          "branches",
+          "holidays"
+        ],
+        "modifications": [
+          "users.department_id",
+          "users.sector_id",
+          "users.shift_id",
+          "users.salary_category_id",
+          "users.organizational_position_id",
+          "users.additional_roles"
+        ]
+      },
+      "business_flows": [
+        {
+          "name": "Creación de Departamento",
+          "steps": [
+            "Admin crea departamento con ubicación GPS",
+            "Asigna radio de cobertura para asistencia GPS",
+            "Crea sectores dentro del departamento",
+            "Asigna supervisor a cada sector",
+            "Asocia empleados al departamento/sector"
+          ]
+        },
+        {
+          "name": "Configuración de Turnos",
+          "steps": [
+            "Crear turno con horarios de entrada/salida",
+            "Asignar branch (sucursal) para feriados por país",
+            "Configurar días de trabajo (L-V, rotativos, etc)",
+            "Definir si respeta feriados nacionales/provinciales",
+            "Agregar días no laborables personalizados",
+            "Asignar turno a empleados o departamentos"
+          ]
+        },
+        {
+          "name": "Aprobación Jerárquica de Vacaciones",
+          "steps": [
+            "Empleado solicita vacaciones (X días)",
+            "Sistema consulta jerarquía organizacional",
+            "Si X <= max_approval_days del supervisor → aprueba directo",
+            "Si X > max_approval_days → escala al siguiente nivel",
+            "Notifica a cada nivel de la cadena de aprobación",
+            "Registra trazabilidad completa de aprobadores"
+          ]
+        },
+        {
+          "name": "Asignación de Categoría Salarial",
+          "steps": [
+            "Admin selecciona convenio laboral (país/industria)",
+            "Elige categoría dentro del convenio",
+            "Asigna categoría a empleado",
+            "Sistema calcula sueldo base automáticamente",
+            "Payroll usa categoría para liquidación"
+          ]
+        }
+      ],
+      "help": {
+        "quickStart": "1. Crear departamentos con GPS\n2. Crear sectores dentro de departamentos\n3. Configurar turnos con horarios y feriados\n4. Definir convenios y categorías salariales\n5. Construir organigrama con posiciones jerárquicas\n6. Asignar empleados a posiciones, departamentos y turnos",
+        "commonIssues": [
+          {
+            "problem": "Turnos no respetan feriados",
+            "solution": "Verificar: 1) Turno tiene branch asignado 2) Branch tiene país configurado 3) respect_national_holidays está habilitado 4) Existen feriados para ese país en la tabla holidays"
+          },
+          {
+            "problem": "Vacaciones no escalan correctamente",
+            "solution": "Verificar: 1) Empleado tiene organizational_position_id asignado 2) Posiciones tienen parent_position_id correcto 3) Supervisor tiene can_approve_permissions = true y max_approval_days configurado"
+          },
+          {
+            "problem": "No puedo ver sectores de un departamento",
+            "solution": "Sectores solo aparecen si: 1) Departamento está activo (is_active=true) 2) Sector pertenece al mismo company_id 3) Usuario tiene permisos para ver ese departamento"
+          }
         ]
       },
       "commercial": {
-        "is_core": false,
-        "standalone": true
-      }
+        "is_core": true,
+        "standalone": false,
+        "included_in": "Plan Básico y superiores",
+        "description": "Módulo core unificado de estructura organizacional. Integra lo que antes eran módulos separados (departments + shifts) en un solo sistema enterprise."
+      },
+      "aliases": [
+        "departments",
+        "shifts",
+        "organigrama",
+        "jerarquia",
+        "estructura"
+      ],
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "🏢\n                        Departamentos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "🏬\n                        Sectores",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "📜\n                        Convenios",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "💼\n                        Categorías",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "⏰\n                        Turnos",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "🏷️\n                        Roles",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "📊\n                        Organigrama",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "👔\n                        Posiciones",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "+ Nuevo Departamento",
+            "action": "create",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "🗑️",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "🏢",
+            "id": "tab-🏢",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "🏬",
+            "id": "tab-🏬",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "📜",
+            "id": "tab-📜",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "💼",
+            "id": "tab-💼",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "⏰",
+            "id": "tab-⏰",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "🏷️",
+            "id": "tab-🏷️",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "📊",
+            "id": "tab-📊",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          },
+          {
+            "label": "👔",
+            "id": "tab-👔",
+            "discoveredAt": "2025-12-12T00:20:23.845Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:38:20.929Z",
+      "autoHealedGaps": 20
     },
     {
       "id": "art-management",
@@ -2164,6 +2855,46 @@
       "autoHealedGaps": 20
     },
     {
+      "id": "employee-360",
+      "name": "Expediente 360°",
+      "category": "rrhh",
+      "version": "1.0.0",
+      "description": "Análisis integral de empleados con IA, scoring y timeline unificado. Incluye: Scoring de 5 categorías, Análisis con Ollama + Llama 3.1, Timeline unificado, Comparación entre empleados, Exportación PDF profesional.",
+      "dependencies": {
+        "required": [
+          "users",
+          "attendance"
+        ],
+        "optional": [],
+        "integrates_with": [
+          "attendance",
+          "sanctions-management",
+          "vacation-management",
+          "training-management",
+          "medical-dashboard"
+        ],
+        "provides_to": [],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true,
+        "rubro": "RRHH Premium"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
+    },
+    {
       "id": "job-postings",
       "name": "Búsquedas Laborales",
       "category": "rrhh",
@@ -2247,72 +2978,30 @@
       "autoHealedGaps": 11
     },
     {
-      "id": "licensing-management",
-      "name": "Gestión de Licencias",
-      "category": "admin",
-      "version": "1.0.0",
-      "description": "Administración de licencias y subscripciones del sistema",
+      "id": "medical",
+      "name": "Gestión Médica",
+      "category": "rrhh",
+      "version": "5.8.0",
+      "description": "Certificados médicos, prescripciones, ausentismos, historial clínico completo",
       "dependencies": {
         "required": [
+          "users",
           "companies"
         ],
-        "optional": [],
-        "integrates_with": [
-          "ALL"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": true,
-        "standalone": false
-      },
-      "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:34:08.976Z"
-          },
-          {
-            "text": "🔄 Recargar Página",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:34:08.976Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:34:08.976Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:34:08.976Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:42:22.422Z",
-      "autoHealedGaps": 4
-    },
-    {
-      "id": "employee-map",
-      "name": "Mapa de Empleados",
-      "category": "analytics",
-      "version": "1.0.0",
-      "description": "Visualización geográfica de empleados en tiempo real",
-      "dependencies": {
-        "required": [
-          "users"
-        ],
         "optional": [
-          "attendance"
+          "notification-center",
+          "document-management",
+          "art-management"
         ],
         "integrates_with": [
-          "attendance"
+          "attendance",
+          "vacation",
+          "dashboard",
+          "legal"
         ],
-        "provides_to": []
+        "provides_to": [
+          "legal"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -2323,1180 +3012,584 @@
           {
             "text": "🚪 Salir",
             "action": "exit",
-            "discoveredAt": "2025-12-12T00:23:45.411Z"
-          },
-          {
-            "text": "Geofence",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:45.411Z"
-          },
-          {
-            "text": "Heatmap",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:45.411Z"
-          },
-          {
-            "text": "Multi-Sucursal",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:45.411Z"
-          },
-          {
-            "text": "Cluster",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:45.411Z"
-          },
-          {
-            "text": "Visitantes",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:45.411Z"
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
           },
           {
             "text": "Actualizar",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:45.411Z"
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Vista General",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Candidatos RRHH",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "PRE-Ocupacional",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Ocupacional",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "POST-Ocupacional",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Legajos 360°",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Notificaciones",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Buscar",
+            "action": "search",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Diagnosticar",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Cerrar",
+            "action": "cancel",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Fotos Solicitadas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Ver Estudios",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Auditorías Pendientes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
+          },
+          {
+            "text": "Reporte General",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
           },
           {
             "text": "🔔\n        1",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:23:45.411Z"
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
           }
         ],
         "tabs": [
           {
             "label": "0",
             "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:23:45.411Z"
+            "discoveredAt": "2025-12-12T00:18:48.365Z"
           }
         ],
         "inputs": []
       },
-      "lastBrainUpdate": "2025-12-12T13:41:41.394Z",
-      "autoHealedGaps": 9
+      "lastBrainUpdate": "2025-12-15T17:51:00.577Z",
+      "autoHealedGaps": 18,
+      "workflows": {
+        "medical_workflow": {
+          "service": "Medical Leave Workflow",
+          "file": "src/workflows/generated/MedicalLeaveServiceGenerated.js",
+          "stages_count": 6,
+          "entry_point": "CERTIFICATE_UPLOADED",
+          "final_states": [
+            "LEAVE_APPROVED",
+            "LEAVE_REJECTED"
+          ],
+          "auto_generated": true,
+          "generated_at": "2025-12-15T17:51:00.573Z",
+          "stats": {
+            "total": 6,
+            "core": 3,
+            "existing": 0,
+            "autoGenerated": 0,
+            "outcomes": 2
+          }
+        }
+      }
     },
     {
-      "id": "facturacion",
-      "name": "Facturación (SIAC ERP)",
-      "category": "erp",
+      "id": "procedures-manual",
+      "name": "Manual de Procedimientos",
+      "category": "rrhh",
       "version": "1.0.0",
-      "description": "Módulo de facturación del ERP SIAC con triple aislación multi-tenant",
+      "description": "Sistema de gestión documental ISO 9001 para procedimientos e instructivos con control de versiones, publicación centralizada y acuse de recibo.",
       "dependencies": {
         "required": [
-          "companies",
-          "clientes"
-        ],
-        "optional": [
-          "plantillas-fiscales"
-        ],
-        "integrates_with": [
-          "clientes"
-        ],
-        "provides_to": []
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      },
-      "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "text": "← Volver a Módulos",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "text": "🧾\n                        Facturación\n                        3 Modos",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "text": "📜\n                        Facturas Emitidas\n                        Historial + CAE",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "text": "⚙️\n                        Configuración AFIP\n                        Certificados + Ptos Venta",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "text": "📝\n                MODO MANUAL\n                Factura directa sin presupuesto",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "text": "📋\n                MODO OCASIONAL\n                Presupuesto → Factura 1 vez",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "text": "🔄\n                MODO RECURRENTE\n                Presupuesto → Facturas periódicas",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "text": "📝 Nueva Factura Manual",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "🧾\n                        Facturación\n                        3 Modos\n                    \n                    \n                        📜\n                        Facturas Emitidas\n                        Historial + CAE\n                    \n                    \n                        ⚙️\n                        Configuración AFIP\n                        Certificados + Ptos Venta",
-            "id": "tab-🧾\n                        facturación\n                        3 modos\n                    \n                    \n                        📜\n                        facturas emitidas\n                        historial + cae\n                    \n                    \n                        ⚙️\n                        configuración afip\n                        certificados + ptos venta",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "label": "🧾\n                        Facturación\n                        3 Modos",
-            "id": "tabFacturacion",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "label": "📜\n                        Facturas Emitidas\n                        Historial + CAE",
-            "id": "tabFacturasEmitidas",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          },
-          {
-            "label": "⚙️\n                        Configuración AFIP\n                        Certificados + Ptos Venta",
-            "id": "tabConfigAfip",
-            "discoveredAt": "2025-12-12T00:19:29.340Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:37:25.996Z",
-      "autoHealedGaps": 14
-    },
-    {
-      "id": "clientes",
-      "name": "Gestión de Clientes (SIAC)",
-      "category": "erp",
-      "version": "1.0.0",
-      "description": "Módulo de gestión de clientes del ERP SIAC",
-      "dependencies": {
-        "required": [
-          "companies"
+          "notifications-enterprise",
+          "organizational-structure"
         ],
         "optional": [],
-        "integrates_with": [
-          "facturacion"
-        ],
-        "provides_to": [
-          "facturacion"
-        ]
+        "integrates_with": [],
+        "provides_to": [],
+        "bundled": []
       },
       "commercial": {
         "is_core": false,
-        "standalone": true
+        "standalone": true,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
       },
       "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:19:15.676Z"
-          },
-          {
-            "text": "← Volver a Módulos",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:15.676Z"
-          },
-          {
-            "text": "👤 Nuevo Cliente",
-            "action": "create",
-            "discoveredAt": "2025-12-12T00:19:15.676Z"
-          },
-          {
-            "text": "📤 Importar",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:15.676Z"
-          },
-          {
-            "text": "📊 Exportar",
-            "action": "export",
-            "discoveredAt": "2025-12-12T00:19:15.676Z"
-          },
-          {
-            "text": "📈 Reportes",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:15.676Z"
-          },
-          {
-            "text": "✏️ Editar",
-            "action": "edit",
-            "discoveredAt": "2025-12-12T00:19:15.676Z"
-          },
-          {
-            "text": "👁️ Ver",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:15.676Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:15.676Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:19:15.676Z"
-          }
-        ],
-        "inputs": []
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
       },
-      "lastBrainUpdate": "2025-12-12T13:37:12.437Z",
-      "autoHealedGaps": 10
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
     },
     {
-      "id": "plantillas-fiscales",
-      "name": "Plantillas Fiscales",
-      "category": "erp",
+      "id": "sanctions-management",
+      "name": "Gestión de Sanciones",
+      "category": "rrhh",
       "version": "1.0.0",
-      "description": "Plantillas fiscales por país para facturación",
+      "description": "Registro y seguimiento de sanciones disciplinarias",
       "dependencies": {
         "required": [
-          "companies"
-        ],
-        "optional": [],
-        "integrates_with": [
-          "facturacion"
-        ],
-        "provides_to": [
-          "facturacion"
-        ]
-      },
-      "commercial": {
-        "is_core": false,
-        "standalone": true
-      },
-      "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "text": "📋 Plantillas",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "text": "🏷️ Condiciones IVA",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "text": "💰 Conceptos",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "text": "📊 Alícuotas",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "text": "⚙️ Configuración",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "text": "➕ Nueva Plantilla",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "text": "← Volver a Módulos",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "text": "🔄 Recargar Página",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T13:28:28.526Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "📋 Plantillas",
-            "id": "tab-📋 plantillas",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "label": "🏷️ Condiciones IVA",
-            "id": "tab-🏷️ condiciones iva",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "label": "💰 Conceptos",
-            "id": "tab-💰 conceptos",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "label": "📊 Alícuotas",
-            "id": "tab-📊 alícuotas",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "label": "⚙️ Configuración",
-            "id": "tab-⚙️ configuración",
-            "discoveredAt": "2025-12-12T00:19:42.982Z"
-          },
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T13:28:28.526Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:37:39.728Z",
-      "autoHealedGaps": 16
-    },
-    {
-      "id": "company-account",
-      "name": "Cuenta Comercial",
-      "category": "core",
-      "version": "1.0.0",
-      "description": "Relacion comercial APONNT-Empresa: Presupuestos, Contratos, Facturas, Comunicaciones",
-      "dependencies": {
-        "required": [
+          "users",
           "companies"
         ],
         "optional": [
-          "legal"
+          "legal",
+          "notification-center"
         ],
         "integrates_with": [
           "legal",
-          "biometric-consent"
+          "attendance"
         ],
-        "provides_to": []
+        "provides_to": [
+          "legal"
+        ]
       },
       "commercial": {
-        "is_core": true,
+        "is_core": false,
         "standalone": true
       },
-      "aliases": [
-        "terms-conditions"
-      ],
       "ui": {
         "mainButtons": [
           {
             "text": "🚪 Salir",
             "action": "exit",
-            "discoveredAt": "2025-12-12T00:17:17.976Z"
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "➕ Nueva Solicitud",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "📥 Mis Pendientes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "📋 Todas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "🚨 Activas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "⛔ Suspensiones",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "📜 Historial",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "📂 Catálogo",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:20:51.020Z"
+          }
+        ],
+        "inputs": []
+      },
+      "lastBrainUpdate": "2025-12-12T13:38:48.316Z",
+      "autoHealedGaps": 10
+    },
+    {
+      "id": "training-management",
+      "name": "Gestión de Capacitaciones",
+      "category": "rrhh",
+      "version": "1.0.0",
+      "description": "Cursos, certificaciones, seguimiento de formación del personal",
+      "dependencies": {
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "document-management"
+        ],
+        "integrates_with": [
+          "users"
+        ],
+        "provides_to": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true
+      },
+      "ui": {
+        "mainButtons": [
+          {
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
           },
           {
             "text": "📊 Dashboard",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:17:17.976Z"
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
           },
           {
-            "text": "📝 Presupuestos",
+            "text": "📚 Capacitaciones",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:17:17.976Z"
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
           },
           {
-            "text": "📄 Contratos",
+            "text": "📋 Evaluaciones (Capacitaciones)",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:17:17.976Z"
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
           },
           {
-            "text": "💳 Facturas",
+            "text": "🎯 Evaluaciones Independientes",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:17:17.976Z"
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
           },
           {
-            "text": "💬 Comunicaciones",
+            "text": "👥 Seguimiento Empleados",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:17:17.976Z"
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📈 Reportes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📅 Calendario",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "➕ Nueva Capacitación",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📋 Nueva Evaluación",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📢 Enviar Recordatorios",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📊 Reporte Cumplimiento",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "💾 Guardar Datos",
+            "action": "save",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "📤 Exportar Datos",
+            "action": "export",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "🗑️ Limpiar Todo",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
           },
           {
             "text": "🔔\n        1",
             "action": "unknown",
-            "discoveredAt": "2025-12-12T00:17:17.976Z"
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
+          },
+          {
+            "text": "👁️ Ver",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T13:29:41.253Z"
+          },
+          {
+            "text": "✏️ Editar",
+            "action": "edit",
+            "discoveredAt": "2025-12-12T13:29:41.253Z"
+          },
+          {
+            "text": "👥 Participantes",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T13:29:41.253Z"
           }
         ],
         "tabs": [
           {
             "label": "0",
             "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:17:17.976Z"
+            "discoveredAt": "2025-12-12T00:20:55.207Z"
           }
         ],
         "inputs": []
       },
-      "lastBrainUpdate": "2025-12-12T13:35:14.535Z",
-      "autoHealedGaps": 8
+      "lastBrainUpdate": "2025-12-12T13:38:52.602Z",
+      "autoHealedGaps": 20
     },
     {
-      "id": "authentication",
-      "name": "Autenticación y Autorización",
-      "category": "core",
+      "id": "vacation-management",
+      "name": "Gestión de Vacaciones",
+      "category": "rrhh",
       "version": "1.0.0",
-      "description": "",
+      "description": "Sistema completo de gestión de vacaciones",
       "dependencies": {
         "required": [],
         "optional": [],
         "integrates_with": [],
-        "provides_to": []
+        "provides_to": [],
+        "bundled": []
       },
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
+      "commercial": {
+        "is_core": false,
+        "standalone": true,
+        "rubro": "Sistema Base"
       },
       "help": {
-        "quickStart": "Tutorial pendiente",
+        "quickStart": "",
         "commonIssues": []
-      },
-      "commercial": {
-        "is_core": true,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      }
-    },
-    {
-      "id": "companies",
-      "name": "Gestión de Empresas (Multi-Tenant Core)",
-      "category": "core",
-      "version": "1.0.0",
-      "description": "",
-      "dependencies": [
-        "aponnt_staff",
-        "vendor_statistics"
-      ],
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": [
-          {
-            "solution": "Contactar a soporte técnico"
-          }
-        ]
-      },
-      "commercial": {
-        "is_core": true,
-        "can_work_standalone": false,
-        "base_price_usd": 0
       },
       "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:17:04.224Z"
-          },
-          {
-            "text": "🔄 Recargar Página",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:17:04.224Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:17:04.224Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:17:04.224Z"
-          }
-        ],
-        "inputs": []
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
       },
-      "lastBrainUpdate": "2025-12-12T13:35:00.837Z",
-      "autoHealedGaps": 4
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
     },
     {
-      "id": "kiosks",
-      "name": "Gestión de Kioscos",
-      "category": "core",
+      "id": "temporary-access",
+      "name": "Accesos Temporales",
+      "category": "security",
       "version": "1.0.0",
-      "description": "",
+      "description": "Sistema de contraseñas temporales para partners",
       "dependencies": {
         "required": [],
         "optional": [],
         "integrates_with": [],
-        "provides_to": []
-      },
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": []
-      },
-      "commercial": {
-        "is_core": true,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      },
-      "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:21:22.509Z"
-          },
-          {
-            "text": "🔄 Recargar Página",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:22.509Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:21:22.509Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:21:22.509Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:39:19.979Z",
-      "autoHealedGaps": 4
-    },
-    {
-      "id": "notifications",
-      "name": "Sistema de Notificaciones Enterprise",
-      "category": "enterprise",
-      "version": "1.0.0",
-      "description": "",
-      "dependencies": {
-        "required": [],
-        "optional": [],
-        "integrates_with": [],
-        "provides_to": []
-      },
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": [
-          {
-            "solution": "Contactar a soporte técnico"
-          }
-        ]
-      },
-      "commercial": {
-        "is_core": false,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      },
-      "workflows": {
-        "notifications_workflow": {
-          "service": "Notification Workflow",
-          "file": "src/workflows/generated/NotificationUnifiedServiceGenerated.js",
-          "stages_count": 47,
-          "entry_point": "NOTIFICATION_CREATED",
-          "final_states": [
-            "DELIVERED",
-            "FAILED",
-            "EXPIRED"
-          ],
-          "auto_generated": true,
-          "generated_at": "2025-12-15T01:17:04.791Z",
-          "stats": {
-            "total": 47,
-            "core": 4,
-            "existing": 0,
-            "autoGenerated": 40,
-            "outcomes": 3
-          }
-        }
-      },
-      "lastBrainUpdate": "2025-12-15T01:17:04.796Z"
-    },
-    {
-      "id": "partners",
-      "name": "Sistema de Asociados (Partners)",
-      "category": "enterprise",
-      "version": "1.0.0",
-      "description": "Médicos, abogados, ingenieros, etc. que proveen servicios a empresas",
-      "dependencies": {
-        "required": [],
-        "optional": [],
-        "integrates_with": [],
-        "provides_to": []
-      },
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": []
-      },
-      "commercial": {
-        "is_core": false,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      },
-      "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:34:22.605Z"
-          },
-          {
-            "text": "🔄 Recargar Página",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:34:22.605Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:34:22.605Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:34:22.605Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:42:36.021Z",
-      "autoHealedGaps": 4
-    },
-    {
-      "id": "aiAssistant",
-      "name": "Asistente IA con Ollama + Llama 3.1",
-      "category": "enterprise",
-      "version": "1.0.0",
-      "description": "Chat flotante con RAG, auto-diagnóstico y knowledge base global",
-      "dependencies": {
-        "required": [],
-        "optional": [],
-        "integrates_with": [],
-        "provides_to": []
-      },
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": [
-          {
-            "solution": "Contactar a soporte técnico"
-          }
-        ]
-      },
-      "commercial": {
-        "is_core": false,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      }
-    },
-    {
-      "id": "auditor",
-      "name": "Sistema de Auditoría y Auto-Diagnóstico",
-      "category": "enterprise",
-      "version": "1.0.0",
-      "description": "Testing automático, auto-healing, data seeding",
-      "dependencies": {
-        "required": [],
-        "optional": [],
-        "integrates_with": [],
-        "provides_to": []
-      },
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": []
-      },
-      "commercial": {
-        "is_core": false,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      },
-      "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:33:55.344Z"
-          },
-          {
-            "text": "🔄 Recargar Página",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:33:55.344Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:33:55.344Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:33:55.344Z"
-          }
-        ],
-        "inputs": []
-      },
-      "lastBrainUpdate": "2025-12-12T13:42:08.852Z",
-      "autoHealedGaps": 4
-    },
-    {
-      "id": "vendorsCommissions",
-      "name": "Vendedores y Sistema de Comisiones",
-      "category": "commercial",
-      "version": "1.0.0",
-      "description": "Jerarquía de staff, comisiones piramidales, stats",
-      "dependencies": [
-        "companies",
-        "notifications"
-      ],
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": [
-          {
-            "solution": "Contactar a soporte técnico"
-          }
-        ]
-      },
-      "commercial": {
-        "is_core": false,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      }
-    },
-    {
-      "id": "budgets",
-      "name": "Sistema de Presupuestos",
-      "category": "commercial",
-      "version": "1.0.0",
-      "description": "Presupuestos versionados con workflow de aprobación",
-      "dependencies": [
-        "companies",
-        "contracts",
-        "notifications",
-        "vendorsCommissions"
-      ],
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": []
-      },
-      "commercial": {
-        "is_core": false,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      }
-    },
-    {
-      "id": "contracts",
-      "name": "Sistema de Contratos",
-      "category": "commercial",
-      "version": "1.0.0",
-      "description": "Contratos con firma digital tipo EULA",
-      "dependencies": [
-        "budgets",
-        "companies",
-        "notifications"
-      ],
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": []
-      },
-      "commercial": {
-        "is_core": false,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      }
-    },
-    {
-      "id": "invoicing",
-      "name": "Facturación Automática",
-      "category": "commercial",
-      "version": "1.0.0",
-      "description": "Facturación mensual automática (día 1 de cada mes)",
-      "dependencies": [
-        "contracts",
-        "cobranzas",
-        "notifications"
-      ],
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": []
-      },
-      "commercial": {
-        "is_core": false,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      }
-    },
-    {
-      "id": "commissionLiquidation",
-      "name": "Liquidación de Comisiones",
-      "category": "commercial",
-      "version": "1.0.0",
-      "description": "Liquidación mensual de comisiones con trazabilidad completa",
-      "dependencies": [
-        "invoicing",
-        "vendorsCommissions",
-        "notifications"
-      ],
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": []
-      },
-      "commercial": {
-        "is_core": false,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      }
-    },
-    {
-      "id": "cobranzas",
-      "name": "Gestión de Cobranzas",
-      "category": "commercial",
-      "version": "1.0.0",
-      "description": "Área de cobranzas confirma pagos y ejecuta transferencias",
-      "dependencies": [
-        "invoicing",
-        "commissionLiquidation",
-        "notifications"
-      ],
-      "api": {
-        "base_path": "",
-        "endpoints": []
-      },
-      "database": {
-        "tables": [],
-        "modifications": []
-      },
-      "help": {
-        "quickStart": "Tutorial pendiente",
-        "commonIssues": []
-      },
-      "commercial": {
-        "is_core": false,
-        "can_work_standalone": false,
-        "base_price_usd": 0
-      }
-    },
-    {
-      "id": "notification-center",
-      "key": "notification-center",
-      "name": "Centro de Notificaciones Unificado",
-      "icon": "🔔",
-      "category": "communication",
-      "is_core": true,
-      "base_price": 0,
-      "description": "Sistema unificado de notificaciones con IA, threads, workflows y multi-canal (Aponnt ↔ Empresa ↔ APKs)",
-      "isCommercial": true,
-      "isAdministrative": false,
-      "hasImplementation": true,
-      "frontend_file": "/js/modules/notification-center.js",
-      "init_function": "showNotificationCenterContent",
-      "status": "COMPLETE",
-      "progress": 100,
-      "aliases": [
-        "notifications-enterprise",
-        "notifications-complete",
-        "inbox"
-      ],
-      "dependencies": {
-        "required": [
-          "users"
-        ],
-        "optional": [
-          "ai-assistant"
-        ],
         "provides_to": [
-          "ALL"
-        ]
+          "partners-medical"
+        ],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
       },
       "ui": {
-        "mainButtons": [
-          {
-            "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:22:36.809Z"
-          },
-          {
-            "text": "Actualizar",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:22:36.809Z"
-          },
-          {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:22:36.809Z"
-          }
-        ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:22:36.809Z"
-          }
-        ],
-        "inputs": []
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
       },
-      "lastBrainUpdate": "2025-12-12T13:40:32.681Z",
-      "autoHealedGaps": 4
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
     },
     {
-      "id": "flutter-integration-tests",
-      "key": "flutter-integration-tests",
-      "name": "Flutter Integration Tests",
-      "icon": "📱",
-      "category": "testing",
-      "is_core": false,
-      "base_price": 0,
-      "description": "Tests de integración Flutter para validar comunicación APK ↔ Backend antes de compilar",
-      "isCommercial": false,
-      "isAdministrative": true,
-      "hasImplementation": true,
-      "backend_file": "src/auditor/collectors/FlutterIntegrationCollector.js",
-      "frontend_file": "frontend_flutter/test/integration/",
-      "status": "COMPLETE",
-      "progress": 100,
+      "id": "visitors",
+      "name": "Control de Visitantes",
+      "category": "security",
       "version": "1.0.0",
-      "aliases": [
-        "flutter-tests",
-        "apk-tests",
-        "integration-tests-flutter"
-      ],
+      "description": "Registro y control de ingreso de visitantes",
       "dependencies": {
         "required": [
-          "database",
           "companies"
         ],
         "optional": [
-          "attendance",
-          "kiosks-professional"
+          "real-biometric-enterprise"
         ],
-        "integrates_with": [
-          "phase4-orchestrator",
-          "stress-test"
-        ],
-        "provides_to": [
-          "phase4-orchestrator"
-        ]
+        "integrates_with": [],
+        "provides_to": []
       },
       "commercial": {
         "is_core": false,
         "standalone": true
       },
-      "help": {
-        "quickStart": "1. Asegurar backend corriendo en puerto 9998\n2. Ejecutar: flutter test test/integration/\n3. Revisar resultados en consola",
-        "commonIssues": [
+      "ui": {
+        "mainButtons": [
           {
-            "problem": "Tests fallan por conexión",
-            "solution": "Verificar que backend esté corriendo y accesible en localhost:9998"
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:18:30.591Z"
           },
           {
-            "problem": "Flutter no encontrado",
-            "solution": "Instalar Flutter SDK y agregarlo al PATH"
+            "text": "🔄 Recargar Página",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:30.591Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:18:30.591Z"
           }
-        ]
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:18:30.591Z"
+          }
+        ],
+        "inputs": []
       },
-      "testsIncluded": [
-        "backend_api_test.dart - Conectividad con backend",
-        "attendance_workflow_test.dart - Flujo de fichaje completo",
-        "run_all_integration_tests.dart - Runner con JSON output"
-      ],
-      "metrics": [
-        "Tests passed/failed",
-        "Pass rate %",
-        "Duration (ms)"
-      ],
-      "lastBrainUpdate": "2025-12-14T12:00:00.000Z"
+      "lastBrainUpdate": "2025-12-12T13:36:27.174Z",
+      "autoHealedGaps": 4
     },
     {
-      "id": "stress-test",
-      "key": "stress-test",
-      "name": "Stress Test de Asistencias",
-      "icon": "🧪",
-      "category": "testing",
-      "is_core": false,
-      "base_price": 0,
-      "description": "Test de estrés realista: simula 1000+ fichajes con llegadas tardías, autorizaciones y biometría",
-      "isCommercial": false,
-      "isAdministrative": true,
-      "hasImplementation": true,
-      "backend_file": "src/auditor/collectors/StressTestCollector.js",
-      "script_file": "scripts/test-realistic-attendance-stress.js",
-      "status": "COMPLETE",
-      "progress": 100,
+      "id": "knowledge-base",
+      "name": "Base de Conocimiento",
+      "category": "support",
       "version": "1.0.0",
-      "aliases": [
-        "stress-testing",
-        "load-test",
-        "attendance-stress-test"
-      ],
+      "description": "Knowledge Base para soporte",
+      "dependencies": {
+        "required": [],
+        "optional": [],
+        "integrates_with": [],
+        "provides_to": [
+          "support-base"
+        ],
+        "bundled": []
+      },
+      "commercial": {
+        "is_core": false,
+        "standalone": true,
+        "rubro": "General"
+      },
+      "help": {
+        "quickStart": "",
+        "commonIssues": []
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedFromDB": true,
+      "addedAt": "2025-12-16T02:40:42.311Z"
+    },
+    {
+      "id": "resource-center",
+      "name": "Centro de Recursos",
+      "category": "support",
+      "version": "1.0.0",
+      "description": "Biblioteca de recursos, documentación y tutoriales",
       "dependencies": {
         "required": [
-          "database",
-          "users",
-          "companies",
-          "attendance"
+          "companies"
         ],
         "optional": [
-          "late-arrival-authorizations",
-          "organizational-structure"
+          "document-management"
         ],
         "integrates_with": [
-          "phase4-orchestrator",
-          "flutter-integration-tests"
+          "notification-center"
         ],
-        "provides_to": [
-          "phase4-orchestrator"
-        ]
+        "provides_to": []
       },
       "commercial": {
         "is_core": false,
         "standalone": true
       },
-      "help": {
-        "quickStart": "1. Ejecutar: node scripts/test-realistic-attendance-stress.js\n2. O usar StressTestCollector desde Phase4Orchestrator\n3. Revisar métricas en output",
-        "commonIssues": [
+      "ui": {
+        "mainButtons": [
           {
-            "problem": "Test muy lento",
-            "solution": "Reducir STRESS_TEST_ATTENDANCES en variables de entorno"
+            "text": "🚪 Salir",
+            "action": "exit",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
           },
           {
-            "problem": "Errores de BD",
-            "solution": "Verificar conexión PostgreSQL y que existan usuarios de prueba"
+            "text": "Cargar Período",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
+          },
+          {
+            "text": "Registrar Horas",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
+          },
+          {
+            "text": "Comparar con Período Anterior",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
+          },
+          {
+            "text": "🔔\n        1",
+            "action": "unknown",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
           }
-        ]
+        ],
+        "tabs": [
+          {
+            "label": "0",
+            "id": "uhc-tickets-badge",
+            "discoveredAt": "2025-12-12T00:23:17.922Z"
+          }
+        ],
+        "inputs": []
       },
-      "modes": {
-        "quick": {
-          "attendances": 50,
-          "days": 3,
-          "description": "Test rápido para desarrollo"
-        },
-        "normal": {
-          "attendances": 200,
-          "days": 7,
-          "description": "Test estándar para CI/CD"
-        },
-        "full": {
-          "attendances": 1000,
-          "days": 30,
-          "description": "Test completo para QA/Production"
-        }
-      },
-      "metrics": [
-        "Total fichajes procesados",
-        "Check-ins/Check-outs exitosos",
-        "Llegadas tardías (aprobadas/rechazadas)",
-        "Intentos biométricos por fichaje",
-        "Fichajes por segundo (performance)",
-        "Health Score (0-100)"
-      ],
-      "lastBrainUpdate": "2025-12-14T12:00:00.000Z"
+      "lastBrainUpdate": "2025-12-12T13:41:13.938Z",
+      "autoHealedGaps": 6
     }
   ],
   "categories": {
@@ -3560,5 +3653,6 @@
       "description": "Pruebas automatizadas, stress tests e integración",
       "color": "#795548"
     }
-  }
+  },
+  "last_sync": "2025-12-16T02:40:42.311Z"
 }

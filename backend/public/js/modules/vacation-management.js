@@ -94,7 +94,15 @@ const VacationAPI = window.VacationAPI = {
     deleteLicense: (id) => VacationAPI.request(`/extraordinary-licenses/${id}`, { method: 'DELETE' }),
 
     // Requests
-    getRequests: (params = '') => VacationAPI.request(`/requests${params}`),
+    // NOTA: Si window.miEspacioSelfView está activo, agregar selfView=true
+    getRequests: (params = '') => {
+        // Si viene de Mi Espacio, forzar vista de datos propios
+        if (window.miEspacioSelfView) {
+            const separator = params.includes('?') ? '&' : '?';
+            params += `${separator}selfView=true`;
+        }
+        return VacationAPI.request(`/requests${params}`);
+    },
     getRequest: (id) => VacationAPI.request(`/requests/${id}`),
     createRequest: (data) => VacationAPI.request('/requests', { method: 'POST', body: JSON.stringify(data) }),
     updateRequest: (id, data) => VacationAPI.request(`/requests/${id}`, { method: 'PUT', body: JSON.stringify(data) }),

@@ -11,6 +11,7 @@
 
 const { Pool } = require('pg');
 const cron = require('node-cron');
+const NotificationRecipientResolver = require('./NotificationRecipientResolver');
 
 class DocumentExpirationNotificationService {
     constructor() {
@@ -301,33 +302,36 @@ class DocumentExpirationNotificationService {
     }
 
     /**
-     * Obtener usuarios de RRHH por posición organizacional (NO por rol)
+     * 🆕 ACTUALIZADO: Obtener usuarios de RRHH usando NotificationRecipientResolver (SSOT)
+     * Ya no usa query directa - delega al servicio centralizado
      */
     async getHRAdmins(client, companyId) {
-        const result = await client.query(`
-            SELECT u.user_id, u.first_name || ' ' || u.last_name as name, u.email,
-                   op.position_name, op.position_code
-            FROM users u
-            JOIN organizational_positions op ON u.organizational_position_id = op.id
-            WHERE u.company_id = $1
-              AND u.is_active = true
-              AND (
-                UPPER(op.position_code) LIKE '%RRHH%'
-                OR UPPER(op.position_code) LIKE '%RH%'
-                OR UPPER(op.position_code) LIKE '%HR%'
-                OR UPPER(op.position_name) LIKE '%RECURSOS HUMANOS%'
-              )
-            ORDER BY op.level_order ASC
-            LIMIT 5
-        `, [companyId]);
+        try {
+            // Usar NotificationRecipientResolver como SSOT
+            const recipients = await NotificationRecipientResolver.resolveRRHH(companyId, {
+                maxRecipients: 5,
+                includeUserDetails: true,
+                fallbackToAdmins: true
+            });
 
-        if (result.rows.length === 0) {
-            console.log(`[DOC-EXPIRATION] No se encontró RRHH por posición para empresa ${companyId}`);
-        } else {
-            console.log(`[DOC-EXPIRATION] ${result.rows.length} usuarios RRHH encontrados por posición`);
+            if (recipients.length === 0) {
+                console.log(`[DOC-EXPIRATION] No se encontró RRHH via NotificationRecipientResolver para empresa ${companyId}`);
+            } else {
+                console.log(`[DOC-EXPIRATION] ${recipients.length} usuarios RRHH encontrados via NotificationRecipientResolver`);
+            }
+
+            // Mapear al formato esperado
+            return recipients.map(r => ({
+                user_id: r.userId,
+                name: r.name || '',
+                email: r.email,
+                position_name: 'RRHH',
+                position_code: 'RRHH'
+            }));
+        } catch (error) {
+            console.error(`[DOC-EXPIRATION] Error obteniendo RRHH via NotificationRecipientResolver:`, error);
+            return [];
         }
-
-        return result.rows;
     }
 
     /**

@@ -16,6 +16,7 @@
 
 const { sequelize } = require('../config/database');
 const cron = require('node-cron');
+const NotificationRecipientResolver = require('./NotificationRecipientResolver');
 
 class SLAEscalationService {
     constructor() {
@@ -714,6 +715,49 @@ El sistema ha registrado este incumplimiento y se están tomando las acciones co
         } catch (error) {
             console.error('❌ [SLA-ESCALATION] Error obteniendo SLA score:', error);
             throw error;
+        }
+    }
+
+    /**
+     * 🆕 NUEVO: Resolver destinatarios de escalamiento usando SSOT
+     * Cuando el target es 'rrhh', usa NotificationRecipientResolver
+     * @param {string} escalateTo - Tipo de destino ('supervisor', 'rrhh', 'gerencia')
+     * @param {number} companyId - ID de la empresa
+     * @returns {Promise<Array>} - Lista de usuarios destino [{userId, name, email}]
+     */
+    async resolveEscalationTarget(escalateTo, companyId) {
+        try {
+            // Para RRHH, usar NotificationRecipientResolver como SSOT
+            if (escalateTo === 'rrhh' || escalateTo === 'RRHH' || escalateTo === 'hr') {
+                const recipients = await NotificationRecipientResolver.resolveRRHH(companyId, {
+                    maxRecipients: 5,
+                    includeUserDetails: true,
+                    fallbackToAdmins: true
+                });
+
+                console.log(`[SLA-ESCALATION] Resueltos ${recipients.length} destinatarios RRHH via NotificationRecipientResolver`);
+                return recipients;
+            }
+
+            // Para Legal, usar NotificationRecipientResolver
+            if (escalateTo === 'legal' || escalateTo === 'Legal') {
+                const recipients = await NotificationRecipientResolver.resolve(companyId, 'Legal', {
+                    maxRecipients: 5,
+                    includeUserDetails: true,
+                    fallbackToAdmins: true
+                });
+
+                console.log(`[SLA-ESCALATION] Resueltos ${recipients.length} destinatarios Legal via NotificationRecipientResolver`);
+                return recipients;
+            }
+
+            // Para otros tipos (supervisor, gerencia), retornar vacío (se resuelven por jerarquía)
+            console.log(`[SLA-ESCALATION] Tipo de escalamiento "${escalateTo}" se resuelve por jerarquía organizacional`);
+            return [];
+
+        } catch (error) {
+            console.error(`❌ [SLA-ESCALATION] Error resolviendo escalamiento a "${escalateTo}":`, error);
+            return [];
         }
     }
 

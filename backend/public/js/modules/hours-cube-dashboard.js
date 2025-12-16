@@ -85,6 +85,9 @@ class HoursCubeDashboard {
                         <button class="hcd-tab active" data-tab="resumen">
                             <i class="fas fa-chart-pie"></i> Resumen General
                         </button>
+                        <button class="hcd-tab" data-tab="multinivel">
+                            <i class="fas fa-layer-group"></i> Métricas Multi-Nivel
+                        </button>
                         <button class="hcd-tab" data-tab="cubo">
                             <i class="fas fa-cube"></i> Cubo de Horas
                         </button>
@@ -98,6 +101,7 @@ class HoursCubeDashboard {
 
                     <!-- Contenido de tabs -->
                     <div class="hcd-tab-content active" id="tab-resumen"></div>
+                    <div class="hcd-tab-content" id="tab-multinivel"></div>
                     <div class="hcd-tab-content" id="tab-cubo"></div>
                     <div class="hcd-tab-content" id="tab-reposicion"></div>
                     <div class="hcd-tab-content" id="tab-vacaciones"></div>
@@ -734,6 +738,7 @@ class HoursCubeDashboard {
 
         this.renderKPIs();
         this.renderResumenTab();
+        this.renderMultiNivelTab();
         this.renderCuboTab();
         this.renderReposicionTab();
         this.renderVacacionesTab();
@@ -920,6 +925,406 @@ class HoursCubeDashboard {
                 </div>
             `;
         }).join('');
+    }
+
+    // ========================================================================
+    // MÉTRICAS MULTI-NIVEL TAB (NEW)
+    // ========================================================================
+    async renderMultiNivelTab() {
+        const container = document.getElementById('tab-multinivel');
+
+        container.innerHTML = `
+            <div class="hcd-loading" style="padding: 40px; text-align: center;">
+                <div class="hcd-spinner"></div>
+                <p>Cargando métricas multi-nivel...</p>
+            </div>
+        `;
+
+        try {
+            const startDate = document.getElementById('hcd-start-date')?.value || this.getDefaultStartDate();
+            const endDate = document.getElementById('hcd-end-date')?.value || this.getDefaultEndDate();
+
+            const response = await fetch(
+                `${this.options.apiBase}/${this.options.companyId}/multi-level-metrics?startDate=${startDate}&endDate=${endDate}`,
+                { headers: { 'Authorization': `Bearer ${this.getAuthToken()}` } }
+            );
+
+            if (!response.ok) throw new Error('Error cargando métricas');
+            const result = await response.json();
+
+            if (!result.success) throw new Error(result.error || 'Error desconocido');
+
+            this.multiLevelData = result;
+            this.renderMultiNivelContent(result);
+
+        } catch (error) {
+            container.innerHTML = `
+                <div class="hcd-alert critical">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Error cargando métricas</strong>
+                        <p>${error.message}</p>
+                    </div>
+                </div>
+                <button class="hcd-btn" onclick="hoursCubeDashboard.renderMultiNivelTab()">
+                    <i class="fas fa-redo"></i> Reintentar
+                </button>
+            `;
+        }
+    }
+
+    renderMultiNivelContent(data) {
+        const container = document.getElementById('tab-multinivel');
+        const metrics = data.metrics || {};
+        const company = metrics.company || {};
+
+        container.innerHTML = `
+            <h3 class="hcd-section-title">
+                <i class="fas fa-layer-group"></i> Métricas Multi-Nivel
+            </h3>
+            <p style="color: #718096; margin-bottom: 20px;">
+                Análisis de horas normales y extras en todos los niveles de la organización.
+                <br><small>Período: ${data.period?.startDate} al ${data.period?.endDate} | ${data.recordsProcessed} registros procesados</small>
+            </p>
+
+            <!-- KPIs de Empresa -->
+            <div class="hcd-metrics-grid" style="margin-bottom: 30px;">
+                <div class="hcd-metric-card">
+                    <div class="hcd-metric-title">📊 Total Horas</div>
+                    <div class="hcd-metric-value">${this.formatNumber(company.totalHours || 0)}</div>
+                </div>
+                <div class="hcd-metric-card">
+                    <div class="hcd-metric-title">✅ Horas Normales</div>
+                    <div class="hcd-metric-value" style="color: #48bb78;">
+                        ${this.formatNumber(company.normalHours || 0)}
+                        <small style="font-size: 0.5em; color: #718096;">(${company.percentages?.normalPct || 0}%)</small>
+                    </div>
+                </div>
+                <div class="hcd-metric-card">
+                    <div class="hcd-metric-title">⏰ Horas Extra</div>
+                    <div class="hcd-metric-value" style="color: #f59e0b;">
+                        ${this.formatNumber(company.overtimeHours || 0)}
+                        <small style="font-size: 0.5em; color: #718096;">(${company.percentages?.overtimePct || 0}%)</small>
+                    </div>
+                </div>
+                <div class="hcd-metric-card">
+                    <div class="hcd-metric-title">📈 Eficiencia</div>
+                    <div class="hcd-metric-value" style="color: ${company.efficiency > 90 ? '#48bb78' : company.efficiency > 70 ? '#ecc94b' : '#fc8181'};">
+                        ${company.efficiency || 0}%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selector de nivel -->
+            <div class="hcd-level-selector" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="hcd-level-btn active" data-level="branch" onclick="hoursCubeDashboard.showMultiLevel('branch')">
+                    <i class="fas fa-building"></i> Por Sucursal
+                </button>
+                <button class="hcd-level-btn" data-level="department" onclick="hoursCubeDashboard.showMultiLevel('department')">
+                    <i class="fas fa-sitemap"></i> Por Departamento
+                </button>
+                <button class="hcd-level-btn" data-level="sector" onclick="hoursCubeDashboard.showMultiLevel('sector')">
+                    <i class="fas fa-th"></i> Por Sector
+                </button>
+                <button class="hcd-level-btn" data-level="shift" onclick="hoursCubeDashboard.showMultiLevel('shift')">
+                    <i class="fas fa-clock"></i> Por Turno
+                </button>
+                <button class="hcd-level-btn" data-level="employee" onclick="hoursCubeDashboard.showMultiLevel('employee')">
+                    <i class="fas fa-users"></i> Por Empleado
+                </button>
+            </div>
+
+            <div id="hcd-multilevel-content">
+                ${this.renderMultiLevelSection(metrics.byBranch, 'branch')}
+            </div>
+        `;
+
+        this.addMultiLevelStyles();
+    }
+
+    showMultiLevel(level) {
+        // Update active button
+        document.querySelectorAll('.hcd-level-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.level === level);
+        });
+
+        const content = document.getElementById('hcd-multilevel-content');
+        const metrics = this.multiLevelData?.metrics || {};
+
+        switch(level) {
+            case 'branch':
+                content.innerHTML = this.renderMultiLevelSection(metrics.byBranch, 'branch');
+                break;
+            case 'department':
+                content.innerHTML = this.renderMultiLevelSection(metrics.byDepartment, 'department');
+                break;
+            case 'sector':
+                content.innerHTML = this.renderMultiLevelSection(metrics.bySector, 'sector');
+                break;
+            case 'shift':
+                content.innerHTML = this.renderMultiLevelShiftSection(metrics.byShift);
+                break;
+            case 'employee':
+                content.innerHTML = this.renderMultiLevelEmployeeSection(metrics.byEmployee);
+                break;
+        }
+    }
+
+    renderMultiLevelSection(items, type) {
+        if (!items || items.length === 0) {
+            return '<p style="color: #a0aec0; text-align: center; padding: 20px;">Sin datos disponibles</p>';
+        }
+
+        const typeNames = {
+            branch: 'Sucursal',
+            department: 'Departamento',
+            sector: 'Sector'
+        };
+
+        return `
+            <div class="hcd-grid">
+                ${items.map(item => `
+                    <div class="hcd-card hcd-multilevel-card">
+                        <h4 class="hcd-card-title">${item.name || 'Sin nombre'}</h4>
+                        <div class="hcd-multilevel-stats">
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">Total Horas:</span>
+                                <span class="hcd-stat-value">${this.formatNumber(item.totalHours)} h</span>
+                            </div>
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">Normales:</span>
+                                <span class="hcd-stat-value" style="color: #48bb78;">
+                                    ${this.formatNumber(item.normalHours)} h (${item.percentages?.normalPct || 0}%)
+                                </span>
+                            </div>
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">Extras:</span>
+                                <span class="hcd-stat-value" style="color: #f59e0b;">
+                                    ${this.formatNumber(item.overtimeHours)} h (${item.percentages?.overtimePct || 0}%)
+                                </span>
+                            </div>
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">Empleados:</span>
+                                <span class="hcd-stat-value">${item.uniqueEmployees || 0}</span>
+                            </div>
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">% Empresa:</span>
+                                <span class="hcd-stat-value">${item.pctOfCompany || 0}%</span>
+                            </div>
+                        </div>
+                        <div class="hcd-progress-bar" style="margin-top: 10px;">
+                            <div class="hcd-progress-fill" style="width: ${item.percentages?.normalPct || 0}%; background: #48bb78;"></div>
+                            <div class="hcd-progress-fill" style="width: ${item.percentages?.overtimePct || 0}%; background: #f59e0b;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75em; color: #a0aec0; margin-top: 4px;">
+                            <span>Normal ${item.percentages?.normalPct || 0}%</span>
+                            <span>Extra ${item.percentages?.overtimePct || 0}%</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    renderMultiLevelShiftSection(items) {
+        if (!items || items.length === 0) {
+            return '<p style="color: #a0aec0; text-align: center; padding: 20px;">Sin datos de turnos</p>';
+        }
+
+        return `
+            <div class="hcd-grid">
+                ${items.map(item => `
+                    <div class="hcd-card hcd-multilevel-card hcd-shift-card">
+                        <h4 class="hcd-card-title">
+                            <i class="fas fa-clock"></i> ${item.name || 'Sin turno'}
+                            ${item.schedule ? `<small style="display: block; font-weight: normal; color: #718096; font-size: 0.75em;">${item.schedule}</small>` : ''}
+                        </h4>
+
+                        ${item.configuredRates ? `
+                            <div class="hcd-shift-rates" style="background: #f7fafc; padding: 10px; border-radius: 6px; margin-bottom: 12px;">
+                                <small style="color: #718096; display: block; margin-bottom: 6px;">Multiplicadores Configurados:</small>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <span class="hcd-rate-badge" style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 0.75em;">
+                                        Normal: x${item.configuredRates.normal || 1}
+                                    </span>
+                                    <span class="hcd-rate-badge" style="background: #fef3c7; padding: 2px 8px; border-radius: 4px; font-size: 0.75em;">
+                                        Extra: x${item.configuredRates.overtime || 1.5}
+                                    </span>
+                                    <span class="hcd-rate-badge" style="background: #e0e7ff; padding: 2px 8px; border-radius: 4px; font-size: 0.75em;">
+                                        Finde: x${item.configuredRates.weekend || 1.5}
+                                    </span>
+                                    <span class="hcd-rate-badge" style="background: #fce7f3; padding: 2px 8px; border-radius: 4px; font-size: 0.75em;">
+                                        Feriado: x${item.configuredRates.holiday || 2}
+                                    </span>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="hcd-multilevel-stats">
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">Total Horas:</span>
+                                <span class="hcd-stat-value">${this.formatNumber(item.totalHours)} h</span>
+                            </div>
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">Normales:</span>
+                                <span class="hcd-stat-value" style="color: #48bb78;">
+                                    ${this.formatNumber(item.normalHours)} h (${item.percentages?.normalPct || 0}%)
+                                </span>
+                            </div>
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">Extras:</span>
+                                <span class="hcd-stat-value" style="color: #f59e0b;">
+                                    ${this.formatNumber(item.overtimeHours)} h (${item.percentages?.overtimePct || 0}%)
+                                </span>
+                            </div>
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">Costo Extra (ponderado):</span>
+                                <span class="hcd-stat-value" style="color: #fc8181;">
+                                    ${this.formatNumber(item.overtimeCost || 0)} u
+                                </span>
+                            </div>
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">Empleados:</span>
+                                <span class="hcd-stat-value">${item.uniqueEmployees || 0}</span>
+                            </div>
+                            <div class="hcd-stat-row">
+                                <span class="hcd-stat-label">% Empresa:</span>
+                                <span class="hcd-stat-value">${item.pctOfCompany || 0}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    renderMultiLevelEmployeeSection(items) {
+        if (!items || items.length === 0) {
+            return '<p style="color: #a0aec0; text-align: center; padding: 20px;">Sin datos de empleados</p>';
+        }
+
+        // Limitamos a 20 para no sobrecargar
+        const displayItems = items.slice(0, 20);
+
+        return `
+            <div style="overflow-x: auto;">
+                <table class="hcd-employee-table" style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background: #f7fafc; text-align: left;">
+                            <th style="padding: 12px 8px;">Empleado</th>
+                            <th style="padding: 12px 8px;">Legajo</th>
+                            <th style="padding: 12px 8px;">Turno</th>
+                            <th style="padding: 12px 8px; text-align: right;">Total h</th>
+                            <th style="padding: 12px 8px; text-align: right;">Normal h</th>
+                            <th style="padding: 12px 8px; text-align: right;">Extra h</th>
+                            <th style="padding: 12px 8px; text-align: right;">% Extra</th>
+                            <th style="padding: 12px 8px; text-align: right;">Eficiencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${displayItems.map(emp => `
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 10px 8px;">
+                                    <strong>${emp.name || 'Sin nombre'}</strong>
+                                    ${emp.departmentName ? `<br><small style="color: #718096;">${emp.departmentName}</small>` : ''}
+                                </td>
+                                <td style="padding: 10px 8px; font-family: monospace;">${emp.legajo || '-'}</td>
+                                <td style="padding: 10px 8px;">${emp.shiftName || 'Sin turno'}</td>
+                                <td style="padding: 10px 8px; text-align: right;">${this.formatNumber(emp.totalHours)}</td>
+                                <td style="padding: 10px 8px; text-align: right; color: #48bb78;">${this.formatNumber(emp.normalHours)}</td>
+                                <td style="padding: 10px 8px; text-align: right; color: #f59e0b;">${this.formatNumber(emp.overtimeHours)}</td>
+                                <td style="padding: 10px 8px; text-align: right;">
+                                    <span style="background: ${emp.percentages?.overtimePct > 20 ? '#fed7d7' : emp.percentages?.overtimePct > 10 ? '#fef3c7' : '#c6f6d5'}; padding: 2px 8px; border-radius: 4px;">
+                                        ${emp.percentages?.overtimePct || 0}%
+                                    </span>
+                                </td>
+                                <td style="padding: 10px 8px; text-align: right;">
+                                    <span style="color: ${emp.efficiency > 90 ? '#48bb78' : emp.efficiency > 70 ? '#ecc94b' : '#fc8181'};">
+                                        ${emp.efficiency || 0}%
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${items.length > 20 ? `<p style="text-align: center; color: #718096; margin-top: 10px;">Mostrando 20 de ${items.length} empleados</p>` : ''}
+            </div>
+        `;
+    }
+
+    addMultiLevelStyles() {
+        if (document.getElementById('hcd-multilevel-styles')) return;
+
+        const styles = document.createElement('style');
+        styles.id = 'hcd-multilevel-styles';
+        styles.textContent = `
+            .hcd-level-selector {
+                padding: 15px;
+                background: #f7fafc;
+                border-radius: 8px;
+            }
+
+            .hcd-level-btn {
+                padding: 10px 16px;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                background: white;
+                cursor: pointer;
+                font-size: 0.9em;
+                transition: all 0.2s;
+            }
+
+            .hcd-level-btn:hover {
+                border-color: #667eea;
+                background: #f0f4ff;
+            }
+
+            .hcd-level-btn.active {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                border-color: transparent;
+            }
+
+            .hcd-multilevel-card {
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+
+            .hcd-multilevel-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            }
+
+            .hcd-multilevel-stats {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .hcd-stat-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .hcd-stat-label {
+                color: #718096;
+                font-size: 0.85em;
+            }
+
+            .hcd-stat-value {
+                font-weight: 600;
+                font-size: 0.95em;
+            }
+
+            .hcd-employee-table tr:hover {
+                background: #f7fafc;
+            }
+
+            .hcd-shift-card {
+                border-top: 3px solid #667eea;
+            }
+        `;
+        document.head.appendChild(styles);
     }
 
     renderCuboTab() {

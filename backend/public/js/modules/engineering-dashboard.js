@@ -184,6 +184,50 @@ const EngineeringDashboard = {
     try {
       // RENDERIZAR INMEDIATAMENTE sin setTimeout
       container.innerHTML = `
+        <!-- CSS para tabs claros del Engineering Dashboard -->
+        <style>
+          .navigation-tabs {
+            display: flex;
+            background: #f8f9fa !important;
+            border-radius: 8px;
+            overflow-x: auto;
+            padding: 5px;
+            margin-bottom: 20px;
+            gap: 5px;
+          }
+          .navigation-tabs .nav-tab {
+            flex: 0 0 auto;
+            min-width: 140px;
+            padding: 12px 20px !important;
+            background: white !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 6px !important;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #374151 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+          }
+          .navigation-tabs .nav-tab:hover {
+            background: #f3f4f6 !important;
+            border-color: #3b82f6 !important;
+          }
+          .navigation-tabs .nav-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+            color: white !important;
+            border-color: #3b82f6 !important;
+          }
+          .navigation-tabs .tab-icon {
+            font-size: 1.2em;
+          }
+          .navigation-tabs .tab-label {
+            font-size: 0.9rem;
+          }
+        </style>
+
         <div style="padding: 20px !important; background: white !important; min-height: 600px !important; position: relative !important;">
           ${!this.metadata || !this.stats ? `
             <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0;">
@@ -388,7 +432,8 @@ const EngineeringDashboard = {
       { id: 'critical-path', icon: '🎯', label: 'Camino Crítico (CPM)' },
       { id: 'organigrama', icon: '🏢', label: 'Organigrama' },
       { id: 'database', icon: '🗄️', label: 'Base de Datos' },
-      { id: 'workflows', icon: '🔄', label: 'Workflows' }
+      { id: 'workflows', icon: '🔄', label: 'Workflows' },
+      { id: 'auto-healing', icon: '🔧', label: 'Auto-Healing' }
     ];
 
     return `
@@ -420,7 +465,7 @@ const EngineeringDashboard = {
           <div id="commercial-modules-dynamic" style="padding: 20px;">
             <div style="text-align: center; padding: 50px;">
               <div style="font-size: 64px; margin-bottom: 20px;">💰</div>
-              <h2 style="color: #1f2937;">Cargando Módulos Comerciales...</h2>
+              <h2 style="color: #374151;">Cargando Módulos Comerciales...</h2>
               <p style="color: #6b7280;">Obteniendo datos del Single Source of Truth</p>
             </div>
           </div>
@@ -442,7 +487,7 @@ const EngineeringDashboard = {
           <div id="critical-path-dynamic" style="padding: 20px;">
             <div style="text-align: center; padding: 50px;">
               <div style="font-size: 64px; margin-bottom: 20px;">🎯</div>
-              <h2 style="color: #1f2937;">Cargando Camino Crítico...</h2>
+              <h2 style="color: #374151;">Cargando Camino Crítico...</h2>
               <p style="color: #6b7280;">Analizando tareas y calculando rutas críticas</p>
             </div>
           </div>
@@ -454,6 +499,22 @@ const EngineeringDashboard = {
       case 'workflows':
         setTimeout(() => this.loadWorkflowsFromBrain(), 100);
         return this.renderWorkflows();
+      case 'auto-healing':
+        // Inicializar Auto-Healing Dashboard si está disponible
+        setTimeout(() => {
+          if (window.AutoHealingDashboard && typeof window.AutoHealingDashboard.render === 'function') {
+            window.AutoHealingDashboard.render();
+          }
+        }, 100);
+        return `
+          <div id="auto-healing-container" style="padding: 20px;">
+            <div style="text-align: center; padding: 50px;">
+              <div style="font-size: 64px; margin-bottom: 20px;">🔧</div>
+              <h2 style="color: #374151;">Sistema de Auto-Healing</h2>
+              <p style="color: #6b7280;">Cargando dashboard...</p>
+            </div>
+          </div>
+        `;
       default:
         return '<p>Vista no encontrada</p>';
     }
@@ -470,7 +531,7 @@ const EngineeringDashboard = {
     return `
       <div class="backend-files-container" style="padding: 20px;">
         <div style="margin-bottom: 30px;">
-          <h2 style="margin: 0 0 10px 0; color: #1f2937; display: flex; align-items: center; gap: 10px;">
+          <h2 style="margin: 0 0 10px 0; color: #374151; display: flex; align-items: center; gap: 10px;">
             <span>⚙️</span>
             <span>Archivos Backend</span>
           </h2>
@@ -565,7 +626,7 @@ const EngineeringDashboard = {
     return `
       <div class="frontend-files-container" style="padding: 20px;">
         <div style="margin-bottom: 30px;">
-          <h2 style="margin: 0 0 10px 0; color: #1f2937; display: flex; align-items: center; gap: 10px;">
+          <h2 style="margin: 0 0 10px 0; color: #374151; display: flex; align-items: center; gap: 10px;">
             <span>🎨</span>
             <span>Archivos Frontend</span>
           </h2>
@@ -1253,7 +1314,7 @@ const EngineeringDashboard = {
                       <div class="task-item ${task.done ? 'done' : 'pending'}" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 6px; background: ${task.done ? '#f0fdf4' : 'white'}; border-radius: 6px; border-left: 3px solid ${task.done ? '#22c55e' : '#f59e0b'}; transition: all 0.2s;">
                         <span class="task-checkbox" style="font-size: 16px;">${task.done ? '✅' : '⏳'}</span>
                         <span class="task-id" style="font-weight: 600; color: ${task.done ? '#166534' : '#92400e'}; min-width: 60px;">${task.id}</span>
-                        <span class="task-name" style="flex: 1; ${task.done ? 'text-decoration: line-through; color: #6b7280;' : 'color: #1f2937;'}">${task.name}</span>
+                        <span class="task-name" style="flex: 1; ${task.done ? 'text-decoration: line-through; color: #6b7280;' : 'color: #374151;'}">${task.name}</span>
                         ${task.assignedTo ? `<span style="font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 10px;">👤 ${task.assignedTo}</span>` : ''}
                         ${task.completedDate ? `<span style="font-size: 11px; color: #059669;">📅 ${task.completedDate}</span>` : ''}
                       </div>
@@ -1310,7 +1371,7 @@ const EngineeringDashboard = {
     return `
       <div class="database-container" style="padding: 20px;">
         <div style="margin-bottom: 30px;">
-          <h2 style="margin: 0 0 10px 0; color: #1f2937; display: flex; align-items: center; gap: 10px;">
+          <h2 style="margin: 0 0 10px 0; color: #374151; display: flex; align-items: center; gap: 10px;">
             <span>🗄️</span>
             <span>Base de Datos</span>
           </h2>
@@ -1370,7 +1431,7 @@ const EngineeringDashboard = {
                 <div style="display: flex; align-items: center; gap: 12px;">
                   <span style="font-size: 20px;">📋</span>
                   <div>
-                    <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">${tableName}</h3>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #374151;">${tableName}</h3>
                     <span style="font-size: 12px; color: #6b7280;">${table.fields?.length || 0} campos</span>
                   </div>
                 </div>
@@ -1387,7 +1448,7 @@ const EngineeringDashboard = {
                   <div class="db-field-row" style="display: flex; align-items: flex-start; gap: 15px; padding: 12px 20px; border-bottom: 1px solid #f3f4f6; ${idx % 2 === 0 ? 'background: #fafafa;' : 'background: white;'}">
                     <!-- Nombre y tipo -->
                     <div style="flex: 0 0 200px;">
-                      <div style="font-weight: 600; color: #1f2937; font-size: 14px;">${field.name}</div>
+                      <div style="font-weight: 600; color: #374151; font-size: 14px;">${field.name}</div>
                       <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">
                         <span style="background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${field.type}</span>
                         ${field.nullable === false ? '<span style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">NOT NULL</span>' : ''}
@@ -2762,7 +2823,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
         <div class="critical-path-container" style="padding: 20px;">
           <!-- Header -->
           <div class="cp-header" style="margin-bottom: 30px;">
-            <h2 style="margin: 0 0 10px 0; color: #1f2937; display: flex; align-items: center; gap: 10px;">
+            <h2 style="margin: 0 0 10px 0; color: #374151; display: flex; align-items: center; gap: 10px;">
               <span>🎯</span>
               <span>Camino Crítico - Programación CPM/PERT + Coordinación</span>
             </h2>
@@ -2773,7 +2834,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
           <!-- Panel de Sesiones Activas -->
           ${sessions.length > 0 ? `
-            <div class="cp-sessions" style="margin-bottom: 30px; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border-radius: 12px; padding: 20px; color: white;">
+            <div class="cp-sessions" style="margin-bottom: 30px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 20px; border: 1px solid #bfdbfe;">
               <h3 style="margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px; font-size: 18px;">
                 <span>👥</span>
                 <span>Equipo Activo (${sessions.length} sesiones)</span>
@@ -2892,16 +2953,16 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
                           <span style="background: #dbeafe; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;" title="${task.phaseKey}">${phase.name || task.phaseKey}</span>
                           ${roadmapTask.assignedTo && !isAssigned ? `<span style="background: #f3e8ff; color: #7c3aed; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">👤 ${roadmapTask.assignedTo}</span>` : ''}
                         </div>
-                        <h4 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px; font-weight: 600;">${task.id}: ${task.name}</h4>
+                        <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 16px; font-weight: 600;">${task.id}: ${task.name}</h4>
                         ${phase.description ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #6b7280; line-height: 1.5; padding: 8px 12px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #3b82f6;">📋 <strong>Fase:</strong> ${phase.description}</p>` : ''}
                         ${roadmapTask.estimatedEffort ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #059669; font-weight: 500;">⏱️ Esfuerzo estimado: ${roadmapTask.estimatedEffort}</p>` : ''}
                         ${roadmapTask.dependencies?.length > 0 ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #f59e0b;">🔗 Depende de: ${roadmapTask.dependencies.join(', ')}</p>` : ''}
                         <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #374151 !important; background: #f8fafc; padding: 10px 12px; border-radius: 6px; margin-top: 10px;">
-                          <span title="Duración estimada" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">📅 Duración:</strong> ${task.duration} días</span>
-                          <span title="Earliest Start" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">ES:</strong> ${task.es}</span>
-                          <span title="Earliest Finish" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">EF:</strong> ${task.ef}</span>
-                          <span title="Latest Start" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">LS:</strong> ${task.ls}</span>
-                          <span title="Latest Finish" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">LF:</strong> ${task.lf}</span>
+                          <span title="Duración estimada" style="color: #374151 !important;"><strong style="color: #374151 !important;">📅 Duración:</strong> ${task.duration} días</span>
+                          <span title="Earliest Start" style="color: #374151 !important;"><strong style="color: #374151 !important;">ES:</strong> ${task.es}</span>
+                          <span title="Earliest Finish" style="color: #374151 !important;"><strong style="color: #374151 !important;">EF:</strong> ${task.ef}</span>
+                          <span title="Latest Start" style="color: #374151 !important;"><strong style="color: #374151 !important;">LS:</strong> ${task.ls}</span>
+                          <span title="Latest Finish" style="color: #374151 !important;"><strong style="color: #374151 !important;">LF:</strong> ${task.lf}</span>
                           <span title="Slack/Float" style="color: #dc2626 !important; font-weight: 600;"><strong style="color: #dc2626 !important;">⏱️ Slack:</strong> ${task.slack} días</span>
                           <span title="Prioridad" style="color: #7c3aed !important; font-weight: 600;"><strong style="color: #7c3aed !important;">🎯 Prioridad:</strong> ${task.priority}/10</span>
                         </div>
@@ -2980,16 +3041,16 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
                           <span style="background: #f3f4f6; color: #6b7280; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;" title="${task.phaseKey}">${phase.name || task.phaseKey}</span>
                           ${roadmapTask.assignedTo && !isAssigned ? `<span style="background: #f3e8ff; color: #7c3aed; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">👤 ${roadmapTask.assignedTo}</span>` : ''}
                         </div>
-                        <h4 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px; font-weight: 600;">${task.id}: ${task.name}</h4>
+                        <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 16px; font-weight: 600;">${task.id}: ${task.name}</h4>
                         ${phase.description ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #6b7280; line-height: 1.5; padding: 8px 12px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #10b981;">📋 <strong>Fase:</strong> ${phase.description}</p>` : ''}
                         ${roadmapTask.estimatedEffort ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #059669; font-weight: 500;">⏱️ Esfuerzo estimado: ${roadmapTask.estimatedEffort}</p>` : ''}
                         ${roadmapTask.dependencies?.length > 0 ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #f59e0b;">🔗 Depende de: ${roadmapTask.dependencies.join(', ')}</p>` : ''}
                         <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #374151 !important; background: #f8fafc; padding: 10px 12px; border-radius: 6px; margin-top: 10px;">
-                          <span title="Duración estimada" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">📅 Duración:</strong> ${task.duration} días</span>
-                          <span title="Earliest Start" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">ES:</strong> ${task.es}</span>
-                          <span title="Earliest Finish" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">EF:</strong> ${task.ef}</span>
-                          <span title="Latest Start" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">LS:</strong> ${task.ls}</span>
-                          <span title="Latest Finish" style="color: #374151 !important;"><strong style="color: #1f2937 !important;">LF:</strong> ${task.lf}</span>
+                          <span title="Duración estimada" style="color: #374151 !important;"><strong style="color: #374151 !important;">📅 Duración:</strong> ${task.duration} días</span>
+                          <span title="Earliest Start" style="color: #374151 !important;"><strong style="color: #374151 !important;">ES:</strong> ${task.es}</span>
+                          <span title="Earliest Finish" style="color: #374151 !important;"><strong style="color: #374151 !important;">EF:</strong> ${task.ef}</span>
+                          <span title="Latest Start" style="color: #374151 !important;"><strong style="color: #374151 !important;">LS:</strong> ${task.ls}</span>
+                          <span title="Latest Finish" style="color: #374151 !important;"><strong style="color: #374151 !important;">LF:</strong> ${task.lf}</span>
                           <span title="Slack/Float" style="color: #10b981 !important; font-weight: 600;"><strong style="color: #10b981 !important;">⏱️ Slack:</strong> ${task.slack} días</span>
                           <span title="Prioridad" style="color: #7c3aed !important; font-weight: 600;"><strong style="color: #7c3aed !important;">🎯 Prioridad:</strong> ${task.priority}/10</span>
                         </div>
@@ -3027,7 +3088,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
           <!-- Análisis por Phases -->
           <div class="cp-section" style="margin-top: 40px;">
-            <h3 style="margin: 0 0 20px 0; color: #1f2937; display: flex; align-items: center; gap: 10px; font-size: 20px;">
+            <h3 style="margin: 0 0 20px 0; color: #374151; display: flex; align-items: center; gap: 10px; font-size: 20px;">
               <span>📊</span>
               <span>Análisis por Phases</span>
             </h3>
@@ -3040,7 +3101,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
                         ${phase.isCritical ? '<span style="background: #fee2e2; color: #dc2626; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">⚠️ PHASE CRÍTICA</span>' : ''}
                         <span style="background: ${phase.status === 'COMPLETED' ? '#d1fae5' : phase.status === 'IN_PROGRESS' ? '#dbeafe' : '#f3f4f6'}; color: ${phase.status === 'COMPLETED' ? '#065f46' : phase.status === 'IN_PROGRESS' ? '#1e40af' : '#374151'}; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">${phase.status}</span>
                       </div>
-                      <h4 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px; font-weight: 600;">${phase.name}</h4>
+                      <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 16px; font-weight: 600;">${phase.name}</h4>
                       <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #6b7280;">
                         <span><strong>Total Tareas:</strong> ${phase.totalTasks}</span>
                         <span><strong>✅ Completadas:</strong> ${phase.completedTasks}</span>
@@ -4035,9 +4096,13 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
   },
 
   /**
-   * Auto-refresh cada 5 minutos
+   * Auto-refresh DESACTIVADO - Solo carga al abrir el tab
    */
   startAutoRefresh() {
+    // ❌ AUTO-REFRESH DESACTIVADO - Se actualiza solo al abrir el módulo
+    // Razón: Resetea el Auto-Healing dashboard mientras está ejecutando
+
+    /* CÓDIGO ORIGINAL COMENTADO:
     // Polling para detectar cambios de otras sesiones (cada 30 segundos - no agresivo)
     this.lastMetadataChecksum = null;
 
@@ -4049,6 +4114,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     setInterval(() => {
       this.refresh();
     }, 5 * 60 * 1000);
+    */
   },
 
   /**
@@ -4414,7 +4480,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
                       <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 15px;">
                         <div>
                           <div style="font-size: 32px; margin-bottom: 8px;">${module.icon}</div>
-                          <h3 style="margin: 0; font-size: 18px; color: #1f2937; font-weight: 700;">${module.name}</h3>
+                          <h3 style="margin: 0; font-size: 18px; color: #374151; font-weight: 700;">${module.name}</h3>
                           ${module.nameAlt ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 2px;">${module.nameAlt}</div>` : ''}
                         </div>
                         ${module.isCore ? '<span style="background: #10b981; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">CORE</span>' : ''}
@@ -4495,7 +4561,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
           <!-- Contenido del subtab MANAGEMENT -->
           <div id="commercial-subtab-management" class="commercial-subtab-content" style="display: none;">
             <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-              <h2 style="margin: 0 0 10px 0; color: #1f2937; font-size: 24px;">✏️ Gestión Comercial</h2>
+              <h2 style="margin: 0 0 10px 0; color: #374151; font-size: 24px;">✏️ Gestión Comercial</h2>
               <p style="margin: 0 0 30px 0; color: #6b7280;">Editar precios por tier de empleados y gestionar bundles</p>
 
               <!-- Tabs internos: Precios | Bundles -->
@@ -4679,7 +4745,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
       container.innerHTML = `
         <div>
-          <h3 style="margin: 0 0 20px 0; color: #1f2937;">💰 Editor de Precios por Tier de Empleados</h3>
+          <h3 style="margin: 0 0 20px 0; color: #374151;">💰 Editor de Precios por Tier de Empleados</h3>
 
           <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 30px; border-radius: 4px;">
             <p style="margin: 0 0 8px 0; color: #1e40af; font-size: 14px; font-weight: 600;">
@@ -4730,7 +4796,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f3f4f6;">
           <div style="font-size: 32px;">${module.icon}</div>
           <div style="flex: 1;">
-            <h4 style="margin: 0 0 3px 0; color: #1f2937; font-size: 16px; font-weight: 600;">${module.name}</h4>
+            <h4 style="margin: 0 0 3px 0; color: #374151; font-size: 16px; font-weight: 600;">${module.name}</h4>
             <p style="margin: 0; color: #9ca3af; font-size: 12px;">${module.category.toUpperCase()}</p>
           </div>
         </div>
@@ -4864,7 +4930,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
 
       container.innerHTML = `
         <div>
-          <h3 style="margin: 0 0 20px 0; color: #1f2937;">🎁 Constructor de Bundles</h3>
+          <h3 style="margin: 0 0 20px 0; color: #374151;">🎁 Constructor de Bundles</h3>
 
           <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 30px; border-radius: 4px;">
             <p style="margin: 0; color: #1e40af; font-size: 14px;">
@@ -4892,7 +4958,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
                 <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px;">
                   <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
                     <div>
-                      <h5 style="margin: 0 0 5px 0; color: #1f2937; font-size: 18px;">${bundle.name}</h5>
+                      <h5 style="margin: 0 0 5px 0; color: #374151; font-size: 18px;">${bundle.name}</h5>
                       <p style="margin: 0; color: #6b7280; font-size: 14px;">${bundle.description || ''}</p>
                     </div>
                     <button
@@ -5016,7 +5082,7 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
         <div style="background: white; border-radius: 12px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
           <!-- Header -->
           <div style="padding: 24px; border-bottom: 2px solid #e5e7eb;">
-            <h3 style="margin: 0; color: #1f2937;">${isEdit ? '✏️ Editar Bundle' : '➕ Crear Nuevo Bundle'}</h3>
+            <h3 style="margin: 0; color: #374151;">${isEdit ? '✏️ Editar Bundle' : '➕ Crear Nuevo Bundle'}</h3>
           </div>
 
           <!-- Form -->

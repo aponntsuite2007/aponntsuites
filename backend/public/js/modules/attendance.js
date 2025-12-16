@@ -69,8 +69,35 @@ const AttendanceAPI = {
     },
 
     // Basic Attendance
-    getAttendances: () => AttendanceAPI.request(`${AttendanceAPI.baseUrl}`),
-    getStats: () => AttendanceAPI.request(`${AttendanceAPI.baseUrl}/stats`),
+    // NOTA: Si window.miEspacioSelfView está activo, pasar selfView=true
+    getAttendances: (params = {}) => {
+        const queryParams = new URLSearchParams();
+
+        // Si viene de Mi Espacio, forzar vista de datos propios
+        if (window.miEspacioSelfView) {
+            queryParams.append('selfView', 'true');
+        }
+
+        // Agregar otros parámetros si se proporcionan
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                queryParams.append(key, value);
+            }
+        });
+
+        const queryString = queryParams.toString();
+        const url = queryString
+            ? `${AttendanceAPI.baseUrl}?${queryString}`
+            : AttendanceAPI.baseUrl;
+
+        return AttendanceAPI.request(url);
+    },
+    getStats: () => {
+        const url = window.miEspacioSelfView
+            ? `${AttendanceAPI.baseUrl}/stats?selfView=true`
+            : `${AttendanceAPI.baseUrl}/stats`;
+        return AttendanceAPI.request(url);
+    },
     getAttendance: (id) => AttendanceAPI.request(`${AttendanceAPI.baseUrl}/${id}`),
     createAttendance: (data) => AttendanceAPI.request(`${AttendanceAPI.baseUrl}`, {
         method: 'POST',
@@ -283,23 +310,59 @@ const AttendanceEngine = {
         let stats = { total: 0, present: 0, late: 0, absent: 0, onTime: 0 };
         let patterns = [];
         let attendances = [];
+        let hoursData = { totalHours: 0, normalHours: 0, overtimeHours: 0, efficiency: 0 };
 
         try {
-            const [statsResult, attendanceResult] = await Promise.all([
+            const [statsResult, attendanceResult, overtimeResult] = await Promise.all([
                 AttendanceAPI.getStats().catch(() => ({})),
-                AttendanceAPI.getAttendances().catch(() => ({ attendances: [] }))
+                AttendanceAPI.getAttendances().catch(() => ({ attendances: [] })),
+                AttendanceAPI.request(`${AttendanceAPI.baseUrl}/stats/overtime-summary`).catch(() => ({}))
             ]);
 
             stats = {
-                total: statsResult.total || 0,
-                present: statsResult.present || 0,
-                late: statsResult.late || 0,
-                absent: statsResult.absent || 0,
-                onTime: statsResult.onTime || statsResult.present || 0
+                total: parseInt(statsResult.total) || 0,
+                present: parseInt(statsResult.present) || 0,
+                late: parseInt(statsResult.late) || 0,
+                absent: parseInt(statsResult.absent) || 0,
+                onTime: parseInt(statsResult.onTime || statsResult.present) || 0
             };
 
             attendances = attendanceResult.attendances || attendanceResult.data || [];
             AttendanceState.attendances = attendances;
+
+            // Procesar datos de horas extras (estructura del backend: data.hours)
+            if (overtimeResult.success && overtimeResult.data) {
+                const hours = overtimeResult.data.hours || {};
+                const totalRecords = overtimeResult.data.totalRecords || 0;
+                const totalHours = hours.total || hours.normal + hours.overtime || 0;
+                const normalHours = hours.normal || 0;
+                const overtimeHours = hours.overtime || 0;
+
+                // Calcular porcentajes
+                const normalPct = totalHours > 0 ? Math.round((normalHours / totalHours) * 100) : 0;
+                const overtimePct = totalHours > 0 ? Math.round((overtimeHours / totalHours) * 100) : 0;
+
+                // Calcular eficiencia (horas trabajadas vs esperadas - 8h/día promedio)
+                const expectedHours = totalRecords * 8;
+                const efficiency = expectedHours > 0 ? Math.round((totalHours / expectedHours) * 100) : 0;
+
+                hoursData = {
+                    totalHours: totalHours,
+                    normalHours: normalHours,
+                    overtimeHours: overtimeHours,
+                    weekendHours: hours.weekend || 0,
+                    holidayHours: hours.holiday || 0,
+                    expectedHours: expectedHours,
+                    efficiency: Math.min(efficiency, 150), // Limitar a 150%
+                    recordCount: totalRecords,
+                    recordsWithOvertime: overtimeResult.data.recordsWithOvertime || 0,
+                    overtimePercentage: overtimeResult.data.overtimePercentage || 0,
+                    percentages: {
+                        normalPct,
+                        overtimePct
+                    }
+                };
+            }
 
             // Try to get patterns if analytics available
             if (AttendanceState.companyId) {
@@ -374,6 +437,37 @@ const AttendanceEngine = {
                         </div>
                         <div class="att-kpi-trend att-trend-down">
                             <span>${absentPct}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hours Metrics Section -->
+                <div class="att-hours-summary" style="margin-bottom: 20px;">
+                    <div class="att-section-header" style="margin-bottom: 12px;">
+                        <h3 style="margin: 0; color: var(--att-text-primary); display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 20px;">⏱️</span> Resumen de Horas (30 días)
+                        </h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                        <div class="att-hours-card" style="background: linear-gradient(135deg, rgba(0, 229, 255, 0.15) 0%, rgba(0, 229, 255, 0.05) 100%); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                            <div style="font-size: 28px; font-weight: 700; color: var(--att-accent-cyan);">${hoursData.totalHours?.toFixed(1) || '0'}h</div>
+                            <div style="font-size: 12px; color: var(--att-text-muted); margin-top: 4px;">Total Horas</div>
+                            <div style="font-size: 10px; color: var(--att-text-secondary); margin-top: 2px;">${hoursData.recordCount || 0} registros</div>
+                        </div>
+                        <div class="att-hours-card" style="background: linear-gradient(135deg, rgba(0, 230, 118, 0.15) 0%, rgba(0, 230, 118, 0.05) 100%); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                            <div style="font-size: 28px; font-weight: 700; color: var(--att-accent-green);">${hoursData.normalHours?.toFixed(1) || '0'}h</div>
+                            <div style="font-size: 12px; color: var(--att-text-muted); margin-top: 4px;">Horas Normales</div>
+                            <div style="font-size: 10px; color: var(--att-text-secondary); margin-top: 2px;">${hoursData.percentages?.normalPct || 0}% del total</div>
+                        </div>
+                        <div class="att-hours-card" style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.15) 0%, rgba(255, 152, 0, 0.05) 100%); border: 1px solid rgba(255, 152, 0, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                            <div style="font-size: 28px; font-weight: 700; color: var(--att-accent-orange);">${hoursData.overtimeHours?.toFixed(1) || '0'}h</div>
+                            <div style="font-size: 12px; color: var(--att-text-muted); margin-top: 4px;">Horas Extra</div>
+                            <div style="font-size: 10px; color: var(--att-text-secondary); margin-top: 2px;">${hoursData.percentages?.overtimePct || 0}% del total</div>
+                        </div>
+                        <div class="att-hours-card" style="background: linear-gradient(135deg, rgba(156, 39, 176, 0.15) 0%, rgba(156, 39, 176, 0.05) 100%); border: 1px solid rgba(156, 39, 176, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                            <div style="font-size: 28px; font-weight: 700; color: #9c27b0;">${hoursData.efficiency?.toFixed(0) || '0'}%</div>
+                            <div style="font-size: 12px; color: var(--att-text-muted); margin-top: 4px;">Eficiencia</div>
+                            <div style="font-size: 10px; color: var(--att-text-secondary); margin-top: 2px;">vs horas esperadas</div>
                         </div>
                     </div>
                 </div>
@@ -567,13 +661,25 @@ const AttendanceEngine = {
                             Exportar
                         </button>
                     </div>
-                    <div class="att-toolbar-right">
+                    <div class="att-toolbar-right" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
                         <div class="att-search-box">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                             <input type="text" id="att-search" placeholder="Buscar empleado..." onkeyup="AttendanceEngine.filterRecords()" />
                         </div>
-                        <select id="att-filter-status" class="att-select" onchange="AttendanceEngine.filterRecords()">
-                            <option value="">Todos los estados</option>
+                        <select id="att-filter-branch" class="att-select att-select-compact" onchange="AttendanceEngine.filterRecords()" title="Sucursal">
+                            <option value="">🏢 Sucursal</option>
+                        </select>
+                        <select id="att-filter-dept" class="att-select att-select-compact" onchange="AttendanceEngine.filterRecords()" title="Departamento">
+                            <option value="">📁 Depto</option>
+                        </select>
+                        <select id="att-filter-destination" class="att-select att-select-compact" onchange="AttendanceEngine.filterRecords()" title="Destino HE">
+                            <option value="">⚡ Destino HE</option>
+                            <option value="bank">🏦 Solo Banco</option>
+                            <option value="paid">💵 Solo Pago</option>
+                            <option value="pending">⏳ Pendientes</option>
+                        </select>
+                        <select id="att-filter-status" class="att-select att-select-compact" onchange="AttendanceEngine.filterRecords()">
+                            <option value="">📊 Estado</option>
                             <option value="present">A tiempo</option>
                             <option value="late">Tarde</option>
                             <option value="absent">Ausente</option>
@@ -582,44 +688,68 @@ const AttendanceEngine = {
                 </div>
 
                 <!-- Records Table -->
-                <div class="att-table-container">
-                    <table class="att-table att-table-striped">
+                <div class="att-table-container" style="overflow-x: auto;">
+                    <table class="att-table att-table-striped att-table-compact">
                         <thead>
                             <tr>
                                 <th>👤 Empleado</th>
                                 <th>🏷️ Legajo</th>
+                                <th>🏢 Sucursal</th>
+                                <th>📁 Depto</th>
+                                <th>🏭 Sector</th>
                                 <th>📅 Fecha</th>
+                                <th>⏰ Turno</th>
                                 <th>🕐 Entrada</th>
                                 <th>🕐 Salida</th>
-                                <th>⏱️ Horas</th>
+                                <th>⏱️ Normal</th>
+                                <th class="att-col-extras" title="Horas para Pago">💵 Extras</th>
+                                <th class="att-col-banco" title="Horas para Banco">🏦 Banco</th>
+                                <th>📊 Total</th>
                                 <th>📍 Estado</th>
-                                <th>⚙️ Acciones</th>
+                                <th>⚙️</th>
                             </tr>
                         </thead>
                         <tbody id="att-records-body">
-                            ${paginatedData.length > 0 ? paginatedData.map(att => `
-                                <tr>
+                            ${paginatedData.length > 0 ? paginatedData.map(att => {
+                                // Calcular horas extras y destino - MUTUAMENTE EXCLUYENTES
+                                const overtimeHours = parseFloat(att.hours?.overtimeHours || att.overtime_hours || 0);
+                                const destination = att.overtime_destination || att.hours?.overtimeDestination;
+                                // Columna Extras: solo si destino es 'pay' o 'paid'
+                                const extrasHours = (destination === 'pay' || destination === 'paid') ? overtimeHours : 0;
+                                // Columna Banco: solo si destino es 'bank'
+                                const bancoHours = destination === 'bank' ? overtimeHours : 0;
+                                // Si hay HE pero no hay destino definido, mostrar en Extras como pendiente
+                                const pendingHours = (overtimeHours > 0 && !destination) ? overtimeHours : 0;
+
+                                return `
+                                <tr class="${overtimeHours > 0 ? 'has-overtime' : ''}">
                                     <td><strong>${att.user_name || att.employee_name || 'N/A'}</strong></td>
-                                    <td><code>${att.legajo || att.employee_id || 'N/A'}</code></td>
-                                    <td>${this.formatDate(att.date || att.attendance_date)}</td>
-                                    <td>${this.formatTime(att.check_in || att.time_in)}</td>
-                                    <td>${this.formatTime(att.check_out || att.time_out)}</td>
-                                    <td>${this.calculateHours(att.check_in || att.time_in, att.check_out || att.time_out)}</td>
-                                    <td>${this.getStatusBadge(att.status)}</td>
+                                    <td><code style="font-size: 0.75rem;">${att.legajo || att.employee_id || 'N/A'}</code></td>
+                                    <td class="att-td-compact">${att.branch_name || att.branch || '-'}</td>
+                                    <td class="att-td-compact">${att.department_name || att.department || '-'}</td>
+                                    <td class="att-td-compact">${att.sector_name || att.sector || '-'}</td>
+                                    <td class="att-td-compact">${this.formatDate(att.date || att.attendance_date)}${att.hours?.isWeekend ? ' <span class="badge-weekend">FDS</span>' : ''}${att.hours?.isHoliday ? ' <span class="badge-holiday">FER</span>' : ''}</td>
+                                    <td class="att-td-compact">${att.shift?.name || '<span class="text-muted">-</span>'}</td>
+                                    <td class="att-td-compact">${this.formatTime(att.check_in || att.time_in)}${att.lateInfo?.isLate ? ' <span class="badge-late">+' + att.lateInfo.lateMinutes + 'm</span>' : ''}</td>
+                                    <td class="att-td-compact">${this.formatTime(att.check_out || att.time_out)}</td>
+                                    <td class="hours-normal att-td-compact">${att.hours?.normalHours?.toFixed(1) || '0.0'}h</td>
+                                    <td class="att-col-extras ${extrasHours > 0 ? 'att-has-extras' : ''} ${pendingHours > 0 ? 'att-has-pending' : ''}">
+                                        ${extrasHours > 0 ? '<span class="att-extras-value">+' + extrasHours.toFixed(1) + 'h</span>' :
+                                          pendingHours > 0 ? '<span class="att-pending-value">⏳' + pendingHours.toFixed(1) + 'h</span>' : '-'}
+                                    </td>
+                                    <td class="att-col-banco ${bancoHours > 0 ? 'att-has-banco' : ''}">
+                                        ${bancoHours > 0 ? '<span class="att-banco-value">+' + bancoHours.toFixed(1) + 'h</span>' : '-'}
+                                    </td>
+                                    <td class="hours-total att-td-compact"><strong>${att.hours?.effectiveHours?.toFixed(1) || this.calculateHours(att.check_in || att.time_in, att.check_out || att.time_out)}</strong></td>
+                                    <td class="att-td-compact">${this.getStatusBadge(att.status, att.lateInfo)}</td>
                                     <td class="att-actions-cell">
-                                        <button onclick="AttendanceEngine.viewRecord('${att.id || att.attendance_id}')" class="att-btn-mini att-btn-info" title="Ver">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                        </button>
-                                        <button onclick="AttendanceEngine.editRecord('${att.id || att.attendance_id}')" class="att-btn-mini att-btn-warning" title="Editar">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                        </button>
-                                        <button onclick="AttendanceEngine.deleteRecord('${att.id || att.attendance_id}')" class="att-btn-mini att-btn-danger" title="Eliminar">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                                        </button>
+                                        <button onclick="AttendanceEngine.viewRecord('${att.id || att.attendance_id}')" class="att-btn-mini att-btn-info" title="Ver">👁️</button>
+                                        <button onclick="AttendanceEngine.editRecord('${att.id || att.attendance_id}')" class="att-btn-mini att-btn-warning" title="Editar">✏️</button>
+                                        <button onclick="AttendanceEngine.deleteRecord('${att.id || att.attendance_id}')" class="att-btn-mini att-btn-danger" title="Eliminar">🗑️</button>
                                     </td>
                                 </tr>
-                            `).join('') : `
-                                <tr><td colspan="8" class="att-empty">No hay registros de asistencia</td></tr>
+                            `}).join('') : `
+                                <tr><td colspan="15" class="att-empty">No hay registros de asistencia</td></tr>
                             `}
                         </tbody>
                     </table>
@@ -651,6 +781,30 @@ const AttendanceEngine = {
                 ` : ''}
             </div>
         `;
+
+        // Poblar filtros de sucursal y departamento
+        this.populateFiltersFromData(attendances);
+    },
+
+    /**
+     * Poblar los selects de sucursal y departamento con datos únicos
+     */
+    populateFiltersFromData(attendances) {
+        // Extraer sucursales únicas
+        const branches = [...new Set(attendances.filter(a => a.branch_name || a.branch).map(a => a.branch_name || a.branch))].sort();
+        const branchSelect = document.getElementById('att-filter-branch');
+        if (branchSelect) {
+            branchSelect.innerHTML = '<option value="">🏢 Sucursal</option>' +
+                branches.map(b => `<option value="${b}">${b}</option>`).join('');
+        }
+
+        // Extraer departamentos únicos
+        const depts = [...new Set(attendances.filter(a => a.department_name || a.department).map(a => a.department_name || a.department))].sort();
+        const deptSelect = document.getElementById('att-filter-dept');
+        if (deptSelect) {
+            deptSelect.innerHTML = '<option value="">📁 Depto</option>' +
+                depts.map(d => `<option value="${d}">${d}</option>`).join('');
+        }
     },
 
     // ========================================================================
@@ -675,14 +829,37 @@ const AttendanceEngine = {
             </div>`;
 
         let stats = null;
+        let hoursStats = null;
+
+        let weatherStats = null;
+        let yearComparison = null;
 
         if (AttendanceState.companyId) {
             try {
-                stats = await AttendanceAPI.getAdvancedStats(
-                    AttendanceState.companyId,
-                    AttendanceState.dateRange.start,
-                    AttendanceState.dateRange.end
-                ).catch(e => { console.log('Advanced stats error:', e); return null; });
+                // Cargar estadísticas avanzadas, de horas y clima en paralelo
+                const [advancedResult, hoursResult, weatherResult, yearComparisonResult] = await Promise.all([
+                    AttendanceAPI.getAdvancedStats(
+                        AttendanceState.companyId,
+                        AttendanceState.dateRange.start,
+                        AttendanceState.dateRange.end
+                    ).catch(e => { console.log('Advanced stats error:', e); return null; }),
+                    AttendanceAPI.request(`${AttendanceAPI.baseUrl}/stats/detailed?groupBy=shift`).catch(e => {
+                        console.log('Hours stats error:', e);
+                        return null;
+                    }),
+                    AttendanceAPI.request(`${AttendanceAPI.baseUrl}/stats/weather-patterns?startDate=${AttendanceState.dateRange.start}&endDate=${AttendanceState.dateRange.end}`).catch(e => {
+                        console.log('Weather stats error:', e);
+                        return null;
+                    }),
+                    AttendanceAPI.request(`${AttendanceAPI.baseUrl}/stats/year-comparison?startDate=${AttendanceState.dateRange.start}&endDate=${AttendanceState.dateRange.end}`).catch(e => {
+                        console.log('Year comparison error:', e);
+                        return null;
+                    })
+                ]);
+                stats = advancedResult;
+                hoursStats = hoursResult?.success ? hoursResult.data : null;
+                weatherStats = weatherResult?.success ? weatherResult.data : null;
+                yearComparison = yearComparisonResult?.success ? yearComparisonResult.data : null;
             } catch (e) {
                 console.log('Analytics API error:', e);
             }
@@ -692,8 +869,10 @@ const AttendanceEngine = {
         // ANALYTICS PLAYGROUND - "Toy Store for HR Managers"
         // =======================================================================
 
-        const fmt = (n, d = 1) => n != null ? Number(n).toFixed(d) : '--';
-        const pct = (n) => n != null ? `${Number(n).toFixed(1)}%` : '--%';
+        // Formatters con separadores de miles (es-AR: punto miles, coma decimales)
+        const fmt = (n, d = 1) => n != null ? Number(n).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d }) : '--';
+        const fmtInt = (n) => n != null ? Number(n).toLocaleString('es-AR') : '--';
+        const pct = (n) => n != null ? `${Number(n).toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%` : '--%';
         const hasData = stats?.success && stats?.attendance?.sampleSize > 0;
 
         // Zone configuration
@@ -1014,6 +1193,32 @@ const AttendanceEngine = {
                                 <i>→</i>
                             </div>
                         </div>
+
+                        <!-- ZONE: Hours Worked - OvertimeCalculator -->
+                        <div class="att-zone-card att-zone-hours" onclick="AttendanceEngine.expandZone('hours')">
+                            <div class="att-zone-bg"></div>
+                            <div class="att-zone-content">
+                                <div class="att-zone-icon">⏱️</div>
+                                <h3>Horas Trabajadas</h3>
+                                <p>Normal, extras, finde, feriado</p>
+                                <div class="att-zone-preview">
+                                    ${hoursStats?.summary ? `
+                                        <div class="att-hours-mini-grid">
+                                            <span class="att-hour-chip att-hour-normal">${fmt(hoursStats.summary.normalHours)}h</span>
+                                            <span class="att-hour-chip att-hour-extra">${fmt(hoursStats.summary.overtimeHours)}h</span>
+                                        </div>
+                                    ` : '<span class="att-zone-na">Calculando horas...</span>'}
+                                </div>
+                                <div class="att-zone-stats">
+                                    <span><strong>${fmt(hoursStats?.summary?.totalHours || 0)}</strong> horas totales</span>
+                                    <span><strong>${hoursStats?.summary?.totalRecords || 0}</strong> registros</span>
+                                </div>
+                            </div>
+                            <div class="att-zone-action">
+                                <span>Explorar</span>
+                                <i>→</i>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -1322,7 +1527,365 @@ const AttendanceEngine = {
                             ` : '<p class="att-no-data">Calculando predicciones...</p>'}
                         </div>
                     </div>
+
+                    <!-- Hours Worked Deep Dive Panel -->
+                    <div class="att-dive-panel att-dive-hours" id="dive-hours" style="display: none;">
+                        <div class="att-dive-header">
+                            <h3>⏱️ Analisis Detallado de Horas Trabajadas</h3>
+                            <button class="att-dive-close" onclick="AttendanceEngine.closeDive('hours')">✕</button>
+                        </div>
+                        <div class="att-dive-content">
+                            ${hoursStats?.summary ? `
+                                <div class="att-hours-dive-summary">
+                                    <div class="att-dive-grid att-dive-grid-4">
+                                        <div class="att-dive-stat att-stat-total">
+                                            <span class="att-dive-value">${fmt(hoursStats.summary.totalHours)}h</span>
+                                            <span class="att-dive-label">Total Trabajadas</span>
+                                            <span class="att-dive-note">${hoursStats.summary.totalRecords} registros</span>
+                                        </div>
+                                        <div class="att-dive-stat att-stat-normal">
+                                            <span class="att-dive-value">${fmt(hoursStats.summary.normalHours)}h</span>
+                                            <span class="att-dive-label">Horas Normales</span>
+                                            <span class="att-dive-note">x1.0 multiplicador</span>
+                                        </div>
+                                        <div class="att-dive-stat att-stat-overtime">
+                                            <span class="att-dive-value">${fmt(hoursStats.summary.overtimeHours)}h</span>
+                                            <span class="att-dive-label">Horas Extras</span>
+                                            <span class="att-dive-note">x1.5 multiplicador</span>
+                                        </div>
+                                        <div class="att-dive-stat att-stat-avg">
+                                            <span class="att-dive-value">${fmt(hoursStats.summary.averageHoursPerDay)}h</span>
+                                            <span class="att-dive-label">Promedio/Dia</span>
+                                            <span class="att-dive-note">vs 8h esperado</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="att-hours-by-daytype">
+                                    <h4>📅 Desglose por Tipo de Dia</h4>
+                                    <div class="att-daytype-grid">
+                                        <div class="att-daytype-card att-daytype-normal">
+                                            <span class="att-daytype-icon">🗓️</span>
+                                            <span class="att-daytype-label">Dias Normales</span>
+                                            <span class="att-daytype-count">${hoursStats.summary.byDayType?.normal?.count || 0} dias</span>
+                                            <span class="att-daytype-hours">${fmt(hoursStats.summary.byDayType?.normal?.hours || 0)}h</span>
+                                        </div>
+                                        <div class="att-daytype-card att-daytype-weekend">
+                                            <span class="att-daytype-icon">🌴</span>
+                                            <span class="att-daytype-label">Fines de Semana</span>
+                                            <span class="att-daytype-count">${hoursStats.summary.byDayType?.weekend?.count || 0} dias</span>
+                                            <span class="att-daytype-hours">${fmt(hoursStats.summary.byDayType?.weekend?.hours || 0)}h (x1.5)</span>
+                                        </div>
+                                        <div class="att-daytype-card att-daytype-holiday">
+                                            <span class="att-daytype-icon">🎉</span>
+                                            <span class="att-daytype-label">Feriados</span>
+                                            <span class="att-daytype-count">${hoursStats.summary.byDayType?.holiday?.count || 0} dias</span>
+                                            <span class="att-daytype-hours">${fmt(hoursStats.summary.byDayType?.holiday?.hours || 0)}h (x2.0)</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                ${hoursStats.grouped && hoursStats.grouped.length > 0 ? `
+                                <div class="att-hours-by-shift">
+                                    <h4>⏰ Horas por Turno</h4>
+                                    <div class="att-shift-hours-grid">
+                                        ${hoursStats.grouped.map(s => `
+                                            <div class="att-shift-hours-card">
+                                                <div class="att-shift-hours-header">
+                                                    <span class="att-shift-name">${s.shiftName || 'Sin turno'}</span>
+                                                    <span class="att-shift-employees">${s.employeeCount} empleados</span>
+                                                </div>
+                                                <div class="att-shift-hours-body">
+                                                    <div class="att-shift-hour-row">
+                                                        <span>Horas Normales</span>
+                                                        <strong>${fmt(s.normalHours)}h</strong>
+                                                    </div>
+                                                    <div class="att-shift-hour-row">
+                                                        <span>Horas Extra</span>
+                                                        <strong class="att-overtime-val">${fmt(s.overtimeHours)}h</strong>
+                                                    </div>
+                                                    <div class="att-shift-hour-row att-total-row">
+                                                        <span>Total</span>
+                                                        <strong>${fmt(s.totalHours)}h</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="att-shift-hours-footer">
+                                                    ${s.days} dias trabajados
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
+
+                                ${hoursStats.byUser && hoursStats.byUser.length > 0 ? `
+                                <div class="att-hours-by-user">
+                                    <h4>👥 Top Empleados por Horas Extra</h4>
+                                    <table class="att-hours-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Empleado</th>
+                                                <th>Legajo</th>
+                                                <th>Dias</th>
+                                                <th>Normal</th>
+                                                <th>Extra</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${hoursStats.byUser
+                                                .sort((a, b) => b.overtimeHours - a.overtimeHours)
+                                                .slice(0, 10)
+                                                .map(u => `
+                                                    <tr>
+                                                        <td>${u.userName || 'N/A'}</td>
+                                                        <td><code>${u.legajo || '-'}</code></td>
+                                                        <td>${u.days}</td>
+                                                        <td>${fmt(u.normalHours)}h</td>
+                                                        <td class="att-overtime-val"><strong>${fmt(u.overtimeHours)}h</strong></td>
+                                                        <td><strong>${fmt(u.totalHours)}h</strong></td>
+                                                    </tr>
+                                                `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                ` : ''}
+
+                                <div class="att-hours-method">
+                                    <h4>📐 Metodologia de Calculo</h4>
+                                    <p><strong>OvertimeCalculatorService</strong> procesa cada asistencia:</p>
+                                    <ul>
+                                        <li>Horas Normales: dentro del horario del turno asignado</li>
+                                        <li>Horas Extra: excedente sobre jornada (multiplicador x1.5)</li>
+                                        <li>Fin de Semana: multiplicador x1.5 configurable por turno</li>
+                                        <li>Feriados: multiplicador x2.0 (tabla holidays)</li>
+                                        <li>Descansos: se descuentan automaticamente</li>
+                                    </ul>
+                                </div>
+                            ` : '<p class="att-no-data">No hay datos de horas para el periodo seleccionado</p>'}
+                        </div>
+                    </div>
                 </section>
+
+                <!-- ============================================================ -->
+                <!-- WEATHER IMPACT ANALYSIS - Gráficos Comparativos -->
+                <!-- ============================================================ -->
+                ${weatherStats ? `
+                <section class="att-play-section att-weather-section">
+                    <div class="att-section-header">
+                        <div class="att-section-icon">🌤️</div>
+                        <div class="att-section-title">
+                            <h2>Impacto Climatico en Tardanzas</h2>
+                            <span class="att-section-badge">Grafico Comparativo</span>
+                        </div>
+                    </div>
+                    <div class="att-section-body">
+                        <!-- Gráfico de Barras Comparativo -->
+                        <div class="att-weather-chart-container">
+                            <div class="att-weather-bars">
+                                ${Object.entries(weatherStats.byPattern)
+                                    .filter(([k, v]) => v.total > 0)
+                                    .sort((a, b) => b[1].latePercent - a[1].latePercent)
+                                    .map(([pattern, data]) => {
+                                        const icons = {
+                                            'FAVORABLE': '☀️',
+                                            'ADVERSO_LLUVIA': '🌧️',
+                                            'ADVERSO_FRIO': '❄️',
+                                            'NOCTURNO': '🌙',
+                                            'UNKNOWN': '❓'
+                                        };
+                                        const colors = {
+                                            'FAVORABLE': '#22c55e',
+                                            'ADVERSO_LLUVIA': '#3b82f6',
+                                            'ADVERSO_FRIO': '#8b5cf6',
+                                            'NOCTURNO': '#6366f1',
+                                            'UNKNOWN': '#9ca3af'
+                                        };
+                                        const basePercent = weatherStats.byPattern.FAVORABLE?.latePercent || 0;
+                                        const diff = data.latePercent - basePercent;
+                                        const diffClass = diff > 0 ? 'att-diff-up' : (diff < 0 ? 'att-diff-down' : '');
+                                        const barHeight = Math.min(100, (data.latePercent / 25) * 100); // Max 25% = 100% height
+                                        return `
+                                            <div class="att-weather-bar-group">
+                                                <div class="att-weather-bar" style="height: ${barHeight}%; background: ${colors[pattern] || '#6366f1'}">
+                                                    <span class="att-bar-value">${data.latePercent.toLocaleString('es-AR', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%</span>
+                                                </div>
+                                                <div class="att-weather-bar-label">
+                                                    <span class="att-bar-icon">${icons[pattern] || '🌡️'}</span>
+                                                    <span class="att-bar-name">${pattern.replace('ADVERSO_', '').replace('_', ' ')}</span>
+                                                    <span class="att-bar-count">${data.total.toLocaleString('es-AR')} reg.</span>
+                                                    ${pattern !== 'FAVORABLE' && diff !== 0 ? `
+                                                        <span class="att-bar-diff ${diffClass}">${diff > 0 ? '+' : ''}${diff.toLocaleString('es-AR', {minimumFractionDigits: 1, maximumFractionDigits: 1})} pp</span>
+                                                    ` : ''}
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                            </div>
+
+                            <!-- Línea de Referencia FAVORABLE -->
+                            <div class="att-weather-baseline" style="bottom: ${Math.min(100, ((weatherStats.byPattern.FAVORABLE?.latePercent || 0) / 25) * 100)}%">
+                                <span class="att-baseline-label">Base: ${(weatherStats.byPattern.FAVORABLE?.latePercent || 0).toLocaleString('es-AR', {minimumFractionDigits: 1})}%</span>
+                            </div>
+                        </div>
+
+                        <!-- Insight Card -->
+                        <div class="att-weather-insight">
+                            <div class="att-insight-icon">💡</div>
+                            <div class="att-insight-content">
+                                <h4>Analisis Automatico</h4>
+                                <p>${weatherStats.insights?.recommendation || 'Sin recomendaciones disponibles.'}</p>
+                                ${weatherStats.insights?.mostImpactful?.increasePercent ? `
+                                    <div class="att-insight-stats">
+                                        <span class="att-insight-stat">
+                                            <strong>${weatherStats.insights.mostImpactful.pattern.replace('ADVERSO_', '').replace('_', ' ')}</strong>
+                                            aumenta tardanzas en <strong class="att-highlight-red">+${weatherStats.insights.mostImpactful.increasePercent}%</strong>
+                                        </span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <!-- Tabla Detallada -->
+                        <div class="att-weather-details">
+                            <h4>📊 Detalle por Patron Climatico</h4>
+                            <table class="att-weather-table">
+                                <thead>
+                                    <tr>
+                                        <th>Patron</th>
+                                        <th>Registros</th>
+                                        <th>Tardanzas</th>
+                                        <th>% Tardanza</th>
+                                        <th>Prom. Min Tarde</th>
+                                        <th>Δ vs Favorable</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${Object.entries(weatherStats.byPattern)
+                                        .filter(([k, v]) => v.total > 0)
+                                        .map(([pattern, data]) => {
+                                            const basePercent = weatherStats.byPattern.FAVORABLE?.latePercent || 0;
+                                            const diff = data.latePercent - basePercent;
+                                            const diffClass = diff > 0 ? 'att-cell-up' : (diff < 0 ? 'att-cell-down' : 'att-cell-neutral');
+                                            return `
+                                                <tr>
+                                                    <td><strong>${pattern.replace('ADVERSO_', '').replace('_', ' ')}</strong></td>
+                                                    <td>${data.total.toLocaleString('es-AR')}</td>
+                                                    <td>${data.lateCount.toLocaleString('es-AR')}</td>
+                                                    <td><strong>${data.latePercent.toLocaleString('es-AR', {minimumFractionDigits: 1})}%</strong></td>
+                                                    <td>${data.avgLateMinutes.toLocaleString('es-AR', {minimumFractionDigits: 1})} min</td>
+                                                    <td class="${diffClass}">
+                                                        ${pattern === 'FAVORABLE' ? '--' : `${diff > 0 ? '+' : ''}${diff.toLocaleString('es-AR', {minimumFractionDigits: 1})} pp`}
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                ` : ''}
+
+                <!-- ============================================================ -->
+                <!-- YEAR-OVER-YEAR COMPARISON -->
+                <!-- ============================================================ -->
+                ${yearComparison ? `
+                <section class="att-play-section att-year-comparison-section">
+                    <div class="att-section-header">
+                        <div class="att-section-icon">📅</div>
+                        <h3>Comparacion Interanual</h3>
+                        <span class="att-section-badge">vs Mismo Periodo Ano Anterior</span>
+                    </div>
+                    <div class="att-section-body">
+                        ${yearComparison.hasHistoricalData ? `
+                        <!-- Tarjetas de Comparación -->
+                        <div class="att-yoy-cards">
+                            <div class="att-yoy-card">
+                                <div class="att-yoy-label">Tasa de Asistencia</div>
+                                <div class="att-yoy-values">
+                                    <span class="att-yoy-current">${yearComparison.current.attendanceRate.toLocaleString('es-AR', {minimumFractionDigits: 1})}%</span>
+                                    <span class="att-yoy-arrow ${yearComparison.variations.attendanceRate.absolute >= 0 ? 'att-arrow-up' : 'att-arrow-down'}">
+                                        ${yearComparison.variations.attendanceRate.absolute >= 0 ? '↑' : '↓'}
+                                    </span>
+                                    <span class="att-yoy-previous">${yearComparison.previous.attendanceRate.toLocaleString('es-AR', {minimumFractionDigits: 1})}%</span>
+                                </div>
+                                <div class="att-yoy-diff ${yearComparison.variations.attendanceRate.absolute >= 0 ? 'att-diff-positive' : 'att-diff-negative'}">
+                                    ${yearComparison.variations.attendanceRate.absolute >= 0 ? '+' : ''}${yearComparison.variations.attendanceRate.absolute.toLocaleString('es-AR', {minimumFractionDigits: 1})} pp
+                                </div>
+                            </div>
+                            <div class="att-yoy-card">
+                                <div class="att-yoy-label">Tasa de Tardanzas</div>
+                                <div class="att-yoy-values">
+                                    <span class="att-yoy-current">${yearComparison.current.lateRate.toLocaleString('es-AR', {minimumFractionDigits: 1})}%</span>
+                                    <span class="att-yoy-arrow ${yearComparison.variations.lateRate.absolute >= 0 ? 'att-arrow-up' : 'att-arrow-down'}">
+                                        ${yearComparison.variations.lateRate.absolute >= 0 ? '↓' : '↑'}
+                                    </span>
+                                    <span class="att-yoy-previous">${yearComparison.previous.lateRate.toLocaleString('es-AR', {minimumFractionDigits: 1})}%</span>
+                                </div>
+                                <div class="att-yoy-diff ${yearComparison.variations.lateRate.absolute >= 0 ? 'att-diff-positive' : 'att-diff-negative'}">
+                                    ${yearComparison.variations.lateRate.absolute >= 0 ? '' : '+'}${(-yearComparison.variations.lateRate.absolute).toLocaleString('es-AR', {minimumFractionDigits: 1})} pp
+                                </div>
+                            </div>
+                            <div class="att-yoy-card">
+                                <div class="att-yoy-label">Prom. Minutos Tarde</div>
+                                <div class="att-yoy-values">
+                                    <span class="att-yoy-current">${yearComparison.current.avgLateMinutes.toLocaleString('es-AR', {minimumFractionDigits: 1})}</span>
+                                    <span class="att-yoy-arrow ${yearComparison.variations.avgLateMinutes.absolute >= 0 ? 'att-arrow-up' : 'att-arrow-down'}">
+                                        ${yearComparison.variations.avgLateMinutes.absolute >= 0 ? '↓' : '↑'}
+                                    </span>
+                                    <span class="att-yoy-previous">${yearComparison.previous.avgLateMinutes.toLocaleString('es-AR', {minimumFractionDigits: 1})}</span>
+                                </div>
+                                <div class="att-yoy-diff ${yearComparison.variations.avgLateMinutes.absolute >= 0 ? 'att-diff-positive' : 'att-diff-negative'}">
+                                    ${yearComparison.variations.avgLateMinutes.absolute >= 0 ? '-' : '+'}${Math.abs(yearComparison.variations.avgLateMinutes.absolute).toLocaleString('es-AR', {minimumFractionDigits: 1})} min
+                                </div>
+                            </div>
+                            <div class="att-yoy-card">
+                                <div class="att-yoy-label">Empleados Activos</div>
+                                <div class="att-yoy-values">
+                                    <span class="att-yoy-current">${yearComparison.current.employees.toLocaleString('es-AR')}</span>
+                                    <span class="att-yoy-arrow ${yearComparison.variations.employeeGrowth.absolute >= 0 ? 'att-arrow-up' : 'att-arrow-down'}">
+                                        ${yearComparison.variations.employeeGrowth.absolute >= 0 ? '↑' : '↓'}
+                                    </span>
+                                    <span class="att-yoy-previous">${yearComparison.previous.employees.toLocaleString('es-AR')}</span>
+                                </div>
+                                <div class="att-yoy-diff att-diff-neutral">
+                                    ${yearComparison.variations.employeeGrowth.absolute >= 0 ? '+' : ''}${yearComparison.variations.employeeGrowth.absolute.toLocaleString('es-AR')} (${yearComparison.variations.employeeGrowth.relative.toLocaleString('es-AR', {minimumFractionDigits: 0})}%)
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Insights Automáticos -->
+                        ${yearComparison.insights?.length > 0 ? `
+                        <div class="att-yoy-insights">
+                            ${yearComparison.insights.map(insight => `
+                                <div class="att-yoy-insight att-insight-${insight.type}">
+                                    <span class="att-insight-emoji">${insight.type === 'positive' ? '✅' : insight.type === 'negative' ? '⚠️' : 'ℹ️'}</span>
+                                    <span>${insight.message}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ` : ''}
+
+                        <!-- Nota sobre ponderación -->
+                        ${yearComparison.employeeRatio !== 1 ? `
+                        <div class="att-yoy-note">
+                            <small>
+                                📊 <strong>Nota:</strong> El personal ${yearComparison.employeeRatio > 1 ? 'creció' : 'decreció'} ${Math.abs((yearComparison.employeeRatio - 1) * 100).toFixed(0)}%.
+                                Las métricas porcentuales son comparables independientemente del tamaño de la plantilla.
+                            </small>
+                        </div>
+                        ` : ''}
+                        ` : `
+                        <div class="att-yoy-no-data">
+                            <span class="att-no-data-icon">📅</span>
+                            <p>No hay datos del mismo periodo del ano anterior para comparar.</p>
+                            <small>Periodo buscado: ${yearComparison.previous?.period?.start || 'N/A'} a ${yearComparison.previous?.period?.end || 'N/A'}</small>
+                        </div>
+                        `}
+                    </div>
+                </section>
+                ` : ''}
 
                 <!-- ============================================================ -->
                 <!-- METHODOLOGY FOOTER -->
@@ -1471,6 +2034,13 @@ const AttendanceEngine = {
             .att-zone-shifts .att-zone-bg { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
             .att-zone-weather .att-zone-bg { background: linear-gradient(90deg, #06b6d4 0%, #22d3ee 100%); }
             .att-zone-predictions .att-zone-bg { background: linear-gradient(90deg, #ec4899 0%, #f472b6 100%); }
+            .att-zone-hours .att-zone-bg { background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%); }
+
+            /* Hours Zone Preview */
+            .att-hours-mini-grid { display: flex; gap: 8px; justify-content: center; }
+            .att-hour-chip { padding: 6px 12px; border-radius: 8px; font-size: 0.85em; font-weight: 600; }
+            .att-hour-chip.att-hour-normal { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+            .att-hour-chip.att-hour-extra { background: rgba(249, 115, 22, 0.2); color: #f97316; }
 
             /* Zone Preview Elements */
             .att-zone-metric { text-align: center; }
@@ -1519,6 +2089,54 @@ const AttendanceEngine = {
             .att-dive-section { margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.02); border-radius: 12px; }
             .att-dive-section h4 { margin: 0 0 12px 0; color: #a0a0a0; font-size: 0.9em; }
             .att-dive-section.att-dive-warning { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+
+            /* Hours Deep Dive Styles */
+            .att-dive-grid-4 { grid-template-columns: repeat(4, 1fr); }
+            .att-stat-total .att-dive-value { color: #38bdf8; }
+            .att-stat-normal .att-dive-value { color: #22c55e; }
+            .att-stat-overtime .att-dive-value { color: #f97316; }
+            .att-stat-avg .att-dive-value { color: #a78bfa; }
+
+            .att-hours-by-daytype { margin-top: 24px; }
+            .att-hours-by-daytype h4 { margin: 0 0 12px 0; color: #a0a0a0; }
+            .att-daytype-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+            .att-daytype-card { padding: 16px; border-radius: 12px; text-align: center; }
+            .att-daytype-normal { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); }
+            .att-daytype-weekend { background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.3); }
+            .att-daytype-holiday { background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.3); }
+            .att-daytype-icon { font-size: 1.5em; display: block; margin-bottom: 8px; }
+            .att-daytype-label { display: block; font-size: 0.85em; color: #e0e0e0; }
+            .att-daytype-count { display: block; font-size: 0.75em; color: #888; margin-top: 4px; }
+            .att-daytype-hours { display: block; font-size: 1.2em; font-weight: 600; color: #fff; margin-top: 8px; }
+
+            .att-hours-by-shift { margin-top: 24px; }
+            .att-hours-by-shift h4 { margin: 0 0 12px 0; color: #a0a0a0; }
+            .att-shift-hours-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+            .att-shift-hours-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; }
+            .att-shift-hours-header { padding: 12px 16px; background: rgba(99,102,241,0.1); display: flex; justify-content: space-between; align-items: center; }
+            .att-shift-name { color: #e0e0e0; font-weight: 600; }
+            .att-shift-employees { color: #888; font-size: 0.8em; }
+            .att-shift-hours-body { padding: 12px 16px; }
+            .att-shift-hour-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+            .att-shift-hour-row:last-child { border-bottom: none; }
+            .att-shift-hour-row span { color: #888; }
+            .att-shift-hour-row strong { color: #e0e0e0; }
+            .att-shift-hour-row.att-total-row { background: rgba(99,102,241,0.1); margin: 8px -16px -12px; padding: 12px 16px; }
+            .att-shift-hours-footer { padding: 8px 16px; background: rgba(0,0,0,0.2); text-align: center; color: #666; font-size: 0.8em; }
+            .att-overtime-val { color: #f97316 !important; }
+
+            .att-hours-by-user { margin-top: 24px; }
+            .att-hours-by-user h4 { margin: 0 0 12px 0; color: #a0a0a0; }
+            .att-hours-table { width: 100%; border-collapse: collapse; }
+            .att-hours-table th { text-align: left; padding: 10px 12px; background: rgba(99,102,241,0.1); color: #a0a0a0; font-size: 0.85em; }
+            .att-hours-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #e0e0e0; }
+            .att-hours-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+            .att-hours-method { margin-top: 24px; padding: 16px; background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.3); border-radius: 12px; }
+            .att-hours-method h4 { margin: 0 0 12px 0; color: #38bdf8; }
+            .att-hours-method p { color: #a0a0a0; margin: 0 0 8px 0; }
+            .att-hours-method ul { margin: 8px 0 0 0; padding-left: 20px; color: #888; }
+            .att-hours-method li { margin: 4px 0; }
 
             /* Percentile Visual */
             .att-percentile-visual { padding: 20px 0; }
@@ -1575,6 +2193,44 @@ const AttendanceEngine = {
             .att-weather-pct { display: block; font-size: 1.2em; font-weight: 600; color: #fff; }
             .att-weather-temp { display: block; font-size: 0.8em; color: #06b6d4; margin-top: 4px; }
 
+            /* Weather Impact Chart Section */
+            .att-weather-section { background: linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(99,102,241,0.05) 100%); border: 1px solid rgba(99,102,241,0.2); }
+            .att-weather-chart-container { position: relative; padding: 40px 20px 20px; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 20px; }
+            .att-weather-bars { display: flex; justify-content: space-around; align-items: flex-end; height: 200px; gap: 20px; }
+            .att-weather-bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 120px; }
+            .att-weather-bar { width: 60px; border-radius: 8px 8px 0 0; display: flex; align-items: flex-start; justify-content: center; min-height: 20px; transition: height 0.5s ease; }
+            .att-bar-value { color: #fff; font-weight: 700; font-size: 0.9em; padding-top: 8px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+            .att-weather-bar-label { text-align: center; margin-top: 12px; }
+            .att-bar-icon { font-size: 1.8em; display: block; margin-bottom: 4px; }
+            .att-bar-name { display: block; font-size: 0.85em; color: #e0e0e0; font-weight: 600; }
+            .att-bar-count { display: block; font-size: 0.7em; color: #888; margin-top: 2px; }
+            .att-bar-diff { display: block; font-size: 0.75em; font-weight: 600; margin-top: 4px; padding: 2px 6px; border-radius: 4px; }
+            .att-diff-up { background: rgba(239,68,68,0.2); color: #f87171; }
+            .att-diff-down { background: rgba(34,197,94,0.2); color: #4ade80; }
+            .att-weather-baseline { position: absolute; left: 20px; right: 20px; border-top: 2px dashed rgba(34,197,94,0.5); }
+            .att-baseline-label { position: absolute; left: 0; top: -20px; font-size: 0.7em; color: #22c55e; background: rgba(0,0,0,0.8); padding: 2px 6px; border-radius: 4px; }
+
+            /* Weather Insight Card */
+            .att-weather-insight { display: flex; gap: 16px; padding: 20px; background: linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.02) 100%); border: 1px solid rgba(251,191,36,0.3); border-radius: 12px; margin-bottom: 20px; }
+            .att-insight-icon { font-size: 2.5em; }
+            .att-insight-content h4 { margin: 0 0 8px 0; color: #fbbf24; }
+            .att-insight-content p { margin: 0; color: #e0e0e0; line-height: 1.6; }
+            .att-insight-stats { margin-top: 12px; }
+            .att-insight-stat { color: #a0a0a0; }
+            .att-highlight-red { color: #f87171; }
+
+            /* Weather Details Table */
+            .att-weather-details { margin-top: 20px; }
+            .att-weather-details h4 { margin: 0 0 12px 0; color: #a0a0a0; }
+            .att-weather-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.2); border-radius: 12px; overflow: hidden; }
+            .att-weather-table th { text-align: left; padding: 12px 16px; background: rgba(99,102,241,0.15); color: #a0a0a0; font-size: 0.85em; font-weight: 600; }
+            .att-weather-table td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #e0e0e0; }
+            .att-weather-table tr:hover td { background: rgba(255,255,255,0.03); }
+            .att-weather-table tr:last-child td { border-bottom: none; }
+            .att-cell-up { color: #f87171; font-weight: 600; }
+            .att-cell-down { color: #4ade80; font-weight: 600; }
+            .att-cell-neutral { color: #888; }
+
             /* Predictions */
             .att-prediction-main { text-align: center; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 16px; }
             .att-pred-trend { display: inline-block; padding: 8px 16px; border-radius: 20px; font-size: 1.1em; margin-bottom: 12px; }
@@ -1592,6 +2248,35 @@ const AttendanceEngine = {
             .att-mpill { background: rgba(99,102,241,0.15); color: #a5b4fc; padding: 6px 12px; border-radius: 16px; font-size: 0.75em; cursor: help; transition: all 0.2s; }
             .att-mpill:hover { background: rgba(99,102,241,0.3); transform: translateY(-2px); }
             .att-engine-info { display: flex; justify-content: center; gap: 24px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.75em; color: #666; flex-wrap: wrap; }
+
+            /* Year-over-Year Comparison */
+            .att-year-comparison-section { background: linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(6,182,212,0.05) 100%); border: 1px solid rgba(16,185,129,0.2); }
+            .att-yoy-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
+            .att-yoy-card { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 20px; text-align: center; }
+            .att-yoy-label { font-size: 0.85em; color: #888; margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+            .att-yoy-values { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px; }
+            .att-yoy-current { font-size: 1.8em; font-weight: 700; color: #fff; }
+            .att-yoy-previous { font-size: 1.1em; color: #888; }
+            .att-yoy-arrow { font-size: 1.5em; }
+            .att-arrow-up { color: #10b981; }
+            .att-arrow-down { color: #ef4444; }
+            .att-yoy-diff { font-size: 0.9em; font-weight: 600; padding: 4px 12px; border-radius: 16px; display: inline-block; }
+            .att-diff-positive { background: rgba(16,185,129,0.2); color: #34d399; }
+            .att-diff-negative { background: rgba(239,68,68,0.2); color: #f87171; }
+            .att-diff-neutral { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+            .att-yoy-insights { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+            .att-yoy-insight { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; }
+            .att-insight-positive { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+            .att-insight-negative { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); }
+            .att-insight-info { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); }
+            .att-insight-emoji { font-size: 1.2em; }
+            .att-yoy-insight span:last-child { color: #e0e0e0; font-size: 0.9em; }
+            .att-yoy-note { margin-top: 16px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+            .att-yoy-note small { color: #888; }
+            .att-yoy-no-data { text-align: center; padding: 40px 20px; }
+            .att-no-data-icon { font-size: 3em; display: block; margin-bottom: 12px; opacity: 0.5; }
+            .att-yoy-no-data p { color: #888; margin: 0 0 8px 0; }
+            .att-yoy-no-data small { color: #666; }
 
             /* Empty State */
             .att-play-empty { text-align: center; padding: 60px 20px; }
@@ -2177,8 +2862,80 @@ const AttendanceEngine = {
         modal.id = 'att-modal';
         modal.className = 'att-modal-overlay';
 
+        // Información de turno
+        const shiftInfo = att.shift ? `
+            <div class="att-detail-item att-detail-full att-detail-shift">
+                <span class="att-detail-label">🏢 Turno Asignado</span>
+                <span class="att-detail-value">
+                    <strong>${att.shift.name}</strong>
+                    <small>(${att.shift.startTime?.substring(0,5) || '--:--'} - ${att.shift.endTime?.substring(0,5) || '--:--'})</small>
+                </span>
+            </div>
+        ` : `
+            <div class="att-detail-item att-detail-full">
+                <span class="att-detail-label">🏢 Turno</span>
+                <span class="att-detail-value text-muted">Sin turno asignado</span>
+            </div>
+        `;
+
+        // Información de horas (del objeto hours del backend)
+        const hours = att.hours || {};
+        const hoursBreakdown = hours.totalHours ? `
+            <div class="att-detail-section">
+                <h4 class="att-section-title-modal">⏱️ Desglose de Horas</h4>
+                <div class="att-hours-grid">
+                    <div class="att-hours-item att-hours-normal">
+                        <span class="att-hours-value">${hours.normalHours?.toFixed(1) || '0.0'}h</span>
+                        <span class="att-hours-label">Horas Normales</span>
+                        <span class="att-hours-multiplier">x${hours.multipliers?.normal || 1}</span>
+                    </div>
+                    <div class="att-hours-item att-hours-overtime ${hours.overtimeHours > 0 ? 'has-value' : ''}">
+                        <span class="att-hours-value">${hours.overtimeHours?.toFixed(1) || '0.0'}h</span>
+                        <span class="att-hours-label">Horas Extra</span>
+                        <span class="att-hours-multiplier">x${hours.multipliers?.overtime || 1.5}</span>
+                    </div>
+                    <div class="att-hours-item att-hours-total">
+                        <span class="att-hours-value">${hours.effectiveHours?.toFixed(1) || '0.0'}h</span>
+                        <span class="att-hours-label">Total Efectivo</span>
+                    </div>
+                </div>
+                ${hours.breakMinutes > 0 ? `
+                    <div class="att-hours-note">
+                        <small>☕ Descanso descontado: ${hours.breakMinutes} minutos</small>
+                    </div>
+                ` : ''}
+                <div class="att-hours-expected">
+                    <small>📋 Esperado por turno: ${hours.expectedWorkHours?.toFixed(1) || '8.0'}h</small>
+                </div>
+            </div>
+        ` : '';
+
+        // Tipo de día
+        const dayTypeInfo = hours.dayType ? `
+            <div class="att-detail-item">
+                <span class="att-detail-label">📆 Tipo de Día</span>
+                <span class="att-detail-value">
+                    ${hours.isHoliday ? '<span class="badge-holiday">Feriado</span>' : ''}
+                    ${hours.isWeekend ? '<span class="badge-weekend">Fin de Semana</span>' : ''}
+                    ${!hours.isHoliday && !hours.isWeekend ? '<span class="badge-normal">Día Laboral</span>' : ''}
+                    ${hours.isHoliday || hours.isWeekend ? `<small class="multiplier-note">Multiplicador: x${hours.isHoliday ? (hours.multipliers?.holiday || 2) : (hours.multipliers?.weekend || 1.5)}</small>` : ''}
+                </span>
+            </div>
+        ` : '';
+
+        // Información de tardanza
+        const lateInfo = att.lateInfo?.isLate ? `
+            <div class="att-detail-item att-detail-full att-late-alert">
+                <span class="att-detail-label">⚠️ Tardanza Detectada</span>
+                <span class="att-detail-value">
+                    <strong>+${att.lateInfo.lateMinutes} minutos</strong>
+                    <small>(Tolerancia: ${att.lateInfo.toleranceMinutes} min | Esperado: ${att.lateInfo.expectedTime?.substring(0,5)} | Llegada: ${att.lateInfo.actualTime})</small>
+                </span>
+            </div>
+        ` : '';
+
         modal.innerHTML = `
-            <div class="att-modal">
+            <div class="att-modal att-modal-large">
                 <div class="att-modal-header">
                     <h3>👁️ Detalle de Asistencia</h3>
                     <button onclick="AttendanceEngine.closeModal()" class="att-modal-close">&times;</button>
@@ -2187,16 +2944,18 @@ const AttendanceEngine = {
                     <div class="att-detail-grid">
                         <div class="att-detail-item">
                             <span class="att-detail-label">👤 Empleado</span>
-                            <span class="att-detail-value">${att.user_name || att.employee_name || 'N/A'}</span>
+                            <span class="att-detail-value"><strong>${att.user_name || att.employee_name || 'N/A'}</strong></span>
                         </div>
                         <div class="att-detail-item">
                             <span class="att-detail-label">🏷️ Legajo</span>
-                            <span class="att-detail-value">${att.legajo || att.employee_id || 'N/A'}</span>
+                            <span class="att-detail-value"><code>${att.legajo || att.employee_id || 'N/A'}</code></span>
                         </div>
                         <div class="att-detail-item">
                             <span class="att-detail-label">📅 Fecha</span>
                             <span class="att-detail-value">${this.formatDate(att.date || att.attendance_date)}</span>
                         </div>
+                        ${dayTypeInfo}
+                        ${shiftInfo}
                         <div class="att-detail-item">
                             <span class="att-detail-label">🕐 Entrada</span>
                             <span class="att-detail-value">${this.formatTime(att.check_in || att.time_in)}</span>
@@ -2205,15 +2964,14 @@ const AttendanceEngine = {
                             <span class="att-detail-label">🕐 Salida</span>
                             <span class="att-detail-value">${this.formatTime(att.check_out || att.time_out)}</span>
                         </div>
-                        <div class="att-detail-item">
-                            <span class="att-detail-label">⏱️ Horas</span>
-                            <span class="att-detail-value">${this.calculateHours(att.check_in || att.time_in, att.check_out || att.time_out)}</span>
-                        </div>
                         <div class="att-detail-item att-detail-full">
                             <span class="att-detail-label">📍 Estado</span>
-                            <span class="att-detail-value">${this.getStatusBadge(att.status)}</span>
+                            <span class="att-detail-value">${this.getStatusBadge(att.status, att.lateInfo)}</span>
                         </div>
+                        ${lateInfo}
                     </div>
+
+                    ${hoursBreakdown}
                 </div>
                 <div class="att-modal-footer">
                     <button onclick="AttendanceEngine.closeModal()" class="att-btn att-btn-secondary">Cerrar</button>
@@ -2333,33 +3091,81 @@ const AttendanceEngine = {
     filterRecords() {
         const search = document.getElementById('att-search')?.value.toLowerCase() || '';
         const status = document.getElementById('att-filter-status')?.value || '';
+        const branchFilter = document.getElementById('att-filter-branch')?.value || '';
+        const deptFilter = document.getElementById('att-filter-dept')?.value || '';
+        const destinationFilter = document.getElementById('att-filter-destination')?.value || '';
 
         const filtered = AttendanceState.attendances.filter(att => {
             const name = (att.user_name || att.employee_name || '').toLowerCase();
-            const matchSearch = name.includes(search);
+            const legajo = (att.legajo || att.employee_id || '').toLowerCase();
+            const matchSearch = name.includes(search) || legajo.includes(search);
             const matchStatus = !status || att.status === status;
-            return matchSearch && matchStatus;
+
+            // Filtro por sucursal
+            const matchBranch = !branchFilter || att.branch_id == branchFilter || att.branch_name === branchFilter;
+
+            // Filtro por departamento
+            const matchDept = !deptFilter || att.department_id == deptFilter || att.department_name === deptFilter;
+
+            // Filtro por destino de HE
+            const destination = att.overtime_destination || att.hours?.overtimeDestination;
+            const overtimeHrs = parseFloat(att.overtime_hours || att.hours?.overtimeHours || 0);
+            let matchDestination = true;
+            if (destinationFilter) {
+                if (destinationFilter === 'pending') {
+                    // Pendientes: tiene HE pero sin destino definido
+                    matchDestination = overtimeHrs > 0 && (!destination || destination === 'pending');
+                } else if (destinationFilter === 'paid') {
+                    // Pagadas: destino es 'paid' o 'pay'
+                    matchDestination = destination === 'paid' || destination === 'pay';
+                } else if (destinationFilter === 'bank') {
+                    // Banco: destino es 'bank'
+                    matchDestination = destination === 'bank';
+                }
+            }
+
+            return matchSearch && matchStatus && matchBranch && matchDept && matchDestination;
         });
 
-        // Re-render table body
+        // Re-render table body con estructura de columnas actualizada
         const tbody = document.getElementById('att-records-body');
         if (tbody) {
-            tbody.innerHTML = filtered.length > 0 ? filtered.map(att => `
-                <tr>
+            tbody.innerHTML = filtered.length > 0 ? filtered.map(att => {
+                // Calcular horas extras y destino - MUTUAMENTE EXCLUYENTES
+                const overtimeHours = parseFloat(att.hours?.overtimeHours || att.overtime_hours || 0);
+                const destination = att.overtime_destination || att.hours?.overtimeDestination;
+                const extrasHours = (destination === 'pay' || destination === 'paid') ? overtimeHours : 0;
+                const bancoHours = destination === 'bank' ? overtimeHours : 0;
+                const pendingHours = (overtimeHours > 0 && !destination) ? overtimeHours : 0;
+
+                return `
+                <tr class="${overtimeHours > 0 ? 'has-overtime' : ''}">
                     <td><strong>${att.user_name || att.employee_name || 'N/A'}</strong></td>
-                    <td><code>${att.legajo || att.employee_id || 'N/A'}</code></td>
-                    <td>${this.formatDate(att.date || att.attendance_date)}</td>
-                    <td>${this.formatTime(att.check_in || att.time_in)}</td>
-                    <td>${this.formatTime(att.check_out || att.time_out)}</td>
-                    <td>${this.calculateHours(att.check_in || att.time_in, att.check_out || att.time_out)}</td>
-                    <td>${this.getStatusBadge(att.status)}</td>
+                    <td><code style="font-size: 0.75rem;">${att.legajo || att.employee_id || 'N/A'}</code></td>
+                    <td class="att-td-compact">${att.branch_name || att.branch || '-'}</td>
+                    <td class="att-td-compact">${att.department_name || att.department || '-'}</td>
+                    <td class="att-td-compact">${att.sector_name || att.sector || '-'}</td>
+                    <td class="att-td-compact">${this.formatDate(att.date || att.attendance_date)}${att.hours?.isWeekend ? ' <span class="badge-weekend">FDS</span>' : ''}${att.hours?.isHoliday ? ' <span class="badge-holiday">FER</span>' : ''}</td>
+                    <td class="att-td-compact">${att.shift?.name || '<span class="text-muted">-</span>'}</td>
+                    <td class="att-td-compact">${this.formatTime(att.check_in || att.time_in)}${att.lateInfo?.isLate ? ' <span class="badge-late">+' + att.lateInfo.lateMinutes + 'm</span>' : ''}</td>
+                    <td class="att-td-compact">${this.formatTime(att.check_out || att.time_out)}</td>
+                    <td class="hours-normal att-td-compact">${att.hours?.normalHours?.toFixed(1) || '0.0'}h</td>
+                    <td class="att-col-extras ${extrasHours > 0 ? 'att-has-extras' : ''} ${pendingHours > 0 ? 'att-has-pending' : ''}">
+                        ${extrasHours > 0 ? '<span class="att-extras-value">+' + extrasHours.toFixed(1) + 'h</span>' :
+                          pendingHours > 0 ? '<span class="att-pending-value">⏳' + pendingHours.toFixed(1) + 'h</span>' : '-'}
+                    </td>
+                    <td class="att-col-banco ${bancoHours > 0 ? 'att-has-banco' : ''}">
+                        ${bancoHours > 0 ? '<span class="att-banco-value">+' + bancoHours.toFixed(1) + 'h</span>' : '-'}
+                    </td>
+                    <td class="hours-total att-td-compact"><strong>${att.hours?.effectiveHours?.toFixed(1) || this.calculateHours(att.check_in || att.time_in, att.check_out || att.time_out)}</strong></td>
+                    <td class="att-td-compact">${this.getStatusBadge(att.status, att.lateInfo)}</td>
                     <td class="att-actions-cell">
                         <button onclick="AttendanceEngine.viewRecord('${att.id || att.attendance_id}')" class="att-btn-mini att-btn-info" title="Ver">👁️</button>
                         <button onclick="AttendanceEngine.editRecord('${att.id || att.attendance_id}')" class="att-btn-mini att-btn-warning" title="Editar">✏️</button>
                         <button onclick="AttendanceEngine.deleteRecord('${att.id || att.attendance_id}')" class="att-btn-mini att-btn-danger" title="Eliminar">🗑️</button>
                     </td>
                 </tr>
-            `).join('') : '<tr><td colspan="8" class="att-empty">No se encontraron registros</td></tr>';
+            `}).join('') : '<tr><td colspan="15" class="att-empty">No se encontraron registros</td></tr>';
         }
     },
 
@@ -2410,29 +3216,81 @@ const AttendanceEngine = {
 
     formatTime(timeStr) {
         if (!timeStr) return '--:--';
-        if (timeStr.includes(':')) return timeStr.substring(0, 5);
-        return timeStr;
+        try {
+            // Si es timestamp ISO (ej: 2025-12-14T01:14:00.000Z)
+            if (timeStr.includes('T')) {
+                const date = new Date(timeStr);
+                return date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+            }
+            // Si ya es formato HH:MM
+            if (timeStr.includes(':')) return timeStr.substring(0, 5);
+            return timeStr;
+        } catch {
+            return '--:--';
+        }
     },
 
     calculateHours(timeIn, timeOut) {
         if (!timeIn || !timeOut) return '0.0h';
         try {
-            const [h1, m1] = timeIn.split(':').map(Number);
-            const [h2, m2] = timeOut.split(':').map(Number);
-            const minutes = (h2 * 60 + m2) - (h1 * 60 + m1);
-            return `${(minutes / 60).toFixed(1)}h`;
+            let d1, d2;
+            // Manejar timestamps ISO
+            if (timeIn.includes('T')) {
+                d1 = new Date(timeIn);
+                d2 = new Date(timeOut);
+            } else {
+                // Formato HH:MM
+                const [h1, m1] = timeIn.split(':').map(Number);
+                const [h2, m2] = timeOut.split(':').map(Number);
+                d1 = new Date(2000, 0, 1, h1, m1);
+                d2 = new Date(2000, 0, 1, h2, m2);
+            }
+            const diffMs = d2 - d1;
+            const hours = diffMs / (1000 * 60 * 60);
+            return `${hours.toFixed(1)}h`;
         } catch {
             return '0.0h';
         }
     },
 
-    getStatusBadge(status) {
+    getStatusBadge(status, lateInfo = null) {
+        // Si hay lateInfo con tardanza, mostrar badge de tarde aunque status sea "present"
+        if (lateInfo?.isLate && status !== 'absent') {
+            return '<span class="att-status att-status-warning">⚠️ Tarde</span>';
+        }
         const badges = {
             present: '<span class="att-status att-status-success">✅ A Tiempo</span>',
             late: '<span class="att-status att-status-warning">⚠️ Tarde</span>',
             absent: '<span class="att-status att-status-danger">❌ Ausente</span>'
         };
         return badges[status] || `<span class="att-status">${status}</span>`;
+    },
+
+    /**
+     * Renderiza el destino de las horas extras (Banco/Pago/Pendiente)
+     * @param {Object} att - Registro de asistencia
+     * @returns {string} HTML del badge de destino
+     */
+    renderOvertimeDestination(att) {
+        const destination = att.overtime_destination || att.hours?.overtimeDestination;
+
+        if (!destination) {
+            // Si hay HE pero no hay destino definido, es pendiente
+            return '<span class="att-ot-badge att-ot-pending" title="Pendiente de decision">⏳ Pendiente</span>';
+        }
+
+        switch (destination) {
+            case 'bank':
+                return '<span class="att-ot-badge att-ot-bank" title="Acumulado en Banco de Horas">🏦 Banco</span>';
+            case 'pay':
+                return '<span class="att-ot-badge att-ot-pay" title="Sera pagado en liquidacion">💵 Pago</span>';
+            case 'pending':
+                return '<span class="att-ot-badge att-ot-pending" title="Empleado debe decidir">⏳ Pendiente</span>';
+            case 'expired':
+                return '<span class="att-ot-badge att-ot-expired" title="Tiempo de decision expirado">⌛ Expirado</span>';
+            default:
+                return `<span class="att-ot-badge">${destination}</span>`;
+        }
     },
 
     showNotification(message, type = 'info') {
@@ -3209,6 +4067,192 @@ function injectAttendanceStyles() {
             color: var(--att-accent-red);
         }
 
+        /* Hours Breakdown Badges */
+        .badge-weekend {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(103, 58, 183, 0.2);
+            color: #b388ff;
+            margin-left: 4px;
+        }
+
+        .badge-holiday {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(233, 30, 99, 0.2);
+            color: #ff80ab;
+            margin-left: 4px;
+        }
+
+        .badge-late {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(255, 193, 7, 0.2);
+            color: var(--att-accent-yellow);
+            margin-left: 4px;
+        }
+
+        /* Overtime Destination Badges (Hour Bank) */
+        .att-ot-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .att-ot-bank {
+            background: linear-gradient(135deg, rgba(0, 150, 136, 0.2), rgba(0, 200, 150, 0.15));
+            color: #00e5a0;
+            border: 1px solid rgba(0, 229, 160, 0.3);
+        }
+
+        .att-ot-pay {
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(100, 180, 255, 0.15));
+            color: #64b5f6;
+            border: 1px solid rgba(100, 181, 246, 0.3);
+        }
+
+        .att-ot-pending {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 220, 100, 0.15));
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            animation: pulse-pending 2s ease-in-out infinite;
+        }
+
+        .att-ot-expired {
+            background: linear-gradient(135deg, rgba(255, 82, 82, 0.2), rgba(255, 120, 120, 0.15));
+            color: #ff5252;
+            border: 1px solid rgba(255, 82, 82, 0.3);
+        }
+
+        .att-ot-na {
+            background: rgba(150, 150, 150, 0.1);
+            color: var(--att-text-muted);
+            border: 1px solid rgba(150, 150, 150, 0.2);
+            font-size: 10px;
+        }
+
+        @keyframes pulse-pending {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .text-muted {
+            color: var(--att-text-muted);
+            font-style: italic;
+        }
+
+        /* Hours columns */
+        .hours-normal {
+            color: var(--att-accent-cyan);
+        }
+
+        .hours-overtime {
+            color: var(--att-accent-yellow);
+        }
+
+        .hours-overtime strong {
+            color: #ff9800;
+        }
+
+        .hours-total {
+            color: var(--att-accent-green);
+        }
+
+        /* ============================================
+           COLUMNAS EXTRAS vs BANCO (SSOT)
+           ============================================ */
+
+        /* Tabla compacta */
+        .att-table-compact th,
+        .att-table-compact td {
+            padding: 6px 8px;
+            font-size: 0.75rem;
+        }
+
+        .att-table-compact th {
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+
+        .att-td-compact {
+            white-space: nowrap;
+            font-size: 0.75rem;
+        }
+
+        /* Columna Extras (para pago) */
+        .att-col-extras {
+            background: rgba(255, 152, 0, 0.05);
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .att-col-extras.att-has-extras {
+            background: rgba(255, 152, 0, 0.15);
+        }
+
+        .att-col-extras.att-has-pending {
+            background: rgba(255, 193, 7, 0.15);
+        }
+
+        .att-extras-value {
+            color: #ff9800;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .att-pending-value {
+            color: #ffc107;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        /* Columna Banco */
+        .att-col-banco {
+            background: rgba(0, 200, 150, 0.05);
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .att-col-banco.att-has-banco {
+            background: rgba(0, 200, 150, 0.15);
+        }
+
+        .att-banco-value {
+            color: #00e5a0;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        /* Select compacto */
+        .att-select-compact {
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            min-width: 90px;
+        }
+
+        /* Row with overtime highlight */
+        tr.has-overtime {
+            background: rgba(255, 152, 0, 0.05) !important;
+        }
+
+        tr.has-overtime:hover {
+            background: rgba(255, 152, 0, 0.1) !important;
+        }
+
         /* Records View */
         .att-records {
             display: flex;
@@ -3895,6 +4939,168 @@ function injectAttendanceStyles() {
             .att-patterns-summary {
                 grid-template-columns: repeat(2, 1fr);
             }
+        }
+
+        /* ====== Modal Detail View Enhanced ====== */
+        .att-modal-large .att-modal-container {
+            max-width: 700px;
+        }
+
+        .att-detail-section {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .att-section-title-modal {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--att-text-secondary);
+            margin: 0 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .att-shift-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .att-shift-time {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .att-shift-time .att-detail-label {
+            font-size: 11px;
+            color: var(--att-text-muted);
+        }
+
+        .att-shift-time .att-detail-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .att-hours-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .att-hours-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        .att-hours-item.att-hours-normal {
+            border-color: var(--att-accent-cyan);
+            background: rgba(0,229,255,0.1);
+        }
+
+        .att-hours-item.att-hours-overtime {
+            border-color: var(--att-accent-orange);
+            background: rgba(255,152,0,0.1);
+        }
+
+        .att-hours-item.att-hours-total {
+            border-color: var(--att-accent-green);
+            background: rgba(0,230,118,0.1);
+        }
+
+        .att-hours-value {
+            display: block;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .att-hours-normal .att-hours-value { color: var(--att-accent-cyan); }
+        .att-hours-overtime .att-hours-value { color: var(--att-accent-orange); }
+        .att-hours-total .att-hours-value { color: var(--att-accent-green); }
+
+        .att-hours-label {
+            display: block;
+            font-size: 11px;
+            color: var(--att-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .att-hours-multiplier {
+            display: block;
+            font-size: 10px;
+            color: var(--att-text-secondary);
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        .att-day-type-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .att-multiplier-note {
+            font-size: 12px;
+            color: var(--att-text-secondary);
+        }
+
+        .att-late-alert {
+            background: rgba(255,82,82,0.15);
+            border: 1px solid rgba(255,82,82,0.3);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .att-late-alert-icon {
+            font-size: 24px;
+        }
+
+        .att-late-alert-content {
+            flex: 1;
+        }
+
+        .att-late-alert-title {
+            font-weight: 600;
+            color: var(--att-accent-red);
+            margin-bottom: 4px;
+        }
+
+        .att-late-alert-detail {
+            font-size: 12px;
+            color: var(--att-text-secondary);
+        }
+
+        /* Badges for day types */
+        .badge-normal {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+        }
+
+        .badge-weekend {
+            background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+        }
+
+        .badge-holiday {
+            background: linear-gradient(135deg, #e91e63, #c2185b);
+        }
+
+        .badge-late {
+            background: linear-gradient(135deg, #ff5722, #e64a19);
+        }
+
+        .badge-overtime {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
         }
     `;
 

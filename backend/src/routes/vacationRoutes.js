@@ -323,12 +323,18 @@ router.put('/extraordinary-licenses/:id', async (req, res) => {
 // Obtener solicitudes de vacaciones - Optimizado para móvil
 router.get('/requests', async (req, res) => {
   try {
-    const { userId, status, year, month, limit, offset, source } = req.query;
+    const { userId, status, year, month, limit, offset, source, selfView } = req.query;
     const companyId = req.user?.company_id || req.query.company_id || 1;
+    const isSelfView = selfView === 'true' || selfView === true;
 
     let whereClause = { company_id: companyId };
 
-    if (userId) {
+    // selfView=true: Usuario quiere ver solo sus datos (desde Mi Espacio)
+    // Empleados SIEMPRE ven solo sus propias solicitudes
+    // Admin/supervisores también si vienen de Mi Espacio
+    if (req.user?.role === 'employee' || isSelfView) {
+      whereClause.userId = req.user?.user_id;
+    } else if (userId) {
       whereClause.userId = userId;
     }
 

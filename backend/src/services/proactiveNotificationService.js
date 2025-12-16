@@ -13,6 +13,7 @@
 const { sequelize } = require('../config/database');
 const inboxService = require('./inboxService');
 const OrganizationalHierarchyService = require('./OrganizationalHierarchyService');
+const NotificationRecipientResolver = require('./NotificationRecipientResolver');
 const crypto = require('crypto');
 
 class ProactiveNotificationService {
@@ -751,51 +752,31 @@ class ProactiveNotificationService {
     }
 
     /**
-     * Busca usuarios de RRHH por posición organizacional (NO por rol genérico)
+     * 🆕 ACTUALIZADO: Busca usuarios de RRHH usando NotificationRecipientResolver (SSOT)
+     * Ya no usa queries directas - delega al servicio centralizado
      * @param {number} companyId - ID de la empresa
      * @returns {Promise<Array>} - Lista de usuarios RRHH
      */
     async findRRHHByPosition(companyId) {
         try {
-            const query = `
-                SELECT
-                    u.user_id,
-                    u."firstName",
-                    u."lastName",
-                    u.email,
-                    op.position_name,
-                    op.position_code
-                FROM users u
-                JOIN organizational_positions op ON u.organizational_position_id = op.id
-                WHERE op.company_id = $1
-                  AND u.company_id = $1
-                  AND u.is_active = true
-                  AND (
-                    UPPER(op.position_code) LIKE '%RRHH%'
-                    OR UPPER(op.position_code) LIKE '%RH%'
-                    OR UPPER(op.position_code) LIKE '%HR%'
-                    OR UPPER(op.position_name) LIKE '%RECURSOS HUMANOS%'
-                  )
-                ORDER BY op.level_order ASC
-                LIMIT 5
-            `;
-
-            const result = await sequelize.query(query, {
-                bind: [companyId],
-                type: sequelize.QueryTypes.SELECT
+            // Usar NotificationRecipientResolver como SSOT
+            const recipients = await NotificationRecipientResolver.resolveRRHH(companyId, {
+                maxRecipients: 5,
+                includeUserDetails: true,
+                fallbackToAdmins: true
             });
 
-            return result.map(user => ({
-                userId: user.user_id,
-                name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-                email: user.email,
-                positionName: user.position_name,
-                positionCode: user.position_code,
-                resolvedFrom: 'position_code'
+            return recipients.map(r => ({
+                userId: r.userId,
+                name: r.name || '',
+                email: r.email,
+                positionName: 'RRHH',
+                positionCode: 'RRHH',
+                resolvedFrom: 'NotificationRecipientResolver'
             }));
 
         } catch (error) {
-            console.error(`❌ [PROACTIVE] Error buscando RRHH por posición:`, error);
+            console.error(`❌ [PROACTIVE] Error buscando RRHH via NotificationRecipientResolver:`, error);
             return [];
         }
     }

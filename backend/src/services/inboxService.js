@@ -13,15 +13,29 @@ const crypto = require('crypto');
 
 /**
  * Obtener bandeja de entrada del usuario
- * Muestra grupos de notificaciones con último mensaje
+ * Muestra grupos de notificaciones donde el usuario es:
+ * - El iniciador del grupo (initiator_id)
+ * - Destinatario de al menos un mensaje
+ * - Remitente de al menos un mensaje
  */
 async function getInbox(employeeId, companyId, filters = {}) {
     try {
         const { status = 'all', priority = 'all', limit = 50, offset = 0 } = filters;
 
+        // CRÍTICO: Filtrar por empresa Y por empleado (es participante del grupo)
         let whereClause = `ng.company_id = $1`;
-        const params = [companyId];
-        let paramIndex = 2;
+        const params = [companyId, employeeId]; // $1 = companyId, $2 = employeeId
+        let paramIndex = 3;
+
+        // Filtro de participación: el empleado debe ser initiator, recipient o sender
+        whereClause += ` AND (
+            ng.initiator_id = $2
+            OR EXISTS (
+                SELECT 1 FROM notification_messages nm2
+                WHERE nm2.group_id = ng.id
+                AND (nm2.recipient_id = $2 OR nm2.sender_id = $2)
+            )
+        )`;
 
         // Filtros de estado
         if (status !== 'all') {
@@ -62,34 +76,35 @@ async function getInbox(employeeId, companyId, filters = {}) {
                     FROM notification_messages
                     WHERE group_id = ng.id
                     AND read_at IS NULL
-                    AND recipient_id = $${paramIndex}
+                    AND recipient_id = $2
                 ) as unread_count
             FROM notification_groups ng
             LEFT JOIN notification_messages nm ON nm.group_id = ng.id
             WHERE ${whereClause}
             GROUP BY ng.id
             ORDER BY MAX(nm.created_at) DESC NULLS LAST, ng.created_at DESC
-            LIMIT $${paramIndex + 1} OFFSET $${paramIndex + 2}
+            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;
 
-        params.push(employeeId, limit, offset);
+        params.push(limit, offset);
 
         const [groups] = await sequelize.query(query, {
             bind: params
         });
 
-        // Contar total
+        // Contar total (sin limit/offset)
+        const countParams = params.slice(0, paramIndex - 1);
         const [countResult] = await sequelize.query(
             `SELECT COUNT(DISTINCT ng.id) as total FROM notification_groups ng WHERE ${whereClause}`,
-            { bind: params.slice(0, paramIndex - 1) }
+            { bind: countParams }
         );
 
         return {
             groups,
-            total: parseInt(countResult[0].total),
+            total: parseInt(countResult[0]?.total || 0),
             limit,
             offset,
-            has_more: (offset + limit) < parseInt(countResult[0].total)
+            has_more: (offset + limit) < parseInt(countResult[0]?.total || 0)
         };
 
     } catch (error) {

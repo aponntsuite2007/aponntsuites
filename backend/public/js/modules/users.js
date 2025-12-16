@@ -1744,7 +1744,12 @@ async function editUser(userId) {
         `;
         
         document.body.appendChild(modal);
-        
+
+        // Aplicar visibilidad de módulos opcionales (plug & play)
+        if (window.moduleHelper && typeof window.moduleHelper.applyModuleVisibility === 'function') {
+            window.moduleHelper.applyModuleVisibility();
+        }
+
         // Cargar departamentos dinámicamente y seleccionar el actual
         setTimeout(() => {
             populateDepartmentSelect('editDepartment', user.departmentId || '');
@@ -2622,6 +2627,66 @@ async function viewUser(userId) {
                                 </div>
                             </div>
 
+                            <!-- BANCO DE HORAS - Integración con Liquidaciones (módulo opcional) -->
+                            <div data-module="hour-bank" style="background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #00897b;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h4 style="color: #00695c; margin: 0;">🏦 Banco de Horas</h4>
+                                    <button class="btn btn-sm btn-info" style="background: #00897b; border-color: #00897b;" onclick="loadUserHourBank('${userId}')">🔄 Actualizar</button>
+                                </div>
+
+                                <!-- KPIs de Banco de Horas -->
+                                <div id="hour-bank-kpis-${userId}" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 15px;">
+                                    <div style="background: rgba(255,255,255,0.9); padding: 12px; border-radius: 8px; text-align: center; border-left: 4px solid #00897b;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Balance Actual</div>
+                                        <div style="font-size: 20px; font-weight: bold; color: #00897b;" id="hb-balance-${userId}">--</div>
+                                        <div style="font-size: 10px; color: #666;">horas</div>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.9); padding: 12px; border-radius: 8px; text-align: center; border-left: 4px solid #2196f3;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Total Acumulado</div>
+                                        <div style="font-size: 20px; font-weight: bold; color: #2196f3;" id="hb-accrued-${userId}">--</div>
+                                        <div style="font-size: 10px; color: #666;">horas</div>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.9); padding: 12px; border-radius: 8px; text-align: center; border-left: 4px solid #ff9800;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Total Usado</div>
+                                        <div style="font-size: 20px; font-weight: bold; color: #ff9800;" id="hb-used-${userId}">--</div>
+                                        <div style="font-size: 10px; color: #666;">horas</div>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.9); padding: 12px; border-radius: 8px; text-align: center; border-left: 4px solid #9c27b0;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Salud Cuenta</div>
+                                        <div style="font-size: 20px; font-weight: bold;" id="hb-health-${userId}">--</div>
+                                        <div style="font-size: 10px; color: #666;" id="hb-health-label-${userId}">Sin evaluar</div>
+                                    </div>
+                                </div>
+
+                                <!-- Alertas y Tendencia -->
+                                <div id="hb-alerts-${userId}" style="display: none; background: rgba(255,193,7,0.2); border: 1px solid rgba(255,193,7,0.5); padding: 10px 15px; border-radius: 8px; margin-bottom: 10px;">
+                                    <small style="color: #856404;"><i class="fas fa-exclamation-triangle"></i> <span id="hb-alert-text-${userId}"></span></small>
+                                </div>
+
+                                <!-- Últimas Transacciones -->
+                                <div style="background: rgba(255,255,255,0.9); border-radius: 8px; overflow: hidden;">
+                                    <div style="max-height: 150px; overflow-y: auto;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                            <thead style="background: #00897b; color: white; position: sticky; top: 0;">
+                                                <tr>
+                                                    <th style="padding: 8px; text-align: left;">Fecha</th>
+                                                    <th style="padding: 8px; text-align: left;">Tipo</th>
+                                                    <th style="padding: 8px; text-align: right;">Horas</th>
+                                                    <th style="padding: 8px; text-align: right;">Balance</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="hb-transactions-${userId}">
+                                                <tr>
+                                                    <td colspan="4" style="padding: 15px; text-align: center; color: #666;">
+                                                        ⏳ Cargando...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                                 <div style="background: #f8d7da; padding: 15px; border-radius: 8px;">
                                     <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
@@ -3070,7 +3135,22 @@ async function viewUser(userId) {
                                     <p style="margin: 5px 0 0; color: #004085;">Permisos</p>
                                 </div>
                             </div>
-                            
+
+                            <!-- NUEVO: Métricas de Horas -->
+                            <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #dee2e6; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h4 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                        ⏱️ Métricas de Horas Trabajadas
+                                        <span style="font-size: 12px; color: #666; font-weight: normal;">(Último mes)</span>
+                                    </h4>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="loadEmployeeHoursMetrics('${userId}')">🔄 Actualizar</button>
+                                </div>
+                                <div id="employee-hours-metrics" style="text-align: center; padding: 20px; color: #666;">
+                                    <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+                                    Cargando métricas de horas...
+                                </div>
+                            </div>
+
                             <div style="background: #fff; border: 1px solid #dee2e6; padding: 15px; border-radius: 8px;">
                                 <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 15px;">
                                     <h4 style="margin: 0;">📊 Registro de Asistencias</h4>
@@ -4789,6 +4869,16 @@ window.showFileTab = function(tabName, button) {
                     historyList.innerHTML = '<p style="text-align: center; color: #999; font-style: italic;">Historial no disponible</p>';
                 }
             }
+            // Cargar banco de horas dinámico (solo si el módulo está activo)
+            if (userId && typeof loadUserHourBank === 'function') {
+                const hourBankSection = document.querySelector('[data-module="hour-bank"]');
+                if (hourBankSection && hourBankSection.offsetParent !== null) {
+                    console.log('🏦 [HOUR-BANK] Cargando banco de horas...');
+                    loadUserHourBank(userId);
+                } else {
+                    console.log('🏦 [HOUR-BANK] Módulo no activo, omitiendo carga');
+                }
+            }
             // Cargar juicios y mediaciones desde SSOT (sección está en tab work)
             if (typeof loadLegalIssuesFromSSOT === 'function') {
                 console.log('⚖️ [LEGAL-ISSUES] Cargando juicios/mediaciones...');
@@ -4804,6 +4894,17 @@ window.showFileTab = function(tabName, button) {
                 loadFamilyDocuments(userId);
             } else {
                 console.warn('⚠️ [FAMILY] No se pudo cargar documentos familiares');
+            }
+        }
+
+        // Si es el tab de asistencias, cargar métricas de horas
+        if (tabName === 'attendance') {
+            console.log('📅 [ATTENDANCE] Cargando métricas de horas...');
+            const userId = window.currentViewUserId;
+            if (userId && typeof loadEmployeeHoursMetrics === 'function') {
+                loadEmployeeHoursMetrics(userId);
+            } else {
+                console.warn('⚠️ [ATTENDANCE] No se pudo cargar métricas de horas');
             }
         }
 
@@ -5867,6 +5968,146 @@ async function loadAttendanceHistory(userId) {
         container.innerHTML = `<p style="text-align: center; color: #dc3545;">❌ Error al cargar historial: ${error.message}</p>`;
     }
 }
+
+/**
+ * Carga las métricas de horas trabajadas de un empleado
+ * Usa el endpoint /api/hours-cube/:companyId/employee/:userId/metrics
+ */
+async function loadEmployeeHoursMetrics(userId) {
+    console.log('⏱️ [HOURS] Cargando métricas de horas para empleado:', userId);
+
+    const container = document.getElementById('employee-hours-metrics');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+        Cargando métricas de horas...
+    `;
+
+    try {
+        // Obtener companyId del contexto
+        const companyId = window.progressiveAdmin?.userContext?.companyId ||
+                          window.userContext?.companyId ||
+                          localStorage.getItem('companyId') || 11;
+
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+        const response = await fetch(`/api/hours-cube/${companyId}/employee/${userId}/metrics?period=month`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al cargar métricas de horas');
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Error desconocido');
+        }
+
+        // Renderizar métricas
+        const metrics = data.metrics || {};
+        const employee = data.employee || {};
+        const period = data.period || {};
+
+        container.innerHTML = `
+            <!-- Info del turno asignado -->
+            ${employee.shift ? `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>🕐 Turno Asignado:</strong> ${employee.shift.name}
+                            <span style="opacity: 0.9; margin-left: 10px;">${employee.shift.schedule}</span>
+                        </div>
+                        <div style="font-size: 12px; opacity: 0.8;">
+                            x${employee.shift.hourlyRates?.overtime || 1.5} extra | x${employee.shift.hourlyRates?.weekend || 1.5} finde
+                        </div>
+                    </div>
+                </div>
+            ` : '<div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;">⚠️ Sin turno asignado</div>'}
+
+            <!-- Grid de métricas principales -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 15px;">
+                <div style="background: white; border: 2px solid #48bb78; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #48bb78;">${(metrics.totalHours || 0).toFixed(1)}h</div>
+                    <div style="font-size: 12px; color: #718096;">Total Horas</div>
+                </div>
+                <div style="background: white; border: 2px solid #3182ce; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #3182ce;">${(metrics.normalHours || 0).toFixed(1)}h</div>
+                    <div style="font-size: 12px; color: #718096;">Normales</div>
+                    <div style="font-size: 10px; color: #a0aec0;">${metrics.percentages?.normalPct || 0}%</div>
+                </div>
+                <div style="background: white; border: 2px solid #ed8936; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #ed8936;">${(metrics.overtimeHours || 0).toFixed(1)}h</div>
+                    <div style="font-size: 12px; color: #718096;">Extras</div>
+                    <div style="font-size: 10px; color: #a0aec0;">${metrics.percentages?.overtimePct || 0}%</div>
+                </div>
+                <div style="background: white; border: 2px solid ${metrics.efficiency > 90 ? '#48bb78' : metrics.efficiency > 70 ? '#ed8936' : '#e53e3e'}; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: ${metrics.efficiency > 90 ? '#48bb78' : metrics.efficiency > 70 ? '#ed8936' : '#e53e3e'};">${metrics.efficiency || 0}%</div>
+                    <div style="font-size: 12px; color: #718096;">Eficiencia</div>
+                </div>
+            </div>
+
+            <!-- Segunda fila de métricas -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 15px;">
+                <div style="background: #f7fafc; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; color: #2d3748;">${metrics.daysPresent || 0}</div>
+                    <div style="font-size: 11px; color: #718096;">Días Presentes</div>
+                </div>
+                <div style="background: #f7fafc; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; color: ${metrics.daysLate > 3 ? '#e53e3e' : '#2d3748'};">${metrics.daysLate || 0}</div>
+                    <div style="font-size: 11px; color: #718096;">Tardanzas</div>
+                </div>
+                <div style="background: #f7fafc; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; color: #805ad5;">${metrics.weekendDays || 0}</div>
+                    <div style="font-size: 11px; color: #718096;">Días Finde</div>
+                    <div style="font-size: 10px; color: #a0aec0;">${(metrics.weekendHours || 0).toFixed(1)}h</div>
+                </div>
+                <div style="background: #f7fafc; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; color: #38a169;">${metrics.percentages?.punctuality || 0}%</div>
+                    <div style="font-size: 11px; color: #718096;">Puntualidad</div>
+                </div>
+            </div>
+
+            <!-- Promedios -->
+            <div style="background: white; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #4a5568;">${(metrics.averages?.hoursPerDay || 0).toFixed(1)}h</div>
+                        <div style="font-size: 11px; color: #a0aec0;">Promedio/día</div>
+                    </div>
+                    <div style="border-left: 1px solid #e2e8f0; padding-left: 20px;">
+                        <div style="font-weight: 600; color: #ed8936;">${(metrics.averages?.overtimePerDay || 0).toFixed(1)}h</div>
+                        <div style="font-size: 11px; color: #a0aec0;">Extra promedio/día</div>
+                    </div>
+                    <div style="border-left: 1px solid #e2e8f0; padding-left: 20px;">
+                        <div style="font-weight: 600; color: #4a5568;">${(metrics.expectedHours || 0).toFixed(1)}h</div>
+                        <div style="font-size: 11px; color: #a0aec0;">Esperadas (turno)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Período -->
+            <div style="text-align: center; margin-top: 10px; font-size: 11px; color: #a0aec0;">
+                📅 Período: ${period.startDate || 'N/A'} al ${period.endDate || 'N/A'} | ${data.metadata?.recordsProcessed || 0} registros
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('❌ [HOURS] Error:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #dc3545;">
+                <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+                Error al cargar métricas: ${error.message}
+                <br><button class="btn btn-sm btn-outline-danger" style="margin-top: 10px;" onclick="loadEmployeeHoursMetrics('${userId}')">🔄 Reintentar</button>
+            </div>
+        `;
+    }
+}
+window.loadEmployeeHoursMetrics = loadEmployeeHoursMetrics;
 
 // Helper functions for badges
 function getAbsenceCaseStatusBadge(status) {
@@ -9946,6 +10187,117 @@ function loadMorePayrollHistory(userId) {
     if (state) {
         state.offset += state.limit;
         loadUserPayrollHistory(userId, true);
+    }
+}
+
+// ============================================================================
+// BANCO DE HORAS - Integración en Gestión de Usuarios
+// ============================================================================
+
+/**
+ * Carga el banco de horas de un usuario
+ * @param {string|number} userId - ID del usuario
+ */
+async function loadUserHourBank(userId) {
+    console.log('🏦 [HOUR-BANK] Cargando banco de horas para usuario:', userId);
+
+    const balanceEl = document.getElementById(`hb-balance-${userId}`);
+    const accruedEl = document.getElementById(`hb-accrued-${userId}`);
+    const usedEl = document.getElementById(`hb-used-${userId}`);
+    const healthEl = document.getElementById(`hb-health-${userId}`);
+    const healthLabelEl = document.getElementById(`hb-health-label-${userId}`);
+    const alertsEl = document.getElementById(`hb-alerts-${userId}`);
+    const alertTextEl = document.getElementById(`hb-alert-text-${userId}`);
+    const transactionsEl = document.getElementById(`hb-transactions-${userId}`);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(`/api/hour-bank/employee-summary/${userId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            throw new Error('No se pudo cargar el banco de horas');
+        }
+
+        const data = await response.json();
+        const summary = data.data || {};
+        const health = summary.health || {};
+        const transactions = summary.transactions || [];
+
+        // Actualizar KPIs
+        if (balanceEl) balanceEl.textContent = (summary.balance || 0).toFixed(1);
+        if (accruedEl) accruedEl.textContent = (summary.total_accrued || 0).toFixed(1);
+        if (usedEl) usedEl.textContent = (summary.total_used || 0).toFixed(1);
+
+        // Health score con color
+        if (healthEl) {
+            const score = health.health_score || 0;
+            healthEl.textContent = score + '/100';
+            healthEl.style.color = score >= 80 ? '#4caf50' : score >= 60 ? '#ff9800' : '#f44336';
+        }
+        if (healthLabelEl) healthLabelEl.textContent = health.status || 'Sin evaluar';
+
+        // Alertas
+        if (health.recommendations && health.recommendations.length > 0) {
+            if (alertsEl) alertsEl.style.display = 'block';
+            if (alertTextEl) alertTextEl.textContent = health.recommendations[0];
+        } else {
+            if (alertsEl) alertsEl.style.display = 'none';
+        }
+
+        // Transacciones
+        if (transactionsEl) {
+            if (transactions.length > 0) {
+                transactionsEl.innerHTML = transactions.slice(0, 5).map(tx => `
+                    <tr>
+                        <td style="padding: 8px; color: #333;">${new Date(tx.transaction_date || tx.created_at).toLocaleDateString('es-AR')}</td>
+                        <td style="padding: 8px;">
+                            ${tx.transaction_type === 'accrual' ?
+                                '<span style="background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 3px; font-size: 10px;">+Acumul.</span>' :
+                                tx.transaction_type === 'usage' ?
+                                '<span style="background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 3px; font-size: 10px;">-Uso</span>' :
+                                '<span style="background: #f5f5f5; color: #666; padding: 2px 6px; border-radius: 3px; font-size: 10px;">' + tx.transaction_type + '</span>'
+                            }
+                        </td>
+                        <td style="padding: 8px; text-align: right; font-weight: bold; color: ${tx.hours_amount >= 0 ? '#2e7d32' : '#c62828'};">
+                            ${tx.hours_amount >= 0 ? '+' : ''}${(tx.hours_amount || 0).toFixed(1)}h
+                        </td>
+                        <td style="padding: 8px; text-align: right; color: #333; font-weight: 600;">
+                            ${(tx.balance_after || 0).toFixed(1)}h
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                transactionsEl.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="padding: 15px; text-align: center; color: #666;">
+                            Sin movimientos registrados
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        console.log('✅ [HOUR-BANK] Datos cargados correctamente');
+    } catch (error) {
+        console.error('❌ [HOUR-BANK] Error:', error);
+
+        // Mostrar error en UI
+        if (balanceEl) balanceEl.textContent = '--';
+        if (accruedEl) accruedEl.textContent = '--';
+        if (usedEl) usedEl.textContent = '--';
+        if (healthEl) healthEl.textContent = '--';
+        if (healthLabelEl) healthLabelEl.textContent = 'No disponible';
+        if (transactionsEl) {
+            transactionsEl.innerHTML = `
+                <tr>
+                    <td colspan="4" style="padding: 15px; text-align: center; color: #dc3545;">
+                        ⚠️ Error al cargar datos
+                    </td>
+                </tr>
+            `;
+        }
     }
 }
 

@@ -55,6 +55,7 @@ ADD CONSTRAINT core_user_must_be_admin CHECK (
 );
 
 -- Función para crear usuario CORE automáticamente
+-- AMPLIADA: Ahora crea AMBOS usuarios (administrador + soporte)
 CREATE OR REPLACE FUNCTION create_core_user_for_company(
   p_company_id INTEGER,
   p_onboarding_trace_id VARCHAR,
@@ -62,20 +63,26 @@ CREATE OR REPLACE FUNCTION create_core_user_for_company(
 )
 RETURNS UUID AS $$
 DECLARE
-  v_user_id UUID;
+  v_admin_user_id UUID;
+  v_support_user_id UUID;
   v_default_password VARCHAR := 'admin123'; -- Password inicial (debe cambiarse)
   v_password_hash VARCHAR;
+  v_company_email VARCHAR;
 BEGIN
-  -- Verificar que no exista ya un usuario CORE
+  -- Verificar que no exista ya un usuario CORE (administrador)
   IF EXISTS (SELECT 1 FROM users WHERE company_id = p_company_id AND is_core_user = TRUE) THEN
-    RAISE EXCEPTION 'Company already has a CORE user';
+    RAISE EXCEPTION 'Company already has a CORE user (administrador)';
   END IF;
 
+  -- Obtener email de la empresa
+  SELECT contact_email INTO v_company_email FROM companies WHERE company_id = p_company_id;
+
   -- Generar hash del password (asumiendo bcrypt con 10 rounds)
-  -- En producción esto debería usar la función de hash que uses en el backend
   v_password_hash := crypt(v_default_password, gen_salt('bf', 10));
 
-  -- Crear usuario CORE
+  -- ============================================================================
+  -- 1. Crear usuario CORE (administrador)
+  -- ============================================================================
   INSERT INTO users (
     company_id,
     usuario,
@@ -93,7 +100,7 @@ BEGIN
     p_company_id,
     'administrador',
     v_password_hash,
-    (SELECT contact_email FROM companies WHERE company_id = p_company_id),
+    v_company_email,
     'admin',
     TRUE,
     TRUE, -- Debe cambiar password en primer login
@@ -102,34 +109,101 @@ BEGIN
     TRUE,
     CURRENT_TIMESTAMP
   )
-  RETURNING id INTO v_user_id;
+  RETURNING user_id INTO v_admin_user_id;
 
-  -- Log de auditoría
-  INSERT INTO audit_logs (
-    trace_id,
-    action,
-    entity_type,
-    entity_id,
-    performed_by,
-    details,
-    created_at
-  )
-  VALUES (
-    p_onboarding_trace_id,
-    'CREATE_CORE_USER',
-    'user',
-    v_user_id,
-    p_created_by,
-    jsonb_build_object(
-      'company_id', p_company_id,
-      'usuario', 'administrador',
-      'is_core_user', true,
-      'force_password_change', true
-    ),
-    CURRENT_TIMESTAMP
-  );
+  -- Log de auditoría (administrador)
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'audit_logs') THEN
+    INSERT INTO audit_logs (
+      trace_id,
+      action,
+      entity_type,
+      entity_id,
+      performed_by,
+      details,
+      created_at
+    )
+    VALUES (
+      p_onboarding_trace_id,
+      'CREATE_CORE_USER',
+      'user',
+      v_admin_user_id,
+      p_created_by,
+      jsonb_build_object(
+        'company_id', p_company_id,
+        'usuario', 'administrador',
+        'is_core_user', true,
+        'force_password_change', true
+      ),
+      CURRENT_TIMESTAMP
+    );
+  END IF;
 
-  RETURN v_user_id;
+  -- ============================================================================
+  -- 2. Crear usuario SOPORTE (inmutable para testing)
+  -- ============================================================================
+  -- Verificar que no exista ya un usuario SOPORTE
+  IF NOT EXISTS (SELECT 1 FROM users WHERE company_id = p_company_id AND is_support_user = TRUE) THEN
+    -- Fallback email para soporte (si no hay contact_email)
+    IF v_company_email IS NULL THEN
+      v_company_email := 'soporte@' || (SELECT slug FROM companies WHERE company_id = p_company_id) || '.com';
+    END IF;
+
+    INSERT INTO users (
+      company_id,
+      usuario,
+      password,
+      email,
+      role,
+      is_support_user,
+      force_password_change,
+      is_active,
+      onboarding_trace_id,
+      "createdAt"
+    )
+    VALUES (
+      p_company_id,
+      'soporte',
+      v_password_hash,
+      v_company_email,
+      'admin',
+      TRUE,
+      FALSE, -- NO forzar cambio de password (es para testing automatizado)
+      TRUE,
+      p_onboarding_trace_id,
+      CURRENT_TIMESTAMP
+    )
+    RETURNING user_id INTO v_support_user_id;
+
+    -- Log de auditoría (soporte)
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'audit_logs') THEN
+      INSERT INTO audit_logs (
+        trace_id,
+        action,
+        entity_type,
+        entity_id,
+        performed_by,
+        details,
+        created_at
+      )
+      VALUES (
+        p_onboarding_trace_id,
+        'CREATE_SUPPORT_USER',
+        'user',
+        v_support_user_id,
+        p_created_by,
+        jsonb_build_object(
+          'company_id', p_company_id,
+          'usuario', 'soporte',
+          'is_support_user', true,
+          'purpose', 'automated_testing'
+        ),
+        CURRENT_TIMESTAMP
+      );
+    END IF;
+  END IF;
+
+  -- Retornar el user_id del administrador (por compatibilidad)
+  RETURN v_admin_user_id;
 END;
 $$ LANGUAGE plpgsql;
 

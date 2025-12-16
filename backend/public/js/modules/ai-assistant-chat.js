@@ -31,7 +31,8 @@
       chat: '/api/assistant/chat',
       feedback: '/api/assistant/feedback',
       history: '/api/assistant/history',
-      health: '/api/assistant/health'
+      health: '/api/assistant/health',
+      escalateToTicket: '/api/assistant/escalate-to-ticket'
     },
     animation: {
       fadeInDuration: 300,
@@ -403,6 +404,182 @@
       background: #f56565;
       color: white;
       border-color: #f56565;
+    }
+
+    /* ESCALADO A TICKET */
+    .ai-escalate-prompt {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 10px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .ai-escalate-prompt-text {
+      font-size: 13px;
+      color: #92400e;
+      margin-bottom: 10px;
+    }
+
+    .ai-escalate-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ai-escalate-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .ai-escalate-btn.primary {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+
+    .ai-escalate-btn.primary:hover {
+      transform: scale(1.02);
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+    }
+
+    .ai-escalate-btn.secondary {
+      background: white;
+      color: #6b7280;
+      border: 1px solid #d1d5db;
+    }
+
+    .ai-escalate-btn.secondary:hover {
+      background: #f3f4f6;
+    }
+
+    /* FORMULARIO DE TICKET */
+    .ai-ticket-form {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 10px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .ai-ticket-form-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ai-ticket-form-field {
+      margin-bottom: 12px;
+    }
+
+    .ai-ticket-form-field label {
+      display: block;
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .ai-ticket-form-field input,
+    .ai-ticket-form-field textarea,
+    .ai-ticket-form-field select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .ai-ticket-form-field input:focus,
+    .ai-ticket-form-field textarea:focus,
+    .ai-ticket-form-field select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .ai-ticket-form-field textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .ai-ticket-form-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .ai-ticket-submit {
+      flex: 1;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .ai-ticket-submit:hover:not(:disabled) {
+      transform: scale(1.02);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    .ai-ticket-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .ai-ticket-cancel {
+      padding: 10px 16px;
+      background: white;
+      color: #6b7280;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .ai-ticket-cancel:hover {
+      background: #f3f4f6;
+    }
+
+    /* TICKET CREADO EXITOSAMENTE */
+    .ai-ticket-success {
+      background: #d1fae5;
+      border: 1px solid #10b981;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 10px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .ai-ticket-success-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .ai-ticket-success-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #065f46;
+      margin-bottom: 4px;
+    }
+
+    .ai-ticket-success-number {
+      font-size: 12px;
+      color: #047857;
+      font-family: monospace;
     }
 
     /* LOADING */
@@ -844,8 +1021,11 @@
       const data = await response.json();
 
       if (data.success) {
-        // Agregar respuesta del asistente
-        addAssistantMessage(data.data);
+        // Agregar respuesta del asistente (incluir pregunta original para escalado)
+        addAssistantMessage({
+          ...data.data,
+          originalQuestion: question
+        });
       } else {
         addErrorMessage('No se pudo obtener respuesta del asistente.');
       }
@@ -924,15 +1104,15 @@
 
     messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
 
-    // Attach feedback listeners
+    // Attach feedback listeners (pasamos pregunta y respuesta para escalado)
     if (data.id) {
-      attachFeedbackListeners(data.id);
+      attachFeedbackListeners(data.id, data.originalQuestion || '', data.answer || '');
     }
 
     scrollToBottom();
   }
 
-  function attachFeedbackListeners(entryId) {
+  function attachFeedbackListeners(entryId, originalQuestion = '', originalAnswer = '') {
     const buttons = document.querySelectorAll(`[data-entry-id="${entryId}"]`);
 
     buttons.forEach(btn => {
@@ -944,8 +1124,212 @@
         buttons.forEach(b => b.classList.remove('helpful', 'not-helpful'));
         btn.classList.add(helpful ? 'helpful' : 'not-helpful');
         btn.disabled = true;
+
+        // Si no fue útil, mostrar opción de escalar a ticket
+        if (!helpful) {
+          showEscalatePrompt(entryId, originalQuestion, originalAnswer);
+        }
       });
     });
+  }
+
+  /**
+   * Mostrar prompt para escalar a ticket de soporte
+   */
+  function showEscalatePrompt(entryId, originalQuestion, originalAnswer) {
+    const feedbackContainer = document.querySelector(`[data-entry-id="${entryId}"]`)?.closest('.ai-message-feedback');
+    if (!feedbackContainer) return;
+
+    // Evitar duplicados
+    if (feedbackContainer.querySelector('.ai-escalate-prompt')) return;
+
+    const promptHTML = `
+      <div class="ai-escalate-prompt" data-escalate-id="${entryId}">
+        <div class="ai-escalate-prompt-text">
+          😔 Lamentamos que la respuesta no haya sido útil.<br>
+          <strong>¿Deseas crear un ticket de soporte?</strong> Un agente humano te atenderá.
+        </div>
+        <div class="ai-escalate-buttons">
+          <button class="ai-escalate-btn primary" data-action="create-ticket">
+            📝 Sí, crear ticket
+          </button>
+          <button class="ai-escalate-btn secondary" data-action="dismiss">
+            No, gracias
+          </button>
+        </div>
+      </div>
+    `;
+
+    feedbackContainer.insertAdjacentHTML('afterend', promptHTML);
+
+    // Event listeners para los botones
+    const promptEl = document.querySelector(`[data-escalate-id="${entryId}"]`);
+
+    promptEl.querySelector('[data-action="create-ticket"]').addEventListener('click', () => {
+      promptEl.remove();
+      showTicketForm(entryId, originalQuestion, originalAnswer);
+    });
+
+    promptEl.querySelector('[data-action="dismiss"]').addEventListener('click', () => {
+      promptEl.remove();
+    });
+
+    scrollToBottom();
+  }
+
+  /**
+   * Mostrar formulario para crear ticket
+   */
+  function showTicketForm(entryId, originalQuestion, originalAnswer) {
+    const messagesContainer = document.getElementById('ai-assistant-messages');
+
+    // Generar asunto sugerido basado en la pregunta
+    const suggestedSubject = originalQuestion.length > 50
+      ? originalQuestion.substring(0, 50) + '...'
+      : originalQuestion;
+
+    const formHTML = `
+      <div class="ai-message ai-message-assistant">
+        <div class="ai-ticket-form" data-ticket-form-id="${entryId}">
+          <div class="ai-ticket-form-title">
+            📝 Crear Ticket de Soporte
+          </div>
+
+          <div class="ai-ticket-form-field">
+            <label>Asunto</label>
+            <input type="text" id="ticket-subject-${entryId}" value="${escapeHtml(suggestedSubject)}" placeholder="Describe brevemente tu problema">
+          </div>
+
+          <div class="ai-ticket-form-field">
+            <label>Prioridad</label>
+            <select id="ticket-priority-${entryId}">
+              <option value="low">🟢 Baja</option>
+              <option value="medium" selected>🟡 Media</option>
+              <option value="high">🟠 Alta</option>
+              <option value="urgent">🔴 Urgente</option>
+            </select>
+          </div>
+
+          <div class="ai-ticket-form-field">
+            <label>Detalles adicionales (opcional)</label>
+            <textarea id="ticket-details-${entryId}" placeholder="Agrega más contexto si lo necesitas..."></textarea>
+          </div>
+
+          <div class="ai-ticket-form-actions">
+            <button class="ai-ticket-submit" id="ticket-submit-${entryId}">
+              🚀 Enviar Ticket
+            </button>
+            <button class="ai-ticket-cancel" id="ticket-cancel-${entryId}">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    messagesContainer.insertAdjacentHTML('beforeend', formHTML);
+
+    // Event listeners
+    document.getElementById(`ticket-submit-${entryId}`).addEventListener('click', async () => {
+      await submitTicket(entryId, originalQuestion, originalAnswer);
+    });
+
+    document.getElementById(`ticket-cancel-${entryId}`).addEventListener('click', () => {
+      document.querySelector(`[data-ticket-form-id="${entryId}"]`)?.closest('.ai-message')?.remove();
+    });
+
+    scrollToBottom();
+  }
+
+  /**
+   * Enviar ticket de soporte
+   */
+  async function submitTicket(entryId, originalQuestion, originalAnswer) {
+    const subject = document.getElementById(`ticket-subject-${entryId}`)?.value || originalQuestion;
+    const priority = document.getElementById(`ticket-priority-${entryId}`)?.value || 'medium';
+    const details = document.getElementById(`ticket-details-${entryId}`)?.value || '';
+
+    const submitBtn = document.getElementById(`ticket-submit-${entryId}`);
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ Enviando...';
+    }
+
+    try {
+      // Obtener datos de usuario y empresa
+      const companyData = JSON.parse(localStorage.getItem('selectedCompany') || localStorage.getItem('currentCompany') || '{}');
+      const companyId = companyData.id || companyData.company_id || '';
+      const userId = window.currentUser?.id || window.currentUser?.userId || window.currentUser?.user_id || '';
+      const userRole = window.currentUser?.role || 'employee';
+
+      const response = await fetch(CONFIG.apiBaseURL + CONFIG.endpoints.escalateToTicket, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || ''),
+          'X-User-Id': String(userId),
+          'X-Company-Id': String(companyId),
+          'X-User-Role': userRole
+        },
+        body: JSON.stringify({
+          conversationId: entryId,
+          originalQuestion,
+          originalAnswer,
+          subject,
+          priority,
+          additionalDetails: details,
+          context: {
+            module: STATE.currentModule,
+            screen: STATE.currentScreen,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      const data = await response.json();
+
+      // Remover formulario
+      document.querySelector(`[data-ticket-form-id="${entryId}"]`)?.closest('.ai-message')?.remove();
+
+      if (data.success) {
+        // Mostrar mensaje de éxito
+        showTicketSuccess(data.ticket);
+      } else {
+        addErrorMessage('No se pudo crear el ticket. Por favor intenta nuevamente.');
+      }
+
+    } catch (error) {
+      console.error('❌ Error creando ticket:', error);
+      addErrorMessage('Error de conexión. Por favor intenta nuevamente.');
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Enviar Ticket';
+      }
+    }
+  }
+
+  /**
+   * Mostrar mensaje de ticket creado exitosamente
+   */
+  function showTicketSuccess(ticket) {
+    const messagesContainer = document.getElementById('ai-assistant-messages');
+
+    const successHTML = `
+      <div class="ai-message ai-message-assistant">
+        <div class="ai-ticket-success">
+          <div class="ai-ticket-success-icon">✅</div>
+          <div class="ai-ticket-success-title">Ticket creado exitosamente</div>
+          <div class="ai-ticket-success-number">${ticket.ticket_number || 'Ticket enviado'}</div>
+          <div style="font-size: 12px; color: #047857; margin-top: 8px;">
+            Un agente de soporte APONNT te contactará pronto.
+          </div>
+        </div>
+      </div>
+    `;
+
+    messagesContainer.insertAdjacentHTML('beforeend', successHTML);
+    scrollToBottom();
   }
 
   async function submitFeedback(entryId, helpful) {

@@ -1568,4 +1568,301 @@ router.get('/detection-logs', auth, async (req, res) => {
   }
 });
 
+/**
+ * ============================================================================
+ * 🧪 BIOMETRIC STRESS TEST ENDPOINT
+ * ============================================================================
+ * Endpoint especial para testing masivo de fichajes biométricos.
+ * BYPASS: No requiere imagen real, usa embeddings pre-generados.
+ *
+ * @route POST /api/v2/biometric-attendance/verify-test
+ * ============================================================================
+ */
+router.post('/verify-test', async (req, res) => {
+    const startTime = Date.now();
+
+    try {
+        const {
+            scenarioId,
+            scenarioType,
+            embedding,
+            qualityScore,
+            userId,
+            expectedUserId,
+            timestamp,
+            testMode,
+            bypassCamera
+        } = req.body;
+
+        const companyId = req.headers['x-company-id'] || req.body.companyId || 1;
+
+        // Validar que es modo test
+        if (!testMode) {
+            return res.status(400).json({
+                success: false,
+                error: 'Este endpoint solo funciona en modo test',
+                code: 'TEST_MODE_REQUIRED'
+            });
+        }
+
+        console.log(`🧪 [VERIFY-TEST] Scenario: ${scenarioType} | ID: ${scenarioId}`);
+
+        // Simular diferentes escenarios de respuesta
+        let response;
+
+        switch (scenarioType) {
+            case 'HAPPY_PATH':
+                // Fichaje exitoso normal
+                response = await simulateHappyPath(companyId, embedding, userId, startTime);
+                break;
+
+            case 'USER_NOT_FOUND':
+                // Usuario no reconocido
+                response = {
+                    success: false,
+                    reason: 'NO_MATCH',
+                    message: 'No se pudo identificar al empleado',
+                    scenarioId: scenarioId,
+                    processingTime: Date.now() - startTime
+                };
+                break;
+
+            case 'LATE_ARRIVAL':
+                // Llegada tarde (dentro de tolerancia configurable)
+                response = await simulateLateArrival(companyId, embedding, userId, startTime);
+                break;
+
+            case 'EARLY_ARRIVAL':
+                // Llegada temprana
+                response = await simulateEarlyArrival(companyId, embedding, userId, startTime);
+                break;
+
+            case 'OUTSIDE_SHIFT':
+                // Fuera del turno asignado
+                response = {
+                    success: false,
+                    reason: 'OUTSIDE_SHIFT',
+                    message: 'Fichaje fuera del horario del turno asignado',
+                    scenarioId: scenarioId,
+                    processingTime: Date.now() - startTime
+                };
+                break;
+
+            case 'DUPLICATE_SHORT':
+                // Duplicado en menos de 5 minutos
+                response = {
+                    success: false,
+                    reason: 'DUPLICATE_DETECTED',
+                    message: 'Fichaje duplicado detectado (menos de 5 minutos)',
+                    duplicateWindow: '5min',
+                    scenarioId: scenarioId,
+                    processingTime: Date.now() - startTime
+                };
+                break;
+
+            case 'DUPLICATE_MEDIUM':
+                // Duplicado en menos de 30 minutos
+                response = {
+                    success: false,
+                    reason: 'DUPLICATE_DETECTED',
+                    message: 'Múltiples fichajes detectados (menos de 30 minutos)',
+                    duplicateWindow: '30min',
+                    scenarioId: scenarioId,
+                    processingTime: Date.now() - startTime
+                };
+                break;
+
+            case 'LOW_QUALITY':
+                // Imagen de baja calidad
+                response = {
+                    success: false,
+                    reason: 'LOW_QUALITY',
+                    message: 'Calidad de imagen insuficiente para reconocimiento',
+                    qualityScore: qualityScore || 0.4,
+                    threshold: 0.7,
+                    scenarioId: scenarioId,
+                    processingTime: Date.now() - startTime
+                };
+                break;
+
+            case 'SUSPENDED_USER':
+                // Usuario suspendido
+                response = {
+                    success: false,
+                    reason: 'employee_suspended',
+                    blocked: true,
+                    blockReason: 'SUSPENSION',
+                    message: 'Acceso bloqueado por suspensión disciplinaria',
+                    suspensionInfo: {
+                        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                        daysRemaining: 7
+                    },
+                    scenarioId: scenarioId,
+                    processingTime: Date.now() - startTime
+                };
+                break;
+
+            case 'RAPID_FIRE':
+                // Stress test - respuesta rápida
+                response = {
+                    success: true,
+                    stressTest: true,
+                    message: 'Stress test response',
+                    scenarioId: scenarioId,
+                    processingTime: Date.now() - startTime
+                };
+                break;
+
+            default:
+                response = {
+                    success: false,
+                    error: 'Tipo de escenario desconocido',
+                    scenarioType: scenarioType,
+                    scenarioId: scenarioId,
+                    processingTime: Date.now() - startTime
+                };
+        }
+
+        // Agregar metadata de test
+        response.testMetadata = {
+            scenarioId: scenarioId,
+            scenarioType: scenarioType,
+            companyId: companyId,
+            timestamp: timestamp || new Date().toISOString(),
+            processingTime: Date.now() - startTime
+        };
+
+        return res.json(response);
+
+    } catch (error) {
+        console.error(`❌ [VERIFY-TEST] Error: ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            error: 'Error interno en test',
+            message: error.message,
+            processingTime: Date.now() - startTime
+        });
+    }
+});
+
+/**
+ * Simular happy path (fichaje exitoso)
+ */
+async function simulateHappyPath(companyId, embedding, userId, startTime) {
+    // Si hay userId, simular matching exitoso
+    if (userId) {
+        try {
+            const { sequelize } = require('../config/database');
+
+            // Buscar usuario real para datos
+            const [user] = await sequelize.query(`
+                SELECT user_id, "firstName", "lastName"
+                FROM users
+                WHERE id = :userId OR user_id::text = :userId
+                LIMIT 1
+            `, {
+                replacements: { userId: userId.toString() },
+                type: QueryTypes.SELECT
+            });
+
+            if (user) {
+                return {
+                    success: true,
+                    message: `Bienvenido, ${user.firstName} ${user.lastName}!`,
+                    employee: {
+                        id: user.user_id,
+                        name: `${user.firstName} ${user.lastName}`
+                    },
+                    attendance: {
+                        id: 'test_att_' + Date.now(),
+                        clockInTime: new Date().toISOString(),
+                        type: 'clock_in'
+                    },
+                    biometric: {
+                        similarity: 0.85 + Math.random() * 0.1,
+                        confidence: 'HIGH',
+                        threshold: 0.75
+                    },
+                    processingTime: Date.now() - startTime
+                };
+            }
+        } catch (err) {
+            console.log(`⚠️ [VERIFY-TEST] DB query failed, using mock data`);
+        }
+    }
+
+    // Mock response si no hay usuario real
+    return {
+        success: true,
+        message: 'Bienvenido, Empleado Test!',
+        employee: {
+            id: 'test_emp_' + Date.now(),
+            name: 'Empleado Test'
+        },
+        attendance: {
+            id: 'test_att_' + Date.now(),
+            clockInTime: new Date().toISOString(),
+            type: 'clock_in'
+        },
+        biometric: {
+            similarity: 0.85 + Math.random() * 0.1,
+            confidence: 'HIGH',
+            threshold: 0.75
+        },
+        processingTime: Date.now() - startTime
+    };
+}
+
+/**
+ * Simular llegada tarde
+ */
+async function simulateLateArrival(companyId, embedding, userId, startTime) {
+    // Simular que está llegando tarde pero dentro de tolerancia configurable
+    const lateMinutes = 5 + Math.floor(Math.random() * 20); // 5-25 min tarde
+
+    return {
+        success: true,
+        lateArrival: true,
+        message: 'Fichaje registrado - Llegada tardía',
+        employee: {
+            id: userId || 'test_emp_' + Date.now(),
+            name: 'Empleado Test'
+        },
+        attendance: {
+            id: 'test_att_' + Date.now(),
+            clockInTime: new Date().toISOString(),
+            type: 'clock_in',
+            lateMinutes: lateMinutes
+        },
+        warning: `Llegada ${lateMinutes} minutos después del inicio del turno`,
+        processingTime: Date.now() - startTime
+    };
+}
+
+/**
+ * Simular llegada temprana
+ */
+async function simulateEarlyArrival(companyId, embedding, userId, startTime) {
+    const earlyMinutes = 15 + Math.floor(Math.random() * 30); // 15-45 min antes
+
+    return {
+        success: true,
+        earlyArrival: true,
+        message: 'Fichaje registrado - Llegada anticipada',
+        employee: {
+            id: userId || 'test_emp_' + Date.now(),
+            name: 'Empleado Test'
+        },
+        attendance: {
+            id: 'test_att_' + Date.now(),
+            clockInTime: new Date().toISOString(),
+            type: 'clock_in',
+            earlyMinutes: earlyMinutes
+        },
+        info: `Llegada ${earlyMinutes} minutos antes del inicio del turno`,
+        processingTime: Date.now() - startTime
+    };
+}
+
 module.exports = router;

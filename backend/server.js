@@ -2713,6 +2713,11 @@ app.use('/api/v2/postgresql/partitioning', postgresqlPartitioningRoutes);
 const biometricAttendanceRoutes = require('./src/routes/biometric-attendance-api');
 app.use('/api/v2/biometric-attendance', biometricAttendanceRoutes);
 
+// 📅 CONFIGURAR CALENDARIO LABORAL API (Feriados, Rotaciones, Días No Laborables)
+const calendarioLaboralRoutes = require('./src/routes/calendarioLaboralRoutes');
+app.use('/api/calendario', calendarioLaboralRoutes);
+console.log('📅 [CALENDARIO-LABORAL] API de Calendario Laboral configurada');
+
 // 🏢 CONFIGURAR BIOMETRIC ENTERPRISE API (ENCRYPTED TEMPLATES)
 const biometricEnterpriseRoutes = require('./src/routes/biometric-enterprise-routes');
 app.use('/api/v2/biometric-enterprise', biometricEnterpriseRoutes);
@@ -2756,6 +2761,18 @@ app.use('/api/v1/absence', absenceRoutes);
 const attendanceRoutes = require('./src/routes/attendanceRoutes');
 app.use('/api/v1/attendance', attendanceRoutes);
 
+// 🏦 CONFIGURAR API DE BANCO DE HORAS
+// Sistema multi-pais con parametrizacion por sucursal via plantillas SSOT
+const hourBankRoutes = require('./src/routes/hourBankRoutes');
+app.use('/api/hour-bank', hourBankRoutes);
+
+console.log('🏦 [HOUR-BANK] Sistema de Banco de Horas ACTIVO:');
+console.log('   📋 /api/hour-bank/templates - Plantillas por sucursal/pais');
+console.log('   💰 /api/hour-bank/balance - Saldo del empleado');
+console.log('   📜 /api/hour-bank/transactions - Historial de movimientos');
+console.log('   📝 /api/hour-bank/requests - Solicitudes de uso');
+console.log('   ⚡ /api/hour-bank/decisions/pending - Elegir cobrar vs banco');
+
 // 📊 CONFIGURAR API DE ATTENDANCE ANALYTICS (Scoring + Patrones + OLAP)
 const attendanceAnalyticsRoutes = require('./src/routes/attendanceAnalyticsRoutes');
 app.use('/api/attendance-analytics', attendanceAnalyticsRoutes);
@@ -2769,6 +2786,21 @@ app.use('/api/attendance-stats', attendanceAdvancedStatsRoutes);
 // Cubo multidimensional, costos de reposición, optimizador de vacaciones
 const hoursCubeRoutes = require('./src/routes/hoursCubeRoutes');
 app.use('/api/hours-cube', hoursCubeRoutes);
+
+// 🔮 CONFIGURAR API DE WORKFORCE PREDICTIVO (IRA + Análisis de Sensibilidad)
+// IRA = Índice de Riesgo de Asistencia, Regresión Lineal, Z-Score, Drill-down SSOT
+const predictiveWorkforceRoutes = require('./src/routes/predictiveWorkforceRoutes');
+app.use('/api/predictive-workforce', predictiveWorkforceRoutes);
+
+console.log('🔮 [PREDICTIVE-WORKFORCE] Sistema de Analytics Predictivo ACTIVO:');
+console.log('   📊 /api/predictive-workforce/:companyId/ira - Índice de Riesgo de Asistencia (IRA)');
+console.log('   🎯 /api/predictive-workforce/:companyId/ira/factors - Factores individuales del IRA');
+console.log('   📈 /api/predictive-workforce/:companyId/ira/trend - Tendencia histórica del IRA');
+console.log('   🔬 /api/predictive-workforce/:companyId/sensitivity - Análisis de Sensibilidad');
+console.log('   ⚖️  /api/predictive-workforce/:companyId/compare/:type - Comparativa Z-Score');
+console.log('   💰 /api/predictive-workforce/:companyId/forecast - Presupuesto de Cobertura');
+console.log('   🔍 /api/predictive-workforce/:companyId/drill-down/:metric - Drill-down SSOT');
+console.log('   🧠 Metodología: βᵢ×Xᵢ, ∂IRA/∂Xᵢ, Z=(x-μ)/σ, Regresión Lineal');
 
 // 🎯 CONFIGURAR API DE EXPEDIENTE 360° (Análisis Integral de Empleados)
 app.use('/api/employee-360', employee360Routes);
@@ -2972,6 +3004,44 @@ console.log('   ⏹️  POST /api/brain-reactive/stop - Detener observación');
 console.log('   📜 GET  /api/brain-reactive/changes - Log de cambios');
 console.log('   ✅ GET  /api/brain-reactive/tasks - Tareas auto-detectadas');
 console.log('   🔄 GET  /api/brain-reactive/workflows - Workflows detectados');
+
+// ✅ CONFIGURAR BRAIN ECOSYSTEM - Sistema Integrado Brain + Phase4 + Workflows
+const brainEcosystemRoutes = require('./src/routes/brainEcosystemRoutes');
+const BrainEcosystemInitializer = require('./src/services/BrainEcosystemInitializer');
+
+app.use('/api/ecosystem', brainEcosystemRoutes);
+
+// Inicializar ecosistema de forma diferida (después de que todo esté listo)
+setImmediate(async () => {
+  try {
+    console.log('');
+    console.log('🧠 [BRAIN ECOSYSTEM] Iniciando integración completa...');
+    const ecosystem = await BrainEcosystemInitializer.initialize(database, {
+      startWatching: process.env.NODE_ENV !== 'production'
+    });
+
+    // Configurar rutas con el ecosistema
+    brainEcosystemRoutes.setEcosystemInitializer(BrainEcosystemInitializer);
+
+    // Hacer disponible globalmente
+    app.set('brainEcosystem', ecosystem);
+
+    console.log('🧠 [BRAIN ECOSYSTEM] Integración completa lista');
+  } catch (error) {
+    console.error('⚠️ [BRAIN ECOSYSTEM] Error inicializando:', error.message);
+  }
+});
+
+console.log('🌐 [BRAIN-ECOSYSTEM] Sistema Integrado Brain-Phase4 ACTIVO:');
+console.log('   📊 GET  /api/ecosystem/status - Estado completo del ecosistema');
+console.log('   🏥 GET  /api/ecosystem/health - Health check rápido');
+console.log('   📝 GET  /api/ecosystem/workflows - Workflows configurados');
+console.log('   🔄 POST /api/ecosystem/workflows/regenerate - Regenerar todos');
+console.log('   🧪 POST /api/ecosystem/test/:moduleKey - Test inteligente');
+console.log('   🚀 POST /api/ecosystem/test-all - Test completo del sistema');
+console.log('   📚 GET  /api/ecosystem/tutorials - Tutoriales auto-generados');
+console.log('   🧠 GET  /api/ecosystem/learning - Learning patterns');
+console.log('   👁️ GET  /api/ecosystem/watcher/status - Estado file watcher');
 
 // ✅ CONFIGURAR BRAIN ANALYZER - Analizador Avanzado del Cerebro
 const brainAnalyzerRoutes = require('./src/routes/brainAnalyzerRoutes');

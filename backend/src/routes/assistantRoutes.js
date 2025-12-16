@@ -464,6 +464,192 @@ router.get('/marketing/summary', authenticate, async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════
+// ENDPOINT: Escalar conversación IA a Ticket de Soporte
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * POST /api/assistant/escalate-to-ticket
+ *
+ * Crea un ticket de soporte cuando la respuesta del asistente IA
+ * no fue satisfactoria para el usuario.
+ *
+ * Flujo:
+ * 1. Usuario pregunta algo a la IA
+ * 2. IA responde
+ * 3. Usuario marca "👎 No útil"
+ * 4. Usuario solicita crear ticket → este endpoint
+ * 5. Se crea ticket y se notifica a staff APONNT
+ *
+ * Body:
+ * {
+ *   "conversationId": "uuid",         // ID de la conversación IA
+ *   "originalQuestion": "...",        // Pregunta original del usuario
+ *   "originalAnswer": "...",          // Respuesta de la IA que no fue útil
+ *   "subject": "...",                 // Asunto del ticket
+ *   "priority": "medium",             // low, medium, high, urgent
+ *   "additionalDetails": "...",       // Detalles adicionales
+ *   "context": { module, screen }     // Contexto del módulo
+ * }
+ */
+router.post('/escalate-to-ticket', authenticate, async (req, res) => {
+  try {
+    const {
+      conversationId,
+      originalQuestion,
+      originalAnswer,
+      subject,
+      priority = 'medium',
+      additionalDetails = '',
+      context = {}
+    } = req.body;
+
+    const companyId = req.user.companyId;
+    const userId = req.user.userId;
+
+    console.log(`\n🎫 [ASSISTANT] Escalando conversación a ticket...`);
+    console.log(`   Company: ${companyId}, User: ${userId}`);
+    console.log(`   Pregunta: ${originalQuestion?.substring(0, 50)}...`);
+
+    // Importar modelos y servicios necesarios
+    const { SupportTicketV2, Company, User } = database;
+    const NotificationUnifiedService = require('../services/NotificationUnifiedService');
+
+    // Verificar que la empresa exista
+    const company = await Company.findByPk(companyId);
+    if (!company) {
+      return res.status(400).json({
+        error: 'Empresa no encontrada'
+      });
+    }
+
+    // Generar número de ticket único
+    const year = new Date().getFullYear();
+    const { sequelize } = require('../config/database');
+    const [lastTicketResult] = await sequelize.query(`
+      SELECT ticket_number FROM support_tickets
+      WHERE ticket_number LIKE 'TICKET-${year}-%'
+      ORDER BY created_at DESC
+      LIMIT 1
+    `);
+
+    let nextNumber = 1;
+    if (lastTicketResult.length > 0) {
+      const match = lastTicketResult[0].ticket_number.match(/TICKET-\d{4}-(\d{6})/);
+      if (match) {
+        nextNumber = parseInt(match[1]) + 1;
+      }
+    }
+
+    const ticket_number = `TICKET-${year}-${String(nextNumber).padStart(6, '0')}`;
+
+    // Construir descripción del ticket con contexto de la conversación IA
+    const description = `
+**Escalado desde Asistente IA**
+
+**Pregunta original del usuario:**
+${originalQuestion}
+
+**Respuesta de la IA (no satisfactoria):**
+${originalAnswer}
+
+**Detalles adicionales del usuario:**
+${additionalDetails || 'Sin detalles adicionales'}
+
+**Contexto:**
+- Módulo: ${context.module || 'No especificado'}
+- Pantalla: ${context.screen || 'No especificada'}
+- Conversación IA ID: ${conversationId || 'No disponible'}
+- Timestamp: ${context.timestamp || new Date().toISOString()}
+    `.trim();
+
+    // Crear ticket en la tabla support_tickets
+    // Nota: SupportTicketV2 es el modelo que mapea a support_tickets
+    const ticket = await SupportTicketV2.create({
+      ticket_number,
+      company_id: companyId,
+      created_by_user_id: userId,
+      module_name: context.module || 'ai-assistant',
+      module_display_name: 'Asistente IA - Escalado',
+      subject: subject || originalQuestion?.substring(0, 100) || 'Consulta escalada desde IA',
+      description,
+      priority,
+      status: 'open',
+      assistant_attempted: true,
+      assistant_resolved: false
+      // Nota: conversationId se incluye en la descripción como referencia
+    });
+
+    console.log(`✅ [ASSISTANT] Ticket creado: ${ticket_number}`);
+
+    // ═══════════════════════════════════════════════════════════
+    // NOTIFICAR A STAFF APONNT via NotificationUnifiedService
+    // ═══════════════════════════════════════════════════════════
+
+    try {
+      // Usar el sistema de notificaciones unificado para enviar a APONNT
+      // Firma: sendToAponnt(companyId, userId, { title, message, category, metadata })
+      const notificationService = new NotificationUnifiedService();
+      await notificationService.sendToAponnt(companyId, userId, {
+        title: `🎫 Ticket escalado desde IA: ${ticket_number}`,
+        message: `
+Un usuario ha escalado su consulta a soporte humano después de que el Asistente IA no pudo resolver su problema.
+
+**Empresa:** ${company.name}
+**Ticket:** ${ticket_number}
+**Prioridad:** ${priority.toUpperCase()}
+
+**Pregunta original:**
+${originalQuestion}
+
+**Por qué fue escalado:**
+El usuario indicó que la respuesta de la IA no fue útil.
+
+Este ticket requiere atención de un agente de soporte.
+        `.trim(),
+        category: 'support_escalation',
+        metadata: {
+          ticket_id: ticket.ticket_id,
+          ticket_number,
+          escalated_from: 'ai_assistant',
+          original_question: originalQuestion,
+          module: context.module,
+          priority
+        }
+      });
+
+      console.log(`📧 [ASSISTANT] Notificación enviada a staff APONNT`);
+    } catch (notifError) {
+      // No fallar el ticket si la notificación falla
+      console.error(`⚠️  [ASSISTANT] Error enviando notificación:`, notifError.message);
+    }
+
+    // Responder con éxito
+    res.status(201).json({
+      success: true,
+      message: 'Ticket de soporte creado exitosamente',
+      ticket: {
+        ticket_id: ticket.ticket_id,
+        ticket_number,
+        status: 'open',
+        priority,
+        created_at: ticket.created_at
+      },
+      meta: {
+        escalated_from: 'ai_assistant',
+        notification_sent: true
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [ASSISTANT] Error escalando a ticket:', error);
+    res.status(500).json({
+      error: 'Error creando ticket de soporte',
+      message: error.message
+    });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
 // EXPORTS
 // ═══════════════════════════════════════════════════════════
 

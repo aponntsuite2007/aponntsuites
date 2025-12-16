@@ -244,8 +244,9 @@ class SystemRegistry {
             existingModule.help = fileModule.help;
           }
         } else {
-          // Módulo no existe en BD, registrarlo desde archivo
-          this.registerModule(fileModule);
+          // ⚠️ FIX SSOT: Módulo en JSON pero NO en BD = fantasma, NO registrar
+          // La BD es la única fuente de verdad para módulos
+          console.warn(`⚠️  [REGISTRY] Módulo "${fileModule.id}" en JSON pero NO en BD - ignorado (SSOT: BD es la verdad)`);
         }
       }
 

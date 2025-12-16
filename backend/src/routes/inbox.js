@@ -10,18 +10,24 @@
 const express = require('express');
 const router = express.Router();
 const inboxService = require('../services/inboxService');
+const { auth } = require('../middleware/auth');
 
-// Middleware de autenticación simple
-const authenticate = (req, res, next) => {
-    req.user = {
-        employee_id: req.headers['x-employee-id'] || 'EMP-001',
-        company_id: parseInt(req.headers['x-company-id']) || 11,
-        role: req.headers['x-role'] || 'employee'
-    };
+/**
+ * Middleware para extraer employee_id del usuario autenticado
+ * El auth middleware ya pone req.user con user_id, company_id, role, etc.
+ * Este middleware adapta los campos para el inboxService
+ */
+const adaptUserForInbox = (req, res, next) => {
+    if (req.user) {
+        // Usar user_id como employee_id para el inbox
+        req.user.employee_id = req.user.user_id || req.user.employeeId || req.user.employee_id;
+        req.user.company_id = req.user.companyId || req.user.company_id;
+    }
     next();
 };
 
-router.use(authenticate);
+// Aplicar autenticación JWT real + adaptador
+router.use(auth, adaptUserForInbox);
 
 // ═══════════════════════════════════════════════════════════════
 // ENDPOINTS DE INBOX

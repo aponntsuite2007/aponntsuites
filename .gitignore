@@ -84,3 +84,4 @@ public/uploads/*
 !public/uploads/.gitkeepnul
 backend/nul
 **/nul
+.aider*

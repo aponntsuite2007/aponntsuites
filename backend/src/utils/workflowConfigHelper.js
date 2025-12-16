@@ -9,6 +9,7 @@
  */
 
 const { User, Department, CompanyModule, SystemModule } = require('../config/database');
+const NotificationRecipientResolver = require('../services/NotificationRecipientResolver');
 
 /**
  * SCHEMA DE CONFIGURACIÓN (guardado en CompanyModule.configuration)
@@ -308,20 +309,19 @@ async function resolveEvaluatorGroup(companyId, groupName) {
 
 /**
  * Resuelve TODOS los usuarios de RRHH
+ * 🆕 ACTUALIZADO: Usa NotificationRecipientResolver como SSOT
  */
 async function resolveAllRRHH(companyId) {
   try {
-    const users = await User.findAll({
-      where: {
-        company_id: companyId,
-        role: 'admin',  // O el rol que corresponda a RRHH
-        is_active: true
-      },
-      attributes: ['id']
+    // Usar NotificationRecipientResolver como fuente única de verdad
+    const rrhhRecipients = await NotificationRecipientResolver.resolveRRHH(companyId, {
+      maxRecipients: 10,
+      includeUserDetails: false,
+      fallbackToAdmins: true
     });
 
-    const userIds = users.map(u => u.id);
-    console.log(`  → Todos RRHH: ${userIds.length} usuarios`);
+    const userIds = rrhhRecipients.map(r => r.userId);
+    console.log(`  → Todos RRHH (via NotificationRecipientResolver): ${userIds.length} usuarios`);
     return userIds;
 
   } catch (error) {

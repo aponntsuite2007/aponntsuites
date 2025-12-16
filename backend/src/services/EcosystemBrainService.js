@@ -895,9 +895,17 @@ class EcosystemBrainService {
   /**
    * Obtener workflows CONECTADOS con pasos, módulos y capacidad de tutorial
    * Esta es la versión avanzada que reemplaza getWorkflows()
+   *
+   * PROCESO:
+   * 1. Regenera workflows derivados si hay cambios en código fuente
+   * 2. Escanea archivos buscando `static STAGES = {...}`
+   * 3. Retorna workflows detectados con source: 'LIVE_CODE_SCAN'
    */
   async getWorkflowsConnected() {
     console.log('🔍 [BRAIN] Detectando workflows CONECTADOS desde código...');
+
+    // PASO 0: Regenerar workflows derivados si hay cambios en código fuente
+    await this.regenerateDerivedWorkflows();
 
     const workflows = [];
     const servicesDir = path.join(this.baseDir, 'src/services');
@@ -2235,6 +2243,7 @@ class EcosystemBrainService {
   /**
    * Registrar resultados de tests y descubrimientos
    * Este es el método que SystemRegistry llama para que Brain aprenda
+   * MEJORADO: Ahora persiste en BD y actualiza learning patterns
    *
    * @param {string} moduleKey - Clave del módulo testeado
    * @param {object} results - Resultados del test (passed, failed, etc.)
@@ -2244,66 +2253,262 @@ class EcosystemBrainService {
     console.log(`🧠 [BRAIN] Recibiendo feedback de tests de ${moduleKey}...`);
 
     try {
-      // Por ahora, el Brain solo logguea los descubrimientos
-      // En el futuro, podría:
-      // 1. Actualizar su conocimiento interno sobre el módulo
-      // 2. Ajustar progress scores basados en tests reales
-      // 3. Detectar patrones de UX comunes entre módulos
-      // 4. Generar recomendaciones de mejora automáticas
+      console.log(`   📊 Tests: ${results.passed || 0} passed, ${results.failed || 0} failed`);
 
-      console.log(`   📊 Tests: ${results.passed} passed, ${results.failed} failed`);
-
-      if (discoveries.buttons && discoveries.buttons.length > 0) {
-        console.log(`   🔘 ${discoveries.buttons.length} botones descubiertos`);
-
-        // Brain podría aprender patrones de nombres de botones
-        const buttonPatterns = discoveries.buttons.map(b => ({
-          text: b.data.text,
-          type: b.context
-        }));
-        console.log(`      Patrones: ${buttonPatterns.map(p => p.text).join(', ')}`);
+      // 1. PERSISTIR RESULTADOS EN BD
+      if (this.db && this.db.sequelize) {
+        await this.persistTestResultsToDB(moduleKey, results);
       }
 
-      if (discoveries.modals && discoveries.modals.length > 0) {
-        console.log(`   🪟 ${discoveries.modals.length} modales descubiertos`);
+      // 2. PROCESAR DESCUBRIMIENTOS
+      if (discoveries) {
+        if (discoveries.buttons && discoveries.buttons.length > 0) {
+          console.log(`   🔘 ${discoveries.buttons.length} botones descubiertos`);
+          await this.persistDiscoveries(moduleKey, 'button', discoveries.buttons);
+        }
 
-        // Brain podría aprender tipos de selectores de modales
-        const modalSelectors = discoveries.modals.map(m => m.data.selector);
-        console.log(`      Selectores: ${modalSelectors.join(', ')}`);
+        if (discoveries.modals && discoveries.modals.length > 0) {
+          console.log(`   🪟 ${discoveries.modals.length} modales descubiertos`);
+          await this.persistDiscoveries(moduleKey, 'modal', discoveries.modals);
+        }
+
+        if (discoveries.fields && discoveries.fields.length > 0) {
+          console.log(`   📝 ${discoveries.fields.length} campos descubiertos`);
+          await this.persistDiscoveries(moduleKey, 'field', discoveries.fields);
+        }
+
+        if (discoveries.flows && discoveries.flows.length > 0) {
+          console.log(`   🔄 ${discoveries.flows.length} flujos testeados`);
+          const flowsWorking = discoveries.flows.filter(f => f.worksCorrectly);
+          console.log(`      Funcionando: ${flowsWorking.length}/${discoveries.flows.length}`);
+          await this.persistDiscoveries(moduleKey, 'flow', discoveries.flows);
+        }
+
+        if (discoveries.endpoints && discoveries.endpoints.length > 0) {
+          console.log(`   🌐 ${discoveries.endpoints.length} endpoints descubiertos`);
+          await this.persistDiscoveries(moduleKey, 'endpoint', discoveries.endpoints);
+        }
       }
 
-      if (discoveries.fields && discoveries.fields.length > 0) {
-        console.log(`   📝 ${discoveries.fields.length} campos descubiertos`);
+      // 3. ACTUALIZAR LEARNING PATTERNS EN MEMORIA
+      await this.updateLearningPatterns(moduleKey, results);
 
-        // Brain podría aprender estructura de formularios
-        const fieldTypes = discoveries.fields.reduce((acc, f) => {
-          acc[f.data.type] = (acc[f.data.type] || 0) + 1;
-          return acc;
-        }, {});
-        console.log(`      Tipos: ${JSON.stringify(fieldTypes)}`);
-      }
+      // 4. CALCULAR Y ACTUALIZAR MODULE SCORE
+      const newScore = this.calculateScoreFromResults(results);
+      await this.updateModuleScore(moduleKey, newScore);
 
-      if (discoveries.flows && discoveries.flows.length > 0) {
-        console.log(`   🔄 ${discoveries.flows.length} flujos testeados`);
+      // 5. INVALIDAR CACHE
+      this.invalidateCache(`module_${moduleKey}`);
+      this.invalidateCache('technical_modules');
 
-        // Brain podría actualizar su conocimiento de CRUD completeness
-        const flowsWorking = discoveries.flows.filter(f => f.worksCorrectly);
-        console.log(`      Funcionando: ${flowsWorking.length}/${discoveries.flows.length}`);
-      }
-
-      // Invalidar cache del módulo para forzar re-scan en próximo uso
-      const cacheKey = `module_${moduleKey}`;
-      if (this.cache.has(cacheKey)) {
-        this.cache.delete(cacheKey);
-        console.log(`   🔄 Cache de ${moduleKey} invalidado - forzará re-scan`);
-      }
-
-      console.log(`✅ [BRAIN] Feedback procesado correctamente`);
+      console.log(`✅ [BRAIN] Feedback procesado y persistido correctamente`);
 
     } catch (error) {
       console.error(`❌ [BRAIN] Error procesando feedback:`, error.message);
-      // No lanzar error, solo loggear (no queremos que un fallo aquí rompa el flujo)
     }
+  }
+
+  /**
+   * Persistir resultados de test en BD
+   */
+  async persistTestResultsToDB(moduleKey, results) {
+    if (!this.db || !this.db.sequelize) return;
+
+    try {
+      await this.db.sequelize.query(`
+        INSERT INTO test_results (
+          module_key, test_timestamp, total_tests, passed, failed,
+          coverage, duration_ms, results_json
+        ) VALUES ($1, NOW(), $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (module_key, DATE(test_timestamp))
+        DO UPDATE SET
+          total_tests = EXCLUDED.total_tests,
+          passed = EXCLUDED.passed,
+          failed = EXCLUDED.failed,
+          coverage = EXCLUDED.coverage,
+          duration_ms = EXCLUDED.duration_ms,
+          results_json = EXCLUDED.results_json,
+          updated_at = NOW()
+      `, {
+        bind: [
+          moduleKey,
+          results.total || 0,
+          results.passed || 0,
+          results.failed || 0,
+          results.coverage || 0,
+          results.duration || 0,
+          JSON.stringify(results)
+        ]
+      });
+
+      console.log(`   💾 Resultados persistidos en test_results`);
+    } catch (error) {
+      // Tabla puede no existir aún
+      console.log(`   ⚠️ No se pudo persistir test_results:`, error.message);
+    }
+  }
+
+  /**
+   * Persistir descubrimientos en BD
+   */
+  async persistDiscoveries(moduleKey, discoveryType, items) {
+    if (!this.db || !this.db.sequelize || !items || items.length === 0) return;
+
+    try {
+      for (const item of items) {
+        const discoveryData = item.data || item;
+        const context = item.context || 'general';
+        const worksCorrectly = item.worksCorrectly !== false;
+
+        await this.db.sequelize.query(`
+          INSERT INTO ux_discoveries (
+            module_key, discovery_type, discovery_data, context,
+            validation_count, works_correctly, validation_status,
+            first_seen_at, last_seen_at
+          ) VALUES ($1, $2, $3, $4, 1, $5, 'pending', NOW(), NOW())
+          ON CONFLICT (module_key, discovery_type, MD5(discovery_data::text))
+          DO UPDATE SET
+            validation_count = ux_discoveries.validation_count + 1,
+            works_correctly = EXCLUDED.works_correctly,
+            last_seen_at = NOW(),
+            validation_status = CASE
+              WHEN ux_discoveries.validation_count >= 2 THEN 'validated'
+              ELSE 'pending'
+            END
+        `, {
+          bind: [moduleKey, discoveryType, JSON.stringify(discoveryData), context, worksCorrectly]
+        });
+      }
+    } catch (error) {
+      console.log(`   ⚠️ No se pudo persistir discoveries:`, error.message);
+    }
+  }
+
+  /**
+   * Actualizar learning patterns en memoria
+   */
+  async updateLearningPatterns(moduleKey, results) {
+    if (!this.learningPatterns) {
+      this.learningPatterns = new Map();
+    }
+
+    const existing = this.learningPatterns.get(moduleKey) || {
+      testCount: 0,
+      totalPassed: 0,
+      totalFailed: 0,
+      lastScore: 0,
+      errorPatterns: new Map(),
+      lastTested: null
+    };
+
+    existing.testCount++;
+    existing.totalPassed += (results.passed || 0);
+    existing.totalFailed += (results.failed || 0);
+    existing.lastTested = new Date().toISOString();
+
+    // Aprender de errores
+    if (results.errors && Array.isArray(results.errors)) {
+      for (const error of results.errors) {
+        const errorKey = `${error.type || 'unknown'}:${(error.error || error.message || '').substring(0, 50)}`;
+        const count = existing.errorPatterns.get(errorKey) || 0;
+        existing.errorPatterns.set(errorKey, count + 1);
+      }
+    }
+
+    this.learningPatterns.set(moduleKey, existing);
+
+    // Persistir en BD si es posible
+    await this.persistLearningPatterns(moduleKey, existing);
+  }
+
+  /**
+   * Persistir learning patterns en BD
+   */
+  async persistLearningPatterns(moduleKey, patterns) {
+    if (!this.db || !this.db.sequelize) return;
+
+    try {
+      await this.db.sequelize.query(`
+        INSERT INTO learning_patterns (
+          module_key, test_count, total_passed, total_failed,
+          last_score, patterns_json, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+        ON CONFLICT (module_key)
+        DO UPDATE SET
+          test_count = EXCLUDED.test_count,
+          total_passed = EXCLUDED.total_passed,
+          total_failed = EXCLUDED.total_failed,
+          last_score = EXCLUDED.last_score,
+          patterns_json = EXCLUDED.patterns_json,
+          updated_at = NOW()
+      `, {
+        bind: [
+          moduleKey,
+          patterns.testCount,
+          patterns.totalPassed,
+          patterns.totalFailed,
+          patterns.lastScore || 0,
+          JSON.stringify(Object.fromEntries(patterns.errorPatterns || []))
+        ]
+      });
+    } catch (error) {
+      // Tabla puede no existir aún
+    }
+  }
+
+  /**
+   * Calcular score desde resultados
+   */
+  calculateScoreFromResults(results) {
+    if (!results || results.total === 0) return 0;
+    const passRate = (results.passed || 0) / (results.total || 1);
+    const coverageBonus = ((results.coverage || 0) / 100) * 0.2;
+    return Math.round((passRate * 0.8 + coverageBonus) * 100);
+  }
+
+  /**
+   * Actualizar score de un módulo
+   */
+  async updateModuleScore(moduleKey, score) {
+    if (!this.moduleScores) {
+      this.moduleScores = new Map();
+    }
+    this.moduleScores.set(moduleKey, {
+      score,
+      updatedAt: new Date().toISOString()
+    });
+    console.log(`   📈 Score de ${moduleKey} actualizado: ${score}`);
+  }
+
+  /**
+   * Invalidar cache por key
+   */
+  invalidateCache(key) {
+    if (key === 'workflows') {
+      // Invalidar todos los caches de workflows
+      for (const cacheKey of this.cache.keys()) {
+        if (cacheKey.includes('workflow') || cacheKey.includes('technical')) {
+          this.cache.delete(cacheKey);
+        }
+      }
+      console.log(`   🔄 Cache de workflows invalidado`);
+    } else if (this.cache.has(key)) {
+      this.cache.delete(key);
+      console.log(`   🔄 Cache de ${key} invalidado`);
+    }
+  }
+
+  /**
+   * Registrar descubrimientos (método helper para integración)
+   */
+  async recordDiscoveries(moduleKey, discoveries) {
+    if (!discoveries) return;
+
+    if (discoveries.buttons) await this.persistDiscoveries(moduleKey, 'button', discoveries.buttons);
+    if (discoveries.modals) await this.persistDiscoveries(moduleKey, 'modal', discoveries.modals);
+    if (discoveries.fields) await this.persistDiscoveries(moduleKey, 'field', discoveries.fields);
+    if (discoveries.flows) await this.persistDiscoveries(moduleKey, 'flow', discoveries.flows);
+    if (discoveries.endpoints) await this.persistDiscoveries(moduleKey, 'endpoint', discoveries.endpoints);
   }
 
   /**
@@ -2876,6 +3081,245 @@ class EcosystemBrainService {
       console.error('❌ [BRAIN] Error generando full metadata:', error.message);
       throw error;
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WORKFLOW AUTO-REGENERATION - Sincroniza STAGES con código fuente real
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Regenera workflows derivados si hay cambios en código fuente
+   *
+   * ESTO HACE QUE EL WORKFLOW SEA VERDADERAMENTE INTROSPECTIVO:
+   * - Cuando cambias LateArrivalAuthorizationService.js
+   * - Este método regenera AttendanceWorkflowService.js
+   * - Los STAGES se actualizan automáticamente
+   * - Brain detecta el cambio via LIVE_CODE_SCAN
+   */
+  async regenerateDerivedWorkflows() {
+    try {
+      // Intentar usar el Universal primero (para TODOS los módulos)
+      let generator;
+      let result;
+
+      try {
+        const UniversalWorkflowGenerator = require('./UniversalWorkflowGenerator');
+        generator = new UniversalWorkflowGenerator();
+
+        // Regenerar solo los que cambiaron
+        result = await generator.regenerateChangedWorkflows();
+
+        if (result.regenerated && result.regenerated.length > 0) {
+          console.log(`   🔄 [BRAIN] Workflows regenerados: ${result.regenerated.join(', ')}`);
+        }
+
+        return result;
+      } catch (universalError) {
+        // Fallback al generador legacy para solo attendance
+        console.log(`   ⚠️ UniversalWorkflowGenerator no disponible, usando legacy`);
+
+        const WorkflowAutoGenerator = require('./WorkflowAutoGenerator');
+        generator = new WorkflowAutoGenerator();
+
+        result = await generator.regenerateIfChanged();
+
+        if (result.regenerated) {
+          console.log(`   🔄 [BRAIN] Workflow regenerado (legacy): ${result.stagesCount} stages`);
+        }
+
+        return result;
+      }
+    } catch (error) {
+      console.log(`   ⚠️ [BRAIN] Auto-regeneration skipped: ${error.message}`);
+      return { regenerated: false, reason: error.message };
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // INTEGRATION METHODS - Para BrainPhase4Integration
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Obtener información de un módulo específico
+   * Usado por BrainPhase4Integration para crear planes de test
+   */
+  async getModuleInfo(moduleKey) {
+    console.log(`🔍 [BRAIN] Obteniendo info de módulo: ${moduleKey}`);
+
+    try {
+      // Obtener módulos técnicos
+      const technicalModules = await this.getTechnicalModules();
+      const module = technicalModules.modules?.find(m =>
+        m.key === moduleKey || m.key.toLowerCase() === moduleKey.toLowerCase()
+      );
+
+      if (!module) {
+        // Intentar buscar en el registry
+        const registryPath = path.join(this.baseDir, 'src/auditor/registry/modules-registry.json');
+        if (fsSync.existsSync(registryPath)) {
+          const registry = JSON.parse(fsSync.readFileSync(registryPath, 'utf8'));
+          const registryModule = registry.modules?.find(m =>
+            m.key === moduleKey || m.moduleKey === moduleKey
+          );
+
+          if (registryModule) {
+            return {
+              key: moduleKey,
+              name: registryModule.name,
+              category: registryModule.category,
+              endpoints: registryModule.api_endpoints || [],
+              tables: registryModule.database?.tables || [],
+              dependencies: registryModule.dependencies || {},
+              businessFlows: registryModule.businessFlows || [],
+              source: 'registry'
+            };
+          }
+        }
+
+        return null;
+      }
+
+      return {
+        key: module.key,
+        name: module.name,
+        status: module.status,
+        progress: module.progress,
+        endpoints: module.endpoints || [],
+        files: module.files,
+        stats: module.stats,
+        completeness: module.completeness,
+        crudAnalysis: module.crudAnalysis,
+        source: 'live_scan'
+      };
+    } catch (error) {
+      console.error(`❌ [BRAIN] Error obteniendo info de ${moduleKey}:`, error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Callback cuando un workflow es actualizado (desde FileWatcher)
+   */
+  async onWorkflowUpdated(moduleKey, result) {
+    console.log(`📢 [BRAIN] Notificado de actualización de workflow: ${moduleKey}`);
+
+    // Invalidar caches relacionados
+    this.invalidateCache('workflows');
+    this.invalidateCache(`module_${moduleKey}`);
+    this.invalidateCache('technical_modules');
+
+    // Actualizar tutoriales si el módulo tiene workflow con stages
+    if (result && result.stagesCount > 0) {
+      await this.updateTutorialForModule(moduleKey, result);
+    }
+
+    // Emitir evento para listeners externos
+    if (this.onWorkflowChangedCallback) {
+      this.onWorkflowChangedCallback(moduleKey, result);
+    }
+
+    return { processed: true, moduleKey };
+  }
+
+  /**
+   * Callback cuando todos los workflows son regenerados
+   */
+  async onWorkflowsRegenerated(data) {
+    console.log(`📢 [BRAIN] Notificado de regeneración completa de workflows`);
+
+    // Invalidar todos los caches
+    this.invalidateCache('workflows');
+    this.invalidateCache('technical_modules');
+    this.cache.clear();
+
+    // Actualizar estadísticas
+    if (data && data.totalModules) {
+      console.log(`   → ${data.totalModules} módulos, ${data.totalStages} stages totales`);
+    }
+
+    return { processed: true, timestamp: new Date().toISOString() };
+  }
+
+  /**
+   * Actualizar tutorial para un módulo
+   */
+  async updateTutorialForModule(moduleKey, workflowResult) {
+    try {
+      const stages = workflowResult.stages || [];
+      if (stages.length === 0) return;
+
+      const tutorialSteps = stages
+        .filter(s => !s.is_final)
+        .map((stage, index) => ({
+          step: index + 1,
+          title: stage.name,
+          description: stage.description || `Paso ${index + 1} del proceso`,
+          category: stage.category,
+          validations: stage.validations || [],
+          transitions: stage.transitions_to || []
+        }));
+
+      // Guardar en memoria
+      if (!this.moduleTutorials) {
+        this.moduleTutorials = new Map();
+      }
+
+      this.moduleTutorials.set(moduleKey, {
+        moduleKey,
+        workflowName: workflowResult.workflowName || moduleKey,
+        stagesCount: workflowResult.stagesCount,
+        steps: tutorialSteps,
+        generatedAt: new Date().toISOString(),
+        version: workflowResult.version || '1.0.0'
+      });
+
+      console.log(`   📚 Tutorial actualizado para ${moduleKey}: ${tutorialSteps.length} pasos`);
+
+    } catch (error) {
+      console.error(`   ⚠️ Error actualizando tutorial:`, error.message);
+    }
+  }
+
+  /**
+   * Obtener tutorial de un módulo
+   */
+  getTutorial(moduleKey) {
+    if (!this.moduleTutorials) return null;
+    return this.moduleTutorials.get(moduleKey);
+  }
+
+  /**
+   * Obtener todos los tutoriales disponibles
+   */
+  getAllTutorials() {
+    if (!this.moduleTutorials) return [];
+    return Array.from(this.moduleTutorials.values());
+  }
+
+  /**
+   * Registrar callback para cambios de workflow
+   */
+  onWorkflowChanged(callback) {
+    this.onWorkflowChangedCallback = callback;
+  }
+
+  /**
+   * Obtener score de un módulo
+   */
+  getModuleScore(moduleKey) {
+    if (!this.moduleScores) return null;
+    return this.moduleScores.get(moduleKey);
+  }
+
+  /**
+   * Obtener learning patterns de un módulo
+   */
+  getLearningPatterns(moduleKey) {
+    if (!this.learningPatterns) return null;
+    if (moduleKey) {
+      return this.learningPatterns.get(moduleKey);
+    }
+    return Object.fromEntries(this.learningPatterns);
   }
 }
 

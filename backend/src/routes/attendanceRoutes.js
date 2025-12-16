@@ -14,6 +14,9 @@ const { useModuleIfAvailable } = require('../utils/moduleHelper');
 // Importar rutas de estadísticas avanzadas
 const advancedStatsRouter = require('./attendance_stats_advanced');
 
+// Importar servicio de cálculo de horas extras
+const OvertimeCalculatorService = require('../services/OvertimeCalculatorService');
+
 /**
  * @route POST /api/v1/attendance
  * @desc Crear asistencia manual (entrada/salida completa)
@@ -242,10 +245,11 @@ router.get('/', auth, async (req, res) => {
       userId,
       branchId,
       status,
-      absenceType
+      absenceType,
+      selfView // NUEVO: Para Mi Espacio - fuerza ver solo datos propios
     } = req.query;
 
-    console.log('🔍 [ATTENDANCE] Filtros recibidos:', { page, limit, startDate, endDate, userId, status, absenceType, companyId: req.user.companyId });
+    console.log('🔍 [ATTENDANCE] Filtros recibidos:', { page, limit, startDate, endDate, userId, status, absenceType, selfView, companyId: req.user.companyId });
 
     const where = {};
 
@@ -254,8 +258,13 @@ router.get('/', auth, async (req, res) => {
       where.company_id = req.user.companyId;
     }
 
-    // Los empleados solo pueden ver sus propios registros
-    if (req.user.role === 'employee') {
+    // selfView=true: Usuario quiere ver solo sus datos (desde Mi Espacio)
+    // Esto aplica incluso si es admin/supervisor
+    const isSelfView = selfView === 'true' || selfView === true;
+
+    // Los empleados SIEMPRE ven solo sus propios registros
+    // Admin/supervisores también si vienen de Mi Espacio (selfView=true)
+    if (req.user.role === 'employee' || isSelfView) {
       where.user_id = req.user.user_id;
     } else if (userId) {
       where.user_id = userId;
@@ -292,8 +301,10 @@ router.get('/', auth, async (req, res) => {
       replacements.companyId = req.user.companyId;
     }
 
-    // Filtrar por usuario específico (empleados solo ven sus registros)
-    if (req.user.role === 'employee') {
+    // Filtrar por usuario específico
+    // Empleados SIEMPRE ven solo sus registros
+    // Admin/supervisores también si vienen de Mi Espacio (selfView=true)
+    if (req.user.role === 'employee' || isSelfView) {
       sqlWhere += ' AND a."UserId" = :userId';
       replacements.userId = req.user.user_id;
     } else if (userId) {
@@ -328,7 +339,7 @@ router.get('/', auth, async (req, res) => {
 
     const count = parseInt(countResult.total || 0);
 
-    // Query de datos - campos mapeados para frontend
+    // Query de datos - campos mapeados para frontend CON INFO DE TURNO, SUCURSAL, DEPTO, SECTOR, DESTINO HE
     const attendances = await sequelize.query(`
       SELECT
         a.id,
@@ -338,12 +349,33 @@ router.get('/', auth, async (req, res) => {
         a.status,
         a.is_late,
         a.kiosk_id as "kioskId",
+        a.overtime_hours,
+        a.overtime_destination,
         CONCAT(u."firstName", ' ', u."lastName") as user_name,
         u."employeeId" as legajo,
         u.user_id,
-        u.email as user_email
+        u.email as user_email,
+        u.branch_id,
+        u.department_id,
+        u.sector_id,
+        cb.name as branch_name,
+        d.name as department_name,
+        sec.name as sector_name,
+        s.id as shift_id,
+        s.name as shift_name,
+        s."startTime" as shift_start,
+        s."endTime" as shift_end,
+        s."hourlyRates" as shift_hourly_rates,
+        s."toleranceConfig" as shift_tolerance,
+        s."breakStartTime" as shift_break_start,
+        s."breakEndTime" as shift_break_end
       FROM attendances a
       INNER JOIN users u ON a."UserId" = u.user_id
+      LEFT JOIN company_branches cb ON u.branch_id = cb.id
+      LEFT JOIN departments d ON u.department_id = d.id
+      LEFT JOIN sectors sec ON u.sector_id = sec.id
+      LEFT JOIN user_shift_assignments usa ON usa.user_id = u.user_id AND usa.is_active = true
+      LEFT JOIN shifts s ON s.id = usa.shift_id
       WHERE 1=1 ${sqlWhere}
       ORDER BY a."checkInTime" DESC NULLS LAST
       LIMIT :limit OFFSET :offset
@@ -351,9 +383,66 @@ router.get('/', auth, async (req, res) => {
 
     console.log('✅ [ATTENDANCE] Encontrados:', count, 'registros');
 
+    // Procesar asistencias con cálculo de horas extras
+    const companyId = req.user.company_id || req.user.companyId;
+    const processedAttendances = await Promise.all(attendances.map(async (att) => {
+      // Construir objeto shift si hay datos
+      const shift = att.shift_id ? {
+        id: att.shift_id,
+        name: att.shift_name,
+        startTime: att.shift_start,
+        endTime: att.shift_end,
+        hourlyRates: att.shift_hourly_rates,
+        toleranceConfig: att.shift_tolerance,
+        breakStartTime: att.shift_break_start,
+        breakEndTime: att.shift_break_end
+      } : null;
+
+      // Verificar si es feriado
+      const isHoliday = await OvertimeCalculatorService.isHoliday(att.date, companyId);
+
+      // Calcular desglose de horas
+      const hoursBreakdown = OvertimeCalculatorService.calculateHoursBreakdown(att, shift, isHoliday);
+
+      // Detectar tardanza según turno
+      const lateInfo = OvertimeCalculatorService.detectLateArrival(att, shift);
+
+      return {
+        id: att.id,
+        date: att.date,
+        check_in: att.check_in,
+        check_out: att.check_out,
+        status: att.status,
+        is_late: att.is_late || lateInfo.isLate,
+        kioskId: att.kioskId,
+        user_name: att.user_name,
+        legajo: att.legajo,
+        user_id: att.user_id,
+        user_email: att.user_email,
+        // Sucursal, Departamento, Sector
+        branch_id: att.branch_id,
+        branch_name: att.branch_name,
+        department_id: att.department_id,
+        department_name: att.department_name,
+        sector_id: att.sector_id,
+        sector_name: att.sector_name,
+        // Horas extras y destino
+        overtime_hours: att.overtime_hours,
+        overtime_destination: att.overtime_destination,
+        shift: shift ? {
+          id: shift.id,
+          name: shift.name,
+          startTime: shift.startTime,
+          endTime: shift.endTime
+        } : null,
+        hours: hoursBreakdown,
+        lateInfo
+      };
+    }));
+
     res.json({
       success: true,
-      data: attendances,
+      data: processedAttendances,
       pagination: {
         totalPages: Math.ceil(count / limit),
         currentPage: parseInt(page),
@@ -378,11 +467,13 @@ router.get('/', auth, async (req, res) => {
  * @desc Obtener estadísticas básicas - DEBE estar antes de /:id
  * @query startDate - Fecha inicio (opcional, default: hace 30 días)
  * @query endDate - Fecha fin (opcional, default: hoy)
+ * @query selfView - Si true, mostrar solo datos del usuario actual
  */
 router.get('/stats', auth, async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, selfView } = req.query;
     const companyId = req.user.company_id || req.user.companyId;
+    const isSelfView = selfView === 'true' || selfView === true;
 
     // Si no se especifica rango, usar últimos 30 días
     let dateStart = startDate;
@@ -394,7 +485,16 @@ router.get('/stats', auth, async (req, res) => {
       dateStart = thirtyDaysAgo.toISOString().split('T')[0];
     }
 
-    console.log('📊 [ATTENDANCE STATS] Empresa:', companyId, '| Rango:', dateStart, 'a', dateEnd);
+    // Construir filtro por usuario si es selfView o es empleado
+    let userFilter = '';
+    const replacements = { companyId, dateStart, dateEnd };
+
+    if (req.user.role === 'employee' || isSelfView) {
+      userFilter = 'AND a."UserId" = :userId';
+      replacements.userId = req.user.user_id;
+    }
+
+    console.log('📊 [ATTENDANCE STATS] Empresa:', companyId, '| Rango:', dateStart, 'a', dateEnd, '| selfView:', isSelfView);
 
     const [stats] = await sequelize.query(`
       SELECT
@@ -408,8 +508,9 @@ router.get('/stats', auth, async (req, res) => {
       WHERE u.company_id = :companyId
         AND a.date >= :dateStart
         AND a.date <= :dateEnd
+        ${userFilter}
     `, {
-      replacements: { companyId, dateStart, dateEnd },
+      replacements,
       type: QueryTypes.SELECT
     });
 
@@ -1218,6 +1319,548 @@ router.get('/unjustified', auth, supervisorOrAdmin, async (req, res) => {
       message: 'Error al obtener ausencias no justificadas',
       error: error.message
     });
+  }
+});
+
+// ========================================
+// 📊 ESTADÍSTICAS DETALLADAS CON HORAS EXTRAS
+// ========================================
+
+/**
+ * @route GET /api/v1/attendance/stats/detailed
+ * @desc Obtener estadísticas detalladas con desglose de horas normales/extras
+ * @query startDate - Fecha inicio (opcional, default: hace 30 días)
+ * @query endDate - Fecha fin (opcional, default: hoy)
+ * @query groupBy - Agrupar por: user, shift, department (default: user)
+ */
+router.get('/stats/detailed', auth, async (req, res) => {
+  try {
+    const { startDate, endDate, groupBy = 'user' } = req.query;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    // Calcular rango de fechas
+    let dateStart = startDate;
+    let dateEnd = endDate || new Date().toISOString().split('T')[0];
+    if (!startDate) {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      dateStart = thirtyDaysAgo.toISOString().split('T')[0];
+    }
+
+    console.log('📊 [DETAILED STATS] Empresa:', companyId, '| Rango:', dateStart, 'a', dateEnd);
+
+    // Query con info completa
+    const attendances = await sequelize.query(`
+      SELECT
+        a.id,
+        a.date,
+        a."checkInTime" as check_in,
+        a."checkOutTime" as check_out,
+        a.status,
+        a.is_late,
+        a."UserId" as user_id,
+        CONCAT(u."firstName", ' ', u."lastName") as user_name,
+        u."employeeId" as legajo,
+        u.department_id,
+        d.name as department_name,
+        s.id as shift_id,
+        s.name as shift_name,
+        s."startTime" as shift_start,
+        s."endTime" as shift_end,
+        s."hourlyRates" as shift_hourly_rates,
+        s."toleranceConfig" as shift_tolerance,
+        s."breakStartTime" as shift_break_start,
+        s."breakEndTime" as shift_break_end
+      FROM attendances a
+      INNER JOIN users u ON a."UserId" = u.user_id
+      LEFT JOIN departments d ON u.department_id = d.id
+      LEFT JOIN user_shift_assignments usa ON usa.user_id = u.user_id AND usa.is_active = true
+      LEFT JOIN shifts s ON s.id = usa.shift_id
+      WHERE u.company_id = :companyId
+        AND a.date >= :dateStart
+        AND a.date <= :dateEnd
+      ORDER BY a.date DESC, u."lastName" ASC
+    `, {
+      replacements: { companyId, dateStart, dateEnd },
+      type: QueryTypes.SELECT
+    });
+
+    // Procesar cada asistencia con cálculo de horas
+    const processedData = await Promise.all(attendances.map(async (att) => {
+      const shift = att.shift_id ? {
+        id: att.shift_id,
+        name: att.shift_name,
+        startTime: att.shift_start,
+        endTime: att.shift_end,
+        hourlyRates: att.shift_hourly_rates,
+        toleranceConfig: att.shift_tolerance,
+        breakStartTime: att.shift_break_start,
+        breakEndTime: att.shift_break_end
+      } : null;
+
+      const isHoliday = await OvertimeCalculatorService.isHoliday(att.date, companyId);
+      const hoursBreakdown = OvertimeCalculatorService.calculateHoursBreakdown(att, shift, isHoliday);
+      const lateInfo = OvertimeCalculatorService.detectLateArrival(att, shift);
+      const earlyInfo = OvertimeCalculatorService.detectEarlyDeparture(att, shift);
+
+      return {
+        ...att,
+        shift,
+        hours: hoursBreakdown,
+        hoursBreakdown: hoursBreakdown,  // Para calculateAggregatedStats
+        lateInfo,
+        earlyInfo
+      };
+    }));
+
+    // Calcular estadísticas agregadas
+    const aggregatedStats = OvertimeCalculatorService.calculateAggregatedStats(processedData);
+
+    // Agrupar según parámetro
+    let groupedStats = {};
+    if (groupBy === 'shift') {
+      // Agrupar por turno
+      processedData.forEach(att => {
+        const key = att.shift_name || 'Sin turno asignado';
+        if (!groupedStats[key]) {
+          groupedStats[key] = {
+            shiftName: key,
+            shiftId: att.shift_id,
+            totalHours: 0,
+            normalHours: 0,
+            overtimeHours: 0,
+            days: 0,
+            employees: new Set()
+          };
+        }
+        groupedStats[key].totalHours += att.hours.effectiveHours;
+        groupedStats[key].normalHours += att.hours.normalHours;
+        groupedStats[key].overtimeHours += att.hours.overtimeHours;
+        groupedStats[key].days++;
+        groupedStats[key].employees.add(att.user_id);
+      });
+
+      // Convertir Sets a conteo
+      Object.keys(groupedStats).forEach(k => {
+        groupedStats[k].employeeCount = groupedStats[k].employees.size;
+        delete groupedStats[k].employees;
+        groupedStats[k].totalHours = parseFloat(groupedStats[k].totalHours.toFixed(2));
+        groupedStats[k].normalHours = parseFloat(groupedStats[k].normalHours.toFixed(2));
+        groupedStats[k].overtimeHours = parseFloat(groupedStats[k].overtimeHours.toFixed(2));
+      });
+
+    } else if (groupBy === 'department') {
+      // Agrupar por departamento
+      processedData.forEach(att => {
+        const key = att.department_name || 'Sin departamento';
+        if (!groupedStats[key]) {
+          groupedStats[key] = {
+            departmentName: key,
+            departmentId: att.department_id,
+            totalHours: 0,
+            normalHours: 0,
+            overtimeHours: 0,
+            days: 0,
+            employees: new Set()
+          };
+        }
+        groupedStats[key].totalHours += att.hours.effectiveHours;
+        groupedStats[key].normalHours += att.hours.normalHours;
+        groupedStats[key].overtimeHours += att.hours.overtimeHours;
+        groupedStats[key].days++;
+        groupedStats[key].employees.add(att.user_id);
+      });
+
+      Object.keys(groupedStats).forEach(k => {
+        groupedStats[k].employeeCount = groupedStats[k].employees.size;
+        delete groupedStats[k].employees;
+        groupedStats[k].totalHours = parseFloat(groupedStats[k].totalHours.toFixed(2));
+        groupedStats[k].normalHours = parseFloat(groupedStats[k].normalHours.toFixed(2));
+        groupedStats[k].overtimeHours = parseFloat(groupedStats[k].overtimeHours.toFixed(2));
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        dateRange: { start: dateStart, end: dateEnd },
+        summary: {
+          totalRecords: aggregatedStats.totalRecords,
+          totalHours: aggregatedStats.totalHours,
+          normalHours: aggregatedStats.totalNormalHours,
+          overtimeHours: aggregatedStats.totalOvertimeHours,
+          averageHoursPerDay: aggregatedStats.averageHoursPerDay,
+          byDayType: aggregatedStats.byDayType
+        },
+        byUser: aggregatedStats.byUserArray,
+        grouped: groupBy !== 'user' ? Object.values(groupedStats) : null,
+        records: processedData
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [DETAILED STATS] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * @route GET /api/v1/attendance/stats/overtime-summary
+ * @desc Resumen rápido de horas extras del período
+ * @query startDate - Fecha inicio
+ * @query endDate - Fecha fin
+ */
+router.get('/stats/overtime-summary', auth, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    let dateStart = startDate;
+    let dateEnd = endDate || new Date().toISOString().split('T')[0];
+    if (!startDate) {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      dateStart = thirtyDaysAgo.toISOString().split('T')[0];
+    }
+
+    // Query optimizada para resumen
+    const attendances = await sequelize.query(`
+      SELECT
+        a.date,
+        a."checkInTime" as check_in,
+        a."checkOutTime" as check_out,
+        a."UserId" as user_id,
+        s."startTime" as shift_start,
+        s."endTime" as shift_end,
+        s."hourlyRates" as shift_hourly_rates,
+        s."breakStartTime" as shift_break_start,
+        s."breakEndTime" as shift_break_end
+      FROM attendances a
+      INNER JOIN users u ON a."UserId" = u.user_id
+      LEFT JOIN user_shift_assignments usa ON usa.user_id = u.user_id AND usa.is_active = true
+      LEFT JOIN shifts s ON s.id = usa.shift_id
+      WHERE u.company_id = :companyId
+        AND a.date >= :dateStart
+        AND a.date <= :dateEnd
+        AND a."checkInTime" IS NOT NULL
+        AND a."checkOutTime" IS NOT NULL
+    `, {
+      replacements: { companyId, dateStart, dateEnd },
+      type: QueryTypes.SELECT
+    });
+
+    // Calcular totales
+    let totalNormalHours = 0;
+    let totalOvertimeHours = 0;
+    let totalWeekendHours = 0;
+    let totalHolidayHours = 0;
+    let recordsWithOvertime = 0;
+
+    for (const att of attendances) {
+      const shift = {
+        startTime: att.shift_start || '08:00',
+        endTime: att.shift_end || '17:00',
+        hourlyRates: att.shift_hourly_rates || { normal: 1, overtime: 1.5 },
+        breakStartTime: att.shift_break_start,
+        breakEndTime: att.shift_break_end
+      };
+
+      const isHoliday = await OvertimeCalculatorService.isHoliday(att.date, companyId);
+      const breakdown = OvertimeCalculatorService.calculateHoursBreakdown(att, shift, isHoliday);
+
+      totalNormalHours += breakdown.normalHours;
+      totalOvertimeHours += breakdown.overtimeHours;
+
+      if (breakdown.isWeekend) {
+        totalWeekendHours += breakdown.effectiveHours;
+      }
+      if (breakdown.isHoliday) {
+        totalHolidayHours += breakdown.effectiveHours;
+      }
+      if (breakdown.overtimeHours > 0) {
+        recordsWithOvertime++;
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        dateRange: { start: dateStart, end: dateEnd },
+        totalRecords: attendances.length,
+        recordsWithOvertime,
+        hours: {
+          total: parseFloat((totalNormalHours + totalOvertimeHours).toFixed(2)),
+          normal: parseFloat(totalNormalHours.toFixed(2)),
+          overtime: parseFloat(totalOvertimeHours.toFixed(2)),
+          weekend: parseFloat(totalWeekendHours.toFixed(2)),
+          holiday: parseFloat(totalHolidayHours.toFixed(2))
+        },
+        overtimePercentage: attendances.length > 0
+          ? parseFloat(((recordsWithOvertime / attendances.length) * 100).toFixed(1))
+          : 0
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [OVERTIME SUMMARY] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ========================================
+// 🌤️ WEATHER PATTERN STATS
+// ========================================
+
+/**
+ * @route GET /api/v1/attendance/stats/weather-patterns
+ * @desc Estadísticas de tardanzas por patrón climático
+ * @query startDate - Fecha inicio
+ * @query endDate - Fecha fin
+ */
+router.get('/stats/weather-patterns', auth, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    let dateStart = startDate;
+    let dateEnd = endDate || new Date().toISOString().split('T')[0];
+    if (!startDate) {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      dateStart = thirtyDaysAgo.toISOString().split('T')[0];
+    }
+
+    // Importar servicio dinámicamente
+    const WeatherPatternService = require('../services/WeatherPatternService');
+    const stats = await WeatherPatternService.getStatsByWeatherPattern(companyId, dateStart, dateEnd);
+
+    res.json({
+      success: true,
+      data: {
+        dateRange: { start: dateStart, end: dateEnd },
+        byPattern: stats.byPattern,
+        summary: stats.summary,
+        insights: {
+          mostImpactful: stats.summary.mostImpactfulPattern,
+          recommendation: generateWeatherRecommendation(stats.summary.mostImpactfulPattern)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [WEATHER PATTERNS] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Helper para generar recomendaciones basadas en clima
+function generateWeatherRecommendation(impact) {
+  if (!impact || !impact.pattern || impact.pattern === 'UNKNOWN') {
+    return 'No hay suficientes datos para generar recomendaciones.';
+  }
+
+  const recommendations = {
+    ADVERSO_LLUVIA: `Los días lluviosos aumentan las tardanzas en ${impact.increasePercent || 0}%. Considere flexibilizar horarios de entrada en días de lluvia o habilitar trabajo remoto.`,
+    ADVERSO_FRIO: `El frío extremo aumenta las tardanzas en ${impact.increasePercent || 0}%. Considere ajustar horarios de entrada en meses de invierno.`,
+    NOCTURNO: `Los turnos nocturnos tienen ${impact.increasePercent || 0}% más tardanzas. Revise los tiempos de transporte y considere incentivos para puntualidad nocturna.`
+  };
+
+  return recommendations[impact.pattern] || 'Analice los patrones específicos para su organización.';
+}
+
+// ========================================
+// 📅 YEAR-OVER-YEAR COMPARISON
+// ========================================
+
+/**
+ * @route GET /api/v1/attendance/stats/year-comparison
+ * @desc Comparación interanual: período actual vs mismo período año anterior
+ * @query startDate - Fecha inicio período actual
+ * @query endDate - Fecha fin período actual
+ * @returns Métricas comparativas con ponderación por cantidad de personal
+ */
+router.get('/stats/year-comparison', auth, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    // Fechas período actual
+    let currentStart = startDate || moment().subtract(30, 'days').format('YYYY-MM-DD');
+    let currentEnd = endDate || moment().format('YYYY-MM-DD');
+
+    // Fechas mismo período año anterior
+    const previousStart = moment(currentStart).subtract(1, 'year').format('YYYY-MM-DD');
+    const previousEnd = moment(currentEnd).subtract(1, 'year').format('YYYY-MM-DD');
+
+    // Query para obtener métricas de un período
+    const getPeriodMetrics = async (start, end) => {
+      const [result] = await sequelize.query(`
+        SELECT
+          COUNT(DISTINCT a."UserId") as unique_employees,
+          COUNT(*) as total_records,
+          COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count,
+          COUNT(CASE WHEN a.status = 'late' OR a.is_late = true THEN 1 END) as late_count,
+          COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_count,
+          AVG(CASE WHEN a.is_late = true THEN COALESCE(a.minutes_late, 0) END) as avg_late_minutes,
+          AVG(
+            CASE WHEN a."checkOutTime" IS NOT NULL AND a."checkInTime" IS NOT NULL
+            THEN EXTRACT(EPOCH FROM (a."checkOutTime" - a."checkInTime")) / 3600
+            END
+          ) as avg_hours_worked
+        FROM attendances a
+        WHERE a.company_id = :companyId
+          AND a.date >= :start
+          AND a.date <= :end
+      `, {
+        replacements: { companyId, start, end },
+        type: QueryTypes.SELECT
+      });
+      return result;
+    };
+
+    // Obtener métricas de ambos períodos en paralelo
+    const [currentMetrics, previousMetrics] = await Promise.all([
+      getPeriodMetrics(currentStart, currentEnd),
+      getPeriodMetrics(previousStart, previousEnd)
+    ]);
+
+    // Calcular porcentajes
+    const calcPercent = (count, total) => total > 0 ? (count / total * 100) : 0;
+
+    const current = {
+      period: { start: currentStart, end: currentEnd },
+      employees: parseInt(currentMetrics.unique_employees) || 0,
+      totalRecords: parseInt(currentMetrics.total_records) || 0,
+      presentCount: parseInt(currentMetrics.present_count) || 0,
+      lateCount: parseInt(currentMetrics.late_count) || 0,
+      absentCount: parseInt(currentMetrics.absent_count) || 0,
+      avgLateMinutes: parseFloat(currentMetrics.avg_late_minutes) || 0,
+      avgHoursWorked: parseFloat(currentMetrics.avg_hours_worked) || 0
+    };
+    current.attendanceRate = calcPercent(current.presentCount + current.lateCount, current.totalRecords);
+    current.lateRate = calcPercent(current.lateCount, current.totalRecords);
+    current.absentRate = calcPercent(current.absentCount, current.totalRecords);
+
+    const previous = {
+      period: { start: previousStart, end: previousEnd },
+      employees: parseInt(previousMetrics.unique_employees) || 0,
+      totalRecords: parseInt(previousMetrics.total_records) || 0,
+      presentCount: parseInt(previousMetrics.present_count) || 0,
+      lateCount: parseInt(previousMetrics.late_count) || 0,
+      absentCount: parseInt(previousMetrics.absent_count) || 0,
+      avgLateMinutes: parseFloat(previousMetrics.avg_late_minutes) || 0,
+      avgHoursWorked: parseFloat(previousMetrics.avg_hours_worked) || 0
+    };
+    previous.attendanceRate = calcPercent(previous.presentCount + previous.lateCount, previous.totalRecords);
+    previous.lateRate = calcPercent(previous.lateCount, previous.totalRecords);
+    previous.absentRate = calcPercent(previous.absentCount, previous.totalRecords);
+
+    // Factor de ponderación por cambio de personal
+    const employeeRatio = previous.employees > 0 ? current.employees / previous.employees : 1;
+
+    // Calcular variaciones (positivo = mejora, negativo = empeora)
+    const variations = {
+      attendanceRate: {
+        absolute: current.attendanceRate - previous.attendanceRate,
+        relative: previous.attendanceRate > 0
+          ? ((current.attendanceRate - previous.attendanceRate) / previous.attendanceRate * 100)
+          : 0
+      },
+      lateRate: {
+        absolute: previous.lateRate - current.lateRate, // Invertido: menos es mejor
+        relative: previous.lateRate > 0
+          ? ((previous.lateRate - current.lateRate) / previous.lateRate * 100)
+          : 0
+      },
+      absentRate: {
+        absolute: previous.absentRate - current.absentRate, // Invertido: menos es mejor
+        relative: previous.absentRate > 0
+          ? ((previous.absentRate - current.absentRate) / previous.absentRate * 100)
+          : 0
+      },
+      avgLateMinutes: {
+        absolute: previous.avgLateMinutes - current.avgLateMinutes, // Invertido
+        relative: previous.avgLateMinutes > 0
+          ? ((previous.avgLateMinutes - current.avgLateMinutes) / previous.avgLateMinutes * 100)
+          : 0
+      },
+      employeeGrowth: {
+        absolute: current.employees - previous.employees,
+        relative: previous.employees > 0
+          ? ((current.employees - previous.employees) / previous.employees * 100)
+          : 0
+      }
+    };
+
+    // Generar insights
+    const insights = [];
+
+    if (variations.attendanceRate.absolute > 2) {
+      insights.push({
+        type: 'positive',
+        metric: 'asistencia',
+        message: `La asistencia mejoró ${variations.attendanceRate.absolute.toFixed(1)} puntos porcentuales vs año anterior`
+      });
+    } else if (variations.attendanceRate.absolute < -2) {
+      insights.push({
+        type: 'negative',
+        metric: 'asistencia',
+        message: `La asistencia disminuyó ${Math.abs(variations.attendanceRate.absolute).toFixed(1)} puntos porcentuales vs año anterior`
+      });
+    }
+
+    if (variations.lateRate.absolute > 2) {
+      insights.push({
+        type: 'positive',
+        metric: 'puntualidad',
+        message: `Las tardanzas se redujeron ${variations.lateRate.absolute.toFixed(1)} puntos porcentuales vs año anterior`
+      });
+    } else if (variations.lateRate.absolute < -2) {
+      insights.push({
+        type: 'negative',
+        metric: 'puntualidad',
+        message: `Las tardanzas aumentaron ${Math.abs(variations.lateRate.absolute).toFixed(1)} puntos porcentuales vs año anterior`
+      });
+    }
+
+    if (employeeRatio > 1.1) {
+      insights.push({
+        type: 'info',
+        metric: 'personal',
+        message: `El personal creció ${((employeeRatio - 1) * 100).toFixed(0)}% vs año anterior. Las métricas por persona son comparables.`
+      });
+    } else if (employeeRatio < 0.9) {
+      insights.push({
+        type: 'info',
+        metric: 'personal',
+        message: `El personal se redujo ${((1 - employeeRatio) * 100).toFixed(0)}% vs año anterior.`
+      });
+    }
+
+    // Si no hay datos del año anterior
+    if (previous.totalRecords === 0) {
+      insights.push({
+        type: 'info',
+        metric: 'datos',
+        message: 'No hay datos del mismo período del año anterior para comparar.'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        current,
+        previous,
+        variations,
+        employeeRatio: parseFloat(employeeRatio.toFixed(2)),
+        insights,
+        hasHistoricalData: previous.totalRecords > 0
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [YEAR COMPARISON] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

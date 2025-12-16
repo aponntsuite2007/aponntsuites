@@ -517,18 +517,6 @@
                                                         alert('Módulo SLA Tracking: no disponible');
                                                     }
                                                     break;
-                                                case 'resource-center':
-                                                case 'resource_center':
-                                                    if (typeof ResourceCenter !== 'undefined' && ResourceCenter.init) {
-                                                        const moduleGrid = document.querySelector('.module-grid');
-                                                        if (moduleGrid) moduleGrid.style.display = 'none';
-                                                        const mainContent = document.getElementById('mainContent');
-                                                        if (mainContent) mainContent.style.display = 'block';
-                                                        ResourceCenter.init();
-                                                    } else {
-                                                        alert('Módulo Resource Center: no disponible');
-                                                    }
-                                                    break;
                                                 case 'audit-reports':
                                                 case 'audit_reports':
                                                     if (typeof AuditReports !== 'undefined' && AuditReports.init) {
@@ -2110,6 +2098,8 @@
     <script src="js/modules/sanctions-management.js"></script>
     <script src="js/modules/vacation-management.js"></script>
     <script src="js/modules/payroll-liquidation.js"></script>
+    <script src="js/modules/hour-bank.js"></script> <!-- Banco de Horas - Vista empleado -->
+    <script src="js/modules/hour-bank-dashboard.js"></script> <!-- Banco de Horas - Dashboard Admin con métricas jerárquicas -->
     <script src="js/modules/positions-management.js"></script>
     <script src="js/modules/payslip-template-editor.js"></script>
     <script src="js/modules/job-postings.js"></script>
@@ -2159,6 +2149,8 @@
         console.log('🔍 [LOAD-CHECK] typeof showBiometricDashboardContent:', typeof showBiometricDashboardContent);
         console.log('🔍 [LOAD-CHECK] typeof window.showBiometricDashboardContent:', typeof window.showBiometricDashboardContent);
     </script>
+    <!-- 🔮 PREDICTIVE WORKFORCE ANALYTICS - IRA, Sensibilidad, Z-Score, Regresión -->
+    <script src="js/modules/predictive-workforce-dashboard.js"></script>
     <script src="js/modules/biometric-simple.js"></script>
     <script src="js/modules/biometric-consent.js"></script>
     <!-- biometric-dashboard.js: Dashboard central que agrupa todos los módulos biométricos -->
@@ -2178,9 +2170,11 @@
     <!-- <script src="js/modules/facturacion.js"></script> -->
     <!-- <script src="js/modules/plantillas-fiscales.js"></script> -->
 
-    <!-- Support System - CORE Module -->
+    <!-- Support System - Librería de API (sin UI propia) -->
     <script src="js/modules/support-system.js"></script>
-    <script src="js/modules/support-customer-view.js"></script>
+
+    <!-- User Support Dashboard - Dashboard de tickets para usuarios (dark theme) -->
+    <script src="js/modules/user-support-dashboard.js"></script>
 
     <!-- Core JavaScript - Essential functions only -->
     <script>
@@ -4198,7 +4192,8 @@
             { id: 'users', name: 'Usuarios', icon: '👥' },
             { id: 'attendance', name: 'Asistencia', icon: '📋' },
             { id: 'dms-dashboard', name: 'Gestión Documental (DMS)', icon: '📁' },
-            { id: 'settings', name: 'Configuración', icon: '⚙️' }
+            { id: 'settings', name: 'Configuración', icon: '⚙️' },
+            { id: 'user-support', name: 'Soporte / Tickets', icon: '🎫' }
         ];
 
         return basicModules.map(module => `
@@ -4402,11 +4397,13 @@
                         'notifications-enterprise': 'showNotificationsEnterpriseContent',
                         'biometric-consent': 'showBiometricConsentContent',
                         'payroll-liquidation': 'showPayrollLiquidationContent',
+                        'hour-bank': 'showHourBankContent',
                         'employee-360': 'showEmployee360Content',
                         'organizational-structure': 'showOrganizationalStructureContent',
                         'company-account': 'showCompanyAccountContent',
                         'procedures-manual': 'showProceduresManualContent',
-                        'my-procedures': 'showMyProceduresContent'
+                        'my-procedures': 'showMyProceduresContent',
+                        'user-support': 'showUserSupportContent'
                     };
 
                     const legacyFunctionName = legacyFunctionMap[moduleId] || `show${capitalize(moduleId)}Content`;
@@ -4520,6 +4517,21 @@
                         }
                         break;
 
+                    /* 🔮 Analytics Predictivo de Workforce
+                     * 📅 Fecha: 2025-01
+                     * 📋 Funcionalidad: IRA, Sensibilidad, Z-Score, Regresión Lineal, Drill-down SSOT
+                     */
+                    case 'predictive-workforce':
+                        console.log('🔮 [PREDICTIVE] Iniciando módulo Analytics Predictivo');
+                        if (typeof PredictiveWorkforceDashboard !== 'undefined' && PredictiveWorkforceDashboard.render) {
+                            const companyId = localStorage.getItem('selectedCompanyId') || sessionStorage.getItem('companyId');
+                            mainContent.innerHTML = '<div id="predictive-workforce-container"></div>';
+                            PredictiveWorkforceDashboard.render('predictive-workforce-container', companyId);
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'predictive-workforce-dashboard.js no cargado');
+                        }
+                        break;
+
                     /* ✅ CÓDIGO FUNCIONAL PROTEGIDO - NO MODIFICAR SIN ANÁLISIS
                      * 📅 Fecha: 23/SEP/2025 04:05:00
                      * 🏷️ Versión: v2.1.2-USERS
@@ -4530,15 +4542,6 @@
                             showUsersContent();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'users.js no cargado');
-                        }
-                        break;
-
-                    // ✅ MÓDULO DE SOPORTE - Sistema de tickets con acceso temporal
-                    case 'support':
-                        if (typeof SupportCustomerView !== 'undefined' && SupportCustomerView.init) {
-                            SupportCustomerView.init('main-content');
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'support-customer-view.js no cargado');
                         }
                         break;
 
@@ -4618,14 +4621,6 @@
                             AuditReports.init();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'audit-reports.js no cargado');
-                        }
-                        break;
-
-                    case 'resource-center':
-                        if (typeof ResourceCenter !== 'undefined' && ResourceCenter.init) {
-                            ResourceCenter.init();
-                        } else {
-                            showModuleFallback(moduleId, moduleName, 'resource-center.js no cargado');
                         }
                         break;
 
@@ -4773,6 +4768,20 @@
                             showPayrollLiquidationContent();
                         } else {
                             showModuleFallback(moduleId, moduleName, 'payroll-liquidation.js no cargado');
+                        }
+                        break;
+                    case 'hour-bank':
+                        // Banco de Horas - Admin Dashboard vs Employee View
+                        const isHourBankAdmin = AuthState.user?.role === 'admin' || AuthState.user?.role === 'hr';
+                        if (isHourBankAdmin && typeof HourBankDashboard !== 'undefined') {
+                            // Admin/HR: Dashboard con métricas jerárquicas
+                            moduleContainer.innerHTML = '<div id="mainContent" style="padding:0;"></div>';
+                            HourBankDashboard.init('mainContent');
+                        } else if (typeof showHourBankContent === 'function') {
+                            // Empleados/Supervisores: Vista básica
+                            showHourBankContent();
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'hour-bank.js no cargado');
                         }
                         break;
                     case 'positions-management':
@@ -4992,13 +5001,13 @@
             { id: 'inbox', name: 'Bandeja Notificaciones', icon: '📬' },
             { id: 'notifications-enterprise', name: '🔔 Notificaciones Enterprise IA', icon: '🤖' },
             { id: 'attendance', name: 'Asistencia', icon: '📋' },
+            { id: 'predictive-workforce', name: 'Analytics Predictivo', icon: '🔮' },
             { id: 'facial-biometric', name: 'Biometría Analítica', icon: '🎭' },{ id: 'medical', name: 'Médico', icon: '👩‍⚕️' },
             { id: 'art-management', name: 'ART', icon: '🏥' },
             { id: 'dms-dashboard', name: 'Gestión Documental (DMS)', icon: '📁' },
             { id: 'legal-dashboard', name: 'Gestión Legal', icon: '⚖️' },
             { id: 'compliance-dashboard', name: 'Compliance Legal', icon: '⚖️' },
             { id: 'sla-tracking', name: 'SLA Tracking', icon: '⏱️' },
-            { id: 'resource-center', name: 'Centro Recursos', icon: '📊' },
             { id: 'audit-reports', name: 'Reportes Auditoría', icon: '📄' },
             { id: 'payroll-liquidation', name: 'Liquidación', icon: '💰' },
             { id: 'employee-map', name: 'Mapa Empleados', icon: '🗺️' },
@@ -5008,13 +5017,14 @@
             { id: 'reports', name: 'Reportes', icon: '📊' },
             { id: 'psychological-assessment', name: 'Evaluación Psicológica', icon: '🧠' },
             { id: 'sanctions-management', name: 'Gestión de Sanciones', icon: '⚖️' },
-            { id: 'vacation-management', name: 'Gestión de Vacaciones', icon: '🏖️' }
+            { id: 'vacation-management', name: 'Gestión de Vacaciones', icon: '🏖️' },
+            { id: 'user-support', name: 'Soporte / Tickets', icon: '🎫' }
         ];
         
         return modules.map(module => {
             // Verificar si el módulo está contratado
             // Módulos CORE que siempre deben estar visibles
-            const coreModules = ['settings', 'dashboard', 'dms-dashboard'];
+            const coreModules = ['settings', 'dashboard', 'dms-dashboard', 'user-support'];
             const isActive = (company.activeModules && (
                                Array.isArray(company.activeModules) ?
                                    company.activeModules.includes(module.id) :
@@ -5350,9 +5360,6 @@
 
                     // MONITORING (1)
                     { id: 'sla-tracking', name: 'SLA Tracking', icon: '⏱️' },
-
-                    // SUPPORT (1)
-                    { id: 'resource-center', name: 'Centro Recursos', icon: '📊' },
 
                     // REPORTS (1)
                     { id: 'audit-reports', name: 'Reportes Auditoría', icon: '📄' },
@@ -5888,6 +5895,9 @@
                 } else if (tabName === 'legal' || tabName === 'legal-dashboard') {
                     script.src = `js/modules/legal-dashboard.js?v=${cacheBuster}`;
                     console.log(`📦 [PROGRESSIVE] Usando LEGAL DASHBOARD ENTERPRISE v3.0`);
+                } else if (tabName === 'user-support') {
+                    script.src = `js/modules/user-support-dashboard.js?v=${cacheBuster}`;
+                    console.log(`📦 [PROGRESSIVE] Usando USER SUPPORT DASHBOARD v1.0`);
                 } else {
                     script.src = `js/modules/${tabName}.js?v=${cacheBuster}`;
                 }
@@ -5965,7 +5975,8 @@
             'medical-config', 'medical', 'fehaciente-consent',
             'terms-conditions', 'absence-notifications', 'dms-dashboard',
             'facial-biometric', 'employee-map', 'training-management','job-postings',
-            'legal-dashboard', 'art-management', 'payroll-liquidation', 'emotional-analysis'
+            'legal-dashboard', 'art-management', 'payroll-liquidation', 'emotional-analysis',
+            'user-support'
         ];
         
         for (const module of modules) {
@@ -6303,6 +6314,10 @@
             `;
         }
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // FUNCIONES DE INICIALIZACIÓN DE MÓDULOS ESPECIALES
+    // ═══════════════════════════════════════════════════════════════
 
     // Detección de cambios de red y manejo de errores
     function setupNetworkDetection() {

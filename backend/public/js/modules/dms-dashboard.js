@@ -1148,6 +1148,15 @@
     };
 
     // ═══════════════════════════════════════════════════════════════
+    // MI ESPACIO: Forzar vista de empleado para admin/supervisor
+    // Cuando viene de Mi Espacio, siempre mostrar solo MIS documentos
+    // ═══════════════════════════════════════════════════════════════
+    if (window.miEspacioSelfView) {
+      state.permissions.canSeeAllDocuments = false;
+      console.log('👤 [DMS] Mi Espacio detectado - Forzando vista personal');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // VISTA INICIAL SEGÚN ROL
     // Empleados: Directamente a "Mis Documentos" (su carpeta privada)
     // Admin/HR/Supervisor: Explorador general

@@ -354,6 +354,19 @@ class BaseModuleCollector {
         await this.page.waitForTimeout(3000);
         await this.page.waitForSelector('#module-content', { state: 'visible', timeout: 30000 });
 
+        // ✅ FIX: Esperar a que window.activeModules esté poblado (carga async post-login)
+        console.log('   ⏳ Esperando que se carguen los módulos activos...');
+        const modulesLoaded = await this.page.waitForFunction(() => {
+            return window.activeModules && window.activeModules.length > 0;
+        }, { timeout: 15000 }).catch(() => false);
+
+        if (modulesLoaded) {
+            const moduleCount = await this.page.evaluate(() => window.activeModules?.length || 0);
+            console.log(`   ✅ ${moduleCount} módulos activos cargados`);
+        } else {
+            console.warn('   ⚠️  activeModules no se cargó en el tiempo esperado, continuando...');
+        }
+
         console.log('✅ Login exitoso\n');
     }
 

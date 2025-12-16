@@ -9,6 +9,17 @@ const { sequelize } = require('../config/database-postgresql');
 const { QueryTypes } = require('sequelize');
 const websocket = require('../config/websocket');
 const nodemailer = require('nodemailer');
+// 🆕 Integración con sistema central de notificaciones
+let notificationUnifiedService = null;
+try {
+  notificationUnifiedService = require('./NotificationUnifiedService');
+  console.log('✅ [AUTH] NotificationUnifiedService integrated');
+} catch (e) {
+  console.log('⚠️ [AUTH] NotificationUnifiedService not available, using fallback notifications');
+}
+
+// 🆕 SSOT: Resolución de destinatarios de notificaciones departamentales
+const NotificationRecipientResolver = require('./NotificationRecipientResolver');
 
 class LateArrivalAuthorizationService {
   constructor() {
@@ -101,18 +112,16 @@ class LateArrivalAuthorizationService {
           -- Contexto del empleado para matching
           SELECT
             $1::integer AS company_id,
-            $2::integer AS branch_id,
-            $3::integer AS department_id,
+            $2::uuid AS branch_id,
+            $3::bigint AS department_id,
             $4::text AS sector,
             $5::uuid AS shift_id
         ),
         authorizer_scores AS (
           SELECT
             u.user_id,
-            u.first_name,
-            u.last_name,
-            u.nombre,
-            u.apellido,
+            u."firstName",
+            u."lastName",
             u.email,
             u.whatsapp_number,
             u.notification_preference_late_arrivals,
@@ -160,7 +169,7 @@ class LateArrivalAuthorizationService {
             END AS is_rrhh
           FROM users u
           CROSS JOIN employee_context ec
-          LEFT JOIN departments d ON u.department_id = d.department_id
+          LEFT JOIN departments d ON u.department_id = d.id
           WHERE
             u.company_id = ec.company_id
             AND u.is_active = true
@@ -182,8 +191,8 @@ class LateArrivalAuthorizationService {
         -- Combine both, removing duplicates
         SELECT DISTINCT ON (user_id)
           user_id,
-          COALESCE(first_name, nombre) AS first_name,
-          COALESCE(last_name, apellido) AS last_name,
+          "firstName" AS first_name,
+          "lastName" AS last_name,
           email,
           whatsapp_number,
           notification_preference_late_arrivals,
@@ -243,8 +252,8 @@ class LateArrivalAuthorizationService {
       const query = `
         SELECT
           u.user_id,
-          COALESCE(u.first_name, u.nombre) AS first_name,
-          COALESCE(u.last_name, u.apellido) AS last_name,
+          u."firstName" AS first_name,
+          u."lastName" AS last_name,
           u.email,
           u.whatsapp_number,
           u.notification_preference_late_arrivals,
@@ -254,7 +263,7 @@ class LateArrivalAuthorizationService {
           CASE WHEN LOWER(d.name) LIKE '%rrhh%' OR LOWER(d.name) LIKE '%recursos humanos%'
                THEN true ELSE false END AS is_rrhh
         FROM users u
-        LEFT JOIN departments d ON u.department_id = d.department_id
+        LEFT JOIN departments d ON u.department_id = d.id
         WHERE
           u.company_id = $1
           AND u.is_active = true
@@ -273,7 +282,7 @@ class LateArrivalAuthorizationService {
             WHEN role = 'supervisor' THEN 2
             ELSE 3
           END,
-          first_name ASC
+          "firstName" ASC
       `;
 
       return await sequelize.query(query, {
@@ -322,8 +331,8 @@ class LateArrivalAuthorizationService {
         const directSupervisorQuery = `
           SELECT
             u.user_id,
-            COALESCE(u.first_name, u.nombre) AS first_name,
-            COALESCE(u.last_name, u.apellido) AS last_name,
+            u."firstName" AS first_name,
+            u."lastName" AS last_name,
             u.email,
             u.whatsapp_number,
             u.notification_preference_late_arrivals,
@@ -352,15 +361,55 @@ class LateArrivalAuthorizationService {
         if (directSupervisors.length > 0) {
           console.log(`✅ [AUTH-HIERARCHY] Found ${directSupervisors.length} direct supervisor(s):`);
 
-          // 🆕 VERIFICAR DISPONIBILIDAD de cada supervisor directo
+          // 🆕 VERIFICAR DISPONIBILIDAD Y MISMO TURNO de cada supervisor directo
           for (const supervisor of directSupervisors) {
-            console.log(`   🔍 Checking availability: ${supervisor.first_name} ${supervisor.last_name} (${supervisor.position_name})`);
+            console.log(`   🔍 Checking supervisor: ${supervisor.first_name} ${supervisor.last_name} (${supervisor.position_name})`);
 
+            // 1️⃣ VERIFICAR MISMO TURNO
+            const shiftCheck = await this.checkSupervisorSameShift(
+              supervisor.user_id,
+              employeeContext.shift_id,
+              companyId
+            );
+
+            if (!shiftCheck.hasSameShift) {
+              // Supervisor tiene turno DIFERENTE → ESCALAR
+              console.log(`   ⚠️ ${supervisor.first_name} ${supervisor.last_name} has DIFFERENT SHIFT: ${shiftCheck.supervisorShiftName}`);
+
+              escalationInfo.escalated = true;
+              escalationInfo.reason = `different_shift:${shiftCheck.supervisorShiftName}`;
+              escalationInfo.fromSupervisor = `${supervisor.first_name} ${supervisor.last_name} (${supervisor.position_name})`;
+
+              // Escalar al siguiente nivel (grandparent)
+              if (supervisor.grandparent_position_id) {
+                console.log(`   🔼 [SHIFT-ESCALATION] Escalating due to different shift to position: ${supervisor.grandparent_position_id}`);
+
+                // Buscar supervisor del siguiente nivel con MISMO TURNO
+                const escalatedWithSameShift = await this._findSupervisorWithSameShift(
+                  supervisor.grandparent_position_id,
+                  employeeContext.shift_id,
+                  companyId,
+                  employeeContext
+                );
+
+                if (escalatedWithSameShift) {
+                  console.log(`   ✅ [SHIFT-ESCALATION] Found supervisor with same shift: ${escalatedWithSameShift.first_name} ${escalatedWithSameShift.last_name}`);
+                  escalationInfo.toSupervisor = `${escalatedWithSameShift.first_name} ${escalatedWithSameShift.last_name} (${escalatedWithSameShift.position_name})`;
+                  escalatedWithSameShift.authorizer_type = 'ESCALATED_SUPERVISOR_SAME_SHIFT';
+                  authorizers.push(escalatedWithSameShift);
+                } else {
+                  console.log(`   ⚠️ [SHIFT-ESCALATION] No supervisor with same shift found in hierarchy`);
+                }
+              }
+              continue; // Pasar al siguiente supervisor
+            }
+
+            // 2️⃣ VERIFICAR DISPONIBILIDAD (vacaciones, licencia, ausente)
             const availability = await this.checkSupervisorAvailability(supervisor.user_id, companyId);
 
             if (availability.isAvailable) {
-              // Supervisor DISPONIBLE → agregar a la lista
-              console.log(`   ✅ ${supervisor.first_name} ${supervisor.last_name} is AVAILABLE`);
+              // Supervisor DISPONIBLE y MISMO TURNO → agregar a la lista
+              console.log(`   ✅ ${supervisor.first_name} ${supervisor.last_name} is AVAILABLE with SAME SHIFT`);
               authorizers.push(supervisor);
             } else {
               // Supervisor NO DISPONIBLE → ESCALAR
@@ -377,8 +426,8 @@ class LateArrivalAuthorizationService {
                 const escalatedSupervisorQuery = `
                   SELECT
                     u.user_id,
-                    COALESCE(u.first_name, u.nombre) AS first_name,
-                    COALESCE(u.last_name, u.apellido) AS last_name,
+                    u."firstName" AS first_name,
+                    u."lastName" AS last_name,
                     u.email,
                     u.whatsapp_number,
                     u.notification_preference_late_arrivals,
@@ -482,6 +531,78 @@ class LateArrivalAuthorizationService {
   }
 
   /**
+   * 🆕 NUEVO: Verificar si el supervisor tiene el MISMO TURNO que el empleado
+   * El supervisor debe estar asignado al mismo turno para poder autorizar
+   *
+   * @param {number} supervisorId - ID del supervisor
+   * @param {string} employeeShiftId - UUID del turno del empleado
+   * @param {number} companyId - ID de la empresa
+   * @returns {Object} { hasSameShift: boolean, supervisorShiftId: string, supervisorShiftName: string, reason: string }
+   */
+  async checkSupervisorSameShift(supervisorId, employeeShiftId, companyId) {
+    try {
+      console.log(`🔍 [SAME-SHIFT] Checking if supervisor ${supervisorId} has shift ${employeeShiftId}...`);
+
+      // Si el empleado no tiene turno asignado, skip la verificación
+      if (!employeeShiftId) {
+        console.log(`⚠️ [SAME-SHIFT] Employee has no shift assigned, skipping check`);
+        return { hasSameShift: true, reason: 'employee_no_shift' };
+      }
+
+      const query = `
+        SELECT
+          usa.shift_id,
+          s.name AS shift_name,
+          CASE WHEN usa.shift_id = $2::uuid THEN true ELSE false END AS has_same_shift
+        FROM user_shift_assignments usa
+        JOIN shifts s ON usa.shift_id = s.id
+        WHERE usa.user_id = $1
+          AND usa.is_active = true
+        ORDER BY usa.created_at DESC
+        LIMIT 1
+      `;
+
+      const result = await sequelize.query(query, {
+        bind: [supervisorId, employeeShiftId],
+        type: QueryTypes.SELECT,
+        plain: true
+      });
+
+      if (!result) {
+        console.log(`⚠️ [SAME-SHIFT] Supervisor ${supervisorId} has no shift assigned`);
+        return {
+          hasSameShift: false,
+          reason: 'supervisor_no_shift',
+          supervisorShiftId: null,
+          supervisorShiftName: null
+        };
+      }
+
+      if (result.has_same_shift) {
+        console.log(`✅ [SAME-SHIFT] Supervisor HAS same shift: ${result.shift_name}`);
+        return {
+          hasSameShift: true,
+          supervisorShiftId: result.shift_id,
+          supervisorShiftName: result.shift_name
+        };
+      } else {
+        console.log(`❌ [SAME-SHIFT] Supervisor has DIFFERENT shift: ${result.shift_name}`);
+        return {
+          hasSameShift: false,
+          reason: 'different_shift',
+          supervisorShiftId: result.shift_id,
+          supervisorShiftName: result.shift_name
+        };
+      }
+
+    } catch (error) {
+      console.error('❌ [SAME-SHIFT] Error checking supervisor shift:', error);
+      // En caso de error, no bloquear el flujo
+      return { hasSameShift: true, reason: 'error_checking' };
+    }
+  }
+
+  /**
    * 🆕 NUEVO: Verificar si un supervisor está DISPONIBLE para autorizar (está trabajando HOY)
    * Verifica:
    * 1. Tiene asistencia activa hoy (check-in sin check-out)
@@ -497,14 +618,14 @@ class LateArrivalAuthorizationService {
       const query = `
         SELECT
           u.user_id,
-          u.first_name,
-          u.last_name,
+          u."firstName",
+          u."lastName",
           -- Check attendance today
           EXISTS (
             SELECT 1 FROM attendances a
-            WHERE a.user_id = u.user_id
-              AND DATE(a.check_in) = CURRENT_DATE
-              AND a.check_in IS NOT NULL
+            WHERE a."UserId" = u.user_id
+              AND DATE(a."checkInTime") = CURRENT_DATE
+              AND a."checkInTime" IS NOT NULL
           ) AS has_attendance_today,
           -- Check vacation
           EXISTS (
@@ -513,20 +634,18 @@ class LateArrivalAuthorizationService {
               AND vr.status = 'approved'
               AND CURRENT_DATE BETWEEN vr.start_date AND vr.end_date
           ) AS is_on_vacation,
-          -- Check sick leave
-          EXISTS (
-            SELECT 1 FROM medical_leaves ml
-            WHERE ml.user_id = u.user_id
-              AND ml.status = 'approved'
-              AND CURRENT_DATE BETWEEN ml.start_date AND ml.end_date
-          ) AS is_on_sick_leave,
-          -- Check if scheduled to work today
+          -- Check sick leave (skip if table doesn't exist)
+          false AS is_on_sick_leave,
+          -- Check if scheduled to work today (cast JSON to JSONB for operators)
           EXISTS (
             SELECT 1 FROM user_shift_assignments usa
             JOIN shifts s ON usa.shift_id = s.id
             WHERE usa.user_id = u.user_id
               AND usa.is_active = true
-              AND EXTRACT(DOW FROM CURRENT_DATE) = ANY(s.days_of_week)
+              AND (
+                s.days::jsonb ? EXTRACT(DOW FROM CURRENT_DATE)::text
+                OR s.days::jsonb @> to_jsonb(EXTRACT(DOW FROM CURRENT_DATE)::int)
+              )
           ) AS is_scheduled_today
         FROM users u
         WHERE u.user_id = $1 AND u.company_id = $2
@@ -544,39 +663,39 @@ class LateArrivalAuthorizationService {
 
       // Si está de vacaciones
       if (result.is_on_vacation) {
-        console.log(`⚠️ [AVAILABILITY] ${result.first_name} ${result.last_name} is ON VACATION`);
+        console.log(`⚠️ [AVAILABILITY] ${result.firstName} ${result.lastName} is ON VACATION`);
         return {
           isAvailable: false,
           reason: 'on_vacation',
-          supervisorName: `${result.first_name} ${result.last_name}`
+          supervisorName: `${result.firstName} ${result.lastName}`
         };
       }
 
       // Si está con licencia médica
       if (result.is_on_sick_leave) {
-        console.log(`⚠️ [AVAILABILITY] ${result.first_name} ${result.last_name} is ON SICK LEAVE`);
+        console.log(`⚠️ [AVAILABILITY] ${result.firstName} ${result.lastName} is ON SICK LEAVE`);
         return {
           isAvailable: false,
           reason: 'on_sick_leave',
-          supervisorName: `${result.first_name} ${result.last_name}`
+          supervisorName: `${result.firstName} ${result.lastName}`
         };
       }
 
       // Si está programado para trabajar hoy pero NO tiene asistencia
       if (result.is_scheduled_today && !result.has_attendance_today) {
-        console.log(`⚠️ [AVAILABILITY] ${result.first_name} ${result.last_name} is SCHEDULED but NOT AT WORK (no attendance)`);
+        console.log(`⚠️ [AVAILABILITY] ${result.firstName} ${result.lastName} is SCHEDULED but NOT AT WORK (no attendance)`);
         return {
           isAvailable: false,
           reason: 'absent_today',
-          supervisorName: `${result.first_name} ${result.last_name}`
+          supervisorName: `${result.firstName} ${result.lastName}`
         };
       }
 
       // Supervisor está disponible
-      console.log(`✅ [AVAILABILITY] ${result.first_name} ${result.last_name} is AVAILABLE`);
+      console.log(`✅ [AVAILABILITY] ${result.firstName} ${result.lastName} is AVAILABLE`);
       return {
         isAvailable: true,
-        supervisorName: `${result.first_name} ${result.last_name}`
+        supervisorName: `${result.firstName} ${result.lastName}`
       };
 
     } catch (error) {
@@ -587,57 +706,134 @@ class LateArrivalAuthorizationService {
   }
 
   /**
-   * 🆕 NUEVO: Buscar usuario(s) de RRHH por POSICIÓN específica (no por departamento)
-   * Busca por position_code que contenga 'RRHH', 'RH', 'HR'
+   * 🆕 ACTUALIZADO: Buscar usuario(s) de RRHH usando NotificationRecipientResolver (SSOT)
+   * Ya no usa queries directas - delega al servicio centralizado
    *
    * @param {number} companyId - ID de la empresa
-   * @returns {Array} Lista de usuarios de RRHH
+   * @returns {Array} Lista de usuarios de RRHH con formato compatible
    */
   async findRRHHByPosition(companyId) {
     try {
-      const query = `
-        SELECT
-          u.user_id,
-          COALESCE(u.first_name, u.nombre) AS first_name,
-          COALESCE(u.last_name, u.apellido) AS last_name,
-          u.email,
-          u.whatsapp_number,
-          u.notification_preference_late_arrivals,
-          u.role,
-          op.position_name,
-          op.position_code,
-          op.level_order,
-          'RRHH' AS authorizer_type,
-          false AS is_direct_supervisor,
-          true AS is_rrhh,
-          800 AS match_score
-        FROM users u
-        JOIN organizational_positions op ON u.organizational_position_id = op.id
-        WHERE op.company_id = $1
-          AND u.company_id = $1
-          AND u.is_active = true
-          AND (
-            UPPER(op.position_code) LIKE '%RRHH%'
-            OR UPPER(op.position_code) LIKE '%RH%'
-            OR UPPER(op.position_code) LIKE '%HR%'
-            OR UPPER(op.position_name) LIKE '%RECURSOS HUMANOS%'
-            OR UPPER(op.position_name) LIKE '%RRHH%'
-            OR UPPER(op.position_name) LIKE '%HUMAN RESOURCES%'
-          )
-        ORDER BY op.level_order ASC, u.role DESC
-        LIMIT 5
-      `;
-
-      const rrhhUsers = await sequelize.query(query, {
-        bind: [companyId],
-        type: QueryTypes.SELECT
+      // Usar NotificationRecipientResolver como SSOT
+      const recipients = await NotificationRecipientResolver.resolveRRHH(companyId, {
+        maxRecipients: 5,
+        includeUserDetails: true,
+        fallbackToAdmins: true
       });
 
-      return rrhhUsers;
+      // Mapear al formato esperado por este servicio
+      return recipients.map(r => ({
+        user_id: r.userId,
+        first_name: r.name?.split(' ')[0] || '',
+        last_name: r.name?.split(' ').slice(1).join(' ') || '',
+        email: r.email,
+        whatsapp_number: null, // Se obtiene si es necesario
+        notification_preference_late_arrivals: 'all',
+        role: r.role,
+        position_name: 'RRHH',
+        position_code: 'RRHH',
+        level_order: 1,
+        authorizer_type: 'RRHH',
+        is_direct_supervisor: false,
+        is_rrhh: true,
+        match_score: 800
+      }));
 
     } catch (error) {
-      console.error('❌ [RRHH-POSITION] Error finding RRHH by position:', error);
+      console.error('❌ [RRHH-POSITION] Error finding RRHH via NotificationRecipientResolver:', error);
       return [];
+    }
+  }
+
+  /**
+   * 🆕 NUEVO: Buscar recursivamente un supervisor en la jerarquía con el MISMO TURNO
+   * Sube por la cadena de mando hasta encontrar uno disponible con mismo turno
+   *
+   * @param {number} positionId - ID de la posición organizacional a buscar
+   * @param {string} employeeShiftId - UUID del turno del empleado
+   * @param {number} companyId - ID de la empresa
+   * @param {Object} employeeContext - Contexto del empleado
+   * @param {number} maxLevels - Máximo de niveles a subir (default 5)
+   * @returns {Object|null} Supervisor encontrado o null
+   */
+  async _findSupervisorWithSameShift(positionId, employeeShiftId, companyId, employeeContext, maxLevels = 5) {
+    try {
+      let currentPositionId = positionId;
+      let level = 0;
+
+      while (currentPositionId && level < maxLevels) {
+        level++;
+        console.log(`   🔼 [SHIFT-SEARCH] Level ${level}: Searching position ${currentPositionId}...`);
+
+        // Buscar usuario en esta posición
+        const query = `
+          SELECT
+            u.user_id,
+            u."firstName" AS first_name,
+            u."lastName" AS last_name,
+            u.email,
+            u.whatsapp_number,
+            u.notification_preference_late_arrivals,
+            u.role,
+            op.position_name,
+            op.position_code,
+            op.parent_position_id AS next_position_id,
+            usa.shift_id
+          FROM users u
+          JOIN organizational_positions op ON u.organizational_position_id = op.id
+          LEFT JOIN user_shift_assignments usa ON u.user_id = usa.user_id AND usa.is_active = true
+          WHERE u.organizational_position_id = $1
+            AND u.company_id = $2
+            AND u.is_active = true
+            AND u.can_authorize_late_arrivals = true
+          ORDER BY usa.is_primary DESC
+          LIMIT 1
+        `;
+
+        const result = await sequelize.query(query, {
+          bind: [currentPositionId, companyId],
+          type: QueryTypes.SELECT,
+          plain: true
+        });
+
+        if (!result) {
+          console.log(`   ⚠️ [SHIFT-SEARCH] No user found at position ${currentPositionId}`);
+          // Intentar subir al siguiente nivel
+          const posQuery = `SELECT parent_position_id FROM organizational_positions WHERE id = $1`;
+          const posResult = await sequelize.query(posQuery, {
+            bind: [currentPositionId],
+            type: QueryTypes.SELECT,
+            plain: true
+          });
+          currentPositionId = posResult?.parent_position_id;
+          continue;
+        }
+
+        // Verificar MISMO TURNO
+        if (result.shift_id === employeeShiftId) {
+          // Verificar DISPONIBILIDAD
+          const availability = await this.checkSupervisorAvailability(result.user_id, companyId);
+
+          if (availability.isAvailable) {
+            console.log(`   ✅ [SHIFT-SEARCH] Found available supervisor with same shift: ${result.first_name} ${result.last_name}`);
+            return result;
+          } else {
+            console.log(`   ⚠️ [SHIFT-SEARCH] ${result.first_name} has same shift but NOT available: ${availability.reason}`);
+          }
+        } else {
+          console.log(`   ⚠️ [SHIFT-SEARCH] ${result.first_name} has different shift (${result.shift_id})`);
+        }
+
+        // Subir al siguiente nivel
+        currentPositionId = result.next_position_id;
+      }
+
+      console.log(`   ❌ [SHIFT-SEARCH] No supervisor with same shift found after ${level} levels`);
+      return null;
+
+    } catch (error) {
+      console.error('❌ [SHIFT-SEARCH] Error searching supervisor with same shift:', error);
+      return null;
     }
   }
 
@@ -662,8 +858,8 @@ class LateArrivalAuthorizationService {
           op.position_name,
           op.parent_position_id
         FROM users u
-        LEFT JOIN departments d ON u.department_id = d.department_id
-        LEFT JOIN branches b ON u.default_branch_id = b.branch_id
+        LEFT JOIN departments d ON u.department_id = d.id
+        LEFT JOIN branches b ON u.default_branch_id = b.id
         LEFT JOIN user_shift_assignments usa ON u.user_id = usa.user_id AND usa.is_active = true
         LEFT JOIN shifts s ON usa.shift_id = s.id
         LEFT JOIN organizational_positions op ON u.organizational_position_id = op.id
@@ -819,11 +1015,42 @@ class LateArrivalAuthorizationService {
       // 4. Registrar autorizadores notificados en la BD
       await this._updateNotifiedAuthorizers(attendanceId, notifiedUserIds);
 
+      // 5. 🆕 ENVIAR VÍA SISTEMA CENTRAL DE NOTIFICACIONES (NotificationUnifiedService)
+      let unifiedNotificationResult = null;
+      if (notificationUnifiedService) {
+        try {
+          unifiedNotificationResult = await this._sendViaUnifiedNotificationSystem({
+            employeeData,
+            employeeContext,
+            authorizers,
+            authorizationToken,
+            shiftData,
+            lateMinutes,
+            companyId,
+            attendanceId
+          });
+          console.log(`✅ [AUTH] Unified notification sent: Thread ID ${unifiedNotificationResult?.threadId || 'N/A'}`);
+        } catch (unifiedError) {
+          console.error('⚠️ [AUTH] Error sending unified notification (non-blocking):', unifiedError.message);
+        }
+      }
+
+      // 6. 🆕 NOTIFICAR AL EMPLEADO que su solicitud fue enviada (en tiempo real)
+      await this._notifyEmployeeRequestSent({
+        employeeData,
+        authorizationToken,
+        shiftData,
+        lateMinutes,
+        authorizers,
+        companyId
+      });
+
       return {
         success: notificationResults.some(r => r.result.success || r.result.email?.success || r.result.whatsapp?.success),
         notificationResults,
         notifiedCount: notifiedUserIds.length,
-        authorizationToken
+        authorizationToken,
+        unifiedNotification: unifiedNotificationResult
       };
 
     } catch (error) {
@@ -1066,6 +1293,221 @@ class LateArrivalAuthorizationService {
 
     } catch (error) {
       console.error('❌ Error sending fallback notification:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * 🆕 NUEVO: Enviar notificación vía Sistema Central (NotificationUnifiedService)
+   * Crea thread y envía notificaciones estructuradas para dashboard y seguimiento
+   */
+  async _sendViaUnifiedNotificationSystem({
+    employeeData,
+    employeeContext,
+    authorizers,
+    authorizationToken,
+    shiftData,
+    lateMinutes,
+    companyId,
+    attendanceId
+  }) {
+    try {
+      if (!notificationUnifiedService) {
+        console.log('⚠️ [UNIFIED] NotificationUnifiedService not available');
+        return null;
+      }
+
+      const employeeName = `${employeeData.first_name} ${employeeData.last_name}`;
+      const employeePosition = employeeContext.position_name || 'N/A';
+
+      // 1️⃣ CREAR THREAD para esta solicitud de autorización
+      const thread = await notificationUnifiedService.createThread({
+        companyId,
+        subject: `Llegada tardía: ${employeeName} (${lateMinutes} min)`,
+        category: 'approval',
+        module: 'attendance',
+        threadType: 'authorization',
+        initiatorType: 'employee',
+        initiatorId: employeeData.user_id,
+        initiatorName: employeeName,
+        priority: lateMinutes > 30 ? 'high' : 'medium'
+      });
+
+      console.log(`📋 [UNIFIED] Thread created: ${thread.id || thread}`);
+      const threadId = thread.id || thread;
+
+      // 2️⃣ NOTIFICACIÓN INICIAL (al empleado - confirmación de solicitud)
+      await notificationUnifiedService.send({
+        companyId,
+        threadId,
+        originType: 'system',
+        originId: 'late-arrival-service',
+        originName: 'Sistema de Llegadas Tardías',
+        recipientType: 'user',
+        recipientId: employeeData.user_id,
+        recipientName: employeeName,
+        category: 'approval',
+        module: 'attendance',
+        notificationType: 'late_arrival_request_sent',
+        priority: lateMinutes > 30 ? 'high' : 'medium',
+        title: `⏳ Solicitud de autorización enviada`,
+        message: `Tu solicitud de ingreso tardío (${lateMinutes} min de retraso) ha sido enviada a ${authorizers.length} supervisor(es). Te notificaremos cuando respondan.`,
+        shortMessage: `Solicitud enviada a ${authorizers.length} supervisor(es)`,
+        metadata: {
+          attendance_id: attendanceId,
+          authorization_token: authorizationToken,
+          late_minutes: lateMinutes,
+          shift_name: shiftData.name,
+          shift_start: shiftData.startTime,
+          employee_position: employeePosition,
+          authorizers_count: authorizers.length
+        },
+        relatedEntityType: 'attendance',
+        relatedEntityId: attendanceId?.toString(),
+        requiresAction: false,
+        channels: ['app', 'websocket']
+      });
+
+      // 3️⃣ NOTIFICACIONES A CADA AUTORIZADOR (supervisor/RRHH)
+      for (const authorizer of authorizers) {
+        const isRRHH = authorizer.is_rrhh || authorizer.authorizer_type === 'RRHH';
+        const isEscalated = authorizer.authorizer_type?.includes('ESCALATED');
+
+        let title = `⚠️ Autorización requerida: ${employeeName}`;
+        let message = `${employeeName} llegó ${lateMinutes} minutos tarde a su turno "${shiftData.name}" (inicio: ${shiftData.startTime}).\n\nRequiere tu autorización para registrar su ingreso.`;
+
+        // Agregar info de escalación si corresponde
+        if (isEscalated) {
+          title = `🔼 [ESCALADO] ${title}`;
+          message = `[ESCALACIÓN AUTOMÁTICA]\n${message}`;
+        }
+
+        if (isRRHH && authorizer.notify_escalation && authorizer.escalation_info) {
+          message += `\n\n📢 NOTA: Esta solicitud fue escalada porque:\n- ${this._translateEscalationReason(authorizer.escalation_info.reason)}`;
+          if (authorizer.escalation_info.fromSupervisor) {
+            message += `\n- Supervisor original: ${authorizer.escalation_info.fromSupervisor}`;
+          }
+        }
+
+        await notificationUnifiedService.send({
+          companyId,
+          threadId,
+          originType: 'employee',
+          originId: employeeData.user_id,
+          originName: employeeName,
+          recipientType: 'user',
+          recipientId: authorizer.user_id,
+          recipientName: `${authorizer.first_name} ${authorizer.last_name}`,
+          recipientRole: authorizer.role,
+          recipientHierarchyLevel: isRRHH ? 3 : 2, // RRHH es nivel 3, supervisor nivel 2
+          category: 'approval',
+          module: 'attendance',
+          notificationType: 'late_arrival_authorization',
+          priority: lateMinutes > 30 ? 'high' : 'medium',
+          title,
+          message,
+          shortMessage: `${employeeName} - ${lateMinutes}min tarde`,
+          metadata: {
+            attendance_id: attendanceId,
+            authorization_token: authorizationToken,
+            late_minutes: lateMinutes,
+            shift_name: shiftData.name,
+            shift_start: shiftData.startTime,
+            employee_id: employeeData.user_id,
+            employee_legajo: employeeData.legajo,
+            employee_department: employeeData.department_name,
+            employee_position: employeePosition,
+            authorizer_type: authorizer.authorizer_type,
+            is_escalated: isEscalated,
+            is_rrhh: isRRHH
+          },
+          relatedEntityType: 'attendance',
+          relatedEntityId: attendanceId?.toString(),
+          requiresAction: true,
+          actionType: 'approve_reject',
+          actionOptions: [
+            { label: '✅ Autorizar', value: 'approve', style: 'success' },
+            { label: '❌ Rechazar', value: 'reject', style: 'danger' }
+          ],
+          actionDeadline: new Date(Date.now() + 30 * 60 * 1000), // 30 min para responder
+          slaHours: 0.5, // 30 minutos SLA
+          channels: ['app', 'websocket', 'email']
+        });
+
+        console.log(`📤 [UNIFIED] Notification sent to: ${authorizer.first_name} ${authorizer.last_name} (${authorizer.authorizer_type})`);
+      }
+
+      return {
+        threadId,
+        notificationsSent: authorizers.length + 1, // +1 por la del empleado
+        authorizers: authorizers.map(a => ({
+          id: a.user_id,
+          name: `${a.first_name} ${a.last_name}`,
+          type: a.authorizer_type
+        }))
+      };
+
+    } catch (error) {
+      console.error('❌ [UNIFIED] Error sending via unified system:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 🆕 NUEVO: Notificar al empleado en tiempo real que su solicitud fue enviada
+   * El empleado puede ver el estado en su dashboard y APK mientras espera
+   */
+  async _notifyEmployeeRequestSent({
+    employeeData,
+    authorizationToken,
+    shiftData,
+    lateMinutes,
+    authorizers,
+    companyId
+  }) {
+    try {
+      const employeeName = `${employeeData.first_name} ${employeeData.last_name}`;
+      const supervisorNames = authorizers
+        .filter(a => !a.is_rrhh)
+        .map(a => `${a.first_name} ${a.last_name}`)
+        .join(', ');
+
+      const notificationData = {
+        type: 'authorization_request_sent',
+        authorizationToken,
+        employee: {
+          userId: employeeData.user_id,
+          name: employeeName,
+          legajo: employeeData.legajo
+        },
+        shift: {
+          name: shiftData.name,
+          startTime: shiftData.startTime
+        },
+        lateMinutes,
+        supervisors: supervisorNames,
+        totalAuthorizers: authorizers.length,
+        timestamp: new Date().toISOString(),
+        message: `Tu solicitud ha sido enviada a ${authorizers.length} supervisor(es). Espera su respuesta.`,
+        estimatedWaitMinutes: 5 // Estimado de espera
+      };
+
+      // 1️⃣ WebSocket al empleado
+      websocket.sendToUser(employeeData.user_id, 'authorization_status', notificationData);
+      console.log(`📱 [EMPLOYEE-NOTIFY] WebSocket sent to ${employeeName}`);
+
+      // 2️⃣ Email de confirmación (ya existía, pero llamamos aquí para asegurar)
+      await this.sendEmployeeNotificationEmail({
+        employeeData,
+        lateMinutes,
+        shiftData,
+        authorizationToken
+      });
+
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ [EMPLOYEE-NOTIFY] Error:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1433,6 +1875,86 @@ _Sistema de Asistencia Biométrico APONNT_`;
         notes
       });
 
+      // 🆕 ENVIAR VÍA SISTEMA CENTRAL DE NOTIFICACIONES
+      if (notificationUnifiedService) {
+        try {
+          const employeeName = `${employeeData.first_name} ${employeeData.last_name}`;
+          const authorizerName = `${authorizerData.first_name} ${authorizerData.last_name}`;
+          const isApproved = status === 'approved';
+
+          // Notificación al empleado (resultado)
+          await notificationUnifiedService.send({
+            companyId: employeeData.company_id || authorizerData.company_id,
+            originType: 'supervisor',
+            originId: authorizerData.user_id,
+            originName: authorizerName,
+            originRole: authorizerData.role,
+            recipientType: 'user',
+            recipientId: employeeData.user_id,
+            recipientName: employeeName,
+            category: 'approval',
+            module: 'attendance',
+            notificationType: isApproved ? 'late_arrival_approved' : 'late_arrival_rejected',
+            priority: isApproved ? 'medium' : 'high',
+            title: isApproved
+              ? `✅ Autorización APROBADA por ${authorizerName}`
+              : `❌ Autorización RECHAZADA por ${authorizerName}`,
+            message: isApproved
+              ? `Tu solicitud de ingreso tardío ha sido APROBADA. Tienes ${authorizationWindow?.windowMinutes || 5} minutos para completar tu fichaje en el kiosk.`
+              : `Tu solicitud de ingreso tardío ha sido RECHAZADA.${notes ? ` Motivo: ${notes}` : ''} Contacta a tu supervisor o RRHH.`,
+            metadata: {
+              attendance_id: attendanceId,
+              status,
+              authorizer_id: authorizerData.user_id,
+              authorizer_name: authorizerName,
+              authorization_window: authorizationWindow,
+              notes
+            },
+            relatedEntityType: 'attendance',
+            relatedEntityId: attendanceId?.toString(),
+            requiresAction: isApproved, // Si aprobado, requiere acción (ir al kiosk)
+            actionType: isApproved ? 'acknowledge' : null,
+            channels: ['app', 'websocket', 'email']
+          });
+
+          // Notificación a RRHH (registro de la decisión)
+          await notificationUnifiedService.send({
+            companyId: employeeData.company_id || authorizerData.company_id,
+            originType: 'supervisor',
+            originId: authorizerData.user_id,
+            originName: authorizerName,
+            originRole: authorizerData.role,
+            recipientType: 'role',
+            recipientRole: 'admin',
+            recipientHierarchyLevel: 3,
+            category: 'info',
+            module: 'attendance',
+            notificationType: 'late_arrival_decision_logged',
+            priority: 'low',
+            title: `📝 Decisión registrada: ${employeeName} - ${isApproved ? 'APROBADO' : 'RECHAZADO'}`,
+            message: `${authorizerName} ${isApproved ? 'aprobó' : 'rechazó'} la solicitud de ingreso tardío de ${employeeName}.${notes ? ` Notas: ${notes}` : ''}`,
+            metadata: {
+              attendance_id: attendanceId,
+              employee_id: employeeData.user_id,
+              employee_name: employeeName,
+              authorizer_id: authorizerData.user_id,
+              authorizer_name: authorizerName,
+              status,
+              notes,
+              decision_time: new Date().toISOString()
+            },
+            relatedEntityType: 'attendance',
+            relatedEntityId: attendanceId?.toString(),
+            requiresAction: false,
+            channels: ['app']
+          });
+
+          console.log(`✅ [UNIFIED] Authorization result notifications sent`);
+        } catch (unifiedError) {
+          console.error('⚠️ [UNIFIED] Error sending result notification (non-blocking):', unifiedError.message);
+        }
+      }
+
       console.log(`✅ Authorization result sent: ${status} by ${authorizerData.first_name} ${authorizerData.last_name}`);
 
       return { success: true, authorizationWindow };
@@ -1701,15 +2223,25 @@ _Sistema de Asistencia Biométrico APONNT_`;
    * 🆕 Traducir razón de escalación a texto legible en español
    */
   _translateEscalationReason(reason) {
+    if (!reason) return 'No especificado';
+
+    // Manejar razón de turno diferente (formato: different_shift:NombreTurno)
+    if (reason.startsWith('different_shift:')) {
+      const shiftName = reason.split(':')[1] || 'otro turno';
+      return `Tiene turno diferente (${shiftName})`;
+    }
+
     const translations = {
       'on_vacation': 'Está de vacaciones',
       'on_sick_leave': 'Está con licencia médica',
       'absent_today': 'No se encuentra trabajando hoy (sin asistencia registrada)',
       'supervisor_not_found': 'Supervisor no encontrado en el sistema',
+      'supervisor_no_shift': 'Supervisor sin turno asignado',
+      'different_shift': 'Tiene turno diferente al empleado',
       'error_checking': 'Error al verificar disponibilidad'
     };
 
-    return translations[reason] || reason || 'No especificado';
+    return translations[reason] || reason;
   }
 }
 
