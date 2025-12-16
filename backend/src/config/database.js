@@ -9,9 +9,14 @@ console.log('🔍 [DEBUG] DATABASE_URL exists?', !!process.env.DATABASE_URL);
 console.log('🔍 [DEBUG] DATABASE_URL value:', process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET');
 console.log('🔍 [DEBUG] NODE_ENV:', process.env.NODE_ENV);
 
+// Pool configurable via env (Render Free=5, Starter=25, Standard=100)
+const POOL_MAX = parseInt(process.env.DB_POOL_MAX) || 10;
+const POOL_MIN = parseInt(process.env.DB_POOL_MIN) || 2;
+
 if (process.env.DATABASE_URL) {
   // RENDER/PRODUCCIÓN: Usar DATABASE_URL
   console.log('🚀 Conectando a Render PostgreSQL via DATABASE_URL');
+  console.log(`🔧 Pool: max=${POOL_MAX}, min=${POOL_MIN}`);
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     logging: false, // DESACTIVAR logging en producción
@@ -19,10 +24,11 @@ if (process.env.DATABASE_URL) {
     quoteIdentifiers: true, // ACTIVAR para preservar camelCase (firstName, lastName)
     underscored: false, // DESACTIVAR - Render tiene nombres mixtos
     pool: {
-      max: 10,
-      min: 0,
+      max: POOL_MAX,
+      min: POOL_MIN,
       acquire: 30000,
-      idle: 10000
+      idle: 10000,
+      evict: 5000  // Limpiar conexiones idle cada 5s
     },
     dialectOptions: {
       ssl: {

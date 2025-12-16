@@ -2713,6 +2713,11 @@ app.use('/api/v2/postgresql/partitioning', postgresqlPartitioningRoutes);
 const biometricAttendanceRoutes = require('./src/routes/biometric-attendance-api');
 app.use('/api/v2/biometric-attendance', biometricAttendanceRoutes);
 
+// 🚀 FAST ATTENDANCE API v3 - Optimizado para fichajes masivos
+const fastAttendanceRoutes = require('./src/routes/fastAttendanceRoutes');
+app.use('/api/v3/attendance', fastAttendanceRoutes);
+console.log('🚀 [FAST-ATTENDANCE] API v3 configurada (respuesta <100ms)');
+
 // 📅 CONFIGURAR CALENDARIO LABORAL API (Feriados, Rotaciones, Días No Laborables)
 const calendarioLaboralRoutes = require('./src/routes/calendarioLaboralRoutes');
 app.use('/api/calendario', calendarioLaboralRoutes);
