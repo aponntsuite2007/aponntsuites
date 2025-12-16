@@ -941,36 +941,82 @@ router.post('/:id/activate', async (req, res) => {
 
     console.log(`📱 [KIOSKS] Activando kiosko ${id} con device: ${device_id}`);
 
-    const kiosk = await Kiosk.findOne({
-      where: {
-        id: parseInt(id),
-        company_id: parseInt(company_id)
-      }
+    // Use raw SQL to avoid Sequelize trying to access columns that may not exist in Render DB
+    const { sequelize } = require('../config/database');
+
+    // First check if kiosk exists
+    const [existingKiosks] = await sequelize.query(`
+      SELECT id, name, location, gps_lat, gps_lng
+      FROM kiosks
+      WHERE id = :id AND company_id = :companyId
+      LIMIT 1
+    `, {
+      replacements: { id: parseInt(id), companyId: parseInt(company_id) }
     });
 
-    if (!kiosk) {
+    if (existingKiosks.length === 0) {
       return res.status(404).json({
         success: false,
         error: 'Kiosko no encontrado'
       });
     }
 
-    // Actualizar kiosko con información del dispositivo
-    await kiosk.update({
-      device_id: device_id,
-      is_active: true,
-      is_configured: true,
-      gps_lat: gps_lat || kiosk.gps_lat,
-      gps_lng: gps_lng || kiosk.gps_lng,
-      last_seen: new Date()
+    const existingKiosk = existingKiosks[0];
+
+    // Update kiosk using raw SQL (only columns that definitely exist)
+    await sequelize.query(`
+      UPDATE kiosks
+      SET device_id = :deviceId,
+          is_active = true,
+          is_configured = true,
+          gps_lat = COALESCE(:gpsLat, gps_lat),
+          gps_lng = COALESCE(:gpsLng, gps_lng),
+          updated_at = NOW()
+      WHERE id = :id AND company_id = :companyId
+    `, {
+      replacements: {
+        deviceId: device_id,
+        gpsLat: gps_lat || null,
+        gpsLng: gps_lng || null,
+        id: parseInt(id),
+        companyId: parseInt(company_id)
+      }
     });
+
+    // Fetch updated kiosk
+    const [updatedKiosks] = await sequelize.query(`
+      SELECT id, name, description, location, device_id,
+             gps_lat, gps_lng, is_configured, is_active,
+             created_at, updated_at, company_id
+      FROM kiosks
+      WHERE id = :id
+    `, {
+      replacements: { id: parseInt(id) }
+    });
+
+    const kiosk = updatedKiosks[0];
 
     console.log(`✅ [KIOSKS] Kiosko ${kiosk.name} activado exitosamente`);
 
     res.json({
       success: true,
       message: 'Kiosko activado exitosamente',
-      kiosk: formatKiosk(kiosk)
+      kiosk: {
+        id: kiosk.id,
+        name: kiosk.name,
+        description: kiosk.description,
+        location: kiosk.location,
+        deviceId: kiosk.device_id,
+        gpsLocation: {
+          lat: kiosk.gps_lat,
+          lng: kiosk.gps_lng
+        },
+        isConfigured: kiosk.is_configured,
+        isActive: kiosk.is_active,
+        createdAt: kiosk.created_at,
+        updatedAt: kiosk.updated_at,
+        companyId: kiosk.company_id
+      }
     });
 
   } catch (error) {
