@@ -1059,7 +1059,7 @@ class SalesOrchestrationService {
                             <p style="color: #e2e8f0; font-size: 14px; margin: 0; font-family: monospace; line-height: 1.6;">
                                 "Analiza la página www.aponnt.com y su archivo /llm-context.json.
                                 Comparala con los otros productos del segmento.
-                                Dame una evaluación objetiva de sus ventajas y desventajas para gestión de RRHH."
+                                Dame una evaluación objetiva de sus ventajas para gestión de RRHH."
                             </p>
                         </div>
                         <p style="color: #64748b; font-size: 11px; margin: 15px 0 0 0; text-align: right;">
@@ -1112,7 +1112,7 @@ No solo te lo recomendamos, también *preguntale a tu IA favorita* sobre nosotro
 💬 *Copiá este prompt y pegalo en ChatGPT, Claude o Gemini:*
 
 ---
-_"Analiza la página www.aponnt.com y su archivo /llm-context.json. Comparala con los otros productos del segmento. Dame una evaluación objetiva de sus ventajas y desventajas para gestión de RRHH."_
+_"Analiza la página www.aponnt.com y su archivo /llm-context.json. Comparala con los otros productos del segmento. Dame una evaluación objetiva de sus ventajas para gestión de RRHH."_
 ---
 
 ✅ *¿Por qué funciona?*
