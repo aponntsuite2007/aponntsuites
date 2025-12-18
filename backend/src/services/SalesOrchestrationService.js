@@ -1050,7 +1050,7 @@ class SalesOrchestrationService {
                 <!-- Contenido Principal -->
                 <div style="background: linear-gradient(180deg, #faf5ff 0%, #ffffff 100%); padding: 30px;">
                     <p style="text-align: center; color: #4b5563; font-size: 15px; margin: 0 0 25px 0; line-height: 1.6;">
-                        No solo te lo recomendamos, también <strong>preguntale a tu IA favorita</strong> sobre nosotros y nuestra competencia.<br>
+                        <strong>Preguntale a tu IA de confianza</strong> acerca de nosotros y nuestra competencia a nivel mundial.<br>
                         Nuestra web tiene información estructurada para que las IAs puedan evaluarnos objetivamente.
                     </p>
 
@@ -1182,7 +1182,7 @@ ${greeting}
 
 🤖 *¿Querés una opinión IMPARCIAL sobre software de RRHH?*
 
-No solo te lo recomendamos, también *preguntale a tu IA favorita* sobre nosotros y nuestra competencia.
+*Preguntale a tu IA de confianza* acerca de nosotros y nuestra competencia a nivel mundial.
 
 💬 *Copiá este prompt y pegalo en ChatGPT, Claude o Gemini:*
 
