@@ -992,6 +992,32 @@ class SalesOrchestrationService {
             <!-- FLYER INNOVADOR: PREGUNTALE A TU IA FAVORITA -->
             <!-- ═══════════════════════════════════════════════════════════════════════════ -->
             <div style="margin: 30px 0; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
+
+                <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+                <!-- HEADER BRANDING APONNT -->
+                <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+                <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%); padding: 30px; text-align: center;">
+                    <!-- Logo APONNT -->
+                    <div style="display: inline-flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
+                            <span style="color: white; font-size: 32px; font-weight: bold;">A</span>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="font-size: 32px; font-weight: 800; color: #f59e0b; letter-spacing: -0.5px;">APONNT</div>
+                            <div style="font-size: 18px; font-weight: 700; color: #8b5cf6;">360º</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 14px; color: #a78bfa; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px;">
+                        Intelligent Ecosystem
+                    </div>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 10px;">
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.6); line-height: 1.6; max-width: 450px; margin: 0 auto;">
+                            Ecosistema Inteligente de Administración y Planificación de Recursos Empresariales<br>
+                            <span style="color: rgba(255,255,255,0.4);">SaaS B2B • Biometría • RRHH • IA Predictiva • 6 idiomas</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Saludo Personalizado -->
                 <div style="background: #faf5ff; padding: 25px 30px; border-bottom: 1px solid #e9d5ff;">
                     <p style="margin: 0; font-size: 20px; color: #4c1d95; font-weight: 600;">
@@ -1103,7 +1129,16 @@ class SalesOrchestrationService {
         const firstName = leadName ? leadName.split(' ')[0] : '';
         const greeting = firstName ? `Hola ${firstName}! 👋` : 'Hola! 👋';
 
-        return `${greeting}
+        return `━━━━━━━━━━━━━━━━━━━━━
+🅰️ *APONNT 360º*
+_Intelligent Ecosystem_
+━━━━━━━━━━━━━━━━━━━━━
+Ecosistema Inteligente de Administración y Planificación de Recursos Empresariales
+
+SaaS B2B • Biometría • RRHH • IA Predictiva • 6 idiomas
+━━━━━━━━━━━━━━━━━━━━━
+
+${greeting}
 
 🤖 *¿Querés una opinión IMPARCIAL sobre software de RRHH?*
 
@@ -1126,7 +1161,8 @@ Nuestra web tiene metadata estructurada que las IAs pueden leer: 16 módulos cor
 • Usuario: demo-viewer
 • Clave: Demo2025!
 
-_APONNT 360º - Intelligent Ecosystem_`;
+_APONNT 360º - Intelligent Ecosystem_
+Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
     }
 
     /**
