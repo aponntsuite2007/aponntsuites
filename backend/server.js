@@ -975,6 +975,7 @@ app.post(`${API_PREFIX}/debug/fix-demo-modules`, async (req, res) => {
       { key: "plantillas-fiscales", name: "Plantillas Fiscales", icon: "📋", category: "fiscal" },
       { key: "medical", name: "Salud Ocupacional", icon: "🩺", category: "medical" },
       { key: "vacation-management", name: "Gestión de Vacaciones", icon: "🌴", category: "hr" },
+      { key: "licensing-management", name: "Gestión de Licencias", icon: "📄", category: "hr" },
       { key: "compliance-dashboard", name: "Dashboard de Cumplimiento", icon: "✅", category: "compliance" },
       { key: "procedures-manual", name: "Manual de Procedimientos", icon: "📖", category: "compliance" },
       { key: "users", name: "Gestión de Usuarios", icon: "👥", category: "core" },
@@ -2425,16 +2426,6 @@ app.get('/associates', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'panel-asociados.html'));
 });
 
-// 🧠 SALES ORCHESTRATION - Páginas públicas para prospectos
-app.get('/survey/:token', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'survey.html'));
-});
-
-app.get('/satisfaction/:token', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'satisfaction.html'));
-});
-console.log('🧠 [SALES-ORCH] Páginas públicas /survey/:token y /satisfaction/:token configuradas');
-
 // Alias para portal de asociados
 app.get('/partners', (req, res) => {
   res.redirect('/associates');
@@ -2513,8 +2504,6 @@ const userProfileRoutes = require('./src/routes/userProfileRoutes');
 const userMedicalRoutes = require('./src/routes/userMedicalRoutes');
 const userAdminRoutes = require('./src/routes/userAdminRoutes');
 const userDocumentsRoutes = require('./src/routes/userDocumentsRoutes'); // Documentos vencibles (Octubre 2025)
-const userSocioEnvironmentalRoutes = require('./src/routes/userSocioEnvironmentalRoutes'); // 📍 Datos Socio-Ambientales (Diciembre 2025)
-const workArrangementRoutes = require('./src/routes/workArrangementRoutes'); // 🏠 Modalidades de Trabajo (Presencial/Remoto/Híbrido) + Control Presencia
 const userMedicalExamsRoutes = require('./src/routes/userMedicalExamsRoutes'); // Exámenes médicos con periodicidad (Octubre 2025)
 const userWorkHistoryRoutes = require('./src/routes/userWorkHistoryRoutes'); // Historial laboral completo (Octubre 2025)
 // 🆕 TAB 2 - Datos Personales (Modal Ver Usuario - Enero 2025)
@@ -2540,7 +2529,6 @@ const medicalAuthorizationsRoutes = require('./src/routes/medicalAuthorizationsR
 // ELIMINADO: occupationalHealthPhase2Routes - Módulo redundante, funcionalidad integrada en medicalCaseRoutes
 const salaryAdvancedRoutes = require('./src/routes/salaryAdvancedRoutes'); // Convenios, Categorías, Payroll
 const payrollRoutes = require('./src/routes/payrollRoutes'); // Sistema Liquidación Parametrizable v3.0
-const benefitsRoutes = require('./src/routes/benefitsRoutes'); // ✅ Sistema de Beneficios y Amenidades Laborales (Dic 2025)
 const organizationalRoutes = require('./src/routes/organizationalRoutes'); // ✅ Estructura Organizacional Enterprise
 const holidayApiRoutes = require('./src/routes/holidayApiRoutes'); // ✅ API Externa de Feriados (Nager.Date)
 // 🆕 Sistema de Upload de Archivos (Enero 2025)
@@ -2606,10 +2594,6 @@ const siacTaxTemplatesRoutes = require('./src/routes/siac/taxTemplates');
 const debugDbRoutes = require('./src/routes/debug-db');
 const siacClientesRoutes = require('./src/routes/siac/clientes');
 const siacFacturacionRoutes = require('./src/routes/siac/facturacion');
-const siacRemitosRoutes = require('./src/routes/siac/remitosRoutes');
-const siacCuentaCorrienteRoutes = require('./src/routes/siac/cuentaCorrienteRoutes');
-const siacCobranzasRoutes = require('./src/routes/siac/cobranzasRoutes');
-const siacCajaRoutes = require('./src/routes/siac/cajaRoutes');
 
 // Configurar rutas con sistema de permisos
 app.use('/api/v1/permissions', permissionsRoutes);
@@ -2620,7 +2604,6 @@ app.use('/api/aponnt/staff-data', aponntStaffRoutes); // ✅ CRUD Staff Aponnt (
 app.use('/api/aponnt/staff-commissions', staffCommissionsRoutes); // ✅ Comisiones Piramidales Staff (Enero 2025)
 app.use('/api/seed-demo', seedDemoRoute); // ⚠️ TEMPORAL: GET /api/seed-demo?key=DEMO_SEED_2024_SECURE
 app.use('/api/v1/legal', legalRoutes);
-app.use('/api/v1/users', userSocioEnvironmentalRoutes); // 📍 ANTES de userRoutes - Rutas específicas primero
 app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exitosa
 app.use('/api/v1/users', userCalendarRoutes); // ✅ Calendario personal del empleado
 app.use('/api/v1/shifts', shiftRoutes);
@@ -2641,7 +2624,6 @@ app.use('/api/v1/user-admin', userAdminRoutes); // Documentos, permisos, discipl
 app.use('/api/v1', userDocumentsRoutes); // Documentos vencibles con notificaciones
 app.use('/api/v1', userMedicalExamsRoutes); // Exámenes médicos con periodicidad automática
 app.use('/api/v1', userWorkHistoryRoutes); // Historial laboral + desvinculación + litigios
-app.use('/api/v1/work-arrangements', workArrangementRoutes); // 🏠 Modalidades de Trabajo + Control Presencia Remota
 
 // 🆕 TAB 2 - Datos Personales Modal Ver Usuario (Enero 2025)
 app.use('/api/v1/users', userDriverLicenseRoutes); // GET/POST/PUT/DELETE /:userId/driver-licenses
@@ -2661,7 +2643,6 @@ app.use('/api/v1/users', userSalaryConfigRoutes); // GET/POST/PUT/DELETE /:userI
 app.use('/api/medical-advanced', medicalAdvancedRoutes); // Antropométricos, Cirugías, Psiquiatría, Deportes, Hábitos
 app.use('/api/salary-advanced', salaryAdvancedRoutes); // Convenios, Categorías, Config V2, Payroll
 app.use('/api/payroll', payrollRoutes); // ✅ Sistema Liquidación Parametrizable v3.0 (Multi-País, Multi-Sucursal)
-app.use('/api/benefits', benefitsRoutes); // ✅ Sistema de Beneficios y Amenidades Laborales (Dic 2025)
 app.use('/api/v1/concept-dependencies', conceptDependenciesRoutes); // ✅ Benefits Engine Multi-Tenant (Dependencias de Conceptos)
 app.use('/api/v1/document-expiration', documentExpirationRoutes); // ✅ Notificaciones Vencimiento Documentos con Escalamiento
 app.use('/api/v1/organizational', organizationalRoutes); // ✅ Estructura Organizacional Enterprise
@@ -2695,19 +2676,6 @@ app.use('/api/invoices', invoiceRoutes); // ✅ Facturación Mensual Automática
 app.use('/api/commissions', commissionRoutes); // ✅ Liquidación de Comisiones Piramidales (L1-L4)
 app.use('/api/billing', billingRoutes); // ✅ Sistema de Facturación 3 Modos: MANUAL, OCASIONAL, RECURRENTE (Enero 2025)
 app.use('/api/afip', afipRoutes); // ✅ Integración AFIP - CAE, Certificados, Config Fiscal Multi-Tenant (Enero 2025)
-const aponntBillingRoutes = require('./src/routes/aponntBillingRoutes');
-app.use('/api/aponnt/billing', aponntBillingRoutes); // ✅ Facturación APONNT a Empresas: Pre-facturas, Tareas Admin, Dashboard (Dic 2025)
-console.log('💼 [APONNT BILLING] Rutas de facturación APONNT→Empresas configuradas');
-
-// 🧠 SALES ORCHESTRATION BRAIN - Sistema de Orquestación Inteligente de Ventas (Dic 2025)
-const salesOrchestrationRoutes = require('./src/routes/salesOrchestrationRoutes');
-app.use('/api/sales-orchestration', salesOrchestrationRoutes);
-console.log('🧠 [SALES-ORCH] Sales Orchestration Brain configurado - Reuniones, Encuestas, Pitches');
-
-// 📢 MARKETING LEADS - Sistema de captación y envío de flyers (Dic 2025)
-const marketingRoutes = require('./src/routes/marketingRoutes');
-app.use('/api/marketing', marketingRoutes);
-console.log('📢 [MARKETING] Sistema de leads y flyers "Preguntale a tu IA" configurado');
 
 // 📬 CONFIGURAR RUTAS DE FORMULARIO DE CONTACTO (index.html)
 const contactFormRoutes = require('./src/routes/contactFormRoutes');
@@ -2733,11 +2701,6 @@ app.use('/api/procedures', proceduresRoutes);
 const hseRoutes = require('./src/routes/hseRoutes');
 app.use('/api/v1/hse', hseRoutes);
 console.log('🛡️ [HSE] Módulo de Seguridad e Higiene Laboral (ISO 45001) configurado');
-
-// 🤖 CONFIGURAR RUTAS DE HSE AI - DETECCIÓN DE EPP CON AZURE CUSTOM VISION
-const hsePPEDetectionRoutes = require('./src/routes/hsePPEDetectionRoutes');
-app.use('/api/hse/ai', hsePPEDetectionRoutes);
-console.log('🤖 [HSE-AI] Detección de EPP con IA (Azure Custom Vision) configurado');
 
 // 🖥️ CONFIGURAR RUTAS DE KIOSKS BIOMÉTRICOS
 app.use('/api/kiosks', kiosksRoutes);
@@ -3046,17 +3009,6 @@ console.log('   ⏹️  POST /api/brain-reactive/stop - Detener observación');
 console.log('   📜 GET  /api/brain-reactive/changes - Log de cambios');
 console.log('   ✅ GET  /api/brain-reactive/tasks - Tareas auto-detectadas');
 console.log('   🔄 GET  /api/brain-reactive/workflows - Workflows detectados');
-
-// ✅ CONFIGURAR WORKFLOW INTROSPECTION - Detección automática de workflows
-const workflowIntrospectionRoutes = require('./src/routes/workflowIntrospectionRoutes');
-app.use('/api/workflows', workflowIntrospectionRoutes);
-
-console.log('📋 [WORKFLOW-INTROSPECTION] Sistema de Workflows Introspectivos ACTIVO:');
-console.log('   🔍 GET  /api/workflows/scan - Escanear todos los workflows');
-console.log('   📖 GET  /api/workflows/tutorials - Tutoriales auto-generados');
-console.log('   🤖 POST /api/workflows/search - Buscar workflows (para AI)');
-console.log('   📊 GET  /api/workflows/stats - Estadísticas de workflows');
-console.log('   📈 GET  /api/workflows/coverage - Cobertura por módulo');
 
 // ✅ CONFIGURAR BRAIN ECOSYSTEM - Sistema Integrado Brain + Phase4 + Workflows
 const brainEcosystemRoutes = require('./src/routes/brainEcosystemRoutes');
@@ -3409,30 +3361,6 @@ console.log('   ⚙️  /api/email/worker/status - Estado del worker');
 console.log('   📨 Technology: Nodemailer + PostgreSQL + Async Queue');
 console.log('   🔄 Worker procesando cola cada 5 segundos');
 
-// ✅ CONFIGURAR SISTEMA DE EMAILS ENTRANTES (INBOUND)
-const inboundEmailRoutes = require('./src/routes/inboundEmailRoutes');
-app.use('/api/email/inbound', inboundEmailRoutes);
-
-console.log('📥 [INBOUND-EMAIL] Sistema de Emails Entrantes ACTIVO:');
-console.log('   📧 /api/email/inbound/webhook - Webhook universal');
-console.log('   📧 /api/email/inbound/sendgrid - Webhook SendGrid');
-console.log('   📧 /api/email/inbound/mailgun - Webhook Mailgun');
-console.log('   📧 /api/email/inbound/postmark - Webhook Postmark');
-console.log('   📧 /api/email/inbound/ses - Webhook Amazon SES');
-console.log('   📧 /api/email/inbound/manual - Endpoint manual/testing');
-console.log('   📊 /api/email/inbound/stats - Estadísticas');
-console.log('   📜 /api/email/inbound/history - Historial');
-
-// ✅ CONFIGURAR SISTEMA DE EMAIL BIDIRECCIONAL POR EMPRESA
-const companyEmailRoutes = require('./src/routes/companyEmailRoutes');
-app.use('/api/company-email', companyEmailRoutes);
-
-console.log('📬 [COMPANY-EMAIL] Sistema de Email Bidireccional por Empresa ACTIVO:');
-console.log('   ⚙️ /api/company-email/imap/configure - Configurar IMAP');
-console.log('   🔍 /api/company-email/imap/test - Probar conexión IMAP');
-console.log('   📊 /api/company-email/stats - Estadísticas polling');
-console.log('   📧 /api/company-email/poll/:companyId - Forzar polling');
-
 // 🔒 CONFIGURAR API BIOMÉTRICA
 // COMENTADO: Conflicto con biometricConsentRoutes en la misma ruta /api/v1/biometric
 // const biometricRoutes = require('./src/routes/biometricRoutes');
@@ -3482,10 +3410,6 @@ app.use('/api/siac/sesiones', siacSesionesRoutes);
 app.use('/api/siac/tax-templates', siacTaxTemplatesRoutes);
 app.use('/api/siac/clientes', siacClientesRoutes);
 app.use('/api/siac/facturacion', siacFacturacionRoutes);
-app.use('/api/siac/remitos', siacRemitosRoutes);
-app.use('/api/siac/cuenta-corriente', siacCuentaCorrienteRoutes);
-app.use('/api/siac/cobranzas', siacCobranzasRoutes);
-app.use('/api/siac/caja', siacCajaRoutes);
 
 // 📧 FORMULARIO DE CONTACTO PUBLICO (Landing Page)
 const contactRoutes = require('./src/routes/contactRoutes');
@@ -3506,6 +3430,11 @@ console.log('💰 [BILLING] Comisiones Liquidación: /api/billing/comisiones-liq
 
 app.use('/api/contact', contactRoutes);
 console.log('📧 [CONTACT] Ruta de contacto publico configurada: /api/contact');
+
+// 📢 MARKETING - Sistema de captación de leads y flyers "Preguntale a tu IA"
+const marketingRoutes = require('./src/routes/marketingRoutes');
+app.use('/api/marketing', marketingRoutes);
+console.log('📢 [MARKETING] Sistema de leads y flyers "Preguntale a tu IA" configurado');
 
 console.log('💼 [SIAC] Rutas de ERP SIAC configuradas:');
 console.log('   ⚙️ /api/siac/configurador/* - Configuración por empresa');
@@ -3884,46 +3813,6 @@ async function startServer() {
     } catch (billingCronError) {
       console.warn('⚠️  [BILLING-CRON] Error iniciando cron jobs de facturación:', billingCronError.message);
       console.warn('⚠️  [BILLING-CRON] El servidor continuará sin facturación automática.\n');
-    }
-
-    // ✅ INICIALIZAR CRON JOBS DE RENOVACIÓN DE CONTRATOS
-    console.log('⏰ [CONTRACT-RENEWAL-CRON] Inicializando cron jobs de renovación de contratos...');
-    try {
-      const contractRenewalCronJobs = require('./src/cron/contractRenewalCronJobs');
-      contractRenewalCronJobs.initContractRenewalCronJobs();
-
-      // Hacer disponible en toda la aplicación
-      app.locals.contractRenewalCronJobs = contractRenewalCronJobs;
-      global.contractRenewalCronJobs = contractRenewalCronJobs;
-
-      console.log('✅ [CONTRACT-RENEWAL-CRON] Cron jobs de renovación iniciados correctamente');
-      console.log('   • Job 1: Ciclo de renovación - Diario 6:00 AM (alertas T-30, extensiones, suspensiones)');
-      console.log('   • Job 2: Estadísticas de contratos - Lunes 8:00 AM');
-      console.log('   • Zona horaria: America/Argentina/Buenos_Aires\n');
-    } catch (contractCronError) {
-      console.warn('⚠️  [CONTRACT-RENEWAL-CRON] Error iniciando cron jobs de renovación:', contractCronError.message);
-      console.warn('⚠️  [CONTRACT-RENEWAL-CRON] El servidor continuará sin renovación automática.\n');
-    }
-
-    // =========================================================================
-    // INICIALIZAR CRON DE EMAIL POLLING BIDIRECCIONAL
-    // =========================================================================
-    console.log('📬 [COMPANY-EMAIL-CRON] Inicializando cron jobs de email polling...');
-    try {
-      const companyEmailPollerCron = require('./src/cron/companyEmailPollerCron');
-      companyEmailPollerCron.initializeCompanyEmailPollerCron();
-
-      // Hacer disponible en toda la aplicación
-      app.locals.companyEmailPollerCron = companyEmailPollerCron;
-      global.companyEmailPollerCron = companyEmailPollerCron;
-
-      console.log('✅ [COMPANY-EMAIL-CRON] Cron jobs de email polling iniciados correctamente');
-      console.log('   • Job 1: Polling IMAP - Cada 2 minutos');
-      console.log('   • Job 2: Health check - Diario 7:00 AM');
-      console.log('   • Zona horaria: America/Argentina/Buenos_Aires\n');
-    } catch (emailCronError) {
-      console.warn('⚠️  [COMPANY-EMAIL-CRON] Error iniciando cron jobs de email:', emailCronError.message);
-      console.warn('⚠️  [COMPANY-EMAIL-CRON] El servidor continuará sin polling de emails.\n');
     }
 
     // Iniciar servidor HTTP
