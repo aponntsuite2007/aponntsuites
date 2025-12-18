@@ -17,11 +17,13 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const EmailService = require('./EmailService');
+const LeadScoringService = require('./LeadScoringService');
 
 class SalesOrchestrationService {
     constructor() {
         this.brainHub = null;
         this.emailService = null;
+        this.leadScoring = LeadScoringService;
         this.initialized = false;
     }
 
@@ -148,6 +150,20 @@ class SalesOrchestrationService {
 
             // Notificar al vendedor y supervisor
             await this.notifyMeetingCreated(meeting, supervisorId);
+
+            // 📊 LEAD SCORING: Crear o actualizar lead
+            try {
+                const leadId = await this.leadScoring.createOrUpdateLeadFromMeeting(
+                    { ...data, attendees: data.attendees },
+                    data.assignedVendorId,
+                    effectiveCreatedById
+                );
+                if (leadId) {
+                    console.log(`📊 [SALES-ORCH] Lead vinculado: ${leadId}`);
+                }
+            } catch (leadError) {
+                console.warn('⚠️ [SALES-ORCH] No se pudo crear/actualizar lead:', leadError.message);
+            }
 
             return {
                 success: true,
@@ -317,6 +333,23 @@ class SalesOrchestrationService {
             // SIEMPRE generar/actualizar el pitch con los datos disponibles
             // No esperar a que todos respondan
             await this.updatePitchAndNotify(attendee.meeting_id, attendee);
+
+            // 📊 LEAD SCORING: Registrar encuesta completada
+            try {
+                const meeting = await this.getMeetingById(attendee.meeting_id);
+                const leadId = await this.leadScoring.findLeadByMeetingData(
+                    meeting?.prospect_email,
+                    meeting?.prospect_company_name
+                );
+                if (leadId) {
+                    await this.leadScoring.onSurveyCompleted(leadId, {
+                        modulesInterested: responses.interests?.map(i => i.moduleKey) || [],
+                        preferredFocus: responses.preferredFocus
+                    });
+                }
+            } catch (leadError) {
+                console.warn('⚠️ [SALES-ORCH] Error actualizando lead scoring:', leadError.message);
+            }
 
             return {
                 success: true,
@@ -843,6 +876,30 @@ class SalesOrchestrationService {
                 console.log(`📧 [SALES-ORCH] Email de agradecimiento enviado a ${attendee.email}`);
             }
 
+            // 📊 LEAD SCORING: Registrar reunión asistida
+            try {
+                const leadId = await this.leadScoring.findLeadByMeetingData(
+                    meeting?.prospect_email,
+                    meeting?.prospect_company_name
+                );
+                if (leadId) {
+                    const hasDecisionMaker = attendees.some(a => a.is_decision_maker);
+                    const startTime = meeting.meeting_started_at ? new Date(meeting.meeting_started_at) : null;
+                    const endTime = new Date();
+                    const duration = startTime ? Math.round((endTime - startTime) / 60000) : meeting.meeting_duration_minutes;
+
+                    await this.leadScoring.onMeetingAttended(leadId, {
+                        meetingId,
+                        duration,
+                        hasDecisionMaker,
+                        attendeeCount: attendees.length
+                    });
+                    console.log(`📊 [SALES-ORCH] Lead scoring actualizado: reunión asistida`);
+                }
+            } catch (leadError) {
+                console.warn('⚠️ [SALES-ORCH] Error actualizando lead scoring:', leadError.message);
+            }
+
             return {
                 success: true,
                 message: `Reunión finalizada. Email de agradecimiento enviado a ${sentCount} participante(s). Recuerde cargar el feedback dentro de 24h.`,
@@ -1361,6 +1418,35 @@ Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
             SET satisfaction_sent_at = NOW()
             WHERE id = ?
         `, { replacements: [meetingId] });
+
+        // 📊 LEAD SCORING: Procesar feedback para actualizar BANT y lifecycle
+        try {
+            const leadId = await this.leadScoring.findLeadByMeetingData(
+                meeting?.prospect_email,
+                meeting?.prospect_company_name
+            );
+            if (leadId) {
+                await this.leadScoring.onFeedbackSubmitted(leadId, {
+                    // BANT indicators from feedback
+                    budgetDiscussed: feedbackData.budgetDiscussed || false,
+                    hasBudget: feedbackData.hasBudget || false,
+                    budgetNotes: feedbackData.budgetNotes,
+                    timelineDiscussed: feedbackData.timelineDiscussed || false,
+                    timeline: feedbackData.timeline, // 'immediate', 'quarter', 'semester', 'year', 'later'
+                    decisionMakerConfirmed: feedbackData.decisionMakerConfirmed || false,
+                    isDecisionMaker: feedbackData.isDecisionMaker || false,
+                    // Outcome
+                    quoteRequested: feedbackData.quoteRequested || false,
+                    result: feedbackData.result, // 'won', 'lost', 'pending', 'not_interested'
+                    lostReason: feedbackData.lostReason,
+                    notes: feedbackData.notes,
+                    recontactDate: feedbackData.recontactDate
+                });
+                console.log(`📊 [SALES-ORCH] Lead scoring actualizado con feedback`);
+            }
+        } catch (leadError) {
+            console.warn('⚠️ [SALES-ORCH] Error actualizando lead scoring:', leadError.message);
+        }
 
         return { success: true, message: 'Feedback registrado. Encuesta de satisfacción enviada a asistentes.' };
     }

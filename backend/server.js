@@ -2602,6 +2602,13 @@ app.use('/api/v1/auth/aponnt', aponntAuthRoutes); // ✅ Auth Staff + Partners
 app.use('/api/aponnt/staff', aponntStaffAuthRoutes); // ✅ Auth Staff Aponnt (con puerta trasera postgres)
 app.use('/api/aponnt/staff-data', aponntStaffRoutes); // ✅ CRUD Staff Aponnt (GET/POST/PUT/DELETE)
 app.use('/api/aponnt/staff-commissions', staffCommissionsRoutes); // ✅ Comisiones Piramidales Staff (Enero 2025)
+
+// 📊 Sistema de Ventas y Leads (Diciembre 2025)
+const salesOrchestrationRoutes = require('./src/routes/salesOrchestrationRoutes');
+const leadRoutes = require('./src/routes/leadRoutes');
+app.use('/api/aponnt/sales', salesOrchestrationRoutes); // ✅ Orquestación de ventas (reuniones, encuestas, pitches)
+app.use('/api/aponnt/leads', leadRoutes); // ✅ Gestión de leads con scoring y lifecycle
+
 app.use('/api/seed-demo', seedDemoRoute); // ⚠️ TEMPORAL: GET /api/seed-demo?key=DEMO_SEED_2024_SECURE
 app.use('/api/v1/legal', legalRoutes);
 app.use('/api/v1/users', userRoutes);  // Restaurado después de migración exitosa
