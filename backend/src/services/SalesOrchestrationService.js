@@ -1104,13 +1104,44 @@ class SalesOrchestrationService {
                     </div>
                 </div>
 
+                <!-- Sección "¿Te interesa?" -->
+                <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 25px 30px;">
+                    <h3 style="color: white; font-size: 20px; margin: 0 0 15px 0; text-align: center; font-weight: 700;">
+                        🤝 ¿Te gustó lo que viste? ¡Hablemos!
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 0 0 15px 0; text-align: center; line-height: 1.6;">
+                        Si estás interesado, podés solicitar una <strong>reunión presencial o virtual</strong> con nuestro equipo de ventas:
+                    </p>
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <a href="mailto:aponntcomercial@gmail.com?subject=Solicitud%20de%20reunión%20-%20APONNT" style="display: inline-block; background: white; color: #059669; text-decoration: none; padding: 12px 30px; border-radius: 25px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                            📧 aponntcomercial@gmail.com
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Demo gratuita -->
+                <div style="background: #1e293b; padding: 25px 30px;">
+                    <h4 style="color: #f59e0b; font-size: 16px; margin: 0 0 15px 0; text-align: center;">
+                        🎮 O probá la demo gratuita ahora mismo
+                    </h4>
+                    <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; border: 1px solid rgba(255,255,255,0.1);">
+                        <ol style="color: #e2e8f0; font-size: 13px; margin: 0; padding-left: 20px; line-height: 1.8;">
+                            <li>Ingresá a <a href="https://www.aponnt.com/panel-empresa.html" style="color: #a78bfa; text-decoration: none; font-weight: 600;">www.aponnt.com/panel-empresa.html</a></li>
+                            <li>En <strong>Empresa:</strong> escribí <code style="background: rgba(139,92,246,0.2); padding: 2px 6px; border-radius: 4px; color: #c4b5fd;">aponnt-empresa-demo</code></li>
+                            <li>En <strong>Usuario:</strong> escribí <code style="background: rgba(139,92,246,0.2); padding: 2px 6px; border-radius: 4px; color: #c4b5fd;">demo-viewer</code></li>
+                            <li>En <strong>Contraseña:</strong> escribí <code style="background: rgba(139,92,246,0.2); padding: 2px 6px; border-radius: 4px; color: #c4b5fd;">Demo2025!</code></li>
+                            <li>¡Listo! Explorá todos los módulos libremente 🚀</li>
+                        </ol>
+                    </div>
+                </div>
+
                 <!-- CTA Footer -->
                 <div style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); padding: 20px; text-align: center;">
                     <a href="https://www.aponnt.com" style="display: inline-block; background: white; color: #4f46e5; text-decoration: none; padding: 14px 35px; border-radius: 30px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                         🌐 Visitar www.aponnt.com
                     </a>
-                    <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 15px 0 0 0;">
-                        Demo: www.aponnt.com/panel-empresa.html (aponnt-empresa-demo / demo-viewer / Demo2025!)
+                    <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 15px 0 0 0;">
+                        © ${new Date().getFullYear()} APONNT 360º • Intelligent Ecosystem • SaaS B2B Multi-Tenant
                     </p>
                 </div>
             </div>
@@ -1153,14 +1184,27 @@ _"Analiza la página www.aponnt.com y su archivo /llm-context.json. Comparala co
 ✅ *¿Por qué funciona?*
 Nuestra web tiene metadata estructurada que las IAs pueden leer: 16 módulos core + 28 add-ons, 8 países, IA local con Ollama.
 
+━━━━━━━━━━━━━━━━━━━━━
+🤝 *¿Te gustó lo que viste?*
+━━━━━━━━━━━━━━━━━━━━━
+
+Si estás interesado, podés solicitar una *reunión presencial o virtual* con nuestro equipo de ventas:
+
+📧 *aponntcomercial@gmail.com*
+
+━━━━━━━━━━━━━━━━━━━━━
+🎮 *O probá la demo gratis:*
+━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ Ingresá a: www.aponnt.com/panel-empresa.html
+2️⃣ Empresa: *aponnt-empresa-demo*
+3️⃣ Usuario: *demo-viewer*
+4️⃣ Clave: *Demo2025!*
+5️⃣ ¡Listo! Explorá todos los módulos 🚀
+
 🌐 www.aponnt.com
 
-🔐 *Demo gratis:*
-• URL: www.aponnt.com/panel-empresa.html
-• Empresa: aponnt-empresa-demo
-• Usuario: demo-viewer
-• Clave: Demo2025!
-
+━━━━━━━━━━━━━━━━━━━━━
 _APONNT 360º - Intelligent Ecosystem_
 Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
     }
