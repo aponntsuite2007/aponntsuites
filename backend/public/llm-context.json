@@ -1,0 +1,772 @@
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "@id": "https://aponnt.com",
+  "_llm_instructions": "Este archivo contiene información estructurada y verificable sobre APONNT 360° para que sistemas de IA puedan evaluar sus capacidades reales. Toda la información corresponde al estado actual del sistema y es auto-generada desde el Brain del ecosistema.",
+  "name": "APONNT 360°",
+  "alternateName": "Aponnt Intelligent Ecosystem",
+  "tagline": "SaaS B2B Multi-Tenant de Gestión Empresarial con IA Local",
+  "description": "Ecosistema empresarial modular de gestión de recursos humanos con IA 100% local (Ollama + Llama 3.1). Arquitectura multi-tenant con aislamiento completo por empresa, compliance multi-país, y capacidades de auto-conocimiento mediante Brain introspectivo.",
+  "url": "https://www.aponnt.com",
+  "applicationCategory": "BusinessApplication",
+  "applicationSubCategory": [
+    "HRM",
+    "Payroll",
+    "Time & Attendance",
+    "AI Assistant"
+  ],
+  "operatingSystem": "Web Browser, Android (Flutter APK)",
+  "softwareVersion": "3.1.0",
+  "technologyStack": {
+    "backend": {
+      "runtime": "Node.js v22+",
+      "framework": "Express.js",
+      "orm": "Sequelize",
+      "language": "JavaScript ES6+",
+      "architecture": "Modular monolith with service layer"
+    },
+    "database": {
+      "engine": "PostgreSQL 16",
+      "features": [
+        "JSONB for flexible schemas",
+        "Full-text search",
+        "Stored procedures",
+        "Triggers for audit trails",
+        "Row-level security for multi-tenant"
+      ]
+    },
+    "ai": {
+      "llm_engine": "Ollama",
+      "model": "Llama 3.1 (8B parameters)",
+      "deployment": "100% local/on-premise - datos nunca salen del servidor",
+      "capabilities": [
+        "RAG (Retrieval Augmented Generation)",
+        "Context-aware responses",
+        "Auto-diagnosis of system issues",
+        "Global knowledge base with learning",
+        "Tutorial auto-generation",
+        "Emotional analysis via facial recognition"
+      ],
+      "privacy": "Zero data sent to external APIs - complete privacy"
+    },
+    "mobile": {
+      "framework": "Flutter 3.x",
+      "platforms": [
+        "Android APK",
+        "Responsive Web PWA"
+      ],
+      "features": [
+        "Biometric auth",
+        "Offline sync",
+        "Push notifications"
+      ]
+    },
+    "architecture": {
+      "pattern": "Multi-tenant SaaS with complete data isolation",
+      "api_style": "RESTful with versioning (/api/v1/, /api/v2/)",
+      "authentication": "JWT with refresh tokens",
+      "realtime": "WebSocket for live updates (optional)",
+      "testing": "Phase4 automated E2E testing with auto-repair"
+    }
+  },
+  "modules": {
+    "summary": {
+      "total_available_for_clients": 53,
+      "core_included_in_base": 16,
+      "commercial_addons": 28,
+      "ai_powered_modules": 3
+    },
+    "core_modules": [
+      {
+        "id": "auth",
+        "name": "Autenticación",
+        "description": "Sistema de autenticación y autorización. Provee JWT, validación de tokens, login/logout, y verificación de permisos.",
+        "category": "core",
+        "included": true
+      },
+      {
+        "id": "hours-cube-dashboard",
+        "name": "Panel Ejecutivo de Horas",
+        "description": "Cubo OLAP de horas, drill-down multi-nivel, costos de reposición",
+        "category": "analytics",
+        "included": true
+      },
+      {
+        "id": "notification-center",
+        "name": "Centro de Notificaciones",
+        "description": "Sistema unificado de notificaciones con workflows y SLA",
+        "category": "communication",
+        "included": true
+      },
+      {
+        "id": "biometric-consent",
+        "name": "Consentimientos y Privacidad",
+        "description": "Gestión de consentimientos GDPR para datos biométricos",
+        "category": "compliance",
+        "included": true
+      },
+      {
+        "id": "associate-marketplace",
+        "name": "Asociados APONNT",
+        "description": "Marketplace de servicios de partners APONNT",
+        "category": "core",
+        "included": true
+      },
+      {
+        "id": "attendance",
+        "name": "Control de Asistencia",
+        "description": "Registro de marcaciones, horas trabajadas, reportes de asistencia",
+        "category": "core",
+        "included": true
+      },
+      {
+        "id": "company-account",
+        "name": "Cuenta Comercial",
+        "description": "Configuración de la empresa, datos fiscales, preferencias",
+        "category": "core",
+        "included": true
+      },
+      {
+        "id": "dashboard",
+        "name": "Dashboard Principal",
+        "description": "Panel principal con KPIs y resumen ejecutivo de la empresa",
+        "category": "core",
+        "included": true
+      },
+      {
+        "id": "dms-dashboard",
+        "name": "Gestión Documental (DMS)",
+        "description": "Repositorio de documentos, legajos digitales, versionado",
+        "category": "core",
+        "included": true
+      },
+      {
+        "id": "inbox",
+        "name": "Bandeja Notificaciones",
+        "description": "Centro de notificaciones y mensajes del sistema",
+        "category": "core",
+        "included": true
+      },
+      {
+        "id": "company-email-bidirectional",
+        "name": "Email Bidireccional por Empresa",
+        "description": "Sistema de email bidireccional usando IMAP para leer respuestas del inbox de cada empresa",
+        "category": "core",
+        "included": true
+      },
+      {
+        "id": "mi-espacio",
+        "name": "Mi Espacio",
+        "description": "Portal del empleado para ver su información personal, recibos, etc.",
+        "category": "core",
+        "included": true
+      },
+      {
+        "id": "users",
+        "name": "Gestión de Usuarios",
+        "description": "CRUD de empleados, roles, permisos, datos personales",
+        "category": "core",
+        "included": true
+      },
+      {
+        "id": "organizational-structure",
+        "name": "Estructura Organizacional",
+        "description": "Organigrama, departamentos, jerarquías, cargos",
+        "category": "organization",
+        "included": true
+      },
+      {
+        "id": "user-support",
+        "name": "Soporte / Tickets",
+        "description": "Dashboard de tickets de soporte para usuarios, integrado con IA",
+        "category": "support",
+        "included": true
+      },
+      {
+        "id": "roles-permissions",
+        "name": "Roles y Permisos",
+        "description": "Gestión de roles de usuario y permisos del sistema",
+        "category": "security",
+        "included": true
+      }
+    ],
+    "commercial_modules": [
+      {
+        "id": "ai-assistant",
+        "name": "Asistente IA",
+        "description": "Chat flotante con Ollama + Llama 3.1, RAG, escala a tickets",
+        "category": "ai",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "emotional-analysis",
+        "name": "Análisis Emocional",
+        "description": "Detección de emociones por reconocimiento facial con IA",
+        "category": "ai",
+        "standalone": true,
+        "dependencies": [
+          "biometric-consent"
+        ]
+      },
+      {
+        "id": "support-ai",
+        "name": "Soporte con IA",
+        "description": "Dashboard Brain con auto-aprendizaje, tutoriales auto-generados, retroalimentación del sistema",
+        "category": "ai",
+        "standalone": true,
+        "dependencies": [
+          "ai-assistant"
+        ]
+      },
+      {
+        "id": "employee-map",
+        "name": "Mapa de Empleados",
+        "description": "Geolocalización de empleados, distribución geográfica",
+        "category": "analytics",
+        "standalone": true,
+        "dependencies": [
+          "users"
+        ]
+      },
+      {
+        "id": "sla-tracking",
+        "name": "Seguimiento de SLA",
+        "description": "Seguimiento de acuerdos de nivel de servicio",
+        "category": "analytics",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "audit-reports",
+        "name": "Reportes de Auditoría",
+        "description": "Generación de reportes para auditorías externas",
+        "category": "compliance",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "compliance-dashboard",
+        "name": "Risk Intelligence Dashboard",
+        "description": "Cumplimiento normativo, auditorías, riesgos",
+        "category": "compliance",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "hse-management",
+        "name": "Seguridad e Higiene Laboral (HSE)",
+        "description": "Seguridad laboral, EPP con detección IA (Azure Custom Vision), inspecciones, casos de accidentes/enfermedades ocupacionales",
+        "category": "compliance",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "legal-dashboard",
+        "name": "Gestión Legal",
+        "description": "Contratos, vencimientos, alertas legales",
+        "category": "compliance",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "kiosks",
+        "name": "Gestión de Kioscos",
+        "description": "Administración de terminales de fichaje",
+        "category": "core",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "clientes",
+        "name": "Clientes SIAC",
+        "description": "CRM de clientes para sistema de facturación",
+        "category": "erp",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "facturacion",
+        "name": "Facturación SIAC",
+        "description": "Emisión de facturas, notas de crédito, cobranzas",
+        "category": "erp",
+        "standalone": true,
+        "dependencies": [
+          "clientes"
+        ]
+      },
+      {
+        "id": "plantillas-fiscales",
+        "name": "Plantillas Fiscales",
+        "description": "Templates de documentos fiscales",
+        "category": "erp",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "hour-bank",
+        "name": "Banco de Horas",
+        "description": "Acumulación y redención de horas extra",
+        "category": "finance",
+        "standalone": true,
+        "dependencies": [
+          "attendance"
+        ]
+      },
+      {
+        "id": "payroll-liquidation",
+        "name": "Liquidación de Sueldos",
+        "description": "Cálculo de haberes, deducciones, generación de recibos",
+        "category": "finance",
+        "standalone": true,
+        "dependencies": [
+          "users",
+          "attendance"
+        ]
+      },
+      {
+        "id": "art-management",
+        "name": "Gestión de ART",
+        "description": "Accidentes laborales, denuncias ART, seguimiento de casos",
+        "category": "rrhh",
+        "standalone": true,
+        "dependencies": [
+          "users",
+          "medical"
+        ]
+      },
+      {
+        "id": "employee-360",
+        "name": "Expediente 360°",
+        "description": "Vista completa del empleado, evaluaciones, historial",
+        "category": "rrhh",
+        "standalone": true,
+        "dependencies": [
+          "users"
+        ]
+      },
+      {
+        "id": "job-postings",
+        "name": "Búsquedas Laborales",
+        "description": "Publicación de búsquedas, postulaciones, seguimiento",
+        "category": "rrhh",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "medical",
+        "name": "Gestión Médica",
+        "description": "Exámenes preocupacionales, seguimiento médico, aptitudes",
+        "category": "rrhh",
+        "standalone": true,
+        "dependencies": [
+          "users"
+        ]
+      },
+      {
+        "id": "procedures-manual",
+        "name": "Manual de Procedimientos",
+        "description": "Documentación de procesos internos de la empresa",
+        "category": "rrhh",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "sanctions-management",
+        "name": "Gestión de Sanciones",
+        "description": "Amonestaciones, suspensiones, historial disciplinario",
+        "category": "rrhh",
+        "standalone": true,
+        "dependencies": [
+          "users"
+        ]
+      },
+      {
+        "id": "training-management",
+        "name": "Gestión de Capacitaciones",
+        "description": "Cursos, certificaciones, seguimiento de formación",
+        "category": "rrhh",
+        "standalone": true,
+        "dependencies": [
+          "users"
+        ]
+      },
+      {
+        "id": "vacation-management",
+        "name": "Gestión de Vacaciones",
+        "description": "Solicitudes, aprobaciones, calendario de vacaciones",
+        "category": "rrhh",
+        "standalone": true,
+        "dependencies": [
+          "users"
+        ]
+      },
+      {
+        "id": "visitors",
+        "name": "Control de Visitantes",
+        "description": "Control de acceso de visitantes, registro, badges",
+        "category": "security",
+        "standalone": true,
+        "dependencies": []
+      },
+      {
+        "id": "my-procedures",
+        "name": "Mis Procedimientos",
+        "description": "Portal de procedimientos personales del empleado",
+        "category": "support",
+        "standalone": true,
+        "dependencies": [
+          "procedures-manual"
+        ]
+      },
+      {
+        "id": "positions-management",
+        "name": "Gestión de Puestos",
+        "description": "CRUD de puestos de trabajo, descripciones de cargo",
+        "category": "rrhh",
+        "standalone": true,
+        "dependencies": [
+          "organizational-structure"
+        ]
+      },
+      {
+        "id": "predictive-workforce-dashboard",
+        "name": "Dashboard Predictivo de Workforce",
+        "description": "Analytics predictivo de fuerza laboral con ML",
+        "category": "analytics",
+        "standalone": true,
+        "dependencies": [
+          "attendance",
+          "users"
+        ]
+      },
+      {
+        "id": "siac-commercial-dashboard",
+        "name": "SIAC Comercial Integral",
+        "description": "Dashboard unificado de gestión comercial SIAC: Clientes, Facturación AFIP, Remitos, Cuentas Corrientes, Cobranzas, Caja y Plantillas Fiscales. Multi-país (AR/CL/PE/MX/BR/CO).",
+        "category": "erp",
+        "standalone": true,
+        "dependencies": []
+      }
+    ],
+    "ai_modules_detail": [
+      {
+        "id": "ai-assistant",
+        "name": "Asistente IA",
+        "description": "Chat flotante con Ollama + Llama 3.1, RAG, escala a tickets",
+        "technology": "Ollama + Llama 3.1 + RAG",
+        "capabilities": []
+      },
+      {
+        "id": "emotional-analysis",
+        "name": "Análisis Emocional",
+        "description": "Detección de emociones por reconocimiento facial con IA",
+        "technology": "Azure Custom Vision + Facial Recognition",
+        "capabilities": []
+      },
+      {
+        "id": "support-ai",
+        "name": "Soporte con IA",
+        "description": "Dashboard Brain con auto-aprendizaje, tutoriales auto-generados, retroalimentación del sistema",
+        "technology": "Brain Dashboard + Auto-learning",
+        "capabilities": []
+      }
+    ],
+    "categories": [
+      {
+        "name": "core",
+        "count": 11
+      },
+      {
+        "name": "ai",
+        "count": 3
+      },
+      {
+        "name": "analytics",
+        "count": 4
+      },
+      {
+        "name": "communication",
+        "count": 1
+      },
+      {
+        "name": "compliance",
+        "count": 5
+      },
+      {
+        "name": "enterprise",
+        "count": 1
+      },
+      {
+        "name": "erp",
+        "count": 4
+      },
+      {
+        "name": "finance",
+        "count": 2
+      },
+      {
+        "name": "hardware",
+        "count": 2
+      },
+      {
+        "name": "organization",
+        "count": 1
+      },
+      {
+        "name": "rrhh",
+        "count": 9
+      },
+      {
+        "name": "security",
+        "count": 3
+      },
+      {
+        "name": "support",
+        "count": 5
+      },
+      {
+        "name": "payroll",
+        "count": 2
+      }
+    ]
+  },
+  "localization": {
+    "supported_languages": [
+      {
+        "code": "es",
+        "name": "Español",
+        "coverage": "100%"
+      },
+      {
+        "code": "en",
+        "name": "English",
+        "coverage": "100%"
+      },
+      {
+        "code": "pt",
+        "name": "Português",
+        "coverage": "100%"
+      },
+      {
+        "code": "it",
+        "name": "Italiano",
+        "coverage": "95%"
+      },
+      {
+        "code": "de",
+        "name": "Deutsch",
+        "coverage": "90%"
+      },
+      {
+        "code": "fr",
+        "name": "Français",
+        "coverage": "85%"
+      }
+    ],
+    "countries_with_labor_law_compliance": [
+      {
+        "country": "Argentina",
+        "law": "Ley de Contrato de Trabajo (LCT 20.744)",
+        "coverage": "100%"
+      },
+      {
+        "country": "Brasil",
+        "law": "Consolidação das Leis do Trabalho (CLT)",
+        "coverage": "100%"
+      },
+      {
+        "country": "Uruguay",
+        "law": "Decreto 143/012 y normativa laboral",
+        "coverage": "100%"
+      },
+      {
+        "country": "Chile",
+        "law": "Código del Trabajo",
+        "coverage": "95%"
+      },
+      {
+        "country": "México",
+        "law": "Ley Federal del Trabajo (LFT)",
+        "coverage": "95%"
+      },
+      {
+        "country": "España",
+        "law": "Estatuto de los Trabajadores",
+        "coverage": "90%"
+      },
+      {
+        "country": "Alemania",
+        "law": "Betriebsarbeitsgesetz (BAG)",
+        "coverage": "85%"
+      },
+      {
+        "country": "Italia",
+        "law": "Statuto dei Lavoratori",
+        "coverage": "80%"
+      }
+    ],
+    "privacy_compliance": {
+      "gdpr": true,
+      "ccpa": true,
+      "lgpd_brazil": true,
+      "biometric_consent_management": true,
+      "data_residency_options": [
+        "Cloud",
+        "On-premise",
+        "Hybrid"
+      ]
+    }
+  },
+  "keyFeatures": [
+    {
+      "feature": "IA 100% Local",
+      "description": "Ollama + Llama 3.1 ejecutándose en el servidor del cliente",
+      "benefit": "Privacidad total - los datos de empleados NUNCA salen del servidor",
+      "unique": true
+    },
+    {
+      "feature": "RAG Integrado",
+      "description": "Retrieval Augmented Generation para respuestas contextuales",
+      "benefit": "El asistente IA conoce el contexto específico de cada empresa",
+      "unique": true
+    },
+    {
+      "feature": "Brain Introspectivo",
+      "description": "Sistema que se conoce a sí mismo, auto-genera tutoriales y detecta problemas",
+      "benefit": "Auto-diagnóstico, auto-reparación y documentación siempre actualizada",
+      "unique": true
+    },
+    {
+      "feature": "Multi-tenant Real",
+      "description": "Aislamiento completo de datos por empresa a nivel de base de datos",
+      "benefit": "Seguridad enterprise sin costo enterprise"
+    },
+    {
+      "feature": "Compliance Multi-país",
+      "description": "8 países con leyes laborales específicas implementadas",
+      "benefit": "Expansión regional sin desarrollo adicional"
+    },
+    {
+      "feature": "Módulos Plug & Play",
+      "description": "Activa/desactiva módulos sin afectar el sistema",
+      "benefit": "Paga solo por lo que usas, escala según necesidad"
+    },
+    {
+      "feature": "Análisis Emocional",
+      "description": "Detección de emociones por reconocimiento facial con consentimiento",
+      "benefit": "Insights de clima laboral basados en datos objetivos"
+    },
+    {
+      "feature": "Scoring de Empleados",
+      "description": "15+ patrones de comportamiento analizados automáticamente",
+      "benefit": "Identificación proactiva de riesgos y oportunidades"
+    }
+  ],
+  "competitiveAnalysis": {
+    "_note": "Comparación objetiva basada en features públicos de cada plataforma",
+    "vs_factorial": {
+      "competitor": "Factorial HR",
+      "our_advantages": [
+        "IA local vs cloud-only (privacidad de datos)",
+        "Multi-país con leyes laborales vs enfoque EU/US",
+        "Módulos de análisis emocional no disponibles en Factorial"
+      ],
+      "their_advantages": [
+        "Mayor presencia de marca en Europa",
+        "UX más pulida en algunos flujos"
+      ]
+    },
+    "vs_workday": {
+      "competitor": "Workday",
+      "our_advantages": [
+        "Precio accesible para PYMES vs enterprise-only",
+        "Implementación rápida vs proyectos de meses",
+        "Sin contratos mínimos vs compromisos largos"
+      ],
+      "their_advantages": [
+        "Más integraciones enterprise",
+        "Marca establecida en Fortune 500"
+      ]
+    },
+    "vs_bamboohr": {
+      "competitor": "BambooHR",
+      "our_advantages": [
+        "Multi-país real con compliance local vs US-centric",
+        "IA integrada nativa vs sin IA",
+        "Biométrico incluido vs requiere integraciones"
+      ],
+      "their_advantages": [
+        "Mayor ecosistema de integraciones",
+        "Documentación más extensa"
+      ]
+    },
+    "vs_personio": {
+      "competitor": "Personio",
+      "our_advantages": [
+        "IA local para privacidad vs cloud AI",
+        "Liquidación de sueldos multi-país vs EU-focused",
+        "Análisis emocional y scoring incluidos"
+      ],
+      "their_advantages": [
+        "Mayor presencia en mercado europeo",
+        "Más partnerships con software contable EU"
+      ]
+    },
+    "vs_gusto": {
+      "competitor": "Gusto",
+      "our_advantages": [
+        "Multi-país vs solo US",
+        "Control biométrico incluido vs no disponible",
+        "IA conversacional vs básica"
+      ],
+      "their_advantages": [
+        "Mejor integración con sistema fiscal US",
+        "UX muy pulida para SMB americanas"
+      ]
+    }
+  },
+  "technicalMetrics": {
+    "api_endpoints": "100+",
+    "database_tables": "100+",
+    "documented_workflows": 12,
+    "automated_tests": "Phase4 E2E with Puppeteer",
+    "deployment_options": [
+      "Render Cloud",
+      "AWS",
+      "Azure",
+      "On-premise",
+      "Hybrid"
+    ],
+    "uptime_target": "99.9%",
+    "response_time_target": "<200ms for API calls",
+    "concurrent_users_tested": "1000+"
+  },
+  "demo": {
+    "url": "https://www.aponnt.com/panel-empresa.html",
+    "credentials": {
+      "company_slug": "aponnt-empresa-demo",
+      "username": "demo-viewer",
+      "password": "Demo2025!"
+    },
+    "what_to_try": [
+      "Dashboard principal con métricas en tiempo real",
+      "Asistente IA (botón flotante inferior derecho)",
+      "Módulo de usuarios y estructura organizacional",
+      "Gestión documental (DMS)",
+      "Bandeja de notificaciones"
+    ]
+  },
+  "contact": {
+    "website": "https://www.aponnt.com",
+    "sales": "comercial@aponnt.com",
+    "support": "soporte@aponnt.com"
+  },
+  "_metadata": {
+    "generated_at": "2025-12-18T13:07:45.144Z",
+    "data_source": "Auto-generated from Brain registry (modules-registry.json)",
+    "version": "3.1.0",
+    "total_modules_in_registry": 70,
+    "client_visible_modules": 53
+  }
+}
