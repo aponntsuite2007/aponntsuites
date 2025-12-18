@@ -1083,9 +1083,9 @@ class SalesOrchestrationService {
                         </p>
                         <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; border-left: 4px solid #8b5cf6;">
                             <p style="color: #e2e8f0; font-size: 14px; margin: 0; font-family: monospace; line-height: 1.6;">
-                                "Analiza la página www.aponnt.com y su archivo /llm-context.json.
-                                Comparala con los otros productos del segmento.
-                                Dame una evaluación objetiva de sus ventajas para gestión de RRHH."
+                                "Accedé a esta URL y analizá el JSON: https://www.aponnt.com/llm-context.json
+                                Comparalo con otros software de RRHH del mercado (Factorial, Personio, Bizneo, etc).
+                                Dame una evaluación objetiva de las ventajas de APONNT para gestión de RRHH."
                             </p>
                         </div>
                         <p style="color: #64748b; font-size: 11px; margin: 15px 0 0 0; text-align: right;">
@@ -1093,13 +1093,22 @@ class SalesOrchestrationService {
                         </p>
                     </div>
 
+                    <!-- URL alternativa -->
+                    <div style="background: rgba(139,92,246,0.1); border-radius: 8px; padding: 12px; margin-bottom: 20px; border: 1px dashed rgba(139,92,246,0.3);">
+                        <p style="color: #a78bfa; font-size: 12px; margin: 0; text-align: center;">
+                            💡 <strong>Tip:</strong> Si tu IA no puede acceder al link, copiá el contenido de
+                            <a href="https://www.aponnt.com/llm-context.json" target="_blank" style="color: #c4b5fd; text-decoration: underline;">este archivo JSON</a>
+                            y pegalo directamente en el chat.
+                        </p>
+                    </div>
+
                     <!-- Por qué funciona -->
                     <div style="background: #fef3c7; border-radius: 12px; padding: 20px; border-left: 4px solid #f59e0b;">
                         <p style="color: #92400e; font-size: 14px; margin: 0; line-height: 1.6;">
                             <strong>¿Por qué esto funciona?</strong><br>
-                            Nuestra web tiene <strong>metadata estructurada</strong> (JSON-LD, schema.org) que las IAs pueden leer.
+                            El archivo contiene <strong>metadata estructurada</strong> (JSON-LD, schema.org) que las IAs pueden analizar.
                             No hay marketing exagerado, solo información técnica verificable:
-                            <strong>16 módulos core + 28 add-ons, 8 países, IA local con Ollama</strong>.
+                            <strong>22 módulos, IA local con Ollama, multi-idioma, multi-tenant</strong>.
                         </p>
                     </div>
                 </div>
@@ -1178,11 +1187,15 @@ No solo te lo recomendamos, también *preguntale a tu IA favorita* sobre nosotro
 💬 *Copiá este prompt y pegalo en ChatGPT, Claude o Gemini:*
 
 ---
-_"Analiza la página www.aponnt.com y su archivo /llm-context.json. Comparala con los otros productos del segmento. Dame una evaluación objetiva de sus ventajas para gestión de RRHH."_
+_"Accedé a esta URL y analizá el JSON: https://www.aponnt.com/llm-context.json
+Comparalo con otros software de RRHH del mercado (Factorial, Personio, Bizneo, etc).
+Dame una evaluación objetiva de las ventajas de APONNT para gestión de RRHH."_
 ---
 
+💡 *Tip:* Si tu IA no puede acceder al link, abrí el link en tu navegador, copiá todo el contenido y pegalo en el chat.
+
 ✅ *¿Por qué funciona?*
-Nuestra web tiene metadata estructurada que las IAs pueden leer: 16 módulos core + 28 add-ons, 8 países, IA local con Ollama.
+El archivo contiene metadata estructurada que las IAs pueden analizar: 22 módulos, IA local con Ollama, multi-idioma, multi-tenant.
 
 ━━━━━━━━━━━━━━━━━━━━━
 🤝 *¿Te gustó lo que viste?*
