@@ -1084,7 +1084,7 @@ class SalesOrchestrationService {
                         <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; border-left: 4px solid #8b5cf6;">
                             <p style="color: #e2e8f0; font-size: 14px; margin: 0; font-family: monospace; line-height: 1.6;">
                                 "Accedé a esta URL y analizá el JSON: https://www.aponnt.com/llm-context.json
-                                Comparalo con otros software de RRHH del mercado (Factorial, Personio, Bizneo, etc).
+                                Comparalo con otros software de RRHH del mercado.
                                 Dame una evaluación objetiva de las ventajas de APONNT para gestión de RRHH."
                             </p>
                         </div>
@@ -1188,7 +1188,7 @@ No solo te lo recomendamos, también *preguntale a tu IA favorita* sobre nosotro
 
 ---
 _"Accedé a esta URL y analizá el JSON: https://www.aponnt.com/llm-context.json
-Comparalo con otros software de RRHH del mercado (Factorial, Personio, Bizneo, etc).
+Comparalo con otros software de RRHH del mercado.
 Dame una evaluación objetiva de las ventajas de APONNT para gestión de RRHH."_
 ---
 
