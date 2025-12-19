@@ -3941,4 +3941,337 @@ router.get('/companies/:companyId/support-tools/status', async (req, res) => {
   }
 });
 
+// ============================================================================
+// CONTRATOS - Para Vendor Dashboard
+// ============================================================================
+
+/**
+ * GET /api/aponnt/dashboard/contracts
+ * Obtiene todos los contratos (para admin/gerencia) o solo los del vendedor
+ */
+router.get('/contracts', async (req, res) => {
+  try {
+    const { Contract, Quote, Company } = require('../config/database');
+    const { vendor_id } = req.query;
+
+    const whereClause = {};
+    if (vendor_id) {
+      whereClause['$company.vendor_id$'] = vendor_id;
+    }
+
+    const contracts = await Contract.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: Company,
+          as: 'company',
+          attributes: ['company_id', 'name', 'legal_name', 'slug', 'is_active']
+        },
+        {
+          model: Quote,
+          as: 'quote',
+          attributes: ['quote_id', 'monthly_total', 'total_amount', 'status'],
+          required: false
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      data: contracts,
+      count: contracts.length
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo contratos:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener contratos',
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// BUDGETS (QUOTES) - Para Vendor Dashboard
+// ============================================================================
+
+/**
+ * GET /api/aponnt/dashboard/budgets
+ * Obtiene presupuestos (quotes) filtrados opcionalmente por vendor_id
+ */
+router.get('/budgets', async (req, res) => {
+  try {
+    const { Quote, Company, User } = require('../config/database');
+    const { vendor_id } = req.query;
+
+    const whereClause = {};
+    const includeWhere = {};
+
+    if (vendor_id) {
+      includeWhere.vendor_id = vendor_id;
+    }
+
+    const budgets = await Quote.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: Company,
+          as: 'company',
+          attributes: ['company_id', 'name', 'legal_name', 'slug', 'is_active'],
+          where: Object.keys(includeWhere).length > 0 ? includeWhere : undefined,
+          required: Object.keys(includeWhere).length > 0
+        },
+        {
+          model: User,
+          as: 'created_by_user',
+          attributes: ['user_id', 'first_name', 'last_name', 'email'],
+          required: false
+        }
+      ],
+      order: [['created_at', 'DESC']],
+      limit: 100
+    });
+
+    res.json({
+      success: true,
+      data: budgets,
+      count: budgets.length
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo budgets:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener presupuestos',
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// COMMERCIAL NOTIFICATIONS - Para Vendor Dashboard
+// ============================================================================
+
+/**
+ * GET /api/aponnt/dashboard/commercial-notifications
+ * Obtiene notificaciones comerciales (unificadas)
+ */
+router.get('/commercial-notifications', async (req, res) => {
+  try {
+    const { UnifiedNotification, Company, User } = require('../config/database');
+    const { vendor_id, limit = 50 } = req.query;
+
+    const whereClause = {
+      category: 'commercial'  // Solo notificaciones comerciales
+    };
+
+    if (vendor_id) {
+      whereClause.recipient_id = vendor_id;
+      whereClause.recipient_type = 'vendor';
+    }
+
+    const notifications = await UnifiedNotification.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: Company,
+          as: 'company',
+          attributes: ['company_id', 'name', 'slug'],
+          required: false
+        },
+        {
+          model: User,
+          as: 'sender',
+          attributes: ['user_id', 'first_name', 'last_name'],
+          required: false
+        }
+      ],
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit)
+    });
+
+    res.json({
+      success: true,
+      data: notifications,
+      count: notifications.length
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo notificaciones comerciales:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener notificaciones',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * PUT /api/aponnt/dashboard/commercial-notifications/:id/read
+ * Marca una notificación como leída
+ */
+router.put('/commercial-notifications/:id/read', async (req, res) => {
+  try {
+    const { UnifiedNotification } = require('../config/database');
+    const { id } = req.params;
+
+    await UnifiedNotification.update(
+      {
+        is_read: true,
+        read_at: new Date()
+      },
+      { where: { notification_id: id } }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error marcando notificación como leída:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al marcar notificación',
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// VENDOR METRICS - Para Vendor Dashboard
+// ============================================================================
+
+/**
+ * GET /api/aponnt/dashboard/vendor-metrics
+ * Calcula métricas del vendedor (empresas, facturación, comisiones)
+ */
+router.get('/vendor-metrics', async (req, res) => {
+  try {
+    const { Company, Quote, Contract, sequelize } = require('../config/database');
+    const { vendor_id } = req.query;
+
+    if (!vendor_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se require vendor_id'
+      });
+    }
+
+    // Contar empresas activas del vendedor
+    const activeCompanies = await Company.count({
+      where: {
+        vendor_id: vendor_id,
+        is_active: true
+      }
+    });
+
+    // Total de empresas del vendedor
+    const totalCompanies = await Company.count({
+      where: { vendor_id: vendor_id }
+    });
+
+    // Presupuestos del vendedor
+    const budgets = await Quote.count({
+      include: [{
+        model: Company,
+        as: 'company',
+        where: { vendor_id: vendor_id },
+        attributes: []
+      }]
+    });
+
+    // Contratos activos
+    const contracts = await Contract.count({
+      include: [{
+        model: Company,
+        as: 'company',
+        where: { vendor_id: vendor_id },
+        attributes: []
+      }],
+      where: { status: 'active' }
+    });
+
+    // Facturación estimada (suma de monthly_total de empresas activas)
+    const billingResult = await Company.findAll({
+      where: {
+        vendor_id: vendor_id,
+        is_active: true
+      },
+      attributes: [
+        [sequelize.fn('SUM', sequelize.col('monthly_total')), 'total']
+      ],
+      raw: true
+    });
+
+    const totalBilling = billingResult[0]?.total || 0;
+
+    // Comisiones pendientes (estimado al 10% de facturación)
+    const pendingCommissions = totalBilling * 0.10;
+
+    res.json({
+      success: true,
+      data: {
+        active_companies: activeCompanies,
+        total_companies: totalCompanies,
+        budgets_count: budgets,
+        contracts_count: contracts,
+        total_billing: parseFloat(totalBilling),
+        pending_commissions: parseFloat(pendingCommissions),
+        conversion_rate: totalCompanies > 0 ? (contracts / totalCompanies * 100).toFixed(2) : 0
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error calculando métricas de vendedor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al calcular métricas',
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// MÓDULOS Y PRECIOS - Para Vendor Dashboard
+// ============================================================================
+
+/**
+ * GET /api/aponnt/dashboard/modules-pricing
+ * Obtiene todos los módulos del sistema con sus precios
+ */
+router.get('/modules-pricing', async (req, res) => {
+  try {
+    const { SystemModule } = require('../config/database');
+
+    const modules = await SystemModule.findAll({
+      where: { is_active: true },
+      attributes: [
+        'system_module_id',
+        'name',
+        'slug',
+        'description',
+        'category',
+        'base_price',
+        'price_per_user',
+        'is_core',
+        'is_standalone',
+        'version',
+        'features'
+      ],
+      order: [
+        ['category', 'ASC'],
+        ['name', 'ASC']
+      ]
+    });
+
+    res.json({
+      success: true,
+      data: modules,
+      count: modules.length
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo módulos y precios:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener módulos',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
