@@ -2573,6 +2573,9 @@ const unifiedHelpRoutes = require('./src/routes/unifiedHelpRoutes');
 // 🎫 IMPORTAR RUTAS DE ESCALAMIENTO DE TICKETS DE SOPORTE (Diciembre 2025)
 const supportEscalationRoutes = require('./src/routes/supportEscalationRoutes');
 
+// 🎫 IMPORTAR RUTAS DE SOPORTE V2 - Sistema completo de tickets
+const supportRoutesV2 = require('./src/routes/supportRoutesV2');
+
 // 📋 IMPORTAR RUTAS DE DEPENDENCIAS DE CONCEPTOS (Benefits Engine Multi-Tenant)
 const conceptDependenciesRoutes = require('./src/routes/conceptDependenciesRoutes');
 
@@ -2699,6 +2702,10 @@ console.log('🆘 [UNIFIED-HELP] Centro de Ayuda Unificado configurado');
 // 🎫 CONFIGURAR RUTAS DE ESCALAMIENTO DE TICKETS DE SOPORTE (Diciembre 2025)
 app.use('/api/v1/support', supportEscalationRoutes);
 console.log('🎫 [SUPPORT-ESCALATION] Rutas de escalamiento de soporte configuradas');
+
+// 🎫 CONFIGURAR RUTAS DE SOPORTE V2 - Sistema completo de tickets
+app.use('/api/support/v2', supportRoutesV2);
+console.log('🎫 [SUPPORT-V2] Sistema de tickets V2 configurado en /api/support/v2');
 
 // 📋 CONFIGURAR RUTAS DE MANUAL DE PROCEDIMIENTOS (ISO 9001)
 const proceduresRoutes = require('./src/routes/proceduresRoutes');
@@ -2978,6 +2985,18 @@ app.use('/api/engineering', engineeringRoutes);
 console.log('🏗️ [ENGINEERING] Engineering Dashboard API ACTIVO:');
 console.log('   📊 GET  /api/engineering/metadata - Metadata completo del sistema');
 console.log('   📋 GET  /api/engineering/modules - Solo módulos');
+
+// ✅ CONFIGURAR EMAIL CONFIG - Configuración de emails Aponnt (solo GG/SUPERADMIN)
+const emailConfigRoutes = require('./src/routes/emailConfigRoutes');
+app.use('/api/email-config', emailConfigRoutes);
+
+console.log('📧 [EMAIL-CONFIG] Email Config API ACTIVO (solo GG/SUPERADMIN):');
+console.log('   📊 GET    /api/email-config - Todas las configuraciones');
+console.log('   📈 GET    /api/email-config/stats - Estadísticas');
+console.log('   📧 GET    /api/email-config/:emailType - Config específica');
+console.log('   ✏️  PATCH  /api/email-config/:emailType - Actualizar config');
+console.log('   ✅ POST   /api/email-config/:emailType/test - Test SMTP');
+console.log('   📜 GET    /api/email-config/:emailType/audit - Historial auditoría');
 
 // ✅ CONFIGURAR ECOSYSTEM BRAIN - Cerebro del Ecosistema con datos VIVOS
 const brainRoutes = require('./src/routes/brainRoutes');

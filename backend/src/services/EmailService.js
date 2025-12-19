@@ -76,6 +76,7 @@ class EmailService {
             await this._logEmail({
                 sender_type: 'aponnt',
                 sender_id: configType,
+                company_id: emailData.companyId || null, // Si el email de Aponnt es para una empresa específica
                 recipient_email: emailData.to,
                 recipient_name: emailData.recipientName,
                 subject: emailData.subject,
@@ -313,6 +314,7 @@ class EmailService {
                 sender_type: 'company',
                 sender_id: companyId.toString(),
                 email_config_id: config.id,
+                company_id: companyId, // ← IMPORTANTE: siempre incluir company_id
                 recipient_email: emailData.to,
                 recipient_name: emailData.recipientName,
                 recipient_type: emailData.recipientType || 'employee',
@@ -335,6 +337,7 @@ class EmailService {
             await this._logEmail({
                 sender_type: 'company',
                 sender_id: companyId.toString(),
+                company_id: companyId,
                 recipient_email: emailData.to,
                 subject: emailData.subject,
                 status: 'failed',
@@ -479,23 +482,48 @@ class EmailService {
      */
 
     async _getAponntTransporter(config) {
-        const key = config.config_type;
+        const key = config.config_type || config.email_type;
 
         if (this.aponntTransporters.has(key)) {
             return this.aponntTransporters.get(key);
         }
 
+        // Usar EmailConfigService para obtener passwords desencriptados
+        const EmailConfigService = require('./EmailConfigService');
+        let decryptedConfig;
+
+        try {
+            decryptedConfig = await EmailConfigService.getConfigByType(key);
+        } catch (error) {
+            console.warn(`⚠️ [EMAIL] No se pudo obtener config de EmailConfigService, usando config directa:`, error.message);
+            decryptedConfig = config;
+        }
+
+        // Usar app_password si existe, sino smtp_password
+        const password = decryptedConfig?.app_password_decrypted ||
+                        decryptedConfig?.smtp_password_decrypted ||
+                        config.smtp_password ||
+                        config.app_password;
+
+        if (!password) {
+            throw new Error(`No hay password configurado para email tipo: ${key}`);
+        }
+
         const transporter = nodemailer.createTransport({
-            host: config.smtp_host,
-            port: config.smtp_port,
-            secure: config.smtp_secure,
+            host: config.smtp_host || decryptedConfig?.smtp_host,
+            port: config.smtp_port || decryptedConfig?.smtp_port || 587,
+            secure: config.smtp_secure !== undefined ? config.smtp_secure : (decryptedConfig?.smtp_secure || false),
             auth: {
-                user: config.smtp_user,
-                pass: config.smtp_password
+                user: config.from_email || config.smtp_user || decryptedConfig?.from_email || decryptedConfig?.email_address,
+                pass: password
+            },
+            tls: {
+                rejectUnauthorized: false // Para desarrollo/testing
             }
         });
 
         this.aponntTransporters.set(key, transporter);
+        console.log(`✅ [EMAIL] Transporter creado para: ${key}`);
         return transporter;
     }
 
@@ -560,6 +588,7 @@ class EmailService {
             await sequelize.query(`
                 INSERT INTO email_logs (
                     sender_type, sender_id, email_config_id,
+                    company_id,
                     recipient_email, recipient_name, recipient_type, recipient_id,
                     subject, body_html, body_text,
                     notification_id, category, status,
@@ -567,6 +596,7 @@ class EmailService {
                     has_attachments, attachments
                 ) VALUES (
                     :sender_type, :sender_id, :email_config_id,
+                    :company_id,
                     :recipient_email, :recipient_name, :recipient_type, :recipient_id,
                     :subject, :body_html, :body_text,
                     :notification_id, :category, :status,
@@ -578,6 +608,7 @@ class EmailService {
                     sender_type: logData.sender_type,
                     sender_id: logData.sender_id,
                     email_config_id: logData.email_config_id || null,
+                    company_id: logData.company_id || null,
                     recipient_email: logData.recipient_email,
                     recipient_name: logData.recipient_name || null,
                     recipient_type: logData.recipient_type || null,
@@ -604,6 +635,84 @@ class EmailService {
     _addSignature(html, signature) {
         if (!signature) return html;
         return `${html}<br><br><hr>${signature}`;
+    }
+
+    /**
+     * ========================================================================
+     * CAPA 4: PARTNERS - Emails a asociados externos
+     * ========================================================================
+     */
+
+    /**
+     * Enviar email a partner (médico, legal, HSE)
+     * Se envía desde Aponnt para mantener neutralidad
+     * @param {object} partnerData - {email, name, category, partnerId}
+     * @param {number} companyId - ID de la empresa que solicitó la acción
+     * @param {object} emailData - {subject, html, text, notificationId, category}
+     */
+    async sendToPartner(partnerData, companyId, emailData) {
+        try {
+            console.log(`📧 [PARTNER] Enviando email a partner: ${partnerData.email} (${partnerData.category})`);
+
+            // Obtener nombre de la empresa para contexto
+            const [company] = await sequelize.query(`
+                SELECT name FROM companies WHERE company_id = :companyId
+            `, {
+                replacements: { companyId },
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            const companyName = company ? company.name : 'la empresa';
+
+            // Enviar desde Aponnt con contexto de empresa
+            const result = await this.sendFromAponnt('transactional', {
+                to: partnerData.email,
+                subject: `[${companyName}] ${emailData.subject}`,
+                html: emailData.html,
+                text: emailData.text,
+                recipientName: partnerData.name,
+                category: emailData.category || 'partner_notification',
+                notificationId: emailData.notificationId
+            });
+
+            // Registrar en log con metadata de partner
+            await this._logEmail({
+                sender_type: 'aponnt',
+                sender_id: 'partner_notification',
+                company_id: companyId, // ← IMPORTANTE: registrar empresa origen
+                recipient_email: partnerData.email,
+                recipient_name: partnerData.name,
+                recipient_type: 'partner',
+                recipient_id: partnerData.partnerId ? partnerData.partnerId.toString() : null,
+                subject: `[${companyName}] ${emailData.subject}`,
+                body_html: emailData.html,
+                body_text: emailData.text,
+                notification_id: emailData.notificationId,
+                category: emailData.category || 'partner_notification',
+                status: 'sent',
+                sent_at: new Date(),
+                message_id: result.messageId
+            });
+
+            console.log(`✅ [PARTNER] Email enviado exitosamente a partner: ${partnerData.email}`);
+            return result;
+
+        } catch (error) {
+            console.error(`❌ [PARTNER] Error enviando email a partner:`, error.message);
+
+            await this._logEmail({
+                sender_type: 'aponnt',
+                sender_id: 'partner_notification',
+                company_id: companyId,
+                recipient_email: partnerData.email,
+                recipient_type: 'partner',
+                subject: emailData.subject,
+                status: 'failed',
+                error_message: error.message
+            });
+
+            throw error;
+        }
     }
 
     /**

@@ -231,6 +231,7 @@ const AdminPanelController = {
             // ===== INGENIERÍA =====
             'engineering': () => this._loadIngenieriaDashboard(),
             'ingenieria-dashboard': () => this._loadIngenieriaDashboard(),
+            'aponnt-email-config': () => this._loadAponntEmailConfig(),
             'brain-ecosystem': () => this._loadBrainEcosystem(),
             'debugging': () => this._loadDebugging(),
             'auditor-sistema': () => this._loadAuditorSistema(),
@@ -244,7 +245,8 @@ const AdminPanelController = {
 
             // ===== MARKETING =====
             'marketing': () => this._loadMarketing(),
-            'sales-orchestration': () => this._loadSalesOrchestration()
+            'sales-orchestration': () => this._loadSalesOrchestration(),
+            'pipeline-ventas': () => this._loadPipelineVentas()
         };
 
         const loader = sectionLoaders[sectionId];
@@ -263,6 +265,11 @@ const AdminPanelController = {
             'ingenieria-dashboard': () => {
                 if (window.EngineeringDashboard) {
                     EngineeringDashboard.init();
+                }
+            },
+            'aponnt-email-config': () => {
+                if (window.AponntEmailConfigModule) {
+                    AponntEmailConfigModule.init();
                 }
             },
             'mi-dashboard': () => {
@@ -311,6 +318,12 @@ const AdminPanelController = {
                 if (window.SalesOrchestrationDashboard) {
                     const container = document.getElementById('sales-orchestration-container') || document.getElementById('content-area');
                     await SalesOrchestrationDashboard.init(container);
+                }
+            },
+            'pipeline-ventas': async () => {
+                if (window.LeadsPipelineDashboard) {
+                    const container = document.getElementById('pipeline-ventas-container') || document.getElementById('content-area');
+                    await LeadsPipelineDashboard.init(container, this._currentStaff);
                 }
             }
         };
@@ -1451,67 +1464,78 @@ const AdminPanelController = {
 
     // ==================== ORGANIGRAMA ====================
     async _loadOrganigrama() {
-        setTimeout(() => this._loadOrganigramaData(), 100);
+        setTimeout(() => this._initOrgChartIntelligent(), 100);
         return `
-            <div class="section-container organigrama-module">
-                <style>
-                    .organigrama-module .section-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-                    .organigrama-module h2 { margin: 0 0 8px 0; display: flex; align-items: center; gap: 12px; }
-                    .org-stats-bar { display: flex; gap: 24px; margin-bottom: 20px; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px; }
-                    .org-stat { text-align: center; }
-                    .org-stat-value { font-size: 1.5rem; font-weight: 700; color: #4a9eff; }
-                    .org-stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
-                    .org-stat-value.warning { color: #ffb84d; }
-                    .org-container { padding: 30px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); }
-                    .org-nivel { margin-bottom: 30px; }
-                    .org-nivel-title { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
-                    .org-nivel-grid { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
-                    .org-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; min-width: 200px; max-width: 280px; transition: all 0.2s; }
-                    .org-card:hover { transform: translateY(-2px); border-color: rgba(74,158,255,0.5); }
-                    .org-card.vacante { border-color: rgba(255,184,77,0.5); background: rgba(255,184,77,0.05); }
-                    .org-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-                    .org-card-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-                    .org-card-icon.direccion { background: linear-gradient(135deg, #dc2626, #b91c1c); }
-                    .org-card-icon.ventas { background: linear-gradient(135deg, #ea580c, #c2410c); }
-                    .org-card-icon.admin { background: linear-gradient(135deg, #0891b2, #0e7490); }
-                    .org-card-icon.desarrollo { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
-                    .org-card-icon.soporte { background: linear-gradient(135deg, #059669, #047857); }
-                    .org-card-icon.externo { background: linear-gradient(135deg, #6b7280, #4b5563); }
-                    .org-card-info h4 { margin: 0; font-size: 0.9rem; font-weight: 600; }
-                    .org-card-info .code { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
-                    .org-card-staff { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); }
-                    .org-staff-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 0.85rem; }
-                    .org-staff-avatar { width: 24px; height: 24px; border-radius: 50%; background: rgba(74,158,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; }
-                    .org-staff-name { color: rgba(255,255,255,0.9); }
-                    .org-vacante-badge { display: inline-block; padding: 4px 10px; background: rgba(255,184,77,0.2); color: #ffb84d; border-radius: 4px; font-size: 0.75rem; }
-                    .org-card-count { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 8px; }
-                </style>
-                <div class="section-header">
-                    <h2><span>🏢</span> Organigrama Aponnt</h2>
-                    <p class="section-subtitle" style="color: rgba(255,255,255,0.6);">Estructura organizacional con staff real asignado</p>
-                </div>
-                <div class="org-stats-bar" id="org-stats-bar">
-                    <div class="org-stat">
-                        <div class="org-stat-value" id="org-total-roles">-</div>
-                        <div class="org-stat-label">Roles Definidos</div>
-                    </div>
-                    <div class="org-stat">
-                        <div class="org-stat-value" id="org-total-staff">-</div>
-                        <div class="org-stat-label">Staff Activo</div>
-                    </div>
-                    <div class="org-stat">
-                        <div class="org-stat-value warning" id="org-roles-vacios">-</div>
-                        <div class="org-stat-label">Roles Vacantes</div>
-                    </div>
-                </div>
-                <div class="org-container" id="organigrama-content">
-                    <div style="text-align: center; padding: 40px;">
-                        <div class="spinner-small"></div>
-                        <span style="color: rgba(255,255,255,0.6);">Cargando organigrama...</span>
-                    </div>
-                </div>
+            <div class="section-container organigrama-module" style="height: calc(100vh - 150px);">
+                <div id="organigrama-intelligent-container" style="width: 100%; height: 100%;"></div>
             </div>
         `;
+    },
+
+    async _initOrgChartIntelligent() {
+        // Cargar el script si no está ya cargado
+        if (!window.OrgChartIntelligent) {
+            const script = document.createElement('script');
+            script.src = '/js/modules/OrgChartIntelligent.js?v=' + Date.now();
+            script.onload = () => {
+                this._createOrgChart();
+            };
+            script.onerror = () => {
+                console.error('[ORGANIGRAMA] Error cargando OrgChartIntelligent.js');
+                document.getElementById('organigrama-intelligent-container').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef4444;">
+                        <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+                        <div>Error cargando componente de organigrama</div>
+                    </div>
+                `;
+            };
+            document.head.appendChild(script);
+        } else {
+            this._createOrgChart();
+        }
+    },
+
+    _createOrgChart() {
+        const orgchart = new OrgChartIntelligent({
+            type: 'aponnt',
+            containerId: 'organigrama-intelligent-container',
+            mode: '2d',
+            onNodeClick: (node) => {
+                console.log('[ORGANIGRAMA] Nodo seleccionado:', node);
+                // Aquí se puede mostrar modal con detalles del staff
+            }
+        });
+
+        orgchart.init();
+
+        // Guardar instancia para poder refreshar después
+        window.orgchartInstance = orgchart;
+    },
+
+    // LEGACY METHOD (mantener por si acaso)
+    async _loadOrganigramaData_OLD() {
+        const container = document.getElementById('organigrama-content');
+        if (!container) return;
+
+        try {
+            const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
+            const response = await fetch('/api/brain/orgchart/aponnt', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+
+            if (!result.success) {
+                container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ff6b6b;">Error: ${result.message}</div>`;
+                return;
+            }
+
+            const { data, stats } = result;
+
+            // LEGACY: Este método está deprecado, usar _loadOrganigramaData() en su lugar
+            console.log('[AdminPanel] _loadOrganigramaData_OLD() deprecado');
+        } catch (error) {
+            console.error('[AdminPanel] Error en organigrama legacy:', error);
+        }
     },
 
     async _loadOrganigramaData() {
@@ -1520,7 +1544,7 @@ const AdminPanelController = {
 
         try {
             const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
-            const response = await fetch('/api/aponnt/staff/organigrama/data', {
+            const response = await fetch('/api/aponnt/staff-data/organigrama/data', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const result = await response.json();
@@ -1608,6 +1632,16 @@ const AdminPanelController = {
             <div class="section-container full-width">
                 <div id="engineering-dashboard-container">
                     <!-- EngineeringDashboard se renderizará aquí -->
+                </div>
+            </div>
+        `;
+    },
+
+    async _loadAponntEmailConfig() {
+        return `
+            <div class="section-container full-width">
+                <div id="content-area">
+                    <!-- AponntEmailConfigModule se renderizará aquí -->
                 </div>
             </div>
         `;
@@ -1916,32 +1950,93 @@ const AdminPanelController = {
     },
 
     async _loadTodosTickets() {
-        return `
-            <div class="section-container">
+        // Usar el componente AdminSupportTicketsView si está disponible
+        if (typeof AdminSupportTicketsView !== 'undefined') {
+            setTimeout(() => {
+                const ticketsView = new AdminSupportTicketsView();
+                ticketsView.init();
+            }, 100);
+            return `<div id="admin-support-tickets-container" class="section-container"></div>`;
+        }
+
+        // Fallback: cargar tickets directamente del API
+        const html = `
+            <div class="section-container tickets-dashboard">
                 <div class="section-header">
-                    <h2>🎫 Todos los Tickets</h2>
-                    <p class="section-subtitle">Vista completa de tickets de soporte</p>
-                    <button class="btn-primary" onclick="AdminPanelController.nuevoTicket()">
-                        <i class="fas fa-plus"></i> Nuevo Ticket
-                    </button>
+                    <h2>🎫 Tickets de Soporte</h2>
+                    <p class="section-subtitle">Vista completa de tickets de todas las empresas</p>
                 </div>
-                <div class="filters-bar">
-                    <select id="filter-estado"><option>Todos los estados</option></select>
-                    <select id="filter-prioridad"><option>Todas las prioridades</option></select>
-                    <input type="text" placeholder="Buscar..." id="filter-buscar">
+                <div id="tickets-loading" style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Cargando tickets...</p>
                 </div>
-                <div class="table-container" id="todos-tickets-table">
-                    <table class="data-table">
-                        <thead>
-                            <tr><th>#</th><th>Empresa</th><th>Asunto</th><th>Prioridad</th><th>Estado</th><th>Asignado</th><th>Fecha</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td colspan="7" class="empty-row">Cargando tickets...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                <div id="tickets-content" style="display: none;"></div>
             </div>
         `;
+
+        // Cargar tickets después de renderizar
+        setTimeout(async () => {
+            try {
+                const token = localStorage.getItem('aponnt_token_staff');
+                const response = await fetch('/api/support/v2/tickets?limit=50', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const tickets = data.tickets || data.data || [];
+
+                document.getElementById('tickets-loading').style.display = 'none';
+                const content = document.getElementById('tickets-content');
+                content.style.display = 'block';
+
+                if (tickets.length === 0) {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
+                            <i class="fas fa-inbox fa-3x" style="margin-bottom: 15px;"></i>
+                            <p>No hay tickets pendientes</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                content.innerHTML = `
+                    <table class="data-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Empresa</th>
+                                <th>Asunto</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tickets.map(t => `
+                                <tr>
+                                    <td>${t.ticket_number || t.id?.substring(0,8) || '-'}</td>
+                                    <td>${t.company_name || t.Company?.name || '-'}</td>
+                                    <td>${t.subject || '-'}</td>
+                                    <td><span class="priority-badge ${t.priority}">${t.priority || '-'}</span></td>
+                                    <td><span class="status-badge ${t.status}">${t.status || '-'}</span></td>
+                                    <td>${t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('[TICKETS] Error cargando:', error);
+                document.getElementById('tickets-loading').innerHTML = `
+                    <div style="color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        <p>Error cargando tickets: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }, 200);
+
+        return html;
     },
 
     async _loadMetricasSoporte() {
@@ -2354,6 +2449,11 @@ const AdminPanelController = {
     async _loadSalesOrchestration() {
         // El módulo SalesOrchestrationDashboard se encarga del render completo
         return `<div id="sales-orchestration-container"></div>`;
+    },
+
+    async _loadPipelineVentas() {
+        // El módulo LeadsPipelineDashboard se encarga del render completo
+        return `<div id="pipeline-ventas-container"></div>`;
     },
 
     // ============================
