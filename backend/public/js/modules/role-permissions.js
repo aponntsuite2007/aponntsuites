@@ -89,7 +89,7 @@ const RolePermissions = (function() {
         'todos-tickets': {
             id: 'todos-tickets',
             icon: '🎫',
-            label: 'Todos los Tickets',
+            label: 'Tickets',
             description: 'Vista completa de tickets',
             badge: 'pending_tickets',
             component: 'AllTickets'
@@ -203,6 +203,14 @@ const RolePermissions = (function() {
             description: 'Métricas del sistema',
             component: 'TechMetrics'
         },
+        'aponnt-email-config': {
+            id: 'aponnt-email-config',
+            icon: '📧',
+            label: 'Configuración de Emails',
+            description: 'Gestión de emails Aponnt (solo GG/SUPERADMIN)',
+            component: 'AponntEmailConfig',
+            permission: ['GG', 'SUPERADMIN']  // Solo accesible para estos roles
+        },
 
         // ========== GERENCIA ==========
         'gestion-staff': {
@@ -277,20 +285,28 @@ const RolePermissions = (function() {
             component: 'SystemConfig'
         },
 
-        // ========== MARKETING (TODOS LOS ROLES) ==========
+        // ========== MARKETING / VENTAS (TODOS LOS ROLES) ==========
         'marketing': {
             id: 'marketing',
-            icon: '📢',
-            label: 'Marketing',
-            description: 'Leads y flyers "Preguntale a tu IA"',
+            icon: '📧',
+            label: 'Leads',
+            description: 'Captura de leads y flyers "Preguntale a tu IA"',
             component: 'MarketingLeadsModule'
         },
-        'sales-orchestration': {
-            id: 'sales-orchestration',
-            icon: '🧠',
-            label: 'Sales Brain',
-            description: 'Orquestación inteligente de ventas',
-            component: 'SalesOrchestrationDashboard'
+        // 'sales-orchestration': DESHABILITADO - Backend no implementado
+        // {
+        //     id: 'sales-orchestration',
+        //     icon: '🧠',
+        //     label: 'Sales Brain',
+        //     description: 'Orquestación inteligente de ventas',
+        //     component: 'SalesOrchestrationDashboard'
+        // },
+        'pipeline-ventas': {
+            id: 'pipeline-ventas',
+            icon: '🎯',
+            label: 'Pipeline de Ventas',
+            description: 'Gestión de leads con scoring BANT, temperatura y lifecycle',
+            component: 'LeadsPipelineDashboard'
         }
     };
 
@@ -319,7 +335,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'sales-orchestration']
+                    sections: ['marketing', 'pipeline-ventas']
                 },
                 {
                     title: '🎫 Soporte',
@@ -350,7 +366,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'sales-orchestration']
+                    sections: ['marketing', 'pipeline-ventas']
                 },
                 {
                     title: '🎫 Soporte',
@@ -376,7 +392,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'sales-orchestration']
+                    sections: ['marketing', 'pipeline-ventas']
                 }
             ]
         },
@@ -408,7 +424,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'sales-orchestration']
+                    sections: ['marketing', 'pipeline-ventas']
                 },
                 {
                     title: '📋 Reportes',
@@ -429,11 +445,11 @@ const RolePermissions = (function() {
             groups: [
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem', 'debugging', 'metricas-tech']
+                    sections: ['engineering', 'brain-ecosystem', 'debugging', 'metricas-tech', 'aponnt-email-config']
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'sales-orchestration']
+                    sections: ['marketing', 'pipeline-ventas']
                 }
             ]
         },
@@ -471,7 +487,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'sales-orchestration']
+                    sections: ['marketing', 'pipeline-ventas']
                 },
                 {
                     title: '🎫 Soporte',
@@ -479,7 +495,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem']
+                    sections: ['engineering', 'brain-ecosystem', 'aponnt-email-config']
                 }
             ]
         },
@@ -517,7 +533,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'sales-orchestration']
+                    sections: ['marketing', 'pipeline-ventas']
                 },
                 {
                     title: '🎫 Soporte',
@@ -525,7 +541,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem', 'debugging']
+                    sections: ['engineering', 'brain-ecosystem', 'debugging', 'aponnt-email-config']
                 }
             ]
         },
@@ -558,7 +574,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '📢 Marketing',
-                    sections: ['marketing', 'sales-orchestration']
+                    sections: ['marketing', 'pipeline-ventas']
                 },
                 {
                     title: '🎫 Soporte',
@@ -566,7 +582,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem', 'debugging', 'metricas-tech']
+                    sections: ['engineering', 'brain-ecosystem', 'debugging', 'metricas-tech', 'aponnt-email-config']
                 },
                 {
                     title: '📋 Reportes',
