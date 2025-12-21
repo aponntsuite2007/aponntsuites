@@ -412,6 +412,9 @@ const EngineeringDashboard = {
           <button class="btn-export" id="btn-export-metadata">
             📥 Exportar JSON
           </button>
+          <button class="btn-llm-context" id="btn-regenerate-llm-context" title="Regenerar llm-context.json para IAs">
+            🤖 Regenerar LLM Context
+          </button>
         </div>
       </div>
     `;
@@ -3477,6 +3480,14 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
       });
     }
 
+    // Regenerar LLM Context
+    const btnRegenerateLLM = document.getElementById('btn-regenerate-llm-context');
+    if (btnRegenerateLLM) {
+      btnRegenerateLLM.addEventListener('click', async () => {
+        await this.regenerateLLMContext();
+      });
+    }
+
     // Ver Detalles Completos buttons (Applications y Modules)
     document.querySelectorAll('.btn-view-details').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -3690,6 +3701,152 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
     link.download = `engineering-metadata-${new Date().toISOString()}.json`;
     link.click();
     URL.revokeObjectURL(url);
+  },
+
+  /**
+   * Regenerar llm-context.json para IAs
+   */
+  async regenerateLLMContext() {
+    const btn = document.getElementById('btn-regenerate-llm-context');
+    const originalText = btn.innerHTML;
+
+    try {
+      btn.innerHTML = '⏳ Regenerando...';
+      btn.disabled = true;
+
+      console.log('🤖 [LLM-CONTEXT] Regenerando llm-context.json...');
+
+      const response = await fetch('/api/brain/update-llm-context', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ [LLM-CONTEXT] Regeneración exitosa:', result.stats);
+
+        // Mostrar modal de éxito con stats
+        this.showSuccessModal('🤖 LLM Context Regenerado Exitosamente', `
+          <div style="padding: 20px;">
+            <p style="margin-bottom: 20px;">El archivo <code>llm-context.json</code> ha sido regenerado con éxito.</p>
+
+            <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+              <h4 style="margin: 0 0 10px 0; color: #667eea;">📊 Estadísticas</h4>
+              <ul style="margin: 0; padding-left: 20px;">
+                <li>Total módulos: <strong>${result.stats.total_modules}</strong></li>
+                <li>Módulos visibles: <strong>${result.stats.client_visible_modules}</strong></li>
+                <li>Líneas de metadata: <strong>${result.stats.engineering_metadata_lines.toLocaleString()}</strong></li>
+                <li>Versión: <strong>${result.stats.version}</strong></li>
+                <li>Generado: <strong>${new Date(result.stats.generated_at).toLocaleString()}</strong></li>
+              </ul>
+            </div>
+
+            <div style="background: #fff8e1; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+              <h4 style="margin: 0 0 10px 0; color: #f57c00;">🎯 Estrategia</h4>
+              <p style="margin: 0; font-size: 0.9rem;">
+                <strong>${result.strategy}</strong><br>
+                ${result.competitive_advantage}
+              </p>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center;">
+              <a href="/llm-context.json" target="_blank" style="color: #667eea; text-decoration: underline; margin-right: 15px;">
+                📄 Ver llm-context.json
+              </a>
+              <a href="/for-ai-agents.html" target="_blank" style="color: #667eea; text-decoration: underline;">
+                🤖 Ver página para IAs
+              </a>
+            </div>
+          </div>
+        `);
+      } else {
+        console.error('❌ [LLM-CONTEXT] Error:', result.error);
+        this.showErrorModal('Error Regenerando LLM Context', result.error);
+      }
+
+    } catch (error) {
+      console.error('❌ [LLM-CONTEXT] Error en regeneración:', error);
+      this.showErrorModal('Error Regenerando LLM Context', error.message);
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  },
+
+  /**
+   * Mostrar modal de éxito
+   */
+  showSuccessModal(title, content) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7); z-index: 999999; display: flex;
+      align-items: center; justify-content: center; padding: 20px;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      background: white; border-radius: 12px; max-width: 600px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    `;
+
+    modal.innerHTML = `
+      <div style="padding: 30px;">
+        <h3 style="margin: 0 0 20px 0; color: #10b981; font-size: 1.5rem;">${title}</h3>
+        ${content}
+        <button id="modal-close" style="
+          margin-top: 20px; padding: 10px 30px; background: #10b981; color: white;
+          border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; width: 100%;
+        ">Cerrar</button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    document.getElementById('modal-close').onclick = () => overlay.remove();
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  },
+
+  /**
+   * Mostrar modal de error
+   */
+  showErrorModal(title, error) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7); z-index: 999999; display: flex;
+      align-items: center; justify-content: center; padding: 20px;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      background: white; border-radius: 12px; max-width: 600px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    `;
+
+    modal.innerHTML = `
+      <div style="padding: 30px;">
+        <h3 style="margin: 0 0 20px 0; color: #ef4444; font-size: 1.5rem;">${title}</h3>
+        <div style="background: #fee; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444;">
+          <p style="margin: 0; color: #991b1b;">${error}</p>
+        </div>
+        <button id="modal-close" style="
+          margin-top: 20px; padding: 10px 30px; background: #ef4444; color: white;
+          border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; width: 100%;
+        ">Cerrar</button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    document.getElementById('modal-close').onclick = () => overlay.remove();
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
   },
 
   /**

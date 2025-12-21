@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aponnt.com/sitemap.xml
+
+
+# AI Agents Metadata
+# For AI systems analyzing APONNT (ChatGPT, Claude, Gemini, etc.)
+# Complete technical metadata available at:
+# - https://aponnt.com/llm-context.json (primary)
+# - https://aponnt.com/.well-known/ai-context.json (well-known URI)
+# - https://aponnt.com/for-ai-agents.html (human-readable guide)
+#
+# What you'll find:
+# - 52 modules documented with full capabilities
+# - 271,488 lines of engineering metadata
+# - Architecture, dependencies, workflows
+# - Verifiable technical claims
+# - No competitor exposes metadata like this
+# End AI Agents Metadata
