@@ -196,15 +196,32 @@ router.get('/metadata', async (req, res) => {
 
 /**
  * GET /api/engineering/modules
- * Retorna solo sección de módulos técnicos
+ * Retorna módulos técnicos - AHORA USA BRAIN SERVICE (datos vivos)
  */
-router.get('/modules', (req, res) => {
+router.get('/modules', async (req, res) => {
   try {
+    ensureBrainService(req);
+
+    if (brainService) {
+      console.log('🧠 [ENGINEERING] Módulos técnicos desde Brain (VIVO)');
+      const technicalModules = await brainService.getTechnicalModules();
+
+      return res.json({
+        success: true,
+        source: 'LIVE_BRAIN',
+        data: technicalModules.modules || []
+      });
+    }
+
+    // Fallback a metadata estático
+    console.log('📦 [ENGINEERING] Módulos técnicos desde metadata (fallback)');
     res.json({
       success: true,
+      source: 'STATIC_FALLBACK',
       data: metadata.modules
     });
   } catch (error) {
+    console.error('❌ [ENGINEERING] Error en GET /modules:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -214,11 +231,33 @@ router.get('/modules', (req, res) => {
 
 /**
  * GET /api/engineering/commercial-modules
- * Retorna TODOS los módulos comerciales contratables (SINGLE SOURCE OF TRUTH)
+ * Retorna TODOS los módulos comerciales - AHORA USA BRAIN SERVICE (datos vivos)
  * Esta es la API que deben usar: panel-administrativo, panel-empresa, index.html
  */
-router.get('/commercial-modules', (req, res) => {
+router.get('/commercial-modules', async (req, res) => {
   try {
+    ensureBrainService(req);
+
+    if (brainService) {
+      console.log('🧠 [ENGINEERING] Módulos comerciales desde Brain (VIVO)');
+      const commercial = await brainService.getCommercialModules();
+
+      return res.json({
+        success: true,
+        source: 'LIVE_BRAIN',
+        data: {
+          modules: commercial.modules || [],
+          bundles: metadata.commercialModules?.bundles || {},
+          licensesTiers: metadata.commercialModules?.licensesTiers || [],
+          stats: commercial.stats || {},
+          version: metadata.commercialModules?._version,
+          lastSync: new Date().toISOString()
+        }
+      });
+    }
+
+    // Fallback a metadata estático
+    console.log('📦 [ENGINEERING] Módulos comerciales desde metadata (fallback)');
     const commercialModules = metadata.commercialModules;
 
     if (!commercialModules) {
@@ -230,6 +269,7 @@ router.get('/commercial-modules', (req, res) => {
 
     res.json({
       success: true,
+      source: 'STATIC_FALLBACK',
       data: {
         modules: commercialModules.modules,
         bundles: commercialModules.bundles,
@@ -240,6 +280,7 @@ router.get('/commercial-modules', (req, res) => {
       }
     });
   } catch (error) {
+    console.error('❌ [ENGINEERING] Error en GET /commercial-modules:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -722,13 +763,36 @@ router.post('/sync-commercial-modules', (req, res) => {
  * GET /api/engineering/roadmap
  * Retorna solo roadmap
  */
-router.get('/roadmap', (req, res) => {
+/**
+ * GET /api/engineering/roadmap
+ * Retorna roadmap del proyecto - AHORA USA BRAIN SERVICE (datos vivos)
+ */
+router.get('/roadmap', async (req, res) => {
   try {
+    ensureBrainService(req);
+
+    if (brainService) {
+      console.log('🧠 [ENGINEERING] Roadmap desde Brain (VIVO)');
+      const roadmapData = await brainService.getRoadmap();
+
+      return res.json({
+        success: true,
+        source: 'LIVE_BRAIN',
+        data: roadmapData.phases && roadmapData.phases.length > 0
+          ? roadmapData.phases
+          : metadata.roadmap || {}
+      });
+    }
+
+    // Fallback a metadata estático
+    console.log('📦 [ENGINEERING] Roadmap desde metadata (fallback)');
     res.json({
       success: true,
+      source: 'STATIC_FALLBACK',
       data: metadata.roadmap
     });
   } catch (error) {
+    console.error('❌ [ENGINEERING] Error en GET /roadmap:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -905,13 +969,35 @@ router.get('/tutorials', async (req, res) => {
  * GET /api/engineering/database
  * Retorna solo database schema
  */
-router.get('/database', (req, res) => {
+/**
+ * GET /api/engineering/database
+ * Retorna schema de base de datos - AHORA USA BRAIN SERVICE (datos vivos desde Sequelize)
+ * Para cada campo, detecta qué módulos/procesos del código lo usan
+ */
+router.get('/database', async (req, res) => {
   try {
+    ensureBrainService(req);
+
+    if (brainService) {
+      console.log('🧠 [ENGINEERING] Database Schema desde Brain (VIVO - Sequelize)');
+      const dbSchema = await brainService.getDatabaseSchema();
+
+      return res.json({
+        success: true,
+        source: 'LIVE_BRAIN_SEQUELIZE',
+        data: dbSchema
+      });
+    }
+
+    // Fallback a metadata estático
+    console.log('📦 [ENGINEERING] Database Schema desde metadata (fallback)');
     res.json({
       success: true,
+      source: 'STATIC_FALLBACK',
       data: metadata.database
     });
   } catch (error) {
+    console.error('❌ [ENGINEERING] Error en GET /database:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -923,13 +1009,34 @@ router.get('/database', (req, res) => {
  * GET /api/engineering/applications
  * Retorna solo aplicaciones del ecosistema
  */
-router.get('/applications', (req, res) => {
+/**
+ * GET /api/engineering/applications
+ * Retorna aplicaciones del ecosistema - AHORA USA BRAIN SERVICE (datos vivos)
+ */
+router.get('/applications', async (req, res) => {
   try {
+    ensureBrainService(req);
+
+    if (brainService) {
+      console.log('🧠 [ENGINEERING] Aplicaciones desde Brain (VIVO)');
+      const apps = await brainService.getApplications();
+
+      return res.json({
+        success: true,
+        source: 'LIVE_BRAIN',
+        data: apps.applications || []
+      });
+    }
+
+    // Fallback a metadata estático
+    console.log('📦 [ENGINEERING] Aplicaciones desde metadata (fallback)');
     res.json({
       success: true,
+      source: 'STATIC_FALLBACK',
       data: metadata.applications
     });
   } catch (error) {
+    console.error('❌ [ENGINEERING] Error en GET /applications:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -1207,6 +1314,47 @@ router.get('/health', (req, res) => {
     metadataLoaded: !!metadata,
     timestamp: new Date().toISOString()
   });
+});
+
+/**
+ * GET /api/engineering/full-system-status
+ * ⭐ NUEVO: Estado completo del Brain Orchestrator
+ * Combina: Orchestrator + Sistema Nervioso + Ecosystem Brain + MetadataWriter
+ * Este endpoint es el "sistema nervioso central" del dashboard
+ */
+router.get('/full-system-status', async (req, res) => {
+  try {
+    // Obtener BrainOrchestrator
+    const { getInstanceSync } = require('../brain/BrainOrchestrator');
+    const brain = getInstanceSync();
+
+    if (!brain) {
+      return res.status(503).json({
+        success: false,
+        error: 'Brain Orchestrator no inicializado',
+        message: 'El Brain Orchestrator aún no está disponible. Intenta de nuevo en unos segundos.',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Obtener estado completo del sistema
+    const systemStatus = await brain.getFullSystemStatus();
+
+    res.json({
+      success: true,
+      data: systemStatus,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ [ENGINEERING] Error obteniendo full system status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error obteniendo estado del sistema',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 /**

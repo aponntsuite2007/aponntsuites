@@ -2045,7 +2045,7 @@ class EcosystemBrainService {
         FROM aponnt_staff s
         LEFT JOIN aponnt_staff_roles r ON s.role_id = r.role_id
         WHERE s.is_active = true
-        ORDER BY r.level_hierarchy, s.first_name
+        ORDER BY r.level, s.first_name
       `);
 
       // Construir árbol jerárquico
@@ -2091,6 +2091,510 @@ class EcosystemBrainService {
     }
 
     return roots;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ORGANIGRAMA INTELIGENTE - VERSIÓN AVANZADA
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Obtener organigrama de Aponnt (staff interno) con análisis inteligente
+   */
+  async getOrgChartAponnt() {
+    console.log('🧠 [BRAIN-ORGCHART] Generando organigrama inteligente de Aponnt...');
+
+    try {
+      const { sequelize } = this.db;
+
+      // Query optimizada con todas las relaciones
+      const [staff] = await sequelize.query(`
+        SELECT
+          s.staff_id,
+          s.first_name || ' ' || s.last_name as full_name,
+          s.first_name,
+          s.last_name,
+          s.email,
+          s.phone,
+          s.profile_photo,
+          r.role_name as position,
+          s.hire_date,
+          s.reports_to_staff_id,
+          s.is_active,
+          s.level,
+          s.area,
+          r.role_id,
+          r.role_name,
+          r.role_code,
+          r.level as role_level,
+          r.role_area
+        FROM aponnt_staff s
+        LEFT JOIN aponnt_staff_roles r ON s.role_id = r.role_id
+        WHERE s.is_active = true
+        ORDER BY r.level NULLS LAST, s.first_name
+      `);
+
+      // Obtener todas las posiciones/roles definidos (incluso sin staff)
+      const [allRoles] = await sequelize.query(`
+        SELECT
+          role_id,
+          role_name,
+          role_code,
+          level,
+          role_area,
+          description,
+          reports_to_role_code
+        FROM aponnt_staff_roles
+        ORDER BY level, role_name
+      `);
+
+      // Construir nodos (staff + vacantes)
+      const nodes = this._buildOrgNodes(staff, allRoles);
+
+      // Construir edges (relaciones)
+      const edges = this._buildOrgEdges(staff);
+
+      // Construir árbol jerárquico
+      const tree = this._buildAdvancedHierarchy(nodes);
+
+      // Análisis inteligente
+      const insights = this._analyzeOrgStructure(nodes, edges);
+
+      // Stats agregadas
+      const stats = this._calculateOrgStats(nodes, staff, allRoles);
+
+      return {
+        type: 'aponnt',
+        scannedAt: new Date().toISOString(),
+        nodes,
+        edges,
+        tree,
+        insights,
+        stats
+      };
+
+    } catch (error) {
+      console.error('❌ [BRAIN-ORGCHART] Error en organigrama Aponnt:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener organigrama de empresa (empleados) con análisis inteligente
+   */
+  async getOrgChartCompany(companyId) {
+    console.log(`🧠 [BRAIN-ORGCHART] Generando organigrama inteligente para empresa ${companyId}...`);
+
+    try {
+      const { sequelize } = this.db;
+
+      // Query optimizada con empleados y posiciones
+      const [employees] = await sequelize.query(`
+        SELECT
+          u.user_id,
+          u."firstName" || ' ' || u."lastName" as full_name,
+          u."firstName",
+          u."lastName",
+          u.email,
+          u.phone,
+          u.position,
+          u.hire_date,
+          u.manager_id,
+          u.is_active,
+          d.id as department_id,
+          d.name as department_name,
+          s.id as sector_id,
+          s.name as sector_name,
+          s.display_order as sector_order
+        FROM users u
+        LEFT JOIN departments d ON u.department_id = d.id
+        LEFT JOIN sectors s ON u.sector_id = s.id
+        WHERE u.company_id = :companyId
+          AND u.is_active = true
+        ORDER BY d.name, s.display_order, u."firstName"
+      `, {
+        replacements: { companyId },
+        type: sequelize.QueryTypes.SELECT
+      });
+
+      // Obtener posiciones organizacionales definidas
+      const [positions] = await sequelize.query(`
+        SELECT
+          p.id as position_id,
+          p.position_name,
+          p.position_code,
+          p.description,
+          p.hierarchy_level,
+          p.parent_position_id,
+          p.department_id,
+          p.color_hex,
+          p.can_approve_permissions,
+          p.max_approval_days,
+          COUNT(u.user_id) as assigned_count
+        FROM organizational_positions p
+        LEFT JOIN users u ON u.position = p.position_name AND u.company_id = p.company_id AND u.is_active = true
+        WHERE p.company_id = :companyId
+          AND p.is_active = true
+        GROUP BY p.id
+        ORDER BY p.hierarchy_level, p.position_name
+      `, {
+        replacements: { companyId },
+        type: sequelize.QueryTypes.SELECT
+      });
+
+      // Construir nodos
+      const nodes = this._buildCompanyOrgNodes(employees, positions);
+
+      // Construir edges
+      const edges = this._buildCompanyOrgEdges(employees);
+
+      // Construir árbol
+      const tree = this._buildAdvancedHierarchy(nodes);
+
+      // Análisis inteligente
+      const insights = this._analyzeOrgStructure(nodes, edges);
+
+      // Stats
+      const stats = this._calculateCompanyOrgStats(nodes, employees, positions);
+
+      return {
+        type: 'company',
+        companyId,
+        scannedAt: new Date().toISOString(),
+        nodes,
+        edges,
+        tree,
+        insights,
+        stats
+      };
+
+    } catch (error) {
+      console.error(`❌ [BRAIN-ORGCHART] Error en organigrama empresa ${companyId}:`, error);
+      throw error;
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // HELPERS - Construcción de Nodos y Edges
+  // ───────────────────────────────────────────────────────────────────────────
+
+  _buildOrgNodes(staff, allRoles) {
+    const nodes = [];
+    const roleMap = new Map();
+
+    // Mapear roles con su staff asignado
+    allRoles.forEach(role => {
+      roleMap.set(role.role_id, {
+        ...role,
+        staff: []
+      });
+    });
+
+    // Asignar staff a roles
+    staff.forEach(s => {
+      if (s.role_id && roleMap.has(s.role_id)) {
+        roleMap.get(s.role_id).staff.push(s);
+      }
+    });
+
+    // Crear nodos (incluyendo vacantes)
+    roleMap.forEach((role, roleId) => {
+      if (role.staff.length > 0) {
+        // Rol con staff asignado
+        role.staff.forEach((s, idx) => {
+          nodes.push({
+            id: `staff_${s.staff_id}`,
+            entityId: s.staff_id,
+            type: 'staff',
+            name: s.full_name,
+            firstName: s.first_name,
+            lastName: s.last_name,
+            email: s.email,
+            phone: s.phone,
+            profile_photo: s.profile_photo,
+            position: s.position,
+            hireDate: s.hire_date,
+            role: role.role_name,
+            roleCode: role.role_code,
+            level: role.level || 99,
+            area: role.role_area || 'general',
+            reportsTo: s.reports_to_staff_id ? `staff_${s.reports_to_staff_id}` : null,
+            isVacant: false,
+            avatar: this._generateAvatar(s.full_name)
+          });
+        });
+      } else {
+        // Rol vacante (sin staff)
+        nodes.push({
+          id: `vacant_role_${roleId}`,
+          entityId: roleId,
+          type: 'vacant',
+          name: role.role_name,
+          position: role.role_name,
+          role: role.role_name,
+          roleCode: role.role_code,
+          level: role.level || 99,
+          area: role.role_area || 'general',
+          reportsTo: role.reports_to_role_code ? `vacant_role_${role.reports_to_role_code}` : null,
+          isVacant: true,
+          vacancyReason: 'Sin asignar',
+          avatar: '❓'
+        });
+      }
+    });
+
+    return nodes;
+  }
+
+  _buildCompanyOrgNodes(employees, positions) {
+    const nodes = [];
+    const positionMap = new Map();
+
+    // Mapear posiciones
+    positions.forEach(pos => {
+      positionMap.set(pos.position_id, pos);
+    });
+
+    // Crear nodos de empleados
+    employees.forEach(emp => {
+      nodes.push({
+        id: `user_${emp.user_id}`,
+        entityId: emp.user_id,
+        type: 'employee',
+        name: emp.full_name,
+        firstName: emp.firstName,
+        lastName: emp.lastName,
+        email: emp.email,
+        phone: emp.phone,
+        position: emp.position,
+        hireDate: emp.hire_date,
+        department: emp.department_name,
+        departmentId: emp.department_id,
+        sector: emp.sector_name,
+        sectorId: emp.sector_id,
+        level: 4, // Por defecto operativo, se puede mejorar con lógica
+        reportsTo: emp.manager_id ? `user_${emp.manager_id}` : null,
+        isVacant: false,
+        avatar: this._generateAvatar(emp.full_name)
+      });
+    });
+
+    // Agregar posiciones vacantes
+    positions.forEach(pos => {
+      if (pos.assigned_count === 0) {
+        nodes.push({
+          id: `vacant_pos_${pos.position_id}`,
+          entityId: pos.position_id,
+          type: 'vacant',
+          name: pos.position_name,
+          position: pos.position_name,
+          positionCode: pos.position_code,
+          level: pos.hierarchy_level || 99,
+          department: null,
+          reportsTo: pos.parent_position_id ? `vacant_pos_${pos.parent_position_id}` : null,
+          isVacant: true,
+          vacancyReason: 'Posición sin cubrir',
+          color: pos.color_hex,
+          avatar: '❓'
+        });
+      }
+    });
+
+    return nodes;
+  }
+
+  _buildOrgEdges(staff) {
+    const edges = [];
+    staff.forEach(s => {
+      if (s.reports_to_staff_id) {
+        edges.push({
+          from: `staff_${s.staff_id}`,
+          to: `staff_${s.reports_to_staff_id}`,
+          type: 'reports_to',
+          strength: 1
+        });
+      }
+    });
+    return edges;
+  }
+
+  _buildCompanyOrgEdges(employees) {
+    const edges = [];
+    employees.forEach(emp => {
+      if (emp.manager_id) {
+        edges.push({
+          from: `user_${emp.user_id}`,
+          to: `user_${emp.manager_id}`,
+          type: 'reports_to',
+          strength: 1
+        });
+      }
+    });
+    return edges;
+  }
+
+  _buildAdvancedHierarchy(nodes) {
+    const map = new Map();
+    const roots = [];
+
+    // Crear mapa
+    nodes.forEach(n => {
+      map.set(n.id, { ...n, children: [], directReports: 0 });
+    });
+
+    // Construir árbol
+    nodes.forEach(n => {
+      const node = map.get(n.id);
+      if (n.reportsTo && map.has(n.reportsTo)) {
+        const parent = map.get(n.reportsTo);
+        parent.children.push(node);
+        parent.directReports++;
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // ANÁLISIS INTELIGENTE - Brain Insights
+  // ───────────────────────────────────────────────────────────────────────────
+
+  _analyzeOrgStructure(nodes, edges) {
+    const insights = {
+      bottlenecks: [],
+      vacancies: [],
+      orphans: [],
+      recommendations: [],
+      healthScore: 100
+    };
+
+    // Detectar bottlenecks (managers con >8 reportes directos)
+    const reportCounts = new Map();
+    edges.forEach(edge => {
+      reportCounts.set(edge.to, (reportCounts.get(edge.to) || 0) + 1);
+    });
+
+    reportCounts.forEach((count, nodeId) => {
+      if (count > 8) {
+        const node = nodes.find(n => n.id === nodeId);
+        insights.bottlenecks.push({
+          nodeId,
+          name: node?.name || 'Unknown',
+          directReports: count,
+          severity: count > 12 ? 'high' : 'medium',
+          recommendation: `Considerar crear posición intermedia. ${node?.name} tiene ${count} reportes directos (ideal: 5-8).`
+        });
+        insights.healthScore -= 5;
+      }
+    });
+
+    // Detectar vacantes
+    const vacantNodes = nodes.filter(n => n.isVacant);
+    vacantNodes.forEach(v => {
+      insights.vacancies.push({
+        nodeId: v.id,
+        position: v.name,
+        level: v.level,
+        area: v.area,
+        priority: v.level <= 2 ? 'high' : 'medium'
+      });
+      insights.healthScore -= (v.level <= 2 ? 3 : 1);
+    });
+
+    // Detectar huérfanos (empleados sin manager)
+    const orphanNodes = nodes.filter(n => !n.isVacant && !n.reportsTo && n.level > 0);
+    orphanNodes.forEach(o => {
+      insights.orphans.push({
+        nodeId: o.id,
+        name: o.name,
+        position: o.position,
+        recommendation: `Asignar manager a ${o.name}`
+      });
+      insights.healthScore -= 2;
+    });
+
+    // Generar recomendaciones generales
+    if (insights.bottlenecks.length > 0) {
+      insights.recommendations.push({
+        type: 'structure',
+        priority: 'high',
+        message: `Se detectaron ${insights.bottlenecks.length} bottlenecks organizacionales. Considere reestructurar.`
+      });
+    }
+
+    if (vacantNodes.length > 3) {
+      insights.recommendations.push({
+        type: 'hiring',
+        priority: 'medium',
+        message: `${vacantNodes.length} posiciones vacantes detectadas. Priorizar reclutamiento.`
+      });
+    }
+
+    insights.healthScore = Math.max(0, insights.healthScore);
+
+    return insights;
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // STATS CALCULADOS
+  // ───────────────────────────────────────────────────────────────────────────
+
+  _calculateOrgStats(nodes, staff, allRoles) {
+    const byLevel = {};
+    const byArea = {};
+
+    nodes.forEach(n => {
+      // Por nivel
+      byLevel[n.level] = (byLevel[n.level] || 0) + 1;
+
+      // Por área
+      if (n.area) {
+        byArea[n.area] = (byArea[n.area] || 0) + 1;
+      }
+    });
+
+    return {
+      totalNodes: nodes.length,
+      totalStaff: staff.length,
+      totalRoles: allRoles.length,
+      vacancies: nodes.filter(n => n.isVacant).length,
+      byLevel,
+      byArea,
+      avgDirectReports: staff.length > 0 ? (staff.filter(s => s.reports_to_staff_id).length / staff.length).toFixed(2) : 0
+    };
+  }
+
+  _calculateCompanyOrgStats(nodes, employees, positions) {
+    const byLevel = {};
+    const byDepartment = {};
+
+    nodes.forEach(n => {
+      byLevel[n.level] = (byLevel[n.level] || 0) + 1;
+
+      if (n.department) {
+        byDepartment[n.department] = (byDepartment[n.department] || 0) + 1;
+      }
+    });
+
+    return {
+      totalNodes: nodes.length,
+      totalEmployees: employees.length,
+      totalPositions: positions.length,
+      vacancies: nodes.filter(n => n.isVacant).length,
+      byLevel,
+      byDepartment,
+      avgDirectReports: employees.length > 0 ? (employees.filter(e => e.manager_id).length / employees.length).toFixed(2) : 0
+    };
+  }
+
+  _generateAvatar(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -3320,6 +3824,384 @@ class EcosystemBrainService {
       return this.learningPatterns.get(moduleKey);
     }
     return Object.fromEntries(this.learningPatterns);
+  }
+
+  /**
+   * ============================================================================
+   * ⭐ NUEVO: DETECCIÓN DE PIEZAS SUELTAS (LOOSE PIECES)
+   * ============================================================================
+   *
+   * Detecta archivos y módulos que existen pero NO están conectados/registrados:
+   * - Routes sin modelo
+   * - Servicios sin routes
+   * - Frontends sin backend
+   * - Archivos sin referencias
+   * - Código muerto
+   */
+  async detectLoosePieces() {
+    console.log('\n🔍 [BRAIN] Detectando piezas sueltas en el código...');
+
+    const loosePieces = {
+      timestamp: new Date().toISOString(),
+      summary: {
+        totalLoosePieces: 0,
+        byCategory: {}
+      },
+      categories: {
+        routesWithoutModel: [],
+        servicesWithoutRoutes: [],
+        frontendsWithoutBackend: [],
+        unreferencedFiles: [],
+        orphanedModules: []
+      }
+    };
+
+    try {
+      // 1. Escanear rutas y modelos
+      const routesFiles = this.scanDirectory(path.join(this.baseDir, 'src/routes'), '.js');
+      const modelsFiles = this.scanDirectory(path.join(this.baseDir, 'src/models'), '.js');
+
+      // Extraer nombres de modelos
+      const modelNames = modelsFiles.map(f => {
+        const basename = path.basename(f, '.js');
+        return basename.toLowerCase();
+      });
+
+      console.log(`   📂 Routes escaneados: ${routesFiles.length}`);
+      console.log(`   📂 Modelos encontrados: ${modelNames.length}`);
+
+      // Detectar routes sin modelo asociado
+      for (const routeFile of routesFiles) {
+        try {
+          const routeName = path.basename(routeFile, '.js')
+            .replace('Routes', '')
+            .replace('routes', '')
+            .toLowerCase();
+
+          // Skip archivos especiales
+          if (routeName === 'index' || routeName.includes('test')) continue;
+
+          // Buscar modelo correspondiente
+          const hasModel = modelNames.some(m =>
+            m === routeName ||
+            m === routeName + 's' ||
+            m === routeName.slice(0, -1) // singular
+          );
+
+          if (!hasModel) {
+            // Leer archivo para verificar si usa sequelize
+            const content = fsSync.readFileSync(routeFile, 'utf8');
+            if (content.includes('sequelize') || content.includes('db.')) {
+              loosePieces.categories.routesWithoutModel.push({
+                file: path.relative(this.baseDir, routeFile),
+                routeName,
+                severity: 'medium',
+                suggestion: `Considerar crear modelo ${routeName}.js en src/models/`
+              });
+            }
+          }
+        } catch (e) {
+          // Ignorar errores de lectura
+        }
+      }
+
+      // 2. Detectar servicios sin routes
+      const servicesFiles = this.scanDirectory(path.join(this.baseDir, 'src/services'), '.js');
+
+      console.log(`   📂 Servicios escaneados: ${servicesFiles.length}`);
+
+      for (const serviceFile of servicesFiles) {
+        try {
+          const serviceName = path.basename(serviceFile, '.js')
+            .replace('Service', '')
+            .replace('service', '')
+            .toLowerCase();
+
+          // Skip archivos especiales
+          if (serviceName.includes('brain') || serviceName.includes('test')) continue;
+
+          // Buscar route correspondiente
+          const hasRoute = routesFiles.some(r => {
+            const routeName = path.basename(r, '.js').toLowerCase();
+            return routeName.includes(serviceName);
+          });
+
+          if (!hasRoute) {
+            // Verificar si el servicio está siendo usado
+            let isReferenced = false;
+            for (const routeFile of routesFiles) {
+              const content = fsSync.readFileSync(routeFile, 'utf8');
+              if (content.includes(path.basename(serviceFile))) {
+                isReferenced = true;
+                break;
+              }
+            }
+
+            if (!isReferenced) {
+              loosePieces.categories.servicesWithoutRoutes.push({
+                file: path.relative(this.baseDir, serviceFile),
+                serviceName,
+                severity: 'low',
+                suggestion: `Servicio no referenciado - considerar eliminar o crear route ${serviceName}Routes.js`
+              });
+            }
+          }
+        } catch (e) {
+          // Ignorar errores
+        }
+      }
+
+      // 3. Detectar frontends sin backend
+      const frontendModules = this.scanDirectory(path.join(this.baseDir, 'public/js/modules'), '.js');
+
+      console.log(`   📂 Módulos frontend escaneados: ${frontendModules.length}`);
+
+      for (const frontendFile of frontendModules) {
+        try {
+          const moduleName = path.basename(frontendFile, '.js')
+            .replace('-dashboard', '')
+            .replace('dashboard', '')
+            .toLowerCase();
+
+          // Leer contenido del frontend
+          const content = fsSync.readFileSync(frontendFile, 'utf8');
+
+          // Buscar fetch API calls
+          const fetchRegex = /fetch\(['"`]([^'"`]+)['")`]/g;
+          const apiCalls = [];
+          let match;
+
+          while ((match = fetchRegex.exec(content)) !== null) {
+            apiCalls.push(match[1]);
+          }
+
+          if (apiCalls.length > 0) {
+            // Verificar si todos los endpoints existen
+            for (const apiCall of apiCalls.slice(0, 10)) { // Limitar a 10
+              // Extraer endpoint base (sin query params)
+              const endpoint = apiCall.split('?')[0];
+
+              // Buscar en routes files
+              let found = false;
+              for (const routeFile of routesFiles) {
+                const routeContent = fsSync.readFileSync(routeFile, 'utf8');
+                if (routeContent.includes(endpoint)) {
+                  found = true;
+                  break;
+                }
+              }
+
+              if (!found && endpoint.startsWith('/api/')) {
+                loosePieces.categories.frontendsWithoutBackend.push({
+                  file: path.relative(this.baseDir, frontendFile),
+                  endpoint,
+                  severity: 'high',
+                  suggestion: `Endpoint ${endpoint} llamado desde frontend pero no encontrado en backend`
+                });
+              }
+            }
+          }
+        } catch (e) {
+          // Ignorar errores
+        }
+      }
+
+      // 4. Calcular totales
+      loosePieces.summary.totalLoosePieces =
+        loosePieces.categories.routesWithoutModel.length +
+        loosePieces.categories.servicesWithoutRoutes.length +
+        loosePieces.categories.frontendsWithoutBackend.length;
+
+      loosePieces.summary.byCategory = {
+        routesWithoutModel: loosePieces.categories.routesWithoutModel.length,
+        servicesWithoutRoutes: loosePieces.categories.servicesWithoutRoutes.length,
+        frontendsWithoutBackend: loosePieces.categories.frontendsWithoutBackend.length
+      };
+
+      console.log(`\n✅ [BRAIN] Detección completada:`);
+      console.log(`   Total piezas sueltas: ${loosePieces.summary.totalLoosePieces}`);
+      console.log(`   - Routes sin modelo: ${loosePieces.summary.byCategory.routesWithoutModel}`);
+      console.log(`   - Servicios sin routes: ${loosePieces.summary.byCategory.servicesWithoutRoutes}`);
+      console.log(`   - Frontends sin backend: ${loosePieces.summary.byCategory.frontendsWithoutBackend}`);
+
+      return loosePieces;
+
+    } catch (error) {
+      console.error('❌ [BRAIN] Error detectando piezas sueltas:', error);
+      return {
+        error: true,
+        message: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * ============================================================================
+   * ESCANEO DE BASE DE DATOS - Schema Vivo desde Sequelize
+   * ============================================================================
+   * Escanea los modelos Sequelize para generar schema de BD en tiempo real.
+   * Para cada campo, detecta qué módulos/procesos del código lo usan.
+   */
+  async getDatabaseSchema() {
+    console.log('\n🗄️ [BRAIN] Generando Database Schema desde Sequelize...');
+
+    try {
+      const schema = {};
+      const modificationRules = [
+        '⚠️ Antes de modificar un campo, revisar qué módulos lo usan',
+        '🔍 Si un campo dice CRÍTICO (>10 módulos), NO eliminarlo sin migración',
+        '📝 Si un campo dice CUIDADO (5-10 módulos), planificar cambios',
+        '✅ Si un campo dice SEGURO (<5 módulos), cambios más seguros'
+      ];
+
+      // Si no tenemos acceso a modelos, retornar vacío
+      if (!this.db || !this.db.sequelize || !this.db.sequelize.models) {
+        console.log('   ⚠️ No hay modelos Sequelize disponibles');
+        return {
+          schema: {},
+          modificationRules,
+          scannedAt: new Date().toISOString(),
+          source: 'NO_MODELS'
+        };
+      }
+
+      const models = this.db.sequelize.models;
+      console.log(`   Escaneando ${Object.keys(models).length} modelos Sequelize...`);
+
+      // Por cada modelo de Sequelize
+      for (const [modelName, model] of Object.entries(models)) {
+        const tableName = model.tableName || modelName;
+        const attributes = model.rawAttributes || model.fieldRawAttributesMap || {};
+
+        console.log(`   📋 Escaneando tabla: ${tableName} (${Object.keys(attributes).length} campos)`);
+
+        const fields = [];
+
+        // Por cada campo del modelo
+        for (const [fieldName, fieldDef] of Object.entries(attributes)) {
+          // Detectar tipo de dato
+          let type = 'UNKNOWN';
+          if (fieldDef.type) {
+            type = fieldDef.type.constructor?.name || fieldDef.type.toString();
+            // Simplificar nombres largos de Sequelize
+            type = type.replace('DataTypes.', '').replace('Sequelize.', '');
+          }
+
+          // Detectar si es nullable
+          const nullable = fieldDef.allowNull !== false;
+
+          // Detectar qué módulos usan este campo
+          const usedBy = await this.detectFieldUsage(tableName, fieldName);
+
+          fields.push({
+            name: fieldName,
+            type,
+            nullable,
+            usedBy,
+            primaryKey: fieldDef.primaryKey || false,
+            autoIncrement: fieldDef.autoIncrement || false,
+            defaultValue: fieldDef.defaultValue !== undefined ? String(fieldDef.defaultValue) : null
+          });
+        }
+
+        schema[tableName] = {
+          model: modelName,
+          fields,
+          totalFields: fields.length
+        };
+      }
+
+      console.log(`\n✅ [BRAIN] Database Schema generado:`);
+      console.log(`   Tablas: ${Object.keys(schema).length}`);
+      console.log(`   Campos totales: ${Object.values(schema).reduce((sum, t) => sum + t.fields.length, 0)}`);
+
+      return {
+        schema,
+        modificationRules,
+        scannedAt: new Date().toISOString(),
+        source: 'LIVE_SEQUELIZE',
+        stats: {
+          totalTables: Object.keys(schema).length,
+          totalFields: Object.values(schema).reduce((sum, t) => sum + t.fields.length, 0)
+        }
+      };
+
+    } catch (error) {
+      console.error('❌ [BRAIN] Error generando Database Schema:', error);
+      return {
+        error: true,
+        message: error.message,
+        schema: {},
+        modificationRules: [],
+        scannedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Detectar en qué módulos/archivos se usa un campo específico de una tabla
+   * Escanea código buscando referencias a tableName.fieldName o fieldName
+   */
+  async detectFieldUsage(tableName, fieldName) {
+    const usedBy = [];
+    const searchPatterns = [
+      new RegExp(`['"\`]${fieldName}['"\`]`, 'g'), // "fieldName" en queries
+      new RegExp(`\\.${fieldName}\\b`, 'g'),       // .fieldName
+      new RegExp(`${tableName}\\.${fieldName}`, 'g') // tableName.fieldName
+    ];
+
+    try {
+      // Escanear archivos backend
+      const backendFiles = [
+        ...this.scanDirectory(path.join(this.baseDir, 'src/routes'), '.js', true),
+        ...this.scanDirectory(path.join(this.baseDir, 'src/services'), '.js', true),
+        ...this.scanDirectory(path.join(this.baseDir, 'src/controllers'), '.js', true)
+      ];
+
+      for (const file of backendFiles) {
+        try {
+          const content = fsSync.readFileSync(file, 'utf8');
+
+          // Verificar si algún pattern coincide
+          const hasMatch = searchPatterns.some(pattern => pattern.test(content));
+
+          if (hasMatch) {
+            const moduleName = path.basename(file, '.js');
+            if (!usedBy.includes(moduleName)) {
+              usedBy.push(moduleName);
+            }
+          }
+        } catch (err) {
+          // Ignorar errores de lectura de archivos individuales
+        }
+      }
+
+      // Escanear archivos frontend (JS modules)
+      const frontendFiles = this.scanDirectory(path.join(this.baseDir, 'public/js/modules'), '.js', true);
+
+      for (const file of frontendFiles) {
+        try {
+          const content = fsSync.readFileSync(file, 'utf8');
+
+          const hasMatch = searchPatterns.some(pattern => pattern.test(content));
+
+          if (hasMatch) {
+            const moduleName = path.basename(file, '.js');
+            if (!usedBy.includes(moduleName)) {
+              usedBy.push(moduleName);
+            }
+          }
+        } catch (err) {
+          // Ignorar errores
+        }
+      }
+
+    } catch (error) {
+      console.error(`   ⚠️ Error detectando uso de ${tableName}.${fieldName}:`, error.message);
+    }
+
+    return usedBy;
   }
 }
 
