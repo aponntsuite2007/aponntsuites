@@ -426,6 +426,7 @@ const EngineeringDashboard = {
   renderNavigation() {
     const tabs = [
       { id: 'overview', icon: '🌍', label: 'Vista General' },
+      { id: 'system-health', icon: '🧠', label: 'Salud del Sistema' },
       { id: 'commercial-modules', icon: '💰', label: 'Módulos Comerciales' },
       { id: 'applications', icon: '📱', label: 'Aplicaciones' },
       { id: 'modules', icon: '📦', label: 'Módulos Técnicos' },
@@ -461,6 +462,18 @@ const EngineeringDashboard = {
     switch (this.currentView) {
       case 'overview':
         return this.renderOverview();
+      case 'system-health':
+        // Cargar salud del sistema dinámicamente
+        setTimeout(() => this.loadSystemHealthView(), 100);
+        return `
+          <div id="system-health-dynamic" style="padding: 20px;">
+            <div style="text-align: center; padding: 50px;">
+              <div style="font-size: 64px; margin-bottom: 20px;">🧠</div>
+              <h2 style="color: #374151;">Cargando Estado del Sistema...</h2>
+              <p style="color: #6b7280;">Obteniendo datos del Brain Orchestrator</p>
+            </div>
+          </div>
+        `;
       case 'commercial-modules':
         // Cargar módulos comerciales dinámicamente
         setTimeout(() => this.loadCommercialModulesView(), 100);
@@ -2787,6 +2800,416 @@ ${extraInstructions ? '📝 NOTAS ADICIONALES: ' + extraInstructions + '\n' : ''
         `;
       }
     }
+  },
+
+  /**
+   * ⭐ NUEVO: Cargar vista de Salud del Sistema (Brain Orchestrator Live)
+   */
+  async loadSystemHealthView() {
+    console.log('🧠 [SYSTEM-HEALTH] Cargando vista de salud del sistema...');
+
+    const container = document.getElementById('system-health-dynamic');
+    if (!container) {
+      console.error('❌ [SYSTEM-HEALTH] Container no encontrado');
+      return;
+    }
+
+    try {
+      // Fetch estado completo del Brain Orchestrator
+      const response = await fetch('/api/engineering/full-system-status');
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || result.message || 'Error obteniendo estado del sistema');
+      }
+
+      const systemStatus = result.data;
+
+      // Renderizar vista con árbol vivo
+      container.innerHTML = this.renderSystemHealthTree(systemStatus);
+
+      // Auto-actualizar cada 5 segundos
+      if (this.systemHealthInterval) {
+        clearInterval(this.systemHealthInterval);
+      }
+
+      this.systemHealthInterval = setInterval(async () => {
+        // Solo actualizar si todavía estamos en la vista system-health
+        if (this.currentView === 'system-health') {
+          await this.loadSystemHealthView();
+        } else {
+          clearInterval(this.systemHealthInterval);
+        }
+      }, 5000);
+
+    } catch (error) {
+      console.error('❌ [SYSTEM-HEALTH] Error:', error);
+      container.innerHTML = `
+        <div style="padding: 40px; text-align: center;">
+          <h3 style="color: #dc2626;">❌ Error al cargar Salud del Sistema</h3>
+          <p style="color: #6b7280;">${error.message}</p>
+          <button onclick="window.EngineeringDashboard.loadSystemHealthView()"
+                  style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 20px;">
+            🔄 Reintentar
+          </button>
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * Renderizar árbol vivo del Brain Orchestrator
+   */
+  renderSystemHealthTree(systemStatus) {
+    const { system, orchestrator, nervousSystem, ecosystemBrain, roadmap, metadataWriter, loosePieces, health } = systemStatus;
+
+    // Iconos de salud
+    const healthIcons = {
+      excellent: '🟢',
+      good: '🟡',
+      degraded: '🟠',
+      critical: '🔴',
+      healthy: '✅',
+      unhealthy: '❌',
+      stopped: '⏸️',
+      unavailable: '⚫'
+    };
+
+    return `
+      <div style="padding: 30px; max-width: 1400px; margin: 0 auto;">
+        <!-- Header -->
+        <div style="margin-bottom: 30px; text-align: center;">
+          <h1 style="color: #111827; margin: 0; display: flex; align-items: center; justify-content: center; gap: 15px;">
+            🧠 Brain Orchestrator
+            <span style="font-size: 48px;">${healthIcons[health.overall]}</span>
+          </h1>
+          <p style="color: #6b7280; margin: 10px 0 0 0; font-size: 18px;">
+            Sistema Nervioso Central - Introspección Completa de Código Vivo
+          </p>
+          <p style="color: #9ca3af; margin: 5px 0 0 0; font-size: 14px;">
+            ⏱️ Uptime: ${system.uptime} | 🔄 Auto-actualización cada 5 segundos
+          </p>
+        </div>
+
+        <!-- ¿Qué es el Brain Orchestrator? - Info expandible -->
+        <details style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; padding: 20px; margin-bottom: 25px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <summary style="font-size: 16px; font-weight: 600; outline: none; user-select: none; list-style: none; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">💡</span>
+            <span>¿Qué es el Brain Orchestrator?</span>
+            <span style="margin-left: auto; font-size: 12px; opacity: 0.8;">Click para expandir</span>
+          </summary>
+          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 13px; line-height: 1.8;">
+            <p style="margin: 0 0 15px 0;">
+              El <strong>Brain Orchestrator</strong> es el <strong>sistema nervioso central</strong> de tu aplicación. Funciona como un "cerebro" que:
+            </p>
+            <ul style="margin: 0; padding-left: 20px; line-height: 2;">
+              <li><strong>🧠 Orquesta 5 agentes IA</strong> especializados (Support, Trainer, Tester, Evaluator, Sales)</li>
+              <li><strong>🧬 Monitorea en tiempo real</strong> errores, health checks, integridad de datos (SSOT)</li>
+              <li><strong>🌍 Escanea TODO tu código</strong> automáticamente (192 módulos, 405K líneas, 2,235 endpoints)</li>
+              <li><strong>📝 Auto-actualiza metadata</strong> cada 5 minutos con datos frescos del código vivo</li>
+              <li><strong>🔍 Detecta piezas sueltas</strong> (código desconectado: routes sin modelo, frontends sin backend)</li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+              <strong>✨ La magia:</strong> El Brain <em>conoce</em> tu código sin configuración manual.
+              Se auto-descubre, se auto-monitorea y mantiene una introspección completa del sistema en todo momento.
+            </p>
+          </div>
+        </details>
+
+        <!-- Leyenda de Estados - Info rápida -->
+        <div style="background: #f9fafb; border-radius: 12px; padding: 15px 20px; margin-bottom: 25px; border: 1px solid #e5e7eb;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <span style="font-size: 14px; font-weight: 600; color: #374151;">📊 Leyenda de Estados:</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; font-size: 12px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px;">🟢</span>
+              <span style="color: #059669;">Excellent</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px;">✅</span>
+              <span style="color: #10b981;">Healthy</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px;">🟡</span>
+              <span style="color: #f59e0b;">Good</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px;">🟠</span>
+              <span style="color: #f97316;">Degraded</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px;">🔴</span>
+              <span style="color: #ef4444;">Critical</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px;">❌</span>
+              <span style="color: #dc2626;">Unhealthy</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Salud General - Health Cards con Tooltips -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
+          ${this.renderHealthCard('Orchestrator', health.orchestrator, orchestrator.activeAgents + orchestrator.activeServices, 'componentes activos', '🧠 Coordina 5 agentes IA + 8 servicios. Es el director de orquesta del sistema.')}
+          ${this.renderHealthCard('Sistema Nervioso', health.nervousSystem, nervousSystem?.errorsDetected || 0, 'errores detectados', '🧬 Monitorea en tiempo real: errores, health checks cada 60s, tests SSOT cada 5 min.')}
+          ${this.renderHealthCard('Ecosystem Brain', health.ecosystemBrain, ecosystemBrain?.totalModules || 0, 'módulos escaneados', '🌍 Escanea TODO el código vivo: 192 módulos, 405K LOC, 2,235 endpoints, 230 tablas.')}
+          ${this.renderHealthCard('Metadata Writer', metadataWriter?.running ? 'healthy' : 'stopped', metadataWriter?.updateCount || 0, 'updates realizados', '📝 Auto-actualiza engineering-metadata.js cada 5 min con datos frescos del Brain.')}
+        </div>
+
+        <!-- Árbol del Brain -->
+        <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 30px;">
+          <h2 style="color: #111827; margin: 0 0 25px 0; font-size: 24px; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px;">
+            🌳 Árbol Vivo del Sistema
+          </h2>
+
+          <!-- Orchestrator: Root -->
+          ${this.renderBrainBranch('🧠 Brain Orchestrator', orchestrator, health.orchestrator, [
+            { label: 'Agentes IA', value: `${orchestrator.activeAgents}/5`, icon: '🤖' },
+            { label: 'Servicios', value: `${orchestrator.activeServices}/8`, icon: '📦' },
+            { label: 'Requests Totales', value: orchestrator.totalRequests.toLocaleString(), icon: '📊' }
+          ], [
+            // Sub-rama: Agentes IA
+            this.renderBrainSubBranch('🤖 Agentes IA', [
+              { name: 'Support AI', stats: orchestrator.agents?.support?.questionsAnswered || 0, label: 'preguntas' },
+              { name: 'Trainer AI', stats: orchestrator.agents?.trainer?.tutorialsCompleted || 0, label: 'tutoriales' },
+              { name: 'Tester AI', stats: orchestrator.agents?.tester?.testsRun || 0, label: 'tests' },
+              { name: 'Evaluator AI', stats: orchestrator.agents?.evaluator?.evaluationsCompleted || 0, label: 'evaluaciones' },
+              { name: 'Sales AI', stats: orchestrator.agents?.sales?.demosCompleted || 0, label: 'demos' }
+            ]),
+
+            // Sub-rama: Servicios Core
+            this.renderBrainSubBranch('📦 Servicios Core', [
+              { name: 'Knowledge DB', stats: orchestrator.services?.knowledgeDB?.totalEntries || 0, label: 'entradas' },
+              { name: 'Tours', stats: orchestrator.services?.tours?.toursAvailable || 0, label: 'tours' },
+              { name: 'NLU', stats: '✅', label: 'activo' }
+            ])
+          ], '🎭 Director de orquesta del sistema. Coordina 5 agentes IA especializados (Support, Trainer, Tester, Evaluator, Sales) y 8 servicios core. Gestiona todas las solicitudes y distribuye trabajo entre agentes.')}
+
+          <!-- Sistema Nervioso -->
+          ${this.renderBrainBranch('🧬 Sistema Nervioso', nervousSystem, health.nervousSystem, [
+            { label: 'Errores Detectados', value: nervousSystem?.errorsDetected || 0, icon: '🔔' },
+            { label: 'Violaciones SSOT', value: nervousSystem?.ssotViolations || 0, icon: '⚠️' },
+            { label: 'Cambios de Archivos', value: nervousSystem?.fileChangesDetected || 0, icon: '📝' },
+            { label: 'Health Checks', value: nervousSystem?.healthChecks || 0, icon: '💓' },
+            { label: 'Incidentes Activos', value: nervousSystem?.activeIncidents || 0, icon: '🚨' }
+          ], [], '💓 Monitoreo en tiempo real. Ejecuta health checks cada 60 segundos (DB, memory, event loop) y tests de integridad SSOT cada 5 minutos. Detecta errores y anomalías automáticamente.')}
+
+          <!-- Ecosystem Brain -->
+          ${this.renderBrainBranch('🌍 Ecosystem Brain', ecosystemBrain, health.ecosystemBrain, [
+            { label: 'Módulos Totales', value: ecosystemBrain?.totalModules || 0, icon: '📦' },
+            { label: 'Archivos Escaneados', value: (ecosystemBrain?.totalFiles || 0).toLocaleString(), icon: '📄' },
+            { label: 'Endpoints', value: (ecosystemBrain?.totalEndpoints || 0).toLocaleString(), icon: '🔌' },
+            { label: 'Líneas de Código', value: (ecosystemBrain?.totalLines || 0).toLocaleString(), icon: '💻' },
+            { label: 'Aplicaciones', value: ecosystemBrain?.applications || 0, icon: '📱' }
+          ], ecosystemBrain?.modulesByCategory ? [
+            this.renderBrainSubBranch('📂 Módulos por Categoría',
+              Object.entries(ecosystemBrain.modulesByCategory).map(([cat, count]) => ({
+                name: cat,
+                stats: count,
+                label: 'módulos'
+              }))
+            )
+          ] : [], '🔍 Introspección de código vivo. Escanea TODO el código automáticamente sin configuración: detecta módulos, endpoints, archivos, workflows. Genera metadata fresco continuamente.')}
+
+          <!-- Roadmap -->
+          ${this.renderBrainBranch('🗺️ Roadmap', roadmap, 'healthy', [
+            { label: 'Fases Totales', value: roadmap?.totalPhases || 0, icon: '📋' },
+            { label: 'Completadas', value: roadmap?.completedPhases || 0, icon: '✅' },
+            { label: 'En Progreso', value: roadmap?.inProgressPhases || 0, icon: '🔄' },
+            { label: 'Planeadas', value: roadmap?.plannedPhases || 0, icon: '📝' }
+          ], [], '🗺️ Gestión de proyecto. Tracking de fases, tareas, progreso. Incluye cálculo de camino crítico (CPM) y diagramas PERT para planificación óptima.')}
+
+          <!-- Metadata Writer -->
+          ${this.renderBrainBranch('📝 Metadata Writer', metadataWriter, metadataWriter?.running ? 'healthy' : 'stopped', [
+            { label: 'Estado', value: metadataWriter?.running ? 'Activo' : 'Detenido', icon: metadataWriter?.running ? '🟢' : '🔴' },
+            { label: 'Última Actualización', value: metadataWriter?.lastUpdate ? new Date(metadataWriter.lastUpdate).toLocaleTimeString() : 'N/A', icon: '⏰' },
+            { label: 'Updates Totales', value: metadataWriter?.updateCount || 0, icon: '🔄' }
+          ], [], '⏰ Auto-actualización periódica. Reescribe engineering-metadata.js cada 5 minutos con datos frescos del Ecosystem Brain. Mantiene backups automáticos (últimos 10).')}
+
+          <!-- Piezas Sueltas (Loose Pieces Detection) -->
+          ${this.renderBrainBranch('🔍 Detección de Piezas Sueltas',
+            loosePieces,
+            loosePieces?.totalLoosePieces > 0 ? 'unhealthy' : 'healthy', [
+            { label: 'Total Detectadas', value: loosePieces?.totalLoosePieces || 0, icon: loosePieces?.totalLoosePieces > 0 ? '⚠️' : '✅' },
+            { label: 'Routes sin Modelo', value: loosePieces?.byCategory?.routesWithoutModel || 0, icon: '📂' },
+            { label: 'Servicios sin Routes', value: loosePieces?.byCategory?.servicesWithoutRoutes || 0, icon: '⚙️' },
+            { label: 'Frontends sin Backend', value: loosePieces?.byCategory?.frontendsWithoutBackend || 0, icon: '🎨' }
+          ], loosePieces?.totalLoosePieces > 0 ? [
+            this.renderLoosePiecesDetails(loosePieces.categories)
+          ] : [], '🔎 Detección de arquitectura. Identifica código desconectado: routes sin modelos (severidad medium), servicios sin routes (low), frontends sin backend (high). Ayuda a optimizar la arquitectura.')}
+        </div>
+
+        <!-- Alerta de Piezas Sueltas -->
+        ${loosePieces?.totalLoosePieces > 0 ? `
+          <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin-top: 20px; border-left: 4px solid #f59e0b;">
+            <h3 style="color: #92400e; margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px;">
+              ⚠️ Piezas Sueltas Detectadas
+            </h3>
+            <p style="color: #78350f; margin: 0 0 10px 0; font-size: 14px;">
+              El Brain detectó ${loosePieces.totalLoosePieces} componentes que no están conectados o referenciados.
+              Revisa los detalles arriba para optimizar la arquitectura.
+            </p>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  /**
+   * Renderizar card de salud
+   */
+  renderHealthCard(title, status, value, label, tooltip = '') {
+    const healthIcons = {
+      excellent: '🟢',
+      good: '🟡',
+      degraded: '🟠',
+      critical: '🔴',
+      healthy: '✅',
+      unhealthy: '❌',
+      stopped: '⏸️',
+      unavailable: '⚫'
+    };
+
+    const colors = {
+      excellent: '#10b981',
+      good: '#f59e0b',
+      degraded: '#f97316',
+      critical: '#ef4444',
+      healthy: '#10b981',
+      unhealthy: '#ef4444',
+      stopped: '#6b7280',
+      unavailable: '#9ca3af'
+    };
+
+    const icon = healthIcons[status] || '⚫';
+    const color = colors[status] || '#6b7280';
+
+    return `
+      <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid ${color}; position: relative; transition: transform 0.2s, box-shadow 0.2s; cursor: help;"
+           onmouseenter="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+           onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'"
+           title="${tooltip.replace(/"/g, '&quot;')}">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+          <span style="font-size: 24px;">${icon}</span>
+          <h3 style="margin: 0; color: #374151; font-size: 14px; font-weight: 600;">${title}</h3>
+        </div>
+        <div style="font-size: 32px; font-weight: 700; color: ${color}; margin-bottom: 5px;">${value}</div>
+        <div style="color: #6b7280; font-size: 12px;">${label}</div>
+        ${tooltip ? `
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0; color: #6b7280; font-size: 11px; line-height: 1.5;">${tooltip}</p>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  /**
+   * Renderizar rama del Brain
+   */
+  renderBrainBranch(title, data, status, metrics, subBranches = [], description = '') {
+    if (!data) return '';
+
+    const healthIcons = {
+      healthy: '✅',
+      unhealthy: '❌',
+      stopped: '⏸️',
+      unavailable: '⚫'
+    };
+
+    const icon = healthIcons[status] || '⚫';
+
+    return `
+      <div style="margin-bottom: 25px; padding-left: 20px; border-left: 3px solid #e5e7eb;">
+        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 18px; display: flex; align-items: center; gap: 10px;">
+          ${title} ${icon}
+        </h3>
+
+        ${description ? `
+          <div style="background: #eff6ff; padding: 10px 12px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #3b82f6;">
+            <p style="margin: 0; color: #1e40af; font-size: 12px; line-height: 1.6;">${description}</p>
+          </div>
+        ` : ''}
+
+        <!-- Métricas -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+          ${metrics.map(m => `
+            <div style="background: #f9fafb; padding: 12px; border-radius: 6px; border-left: 3px solid #3b82f6;">
+              <div style="color: #6b7280; font-size: 12px; margin-bottom: 4px;">${m.icon} ${m.label}</div>
+              <div style="color: #111827; font-size: 20px; font-weight: 600;">${m.value}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Sub-ramas -->
+        ${subBranches.join('')}
+      </div>
+    `;
+  },
+
+  /**
+   * Renderizar sub-rama del Brain
+   */
+  renderBrainSubBranch(title, items) {
+    return `
+      <div style="margin-left: 25px; margin-top: 15px; padding-left: 15px; border-left: 2px dashed #d1d5db;">
+        <h4 style="color: #374151; margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">${title}</h4>
+        <div style="display: grid; gap: 8px;">
+          ${items.map(item => `
+            <div style="background: #f3f4f6; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="color: #374151;">${item.name}</span>
+              <span style="color: #3b82f6; font-weight: 600;">${item.stats} ${item.label}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Renderizar detalles de piezas sueltas
+   */
+  renderLoosePiecesDetails(categories) {
+    const allPieces = [
+      ...(categories.routesWithoutModel || []).map(p => ({ ...p, category: 'Routes sin Modelo', icon: '📂' })),
+      ...(categories.servicesWithoutRoutes || []).map(p => ({ ...p, category: 'Servicios sin Routes', icon: '⚙️' })),
+      ...(categories.frontendsWithoutBackend || []).map(p => ({ ...p, category: 'Frontends sin Backend', icon: '🎨' }))
+    ];
+
+    if (allPieces.length === 0) return '';
+
+    // Severity colors
+    const severityColors = {
+      high: '#dc2626',
+      medium: '#f59e0b',
+      low: '#6b7280'
+    };
+
+    return `
+      <div style="margin-left: 25px; margin-top: 15px; padding: 15px; background: #fef3c7; border-radius: 6px; border-left: 3px solid #f59e0b;">
+        <h4 style="color: #92400e; margin: 0 0 15px 0; font-size: 14px; font-weight: 600;">⚠️ Detalles de Piezas Sueltas</h4>
+        <div style="display: grid; gap: 10px; max-height: 400px; overflow-y: auto;">
+          ${allPieces.map(piece => `
+            <div style="background: white; padding: 12px; border-radius: 4px; border-left: 3px solid ${severityColors[piece.severity] || '#6b7280'};">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="font-size: 16px;">${piece.icon}</span>
+                <span style="color: #374151; font-weight: 600; font-size: 12px;">${piece.category}</span>
+                <span style="background: ${severityColors[piece.severity] || '#6b7280'}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 10px; text-transform: uppercase;">
+                  ${piece.severity}
+                </span>
+              </div>
+              <div style="color: #6b7280; font-size: 12px; font-family: 'Courier New', monospace; margin-bottom: 6px;">
+                📄 ${piece.file || piece.routeName || piece.serviceName || piece.endpoint}
+              </div>
+              <div style="color: #3b82f6; font-size: 11px; font-style: italic;">
+                💡 ${piece.suggestion}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
   },
 
   /**
