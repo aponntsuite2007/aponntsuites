@@ -652,6 +652,113 @@ class NotificationUnifiedService {
     }
 
     /**
+     * Obtener cadena de escalamiento completa SIN HUECOS
+     * Usa la función PostgreSQL get_complete_escalation_chain()
+     *
+     * @param {string} userId - UUID del usuario origen
+     * @param {number} companyId - ID de la empresa
+     * @param {string} notificationType - Tipo de notificación (opcional)
+     * @param {string} partnerCategory - Categoría del partner: medical, legal, hse (opcional)
+     * @returns {Promise<Array>} Cadena de escalamiento con 3 niveles garantizados
+     */
+    async getCompleteEscalationChain(userId, companyId, notificationType = null, partnerCategory = null) {
+        try {
+            console.log(`[ESCALATION] Obteniendo cadena completa - userId: ${userId}, companyId: ${companyId}, partnerCategory: ${partnerCategory}`);
+
+            const query = `
+                SELECT * FROM get_complete_escalation_chain($1, $2, $3, $4)
+            `;
+
+            const chain = await sequelize.query(query, {
+                bind: [userId, companyId, notificationType, partnerCategory],
+                type: QueryTypes.SELECT
+            });
+
+            console.log(`[ESCALATION] Cadena obtenida con ${chain.length} niveles:`,
+                chain.map(c => `${c.level}: ${c.role_type} (${c.user_name || 'N/A'})`).join(', ')
+            );
+
+            // Validar que tenemos al menos un nivel (debería tener 3)
+            if (chain.length === 0) {
+                console.error('[ESCALATION] ❌ ERROR CRÍTICO: Cadena de escalamiento vacía - violación de regla sin huecos');
+                throw new Error('No se pudo construir cadena de escalamiento - esto no debería pasar');
+            }
+
+            // Formatear cadena para uso en notificaciones
+            return chain.map(level => ({
+                level: level.level,
+                roleType: level.role_type,
+                userId: level.user_id,
+                userName: level.user_name,
+                userEmail: level.user_email,
+                isFallback: level.fallback_to_general_manager,
+                notes: level.notes
+            }));
+
+        } catch (error) {
+            console.error('[ESCALATION] Error obteniendo cadena de escalamiento:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Resolver destinatario para partners
+     * Si partner_category está presente, busca:
+     * 1. Partner activo
+     * 2. Partner sustituto (si está en periodo de sustitución)
+     * 3. Coordinador de partners de la empresa
+     *
+     * @param {number} companyId - ID de la empresa
+     * @param {string} partnerCategory - Categoría: medical, legal, hse
+     * @returns {Promise<Object|null>} Datos del destinatario resuelto
+     */
+    async resolvePartnerRecipient(companyId, partnerCategory) {
+        try {
+            console.log(`[PARTNER] Resolviendo partner para companyId: ${companyId}, category: ${partnerCategory}`);
+
+            // TODO: Aquí iría la lógica para buscar el partner activo
+            // Por ahora, buscar directamente al coordinador como fallback
+            const coordinatorQuery = `
+                SELECT
+                    id,
+                    coordinator_user_id,
+                    coordinator_name,
+                    coordinator_email,
+                    coordinator_phone
+                FROM partner_coordinators
+                WHERE company_id = $1
+                  AND partner_category = $2
+                  AND is_active = TRUE
+                LIMIT 1
+            `;
+
+            const [coordinator] = await sequelize.query(coordinatorQuery, {
+                bind: [companyId, partnerCategory],
+                type: QueryTypes.SELECT
+            });
+
+            if (coordinator) {
+                console.log(`[PARTNER] Coordinador encontrado: ${coordinator.coordinator_name}`);
+                return {
+                    recipientType: 'partner_coordinator',
+                    recipientId: coordinator.coordinator_user_id,
+                    recipientName: coordinator.coordinator_name,
+                    recipientEmail: coordinator.coordinator_email,
+                    partnerCoordinatorId: coordinator.id,
+                    resolvedFrom: 'partner_coordinator'
+                };
+            }
+
+            console.log(`[PARTNER] No se encontró coordinador para category: ${partnerCategory}`);
+            return null;
+
+        } catch (error) {
+            console.error('[PARTNER] Error resolviendo partner:', error);
+            return null;
+        }
+    }
+
+    /**
      * Procesar paso de workflow
      */
     async processWorkflowStep(notification, action, userId) {

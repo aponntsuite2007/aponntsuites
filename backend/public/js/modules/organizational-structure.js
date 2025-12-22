@@ -1342,93 +1342,107 @@ const OrgEngine = {
     },
 
     // ========================================================================
-    // ORGCHART TAB - Organigrama Visual
+    // ORGCHART TAB - Organigrama Visual INTELIGENTE
     // ========================================================================
     async renderOrgChart() {
         const content = document.getElementById('org-tab-content');
 
         content.innerHTML = `
-            <div class="org-content-header">
-                <h3 class="org-content-title">📊 Organigrama Empresarial</h3>
-                <div class="org-toolbar">
-                    <button class="org-btn org-btn-secondary" onclick="OrgEngine.refreshOrgChart()">
-                        🔄 Actualizar
-                    </button>
-                    <button class="org-btn org-btn-secondary" onclick="OrgEngine.exportOrgChart()">
-                        📥 Exportar SVG
-                    </button>
-                    <button class="org-btn org-btn-primary" onclick="OrgEngine.showTab('positions')">
-                        + Gestionar Posiciones
-                    </button>
-                </div>
-            </div>
-            <div id="orgchart-container" style="height: calc(100vh - 280px); min-height: 500px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; position: relative; overflow: hidden;">
-                <div class="org-loading" id="orgchart-loading">
-                    <div class="org-spinner"></div>
-                    <span>Cargando organigrama...</span>
+            <div id="orgchart-intelligent-container-company" style="height: calc(100vh - 240px); min-height: 600px;">
+                <div class="org-loading" style="padding: 60px; text-align: center;">
+                    <div class="org-spinner" style="margin: 0 auto 20px;"></div>
+                    <span style="color: rgba(255,255,255,0.7);">Cargando organigrama inteligente...</span>
                 </div>
             </div>
         `;
 
-        // Cargar y ejecutar el módulo de organigrama
-        await this.loadOrgChartModule();
+        // Cargar componente inteligente
+        setTimeout(() => this._initOrgChartIntelligent(), 100);
     },
 
-    async loadOrgChartModule() {
-        try {
-            // Verificar si ya está cargado
-            if (typeof window.orgchartModule !== 'undefined') {
-                console.log('📊 [ORGCHART] Módulo ya cargado, inicializando...');
-                await window.orgchartModule.init('orgchart-container');
-                return;
-            }
+    async _initOrgChartIntelligent() {
+        // Obtener company_id del usuario logueado
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const companyId = user.company_id;
 
-            // Cargar script dinámicamente
+        if (!companyId) {
+            document.getElementById('orgchart-intelligent-container-company').innerHTML = `
+                <div style="text-align: center; padding: 60px; color: #ef4444;">
+                    <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
+                    <div style="font-size: 1.1rem;">No se pudo obtener el ID de la empresa</div>
+                    <div style="font-size: 0.9rem; margin-top: 8px; color: rgba(255,255,255,0.6);">Verifica que hayas iniciado sesión correctamente</div>
+                </div>
+            `;
+            return;
+        }
+
+        // Cargar el script si no está ya cargado
+        if (!window.OrgChartIntelligent) {
             const script = document.createElement('script');
-            script.src = '/js/modules/organizational-chart.js';
-            script.onload = async () => {
-                console.log('📊 [ORGCHART] Script cargado, inicializando...');
-                // Esperar un poco para que se defina el módulo
-                setTimeout(async () => {
-                    if (typeof window.orgchartModule !== 'undefined') {
-                        await window.orgchartModule.init('orgchart-container');
-                    } else {
-                        document.getElementById('orgchart-loading').innerHTML = `
-                            <div class="org-empty-icon">⚠️</div>
-                            <p>Error: Módulo de organigrama no disponible</p>
-                        `;
-                    }
-                }, 100);
+            script.src = '/js/modules/OrgChartIntelligent.js?v=' + Date.now();
+            script.onload = () => {
+                console.log('🧠 [ORGCHART] OrgChartIntelligent.js cargado');
+                this._createCompanyOrgChart(companyId);
             };
             script.onerror = () => {
-                document.getElementById('orgchart-loading').innerHTML = `
-                    <div class="org-empty-icon">❌</div>
-                    <p>Error cargando módulo de organigrama</p>
+                console.error('[OrgEngine] Error cargando OrgChartIntelligent.js');
+                document.getElementById('orgchart-intelligent-container-company').innerHTML = `
+                    <div style="text-align: center; padding: 60px; color: #ef4444;">
+                        <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+                        <div style="font-size: 1.1rem;">Error cargando componente de organigrama inteligente</div>
+                        <div style="font-size: 0.9rem; margin-top: 8px; color: rgba(255,255,255,0.6);">Verifica tu conexión e intenta nuevamente</div>
+                    </div>
                 `;
             };
             document.head.appendChild(script);
-        } catch (error) {
-            console.error('[OrgEngine] Error cargando organigrama:', error);
-            document.getElementById('orgchart-loading').innerHTML = `
-                <div class="org-empty-icon">❌</div>
-                <p>Error: ${error.message}</p>
-            `;
+        } else {
+            this._createCompanyOrgChart(companyId);
         }
     },
 
+    _createCompanyOrgChart(companyId) {
+        console.log(`🧠 [ORGCHART] Creando organigrama para company_id: ${companyId}`);
+
+        const orgchart = new OrgChartIntelligent({
+            type: 'company',
+            companyId: companyId,
+            containerId: 'orgchart-intelligent-container-company',
+            mode: '2d',
+            onNodeClick: (node) => {
+                console.log('[ORGCHART-COMPANY] Nodo seleccionado:', node);
+                // TODO: Mostrar modal con detalles del empleado
+                // OrgEngine.showEmployeeModal(node.entityId);
+            },
+            onNodeEdit: (node) => {
+                // Callback para editar empleado
+                console.log('[ORGCHART-COMPANY] Editar:', node);
+                // TODO: Abrir modal de edición
+            }
+        });
+
+        orgchart.init();
+
+        // Guardar instancia para poder usar refresh() y exportChart()
+        window.orgchartCompanyInstance = orgchart;
+        console.log('✅ [ORGCHART] Organigrama inteligente inicializado');
+    },
+
     refreshOrgChart() {
-        if (typeof window.orgchartModule !== 'undefined' && window.orgchartModule.loadData) {
-            window.orgchartModule.loadData();
+        if (window.orgchartCompanyInstance) {
+            console.log('🔄 [ORGCHART] Refrescando organigrama...');
+            window.orgchartCompanyInstance.refresh();
         } else {
+            console.log('🔄 [ORGCHART] Re-renderizando organigrama...');
             this.renderOrgChart();
         }
     },
 
     exportOrgChart() {
-        if (typeof window.orgchartModule !== 'undefined' && window.orgchartModule.exportSVG) {
-            window.orgchartModule.exportSVG();
+        if (window.orgchartCompanyInstance) {
+            console.log('📥 [ORGCHART] Exportando organigrama...');
+            window.orgchartCompanyInstance.exportChart();
         } else {
-            alert('El organigrama no está disponible para exportar');
+            alert('El organigrama no está disponible para exportar. Intenta recargarlo.');
         }
     },
 

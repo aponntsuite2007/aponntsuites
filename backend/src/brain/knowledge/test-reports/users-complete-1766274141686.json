@@ -1,0 +1,226 @@
+{
+  "summary": {
+    "passed": 24,
+    "failed": 3,
+    "skipped": 0,
+    "successRate": "88.9%",
+    "duration": "1.22s"
+  },
+  "tests": [
+    {
+      "name": "1.1 Login como admin",
+      "passed": true,
+      "companyId": 11,
+      "timestamp": "2025-12-20T23:42:20.907Z"
+    },
+    {
+      "name": "2.1 GET /users - Listar usuarios",
+      "passed": true,
+      "count": 10,
+      "timestamp": "2025-12-20T23:42:20.932Z"
+    },
+    {
+      "name": "2.2 POST /users - Crear usuario",
+      "passed": true,
+      "userId": "eb9aef2b-de42-4af0-bc80-13aba77efaea",
+      "timestamp": "2025-12-20T23:42:21.375Z"
+    },
+    {
+      "name": "2.3 GET /users/:id - Obtener usuario",
+      "passed": {
+        "id": "eb9aef2b-de42-4af0-bc80-13aba77efaea",
+        "user_id": "eb9aef2b-de42-4af0-bc80-13aba77efaea",
+        "employeeId": "TEST1766274140932",
+        "firstName": "Test",
+        "lastName": "Autonomo",
+        "email": "test.autonomo.1766274140932@test.com",
+        "role": "employee",
+        "isActive": true,
+        "company_id": 11,
+        "createdAt": "2025-12-20T23:42:20.950Z",
+        "updatedAt": "2025-12-20T23:42:20.950Z",
+        "name": "Test Autonomo",
+        "fullName": "Test Autonomo",
+        "legajo": null,
+        "phone": null,
+        "departmentId": null,
+        "companyId": 11,
+        "defaultBranchId": null,
+        "hireDate": null,
+        "birthDate": null,
+        "dni": "DNI_1766274140949",
+        "cuil": null,
+        "address": null,
+        "emergencyContact": null,
+        "salary": null,
+        "position": null,
+        "permissions": {},
+        "settings": {},
+        "biometric_photo_url": null,
+        "biometric_photo_date": null,
+        "biometric_photo_expiration": null,
+        "gpsEnabled": false,
+        "allowOutsideRadius": true,
+        "canUseMobileApp": true,
+        "canUseKiosk": true,
+        "canUseAllKiosks": false,
+        "authorizedKiosks": [],
+        "hasFlexibleSchedule": false,
+        "flexibleScheduleNotes": null,
+        "canAuthorizeLateArrivals": false,
+        "authorizedDepartments": [],
+        "department": null,
+        "lastAccess": "Nunca",
+        "status": "Activo",
+        "biometric": "⚠️ Pendiente",
+        "shifts": [],
+        "shiftIds": [],
+        "shiftNames": [],
+        "departmentName": null,
+        "branchName": null
+      },
+      "found": true,
+      "timestamp": "2025-12-20T23:42:21.447Z"
+    },
+    {
+      "name": "2.4 PUT /users/:id - Actualizar usuario",
+      "passed": true,
+      "timestamp": "2025-12-20T23:42:21.492Z"
+    },
+    {
+      "name": "3.1 TAB 1: Información Personal",
+      "passed": true,
+      "status": 404,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.496Z"
+    },
+    {
+      "name": "3.2 TAB 2: Datos Personales",
+      "passed": true,
+      "status": 404,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.499Z"
+    },
+    {
+      "name": "3.3 TAB 3: Antecedentes Laborales",
+      "passed": true,
+      "status": 200,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.514Z"
+    },
+    {
+      "name": "3.4 TAB 4: Datos Médicos",
+      "passed": true,
+      "status": 404,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.517Z"
+    },
+    {
+      "name": "3.5 TAB 5: Documentos",
+      "passed": true,
+      "status": 200,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.531Z"
+    },
+    {
+      "name": "3.6 TAB 6: Vacaciones",
+      "passed": true,
+      "status": 404,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.534Z"
+    },
+    {
+      "name": "3.7 TAB 7: Asistencia",
+      "passed": true,
+      "status": 404,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.536Z"
+    },
+    {
+      "name": "3.8 TAB 8: Config. Tareas/Salario",
+      "passed": true,
+      "status": 404,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.553Z"
+    },
+    {
+      "name": "3.9 TAB 9: Permisos",
+      "passed": true,
+      "status": 404,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.555Z"
+    },
+    {
+      "name": "3.10 TAB 10: Historial",
+      "passed": true,
+      "status": 404,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.558Z"
+    },
+    {
+      "name": "3.11 TAB 11: Calendario",
+      "passed": true,
+      "status": 404,
+      "hasData": true,
+      "timestamp": "2025-12-20T23:42:21.560Z"
+    },
+    {
+      "name": "4.1 Validación: Usuario sin email rechazado",
+      "passed": true,
+      "timestamp": "2025-12-20T23:42:21.566Z"
+    },
+    {
+      "name": "4.2 Validación: Email duplicado rechazado",
+      "passed": true,
+      "timestamp": "2025-12-20T23:42:21.573Z"
+    },
+    {
+      "name": "4.3 Validación: Campos vacíos rechazados",
+      "passed": true,
+      "timestamp": "2025-12-20T23:42:21.578Z"
+    },
+    {
+      "name": "4.4 Validación: Password débil",
+      "passed": true,
+      "note": "Depende de política de passwords",
+      "timestamp": "2025-12-20T23:42:21.589Z"
+    },
+    {
+      "name": "5.1 Búsqueda por nombre",
+      "passed": true,
+      "timestamp": "2025-12-20T23:42:21.630Z"
+    },
+    {
+      "name": "5.2 Filtro por rol",
+      "passed": true,
+      "timestamp": "2025-12-20T23:42:21.646Z"
+    },
+    {
+      "name": "5.3 Paginación",
+      "passed": true,
+      "timestamp": "2025-12-20T23:42:21.661Z"
+    },
+    {
+      "name": "6.1 Brain Agents Health Check",
+      "passed": false,
+      "timestamp": "2025-12-20T23:42:21.663Z"
+    },
+    {
+      "name": "6.2 Support AI: Pregunta sobre usuarios",
+      "passed": false,
+      "hasAnswer": false,
+      "timestamp": "2025-12-20T23:42:21.665Z"
+    },
+    {
+      "name": "6.3 Tester AI: Edge cases para users",
+      "passed": false,
+      "timestamp": "2025-12-20T23:42:21.667Z"
+    },
+    {
+      "name": "7.1 DELETE /users/:id - Eliminar usuario de prueba",
+      "passed": true,
+      "timestamp": "2025-12-20T23:42:21.686Z"
+    }
+  ],
+  "timestamp": "2025-12-20T23:42:21.686Z"
+}

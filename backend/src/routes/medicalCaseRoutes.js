@@ -13,6 +13,14 @@
 const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
+
+// ============================================================================
+// HELPER: Validar formato UUID
+// ============================================================================
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isValidUUID(str) {
+  return typeof str === 'string' && UUID_REGEX.test(str);
+}
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -178,6 +186,11 @@ router.get('/employee/:employeeId', auth, async (req, res) => {
     try {
         const { employeeId } = req.params;
         const { companyId } = req.user;
+
+        // ✅ FIX: Validar UUID
+        if (!isValidUUID(employeeId)) {
+            return res.json({ success: true, cases: [] });
+        }
 
         const cases = await db.sequelize.query(`
             SELECT

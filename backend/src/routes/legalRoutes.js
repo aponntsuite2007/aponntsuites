@@ -266,8 +266,8 @@ router.get('/communications/:id', authenticateToken, async (req, res) => {
                 creator.firstName as created_by_name
             FROM legal_communications lc
             JOIN legal_communication_types lct ON lc.type_id = lct.id
-            JOIN users u ON lc.employee_id = u.id
-            JOIN users creator ON lc.created_by = creator.id
+            JOIN users u ON lc.employee_id = u.user_id
+            JOIN users creator ON lc.created_by = creator.user_id
             WHERE lc.id = ?
         `, { replacements: [id] });
 
@@ -422,30 +422,30 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
 
         // Por empleado (top 10)
         const [employeeStats] = await sequelize.query(`
-            SELECT 
-                u.firstName,
-                u.lastName,
-                u.employeeId,
+            SELECT
+                u."firstName",
+                u."lastName",
+                u."employeeId",
                 COUNT(lc.id) as communication_count,
                 COUNT(CASE WHEN lc.status = 'responded' THEN 1 END) as responded_count
             FROM users u
-            LEFT JOIN legal_communications lc ON u.id = lc.employee_id
-            WHERE u.isActive = 1
-            GROUP BY u.id, u.firstName, u.lastName, u.employeeId
-            HAVING communication_count > 0
+            LEFT JOIN legal_communications lc ON u.user_id = lc.employee_id
+            WHERE u."isActive" = true
+            GROUP BY u.user_id, u."firstName", u."lastName", u."employeeId"
+            HAVING COUNT(lc.id) > 0
             ORDER BY communication_count DESC
             LIMIT 10
         `);
 
         // Tendencia mensual (últimos 6 meses)
         const [monthlyStats] = await sequelize.query(`
-            SELECT 
-                DATE_FORMAT(created_at, '%Y-%m') as month,
+            SELECT
+                TO_CHAR(created_at, 'YYYY-MM') as month,
                 COUNT(*) as count,
                 COUNT(CASE WHEN status IN ('delivered', 'responded', 'closed') THEN 1 END) as completed_count
             FROM legal_communications
-            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            WHERE created_at >= NOW() - INTERVAL '6 MONTH'
+            GROUP BY TO_CHAR(created_at, 'YYYY-MM')
             ORDER BY month DESC
         `);
 
@@ -572,13 +572,13 @@ async function sendLegalStatusChangeNotification(communicationId, newStatus, not
                 lct.category,
                 lct.severity,
                 u.user_id as employee_user_id,
-                u.firstName as employee_first_name,
-                u.lastName as employee_last_name,
-                u.employeeId,
+                u."firstName" as employee_first_name,
+                u."lastName" as employee_last_name,
+                u."employeeId",
                 u.company_id
             FROM legal_communications lc
             JOIN legal_communication_types lct ON lc.type_id = lct.id
-            JOIN users u ON lc.employee_id = u.id
+            JOIN users u ON lc.employee_id = u.user_id
             WHERE lc.id = ?
         `, { replacements: [communicationId] });
 

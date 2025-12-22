@@ -1603,77 +1603,13 @@ app.get(`${API_PREFIX}/companies/:companyId/branches`, async (req, res) => {
 
 // === USUARIOS ENDPOINTS - PostgreSQL Integration ===
 
-// Endpoint para obtener usuarios
+// ❌ COMENTADO 2025-12-20: Este endpoint NO filtraba por company_id, retornaba usuarios de TODAS las empresas
+// Ahora userRoutes.js (línea 2617) maneja este endpoint con filtro multi-tenant correcto
+/*
 app.get(`${API_PREFIX}/users`, async (req, res) => {
-  console.log(`👥 === SOLICITUD USUARIOS ===`);
-  console.log(`👤 Usuario: ${req.headers.authorization}`);
-  console.log(`🌐 IP: ${req.ip}`);
-  console.log(`=============================`);
-  
-  if (!isDatabaseConnected) {
-    return res.status(503).json({
-      success: false,
-      error: 'Base de datos no disponible',
-      message: 'PostgreSQL no está conectado'
-    });
-  }
-  
-  try {
-    const { User, Department } = database;
-    
-    // Obtener todos los usuarios activos
-    const users = await User.findAll({
-      where: { isActive: true },
-      order: [['firstName', 'ASC'], ['lastName', 'ASC']]
-    });
-    
-    // Formatear para el frontend
-    const formattedUsers = users.map(user => ({
-      id: user.user_id,
-      employeeId: user.employeeId,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      department: user.department, // Mantener campo legacy
-      departmentInfo: user.department ? {
-        id: user.department.id,
-        name: user.department.name,
-        gpsLocation: {
-          lat: user.department.gps_lat,
-          lng: user.department.gps_lng
-        },
-        coverageRadius: user.department.coverage_radius
-      } : null,
-      position: user.position,
-      salary: user.salary,
-      hireDate: user.hireDate,
-      birthDate: user.birthDate,
-      address: user.address,
-      emergencyContact: user.emergencyContact,
-      emergencyPhone: user.emergencyPhone,
-      isActive: user.is_active,
-      allowOutsideRadius: user.allowOutsideRadius || false, // Nuevo campo
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt
-    }));
-    
-    res.json({
-      success: true,
-      users: formattedUsers,
-      total: formattedUsers.length
-    });
-    
-  } catch (error) {
-    console.error('❌ Error obteniendo usuarios:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor',
-      message: error.message
-    });
-  }
+  // ... LEGACY CODE REMOVED - violaba aislamiento multi-tenant
 });
+*/
 
 // Endpoint para crear usuarios (requiere autenticación)
 app.post(`${API_PREFIX}/users`, auth, async (req, res) => {
@@ -2609,7 +2545,7 @@ app.use('/api/aponnt/staff-commissions', staffCommissionsRoutes); // ✅ Comisio
 // 📊 Sistema de Ventas y Leads (Diciembre 2025)
 const salesOrchestrationRoutes = require('./src/routes/salesOrchestrationRoutes');
 const leadRoutes = require('./src/routes/leadRoutes');
-app.use('/api/aponnt/sales', salesOrchestrationRoutes); // ✅ Orquestación de ventas (reuniones, encuestas, pitches)
+app.use('/api/sales-orchestration', salesOrchestrationRoutes); // ✅ Orquestación de ventas (reuniones, encuestas, pitches)
 app.use('/api/aponnt/leads', leadRoutes); // ✅ Gestión de leads con scoring y lifecycle
 
 app.use('/api/seed-demo', seedDemoRoute); // ⚠️ TEMPORAL: GET /api/seed-demo?key=DEMO_SEED_2024_SECURE
@@ -2998,6 +2934,40 @@ console.log('   ✏️  PATCH  /api/email-config/:emailType - Actualizar config'
 console.log('   ✅ POST   /api/email-config/:emailType/test - Test SMTP');
 console.log('   📜 GET    /api/email-config/:emailType/audit - Historial auditoría');
 
+// 🔔 CONFIGURAR RUTAS DE NOTIFICATION WORKFLOWS - SSOT Sistema de Notificaciones Multi-Canal (Diciembre 2025)
+const notificationWorkflowRoutes = require('./src/routes/notificationWorkflowRoutes');
+app.use('/api/notifications', notificationWorkflowRoutes);
+
+console.log('🔔 [NOTIFICATION-WORKFLOWS] Sistema de Workflows Multi-Canal ACTIVO:');
+console.log('   📋 GET    /api/notifications/workflows - Listar workflows (Aponnt + Empresas)');
+console.log('   📊 GET    /api/notifications/workflows/stats - Estadísticas globales');
+console.log('   📝 GET    /api/notifications/workflows/:id - Ver workflow');
+console.log('   ✏️  PATCH  /api/notifications/workflows/:id - Actualizar workflow');
+console.log('   ➕ POST   /api/notifications/workflows - Crear workflow');
+console.log('   🚀 POST   /api/notifications/trigger - Disparar workflow');
+console.log('   👤 GET    /api/notifications/response/:logId - Registrar respuesta usuario');
+console.log('   📜 GET    /api/notifications/log - Historial de notificaciones');
+console.log('   📊 GET    /api/notifications/metrics/process/:key - Métricas de proceso');
+console.log('   📈 GET    /api/notifications/metrics/channels - Stats por canal');
+console.log('   ✅ 78 procesos: 56 Aponnt (global) + 22 Empresas (multi-tenant)');
+console.log('   🌐 Canales: Email, WhatsApp, SMS, Push (extensible)');
+console.log('   ⚡ Workflows con respuesta automática (SI/NO, ACEPTO/RECHAZO)');
+
+// 🔗 CONFIGURAR COMPANY EMAIL PROCESS MAPPING - Asignación de emails a procesos (multi-tenant)
+const companyEmailProcessRoutes = require('./src/routes/companyEmailProcessRoutes');
+app.use('/api/company-email-process', companyEmailProcessRoutes);
+
+console.log('🔗 [COMPANY-EMAIL-PROCESS] Sistema de Asignación Email-Proceso ACTIVO (multi-tenant):');
+console.log('   ➕ POST   /api/company-email-process/assign - Asignar email a proceso específico');
+console.log('   🤖 POST   /api/company-email-process/auto-assign - Auto-asignar todos (primer email)');
+console.log('   📋 GET    /api/company-email-process/mappings - Ver mapeos de empresa');
+console.log('   🔍 GET    /api/company-email-process/unassigned - Procesos sin asignar');
+console.log('   📊 GET    /api/company-email-process/stats - Estadísticas de asignación');
+console.log('   ❌ DELETE /api/company-email-process/unassign - Des-asignar proceso');
+console.log('   ✅ GET    /api/company-email-process/check-first-email - Verificar primer email');
+console.log('   💡 Lógica: Primer email → auto-asigna TODOS los procesos company');
+console.log('   📧 Emails siguientes → asignación manual por admin empresa');
+
 // ✅ CONFIGURAR ECOSYSTEM BRAIN - Cerebro del Ecosistema con datos VIVOS
 const brainRoutes = require('./src/routes/brainRoutes');
 app.set('database', database); // Pasar database para que Brain pueda usarla
@@ -3103,6 +3073,47 @@ console.log('   🚀 POST /api/brain-testing/execute/:moduleKey - Ejecutar tests
 console.log('   🔍 GET  /api/brain-testing/fields/:moduleKey - Análisis de campos');
 console.log('   🎲 POST /api/brain-testing/generate-data/:moduleKey - Generar datos');
 
+// ✅ CONFIGURAR BRAIN NERVOUS SYSTEM - Sistema Nervioso Reactivo
+const brainNervousRoutes = require('./src/routes/brainNervousRoutes');
+app.use('/api/brain/nervous', brainNervousRoutes);
+
+console.log('🧠 [BRAIN NERVOUS] Sistema Nervioso del Brain ACTIVO:');
+console.log('   📊 GET  /api/brain/nervous/status - Estado del sistema nervioso');
+console.log('   ▶️  POST /api/brain/nervous/start - Iniciar sistema nervioso');
+console.log('   ⏹️  POST /api/brain/nervous/stop - Detener sistema nervioso');
+console.log('   📈 GET  /api/brain/nervous/stats - Estadísticas');
+console.log('   🚨 GET  /api/brain/nervous/incidents - Incidentes activos');
+console.log('   📝 POST /api/brain/nervous/report - Reportar problema manual');
+console.log('   🩺 POST /api/brain/nervous/health-check - Health check manual');
+console.log('   🧪 POST /api/brain/nervous/ssot-test - Test SSOT manual');
+console.log('   ⚡ POST /api/brain/nervous/simulate-error - Simular error (testing)');
+console.log('   🔥 POST /api/brain/nervous/test-escalation - Test escalamiento');
+
+// ✅ CONFIGURAR BRAIN TOUR SERVICE - Tours Guiados Dinámicos
+const brainTourRoutes = require('./src/routes/brainTourRoutes');
+app.use('/api/brain/tours', brainTourRoutes);
+
+console.log('🎯 [BRAIN TOURS] Sistema de Tours Guiados ACTIVO:');
+console.log('   📋 GET  /api/brain/tours - Lista de tours disponibles');
+console.log('   🎓 GET  /api/brain/tours/:tourId - Obtener tour específico');
+console.log('   👋 GET  /api/brain/tours/onboarding/:role - Tour de onboarding');
+console.log('   📦 GET  /api/brain/tours/module/:key - Tour de módulo');
+console.log('   🔄 GET  /api/brain/tours/workflow/:name - Tour de workflow');
+console.log('   💾 POST /api/brain/tours/progress - Guardar progreso');
+
+// ✅ CONFIGURAR UNIFIED TEST ENGINE - Sistema de Testing que FUNCIONA
+const unifiedTestRoutes = require('./src/routes/unifiedTestRoutes');
+app.use('/api/unified-test', unifiedTestRoutes);
+
+console.log('🔧 [UNIFIED-TEST] Sistema de Testing Unificado ACTIVO:');
+console.log('   🚀 POST /api/unified-test/run - Ejecutar test completo');
+console.log('   📦 POST /api/unified-test/module/:name - Testear módulo específico');
+console.log('   📋 POST /api/unified-test/user-modal - Test 11 tabs del modal');
+console.log('   🔒 POST /api/unified-test/ssot - Tests de integridad SSOT');
+console.log('   🧠 GET  /api/unified-test/brain-modules - Módulos desde Brain VIVO');
+console.log('   📚 GET  /api/unified-test/tutorial/:name - Tutorial dinámico');
+console.log('   📊 GET  /api/unified-test/status - Estado del engine');
+
 // ✅ CONFIGURAR TRAINING & KNOWLEDGE - Sistema de Capacitación Inteligente
 const trainingKnowledgeRoutes = require('./src/routes/trainingKnowledgeRoutes');
 app.use('/api/training', trainingKnowledgeRoutes);
@@ -3117,6 +3128,27 @@ console.log('   🎫 POST /api/training/ticket-tutorial - Tutorial para ticket')
 console.log('   📢 POST /api/training/notify-feature - Notificar nueva feature');
 console.log('   📊 GET  /api/training/support-dashboard - Dashboard de soporte');
 console.log('   🧠 GET  /api/training/brain-status - Estado del Brain');
+
+// ✅ SISTEMA AUTÓNOMO - Agentes IA (0 Humanos, 100% IA)
+const brainAgentsRoutes = require('./src/brain/routes/brainAgentsRoutes');
+app.use('/api/brain/agents', brainAgentsRoutes);
+
+// NUEVO: Import BrainOrchestrator para inicialización automática
+const { getInstance: getBrainOrchestrator } = require('./src/brain/BrainOrchestrator');
+
+console.log('🤖 [BRAIN AGENTS] Sistema Autónomo de Agentes IA ACTIVO:');
+console.log('   💬 POST /api/brain/agents/support/ask - Soporte AI 24/7');
+console.log('   🎓 POST /api/brain/agents/trainer/onboarding/start - Iniciar capacitación');
+console.log('   📋 GET  /api/brain/agents/trainer/tutorial/next/:userId - Siguiente tutorial');
+console.log('   🧪 POST /api/brain/agents/tester/run - Ejecutar tests E2E');
+console.log('   📊 POST /api/brain/agents/evaluator/user - Evaluar usuario');
+console.log('   💼 POST /api/brain/agents/sales/demo/start - Iniciar demo ventas');
+console.log('   💰 POST /api/brain/agents/sales/pricing - Calcular pricing');
+console.log('   📈 POST /api/brain/agents/sales/roi - Calcular ROI');
+console.log('   📄 POST /api/brain/agents/sales/proposal/:leadId - Generar propuesta');
+console.log('   🏥 GET  /api/brain/agents/health - Health check del sistema');
+console.log('   📊 GET  /api/brain/agents/stats - Estadísticas globales');
+console.log('   🎛️ GET  /api/brain/agents/dashboard - Resumen para dashboard');
 
 // ✅ CONFIGURAR DATABASE SYNC - Sistema de Sincronización de BD
 const databaseSyncRoutes = require('./src/routes/databaseSyncRoutes');
@@ -3903,6 +3935,20 @@ ${_getNetworkInterfaces().map(ip => `   • ${ip.interface}: ${ip.ip}${ip.isPrim
 
         console.log('✅ [ADMIN-WS] WebSocket para panel administrativo inicializado en /biometric-ws');
         console.log('🔗 [WS] Servidores WebSocket conectados: Kiosk ↔ Admin Panel');
+
+        // 🧠 INICIALIZAR BRAIN ORCHESTRATOR - Cerebro Central del Sistema
+        console.log('\n🧠 [SERVER] Inicializando Brain Orchestrator...');
+        getBrainOrchestrator().then(brain => {
+          console.log('✅ [SERVER] Brain Orchestrator inicializado y activo');
+          console.log(`   🤖 Agentes IA: ${Object.keys(brain.agents).length}`);
+          console.log(`   📦 Servicios: ${Object.keys(brain.services).length}`);
+          console.log('   🧠 Sistema Nervioso: Monitoreando en tiempo real');
+          console.log('   🌍 Ecosystem Brain: Escaneando código');
+          console.log('   📝 MetadataWriter: Auto-actualización cada 5 min\n');
+        }).catch(err => {
+          console.error('❌ [SERVER] Error inicializando Brain Orchestrator:', err);
+        });
+
       }).catch(err => {
         console.error('❌ [KIOSK-WS] Error inicializando WebSocket server:', err);
       });

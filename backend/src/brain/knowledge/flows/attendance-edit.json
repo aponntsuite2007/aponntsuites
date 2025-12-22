@@ -1,0 +1,52 @@
+{
+  "name": "edit-attendance",
+  "description": "Editar un attendance existente",
+  "steps": [
+    {
+      "action": "navigate",
+      "target": "module-attendance",
+      "description": "Ir al módulo de attendances"
+    },
+    {
+      "action": "click",
+      "target": "row-attendance",
+      "description": "Seleccionar attendance de la lista"
+    },
+    {
+      "action": "click",
+      "target": "btn-edit",
+      "description": "Click en \"Editar\""
+    },
+    {
+      "action": "wait",
+      "target": "modal-attendance",
+      "description": "Esperar que abra el modal"
+    },
+    {
+      "action": "modify-form",
+      "target": "form-attendance",
+      "description": "Modificar campos"
+    },
+    {
+      "action": "click",
+      "target": "btn-save",
+      "description": "Click en \"Guardar\""
+    },
+    {
+      "action": "verify",
+      "target": "success-message",
+      "description": "Verificar mensaje de éxito"
+    }
+  ],
+  "preconditions": [
+    "logged-in",
+    "attendance-exists",
+    "has-permission-edit-attendance"
+  ],
+  "postconditions": [
+    "attendance-updated"
+  ],
+  "module": "attendance",
+  "generatedAt": "2025-12-22T03:21:02.724Z",
+  "source": "auto-generated"
+}

@@ -72,6 +72,9 @@ const AdminPanelController = {
                 activeSection: RolePermissions.getDefaultSection(this._currentStaff)
             });
 
+            // Habilitar auto-hide del sidebar
+            AdminSidebar.enableAutoHide();
+
             // Cargar sección inicial
             const defaultSection = RolePermissions.getDefaultSection(this._currentStaff);
             await this.loadSection(defaultSection);
@@ -231,6 +234,7 @@ const AdminPanelController = {
             // ===== INGENIERÍA =====
             'engineering': () => this._loadIngenieriaDashboard(),
             'ingenieria-dashboard': () => this._loadIngenieriaDashboard(),
+            'ai-testing': () => this._loadAITestingDashboard(),
             'aponnt-email-config': () => this._loadAponntEmailConfig(),
             'brain-ecosystem': () => this._loadBrainEcosystem(),
             'debugging': () => this._loadDebugging(),
@@ -262,25 +266,48 @@ const AdminPanelController = {
      */
     async _initializeSectionModule(sectionId) {
         const moduleInitializers = {
-            'ingenieria-dashboard': () => {
+            'engineering': async () => {
+                console.log('[AdminPanel] Inicializando Engineering Dashboard...');
                 if (window.EngineeringDashboard) {
-                    EngineeringDashboard.init();
+                    await EngineeringDashboard.init();
+                } else {
+                    console.error('[AdminPanel] EngineeringDashboard no está definido');
+                }
+            },
+            'ingenieria-dashboard': async () => {
+                console.log('[AdminPanel] Inicializando Engineering Dashboard (alias)...');
+                if (window.EngineeringDashboard) {
+                    await EngineeringDashboard.init();
+                }
+            },
+            'ai-testing': async () => {
+                console.log('[AdminPanel] Inicializando AI Testing Dashboard...');
+                if (window.AITestingDashboard) {
+                    await AITestingDashboard.init('ai-testing-container');
+                } else {
+                    console.error('[AdminPanel] AITestingDashboard no está definido');
                 }
             },
             'aponnt-email-config': () => {
+                console.log('[AdminPanel] Intentando inicializar AponntEmailConfigModule...');
+                console.log('[AdminPanel] AponntEmailConfigModule disponible:', !!window.AponntEmailConfigModule);
                 if (window.AponntEmailConfigModule) {
+                    console.log('[AdminPanel] Llamando a AponntEmailConfigModule.init()');
                     AponntEmailConfigModule.init();
+                } else {
+                    console.error('[AdminPanel] ❌ AponntEmailConfigModule no está disponible en window');
+                    console.error('[AdminPanel] Verifica que el script esté cargado en panel-administrativo.html');
                 }
             },
             'mi-dashboard': () => {
                 if (window.VendorDashboard) {
-                    VendorDashboard.init(this._currentStaff);
+                    VendorDashboard.init(AdminPanelController._currentStaff);
                 }
             },
-            'brain-ecosystem': () => {
-                if (window.BrainEcosystemUI) {
-                    BrainEcosystemUI.init();
-                }
+            'brain-ecosystem': async () => {
+                console.log('[AdminPanel] Inicializando Brain Ecosystem...');
+                // Brain Ecosystem usa la API directamente, se inicializa inline
+                await AdminPanelController._initBrainEcosystemInline();
             },
             'auditor-sistema': () => {
                 if (window.AuditorDashboard) {
@@ -323,7 +350,7 @@ const AdminPanelController = {
             'pipeline-ventas': async () => {
                 if (window.LeadsPipelineDashboard) {
                     const container = document.getElementById('pipeline-ventas-container') || document.getElementById('content-area');
-                    await LeadsPipelineDashboard.init(container, this._currentStaff);
+                    await LeadsPipelineDashboard.init(container, AdminPanelController._currentStaff);
                 }
             }
         };
@@ -331,6 +358,9 @@ const AdminPanelController = {
         const initializer = moduleInitializers[sectionId];
         if (initializer) {
             try {
+                // Pequeño delay para asegurar que el DOM esté actualizado
+                await new Promise(resolve => setTimeout(resolve, 50));
+                console.log(`[AdminPanel] Ejecutando inicializador para: ${sectionId}`);
                 await initializer();
             } catch (error) {
                 console.error(`[AdminPanel] Error inicializando módulo ${sectionId}:`, error);
@@ -749,6 +779,16 @@ const AdminPanelController = {
             'CANCELLED': 'Anulada'
         };
         return labels[status] || status || 'Pendiente';
+    },
+
+    _formatCurrency(amount) {
+        if (amount === null || amount === undefined) return '$0';
+        return new Intl.NumberFormat('es-AR', {
+            style: 'currency',
+            currency: 'ARS',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
     },
 
     // ==================== TAREAS ADMIN ====================
@@ -1202,7 +1242,7 @@ const AdminPanelController = {
 
         try {
             const token = localStorage.getItem('aponnt_token_staff') || sessionStorage.getItem('aponnt_token_staff');
-            const response = await fetch('/api/aponnt/staff/vendors', {
+            const response = await fetch('/api/aponnt/staff-data/vendors', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const result = await response.json();
@@ -1637,10 +1677,20 @@ const AdminPanelController = {
         `;
     },
 
+    async _loadAITestingDashboard() {
+        return `
+            <div class="section-container full-width">
+                <div id="ai-testing-container">
+                    <!-- AITestingDashboard se renderizará aquí -->
+                </div>
+            </div>
+        `;
+    },
+
     async _loadAponntEmailConfig() {
         return `
             <div class="section-container full-width">
-                <div id="content-area">
+                <div id="email-config-container">
                     <!-- AponntEmailConfigModule se renderizará aquí -->
                 </div>
             </div>
@@ -1651,7 +1701,7 @@ const AdminPanelController = {
         return `
             <div class="section-container">
                 <div class="section-header">
-                    <h2>Brain Ecosystem</h2>
+                    <h2>🧠 Brain Ecosystem</h2>
                     <p class="section-subtitle">Sistema de auto-conocimiento del sistema</p>
                 </div>
                 <div id="brain-ecosystem-container">
@@ -1662,6 +1712,145 @@ const AdminPanelController = {
                 </div>
             </div>
         `;
+    },
+
+    async _initBrainEcosystemInline() {
+        console.log('[Brain] _initBrainEcosystemInline llamado');
+        const container = document.getElementById('brain-ecosystem-container');
+        console.log('[Brain] Container encontrado:', !!container);
+        if (!container) {
+            console.error('[Brain] Container brain-ecosystem-container NO encontrado');
+            return;
+        }
+
+        try {
+            console.log('[Brain] Cargando datos de API...');
+            // Cargar datos del Brain
+            const [overviewRes, workflowsRes, commercialRes] = await Promise.all([
+                fetch('/api/brain/overview'),
+                fetch('/api/brain/workflows'),
+                fetch('/api/brain/commercial-modules')
+            ]);
+            console.log('[Brain] Respuestas recibidas:', overviewRes.status, workflowsRes.status, commercialRes.status);
+
+            const overview = await overviewRes.json();
+            const workflows = await workflowsRes.json();
+            const commercial = await commercialRes.json();
+
+            if (!overview.success) throw new Error(overview.error || 'Error cargando overview');
+
+            const data = overview.data;
+            const wfData = workflows.success ? workflows.data : { workflows: [] };
+            const commercialModules = commercial.success ? commercial.data.modules : [];
+
+            container.innerHTML = `
+                <div class="brain-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+
+                    <!-- Stats Card -->
+                    <div class="brain-card" style="background: var(--dark-bg-card, #1a1a2e); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                        <h3 style="color: var(--accent-primary, #f59e0b); margin: 0 0 15px 0;">📊 Estado del Sistema</h3>
+                        <div style="display: grid; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <span style="color: rgba(255,255,255,0.6);">Archivos Backend</span>
+                                <span style="color: #22c55e; font-weight: 600;">${data.stats?.backend?.totalFiles || 0}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <span style="color: rgba(255,255,255,0.6);">Archivos Frontend</span>
+                                <span style="color: #3b82f6; font-weight: 600;">${data.stats?.frontend?.totalFiles || 0}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <span style="color: rgba(255,255,255,0.6);">Rutas API</span>
+                                <span style="color: #8b5cf6; font-weight: 600;">${data.stats?.backend?.routes || 0}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <span style="color: rgba(255,255,255,0.6);">Servicios</span>
+                                <span style="color: #ec4899; font-weight: 600;">${data.stats?.backend?.services || 0}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                                <span style="color: rgba(255,255,255,0.6);">Tablas BD</span>
+                                <span style="color: #14b8a6; font-weight: 600;">${data.stats?.database?.tables || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Módulos Comerciales -->
+                    <div class="brain-card" style="background: var(--dark-bg-card, #1a1a2e); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                        <h3 style="color: var(--accent-primary, #f59e0b); margin: 0 0 15px 0;">💰 Módulos Comerciales</h3>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            ${commercialModules.slice(0, 10).map(m => `
+                                <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <span style="font-size: 1.2em;">${m.icon || '📦'}</span>
+                                    <span style="color: rgba(255,255,255,0.9); flex: 1;">${m.name}</span>
+                                    <span style="color: ${m.isCore ? '#22c55e' : '#3b82f6'}; font-size: 0.75em; padding: 2px 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                                        ${m.isCore ? 'CORE' : 'ADD-ON'}
+                                    </span>
+                                </div>
+                            `).join('')}
+                            ${commercialModules.length > 10 ? `<p style="color: rgba(255,255,255,0.5); text-align: center; margin: 10px 0;">+${commercialModules.length - 10} más...</p>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Workflows Detectados -->
+                    <div class="brain-card" style="background: var(--dark-bg-card, #1a1a2e); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                        <h3 style="color: var(--accent-primary, #f59e0b); margin: 0 0 15px 0;">🔄 Workflows Detectados</h3>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            ${(wfData.workflows || []).slice(0, 8).map(wf => `
+                                <div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div style="color: rgba(255,255,255,0.9); font-weight: 500;">${wf.name || wf.module}</div>
+                                    <div style="color: rgba(255,255,255,0.5); font-size: 0.85em;">${wf.stages?.length || 0} etapas</div>
+                                </div>
+                            `).join('')}
+                            ${(wfData.workflows || []).length === 0 ? '<p style="color: rgba(255,255,255,0.5);">No hay workflows configurados</p>' : ''}
+                        </div>
+                    </div>
+
+                    <!-- Última Actualización -->
+                    <div class="brain-card" style="background: var(--dark-bg-card, #1a1a2e); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                        <h3 style="color: var(--accent-primary, #f59e0b); margin: 0 0 15px 0;">🕐 Estado del Brain</h3>
+                        <div style="display: grid; gap: 10px;">
+                            <div style="padding: 10px; background: rgba(34, 197, 94, 0.1); border-radius: 8px; border-left: 3px solid #22c55e;">
+                                <div style="color: #22c55e; font-weight: 600;">✅ Brain Activo</div>
+                                <div style="color: rgba(255,255,255,0.6); font-size: 0.85em;">Monitoreando cambios en tiempo real</div>
+                            </div>
+                            <div style="padding: 10px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 3px solid #3b82f6;">
+                                <div style="color: #3b82f6; font-weight: 600;">📡 File Watcher</div>
+                                <div style="color: rgba(255,255,255,0.6); font-size: 0.85em;">Observando ${data.stats?.services || 0} servicios</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Acciones -->
+                <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="AdminPanelController._refreshBrainData()" class="btn btn-primary" style="background: var(--accent-primary, #f59e0b); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; color: #000; font-weight: 600;">
+                        🔄 Refrescar Datos
+                    </button>
+                    <button onclick="window.open('/api/brain/overview', '_blank')" class="btn btn-secondary" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; cursor: pointer; color: #fff;">
+                        📋 Ver JSON Completo
+                    </button>
+                </div>
+            `;
+        } catch (error) {
+            console.error('[Brain] Error:', error);
+            container.innerHTML = `
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 12px; padding: 20px; text-align: center;">
+                    <h3 style="color: #ef4444; margin: 0 0 10px 0;">❌ Error cargando Brain</h3>
+                    <p style="color: rgba(255,255,255,0.6);">${error.message}</p>
+                    <button onclick="AdminPanelController._initBrainEcosystemInline()" style="margin-top: 15px; background: #ef4444; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; color: #fff;">
+                        Reintentar
+                    </button>
+                </div>
+            `;
+        }
+    },
+
+    async _refreshBrainData() {
+        const container = document.getElementById('brain-ecosystem-container');
+        if (container) {
+            container.innerHTML = '<div class="loading-placeholder"><div class="spinner-small"></div><span>Actualizando...</span></div>';
+        }
+        await this._initBrainEcosystemInline();
     },
 
     async _loadAuditorSistema() {
@@ -1959,12 +2148,12 @@ const AdminPanelController = {
             return `<div id="admin-support-tickets-container" class="section-container"></div>`;
         }
 
-        // Fallback: cargar tickets directamente del API
+        // Fallback: cargar tickets directamente del API (filtrado por rol)
         const html = `
             <div class="section-container tickets-dashboard">
                 <div class="section-header">
                     <h2>🎫 Tickets de Soporte</h2>
-                    <p class="section-subtitle">Vista completa de tickets de todas las empresas</p>
+                    <p class="section-subtitle">Tickets según tu rol y empresas asignadas</p>
                 </div>
                 <div id="tickets-loading" style="text-align: center; padding: 40px;">
                     <i class="fas fa-spinner fa-spin fa-2x"></i>
@@ -1977,10 +2166,34 @@ const AdminPanelController = {
         // Cargar tickets después de renderizar
         setTimeout(async () => {
             try {
-                const token = localStorage.getItem('aponnt_token_staff');
-                const response = await fetch('/api/support/v2/tickets?limit=50', {
+                // Usar el método _getToken que revisa localStorage Y sessionStorage
+                const token = AdminPanelController._getToken();
+                console.log('[AdminPanel] Token para tickets:', token ? `${token.substring(0, 30)}...` : 'NO TOKEN');
+
+                // Verificar que hay token antes de hacer fetch
+                if (!token || token === 'null' || token === 'undefined') {
+                    console.error('[AdminPanel] No hay token válido para cargar tickets');
+                    document.getElementById('tickets-loading').style.display = 'none';
+                    const content = document.getElementById('tickets-content');
+                    content.style.display = 'block';
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #ef4444;">
+                            <i class="fas fa-exclamation-triangle fa-3x" style="margin-bottom: 15px;"></i>
+                            <p>Sesión expirada. Por favor recargue la página.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Usar endpoint admin con filtrado por rol
+                const response = await fetch('/api/support/v2/admin/tickets?limit=50', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Error ${response.status}`);
+                }
 
                 const data = await response.json();
                 const tickets = data.tickets || data.data || [];

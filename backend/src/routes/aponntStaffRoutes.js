@@ -94,6 +94,44 @@ router.get('/roles', async (req, res) => {
 });
 
 /**
+ * GET /api/aponnt/staff/vendors
+ * Obtener solo vendedores (staff con role comercial/ventas)
+ */
+router.get('/vendors', async (req, res) => {
+  try {
+    const vendors = await AponntStaff.findAll({
+      include: [
+        {
+          model: AponntStaffRole,
+          as: 'role',
+          where: {
+            role_code: ['VENDOR', 'VENDEDOR', 'COMERCIAL', 'SALES']
+          }
+        }
+      ],
+      where: {
+        is_active: true
+      },
+      order: [['first_name', 'ASC'], ['last_name', 'ASC']]
+    });
+
+    res.json({
+      success: true,
+      data: vendors,
+      count: vendors.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo vendedores:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo vendedores',
+      error: error.message
+    });
+  }
+});
+
+/**
  * GET /api/aponnt/staff/:id
  * Obtener un staff específico
  */
@@ -289,6 +327,114 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error eliminando staff',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/aponnt/staff/organigrama/data
+ * Obtener estructura del organigrama con staff agrupado por rol
+ */
+router.get('/organigrama/data', async (req, res) => {
+  try {
+    // Obtener todos los roles
+    const roles = await AponntStaffRole.findAll({
+      order: [['level', 'ASC'], ['role_area', 'ASC']]
+    });
+
+    // Obtener todo el staff activo con sus roles
+    const staff = await AponntStaff.findAll({
+      where: { is_active: true },
+      include: [{
+        model: AponntStaffRole,
+        as: 'role'
+      }],
+      order: [['level', 'ASC'], ['last_name', 'ASC']]
+    });
+
+    // Agrupar staff por role_code
+    const staffByRole = {};
+    staff.forEach(s => {
+      const roleCode = s.role?.role_code || 'SIN_ROL';
+      if (!staffByRole[roleCode]) {
+        staffByRole[roleCode] = [];
+      }
+      // Filtrar usuarios de testing
+      const name = `${s.first_name} ${s.last_name}`.trim();
+      if (!name.includes('Automatizado') &&
+          !name.includes('TEST-USERS') &&
+          !name.includes('Sistema Testing') &&
+          !name.includes('Test User')) {
+        staffByRole[roleCode].push({
+          id: s.staff_id,
+          name: name,
+          email: s.email,
+          area: s.area,
+          level: s.level
+        });
+      }
+    });
+
+    // Estructura del organigrama por niveles
+    const organigrama = {
+      nivel0: [], // Dirección
+      nivel1: [], // Gerencias
+      nivel2: [], // Jefaturas
+      nivel3: [], // Coordinadores
+      nivel4: [], // Operativos
+      externos: [] // Staff externo
+    };
+
+    roles.forEach(role => {
+      const roleData = {
+        code: role.role_code,
+        name: role.role_name,
+        area: role.role_area,
+        level: role.level,
+        reportsTo: role.reports_to_role_code,
+        isSales: role.is_sales_role,
+        staff: staffByRole[role.role_code] || []
+      };
+
+      if (role.role_area === 'externo') {
+        organigrama.externos.push(roleData);
+      } else if (role.level === 0) {
+        organigrama.nivel0.push(roleData);
+      } else if (role.level === 1) {
+        organigrama.nivel1.push(roleData);
+      } else if (role.level === 2) {
+        organigrama.nivel2.push(roleData);
+      } else if (role.level === 3) {
+        organigrama.nivel3.push(roleData);
+      } else {
+        organigrama.nivel4.push(roleData);
+      }
+    });
+
+    // Estadísticas
+    const stats = {
+      totalRoles: roles.length,
+      totalStaff: staff.length,
+      staffPorArea: {},
+      rolesVacios: roles.filter(r => !staffByRole[r.role_code] || staffByRole[r.role_code].length === 0).length
+    };
+
+    staff.forEach(s => {
+      stats.staffPorArea[s.area] = (stats.staffPorArea[s.area] || 0) + 1;
+    });
+
+    res.json({
+      success: true,
+      data: organigrama,
+      stats
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo organigrama:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo organigrama',
       error: error.message
     });
   }

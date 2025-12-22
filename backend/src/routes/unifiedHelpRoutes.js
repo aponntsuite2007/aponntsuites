@@ -38,6 +38,11 @@ const unifiedHelpService = require('../services/UnifiedHelpService');
 
 const authenticate = (req, res, next) => {
     try {
+        // ✅ FIX: Health endpoint no requiere autenticación
+        if (req.path === '/health' || req.path.endsWith('/health')) {
+            return next();
+        }
+
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({

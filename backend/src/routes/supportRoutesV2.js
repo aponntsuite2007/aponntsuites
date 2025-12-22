@@ -1012,4 +1012,319 @@ router.post('/monitor/run-now', authenticate, async (req, res) => {
   }
 });
 
+// =========================================================================
+// ADMIN ENDPOINTS - Para Staff de APONNT (panel-administrativo)
+// =========================================================================
+
+/**
+ * Middleware de autenticación para Staff de APONNT
+ */
+const authenticateStaff = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.replace('Bearer ', '').trim();
+
+    // Validaciones más robustas
+    if (!token || token === 'null' || token === 'undefined' || token.length < 10) {
+      console.log('[SUPPORT-ADMIN] Token inválido o vacío:', {
+        hasAuthHeader: !!authHeader,
+        tokenValue: token ? `${token.substring(0, 20)}...` : 'empty',
+        tokenLength: token?.length
+      });
+      return res.status(401).json({ error: 'Token requerido o inválido' });
+    }
+
+    // Verificar formato básico JWT (3 partes separadas por punto)
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.log('[SUPPORT-ADMIN] Token no tiene formato JWT válido:', parts.length, 'partes');
+      return res.status(401).json({ error: 'Token con formato inválido' });
+    }
+
+    const jwt = require('jsonwebtoken');
+    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    const decoded = jwt.verify(token, secret);
+
+    // Verificar que es staff de APONNT
+    if (!decoded.staffId && !decoded.staff_id) {
+      return res.status(403).json({ error: 'Acceso solo para staff de APONNT' });
+    }
+
+    req.staffId = decoded.staffId || decoded.staff_id;
+    req.staffRole = decoded.role || decoded.role_code || decoded.roleCode;
+    req.staffArea = decoded.area;
+    req.staffLevel = decoded.level;
+    req.staffCountry = decoded.country;
+
+    console.log('[SUPPORT-ADMIN] Staff autenticado:', {
+      staffId: req.staffId,
+      role: req.staffRole,
+      area: req.staffArea,
+      level: req.staffLevel,
+      country: req.staffCountry
+    });
+
+    next();
+  } catch (error) {
+    console.error('[SUPPORT-ADMIN] Error de auth:', error.message);
+    return res.status(401).json({ error: 'Token inválido', detail: error.message });
+  }
+};
+
+/**
+ * Determina el tipo de rol basado en role_code, area y level
+ */
+function getStaffRoleType(roleCode, area, level) {
+  // SUPERADMIN tiene prioridad
+  if (roleCode === 'SUPERADMIN' || level === -1) return 'SUPERADMIN';
+  // Gerente General (nivel 0, máximo poder)
+  if (level === 0 || roleCode === 'GG') return 'GERENTE_GENERAL';
+  // Gerente Regional (nivel 1, casi todo excepto módulos)
+  if (level === 1 && (area === 'direccion' || roleCode === 'GR')) return 'GERENCIA';
+  // Supervisor de Soporte (area soporte)
+  if (area === 'soporte') return 'SUPERVISOR_SOPORTE';
+  // Vendedor por defecto si es area ventas
+  if (area === 'ventas') return 'VENDEDOR';
+  // Otros
+  return 'OTHER';
+}
+
+/**
+ * GET /api/support/v2/admin/tickets
+ * Listar tickets para staff de APONNT según su rol
+ *
+ * Reglas de visibilidad:
+ * - Vendedor: Solo tickets de SUS empresas asignadas (aponnt_staff_companies)
+ * - Supervisor Soporte: TODOS los tickets
+ * - Gerente Regional (GR): Tickets de empresas de SU país/región
+ * - Gerente General (GG) / Superadmin: TODO
+ */
+router.get('/admin/tickets', authenticateStaff, async (req, res) => {
+  try {
+    const { status, priority, limit = 50, offset = 0 } = req.query;
+    const staffId = req.staffId;
+    const roleCode = req.staffRole;
+    const area = req.staffArea;
+    const level = req.staffLevel;
+
+    // Determinar tipo de rol
+    const roleType = getStaffRoleType(roleCode, area, level);
+    console.log('[SUPPORT-ADMIN] roleType determinado:', roleType);
+
+    // Obtener país del staff para GR (si no viene en el token, buscarlo en BD)
+    let staffCountry = req.staffCountry;
+    if (roleType === 'GERENCIA' && !staffCountry) {
+      const [staffData] = await database.sequelize.query(`
+        SELECT country FROM aponnt_staff WHERE staff_id = :staffId
+      `, {
+        replacements: { staffId },
+        type: database.sequelize.QueryTypes.SELECT
+      });
+      staffCountry = staffData?.country;
+    }
+
+    // Construir query según rol
+    let baseQuery = `
+      SELECT
+        t.ticket_id,
+        t.ticket_number,
+        t.company_id,
+        c.name as company_name,
+        c.country as company_country,
+        t.module_name,
+        t.module_display_name,
+        t.subject,
+        t.priority,
+        t.status,
+        t.created_at,
+        t.first_response_at,
+        t.closed_at,
+        t.rating,
+        t.assistant_attempted,
+        t.assistant_resolved,
+        u.\"firstName\" || ' ' || u.\"lastName\" as created_by_name,
+        u.email as created_by_email
+      FROM support_tickets t
+      LEFT JOIN companies c ON t.company_id = c.company_id
+      LEFT JOIN users u ON t.created_by_user_id = u.user_id
+      WHERE 1=1
+    `;
+
+    const params = {};
+
+    // Filtros según rol
+    switch (roleType) {
+      case 'VENDEDOR':
+        // Solo empresas asignadas en aponnt_staff_companies
+        baseQuery += ` AND t.company_id IN (
+          SELECT company_id FROM aponnt_staff_companies
+          WHERE staff_id = :staffId AND is_active = true
+        )`;
+        params.staffId = staffId;
+        console.log('[SUPPORT-ADMIN] Filtro VENDEDOR: empresas asignadas de staff', staffId);
+        break;
+
+      case 'SUPERVISOR_SOPORTE':
+        // Ve TODOS los tickets - sin filtro adicional
+        console.log('[SUPPORT-ADMIN] Filtro SUPERVISOR_SOPORTE: ve TODO');
+        break;
+
+      case 'GERENCIA':
+        // Solo empresas de su país/región
+        if (staffCountry) {
+          baseQuery += ` AND c.country = :staffCountry`;
+          params.staffCountry = staffCountry;
+          console.log('[SUPPORT-ADMIN] Filtro GERENCIA: empresas de país', staffCountry);
+        } else {
+          console.warn('[SUPPORT-ADMIN] GR sin país definido, mostrando todos');
+        }
+        break;
+
+      case 'GERENTE_GENERAL':
+      case 'SUPERADMIN':
+        // Ve TODO - sin filtro
+        console.log('[SUPPORT-ADMIN] Filtro GG/SUPERADMIN: ve TODO');
+        break;
+
+      default:
+        // Otros roles: solo sus propias empresas si tienen asignadas
+        baseQuery += ` AND t.company_id IN (
+          SELECT company_id FROM aponnt_staff_companies
+          WHERE staff_id = :staffId AND is_active = true
+        )`;
+        params.staffId = staffId;
+        console.log('[SUPPORT-ADMIN] Filtro DEFAULT: empresas asignadas');
+    }
+
+    // Filtros opcionales
+    if (status) {
+      baseQuery += ` AND t.status = :status`;
+      params.status = status;
+    }
+    if (priority) {
+      baseQuery += ` AND t.priority = :priority`;
+      params.priority = priority;
+    }
+
+    // Ordenar y paginar
+    baseQuery += ` ORDER BY t.created_at DESC LIMIT :limit OFFSET :offset`;
+    params.limit = parseInt(limit);
+    params.offset = parseInt(offset);
+
+    // Ejecutar query
+    const tickets = await database.sequelize.query(baseQuery, {
+      replacements: params,
+      type: database.sequelize.QueryTypes.SELECT
+    });
+
+    // Query para contar total
+    let countQuery = baseQuery.replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(*) as total FROM');
+    countQuery = countQuery.replace(/ORDER BY[\s\S]*$/, '');
+    const [countResult] = await database.sequelize.query(countQuery, {
+      replacements: params,
+      type: database.sequelize.QueryTypes.SELECT
+    });
+
+    res.json({
+      success: true,
+      tickets,
+      total: parseInt(countResult?.total || 0),
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      roleType,
+      staffCountry: roleType === 'GERENCIA' ? staffCountry : undefined
+    });
+
+  } catch (error) {
+    console.error('[SUPPORT-ADMIN] Error listing tickets:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/support/v2/admin/tickets/stats
+ * Estadísticas de tickets para staff de APONNT (respeta mismos filtros de rol)
+ */
+router.get('/admin/tickets/stats', authenticateStaff, async (req, res) => {
+  try {
+    const staffId = req.staffId;
+    const roleCode = req.staffRole;
+    const area = req.staffArea;
+    const level = req.staffLevel;
+
+    const roleType = getStaffRoleType(roleCode, area, level);
+
+    // Obtener país del staff para GR
+    let staffCountry = req.staffCountry;
+    if (roleType === 'GERENCIA' && !staffCountry) {
+      const [staffData] = await database.sequelize.query(`
+        SELECT country FROM aponnt_staff WHERE staff_id = :staffId
+      `, {
+        replacements: { staffId },
+        type: database.sequelize.QueryTypes.SELECT
+      });
+      staffCountry = staffData?.country;
+    }
+
+    // Construir WHERE según rol
+    let whereClause = '1=1';
+    const params = {};
+
+    switch (roleType) {
+      case 'VENDEDOR':
+        whereClause = `t.company_id IN (
+          SELECT company_id FROM aponnt_staff_companies
+          WHERE staff_id = :staffId AND is_active = true
+        )`;
+        params.staffId = staffId;
+        break;
+      case 'GERENCIA':
+        if (staffCountry) {
+          whereClause = `c.country = :staffCountry`;
+          params.staffCountry = staffCountry;
+        }
+        break;
+      // SUPERVISOR_SOPORTE, GERENTE_GENERAL, SUPERADMIN: sin filtro
+    }
+
+    const statsQuery = `
+      SELECT
+        COUNT(*) as total_tickets,
+        COUNT(*) FILTER (WHERE t.status = 'open') as open_tickets,
+        COUNT(*) FILTER (WHERE t.status = 'in_progress') as in_progress_tickets,
+        COUNT(*) FILTER (WHERE t.status = 'waiting_customer') as waiting_tickets,
+        COUNT(*) FILTER (WHERE t.status = 'resolved') as resolved_tickets,
+        COUNT(*) FILTER (WHERE t.status = 'closed') as closed_tickets,
+        COUNT(*) FILTER (WHERE t.priority = 'critical') as critical_tickets,
+        COUNT(*) FILTER (WHERE t.priority = 'high') as high_priority_tickets,
+        COUNT(*) FILTER (WHERE t.assistant_resolved = true) as resolved_by_ai,
+        ROUND(AVG(t.rating)::numeric, 2) as avg_rating
+      FROM support_tickets t
+      LEFT JOIN companies c ON t.company_id = c.company_id
+      WHERE ${whereClause}
+    `;
+
+    const [stats] = await database.sequelize.query(statsQuery, {
+      replacements: params,
+      type: database.sequelize.QueryTypes.SELECT
+    });
+
+    res.json({
+      success: true,
+      stats,
+      roleType
+    });
+
+  } catch (error) {
+    console.error('[SUPPORT-ADMIN] Error getting stats:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

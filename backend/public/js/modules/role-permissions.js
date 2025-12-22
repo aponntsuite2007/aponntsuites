@@ -203,13 +203,20 @@ const RolePermissions = (function() {
             description: 'Métricas del sistema',
             component: 'TechMetrics'
         },
+        'ai-testing': {
+            id: 'ai-testing',
+            icon: '🤖',
+            label: 'AI Testing',
+            description: 'Tests con IA - Tercera Ola',
+            component: 'AITestingDashboard'
+        },
         'aponnt-email-config': {
             id: 'aponnt-email-config',
             icon: '📧',
             label: 'Configuración de Emails',
-            description: 'Gestión de emails Aponnt (solo GG/SUPERADMIN)',
+            description: 'Gestión de emails Aponnt (acceso público)',
             component: 'AponntEmailConfig',
-            permission: ['GG', 'SUPERADMIN']  // Solo accesible para estos roles
+            permission: []  // Acceso público para todos los roles
         },
 
         // ========== GERENCIA ==========
@@ -445,7 +452,7 @@ const RolePermissions = (function() {
             groups: [
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem', 'debugging', 'metricas-tech', 'aponnt-email-config']
+                    sections: ['engineering', 'brain-ecosystem', 'ai-testing', 'debugging', 'metricas-tech', 'aponnt-email-config']
                 },
                 {
                     title: '📢 Marketing',
@@ -495,7 +502,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem', 'aponnt-email-config']
+                    sections: ['engineering', 'brain-ecosystem', 'ai-testing', 'aponnt-email-config']
                 }
             ]
         },
@@ -541,7 +548,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem', 'debugging', 'aponnt-email-config']
+                    sections: ['engineering', 'brain-ecosystem', 'ai-testing', 'debugging', 'aponnt-email-config']
                 }
             ]
         },
@@ -582,7 +589,7 @@ const RolePermissions = (function() {
                 },
                 {
                     title: '🔧 Ingeniería',
-                    sections: ['engineering', 'brain-ecosystem', 'debugging', 'metricas-tech', 'aponnt-email-config']
+                    sections: ['engineering', 'brain-ecosystem', 'ai-testing', 'debugging', 'metricas-tech', 'aponnt-email-config']
                 },
                 {
                     title: '📋 Reportes',

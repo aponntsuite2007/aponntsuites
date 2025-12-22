@@ -1,61 +1,0 @@
-
-╔══════════════════════════════════════════════════════════╗
-║   TEST CRUD CON CLICKS REALES - TODOS LOS FORMULARIOS   ║
-╚══════════════════════════════════════════════════════════╝
-
-🚀 Iniciando navegador...
-🌐 LOGIN...
-   ✅ Login OK
-
-📊 Abriendo módulo Usuarios...
-   🔹 Usando sidebar para abrir módulo
-🔍 Abriendo modal VER...
-   ✅ Modal VER abierto
-
-════════════════════════════════════════════════════════════════════════════════════════════════════
-  PROBANDO BOTONES Y FORMULARIOS DE CADA TAB
-════════════════════════════════════════════════════════════════════════════════════════════════════
-
-🔹 TAB 1: ADMINISTRACIÓN
-────────────────────────────────────────────────────────────────────────────────────────────────────
-   🔧 TEST: Botón "Cambiar Rol"...
-      ❌ Modal/dialog abierto: false
-   ✅ TAB 1 probado
-
-🔹 TAB 2: DATOS PERSONALES
-────────────────────────────────────────────────────────────────────────────────────────────────────
-   🔧 TEST: Botón "Editar" datos básicos...
-      ✅ Modal de edición abierto: true
-      📝 Campos de input encontrados: 4
-      ✅ Campo modificado con [TEST]
-      🔍 Botón Cancel/Cerrar encontrado: false
-      🔧 Forzando cierre con JavaScript...
-      ✅ Modals cerrados: 2
-   🔧 TEST: Botón "+ Agregar" (educación/obra social)...
-   ✅ TAB 2 probado
-
-🔹 TAB 3: ANTECEDENTES LABORALES
-────────────────────────────────────────────────────────────────────────────────────────────────────
-
-❌ ERROR:
-locator.click: Timeout 30000ms exceeded.
-Call log:
-[2m  - waiting for locator('.file-tab').nth(2)[22m
-[2m    - locator resolved to <button class="file-tab" onclick="showFileTab('work', this)">💼 Antecedentes Laborales</button>[22m
-[2m  - attempting click action[22m
-[2m    2 × waiting for element to be visible, enabled and stable[22m
-[2m      - element is not visible[22m
-[2m    - retrying click action[22m
-[2m    - waiting 20ms[22m
-[2m    2 × waiting for element to be visible, enabled and stable[22m
-[2m      - element is not visible[22m
-[2m    - retrying click action[22m
-[2m      - waiting 100ms[22m
-[2m    56 × waiting for element to be visible, enabled and stable[22m
-[2m       - element is not visible[22m
-[2m     - retrying click action[22m
-[2m       - waiting 500ms[22m
-
-   💾 crud-clicks-error.png
-
-👋 Cerrando navegador...

@@ -26,9 +26,22 @@ const {
   Department,
   JobPosting,
   JobApplication,
+  CandidateProfile,
   MedicalRecord,
   sequelize
 } = require('../config/database');
+
+// Importar JWT para autenticación simple de candidatos
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'aponnt_secret_2025';
+
+// Importar servicio de email
+let EmailService;
+try {
+  EmailService = require('../services/EmailService');
+} catch (e) {
+  console.log('⚠️ EmailService no disponible, emails de verificación desactivados');
+}
 
 // Importar servicio de inbox para notificaciones proactivas
 const inboxService = require('../services/inboxService');
@@ -499,8 +512,708 @@ router.get('/public/companies', async (req, res) => {
   }
 });
 
+// ============================================================================
+// ENDPOINTS PÚBLICOS - BOLSA DE CVs (Portal de Empleo Público)
+// ============================================================================
+
+/**
+ * POST /api/job-postings/public/candidates/register
+ * Registrar candidato en pool - Envía código de verificación
+ */
+router.post('/public/candidates/register', async (req, res) => {
+  try {
+    const { email, full_name, phone, professional_title } = req.body;
+
+    if (!email || !full_name) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email y nombre completo son requeridos'
+      });
+    }
+
+    // Verificar si ya existe
+    let candidate = await CandidateProfile.findOne({ where: { email } });
+
+    if (candidate && candidate.is_verified) {
+      return res.status(400).json({
+        success: false,
+        error: 'Este email ya está registrado. Usa la opción de login.'
+      });
+    }
+
+    if (!candidate) {
+      candidate = await CandidateProfile.create({
+        email,
+        full_name,
+        phone,
+        professional_title
+      });
+    } else {
+      // Actualizar datos básicos si existe pero no está verificado
+      await candidate.update({ full_name, phone, professional_title });
+    }
+
+    // Generar código de verificación
+    const verificationCode = candidate.generateVerificationCode();
+    await candidate.save();
+
+    // Enviar email con código
+    if (EmailService) {
+      try {
+        await EmailService.sendEmail({
+          to: email,
+          subject: 'Tu código de verificación - Portal de Empleo',
+          html: `
+            <h2>¡Hola ${full_name}!</h2>
+            <p>Tu código de verificación es:</p>
+            <h1 style="font-size: 32px; letter-spacing: 5px; text-align: center; background: #f0f0f0; padding: 20px; border-radius: 8px;">
+              ${verificationCode}
+            </h1>
+            <p>Este código expira en 15 minutos.</p>
+            <p>Si no solicitaste este código, ignora este email.</p>
+          `
+        });
+      } catch (emailError) {
+        console.error('⚠️ Error enviando email de verificación:', emailError);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Código de verificación enviado a tu email',
+      candidateId: candidate.id
+    });
+
+  } catch (error) {
+    console.error('❌ [CANDIDATES] Error en registro:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al registrar candidato'
+    });
+  }
+});
+
+/**
+ * POST /api/job-postings/public/candidates/verify
+ * Verificar código y devolver token
+ */
+router.post('/public/candidates/verify', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email y código son requeridos'
+      });
+    }
+
+    const candidate = await CandidateProfile.findOne({ where: { email } });
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        error: 'Candidato no encontrado'
+      });
+    }
+
+    if (!candidate.isCodeValid(code)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Código inválido o expirado'
+      });
+    }
+
+    // Marcar como verificado
+    await candidate.update({
+      is_verified: true,
+      verification_code: null,
+      verification_code_expires: null,
+      last_login: new Date()
+    });
+
+    // Generar token JWT (expira en 24h)
+    const token = jwt.sign(
+      {
+        candidateId: candidate.id,
+        email: candidate.email,
+        type: 'candidate'
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      success: true,
+      message: 'Email verificado correctamente',
+      token,
+      profile: {
+        id: candidate.id,
+        email: candidate.email,
+        full_name: candidate.full_name,
+        is_verified: true,
+        has_complete_profile: !!(candidate.skills?.length > 0 && candidate.professional_title)
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [CANDIDATES] Error en verificación:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al verificar código'
+    });
+  }
+});
+
+/**
+ * POST /api/job-postings/public/candidates/login
+ * Login de candidato existente - Envía código por email
+ */
+router.post('/public/candidates/login', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email es requerido'
+      });
+    }
+
+    const candidate = await CandidateProfile.findOne({ where: { email, is_verified: true } });
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        error: 'Candidato no encontrado o no verificado'
+      });
+    }
+
+    // Generar código de verificación
+    const verificationCode = candidate.generateVerificationCode();
+    await candidate.save();
+
+    // Enviar email con código
+    if (EmailService) {
+      try {
+        await EmailService.sendEmail({
+          to: email,
+          subject: 'Tu código de acceso - Portal de Empleo',
+          html: `
+            <h2>¡Hola ${candidate.full_name}!</h2>
+            <p>Tu código de acceso es:</p>
+            <h1 style="font-size: 32px; letter-spacing: 5px; text-align: center; background: #f0f0f0; padding: 20px; border-radius: 8px;">
+              ${verificationCode}
+            </h1>
+            <p>Este código expira en 15 minutos.</p>
+          `
+        });
+      } catch (emailError) {
+        console.error('⚠️ Error enviando email de login:', emailError);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Código de acceso enviado a tu email'
+    });
+
+  } catch (error) {
+    console.error('❌ [CANDIDATES] Error en login:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al iniciar sesión'
+    });
+  }
+});
+
+/**
+ * GET /api/job-postings/public/candidates/me
+ * Obtener perfil del candidato actual
+ */
+router.get('/public/candidates/me', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'Token de autenticación requerido'
+      });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    if (decoded.type !== 'candidate') {
+      return res.status(403).json({
+        success: false,
+        error: 'Token no válido para candidatos'
+      });
+    }
+
+    const candidate = await CandidateProfile.findByPk(decoded.candidateId);
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        error: 'Candidato no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      profile: {
+        id: candidate.id,
+        email: candidate.email,
+        full_name: candidate.full_name,
+        phone: candidate.phone,
+        location: candidate.location,
+        professional_title: candidate.professional_title,
+        years_experience: candidate.years_experience,
+        skills: candidate.skills,
+        education: candidate.education,
+        experience: candidate.experience,
+        preferences: candidate.preferences,
+        visibility: candidate.visibility,
+        cv_original_name: candidate.cv_original_name,
+        has_cv: !!candidate.cv_file_path,
+        profile_views: candidate.profile_views,
+        created_at: candidate.created_at
+      }
+    });
+
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        error: 'Token inválido o expirado'
+      });
+    }
+    console.error('❌ [CANDIDATES] Error obteniendo perfil:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener perfil'
+    });
+  }
+});
+
+/**
+ * PUT /api/job-postings/public/candidates/profile
+ * Actualizar perfil del candidato
+ */
+router.put('/public/candidates/profile', upload.single('cv'), async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'Token de autenticación requerido'
+      });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    if (decoded.type !== 'candidate') {
+      return res.status(403).json({
+        success: false,
+        error: 'Token no válido para candidatos'
+      });
+    }
+
+    const candidate = await CandidateProfile.findByPk(decoded.candidateId);
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        error: 'Candidato no encontrado'
+      });
+    }
+
+    // Parsear datos del body (pueden venir como JSON string en FormData)
+    const updateData = {};
+    const fields = ['full_name', 'phone', 'professional_title', 'years_experience', 'visibility'];
+
+    for (const field of fields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
+
+    // Campos JSON
+    const jsonFields = ['location', 'skills', 'education', 'experience', 'preferences'];
+    for (const field of jsonFields) {
+      if (req.body[field]) {
+        try {
+          updateData[field] = typeof req.body[field] === 'string'
+            ? JSON.parse(req.body[field])
+            : req.body[field];
+        } catch (e) {
+          console.warn(`⚠️ Error parseando ${field}:`, e.message);
+        }
+      }
+    }
+
+    // Si se subió CV
+    if (req.file) {
+      // Eliminar CV anterior si existe
+      if (candidate.cv_file_path && fs.existsSync(candidate.cv_file_path)) {
+        try {
+          fs.unlinkSync(candidate.cv_file_path);
+        } catch (e) {
+          console.warn('⚠️ No se pudo eliminar CV anterior:', e.message);
+        }
+      }
+      updateData.cv_file_path = req.file.path;
+      updateData.cv_original_name = req.file.originalname;
+    }
+
+    await candidate.update(updateData);
+
+    res.json({
+      success: true,
+      message: 'Perfil actualizado correctamente',
+      profile: {
+        id: candidate.id,
+        full_name: candidate.full_name,
+        professional_title: candidate.professional_title,
+        skills: candidate.skills,
+        has_cv: !!candidate.cv_file_path
+      }
+    });
+
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        error: 'Token inválido o expirado'
+      });
+    }
+    console.error('❌ [CANDIDATES] Error actualizando perfil:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al actualizar perfil'
+    });
+  }
+});
+
+/**
+ * GET /api/job-postings/public/candidates/pool
+ * Buscar en pool de candidatos (público, datos básicos)
+ */
+router.get('/public/candidates/pool', async (req, res) => {
+  try {
+    const { skills, experience_min, location, page = 1, limit = 20 } = req.query;
+
+    const result = await CandidateProfile.searchPool({
+      skills: skills ? skills.split(',') : null,
+      experience_min,
+      location,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+
+    res.json({
+      success: true,
+      ...result
+    });
+
+  } catch (error) {
+    console.error('❌ [CANDIDATES] Error buscando pool:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al buscar candidatos'
+    });
+  }
+});
+
+/**
+ * GET /api/job-postings/public/candidates/pool/stats
+ * Estadísticas del pool de candidatos
+ */
+router.get('/public/candidates/pool/stats', async (req, res) => {
+  try {
+    const stats = await CandidateProfile.findAll({
+      attributes: [
+        [sequelize.fn('COUNT', sequelize.col('id')), 'total'],
+        [sequelize.fn('COUNT', sequelize.literal('CASE WHEN is_verified = true THEN 1 END')), 'verified'],
+        [sequelize.fn('AVG', sequelize.col('years_experience')), 'avgExperience']
+      ],
+      where: {
+        status: 'active',
+        visibility: 'public'
+      },
+      raw: true
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        totalCandidates: parseInt(stats[0]?.total) || 0,
+        verifiedCandidates: parseInt(stats[0]?.verified) || 0,
+        avgExperience: parseFloat(stats[0]?.avgExperience) || 0
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [CANDIDATES] Error obteniendo stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener estadísticas'
+    });
+  }
+});
+
 // Middleware de autenticación para todas las rutas siguientes
 router.use(authMiddleware);
+
+// ============================================================================
+// ENDPOINTS PARA POOL DE CVs (Requieren auth de empresa)
+// ============================================================================
+
+/**
+ * GET /api/job-postings/candidates/pool
+ * Empresas: Ver pool de candidatos con datos completos
+ */
+router.get('/candidates/pool', async (req, res) => {
+  try {
+    const context = buildContext(req);
+    const { skills, experience_min, location, page = 1, limit = 20 } = req.query;
+
+    const result = await CandidateProfile.searchPool({
+      skills: skills ? skills.split(',') : null,
+      experience_min,
+      location,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+
+    // Para empresas autenticadas, incrementar contador de vistas
+    // (implementación simplificada)
+
+    res.json({
+      success: true,
+      ...result
+    });
+
+  } catch (error) {
+    console.error('❌ [CANDIDATES] Error buscando pool (auth):', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al buscar candidatos'
+    });
+  }
+});
+
+/**
+ * GET /api/job-postings/candidates/pool/:id
+ * Empresas: Ver detalle de candidato
+ */
+router.get('/candidates/pool/:id', async (req, res) => {
+  try {
+    const context = buildContext(req);
+    const { id } = req.params;
+
+    const candidate = await CandidateProfile.findOne({
+      where: {
+        id,
+        status: 'active',
+        visibility: 'public',
+        is_verified: true
+      }
+    });
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        error: 'Candidato no encontrado o no disponible'
+      });
+    }
+
+    // Incrementar contador de vistas
+    await candidate.increment('profile_views');
+
+    res.json({
+      success: true,
+      candidate: {
+        id: candidate.id,
+        full_name: candidate.full_name,
+        professional_title: candidate.professional_title,
+        location: candidate.location,
+        years_experience: candidate.years_experience,
+        skills: candidate.skills,
+        education: candidate.education,
+        experience: candidate.experience,
+        preferences: {
+          work_mode: candidate.preferences?.work_mode,
+          availability: candidate.preferences?.availability,
+          willing_to_relocate: candidate.preferences?.willing_to_relocate
+        },
+        has_cv: !!candidate.cv_file_path,
+        cv_download_url: candidate.cv_file_path
+          ? `/api/job-postings/candidates/pool/${candidate.id}/cv`
+          : null,
+        profile_views: candidate.profile_views + 1,
+        created_at: candidate.created_at
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [CANDIDATES] Error obteniendo candidato:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener candidato'
+    });
+  }
+});
+
+/**
+ * GET /api/job-postings/candidates/pool/:id/cv
+ * Empresas: Descargar CV de candidato
+ */
+router.get('/candidates/pool/:id/cv', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const candidate = await CandidateProfile.findOne({
+      where: {
+        id,
+        status: 'active',
+        visibility: 'public',
+        is_verified: true
+      }
+    });
+
+    if (!candidate || !candidate.cv_file_path) {
+      return res.status(404).json({
+        success: false,
+        error: 'CV no encontrado'
+      });
+    }
+
+    if (!fs.existsSync(candidate.cv_file_path)) {
+      return res.status(404).json({
+        success: false,
+        error: 'Archivo CV no encontrado en servidor'
+      });
+    }
+
+    res.download(candidate.cv_file_path, candidate.cv_original_name || 'cv.pdf');
+
+  } catch (error) {
+    console.error('❌ [CANDIDATES] Error descargando CV:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al descargar CV'
+    });
+  }
+});
+
+/**
+ * POST /api/job-postings/candidates/pool/:id/import
+ * Empresas: Importar candidato del pool a una oferta específica
+ */
+router.post('/candidates/pool/:id/import', async (req, res) => {
+  try {
+    const context = buildContext(req);
+    const { id } = req.params;
+    const { job_posting_id } = req.body;
+
+    if (!job_posting_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'job_posting_id es requerido'
+      });
+    }
+
+    // Verificar que la oferta existe y pertenece a la empresa
+    const jobPosting = await JobPosting.findOne({
+      where: {
+        id: job_posting_id,
+        company_id: context.companyId
+      }
+    });
+
+    if (!jobPosting) {
+      return res.status(404).json({
+        success: false,
+        error: 'Oferta laboral no encontrada'
+      });
+    }
+
+    // Obtener candidato del pool
+    const candidate = await CandidateProfile.findOne({
+      where: {
+        id,
+        status: 'active',
+        is_verified: true
+      }
+    });
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        error: 'Candidato no encontrado en pool'
+      });
+    }
+
+    // Verificar si ya existe una postulación
+    const existingApplication = await JobApplication.findOne({
+      where: {
+        job_posting_id,
+        candidate_email: candidate.email
+      }
+    });
+
+    if (existingApplication) {
+      return res.status(400).json({
+        success: false,
+        error: 'Este candidato ya tiene una postulación para esta oferta'
+      });
+    }
+
+    // Crear JobApplication a partir del CandidateProfile
+    const application = await JobApplication.create({
+      job_posting_id,
+      company_id: context.companyId,
+      candidate_name: candidate.full_name,
+      candidate_email: candidate.email,
+      candidate_phone: candidate.phone,
+      candidate_location: candidate.location?.city || '',
+      professional_title: candidate.professional_title,
+      years_experience: candidate.years_experience,
+      skills: candidate.skills,
+      education_summary: JSON.stringify(candidate.education),
+      experience_summary: JSON.stringify(candidate.experience),
+      cv_path: candidate.cv_file_path,
+      cv_original_name: candidate.cv_original_name,
+      source: 'cv_pool',
+      status: 'new',
+      imported_from_pool: true,
+      pool_profile_id: candidate.id,
+      imported_by: context.userId,
+      imported_at: new Date()
+    });
+
+    res.json({
+      success: true,
+      message: 'Candidato importado al pipeline exitosamente',
+      application: {
+        id: application.id,
+        candidate_name: application.candidate_name,
+        status: application.status,
+        job_posting_id: application.job_posting_id
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [CANDIDATES] Error importando candidato:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al importar candidato'
+    });
+  }
+});
 
 // ============================================================================
 // ENDPOINTS PARA OFERTAS LABORALES (JobPosting) - REQUIEREN AUTH

@@ -22,6 +22,7 @@ const SystemRegistry = require('../auditor/registry/SystemRegistry');
 const AuditorEngine = require('../auditor/core/AuditorEngine');
 const ProcessChainGenerator = require('./ProcessChainGenerator');
 const ContextValidatorService = require('./ContextValidatorService');
+const PrerequisiteChecker = require('../brain/services/PrerequisiteChecker');
 
 class AssistantService {
   constructor(database, brainService = null) {
@@ -56,6 +57,15 @@ class AssistantService {
     } catch (e) {
       console.warn('⚠️ SystemRegistry no disponible:', e.message);
       this.systemRegistry = null;
+    }
+
+    // 🧠 PREREQUISITE CHECKER - Verificación de prerrequisitos en tiempo real
+    try {
+      this.prerequisiteChecker = new PrerequisiteChecker(database);
+      console.log('✅ PrerequisiteChecker inicializado');
+    } catch (e) {
+      console.warn('⚠️ PrerequisiteChecker no disponible:', e.message);
+      this.prerequisiteChecker = null;
     }
 
     console.log('🤖 AssistantService inicializado');
@@ -166,6 +176,211 @@ class AssistantService {
   }
 
   /**
+   * 🧠 DETECTAR INTENCIÓN DE VERIFICACIÓN
+   * Detecta si el usuario quiere VERIFICAR si puede hacer algo (no ejecutar la acción)
+   * Ej: "¿puedo liquidar sueldos?", "verifica que pueda", "qué me falta para..."
+   */
+  detectVerificationIntent(question) {
+    const lowerQuestion = question.toLowerCase();
+
+    // Patrones que indican intención de VERIFICACIÓN (no acción)
+    const verificationPatterns = [
+      { pattern: /(?:puedo|podré|podria)\s+(?:hacer|realizar|ejecutar|procesar|liquidar|generar)/i, type: 'can_i' },
+      { pattern: /(?:tengo|tenemos)\s+(?:todo|todos?|lo necesario)\s+(?:para|listo)/i, type: 'have_all' },
+      { pattern: /(?:estoy|estamos)\s+(?:listo|preparado|en condiciones)\s+(?:para)?/i, type: 'ready' },
+      { pattern: /(?:verificar?|chequear?|revisar?|comprobar?)\s+(?:si|que|requisitos|prerrequisitos)/i, type: 'verify' },
+      { pattern: /(?:qué|que)\s+(?:me|nos)\s+falta\s+(?:para)?/i, type: 'whats_missing' },
+      { pattern: /(?:requisitos|prerrequisitos|condiciones)\s+(?:para|de)/i, type: 'requirements' },
+      { pattern: /(?:falta|faltan)\s+(?:algo|datos?|configurar?)/i, type: 'missing' },
+      { pattern: /(?:está|esta)\s+(?:todo|listo|ok|bien)\s+(?:para)?/i, type: 'is_ok' },
+      { pattern: /(?:antes de|previo a)\s+(?:liquidar|procesar|generar)/i, type: 'before' }
+    ];
+
+    for (const { pattern, type } of verificationPatterns) {
+      if (pattern.test(lowerQuestion)) {
+        // Extraer la acción que quiere verificar
+        const actionMatch = this.extractActionFromVerification(lowerQuestion);
+
+        console.log(`✅ [VERIFICATION INTENT] Tipo: ${type}, Acción: ${actionMatch?.actionKey || 'desconocida'}`);
+
+        return {
+          isVerificationIntent: true,
+          verificationType: type,
+          actionKey: actionMatch?.actionKey || null,
+          confidence: actionMatch ? 0.9 : 0.6,
+          originalQuestion: question
+        };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Extrae la acción específica de una pregunta de verificación
+   */
+  extractActionFromVerification(question) {
+    const actionMappings = [
+      // NÓMINA/PAYROLL
+      { keywords: ['liquidar', 'liquidación', 'nómina', 'nomina', 'sueldos', 'salarios', 'quincena'], actionKey: 'payroll-liquidation' },
+      { keywords: ['recibo', 'recibos de sueldo'], actionKey: 'payroll-receipt-generate' },
+
+      // ASISTENCIA
+      { keywords: ['check-in', 'checkin', 'fichar', 'marcar entrada', 'registrar asistencia'], actionKey: 'check-in' },
+      { keywords: ['check-out', 'checkout', 'marcar salida'], actionKey: 'check-out' },
+      { keywords: ['reporte de asistencia', 'informe asistencia'], actionKey: 'attendance-report' },
+
+      // VACACIONES
+      { keywords: ['vacaciones', 'pedir vacaciones', 'solicitar vacaciones'], actionKey: 'vacation-request' },
+      { keywords: ['aprobar vacaciones'], actionKey: 'vacation-approve' },
+
+      // TURNOS
+      { keywords: ['cambiar turno', 'cambio de turno', 'intercambiar turno'], actionKey: 'shift-swap' },
+      { keywords: ['asignar turno'], actionKey: 'shift-assign' },
+
+      // USUARIOS
+      { keywords: ['crear usuario', 'agregar usuario', 'nuevo usuario', 'alta usuario'], actionKey: 'user-create' },
+      { keywords: ['editar usuario', 'modificar usuario'], actionKey: 'user-update' },
+
+      // HORAS EXTRA
+      { keywords: ['horas extra', 'overtime', 'extras'], actionKey: 'overtime-request' },
+
+      // MÉDICO
+      { keywords: ['licencia médica', 'licencia medica', 'parte médico'], actionKey: 'medical-leave' },
+
+      // REPORTES
+      { keywords: ['generar reporte', 'crear reporte', 'exportar'], actionKey: 'report-generate' }
+    ];
+
+    const lowerQuestion = question.toLowerCase();
+
+    for (const mapping of actionMappings) {
+      for (const keyword of mapping.keywords) {
+        if (lowerQuestion.includes(keyword)) {
+          return { actionKey: mapping.actionKey, matchedKeyword: keyword };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * 🧠 MANEJAR VERIFICACIÓN DE PRERREQUISITOS
+   * Usa PrerequisiteChecker para verificar y devolver resultado estructurado
+   */
+  async handleVerificationRequest(verificationIntent, companyId, userId) {
+    if (!this.prerequisiteChecker) {
+      return {
+        success: false,
+        error: 'PrerequisiteChecker no disponible',
+        suggestion: 'El sistema de verificación no está configurado'
+      };
+    }
+
+    if (!verificationIntent.actionKey) {
+      // No sabemos qué acción verificar, listar disponibles
+      const actions = this.prerequisiteChecker.getAvailableActions();
+      return {
+        success: true,
+        type: 'action_list',
+        message: 'No especificaste qué acción verificar. Estas son las acciones disponibles:',
+        availableActions: actions.slice(0, 15),
+        totalActions: actions.length,
+        hint: 'Pregunta algo como "¿puedo liquidar sueldos?" o "¿tengo todo para generar recibos?"'
+      };
+    }
+
+    // Verificar prerrequisitos de la acción específica
+    const result = await this.prerequisiteChecker.checkPrerequisites(
+      verificationIntent.actionKey,
+      companyId,
+      userId
+    );
+
+    return {
+      success: true,
+      type: 'prerequisite_check',
+      actionKey: verificationIntent.actionKey,
+      actionName: result.actionName,
+      canProceed: result.canProceed,
+      verified: result.verified,
+      missing: result.missing,
+      warnings: result.warnings,
+      modules: result.modules,
+      process: result.process,
+      summary: result.summary,
+      checkDurationMs: result.checkDurationMs
+    };
+  }
+
+  /**
+   * 🧠 GENERAR RESPUESTA NATURAL PARA VERIFICACIÓN
+   * Convierte el resultado de verificación en respuesta legible
+   */
+  generateVerificationResponse(verificationResult) {
+    if (!verificationResult.success) {
+      return {
+        answer: `❌ ${verificationResult.error}. ${verificationResult.suggestion || ''}`,
+        source: 'prerequisite_checker_error',
+        confidence: 0.5
+      };
+    }
+
+    if (verificationResult.type === 'action_list') {
+      const actionsList = verificationResult.availableActions
+        .map(a => `• ${a.name}`)
+        .join('\n');
+
+      return {
+        answer: `${verificationResult.message}\n\n${actionsList}\n\n💡 ${verificationResult.hint}`,
+        source: 'prerequisite_checker',
+        confidence: 0.8
+      };
+    }
+
+    // Resultado de verificación de prerrequisitos
+    const { summary, canProceed, verified, missing, process } = verificationResult;
+
+    let answer = `${summary.emoji} **${summary.title}**\n\n${summary.message}\n\n`;
+
+    if (canProceed) {
+      // TODO OK - mostrar pasos a seguir
+      answer += `**✅ Verificaciones pasadas:**\n`;
+      verified.slice(0, 5).forEach(v => {
+        answer += `• ${v.description}${v.value ? ` (${v.value})` : ''}\n`;
+      });
+
+      if (process && process.steps) {
+        answer += `\n**📋 Próximos pasos:**\n`;
+        process.steps.slice(0, 3).forEach((step, i) => {
+          answer += `${i + 1}. ${step.description || step}\n`;
+        });
+      }
+    } else {
+      // FALTA ALGO - mostrar qué y cómo solucionarlo
+      answer += `**❌ Falta completar:**\n`;
+      missing.forEach(m => {
+        answer += `• ${m.description}\n`;
+        if (m.howToFix) {
+          answer += `  → ${m.howToFix}\n`;
+        }
+      });
+
+      if (summary.alternative) {
+        answer += `\n**💡 Alternativa:** ${summary.alternative.message}\n`;
+      }
+    }
+
+    return {
+      answer,
+      source: 'prerequisite_checker',
+      confidence: 0.95,
+      verificationResult
+    };
+  }
+
+  /**
    * Método principal: Responder pregunta del usuario
    *
    * @param {Object} params
@@ -187,6 +402,66 @@ class AssistantService {
       console.log(`   Empresa: ${companyId}`);
       console.log(`   Pregunta: "${question}"`);
       console.log(`   Contexto: ${JSON.stringify(context)}`);
+
+      // 🧠 PASO 0: DETECTAR INTENCIÓN DE VERIFICACIÓN (PRIORIDAD MÁXIMA)
+      const verificationIntent = this.detectVerificationIntent(question);
+
+      if (verificationIntent && verificationIntent.isVerificationIntent) {
+        console.log(`🧠 [VERIFICATION] Detectada intención de verificación: ${verificationIntent.verificationType}`);
+
+        // Manejar verificación usando PrerequisiteChecker
+        const verificationResult = await this.handleVerificationRequest(
+          verificationIntent,
+          companyId,
+          userId
+        );
+
+        // Generar respuesta natural
+        const response = this.generateVerificationResponse(verificationResult);
+
+        // Guardar en knowledge base y conversación
+        const savedEntry = await this.saveToKnowledgeBase({
+          companyId,
+          userId,
+          userRole,
+          question,
+          context,
+          answer: response.answer,
+          answerSource: 'prerequisite_checker',
+          modelUsed: 'prerequisite_checker',
+          tokensUsed: 0,
+          responseTimeMs: Date.now() - startTime,
+          confidenceScore: response.confidence,
+          diagnosticTriggered: false
+        });
+
+        const conversation = await this.saveConversation({
+          companyId,
+          userId,
+          question,
+          answer: response.answer,
+          knowledgeEntryId: savedEntry.id,
+          context,
+          answerSource: 'prerequisite_checker',
+          confidenceScore: response.confidence,
+          responseTimeMs: Date.now() - startTime,
+          diagnosticTriggered: false
+        });
+
+        console.log(`✅ Verificación completada en ${Date.now() - startTime}ms`);
+
+        return {
+          id: conversation.id,
+          answer: response.answer,
+          source: 'prerequisite_checker',
+          confidence: response.confidence,
+          verificationResult: verificationResult,
+          responseTimeMs: Date.now() - startTime,
+          suggestedActions: verificationResult.canProceed
+            ? [{ label: 'Proceder', action: verificationResult.actionKey }]
+            : verificationResult.missing?.map(m => ({ label: m.howToFix, module: m.relatedModule })) || []
+        };
+      }
 
       // PASO 0.5: 🔥 DETECTAR INTENCIÓN DE ACCIÓN
       const actionIntent = this.detectActionIntent(question);

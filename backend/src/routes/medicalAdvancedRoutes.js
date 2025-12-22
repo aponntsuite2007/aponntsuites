@@ -18,6 +18,14 @@ const {
 } = require('../config/database');
 
 // ============================================================================
+// HELPER: Validar formato UUID
+// ============================================================================
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isValidUUID(str) {
+  return typeof str === 'string' && UUID_REGEX.test(str);
+}
+
+// ============================================================================
 // DATOS ANTROPOMÉTRICOS
 // ============================================================================
 
@@ -25,6 +33,12 @@ const {
 router.get('/anthropometric/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
+
+        // ✅ FIX: Validar UUID
+        if (!isValidUUID(userId)) {
+            return res.json({ success: true, data: [] });
+        }
+
         const { companyId } = req.user || {};
 
         const data = await UserAnthropometricData.findAll({
@@ -425,6 +439,12 @@ router.put('/healthy-habits/:userId', async (req, res) => {
 router.get('/complete/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
+
+        // ✅ FIX: Validar UUID
+        if (!isValidUUID(userId)) {
+            return res.json({ success: false, error: 'userId inválido', data: null });
+        }
+
         const { companyId } = req.user || {};
         const companyFilter = companyId ? { company_id: companyId } : {};
 

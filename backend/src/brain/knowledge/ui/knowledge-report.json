@@ -1,0 +1,220 @@
+{
+  "generatedAt": "2025-12-20T23:05:21.986Z",
+  "summary": {
+    "totalModules": 30,
+    "totalButtons": 10,
+    "totalInputs": 12,
+    "totalModals": 1,
+    "totalTabs": 0
+  },
+  "moduleKnowledge": {
+    "admin_consent_management": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 3
+    },
+    "admin_finance_dashboard": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 3
+    },
+    "admin_panel_controller": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 9
+    },
+    "admin_sidebar": {
+      "hasUI": false,
+      "hasAPI": false,
+      "complexity": 0
+    },
+    "admin_support_tickets_view": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 9
+    },
+    "ai_assistant_chat": {
+      "hasUI": false,
+      "hasAPI": false,
+      "complexity": 0
+    },
+    "ai_testing_dashboard": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 4
+    },
+    "aponnt_billing_dashboard": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 8
+    },
+    "aponnt_email_config": {
+      "hasUI": false,
+      "hasAPI": false,
+      "complexity": 0
+    },
+    "aponnt_login": {
+      "hasUI": false,
+      "hasAPI": false,
+      "complexity": 0
+    },
+    "art_management": {
+      "hasUI": false,
+      "hasAPI": false,
+      "complexity": 0
+    },
+    "associate_marketplace": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 8
+    },
+    "associate_workflow_panel": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 4
+    },
+    "attendance": {
+      "hasUI": false,
+      "hasAPI": false,
+      "complexity": 0
+    },
+    "audit_reports": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 6
+    },
+    "auto_healing_dashboard": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 5
+    },
+    "benefits_management": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 9
+    },
+    "biometric_attendance_module": {
+      "hasUI": false,
+      "hasAPI": false,
+      "complexity": 0
+    },
+    "biometric_consent": {
+      "hasUI": false,
+      "hasAPI": false,
+      "complexity": 0
+    },
+    "biometric_dashboard": {
+      "hasUI": false,
+      "hasAPI": false,
+      "complexity": 0
+    },
+    "biometric_simple": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 2
+    },
+    "brain_tour_guide": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 6
+    },
+    "clientes": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 5
+    },
+    "company_account": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 5
+    },
+    "company_modal_tabs_redesign": {
+      "hasUI": false,
+      "hasAPI": false,
+      "complexity": 0
+    },
+    "company_workflow": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 9
+    },
+    "compliance_dashboard": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 4
+    },
+    "configurador_modulos": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 2
+    },
+    "contextual_help_system": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 4
+    },
+    "critical_path_ui": {
+      "hasUI": false,
+      "hasAPI": true,
+      "complexity": 6
+    }
+  },
+  "actionableButtons": [],
+  "formFields": [],
+  "buttonsByAction": {
+    "unknown": [
+      {
+        "text": "☰",
+        "id": null,
+        "module": null
+      },
+      {
+        "text": "🚀 Iniciar Sesión",
+        "id": "loginButton",
+        "module": null
+      },
+      {
+        "text": "👁️",
+        "id": null,
+        "module": null
+      },
+      {
+        "text": "🚀 Acceder",
+        "id": "loginButton",
+        "module": null
+      },
+      {
+        "text": "👁️",
+        "id": null,
+        "module": null
+      },
+      {
+        "text": "🏗️ Inicializar",
+        "id": null,
+        "module": null
+      },
+      {
+        "text": "👤 Mi Espacio",
+        "id": "btnMiDashboard",
+        "module": null
+      }
+    ],
+    "cancel": [
+      {
+        "text": "×",
+        "id": null,
+        "module": null
+      },
+      {
+        "text": "Cancelar",
+        "id": null,
+        "module": null
+      },
+      {
+        "text": "🚪 Salir",
+        "id": null,
+        "module": null
+      }
+    ]
+  }
+}

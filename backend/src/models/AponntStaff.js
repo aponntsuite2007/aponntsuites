@@ -77,6 +77,12 @@ module.exports = (sequelize) => {
       comment: 'Teléfono de contacto'
     },
 
+    profile_photo: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      comment: 'URL de la foto de perfil del staff'
+    },
+
     document_type: {
       type: DataTypes.STRING(20),
       allowNull: true,

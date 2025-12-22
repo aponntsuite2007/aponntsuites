@@ -314,6 +314,7 @@ const MedicalRecordAuditLog = require('../models/MedicalRecordAuditLog')(sequeli
 // ✅ MODELOS - Sistema de Postulaciones Laborales (RRHH → Médico → Alta)
 const JobPosting = require('../models/JobPosting')(sequelize);
 const JobApplication = require('../models/JobApplication')(sequelize);
+const CandidateProfile = require('../models/CandidateProfile')(sequelize);
 
 // ✅ MODELOS - Manual de Procedimientos ISO 9001
 const Procedure = require('../models/Procedure')(sequelize);
@@ -1755,6 +1756,7 @@ module.exports = {
   // ✅ EXPORTS - Sistema de Postulaciones Laborales
   JobPosting,
   JobApplication,
+  CandidateProfile,
 
   // ✅ EXPORTS - Manual de Procedimientos ISO 9001
   Procedure,

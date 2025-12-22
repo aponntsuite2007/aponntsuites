@@ -5,6 +5,14 @@ const AttendanceScoringEngine = require('../services/AttendanceScoringEngine');
 const PatternDetectionService = require('../services/PatternDetectionService');
 const { AttendanceProfile, AttendancePattern, ScoringHistory, ComparativeAnalytics } = require('../config/database');
 
+// ============================================================================
+// HELPER: Validar formato UUID
+// ============================================================================
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isValidUUID(str) {
+  return typeof str === 'string' && UUID_REGEX.test(str);
+}
+
 /**
  * Rutas de Attendance Analytics
  *
@@ -25,6 +33,12 @@ router.get('/employee/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const companyId = req.user?.company_id || req.query.company_id;
+
+    // ✅ FIX: Validar UUID
+    if (!isValidUUID(userId)) {
+      console.warn(`⚠️ [ANALYTICS] userId inválido: "${userId}"`);
+      return res.json({ success: false, error: 'userId inválido - se requiere UUID' });
+    }
 
     if (!companyId) {
       return res.status(400).json({
@@ -54,6 +68,11 @@ router.get('/employee/:userId/profile', async (req, res) => {
   try {
     const { userId } = req.params;
     const companyId = req.user?.company_id || req.query.company_id;
+
+    // ✅ FIX: Validar UUID
+    if (!isValidUUID(userId)) {
+      return res.json({ success: false, error: 'userId inválido' });
+    }
 
     const profile = await AttendanceProfile.findOne({
       where: { user_id: userId, company_id: companyId }
@@ -91,6 +110,11 @@ router.get('/employee/:userId/patterns', async (req, res) => {
     const companyId = req.user?.company_id || req.query.company_id;
     const status = req.query.status || 'active';
 
+    // ✅ FIX: Validar UUID
+    if (!isValidUUID(userId)) {
+      return res.json({ success: true, patterns: [] });
+    }
+
     const patterns = await AttendancePattern.findAll({
       where: {
         user_id: userId,
@@ -124,6 +148,17 @@ router.get('/employee/:userId/history', async (req, res) => {
     const { userId } = req.params;
     const companyId = req.user?.company_id || req.query.company_id;
     const limit = parseInt(req.query.limit) || 12;
+
+    // ✅ FIX: Validar UUID
+    if (!isValidUUID(userId)) {
+      return res.json({ success: true, total: 0, history: [] });
+    }
+
+    // FIX 2025-12-20: Validar company_id para evitar WHERE con undefined
+    if (!companyId) {
+      console.warn('[ATTENDANCE-HISTORY] company_id no proporcionado para userId:', userId);
+      return res.json({ success: true, total: 0, history: [], warning: 'company_id requerido' });
+    }
 
     const history = await ScoringHistory.findAll({
       where: { user_id: userId, company_id: companyId },
@@ -310,6 +345,11 @@ router.post('/recalculate/employee/:userId', async (req, res) => {
     const { userId } = req.params;
     const companyId = req.user?.company_id || req.body.company_id;
 
+    // ✅ FIX: Validar UUID
+    if (!isValidUUID(userId)) {
+      return res.json({ success: false, error: 'userId inválido' });
+    }
+
     if (!companyId) {
       return res.status(400).json({
         success: false,
@@ -342,6 +382,11 @@ router.post('/patterns/detect/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const companyId = req.user?.company_id || req.body.company_id;
+
+    // ✅ FIX: Validar UUID
+    if (!isValidUUID(userId)) {
+      return res.json({ success: false, error: 'userId inválido' });
+    }
 
     if (!companyId) {
       return res.status(400).json({

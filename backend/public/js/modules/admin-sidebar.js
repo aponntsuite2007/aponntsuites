@@ -139,34 +139,31 @@ const AdminSidebar = {
             const items = group.sections || group.items || [];
             const validItems = items.filter(Boolean);
 
-            // Si el grupo tiene UN SOLO item, renderizarlo directamente como menú (sin submenú)
-            if (validItems.length === 1) {
-                const item = validItems[0];
-                const isActive = item.id === this._activeSection;
-                const icon = item.icon || '📄';
-                return `
-                    <a href="#"
-                       class="menu-item menu-item-single ${isActive ? 'active' : ''}"
-                       data-section="${item.id}"
-                       data-tooltip="${item.label}">
-                        <span class="menu-item-icon">${icon}</span>
-                        <span class="menu-item-label">${item.label}</span>
-                    </a>
-                `;
+            if (validItems.length === 0) {
+                return ''; // No renderizar grupos vacíos
             }
 
             const isExpanded = this._expandedGroups.has(groupId);
             const hasActiveItem = validItems.some(item => item.id === this._activeSection);
 
-            // Obtener icono del primer item o usar uno por defecto (puede ser emoji o clase FA)
-            const firstItemIcon = validItems[0] && validItems[0].icon;
-            const groupIcon = group.icon || firstItemIcon || '📁';
+            // Extraer emoji del título si existe (ej: "🎫 Soporte" -> icon="🎫", label="SOPORTE")
+            const emojiMatch = groupTitle.match(/^(\p{Emoji})\s*(.+)$/u);
+            let groupIcon, groupLabel;
+            if (emojiMatch) {
+                groupIcon = emojiMatch[1];
+                groupLabel = emojiMatch[2].toUpperCase();
+            } else {
+                // Obtener icono del primer item o usar uno por defecto
+                const firstItemIcon = validItems[0] && validItems[0].icon;
+                groupIcon = group.icon || firstItemIcon || '📁';
+                groupLabel = groupTitle.toUpperCase();
+            }
 
             return `
                 <div class="menu-group ${isExpanded || hasActiveItem ? 'expanded' : ''}" data-group="${groupId}">
                     <div class="menu-group-header" data-group-toggle="${groupId}">
                         <span class="menu-group-icon">${groupIcon}</span>
-                        <span class="menu-group-label">${groupTitle}</span>
+                        <span class="menu-group-label">${groupLabel}</span>
                         <i class="fas fa-chevron-down menu-group-arrow"></i>
                     </div>
                     <div class="menu-group-items">
@@ -448,9 +445,114 @@ const AdminSidebar = {
     },
 
     /**
+     * Habilita modo auto-hide del sidebar
+     * El sidebar se oculta automáticamente y aparece al acercar el mouse
+     */
+    enableAutoHide() {
+        console.log('[AdminSidebar] Habilitando auto-hide...');
+
+        // Variables para control de estado
+        this._autoHideEnabled = true;
+        this._autoHideTimer = null;
+        this._autoHideVisible = false;
+
+        // Agregar clase especial para auto-hide (sidebar oculto completamente)
+        if (this._sidebar) {
+            this._sidebar.classList.add('auto-hide-mode');
+            this._sidebar.classList.add('auto-hide-hidden');
+        }
+
+        // Listener global para detectar mouse cerca del borde izquierdo
+        const handleMouseMove = (e) => {
+            if (!this._autoHideEnabled) return;
+
+            const triggerZone = 20; // px desde el borde izquierdo
+            const sidebarWidth = 280;
+
+            // Si el mouse está en la zona de activación O dentro del sidebar visible
+            if (e.clientX < triggerZone || (this._autoHideVisible && e.clientX < sidebarWidth)) {
+                // Cancelar timer de cierre
+                if (this._autoHideTimer) {
+                    clearTimeout(this._autoHideTimer);
+                    this._autoHideTimer = null;
+                }
+
+                // Mostrar sidebar si está oculto
+                if (!this._autoHideVisible) {
+                    this._autoHideVisible = true;
+                    if (this._sidebar) {
+                        this._sidebar.classList.remove('auto-hide-hidden');
+                        this._sidebar.classList.add('auto-hide-visible');
+                    }
+                }
+            } else {
+                // Mouse fuera del sidebar - iniciar timer para ocultar
+                if (this._autoHideVisible && !this._autoHideTimer) {
+                    this._autoHideTimer = setTimeout(() => {
+                        if (this._autoHideEnabled && this._autoHideVisible) {
+                            this._autoHideVisible = false;
+                            if (this._sidebar) {
+                                this._sidebar.classList.remove('auto-hide-visible');
+                                this._sidebar.classList.add('auto-hide-hidden');
+                            }
+                        }
+                        this._autoHideTimer = null;
+                    }, 600); // Delay de 600ms antes de cerrar
+                }
+            }
+        };
+
+        // Agregar listener
+        document.addEventListener('mousemove', handleMouseMove);
+
+        // Guardar referencia para poder removerlo después
+        this._autoHideMouseHandler = handleMouseMove;
+
+        console.log('[AdminSidebar] Auto-hide habilitado. Acerca el mouse al borde izquierdo para mostrar el menú.');
+    },
+
+    /**
+     * Deshabilita modo auto-hide del sidebar
+     */
+    disableAutoHide() {
+        console.log('[AdminSidebar] Deshabilitando auto-hide...');
+
+        this._autoHideEnabled = false;
+
+        // Remover listener
+        if (this._autoHideMouseHandler) {
+            document.removeEventListener('mousemove', this._autoHideMouseHandler);
+            this._autoHideMouseHandler = null;
+        }
+
+        // Cancelar timer pendiente
+        if (this._autoHideTimer) {
+            clearTimeout(this._autoHideTimer);
+            this._autoHideTimer = null;
+        }
+
+        // Remover clases de auto-hide
+        if (this._sidebar) {
+            this._sidebar.classList.remove('auto-hide-mode');
+            this._sidebar.classList.remove('auto-hide-hidden');
+            this._sidebar.classList.remove('auto-hide-visible');
+        }
+
+        // Restaurar estado expandido
+        if (this._isCollapsed) {
+            this.expand();
+        }
+    },
+
+    /**
      * Destruye el componente y limpia listeners
      */
     destroy() {
+        // Deshabilitar auto-hide si está activo
+        if (this._autoHideEnabled) {
+            this.disableAutoHide();
+        }
+
         if (this._sidebar) {
             this._sidebar.innerHTML = '';
         }
@@ -585,6 +687,60 @@ additionalStyles.textContent = `
 
     .menu-group.expanded .menu-group-arrow {
         transform: rotate(180deg);
+    }
+
+    /* ============================================
+       AUTO-HIDE MODE STYLES
+       ============================================ */
+    /* Sidebar en modo auto-hide */
+    #admin-sidebar.auto-hide-mode {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 9999;
+    }
+
+    /* Sidebar oculto - solo muestra 5px como indicador */
+    #admin-sidebar.auto-hide-hidden {
+        transform: translateX(-275px);
+    }
+
+    /* Sidebar visible en auto-hide */
+    #admin-sidebar.auto-hide-visible {
+        transform: translateX(0);
+        box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Main content se expande en auto-hide mode */
+    #admin-sidebar.auto-hide-mode ~ #admin-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Ajuste adicional para el content-area */
+    #admin-sidebar.auto-hide-mode ~ #admin-main #content-area {
+        max-width: 100%;
+    }
+
+    /* Indicador visual cuando está oculto */
+    #admin-sidebar.auto-hide-hidden::after {
+        content: '☰';
+        position: absolute;
+        right: -30px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--accent-primary, #f59e0b);
+        color: white;
+        padding: 12px 8px;
+        border-radius: 0 8px 8px 0;
+        cursor: pointer;
+        font-size: 16px;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        pointer-events: none;
+    }
+
+    #admin-sidebar.auto-hide-hidden::after:hover {
+        opacity: 1;
     }
 `;
 

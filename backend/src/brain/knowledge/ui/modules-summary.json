@@ -1,0 +1,212 @@
+{
+  "admin_consent_management": {
+    "sourceFile": "admin-consent-management.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 3
+  },
+  "admin_finance_dashboard": {
+    "sourceFile": "admin-finance-dashboard.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 3
+  },
+  "admin_panel_controller": {
+    "sourceFile": "admin-panel-controller.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 9
+  },
+  "admin_sidebar": {
+    "sourceFile": "admin-sidebar.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "admin_support_tickets_view": {
+    "sourceFile": "admin-support-tickets-view.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 9
+  },
+  "ai_assistant_chat": {
+    "sourceFile": "ai-assistant-chat.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "ai_testing_dashboard": {
+    "sourceFile": "ai-testing-dashboard.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 4
+  },
+  "aponnt_billing_dashboard": {
+    "sourceFile": "aponnt-billing-dashboard.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 8
+  },
+  "aponnt_email_config": {
+    "sourceFile": "aponnt-email-config.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 1
+  },
+  "aponnt_login": {
+    "sourceFile": "aponnt-login.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "art_management": {
+    "sourceFile": "art-management.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "associate_marketplace": {
+    "sourceFile": "associate-marketplace.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 8
+  },
+  "associate_workflow_panel": {
+    "sourceFile": "associate-workflow-panel.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 4
+  },
+  "attendance": {
+    "sourceFile": "attendance.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "audit_reports": {
+    "sourceFile": "audit-reports.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 6
+  },
+  "auto_healing_dashboard": {
+    "sourceFile": "auto-healing-dashboard.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 5
+  },
+  "benefits_management": {
+    "sourceFile": "benefits-management.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 9
+  },
+  "biometric_attendance_module": {
+    "sourceFile": "biometric-attendance-module.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "biometric_consent": {
+    "sourceFile": "biometric-consent.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "biometric_dashboard": {
+    "sourceFile": "biometric-dashboard.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "biometric_simple": {
+    "sourceFile": "biometric-simple.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 2
+  },
+  "brain_tour_guide": {
+    "sourceFile": "brain-tour-guide.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 6
+  },
+  "clientes": {
+    "sourceFile": "clientes.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 5
+  },
+  "company_account": {
+    "sourceFile": "company-account.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 5
+  },
+  "company_email_process": {
+    "sourceFile": "company-email-process.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "company_email_smtp_config": {
+    "sourceFile": "company-email-smtp-config.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "company_modal_tabs_redesign": {
+    "sourceFile": "company-modal-tabs-redesign.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 0
+  },
+  "company_workflow": {
+    "sourceFile": "company-workflow.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 9
+  },
+  "compliance_dashboard": {
+    "sourceFile": "compliance-dashboard.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 4
+  },
+  "configurador_modulos": {
+    "sourceFile": "configurador-modulos.js",
+    "buttonCount": 0,
+    "inputCount": 0,
+    "hasJSAnalysis": true,
+    "apiEndpoints": 2
+  }
+}

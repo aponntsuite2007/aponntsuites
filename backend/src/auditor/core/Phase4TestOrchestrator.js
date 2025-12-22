@@ -59,6 +59,10 @@ const axios = require('axios');
 const FlutterIntegrationCollector = require('../collectors/FlutterIntegrationCollector');
 const StressTestCollector = require('../collectors/StressTestCollector');
 
+// 🔍 UI ELEMENT DISCOVERY ENGINE (2025-12-20)
+// Motor de descubrimiento REAL de elementos UI con verificación SSOT
+const UIElementDiscoveryEngine = require('../collectors/UIElementDiscoveryEngine');
+
 class Phase4TestOrchestrator {
     constructor(config = {}, database = null, brainService = null) {
         // ⚡ AUTO-DETECCIÓN DE PUERTO: Detectar automáticamente qué servidor está corriendo
@@ -103,6 +107,10 @@ class Phase4TestOrchestrator {
 
         // ✨ NEW: Schema Validator (integrado desde SSOT)
         this.schemaValidator = new SchemaValidator();
+
+        // 🔍 UI Element Discovery Engine (2025-12-20)
+        // Motor de verificación REAL de elementos UI
+        this.uiDiscovery = null; // Se inicializa con el mismo browser en start()
 
         // Componentes de Phase 4 avanzado (lazy-load en start)
         this.systemRegistry = null;
@@ -159,6 +167,80 @@ class Phase4TestOrchestrator {
      */
     async wait(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // =========================================================================
+    // 🔍 VERIFICACIÓN REAL DE UI (2025-12-20)
+    // Métodos que usan UIElementDiscoveryEngine para verificación REAL
+    // =========================================================================
+
+    /**
+     * Verificar REALMENTE que un modal abrió y tiene el contenido correcto
+     * @param {string} buttonSelector - Selector del botón que abre el modal
+     * @param {Object} expectations - Qué debe tener el modal
+     * @returns {Object} Resultado de verificación real
+     */
+    async verifyModalReal(buttonSelector, expectations = {}) {
+        if (!this.uiDiscovery) {
+            this.logger.warn('UI-DISCOVERY', 'Motor no inicializado, usando verificación legacy');
+            return { verified: false, error: 'UIDiscovery no disponible' };
+        }
+
+        this.logger.debug('UI-DISCOVERY', `Verificando modal: ${buttonSelector}`);
+
+        const result = await this.uiDiscovery.openAndVerifyModal(buttonSelector, expectations);
+
+        if (result.verified) {
+            this.stats.uiTestsPassed++;
+            this.logger.info('UI-DISCOVERY', `✅ Modal verificado: ${result.modalContent?.title || 'Sin título'}`);
+        } else {
+            this.stats.uiTestsFailed++;
+            this.logger.error('UI-DISCOVERY', `❌ Modal falló: ${result.issues.join(', ')}`);
+        }
+
+        return result;
+    }
+
+    /**
+     * Descubrir TODOS los elementos de la pantalla actual
+     * Útil para saber qué hay REALMENTE en la UI
+     */
+    async discoverCurrentScreen() {
+        if (!this.uiDiscovery) {
+            return { error: 'UIDiscovery no disponible' };
+        }
+
+        this.logger.debug('UI-DISCOVERY', 'Escaneando pantalla actual...');
+        const discovery = await this.uiDiscovery.discoverAllElements();
+
+        this.logger.info('UI-DISCOVERY', `Encontrados: ${discovery.summary.totalButtons} botones, ${discovery.summary.totalInputs} inputs, ${discovery.summary.dynamicDataCount} datos SSOT`);
+
+        return discovery;
+    }
+
+    /**
+     * Verificar que un dato de la UI coincide con la BD (SSOT)
+     * @param {string} selector - Selector del elemento con el dato
+     * @param {string} table - Tabla de BD
+     * @param {string} column - Columna
+     * @param {Object} where - Condiciones WHERE
+     */
+    async verifySSOTData(selector, table, column, where) {
+        if (!this.uiDiscovery) {
+            return { verified: false, error: 'UIDiscovery no disponible' };
+        }
+
+        const result = await this.uiDiscovery.verifySSOT(selector, table, column, where);
+
+        if (result.verified) {
+            this.stats.schemaValidationPassed++;
+            this.logger.info('SSOT', `✅ UI="${result.uiValue}" === BD="${result.dbValue}"`);
+        } else {
+            this.stats.schemaValidationFailed++;
+            this.logger.error('SSOT', `❌ Mismatch: UI="${result.uiValue}" !== BD="${result.dbValue}"`);
+        }
+
+        return result;
     }
 
     /**
@@ -491,6 +573,18 @@ class Phase4TestOrchestrator {
             } else {
                 this.logger.warn('OLLAMA', 'Ollama no disponible - continuando sin análisis IA');
             }
+
+            // 5.5 Inicializar UI Element Discovery Engine (2025-12-20)
+            // Comparte el contexto de browser/page de Playwright
+            this.uiDiscovery = new UIElementDiscoveryEngine({
+                baseUrl: this.config.baseUrl,
+                database: this.database,
+                headless: this.config.headless
+            });
+            // Inyectar page existente para evitar abrir otro browser
+            this.uiDiscovery.page = this.page;
+            this.uiDiscovery.browser = this.browser;
+            this.logger.info('UI-DISCOVERY', 'Motor de verificación UI inicializado');
 
             // 6. Inicializar componentes avanzados (TechnicalReportGenerator)
             if (this.database) {
@@ -8796,6 +8890,409 @@ class Phase4TestOrchestrator {
 
         results.success = results.summary.failedSuites === 0;
         return results;
+    }
+
+    /**
+     * ═══════════════════════════════════════════════════════════════════════════
+     * SMART E2E TESTING SYSTEM - INTEGRACIÓN 100% CON BRAIN + SISTEMA NERVIOSO
+     * ═══════════════════════════════════════════════════════════════════════════
+     * Testing inteligente que funciona como un "ejército de personas" testeando:
+     * - ✅ Detecta qué botón falló
+     * - ✅ Detecta qué dato no se cargó
+     * - ✅ Detecta cambios que no respetaron SSOT
+     * - ✅ Detecta módulos mostrándose sin estar contratados
+     * ═══════════════════════════════════════════════════════════════════════════
+     */
+
+    /**
+     * PASO 1: RECOLECTAR CONTEXTO INTELIGENTE DESDE BRAIN
+     * Consulta al Brain para saber qué DEBE aparecer según módulos contratados
+     *
+     * @param {Object} params - { companyId, module }
+     * @returns {Promise<Object>} Contexto completo con elementos esperados
+     */
+    async gatherContext({ companyId, module }) {
+        this.logger.info(`\n🧠 [SMART-TEST] Recolectando contexto inteligente para módulo "${module}"...`);
+        this.logger.info(`   🏢 Empresa: ${companyId}`);
+
+        const context = {
+            companyId,
+            module,
+            moduleIsActive: false,
+            expectedElements: [],
+            expectedEndpoints: [],
+            expectedDBFields: [],
+            systemHealth: null,
+            timestamp: new Date()
+        };
+
+        try {
+            // ════════════════════════════════════════════════════════════
+            // 1. CONSULTAR MÓDULOS ACTIVOS
+            // ════════════════════════════════════════════════════════════
+            if (this.brainService) {
+                this.logger.info('   🔍 Consultando módulos activos al Brain...');
+                const activeModules = await this.brainService.getActiveModulesForCompany(companyId);
+
+                context.moduleIsActive = activeModules.some(m => m.module_key === module);
+                context.activeModules = activeModules;
+
+                this.logger.info(`      ✅ Módulo "${module}" ${context.moduleIsActive ? 'ACTIVO' : 'INACTIVO'}`);
+                this.logger.info(`      📊 Total módulos activos: ${activeModules.length}`);
+
+                // ════════════════════════════════════════════════════════════
+                // 2. OBTENER ELEMENTOS UI ESPERADOS
+                // ════════════════════════════════════════════════════════════
+                if (context.moduleIsActive) {
+                    this.logger.info('   🔍 Consultando elementos UI esperados al Brain...');
+                    context.expectedElements = await this.brainService.getModuleUIElements(module);
+                    this.logger.info(`      ✅ ${context.expectedElements.length} elementos UI esperados`);
+                }
+
+                // ════════════════════════════════════════════════════════════
+                // 3. OBTENER ENDPOINTS ESPERADOS
+                // ════════════════════════════════════════════════════════════
+                this.logger.info('   🔍 Consultando endpoints esperados al Brain...');
+                context.expectedEndpoints = await this.brainService.getModuleEndpoints(module);
+                this.logger.info(`      ✅ ${context.expectedEndpoints.length} endpoints esperados`);
+
+                // ════════════════════════════════════════════════════════════
+                // 4. OBTENER SCHEMA DE DB
+                // ════════════════════════════════════════════════════════════
+                this.logger.info('   🔍 Consultando schema de BD al Brain...');
+                const dbSchema = await this.brainService.getDatabaseSchema();
+
+                // Extraer campos del módulo específico
+                const tableName = this.moduleTableMap[module];
+                if (tableName && dbSchema.schema && dbSchema.schema[tableName]) {
+                    context.expectedDBFields = dbSchema.schema[tableName].fields || [];
+                    this.logger.info(`      ✅ ${context.expectedDBFields.length} campos esperados en tabla "${tableName}"`);
+                }
+
+            } else {
+                this.logger.warn('   ⚠️ Brain Service no disponible - contexto limitado');
+            }
+
+            // ════════════════════════════════════════════════════════════
+            // 5. HEALTH CHECK DEL SISTEMA NERVIOSO
+            // ════════════════════════════════════════════════════════════
+            // TODO: Conectar con Sistema Nervioso cuando esté disponible
+            // const nervousSystem = require('../../brain/services/BrainNervousSystem');
+            // context.systemHealth = nervousSystem.getSystemHealth();
+
+            this.logger.info('✅ [SMART-TEST] Contexto recolectado exitosamente');
+
+            return context;
+
+        } catch (error) {
+            this.logger.error(`❌ [SMART-TEST] Error recolectando contexto: ${error.message}`);
+            context.error = error.message;
+            return context;
+        }
+    }
+
+    /**
+     * PASO 2: COMPARACIÓN INTELIGENTE DE ELEMENTOS
+     * Compara elementos esperados (según Brain) vs elementos descubiertos (en UI)
+     *
+     * @param {Array} expectedElements - Elementos que DEBEN estar (según Brain)
+     * @param {Object} discoveredElements - Elementos encontrados en UI
+     * @returns {Object} { missing: [], unexpected: [], matched: [] }
+     */
+    compareElements(expectedElements, discoveredElements) {
+        this.logger.info('\n⚖️ [SMART-TEST] Comparando elementos esperados vs descubiertos...');
+
+        const result = {
+            missing: [],      // Elementos que DEBEN estar pero NO están
+            unexpected: [],   // Elementos que NO deben estar pero ESTÁN (CRÍTICO)
+            matched: [],      // Elementos que están correctamente
+            summary: {}
+        };
+
+        // Flatten discovered elements (buttons, inputs, containers)
+        const flatDiscovered = [
+            ...(discoveredElements.buttons || []),
+            ...(discoveredElements.inputs || []),
+            ...(discoveredElements.containers || [])
+        ];
+
+        // ════════════════════════════════════════════════════════════
+        // 1. VERIFICAR QUE TODOS LOS ESPERADOS ESTÉN PRESENTES
+        // ════════════════════════════════════════════════════════════
+        for (const expected of expectedElements) {
+            const found = flatDiscovered.find(d => {
+                // Comparar por selector o por data-module + type
+                return (expected.selector && d.selector === expected.selector) ||
+                       (expected.dataModule === d.dataModule && expected.type === d.type);
+            });
+
+            if (found) {
+                result.matched.push({
+                    ...expected,
+                    status: 'OK',
+                    discovered: found
+                });
+            } else {
+                result.missing.push({
+                    ...expected,
+                    status: 'MISSING',
+                    severity: 'HIGH',
+                    reason: `Elemento esperado "${expected.type}" (${expected.selector || expected.text}) no encontrado en UI`
+                });
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // 2. DETECTAR ELEMENTOS INESPERADOS (MÓDULOS NO CONTRATADOS)
+        // ════════════════════════════════════════════════════════════
+        for (const discovered of flatDiscovered) {
+            // Si tiene data-module y NO es 'core', verificar que el módulo esté activo
+            if (discovered.dataModule && discovered.dataModule !== 'core') {
+                const shouldExist = expectedElements.some(e => e.dataModule === discovered.dataModule);
+
+                if (!shouldExist) {
+                    result.unexpected.push({
+                        element: discovered,
+                        status: 'UNEXPECTED',
+                        severity: 'CRITICAL',
+                        reason: `Módulo "${discovered.dataModule}" mostrándose sin estar contratado`,
+                        suggestion: `Agregar v-if="hasModule('${discovered.dataModule}')" al elemento`
+                    });
+                }
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // 3. SUMMARY
+        // ════════════════════════════════════════════════════════════
+        result.summary = {
+            total: expectedElements.length,
+            matched: result.matched.length,
+            missing: result.missing.length,
+            unexpected: result.unexpected.length,
+            status: result.missing.length === 0 && result.unexpected.length === 0 ? 'OK' : 'ERROR'
+        };
+
+        this.logger.info(`   ✅ Matched: ${result.matched.length}`);
+        if (result.missing.length > 0) {
+            this.logger.warn(`   ⚠️ Missing: ${result.missing.length}`);
+        }
+        if (result.unexpected.length > 0) {
+            this.logger.error(`   🚨 Unexpected: ${result.unexpected.length} (CRÍTICO - módulos no contratados)`);
+        }
+
+        return result;
+    }
+
+    /**
+     * PASO 3: REPORTAR ERROR AL SISTEMA NERVIOSO + GENERAR TICKET
+     * Sistema de "ejército de testers" reportando problemas en tiempo real
+     *
+     * @param {Object} errorData - Datos del error detectado
+     */
+    async reportToNervousSystem(errorData) {
+        this.logger.info('\n🚨 [SMART-TEST] Reportando error detectado...');
+
+        try {
+            // ════════════════════════════════════════════════════════════
+            // 1. REPORTAR A SISTEMA NERVIOSO (si está disponible)
+            // ════════════════════════════════════════════════════════════
+            // TODO: Conectar con Sistema Nervioso
+            // const nervousSystem = require('../../brain/services/BrainNervousSystem');
+            // nervousSystem.reportError({
+            //     type: errorData.type,
+            //     module: errorData.module,
+            //     severity: errorData.severity,
+            //     message: errorData.message,
+            //     details: errorData.details
+            // });
+
+            this.logger.info(`   🔔 Error tipo: ${errorData.type}`);
+            this.logger.info(`   🔔 Severidad: ${errorData.severity}`);
+            this.logger.info(`   🔔 Mensaje: ${errorData.message}`);
+
+            // ════════════════════════════════════════════════════════════
+            // 2. GENERAR TICKET (si está configurado)
+            // ════════════════════════════════════════════════════════════
+            if (errorData.generateTicket && this.ticketGenerator) {
+                this.logger.info('   📋 Generando ticket automático...');
+
+                const ticket = await this.ticketGenerator.generate({
+                    title: errorData.ticket.title,
+                    description: errorData.ticket.description,
+                    suggestedFix: errorData.ticket.suggestedFix,
+                    affectedFile: errorData.ticket.affectedFile,
+                    priority: errorData.ticket.priority || 'HIGH',
+                    metadata: {
+                        detectedBy: 'SmartE2ETestingSystem',
+                        timestamp: new Date(),
+                        module: errorData.module,
+                        companyId: errorData.companyId
+                    }
+                });
+
+                this.logger.info(`   ✅ Ticket generado: ${ticket.id || 'ID no disponible'}`);
+            }
+
+            // ════════════════════════════════════════════════════════════
+            // 3. GUARDAR EN STATS
+            // ════════════════════════════════════════════════════════════
+            this.stats.errors.push({
+                ...errorData,
+                timestamp: new Date()
+            });
+
+        } catch (error) {
+            this.logger.error(`❌ Error reportando al sistema: ${error.message}`);
+        }
+    }
+
+    /**
+     * PASO 4: EJECUTAR SMART TEST COMPLETO (TODO EL FLUJO)
+     * Este es el método principal que orquesta todo el testing inteligente
+     *
+     * @param {Object} options - { companyId, module, url }
+     * @returns {Promise<Object>} Resultado completo del test
+     */
+    async runSmartE2ETest(options = {}) {
+        const { companyId, module, url } = options;
+
+        this.logger.info('');
+        this.logger.info('╔══════════════════════════════════════════════════════════════╗');
+        this.logger.info('║   🧪 SMART E2E TESTING SYSTEM - Test Inteligente             ║');
+        this.logger.info('╚══════════════════════════════════════════════════════════════╝');
+        this.logger.info(`   🏢 Empresa: ${companyId}`);
+        this.logger.info(`   📦 Módulo: ${module}`);
+        this.logger.info(`   🌐 URL: ${url || this.config.baseUrl}`);
+        this.logger.info('');
+
+        const result = {
+            success: false,
+            companyId,
+            module,
+            context: null,
+            discovery: null,
+            comparison: null,
+            errors: [],
+            timestamp: new Date()
+        };
+
+        try {
+            // ════════════════════════════════════════════════════════════
+            // PASO 1: RECOLECTAR CONTEXTO DESDE BRAIN
+            // ════════════════════════════════════════════════════════════
+            this.logger.info('[1/4] 🧠 Recolectando contexto desde Brain...');
+            result.context = await this.gatherContext({ companyId, module });
+
+            if (result.context.error) {
+                throw new Error(`Error recolectando contexto: ${result.context.error}`);
+            }
+
+            // ════════════════════════════════════════════════════════════
+            // PASO 2: DESCUBRIR ELEMENTOS UI
+            // ════════════════════════════════════════════════════════════
+            this.logger.info('\n[2/4] 🔍 Descubriendo elementos en UI...');
+
+            if (!this.uiDiscovery) {
+                this.logger.warn('   ⚠️ UIElementDiscoveryEngine no inicializado - saltando discovery');
+                result.discovery = { elements: { buttons: [], inputs: [], containers: [] } };
+            } else {
+                if (url) {
+                    await this.uiDiscovery.navigateTo(url);
+                }
+                result.discovery = await this.uiDiscovery.discoverAllElements();
+                this.logger.info(`   ✅ Elementos descubiertos: ${result.discovery.summary?.totalElements || 0}`);
+            }
+
+            // ════════════════════════════════════════════════════════════
+            // PASO 3: COMPARACIÓN INTELIGENTE
+            // ════════════════════════════════════════════════════════════
+            this.logger.info('\n[3/4] ⚖️ Comparando esperados vs descubiertos...');
+            result.comparison = this.compareElements(
+                result.context.expectedElements,
+                result.discovery.elements
+            );
+
+            // ════════════════════════════════════════════════════════════
+            // PASO 4: REPORTAR ERRORES SI HAY
+            // ════════════════════════════════════════════════════════════
+            this.logger.info('\n[4/4] 📊 Analizando resultados...');
+
+            if (result.comparison.unexpected.length > 0) {
+                // 🚨 CRÍTICO: Módulos mostrándose sin estar contratados
+                for (const unexpected of result.comparison.unexpected) {
+                    await this.reportToNervousSystem({
+                        type: 'MODULE_VISIBILITY_ERROR',
+                        severity: 'CRITICAL',
+                        module,
+                        companyId,
+                        message: unexpected.reason,
+                        details: unexpected,
+                        generateTicket: true,
+                        ticket: {
+                            title: `🚨 CRÍTICO: Módulo "${unexpected.element.dataModule}" visible sin estar contratado`,
+                            description: `Empresa ${companyId} NO tiene módulo "${unexpected.element.dataModule}" contratado, pero el elemento aparece en ${unexpected.element.file}`,
+                            suggestedFix: unexpected.suggestion,
+                            affectedFile: `public/${unexpected.element.file}`,
+                            priority: 'HIGH'
+                        }
+                    });
+                }
+
+                result.errors.push({
+                    type: 'UNEXPECTED_MODULES',
+                    count: result.comparison.unexpected.length,
+                    details: result.comparison.unexpected
+                });
+            }
+
+            if (result.comparison.missing.length > 0) {
+                // ⚠️ WARNING: Elementos esperados que faltan
+                for (const missing of result.comparison.missing) {
+                    await this.reportToNervousSystem({
+                        type: 'MISSING_ELEMENT_ERROR',
+                        severity: 'HIGH',
+                        module,
+                        companyId,
+                        message: missing.reason,
+                        details: missing,
+                        generateTicket: false // No generar ticket automático para missing
+                    });
+                }
+
+                result.errors.push({
+                    type: 'MISSING_ELEMENTS',
+                    count: result.comparison.missing.length,
+                    details: result.comparison.missing
+                });
+            }
+
+            // ════════════════════════════════════════════════════════════
+            // RESULTADO FINAL
+            // ════════════════════════════════════════════════════════════
+            result.success = result.errors.length === 0;
+
+            this.logger.info('');
+            this.logger.info('╔══════════════════════════════════════════════════════════════╗');
+            if (result.success) {
+                this.logger.info('║   ✅ SMART TEST EXITOSO - Sistema funcionando correctamente   ║');
+            } else {
+                this.logger.info('║   ❌ SMART TEST FALLIDO - Errores detectados                  ║');
+            }
+            this.logger.info('╚══════════════════════════════════════════════════════════════╝');
+            this.logger.info(`   Elementos matched: ${result.comparison.matched.length}`);
+            this.logger.info(`   Elementos missing: ${result.comparison.missing.length}`);
+            this.logger.info(`   Módulos inesperados: ${result.comparison.unexpected.length}`);
+            this.logger.info('');
+
+            return result;
+
+        } catch (error) {
+            this.logger.error(`❌ Error en Smart E2E Test: ${error.message}`);
+            result.error = error.message;
+            result.success = false;
+            return result;
+        }
     }
 
 }

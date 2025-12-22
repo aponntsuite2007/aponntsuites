@@ -1,0 +1,1070 @@
+{
+  "analyzedAt": "2025-12-22T03:21:02.558Z",
+  "files": [
+    "panel-empresa.html",
+    "panel-administrativo.html"
+  ],
+  "modules": {
+    "admin_consent_management": {
+      "key": "admin_consent_management",
+      "sourceFile": "admin-consent-management.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 4,
+        "apiEndpoints": [
+          "/api/consents/all",
+          "/api/consents/stats",
+          "/api/consents/definitions/${consentId}"
+        ],
+        "domReferences": 21
+      }
+    },
+    "admin_finance_dashboard": {
+      "key": "admin_finance_dashboard",
+      "sourceFile": "admin-finance-dashboard.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 1,
+        "apiEndpoints": [
+          "${this._apiBase}/finance/stats",
+          "${this._apiBase}/invoices",
+          "${this._apiBase}/vendor-commissions"
+        ],
+        "domReferences": 1
+      }
+    },
+    "admin_panel_controller": {
+      "key": "admin_panel_controller",
+      "sourceFile": "admin-panel-controller.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 5,
+        "apiEndpoints": [
+          "/api/aponnt/billing/invoices",
+          "/api/aponnt/staff-data/vendors",
+          "/api/brain/orgchart/aponnt",
+          "/api/aponnt/staff-data/organigrama/data",
+          "/api/brain/overview",
+          "/api/brain/workflows",
+          "/api/brain/commercial-modules",
+          "/api/support/v2/admin/tickets?limit=50",
+          "/api/aponnt/staff/login"
+        ],
+        "domReferences": 45
+      }
+    },
+    "admin_sidebar": {
+      "key": "admin_sidebar",
+      "sourceFile": "admin-sidebar.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 1,
+        "apiEndpoints": [],
+        "domReferences": 6
+      }
+    },
+    "admin_support_tickets_view": {
+      "key": "admin_support_tickets_view",
+      "sourceFile": "admin-support-tickets-view.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 4,
+        "apiEndpoints": [
+          "/api/support/v2/vendors",
+          "/api/v1/companies",
+          "/api/support/v2/modules",
+          "/api/support/v2/tickets/${ticketId}/messages",
+          "/api/support/v2/messages",
+          "/api/support/v2/tickets/${ticketId}/status",
+          "/api/support/v2/tickets/${ticketId}/assign",
+          "/api/support/v2/tickets/${ticketId}/escalate",
+          "/api/support/v2/tickets/${ticketId}/resolve"
+        ],
+        "domReferences": 13
+      }
+    },
+    "ai_assistant_chat": {
+      "key": "ai_assistant_chat",
+      "sourceFile": "ai-assistant-chat.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 33,
+        "apiEndpoints": [],
+        "domReferences": 41
+      }
+    },
+    "ai_testing_dashboard": {
+      "key": "ai_testing_dashboard",
+      "sourceFile": "ai-testing-dashboard.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 0,
+        "apiEndpoints": [
+          "/api/audit/phase4/ai-test",
+          "/api/audit/phase4/ai-test/batch",
+          "/api/audit/phase4/ai-test/history",
+          "/api/audit/phase4/ai-test/patterns"
+        ],
+        "domReferences": 18
+      }
+    },
+    "aponnt_billing_dashboard": {
+      "key": "aponnt_billing_dashboard",
+      "sourceFile": "aponnt-billing-dashboard.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 32,
+        "apiEndpoints": [
+          "/api/aponnt/billing/dashboard/stats",
+          "/api/aponnt/billing/pre-invoices?${params}",
+          "/api/aponnt/billing/pre-invoices/${id}",
+          "/api/aponnt/billing/pre-invoices/${id}/approve",
+          "/api/aponnt/billing/pre-invoices/${id}/reject",
+          "/api/aponnt/billing/pre-invoices/${id}/invoice",
+          "/api/aponnt/billing/admin-tasks?${params}",
+          "/api/aponnt/billing/email-config"
+        ],
+        "domReferences": 5
+      }
+    },
+    "aponnt_email_config": {
+      "key": "aponnt_email_config",
+      "sourceFile": "aponnt-email-config.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 46,
+        "apiEndpoints": [
+          "/api/email-config"
+        ],
+        "domReferences": 46
+      }
+    },
+    "aponnt_login": {
+      "key": "aponnt_login",
+      "sourceFile": "aponnt-login.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 0,
+        "apiEndpoints": [],
+        "domReferences": 16
+      }
+    },
+    "art_management": {
+      "key": "art_management",
+      "sourceFile": "art-management.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 24,
+        "apiEndpoints": [],
+        "domReferences": 54
+      }
+    },
+    "associate_marketplace": {
+      "key": "associate_marketplace",
+      "sourceFile": "associate-marketplace.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 24,
+        "apiEndpoints": [
+          "${config.apiBase}/categories",
+          "${config.apiBase}/contracts/my-company",
+          "${config.apiBase}/search?${params}",
+          "${config.apiBase}/${associateId}",
+          "${config.apiBase}/contracts",
+          "${config.apiBase}/contracts/${contractId}/pause",
+          "${config.apiBase}/contracts/${contractId}/activate",
+          "${config.apiBase}/contracts/${contractId}"
+        ],
+        "domReferences": 8
+      }
+    },
+    "associate_workflow_panel": {
+      "key": "associate_workflow_panel",
+      "sourceFile": "associate-workflow-panel.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 0,
+        "apiEndpoints": [
+          "${this.apiBase}/overview?period=${this.currentPeriod}",
+          "${this.apiBase}/billing-summary?period=${this.currentPeriod}",
+          "${this.apiBase}/stats",
+          "${this.apiBase}/companies"
+        ],
+        "domReferences": 5
+      }
+    },
+    "attendance": {
+      "key": "attendance",
+      "sourceFile": "attendance.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 29,
+        "apiEndpoints": [],
+        "domReferences": 39
+      }
+    },
+    "audit_reports": {
+      "key": "audit_reports",
+      "sourceFile": "audit-reports.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 1,
+        "apiEndpoints": [
+          "/api/audit-reports/types",
+          "/api/audit-reports/generate",
+          "/api/audit-reports/batch-generate",
+          "/api/audit-reports/verify/${code}",
+          "/api/audit-reports/history?limit=50",
+          "/api/audit-reports/${reportId}/info"
+        ],
+        "domReferences": 21
+      }
+    },
+    "auto_healing_dashboard": {
+      "key": "auto_healing_dashboard",
+      "sourceFile": "auto-healing-dashboard.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 2,
+        "apiEndpoints": [
+          "/api/auto-healing/run",
+          "/api/auto-healing/stop",
+          "/api/auto-healing/status",
+          "/api/auto-healing/metrics",
+          "/api/auto-healing/reports"
+        ],
+        "domReferences": 14
+      }
+    },
+    "benefits_management": {
+      "key": "benefits_management",
+      "sourceFile": "benefits-management.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 47,
+        "apiEndpoints": [
+          "/api/benefits/stats/${companyId}",
+          "/api/benefits/policies/${companyId}",
+          "/api/benefits/policies",
+          "/api/v1/users",
+          "/api/benefits/types?active=true",
+          "/api/benefits/assign",
+          "/api/benefits/assets",
+          "/api/benefits/contract/templates",
+          "/api/benefits/expiring/${days}?companyId=${companyId}"
+        ],
+        "domReferences": 57
+      }
+    },
+    "biometric_attendance_module": {
+      "key": "biometric_attendance_module",
+      "sourceFile": "biometric-attendance-module.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 5,
+        "apiEndpoints": [],
+        "domReferences": 8
+      }
+    },
+    "biometric_consent": {
+      "key": "biometric_consent",
+      "sourceFile": "biometric-consent.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 16,
+        "apiEndpoints": [],
+        "domReferences": 5
+      }
+    },
+    "biometric_dashboard": {
+      "key": "biometric_dashboard",
+      "sourceFile": "biometric-dashboard.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 3,
+        "apiEndpoints": [],
+        "domReferences": 7
+      }
+    },
+    "biometric_simple": {
+      "key": "biometric_simple",
+      "sourceFile": "biometric-simple.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 17,
+        "apiEndpoints": [
+          "/api/v2/biometric-enterprise/analyze-face",
+          "/api/v2/biometric-enterprise/enroll-face"
+        ],
+        "domReferences": 22
+      }
+    },
+    "brain_tour_guide": {
+      "key": "brain_tour_guide",
+      "sourceFile": "brain-tour-guide.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 11,
+        "apiEndpoints": [
+          "${this.config.apiBaseUrl}?${params}",
+          "${this.config.apiBaseUrl}/${tourId}",
+          "${this.config.apiBaseUrl}/onboarding/${role}",
+          "${this.config.apiBaseUrl}/module/${moduleKey}",
+          "${this.config.apiBaseUrl}/workflow/${workflowName}",
+          "${this.config.apiBaseUrl}/progress"
+        ],
+        "domReferences": 12
+      }
+    },
+    "clientes": {
+      "key": "clientes",
+      "sourceFile": "clientes.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 20,
+        "apiEndpoints": [
+          "/api/siac/tax-templates?country=${countryCode}",
+          "/api/siac/tax-conditions?country=${countryCode}",
+          "/api/siac/tax-templates",
+          "/api/siac/clientes",
+          "/api/siac/clientes?company_id=${clientesState.companyId}"
+        ],
+        "domReferences": 45
+      }
+    },
+    "company_account": {
+      "key": "company_account",
+      "sourceFile": "company-account.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 12,
+        "apiEndpoints": [
+          "/api/company-account/communications",
+          "/api/company-account/communications/${commId}/read",
+          "/api/company-account/${type}/${id}/download",
+          "/api/company-account/notifications/${notifId}/read",
+          "/api/company-account/notifications/read-all"
+        ],
+        "domReferences": 12
+      }
+    },
+    "company_email_process": {
+      "key": "company_email_process",
+      "sourceFile": "company-email-process.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 23,
+        "apiEndpoints": [],
+        "domReferences": 2
+      }
+    },
+    "company_email_smtp_config": {
+      "key": "company_email_smtp_config",
+      "sourceFile": "company-email-smtp-config.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 19,
+        "apiEndpoints": [],
+        "domReferences": 11
+      }
+    },
+    "company_modal_tabs_redesign": {
+      "key": "company_modal_tabs_redesign",
+      "sourceFile": "company-modal-tabs-redesign.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 5,
+        "apiEndpoints": [],
+        "domReferences": 5
+      }
+    },
+    "company_workflow": {
+      "key": "company_workflow",
+      "sourceFile": "company-workflow.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 14,
+        "apiEndpoints": [
+          "${this.baseUrl}/modules-pricing",
+          "/api/audit/registry",
+          "${this.baseUrl}/companies/${companyId}/branches",
+          "${this.baseUrl}/companies/${companyId}/users",
+          "${this.baseUrl}/companies",
+          "${this.baseUrl}/companies/${companyId}",
+          "${this.baseUrl}/budgets",
+          "${this.baseUrl}/branches/${branchId}",
+          "${WorkflowAPI.baseUrl}/companies/${companyId}/reset-admin-password"
+        ],
+        "domReferences": 49
+      }
+    },
+    "compliance_dashboard": {
+      "key": "compliance_dashboard",
+      "sourceFile": "compliance-dashboard.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 19,
+        "apiEndpoints": [
+          "${this.baseUrl}${endpoint}",
+          "/api/compliance/export/dashboard/${format}?period=${periodDays}&company_name=${companyName}",
+          "/api/compliance/export/violations/${format}?company_name=${companyName}",
+          "/api/compliance/export/employee/${employeeId}/pdf?period=${periodDays}&company_name=${companyName}"
+        ],
+        "domReferences": 32
+      }
+    },
+    "configurador_modulos": {
+      "key": "configurador_modulos",
+      "sourceFile": "configurador-modulos.js",
+      "elements": {
+        "buttons": [],
+        "inputs": [],
+        "modals": [],
+        "tabs": []
+      },
+      "jsAnalysis": {
+        "functionCount": 0,
+        "apiEndpoints": [
+          "/api/modules",
+          "/api/modules/stats/general"
+        ],
+        "domReferences": 7
+      }
+    }
+  },
+  "globalElements": {
+    "buttons": [
+      {
+        "index": 0,
+        "text": "☰",
+        "id": null,
+        "classes": "mobile-menu-btn",
+        "type": "button",
+        "onclick": "toggleMobileSidebar()",
+        "dataAction": null,
+        "dataModule": null,
+        "disabled": false,
+        "sourceFile": "panel-empresa.html",
+        "inferredAction": "unknown"
+      },
+      {
+        "index": 1,
+        "text": "🚀 Iniciar Sesión",
+        "id": "loginButton",
+        "classes": "btn-primary",
+        "type": "submit",
+        "onclick": null,
+        "dataAction": null,
+        "dataModule": null,
+        "disabled": true,
+        "sourceFile": "panel-empresa.html",
+        "inferredAction": "unknown"
+      },
+      {
+        "index": 2,
+        "text": "👁️",
+        "id": null,
+        "classes": "password-toggle",
+        "type": "button",
+        "onclick": "togglePassword('userPassword', this)",
+        "dataAction": null,
+        "dataModule": null,
+        "disabled": false,
+        "sourceFile": "panel-empresa.html",
+        "inferredAction": "unknown"
+      },
+      {
+        "index": 3,
+        "text": "🚀 Acceder",
+        "id": "loginButton",
+        "classes": "",
+        "type": "button",
+        "onclick": null,
+        "dataAction": null,
+        "dataModule": null,
+        "disabled": false,
+        "sourceFile": "panel-empresa.html",
+        "inferredAction": "unknown"
+      },
+      {
+        "index": 4,
+        "text": "×",
+        "id": null,
+        "classes": "",
+        "type": "button",
+        "onclick": "closeInitCompanyModal()",
+        "dataAction": null,
+        "dataModule": null,
+        "disabled": false,
+        "sourceFile": "panel-empresa.html",
+        "inferredAction": "cancel"
+      },
+      {
+        "index": 5,
+        "text": "👁️",
+        "id": null,
+        "classes": "password-toggle",
+        "type": "button",
+        "onclick": "togglePassword('initAdminPassword', this)",
+        "dataAction": null,
+        "dataModule": null,
+        "disabled": false,
+        "sourceFile": "panel-empresa.html",
+        "inferredAction": "unknown"
+      },
+      {
+        "index": 6,
+        "text": "Cancelar",
+        "id": null,
+        "classes": "",
+        "type": "button",
+        "onclick": "closeInitCompanyModal()",
+        "dataAction": null,
+        "dataModule": null,
+        "disabled": false,
+        "sourceFile": "panel-empresa.html",
+        "inferredAction": "cancel"
+      },
+      {
+        "index": 7,
+        "text": "🏗️ Inicializar",
+        "id": null,
+        "classes": "",
+        "type": "submit",
+        "onclick": null,
+        "dataAction": null,
+        "dataModule": null,
+        "disabled": false,
+        "sourceFile": "panel-empresa.html",
+        "inferredAction": "unknown"
+      },
+      {
+        "index": 8,
+        "text": "👤 Mi Espacio",
+        "id": "btnMiDashboard",
+        "classes": "",
+        "type": "button",
+        "onclick": "showEmployeeDashboard(window.currentUser, window.currentCompany || window.selectedCompany)",
+        "dataAction": null,
+        "dataModule": null,
+        "disabled": false,
+        "sourceFile": "panel-empresa.html",
+        "inferredAction": "unknown"
+      },
+      {
+        "index": 9,
+        "text": "🚪 Salir",
+        "id": null,
+        "classes": "",
+        "type": "button",
+        "onclick": "cerrarSesion()",
+        "dataAction": null,
+        "dataModule": null,
+        "disabled": false,
+        "sourceFile": "panel-empresa.html",
+        "inferredAction": "cancel"
+      }
+    ],
+    "inputs": [
+      {
+        "index": 0,
+        "name": null,
+        "id": "userInput",
+        "type": "text",
+        "label": "Usuario:",
+        "placeholder": "Ingrese su usuario",
+        "required": true,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 1,
+        "name": null,
+        "id": "passwordInput",
+        "type": "password",
+        "label": "Contraseña:",
+        "placeholder": null,
+        "required": true,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 2,
+        "name": null,
+        "id": "userEmail",
+        "type": "text",
+        "label": "👤 Usuario",
+        "placeholder": "👤 Usuario",
+        "required": false,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 3,
+        "name": null,
+        "id": "userPassword",
+        "type": "password",
+        "label": "🔒 Contraseña",
+        "placeholder": "🔒 Contraseña",
+        "required": false,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 4,
+        "name": null,
+        "id": "rememberMe",
+        "type": "checkbox",
+        "label": "🔄 Permanecer conectado",
+        "placeholder": null,
+        "required": false,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 5,
+        "name": null,
+        "id": "initCompanyName",
+        "type": "text",
+        "label": null,
+        "placeholder": null,
+        "required": true,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 6,
+        "name": null,
+        "id": "initCompanySlug",
+        "type": "text",
+        "label": null,
+        "placeholder": null,
+        "required": true,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 7,
+        "name": null,
+        "id": "initAdminEmail",
+        "type": "email",
+        "label": null,
+        "placeholder": null,
+        "required": true,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 8,
+        "name": null,
+        "id": "initAdminPassword",
+        "type": "password",
+        "label": null,
+        "placeholder": null,
+        "required": true,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 9,
+        "name": null,
+        "id": "basicModules",
+        "type": "checkbox",
+        "label": null,
+        "placeholder": null,
+        "required": false,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 10,
+        "name": null,
+        "id": "hrModules",
+        "type": "checkbox",
+        "label": null,
+        "placeholder": null,
+        "required": false,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 11,
+        "name": null,
+        "id": "advancedModules",
+        "type": "checkbox",
+        "label": null,
+        "placeholder": null,
+        "required": false,
+        "pattern": null,
+        "maxLength": null,
+        "minLength": null,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      }
+    ],
+    "selects": [
+      {
+        "index": 0,
+        "name": null,
+        "id": "companySelect",
+        "label": "🏢 Seleccionar Empresa",
+        "required": true,
+        "options": [
+          {
+            "value": "",
+            "text": "Cargando empresas..."
+          }
+        ],
+        "optionCount": 1,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 1,
+        "name": null,
+        "id": "companySelectModal",
+        "label": null,
+        "required": false,
+        "options": [
+          {
+            "value": "",
+            "text": "🏢 Seleccionar Empresa..."
+          }
+        ],
+        "optionCount": 1,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 2,
+        "name": null,
+        "id": "initLicenseType",
+        "label": null,
+        "required": false,
+        "options": [
+          {
+            "value": "standard",
+            "text": "Estándar"
+          },
+          {
+            "value": "premium",
+            "text": "Premium"
+          },
+          {
+            "value": "enterprise",
+            "text": "Enterprise"
+          }
+        ],
+        "optionCount": 3,
+        "dataModule": null,
+        "sourceFile": "panel-empresa.html"
+      }
+    ],
+    "modals": [
+      {
+        "id": "initCompanyModal",
+        "title": null,
+        "tabCount": 0,
+        "tabs": [],
+        "fieldCount": 8,
+        "fields": [
+          {
+            "name": "initCompanyName",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "initCompanySlug",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "initAdminEmail",
+            "type": "email",
+            "required": true
+          },
+          {
+            "name": "initAdminPassword",
+            "type": "password",
+            "required": true
+          },
+          {
+            "name": "initLicenseType",
+            "type": "select",
+            "required": false
+          },
+          {
+            "name": "basicModules",
+            "type": "checkbox",
+            "required": false
+          },
+          {
+            "name": "hrModules",
+            "type": "checkbox",
+            "required": false
+          },
+          {
+            "name": "advancedModules",
+            "type": "checkbox",
+            "required": false
+          }
+        ],
+        "buttons": [],
+        "sourceFile": "panel-empresa.html"
+      }
+    ],
+    "tabs": [],
+    "tables": [],
+    "forms": [
+      {
+        "index": 0,
+        "id": "multiTenantLoginForm",
+        "action": null,
+        "method": "get",
+        "fieldCount": 3,
+        "fields": [
+          {
+            "type": "select",
+            "required": true
+          },
+          {
+            "type": "text",
+            "required": true
+          },
+          {
+            "type": "password",
+            "required": true
+          }
+        ],
+        "sourceFile": "panel-empresa.html"
+      },
+      {
+        "index": 1,
+        "id": "initCompanyForm",
+        "action": null,
+        "method": "get",
+        "fieldCount": 8,
+        "fields": [
+          {
+            "type": "text",
+            "required": true
+          },
+          {
+            "type": "text",
+            "required": true
+          },
+          {
+            "type": "email",
+            "required": true
+          },
+          {
+            "type": "password",
+            "required": true
+          },
+          {
+            "type": "select",
+            "required": false
+          },
+          {
+            "type": "checkbox",
+            "required": false
+          },
+          {
+            "type": "checkbox",
+            "required": false
+          },
+          {
+            "type": "checkbox",
+            "required": false
+          }
+        ],
+        "sourceFile": "panel-empresa.html"
+      }
+    ]
+  },
+  "stats": {
+    "filesAnalyzed": 2,
+    "totalButtons": 10,
+    "totalInputs": 12,
+    "totalModals": 1,
+    "totalTabs": 0
+  }
+}

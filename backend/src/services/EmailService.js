@@ -47,7 +47,7 @@ class EmailService {
             // Obtener configuración de Aponnt
             const [config] = await sequelize.query(`
                 SELECT * FROM aponnt_email_config
-                WHERE config_type = :configType AND is_active = true
+                WHERE email_type = :configType AND is_active = true
                 LIMIT 1
             `, {
                 replacements: { configType },

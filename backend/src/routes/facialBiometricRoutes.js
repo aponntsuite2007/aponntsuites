@@ -3,6 +3,14 @@ const router = express.Router();
 const { FacialBiometricData, User } = require('../config/database');
 const { auth } = require('../middleware/auth');
 
+// ============================================================================
+// HELPER: Validar formato UUID
+// ============================================================================
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isValidUUID(str) {
+  return typeof str === 'string' && UUID_REGEX.test(str);
+}
+
 // 📷 Register facial biometric data
 router.post('/register', auth, async (req, res) => {
   try {
@@ -213,6 +221,15 @@ router.post('/verify', auth, async (req, res) => {
 router.get('/user/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
+
+    // ✅ FIX: Validar que userId sea UUID válido
+    if (!isValidUUID(userId)) {
+      console.warn(`⚠️ [FACIAL] userId inválido recibido: "${userId}" - Se esperaba UUID`);
+      return res.json({
+        success: true,
+        data: [] // Retornar array vacío en vez de error 500
+      });
+    }
 
     const facialData = await FacialBiometricData.findAll({
       where: { userId },

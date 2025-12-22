@@ -744,10 +744,8 @@ async function loadUsers() {
             }
 
             // Transform PostgreSQL users to expected format
-            console.log('🔍 [DEBUG] Sample raw user from API:', users[0]);
-            users = users.map(user => {
-                console.log(`🔍 [DEBUG] Mapping user - id: ${user.id}, user_id fallback: ${user.user_id}`);
-                return {
+            // DEBUG REMOVED - was causing 2811+ logs per load
+            users = users.map(user => ({
                 id: user.id || user.user_id,  // ✅ FIX: Backend returns 'id', not 'user_id'
                 name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0],
                 email: user.email,
@@ -770,9 +768,8 @@ async function loadUsers() {
                 emergencyContact: user.emergencyContact,
                 emergencyPhone: user.emergencyPhone,
                 departmentId: user.departmentId
-            };
-            });
-            console.log('🔍 [DEBUG] Sample mapped user:', users[0]);
+            }));
+            // DEBUG REMOVED: console.log('🔍 [DEBUG] Sample mapped user:', users[0]);
 
         } else if (response.status === 401) {
             console.log('🔑 Token expirado o inválido');
@@ -823,10 +820,11 @@ async function loadUsers() {
         allUsers = users;
         filteredUsers = [...users];
         window.currentUsersData = users;
-        
-        // Fetch biometric status for each user
-        await fetchBiometricStatusForUsers(users);
-        
+
+        // ✅ FIX: NO cargar biometría para TODOS los usuarios aquí
+        // Se cargará solo para los usuarios visibles en displayUsersTable
+        // Esto reduce de 2811 requests a solo 25 por página
+
         displayUsersTable(users);
 
         // Update stats
@@ -951,7 +949,83 @@ function displayUsersTable(users) {
     // 📄 RENDER PAGINATION CONTROLS
     renderPaginationControls(users.length, startIndex, Math.min(endIndex, users.length));
 
+    // ✅ FIX: Cargar biometría SOLO para usuarios visibles (máx 25-100)
+    loadBiometricForVisibleUsers(paginatedUsers);
+
     showUserMessage(`✅ ${users.length} usuarios cargados exitosamente`, 'success');
+}
+
+// ✅ FIX: Función para cargar biometría SOLO de usuarios visibles en la página
+async function loadBiometricForVisibleUsers(visibleUsers) {
+    if (!visibleUsers || visibleUsers.length === 0) return;
+
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    if (!token) return;
+
+    console.log(`🔍 [BIO-LAZY] Cargando biometría para ${visibleUsers.length} usuarios visibles...`);
+
+    // Procesar todos en paralelo (son pocos, máx 25-100)
+    const results = await Promise.allSettled(visibleUsers.map(async (user) => {
+        try {
+            const apiUrl = window.progressiveAdmin.getApiUrl(`/api/v1/facial-biometric/user/${user.id}`);
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const bioData = await response.json();
+                if (bioData && bioData.length > 0) {
+                    const hasFace = bioData.some(b => b.faceEmbedding);
+                    const hasFingerprint = bioData.some(b => b.fingerprintTemplate);
+
+                    if (hasFace && hasFingerprint) {
+                        user.biometric = '👤👆 Completo';
+                    } else if (hasFace) {
+                        user.biometric = '👤 Rostro';
+                    } else if (hasFingerprint) {
+                        user.biometric = '👆 Huella';
+                    } else {
+                        user.biometric = '⚠️ Pendiente';
+                    }
+                } else {
+                    user.biometric = '❌ Sin registro';
+                }
+            } else {
+                user.biometric = '⚠️ Pendiente';
+            }
+        } catch (error) {
+            user.biometric = '⚠️ N/D';
+        }
+        return user;
+    }));
+
+    // Actualizar la UI con los estados biométricos
+    updateBiometricBadges(visibleUsers);
+    console.log(`✅ [BIO-LAZY] Biometría actualizada para ${visibleUsers.length} usuarios`);
+}
+
+// Actualizar badges de biometría en la tabla sin re-renderizar toda la tabla
+function updateBiometricBadges(users) {
+    const rows = document.querySelectorAll('.users-table tbody tr');
+    rows.forEach((row, index) => {
+        if (users[index]) {
+            const bioBadge = row.querySelector('td:nth-child(7) .users-badge');
+            if (bioBadge) {
+                bioBadge.textContent = users[index].biometric;
+                // Actualizar clase según estado
+                bioBadge.className = 'users-badge';
+                if (users[index].biometric.includes('Completo') || users[index].biometric.includes('Rostro') || users[index].biometric.includes('Huella')) {
+                    bioBadge.classList.add('success');
+                } else {
+                    bioBadge.classList.add('warning');
+                }
+            }
+        }
+    });
 }
 
 // 📄 ========== PAGINATION FUNCTIONS ==========
@@ -1146,70 +1220,15 @@ function updateUserStatsFromData(users) {
     if (adminElement) adminElement.textContent = adminUsers;
 }
 
-// Fetch biometric status for all users
-async function fetchBiometricStatusForUsers(users) {
-    console.log('🔍 [USERS] Obteniendo estado biométrico de usuarios...');
-    console.time('⏱️ Tiempo carga biometría');
-
-    if (!users || users.length === 0) return;
-
-    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-    if (!token) return;
-
-    // ✅ OPTIMIZACIÓN: Fetch EN PARALELO con Promise.all() (100x más rápido!)
-    const promises = users.map(async (user) => {
-        try {
-            const apiUrl = window.progressiveAdmin.getApiUrl(`/api/v1/facial-biometric/user/${user.id}`);
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const bioData = await response.json();
-                if (bioData && bioData.length > 0) {
-                    // User has biometric data
-                    const hasFace = bioData.some(b => b.faceEmbedding);
-                    const hasFingerprint = bioData.some(b => b.fingerprintTemplate);
-
-                    if (hasFace && hasFingerprint) {
-                        user.biometric = '👤👆 Completo';
-                        user.biometricDetails = { face: true, fingerprint: true };
-                    } else if (hasFace) {
-                        user.biometric = '👤 Rostro';
-                        user.biometricDetails = { face: true, fingerprint: false };
-                    } else if (hasFingerprint) {
-                        user.biometric = '👆 Huella';
-                        user.biometricDetails = { face: false, fingerprint: true };
-                    } else {
-                        user.biometric = '⚠️ Pendiente';
-                        user.biometricDetails = { face: false, fingerprint: false };
-                    }
-                } else {
-                    user.biometric = '❌ Sin registro';
-                    user.biometricDetails = { face: false, fingerprint: false };
-                }
-            } else {
-                // If error fetching, mark as pending
-                user.biometric = '⚠️ Pendiente';
-                user.biometricDetails = { face: false, fingerprint: false };
-            }
-        } catch (error) {
-            console.error(`Error obteniendo biometría para usuario ${user.id}:`, error);
-            user.biometric = '⚠️ Error';
-            user.biometricDetails = { face: false, fingerprint: false };
-        }
-    });
-
-    // Esperar a que TODAS las promesas se resuelvan en paralelo
-    await Promise.allSettled(promises);  // allSettled = continúa aunque algunas fallen
-
-    console.timeEnd('⏱️ Tiempo carga biometría');
-    console.log('✅ [USERS] Estado biométrico actualizado');
+// ⚠️ OBSOLETA - Ya no se usa. Reemplazada por loadBiometricForVisibleUsers()
+// que carga biometría SOLO para los usuarios visibles en la página actual (25-100)
+// en lugar de todos los usuarios (que eran 2811+ y causaba freeze)
+// Mantenida por si se necesita revertir
+/*
+async function fetchBiometricStatusForUsers_OBSOLETE(users) {
+    // ... código removido para evitar uso accidental
 }
+*/
 
 // Filter users by search term
 function filterUsers() {
@@ -2112,13 +2131,26 @@ async function viewUser(userId) {
                     <button class="file-tab" onclick="showFileTab('attendance', this)">📅 Asistencias/Permisos</button>
                     <button class="file-tab" onclick="showFileTab('calendar', this)">📆 Calendario</button>
                     <button class="file-tab" onclick="showFileTab('disciplinary', this)">⚖️ Disciplinarios</button>
-                    <button class="file-tab" onclick="showFileTab('tasks', this)">🎯 Config. Tareas</button>
                     <button class="file-tab" onclick="showFileTab('biometric', this)">📸 Registro Biométrico</button>
                     <button class="file-tab" onclick="showFileTab('notifications', this)">🔔 Notificaciones</button>
                 </div>
 
+                <!-- Banner de Estado: Alta/Baja -->
+                <div id="hiring-status-banner" style="position: absolute; top: 120px; left: 0; right: 0; height: auto; min-height: 40px; padding: 8px 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-bottom: 2px solid #047857; display: flex; justify-content: space-between; align-items: center; z-index: 98;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span id="hiring-status-icon" style="font-size: 24px;">✅</span>
+                        <div>
+                            <div id="hiring-status-text" style="color: white; font-weight: bold; font-size: 14px;">EMPLEADO DADO DE ALTA</div>
+                            <div id="hiring-status-detail" style="color: rgba(255,255,255,0.9); font-size: 11px;">Todos los requisitos completados</div>
+                        </div>
+                    </div>
+                    <button id="hiring-status-action-btn" onclick="manageHiringStatus('${userId}')" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        📋 Ver Detalles
+                    </button>
+                </div>
+
                 <!-- Contenido del Expediente -->
-                <div style="position: absolute; top: 160px; left: 0; right: 0; bottom: 0; padding: 20px; overflow-y: auto; background: white;">
+                <div style="position: absolute; top: 200px; left: 0; right: 0; bottom: 0; padding: 20px; overflow-y: auto; background: white;">
                     
                     <!-- Tab: Administración -->
                     <div id="admin-tab" class="file-tab-content active">
@@ -2139,6 +2171,63 @@ async function viewUser(userId) {
                                         <span class="status-badge ${user.isActive ? 'active' : 'inactive'}">${user.isActive ? '✅ Activo' : '❌ Inactivo'}</span>
                                     </div>
                                     <button class="btn btn-sm btn-outline-secondary" onclick="toggleUserStatus('${userId}')">${user.isActive ? '🔒 Desactivar' : '✅ Activar'}</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Workflow de Alta y Baja -->
+                        <div id="hiring-workflow-section" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h4 style="margin: 0; color: #333;">🔄 Workflow de Alta y Baja</h4>
+                                <button class="btn btn-sm btn-outline-info" onclick="refreshHiringStatus('${userId}')">🔄 Actualizar</button>
+                            </div>
+
+                            <!-- Estado General del Workflow -->
+                            <div id="hiring-status-general-${userId}" style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span id="hiring-icon-${userId}" style="font-size: 24px;">🔄</span>
+                                    <div style="flex: 1;">
+                                        <div id="hiring-status-title-${userId}" style="font-weight: bold; color: #333;">Cargando estado...</div>
+                                        <div id="hiring-status-subtitle-${userId}" style="font-size: 0.9em; color: #666;">Verificando requisitos de alta</div>
+                                    </div>
+                                    <span id="hiring-badge-${userId}" class="status-badge secondary">⏳</span>
+                                </div>
+                            </div>
+
+                            <!-- Requisitos de Alta (employee_hiring_status) -->
+                            <div id="hiring-requirements-${userId}" style="margin-bottom: 15px;">
+                                <h5 style="margin: 0 0 10px 0; color: #555; font-size: 14px;">📋 Requisitos de Alta (Validaciones):</h5>
+                                <div id="hiring-req-list-${userId}" style="display: grid; gap: 8px;">
+                                    <div style="text-align: center; padding: 20px; color: #999;">
+                                        <div style="font-size: 32px; margin-bottom: 10px;">🔄</div>
+                                        <div>Cargando requisitos...</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Condiciones Adicionales (Campos en employees) -->
+                            <div id="employee-conditions-${userId}" style="margin-bottom: 15px;">
+                                <h5 style="margin: 0 0 10px 0; color: #555; font-size: 14px;">📄 Condiciones Adicionales de Alta:</h5>
+                                <div id="employee-conditions-list-${userId}" style="display: grid; gap: 8px;">
+                                    <div style="text-align: center; padding: 20px; color: #999;">
+                                        <div style="font-size: 32px; margin-bottom: 10px;">🔄</div>
+                                        <div>Cargando condiciones...</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Configurar Requisitos (Solo Admin) -->
+                            <div id="hiring-config-${userId}" style="margin-bottom: 15px; padding: 10px; background: #e8f4f8; border-radius: 6px; border-left: 4px solid #17a2b8;">
+                                <button class="btn btn-sm btn-outline-info" onclick="configureHiringRequirements('${userId}')">⚙️ Configurar Requisitos</button>
+                                <span style="margin-left: 10px; font-size: 0.85em; color: #666;">Define qué validaciones requiere este empleado</span>
+                            </div>
+
+                            <!-- Proceso de Baja -->
+                            <div id="offboarding-section-${userId}" style="padding: 12px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+                                <h5 style="margin: 0 0 10px 0; color: #856404; font-size: 14px;">⚠️ Proceso de Baja:</h5>
+                                <button class="btn btn-sm btn-warning" onclick="initiateOffboarding('${userId}', '${user.firstName} ${user.lastName}')">📋 Gestionar Baja de Empleado</button>
+                                <div id="offboarding-info-${userId}" style="margin-top: 8px; font-size: 0.85em; color: #856404;">
+                                    ${user.tipo_baja ? `<strong>Tipo:</strong> ${user.tipo_baja} | <strong>Fecha:</strong> ${user.fecha_baja ? new Date(user.fecha_baja).toLocaleDateString() : 'N/A'}` : 'No hay registro de baja'}
                                 </div>
                             </div>
                         </div>
@@ -2710,17 +2799,7 @@ async function viewUser(userId) {
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div style="background: #fff; border: 1px solid #dee2e6; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 15px;">
-                                    <h4 style="margin: 0;">🎯 Tareas y Categorías Asignadas</h4>
-                                    <button class="btn btn-sm btn-success" onclick="assignTasks('${userId}')">+ Asignar Tarea</button>
-                                </div>
-                                <div id="assigned-tasks-list">
-                                    <p style="text-align: center; color: #666; font-style: italic;">No hay tareas asignadas</p>
-                                </div>
-                            </div>
-                            
+
                             <div style="background: #fff; border: 1px solid #dee2e6; padding: 15px; border-radius: 8px;">
                                 <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 15px;">
                                     <h4 style="margin: 0;">📜 Historial de Posiciones</h4>
@@ -3214,79 +3293,6 @@ async function viewUser(userId) {
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Tab: Configuración de Tareas -->
-                    <div id="tasks-tab" class="file-tab-content" style="display: none;">
-                        <h3>🎯 Configuración de Tareas y Categorías</h3>
-                        <div id="tasks-config">
-                            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                                <h4 style="color: #155724; margin-top: 0;">📊 Tareas Disponibles en la Empresa</h4>
-                                <div style="display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: center;">
-                                    <div style="background: white; padding: 12px; border-radius: 6px;">
-                                        <div id="company-tasks-summary" style="font-size: 14px;">
-                                            <div><strong>Total de Tareas Configuradas:</strong> <span id="total-tasks-count">--</span></div>
-                                            <div><strong>Categorías Activas:</strong> <span id="active-categories-count">--</span></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <button class="btn btn-success" onclick="manageCompanyTasks()" style="margin-bottom: 5px;">
-                                            ⚙️ Gestionar Tareas
-                                        </button>
-                                        <button class="btn btn-info" onclick="createNewTask()" style="display: block;">
-                                            + Nueva Tarea
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                <div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
-                                    <h5 style="color: #856404; margin-top: 0;">🏷️ Tareas Asignadas al Empleado</h5>
-                                    <div id="employee-assigned-tasks">
-                                        <p style="text-align: center; color: #666; font-style: italic; font-size: 12px;">
-                                            No tiene tareas asignadas
-                                        </p>
-                                    </div>
-                                    <div style="text-align: center; margin-top: 15px;">
-                                        <button class="btn btn-sm btn-warning" onclick="assignEmployeeTasks('${userId}')">
-                                            🎯 Asignar Tareas
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div style="background: #d4edda; padding: 15px; border-radius: 8px;">
-                                    <h5 style="color: #155724; margin-top: 0;">💰 Información Salarial por Tarea</h5>
-                                    <div id="salary-by-task">
-                                        <div style="background: white; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
-                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
-                                                <div><strong>Salario Base:</strong></div>
-                                                <div>${user.salary ? '$' + user.salary.toLocaleString() : 'No especificado'}</div>
-                                                <div><strong>Modalidad:</strong></div>
-                                                <div id="salary-modality">Por definir</div>
-                                                <div><strong>Jornada:</strong></div>
-                                                <div id="work-schedule">Por definir</div>
-                                            </div>
-                                        </div>
-                                        <button class="btn btn-sm btn-success" onclick="configureSalaryDetails('${userId}')">
-                                            💰 Configurar Detalles
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="background: #fff; border: 1px solid #dee2e6; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 15px;">
-                                    <h4 style="margin: 0;">📋 Historial de Asignaciones de Tareas</h4>
-                                    <button class="btn btn-sm btn-info" onclick="viewTaskHistory('${userId}')">📊 Ver Historial</button>
-                                </div>
-                                <div id="task-assignment-history">
-                                    <p style="text-align: center; color: #666; font-style: italic;">
-                                        No hay historial de asignaciones de tareas
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Tab: Registro Biométrico -->
                     <div id="biometric-tab" class="file-tab-content" style="display: none;">
@@ -3403,10 +3409,13 @@ async function viewUser(userId) {
         `;
 
         document.body.appendChild(modal);
-        
+
         // Cargar datos iniciales de cada sección
         loadEmployeeFileData(userId);
-        
+
+        // Cargar estado de alta/baja del empleado
+        loadHiringStatus(userId);
+
     } catch (error) {
         console.error('❌ [USERS] Error cargando expediente:', error);
         showUserMessage('❌ Error cargando expediente del empleado', 'error');
@@ -4796,33 +4805,41 @@ window.startBiometricCapture = startBiometricCapture;
 
 // Cambiar entre tabs del expediente
 window.showFileTab = function(tabName, button) {
-    console.log(`🔄 [TABS] Cambiando a tab: ${tabName}`);
+    console.time(`⏱️ showFileTab-${tabName}`);
+    console.log(`🔄 [TABS] INICIO - Cambiando a tab: ${tabName}`);
 
     // Obtener el modal
+    console.log('🔍 [TABS] Paso 1: Buscando modal...');
     const modal = document.getElementById('employeeFileModal');
     if (!modal) {
         console.error('❌ [TABS] Modal employeeFileModal no encontrado');
         return;
     }
+    console.log('🔍 [TABS] Paso 1: Modal encontrado ✓');
 
     // Ocultar todos los tabs DENTRO del modal
+    console.log('🔍 [TABS] Paso 2: Ocultando tabs...');
     modal.querySelectorAll('.file-tab-content').forEach(tab => {
         tab.style.setProperty('display', 'none', 'important');
         tab.classList.remove('active');
     });
+    console.log('🔍 [TABS] Paso 2: Tabs ocultos ✓');
 
     // Remover clase active de todos los botones DENTRO del modal
+    console.log('🔍 [TABS] Paso 3: Limpiando botones...');
     modal.querySelectorAll('.file-tab').forEach(btn => {
         btn.classList.remove('active');
     });
+    console.log('🔍 [TABS] Paso 3: Botones limpiados ✓');
 
     // Mostrar tab seleccionado
+    console.log('🔍 [TABS] Paso 4: Mostrando tab seleccionado...');
     const targetTab = document.getElementById(`${tabName}-tab`);
     if (targetTab) {
         targetTab.style.setProperty('display', 'block', 'important');
         targetTab.classList.add('active');
         button.classList.add('active');
-        console.log(`✅ [TABS] Tab "${tabName}" mostrado correctamente`);
+        console.log(`✅ [TABS] Paso 4: Tab "${tabName}" mostrado ✓`);
 
         // Si es el tab de calendario, cargar el calendario
         if (tabName === 'calendar' && !window.userCalendarLoaded) {
@@ -5430,6 +5447,12 @@ async function loadEmployeeFileData(userId) {
 
     // Cargar estado de consentimiento biométrico
     await loadBiometricConsentStatus(userId);
+
+    // Cargar estado del workflow de alta/baja
+    await refreshHiringStatus(userId);
+
+    // Cargar condiciones adicionales del empleado
+    await loadEmployeeConditions(userId);
 }
 
 // Cargar estado de consentimiento biométrico para un usuario
@@ -6991,128 +7014,6 @@ function addUnionAffiliation(userId) {
         showUserMessage('✅ Afiliación gremial actualizada', 'success');
     };
 }
-
-// =================== FUNCIONES DE GESTIÓN DE TAREAS ===================
-
-function assignTasks(userId) {
-    console.log('🎯 [TASKS] Asignando tareas a usuario:', userId);
-    showUserMessage('🔧 Función en desarrollo: Asignación de Tareas', 'info');
-}
-
-function manageCompanyTasks() {
-    console.log('⚙️ [TASKS] Gestionando tareas de la empresa');
-    showUserMessage('🔧 Función en desarrollo: Gestión de Tareas Empresa', 'info');
-}
-
-function createNewTask() {
-    console.log('➕ [TASKS] Creando nueva tarea');
-    
-    const modal = document.createElement('div');
-    modal.id = 'newTaskModal';
-    modal.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5); display: flex; justify-content: center;
-        align-items: center; z-index: 10001;
-    `;
-    
-    modal.innerHTML = `
-        <div style="background: white; padding: 20px; border-radius: 8px; width: 700px; max-height: 80vh; overflow-y: auto;">
-            <h4>➕ Crear Nueva Tarea/Categoría</h4>
-            <form id="newTaskForm">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div>
-                        <h5 style="color: #155724;">📝 Información de la Tarea</h5>
-                        <div style="margin: 10px 0;">
-                            <label>Nombre de la Tarea:</label>
-                            <input type="text" id="taskName" class="form-control" required>
-                        </div>
-                        <div style="margin: 10px 0;">
-                            <label>Categoría:</label>
-                            <select id="taskCategory" class="form-control" required>
-                                <option value="">Seleccionar...</option>
-                                <option value="administrative">Administrativo</option>
-                                <option value="operational">Operativo</option>
-                                <option value="technical">Técnico</option>
-                                <option value="management">Gerencial</option>
-                                <option value="sales">Ventas</option>
-                                <option value="support">Soporte</option>
-                            </select>
-                        </div>
-                        <div style="margin: 10px 0;">
-                            <label>Descripción:</label>
-                            <textarea id="taskDescription" class="form-control" rows="4" required placeholder="Describe las responsabilidades y actividades de esta tarea..."></textarea>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h5 style="color: #856404;">💰 Información Salarial</h5>
-                        <div style="margin: 10px 0;">
-                            <label>Salario:</label>
-                            <input type="number" id="taskSalary" class="form-control" step="0.01" required>
-                        </div>
-                        <div style="margin: 10px 0;">
-                            <label>Modalidad de Pago:</label>
-                            <select id="paymentMode" class="form-control" required>
-                                <option value="">Seleccionar...</option>
-                                <option value="hourly">Por Hora</option>
-                                <option value="monthly">Mensual</option>
-                                <option value="daily">Diario</option>
-                                <option value="piece">Por Pieza/Proyecto</option>
-                            </select>
-                        </div>
-                        <div style="margin: 10px 0;">
-                            <label>Jornada Laboral:</label>
-                            <select id="workSchedule" class="form-control" required>
-                                <option value="">Seleccionar...</option>
-                                <option value="full_time">Tiempo Completo</option>
-                                <option value="part_time">Medio Tiempo</option>
-                                <option value="weekly">Semanal</option>
-                                <option value="biweekly">Quincenal</option>
-                                <option value="monthly">Mensual</option>
-                                <option value="flexible">Flexible</option>
-                            </select>
-                        </div>
-                        <div style="margin: 10px 0;">
-                            <label>
-                                <input type="checkbox" id="isActive"> ¿Tarea activa?
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" onclick="closeModal('newTaskModal')" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Crear Tarea</button>
-                </div>
-            </form>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    document.getElementById('newTaskForm').onsubmit = (e) => {
-        e.preventDefault();
-        closeModal('newTaskModal');
-        showUserMessage('✅ Nueva tarea creada exitosamente', 'success');
-    };
-}
-
-function assignEmployeeTasks(userId) {
-    console.log('🎯 [TASKS] Asignando tareas específicas al empleado:', userId);
-    showUserMessage('🔧 Función en desarrollo: Asignar Tareas al Empleado', 'info');
-}
-
-function configureSalaryDetails(userId) {
-    console.log('💰 [SALARY] Configurando detalles salariales:', userId);
-    showUserMessage('🔧 Función en desarrollo: Configuración Salarial', 'info');
-}
-
-function viewTaskHistory(userId) {
-    console.log('📊 [TASKS] Viendo historial de tareas:', userId);
-    showUserMessage('🔧 Función en desarrollo: Historial de Tareas', 'info');
-}
-
-// =================== FUNCIONES DE CONTACTO Y OBRA SOCIAL ===================
 
 // ═══════════════════════════════════════════════════════════════════
 // EDITAR DATOS BÁSICOS DEL USUARIO
@@ -12629,6 +12530,1167 @@ async function changeDepartment(userId, currentDeptId) {
     }
 }
 
+// ============================================================================
+// WORKFLOW DE ALTA Y BAJA - FUNCIONES
+// ============================================================================
+
+/**
+ * Refresh hiring status for a user
+ * @param {string} userId - User ID
+ */
+window.refreshHiringStatus = async function(userId) {
+    console.log('🔄 [HIRING] Refrescando hiring status para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Fetch hiring status from API
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/users/${userId}/hiring-status`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            // Si no existe, mostrar estado por defecto
+            if (response.status === 404) {
+                renderEmptyHiringStatus(userId);
+                return;
+            }
+            throw new Error('Error al obtener hiring status');
+        }
+
+        const data = await response.json();
+        const hiringStatus = data.hiringStatus || data;
+
+        // Render hiring status
+        renderHiringStatus(userId, hiringStatus);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al cargar hiring status: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Render hiring status in the UI
+ * @param {string} userId - User ID
+ * @param {object} status - Hiring status object
+ */
+function renderHiringStatus(userId, status) {
+    const iconEl = document.getElementById(`hiring-icon-${userId}`);
+    const titleEl = document.getElementById(`hiring-status-title-${userId}`);
+    const subtitleEl = document.getElementById(`hiring-status-subtitle-${userId}`);
+    const badgeEl = document.getElementById(`hiring-badge-${userId}`);
+    const reqListEl = document.getElementById(`hiring-req-list-${userId}`);
+
+    if (!status) {
+        renderEmptyHiringStatus(userId);
+        return;
+    }
+
+    // Determinar estado general
+    const canActivate = status.puede_activarse;
+    const estadoGeneral = status.estado_general || 'pendiente';
+
+    // Actualizar icono y badge
+    if (canActivate) {
+        iconEl.textContent = '✅';
+        titleEl.textContent = 'EMPLEADO PUEDE SER ACTIVADO';
+        titleEl.style.color = '#28a745';
+        subtitleEl.textContent = 'Todos los requisitos cumplidos';
+        badgeEl.textContent = '✅ Aprobado';
+        badgeEl.className = 'status-badge success';
+    } else {
+        iconEl.textContent = '⚠️';
+        titleEl.textContent = 'PENDIENTE DE APROBACIÓN';
+        titleEl.style.color = '#ffc107';
+        subtitleEl.textContent = status.motivo_bloqueo || 'Hay requisitos pendientes';
+        badgeEl.textContent = '⏳ Pendiente';
+        badgeEl.className = 'status-badge warning';
+    }
+
+    // Renderizar lista de requisitos
+    const requirements = [];
+
+    if (status.requiere_aprobacion_medica) {
+        requirements.push({
+            type: 'medica',
+            label: '🏥 Aprobación Médica',
+            estado: status.aprobacion_medica_estado || 'pendiente',
+            fecha: status.aprobacion_medica_fecha,
+            observaciones: status.aprobacion_medica_observaciones
+        });
+    }
+
+    if (status.requiere_aprobacion_legal) {
+        requirements.push({
+            type: 'legal',
+            label: '⚖️ Aprobación Legal',
+            estado: status.aprobacion_legal_estado || 'pendiente',
+            fecha: status.aprobacion_legal_fecha,
+            observaciones: status.aprobacion_legal_observaciones
+        });
+    }
+
+    if (status.requiere_aprobacion_rrhh) {
+        requirements.push({
+            type: 'rrhh',
+            label: '👥 Aprobación RRHH',
+            estado: status.aprobacion_rrhh_estado || 'pendiente',
+            fecha: status.aprobacion_rrhh_fecha,
+            observaciones: status.aprobacion_rrhh_observaciones
+        });
+    }
+
+    if (status.requiere_evaluacion_capacitacion) {
+        requirements.push({
+            type: 'capacitacion',
+            label: '📚 Evaluación Capacitación',
+            estado: status.evaluacion_capacitacion_estado || 'pendiente',
+            fecha: status.evaluacion_capacitacion_fecha,
+            observaciones: status.evaluacion_capacitacion_observaciones
+        });
+    }
+
+    if (status.requiere_certificado_conducta) {
+        requirements.push({
+            type: 'certificado_conducta',
+            label: '📄 Certificado Conducta',
+            estado: status.certificado_conducta_estado || 'pendiente',
+            fecha: status.certificado_conducta_fecha
+        });
+    }
+
+    if (status.requiere_evaluacion_ambiental) {
+        requirements.push({
+            type: 'evaluacion_ambiental',
+            label: '🌿 Evaluación Ambiental',
+            estado: status.evaluacion_ambiental_estado || 'pendiente',
+            fecha: status.evaluacion_ambiental_fecha
+        });
+    }
+
+    // Ocultar/mostrar sección completa según si hay requisitos
+    const requirementsSection = document.getElementById(`hiring-requirements-${userId}`);
+
+    if (requirements.length === 0) {
+        // Ocultar sección completa si no hay requisitos configurados
+        if (requirementsSection) {
+            requirementsSection.style.display = 'none';
+        }
+    } else {
+        // Mostrar sección si hay requisitos
+        if (requirementsSection) {
+            requirementsSection.style.display = 'block';
+        }
+        reqListEl.innerHTML = requirements.map(req => {
+            const isApproved = req.estado === 'aprobado';
+            const isRejected = req.estado === 'rechazado';
+            const isPending = req.estado === 'pendiente';
+
+            let statusBadge = '';
+            let statusColor = '';
+            let actionButtons = '';
+
+            if (isApproved) {
+                statusBadge = '✅ Aprobado';
+                statusColor = '#28a745';
+            } else if (isRejected) {
+                statusBadge = '❌ Rechazado';
+                statusColor = '#dc3545';
+                actionButtons = `<button class="btn btn-sm btn-success" onclick="approveRequirement('${userId}', '${req.type}')">✅ Aprobar</button>`;
+            } else {
+                statusBadge = '⏳ Pendiente';
+                statusColor = '#ffc107';
+                actionButtons = `
+                    <button class="btn btn-sm btn-success" onclick="approveRequirement('${userId}', '${req.type}')">✅ Aprobar</button>
+                    <button class="btn btn-sm btn-danger" onclick="rejectRequirement('${userId}', '${req.type}')">❌ Rechazar</button>
+                `;
+            }
+
+            return `
+                <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid ${statusColor};">
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold; color: #333;">${req.label}</div>
+                        <div style="font-size: 0.85em; color: #666;">
+                            <span style="color: ${statusColor}; font-weight: bold;">${statusBadge}</span>
+                            ${req.fecha ? `| ${new Date(req.fecha).toLocaleDateString()}` : ''}
+                        </div>
+                        ${req.observaciones ? `<div style="font-size: 0.8em; color: #999; margin-top: 4px;">${req.observaciones}</div>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        ${actionButtons}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+/**
+ * Render empty hiring status (no record found)
+ */
+function renderEmptyHiringStatus(userId) {
+    const iconEl = document.getElementById(`hiring-icon-${userId}`);
+    const titleEl = document.getElementById(`hiring-status-title-${userId}`);
+    const subtitleEl = document.getElementById(`hiring-status-subtitle-${userId}`);
+    const badgeEl = document.getElementById(`hiring-badge-${userId}`);
+    const requirementsSection = document.getElementById(`hiring-requirements-${userId}`);
+
+    iconEl.textContent = 'ℹ️';
+    titleEl.textContent = 'Sin registro de workflow';
+    titleEl.style.color = '#6c757d';
+    subtitleEl.textContent = 'Configura los requisitos para este empleado';
+    badgeEl.textContent = '➖ N/A';
+    badgeEl.className = 'status-badge secondary';
+
+    // Ocultar sección de requisitos cuando no hay registro
+    if (requirementsSection) {
+        requirementsSection.style.display = 'none';
+    }
+}
+
+/**
+ * Configure hiring requirements for a user
+ */
+window.configureHiringRequirements = async function(userId) {
+    console.log('⚙️ [HIRING] Configurando requisitos para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Get current hiring status
+        let currentStatus = null;
+        try {
+            const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/users/${userId}/hiring-status`), {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                currentStatus = data.hiringStatus || data;
+            }
+        } catch (e) {
+            console.log('No hiring status found, creating new one');
+        }
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'configureHiringModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
+
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 12px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                <div style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        ⚙️ Configurar Requisitos de Alta
+                        <button onclick="closeConfigHiringModal()" style="margin-left: auto; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">✕</button>
+                    </h3>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Selecciona qué validaciones requiere este empleado</p>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; gap: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" id="req-medica" ${currentStatus?.requiere_aprobacion_medica ? 'checked' : ''} style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: bold; color: #333;">🏥 Aprobación Médica</div>
+                                <div style="font-size: 0.85em; color: #666;">Requiere aprobación del dashboard médico</div>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" id="req-legal" ${currentStatus?.requiere_aprobacion_legal ? 'checked' : ''} style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: bold; color: #333;">⚖️ Aprobación Legal</div>
+                                <div style="font-size: 0.85em; color: #666;">Requiere validación legal (antecedentes, contratos)</div>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" id="req-rrhh" ${currentStatus?.requiere_aprobacion_rrhh ? 'checked' : ''} style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: bold; color: #333;">👥 Aprobación RRHH</div>
+                                <div style="font-size: 0.85em; color: #666;">Requiere validación de Recursos Humanos</div>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" id="req-capacitacion" ${currentStatus?.requiere_evaluacion_capacitacion ? 'checked' : ''} style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: bold; color: #333;">📚 Evaluación de Capacitación</div>
+                                <div style="font-size: 0.85em; color: #666;">Requiere completar capacitación inicial</div>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" id="req-certificado" ${currentStatus?.requiere_certificado_conducta ? 'checked' : ''} style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: bold; color: #333;">📄 Certificado de Buena Conducta</div>
+                                <div style="font-size: 0.85em; color: #666;">Requiere certificado de antecedentes penales</div>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" id="req-ambiental" ${currentStatus?.requiere_evaluacion_ambiental ? 'checked' : ''} style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: bold; color: #333;">🌿 Evaluación Ambiental</div>
+                                <div style="font-size: 0.85em; color: #666;">Requiere evaluación de adaptación al ambiente laboral</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button onclick="closeConfigHiringModal()" class="btn btn-secondary">Cancelar</button>
+                        <button onclick="saveHiringRequirements('${userId}')" class="btn btn-primary">💾 Guardar Configuración</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al cargar configuración: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Close configure hiring modal
+ */
+window.closeConfigHiringModal = function() {
+    const modal = document.getElementById('configureHiringModal');
+    if (modal) modal.remove();
+};
+
+/**
+ * Save hiring requirements configuration
+ */
+window.saveHiringRequirements = async function(userId) {
+    console.log('💾 [HIRING] Guardando configuración de requisitos');
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        const requirements = {
+            requiere_aprobacion_medica: document.getElementById('req-medica').checked,
+            requiere_aprobacion_legal: document.getElementById('req-legal').checked,
+            requiere_aprobacion_rrhh: document.getElementById('req-rrhh').checked,
+            requiere_evaluacion_capacitacion: document.getElementById('req-capacitacion').checked,
+            requiere_certificado_conducta: document.getElementById('req-certificado').checked,
+            requiere_evaluacion_ambiental: document.getElementById('req-ambiental').checked
+        };
+
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/users/${userId}/hiring-status`), {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requirements)
+        });
+
+        if (!response.ok) throw new Error('Error al guardar configuración');
+
+        showUserMessage('✅ Configuración guardada correctamente', 'success');
+        closeConfigHiringModal();
+
+        // Refresh hiring status
+        await refreshHiringStatus(userId);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al guardar configuración: ' + error.message, 'error');
+    }
+};
+
+/**
+ * Approve a hiring requirement
+ */
+window.approveRequirement = async function(userId, type) {
+    console.log(`✅ [HIRING] Aprobando requisito ${type} para usuario ${userId}`);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Pedir observaciones opcionales
+        const observaciones = prompt(`Observaciones para la aprobación de ${type} (opcional):`);
+
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/users/${userId}/hiring-status/approve/${type}`), {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                estado: 'aprobado',
+                observaciones: observaciones || ''
+            })
+        });
+
+        if (!response.ok) throw new Error('Error al aprobar requisito');
+
+        showUserMessage(`✅ Requisito ${type} aprobado correctamente`, 'success');
+
+        // Refresh hiring status
+        await refreshHiringStatus(userId);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al aprobar requisito: ' + error.message, 'error');
+    }
+};
+
+/**
+ * Reject a hiring requirement
+ */
+window.rejectRequirement = async function(userId, type) {
+    console.log(`❌ [HIRING] Rechazando requisito ${type} para usuario ${userId}`);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Pedir motivo del rechazo
+        const observaciones = prompt(`Motivo del rechazo de ${type} (requerido):`);
+        if (!observaciones) {
+            showUserMessage('⚠️ Debes especificar un motivo', 'warning');
+            return;
+        }
+
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/users/${userId}/hiring-status/approve/${type}`), {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                estado: 'rechazado',
+                observaciones: observaciones
+            })
+        });
+
+        if (!response.ok) throw new Error('Error al rechazar requisito');
+
+        showUserMessage(`⚠️ Requisito ${type} rechazado`, 'warning');
+
+        // Refresh hiring status
+        await refreshHiringStatus(userId);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al rechazar requisito: ' + error.message, 'error');
+    }
+};
+
+/**
+ * Initiate offboarding process for a user
+ */
+window.initiateOffboarding = async function(userId, userName) {
+    console.log('⚠️ [OFFBOARDING] Iniciando proceso de baja para:', userName);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Get user data to check current offboarding status
+        const userResponse = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!userResponse.ok) throw new Error('Error al obtener usuario');
+        const userData = await userResponse.json();
+        const user = userData.user || userData;
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'offboardingModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
+
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                <div style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        ⚠️ Proceso de Baja de Empleado
+                        <button onclick="closeOffboardingModal()" style="margin-left: auto; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">✕</button>
+                    </h3>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Empleado: ${userName}</p>
+                </div>
+                <div style="padding: 20px;">
+                    ${user.tipo_baja ? `
+                        <div style="padding: 15px; background: #fff3cd; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                            <div style="font-weight: bold; color: #856404; margin-bottom: 8px;">⚠️ Este empleado ya tiene un registro de baja</div>
+                            <div style="font-size: 0.9em; color: #856404;">
+                                <strong>Tipo:</strong> ${user.tipo_baja}<br>
+                                <strong>Fecha:</strong> ${user.fecha_baja ? new Date(user.fecha_baja).toLocaleDateString() : 'N/A'}<br>
+                                ${user.motivo_baja ? `<strong>Motivo:</strong> ${user.motivo_baja}` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Tipo de Baja:</label>
+                        <select id="tipo-baja" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">Seleccionar...</option>
+                            <option value="renuncia" ${user.tipo_baja === 'renuncia' ? 'selected' : ''}>Renuncia Voluntaria</option>
+                            <option value="despido" ${user.tipo_baja === 'despido' ? 'selected' : ''}>Despido Sin Causa</option>
+                            <option value="despido_causa" ${user.tipo_baja === 'despido_causa' ? 'selected' : ''}>Despido Con Causa</option>
+                            <option value="fin_contrato" ${user.tipo_baja === 'fin_contrato' ? 'selected' : ''}>Fin de Contrato</option>
+                            <option value="mutual_acuerdo" ${user.tipo_baja === 'mutual_acuerdo' ? 'selected' : ''}>Mutuo Acuerdo</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Fecha de Baja:</label>
+                        <input type="date" id="fecha-baja" class="form-control" value="${user.fecha_baja || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Nro. Documento (Telegrama, Carta, etc.):</label>
+                        <input type="text" id="nro-documento-baja" class="form-control" value="${user.nro_documento_baja || ''}" placeholder="Ej: TELE-2025-001" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Motivo de Baja:</label>
+                        <textarea id="motivo-baja" class="form-control" rows="4" placeholder="Describe el motivo de la baja..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">${user.motivo_baja || ''}</textarea>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="gestionar-legal" ${user.gestionado_por_legal ? 'checked' : ''} style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: bold; color: #333;">⚖️ Gestionar por Dashboard Legal</div>
+                                <div style="font-size: 0.85em; color: #666;">La baja requiere intervención del área legal</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style="padding: 12px; background: #f8d7da; border-radius: 6px; border-left: 4px solid #dc3545; margin-bottom: 15px;">
+                        <div style="font-weight: bold; color: #721c24; margin-bottom: 5px;">⚠️ Advertencia</div>
+                        <div style="font-size: 0.9em; color: #721c24;">
+                            Registrar una baja no desactiva automáticamente al usuario.
+                            Debes desactivarlo manualmente si corresponde.
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button onclick="closeOffboardingModal()" class="btn btn-secondary">Cancelar</button>
+                        <button onclick="saveOffboarding('${userId}')" class="btn btn-warning">💾 Registrar Baja</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al cargar offboarding: ' + error.message, 'error');
+    }
+};
+
+/**
+ * Close offboarding modal
+ */
+window.closeOffboardingModal = function() {
+    const modal = document.getElementById('offboardingModal');
+    if (modal) modal.remove();
+};
+
+/**
+ * Save offboarding data
+ */
+window.saveOffboarding = async function(userId) {
+    console.log('💾 [OFFBOARDING] Guardando datos de baja');
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        const tipoBaja = document.getElementById('tipo-baja').value;
+        const fechaBaja = document.getElementById('fecha-baja').value;
+        const nroDocumento = document.getElementById('nro-documento-baja').value;
+        const motivoBaja = document.getElementById('motivo-baja').value;
+        const gestionadoPorLegal = document.getElementById('gestionar-legal').checked;
+
+        if (!tipoBaja) {
+            showUserMessage('⚠️ Debes seleccionar un tipo de baja', 'warning');
+            return;
+        }
+
+        if (!fechaBaja) {
+            showUserMessage('⚠️ Debes especificar una fecha de baja', 'warning');
+            return;
+        }
+
+        const offboardingData = {
+            tipo_baja: tipoBaja,
+            fecha_baja: fechaBaja,
+            nro_documento_baja: nroDocumento,
+            motivo_baja: motivoBaja,
+            gestionado_por_legal: gestionadoPorLegal
+        };
+
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(offboardingData)
+        });
+
+        if (!response.ok) throw new Error('Error al guardar baja');
+
+        showUserMessage('✅ Baja registrada correctamente', 'success');
+        closeOffboardingModal();
+
+        // Refresh user file if open
+        const userFileModal = document.getElementById('user-file-modal');
+        if (userFileModal) {
+            openUserFile(userId);
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al guardar baja: ' + error.message, 'error');
+    }
+};
+
+// ============================================================================
+// END WORKFLOW DE ALTA Y BAJA
+// ============================================================================
+
+// ============================================================================
+// CONDICIONES ADICIONALES DE EMPLEADO (JSONB en employees)
+// ============================================================================
+
+/**
+ * Load employee additional conditions (certificado_buena_conducta, evaluacion_ambiental)
+ * @param {string} userId - User ID
+ */
+async function loadEmployeeConditions(userId) {
+    console.log('📄 [EMPLOYEE-CONDITIONS] Cargando condiciones para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            console.warn('⚠️ [EMPLOYEE-CONDITIONS] No hay token de autenticación');
+            return;
+        }
+
+        // Get user data
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al obtener usuario');
+        }
+
+        const userData = await response.json();
+        const user = userData.user || userData;
+
+        // Render conditions
+        renderEmployeeConditions(userId, user);
+
+    } catch (error) {
+        console.error('Error:', error);
+        const listEl = document.getElementById(`employee-conditions-list-${userId}`);
+        if (listEl) {
+            listEl.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #dc3545;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">❌</div>
+                    <div>Error al cargar condiciones</div>
+                </div>
+            `;
+        }
+    }
+}
+
+/**
+ * Render employee conditions in the UI
+ * @param {string} userId - User ID
+ * @param {object} user - User object
+ */
+function renderEmployeeConditions(userId, user) {
+    const listEl = document.getElementById(`employee-conditions-list-${userId}`);
+    if (!listEl) return;
+
+    const conditions = [];
+
+    // 1. Certificado de Buena Conducta
+    const certificado = user.certificado_buena_conducta || {};
+    const certificadoObligatorio = user.certificado_obligatorio || false;
+
+    let certificadoEstado = certificado.estado || 'pendiente';
+    let certificadoColor = '#ffc107';
+    let certificadoIcon = '⏳';
+    let certificadoBadge = 'Pendiente';
+
+    if (certificadoEstado === 'aprobado') {
+        certificadoColor = '#28a745';
+        certificadoIcon = '✅';
+        certificadoBadge = 'Aprobado';
+    } else if (certificadoEstado === 'rechazado') {
+        certificadoColor = '#dc3545';
+        certificadoIcon = '❌';
+        certificadoBadge = 'Rechazado';
+    } else if (certificadoEstado === 'vencido') {
+        certificadoColor = '#6c757d';
+        certificadoIcon = '⏰';
+        certificadoBadge = 'Vencido';
+    }
+
+    const certificadoHTML = `
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid ${certificadoColor};">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; color: #333; margin-bottom: 4px;">
+                        📄 Certificado de Buena Conducta
+                        ${certificadoObligatorio ? '<span style="color: #dc3545; font-size: 0.85em;">(OBLIGATORIO)</span>' : ''}
+                    </div>
+                    <div style="font-size: 0.9em; color: #666;">
+                        ${certificadoIcon} <strong>${certificadoBadge}</strong>
+                        ${certificado.fecha_emision ? `| Emitido: ${new Date(certificado.fecha_emision).toLocaleDateString()}` : ''}
+                        ${certificado.fecha_vencimiento ? `| Vence: ${new Date(certificado.fecha_vencimiento).toLocaleDateString()}` : ''}
+                    </div>
+                    ${certificado.entidad_emisora ? `<div style="font-size: 0.85em; color: #999; margin-top: 4px;">Emisor: ${certificado.entidad_emisora}</div>` : ''}
+                    ${certificado.observaciones ? `<div style="font-size: 0.85em; color: #999; margin-top: 4px;">Obs: ${certificado.observaciones}</div>` : ''}
+                    ${certificado.archivo_url ? `<div style="margin-top: 6px;"><a href="${certificado.archivo_url}" target="_blank" class="btn btn-sm btn-outline-primary">📄 Ver Certificado</a></div>` : ''}
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-sm btn-outline-info" onclick="manageCertificadoConducta('${userId}')">✏️ Gestionar</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    conditions.push(certificadoHTML);
+
+    // 2. Evaluación Ambiental
+    const evaluacion = user.evaluacion_ambiental || {};
+    const evaluacionDeterminante = user.evaluacion_determinante || false;
+
+    let evaluacionAprobado = evaluacion.aprobado;
+    let evaluacionColor = '#ffc107';
+    let evaluacionIcon = '⏳';
+    let evaluacionBadge = 'Pendiente';
+
+    if (evaluacionAprobado === true) {
+        evaluacionColor = '#28a745';
+        evaluacionIcon = '✅';
+        evaluacionBadge = 'Aprobado';
+    } else if (evaluacionAprobado === false) {
+        evaluacionColor = '#dc3545';
+        evaluacionIcon = '❌';
+        evaluacionBadge = 'No Aprobado';
+    }
+
+    const evaluacionHTML = `
+        <div style="padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid ${evaluacionColor};">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; color: #333; margin-bottom: 4px;">
+                        🌿 Evaluación Ambiental
+                        ${evaluacionDeterminante ? '<span style="color: #dc3545; font-size: 0.85em;">(DETERMINANTE)</span>' : ''}
+                    </div>
+                    <div style="font-size: 0.9em; color: #666;">
+                        ${evaluacionIcon} <strong>${evaluacionBadge}</strong>
+                        ${evaluacion.fecha_evaluacion ? `| Fecha: ${new Date(evaluacion.fecha_evaluacion).toLocaleDateString()}` : ''}
+                    </div>
+                    ${evaluacion.evaluador ? `<div style="font-size: 0.85em; color: #999; margin-top: 4px;">Evaluador: ${evaluacion.evaluador}</div>` : ''}
+                    ${evaluacion.descripcion ? `<div style="font-size: 0.85em; color: #999; margin-top: 4px;">Descripción: ${evaluacion.descripcion}</div>` : ''}
+                    ${evaluacion.observaciones ? `<div style="font-size: 0.85em; color: #999; margin-top: 4px;">Obs: ${evaluacion.observaciones}</div>` : ''}
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-sm btn-outline-info" onclick="manageEvaluacionAmbiental('${userId}')">✏️ Gestionar</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    conditions.push(evaluacionHTML);
+
+    // Render all conditions
+    if (conditions.length > 0) {
+        listEl.innerHTML = conditions.join('');
+    } else {
+        listEl.innerHTML = `
+            <div style="text-align: center; padding: 15px; background: #e8f5e9; border-radius: 6px; color: #2e7d32;">
+                <div style="font-size: 24px; margin-bottom: 8px;">✅</div>
+                <div style="font-weight: bold;">No hay condiciones adicionales configuradas</div>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Manage certificado de buena conducta
+ */
+window.manageCertificadoConducta = async function(userId) {
+    console.log('📄 [CERTIFICADO] Gestionando certificado para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Get current user data
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Error al obtener usuario');
+        const userData = await response.json();
+        const user = userData.user || userData;
+
+        const certificado = user.certificado_buena_conducta || {};
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'certificadoConductaModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
+
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                <div style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        📄 Certificado de Buena Conducta
+                        <button onclick="closeCertificadoModal()" style="margin-left: auto; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">✕</button>
+                    </h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Estado:</label>
+                        <select id="cert-estado" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="pendiente" ${certificado.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+                            <option value="aprobado" ${certificado.estado === 'aprobado' ? 'selected' : ''}>Aprobado</option>
+                            <option value="rechazado" ${certificado.estado === 'rechazado' ? 'selected' : ''}>Rechazado</option>
+                            <option value="vencido" ${certificado.estado === 'vencido' ? 'selected' : ''}>Vencido</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">URL del Archivo:</label>
+                        <input type="url" id="cert-archivo" class="form-control" value="${certificado.archivo_url || ''}" placeholder="https://..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Fecha Emisión:</label>
+                            <input type="date" id="cert-fecha-emision" class="form-control" value="${certificado.fecha_emision || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Fecha Vencimiento:</label>
+                            <input type="date" id="cert-fecha-vencimiento" class="form-control" value="${certificado.fecha_vencimiento || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Entidad Emisora:</label>
+                        <input type="text" id="cert-entidad" class="form-control" value="${certificado.entidad_emisora || ''}" placeholder="Ej: Policía Federal Argentina" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Observaciones:</label>
+                        <textarea id="cert-observaciones" class="form-control" rows="3" placeholder="Observaciones adicionales..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">${certificado.observaciones || ''}</textarea>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="cert-obligatorio" ${user.certificado_obligatorio ? 'checked' : ''} style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: bold; color: #333;">Certificado Obligatorio</div>
+                                <div style="font-size: 0.85em; color: #666;">Si está marcado, bloquea el alta hasta tener certificado aprobado</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button onclick="closeCertificadoModal()" class="btn btn-secondary">Cancelar</button>
+                        <button onclick="saveCertificadoConducta('${userId}')" class="btn btn-primary">💾 Guardar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al cargar certificado: ' + error.message, 'error');
+    }
+};
+
+window.closeCertificadoModal = function() {
+    const modal = document.getElementById('certificadoConductaModal');
+    if (modal) modal.remove();
+};
+
+window.saveCertificadoConducta = async function(userId) {
+    console.log('💾 [CERTIFICADO] Guardando certificado');
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        const certificadoData = {
+            certificado_buena_conducta: {
+                estado: document.getElementById('cert-estado').value,
+                archivo_url: document.getElementById('cert-archivo').value || null,
+                fecha_emision: document.getElementById('cert-fecha-emision').value || null,
+                fecha_vencimiento: document.getElementById('cert-fecha-vencimiento').value || null,
+                entidad_emisora: document.getElementById('cert-entidad').value || null,
+                observaciones: document.getElementById('cert-observaciones').value || null
+            },
+            certificado_obligatorio: document.getElementById('cert-obligatorio').checked
+        };
+
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(certificadoData)
+        });
+
+        if (!response.ok) throw new Error('Error al guardar certificado');
+
+        showUserMessage('✅ Certificado guardado correctamente', 'success');
+        closeCertificadoModal();
+
+        // Refresh conditions
+        await loadEmployeeConditions(userId);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al guardar certificado: ' + error.message, 'error');
+    }
+};
+
+/**
+ * Manage evaluacion ambiental
+ */
+window.manageEvaluacionAmbiental = async function(userId) {
+    console.log('🌿 [EVALUACION] Gestionando evaluación ambiental para usuario:', userId);
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        // Get current user data
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Error al obtener usuario');
+        const userData = await response.json();
+        const user = userData.user || userData;
+
+        const evaluacion = user.evaluacion_ambiental || {};
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'evaluacionAmbientalModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
+
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        🌿 Evaluación Ambiental
+                        <button onclick="closeEvaluacionModal()" style="margin-left: auto; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">✕</button>
+                    </h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">¿Aprobado?</label>
+                        <select id="eval-aprobado" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">Sin evaluar</option>
+                            <option value="true" ${evaluacion.aprobado === true ? 'selected' : ''}>✅ Aprobado</option>
+                            <option value="false" ${evaluacion.aprobado === false ? 'selected' : ''}>❌ No Aprobado</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Fecha de Evaluación:</label>
+                        <input type="date" id="eval-fecha" class="form-control" value="${evaluacion.fecha_evaluacion || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Evaluador:</label>
+                        <input type="text" id="eval-evaluador" class="form-control" value="${evaluacion.evaluador || ''}" placeholder="Nombre del evaluador" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Descripción:</label>
+                        <textarea id="eval-descripcion" class="form-control" rows="3" placeholder="Descripción de la evaluación..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">${evaluacion.descripcion || ''}</textarea>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Observaciones:</label>
+                        <textarea id="eval-observaciones" class="form-control" rows="3" placeholder="Observaciones adicionales..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">${evaluacion.observaciones || ''}</textarea>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="eval-determinante" ${user.evaluacion_determinante ? 'checked' : ''} style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: bold; color: #333;">Evaluación Determinante</div>
+                                <div style="font-size: 0.85em; color: #666;">Si está marcado y la evaluación es No Aprobada, bloquea el alta del empleado</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button onclick="closeEvaluacionModal()" class="btn btn-secondary">Cancelar</button>
+                        <button onclick="saveEvaluacionAmbiental('${userId}')" class="btn btn-success">💾 Guardar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al cargar evaluación: ' + error.message, 'error');
+    }
+};
+
+window.closeEvaluacionModal = function() {
+    const modal = document.getElementById('evaluacionAmbientalModal');
+    if (modal) modal.remove();
+};
+
+window.saveEvaluacionAmbiental = async function(userId) {
+    console.log('💾 [EVALUACION] Guardando evaluación ambiental');
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            showUserMessage('⚠️ No hay sesión activa', 'error');
+            return;
+        }
+
+        const aprobadoValue = document.getElementById('eval-aprobado').value;
+        const aprobado = aprobadoValue === '' ? null : aprobadoValue === 'true';
+
+        const evaluacionData = {
+            evaluacion_ambiental: {
+                aprobado: aprobado,
+                descripcion: document.getElementById('eval-descripcion').value || null,
+                fecha_evaluacion: document.getElementById('eval-fecha').value || null,
+                evaluador: document.getElementById('eval-evaluador').value || null,
+                observaciones: document.getElementById('eval-observaciones').value || null
+            },
+            evaluacion_determinante: document.getElementById('eval-determinante').checked
+        };
+
+        const response = await fetch(window.progressiveAdmin.getApiUrl(`/api/v1/users/${userId}`), {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(evaluacionData)
+        });
+
+        if (!response.ok) throw new Error('Error al guardar evaluación');
+
+        showUserMessage('✅ Evaluación guardada correctamente', 'success');
+        closeEvaluacionModal();
+
+        // Refresh conditions
+        await loadEmployeeConditions(userId);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showUserMessage('❌ Error al guardar evaluación: ' + error.message, 'error');
+    }
+};
+
+// ============================================================================
+// END CONDICIONES ADICIONALES DE EMPLEADO
+// ============================================================================
+
 // Manage branches - CRUD completo
 async function manageBranches(userId) {
     console.log('🏢 [USERS] Gestionando sucursales para usuario:', userId);
@@ -13595,6 +14657,569 @@ function openNationalLicenseModal(userId) {
     };
 }
 
+// ============================================================================
+// SISTEMA DE ALTA Y BAJA DE EMPLEADOS (ONBOARDING/OFFBOARDING)
+// ============================================================================
+
+/**
+ * Cargar estado de alta/baja del empleado y actualizar el banner
+ */
+async function loadHiringStatus(userId) {
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+        // Cargar estado de alta
+        const hiringResponse = await fetch(`/api/v1/users/${userId}/hiring-status`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Cargar estado de baja
+        const offboardingResponse = await fetch(`/api/v1/users/${userId}/offboarding`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const hiringData = await hiringResponse.json();
+        const offboardingData = await offboardingResponse.json();
+
+        // Actualizar banner según el estado
+        const banner = document.getElementById('hiring-status-banner');
+        const icon = document.getElementById('hiring-status-icon');
+        const text = document.getElementById('hiring-status-text');
+        const detail = document.getElementById('hiring-status-detail');
+        const actionBtn = document.getElementById('hiring-status-action-btn');
+
+        if (offboardingData.has_baja) {
+            // Empleado dado de baja
+            const tipoMap = {
+                'renuncia': 'Renuncia',
+                'despido': 'Despido',
+                'despido_causa': 'Despido con Causa',
+                'fin_contrato': 'Fin de Contrato',
+                'mutual_acuerdo': 'Mutuo Acuerdo'
+            };
+            const tipoText = tipoMap[offboardingData.data.tipo_baja] || offboardingData.data.tipo_baja;
+            const fechaBaja = offboardingData.data.fecha_baja ? new Date(offboardingData.data.fecha_baja).toLocaleDateString() : 'Sin fecha';
+
+            banner.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+            banner.style.borderBottom = '2px solid #b91c1c';
+            icon.textContent = '❌';
+            text.textContent = 'EMPLEADO DADO DE BAJA';
+            detail.textContent = `${tipoText} - Fecha: ${fechaBaja}`;
+            actionBtn.textContent = '📄 Ver Detalles de Baja';
+            actionBtn.onclick = () => viewOffboardingDetails(userId, offboardingData.data);
+
+        } else if (hiringData.exists && hiringData.data.hiring_status) {
+            const status = hiringData.data.hiring_status;
+            const puedeActivarse = status.puede_activarse;
+
+            if (puedeActivarse) {
+                // Alta completada - puede activarse
+                banner.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                banner.style.borderBottom = '2px solid #047857';
+                icon.textContent = '✅';
+                text.textContent = 'EMPLEADO DADO DE ALTA';
+                detail.textContent = 'Todos los requisitos completados - Puede activarse';
+                actionBtn.textContent = '📋 Ver Proceso de Alta';
+                actionBtn.onclick = () => manageHiringStatus(userId);
+            } else {
+                // Alta pendiente - faltan requisitos
+                banner.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                banner.style.borderBottom = '2px solid #b45309';
+                icon.textContent = '⏳';
+                text.textContent = 'ALTA EN PROCESO';
+                detail.textContent = status.motivo_bloqueo || 'Requisitos pendientes de aprobación';
+                actionBtn.textContent = '📋 Gestionar Alta';
+                actionBtn.onclick = () => manageHiringStatus(userId);
+            }
+        } else {
+            // Sin proceso de alta configurado
+            banner.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            banner.style.borderBottom = '2px solid #047857';
+            icon.textContent = '✅';
+            text.textContent = 'EMPLEADO ACTIVO';
+            detail.textContent = 'Sin proceso de alta formal configurado';
+            actionBtn.textContent = '⚙️ Configurar Proceso de Alta';
+            actionBtn.onclick = () => configureHiringProcess(userId);
+        }
+
+    } catch (error) {
+        console.error('Error cargando estado de alta/baja:', error);
+    }
+}
+
+/**
+ * Abrir modal de gestión del proceso de alta
+ */
+async function manageHiringStatus(userId) {
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+        const response = await fetch(`/api/v1/users/${userId}/hiring-status`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (!data.exists || !data.data.hiring_status) {
+            configureHiringProcess(userId);
+            return;
+        }
+
+        const status = data.data.hiring_status;
+        const user = data.data.user;
+
+        const modal = document.createElement('div');
+        modal.id = 'hiringStatusModal';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10002;';
+
+        modal.innerHTML = `
+            <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 1000px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                <h2 style="margin: 0 0 20px 0; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+                    📋 Proceso de Alta - ${user.firstName} ${user.lastName}
+                </h2>
+
+                <div style="background: ${status.puede_activarse ? '#d4edda' : '#fff3cd'}; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 2px solid ${status.puede_activarse ? '#28a745' : '#ffc107'};">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span style="font-size: 32px;">${status.puede_activarse ? '✅' : '⏳'}</span>
+                        <div>
+                            <h3 style="margin: 0; color: ${status.puede_activarse ? '#155724' : '#856404'};">
+                                ${status.puede_activarse ? 'ALTA COMPLETADA - Puede activarse' : 'ALTA EN PROCESO'}
+                            </h3>
+                            <p style="margin: 5px 0 0 0; color: ${status.puede_activarse ? '#155724' : '#856404'};">
+                                ${status.motivo_bloqueo || 'Todos los requisitos han sido aprobados'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    ${createRequirementCard('Aprobación Médica', 'medica', status, userId)}
+                    ${createRequirementCard('Aprobación Legal', 'legal', status, userId)}
+                    ${createRequirementCard('Aprobación RRHH', 'rrhh', status, userId)}
+                    ${createRequirementCard('Evaluación Capacitación', 'capacitacion', status, userId)}
+                    ${createRequirementCard('Certificado Buena Conducta', 'certificado_conducta', status, userId)}
+                    ${createRequirementCard('Evaluación Ambiental', 'evaluacion_ambiental', status, userId)}
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding-top: 20px; border-top: 2px solid #dee2e6;">
+                    <button onclick="document.getElementById('hiringStatusModal').remove()" class="btn btn-secondary">
+                        Cerrar
+                    </button>
+                    <button onclick="startOffboarding('${userId}')" class="btn btn-danger">
+                        ❌ Iniciar Proceso de Baja
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error('Error abriendo gestión de alta:', error);
+        showUserMessage('❌ Error al cargar proceso de alta', 'error');
+    }
+}
+
+/**
+ * Crear tarjeta de requisito individual
+ */
+function createRequirementCard(title, type, status, userId) {
+    const requiere = status[`requiere_aprobacion_${type}`];
+    const estado = status[`aprobacion_${type}_estado`];
+    const fecha = status[`aprobacion_${type}_fecha`];
+    const observaciones = status[`aprobacion_${type}_observaciones`];
+
+    if (!requiere) {
+        return `
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                <h4 style="margin: 0 0 10px 0; color: #6c757d; font-size: 14px;">⊘ ${title}</h4>
+                <p style="margin: 0; color: #6c757d; font-size: 12px;">No requerido para este empleado</p>
+            </div>
+        `;
+    }
+
+    const estadoConfig = {
+        'aprobado': { icon: '✅', color: '#28a745', bg: '#d4edda', text: 'APROBADO' },
+        'rechazado': { icon: '❌', color: '#dc3545', bg: '#f8d7da', text: 'RECHAZADO' },
+        'pendiente': { icon: '⏳', color: '#ffc107', bg: '#fff3cd', text: 'PENDIENTE' }
+    };
+
+    const config = estadoConfig[estado] || estadoConfig['pendiente'];
+
+    return `
+        <div style="background: ${config.bg}; padding: 15px; border-radius: 8px; border: 2px solid ${config.color};">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: ${config.color}; font-size: 14px;">${config.icon} ${title}</h4>
+                <span style="background: ${config.color}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">
+                    ${config.text}
+                </span>
+            </div>
+            ${fecha ? `<p style="margin: 5px 0; font-size: 11px; color: #666;">Fecha: ${new Date(fecha).toLocaleDateString()}</p>` : ''}
+            ${observaciones ? `<p style="margin: 5px 0; font-size: 11px; color: #666; font-style: italic;">${observaciones}</p>` : ''}
+            ${estado !== 'aprobado' ? `
+                <div style="display: flex; gap: 5px; margin-top: 10px;">
+                    <button onclick="approveHiringRequirement('${userId}', '${type}', 'aprobado')" class="btn btn-sm btn-success" style="flex: 1; font-size: 11px;">
+                        ✅ Aprobar
+                    </button>
+                    <button onclick="approveHiringRequirement('${userId}', '${type}', 'rechazado')" class="btn btn-sm btn-danger" style="flex: 1; font-size: 11px;">
+                        ❌ Rechazar
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+/**
+ * Aprobar o rechazar un requisito del proceso de alta
+ */
+async function approveHiringRequirement(userId, type, estado) {
+    try {
+        const observaciones = prompt(`Observaciones para ${type} (opcional):`);
+
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+        const response = await fetch(`/api/v1/users/${userId}/hiring-status/approve/${type}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ estado, observaciones })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showUserMessage(`✅ ${type} ${estado} exitosamente`, 'success');
+            // Cerrar modal y reabrir para refrescar
+            document.getElementById('hiringStatusModal')?.remove();
+            manageHiringStatus(userId);
+            // Recargar banner
+            loadHiringStatus(userId);
+        } else {
+            showUserMessage(`❌ Error: ${data.error}`, 'error');
+        }
+
+    } catch (error) {
+        console.error('Error aprobando requisito:', error);
+        showUserMessage('❌ Error al procesar aprobación', 'error');
+    }
+}
+
+/**
+ * Configurar proceso de alta para un empleado que no lo tiene
+ */
+function configureHiringProcess(userId) {
+    const modal = document.createElement('div');
+    modal.id = 'configureHiringModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10002;';
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 12px; width: 700px; max-height: 90vh; overflow-y: auto;">
+            <h2 style="margin: 0 0 20px 0; color: #2c3e50;">⚙️ Configurar Proceso de Alta</h2>
+
+            <p style="margin-bottom: 25px; color: #666;">
+                Seleccione los requisitos necesarios para dar de alta a este empleado:
+            </p>
+
+            <form id="hiringConfigForm">
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer;">
+                        <input type="checkbox" id="req_medica" name="req_medica" style="width: 18px; height: 18px;">
+                        <div>
+                            <strong>Aprobación Médica</strong>
+                            <p style="margin: 0; font-size: 12px; color: #666;">Requiere examen médico pre-ocupacional</p>
+                        </div>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer;">
+                        <input type="checkbox" id="req_legal" name="req_legal" style="width: 18px; height: 18px;">
+                        <div>
+                            <strong>Aprobación Legal</strong>
+                            <p style="margin: 0; font-size: 12px; color: #666;">Revisión de documentación legal y antecedentes</p>
+                        </div>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer;">
+                        <input type="checkbox" id="req_rrhh" name="req_rrhh" style="width: 18px; height: 18px;">
+                        <div>
+                            <strong>Aprobación RRHH</strong>
+                            <p style="margin: 0; font-size: 12px; color: #666;">Validación de postulación y entrevistas</p>
+                        </div>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer;">
+                        <input type="checkbox" id="req_capacitacion" name="req_capacitacion" style="width: 18px; height: 18px;">
+                        <div>
+                            <strong>Evaluación de Capacitación</strong>
+                            <p style="margin: 0; font-size: 12px; color: #666;">Capacitación inicial y evaluación</p>
+                        </div>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer;">
+                        <input type="checkbox" id="req_certificado" name="req_certificado" style="width: 18px; height: 18px;">
+                        <div>
+                            <strong>Certificado de Buena Conducta</strong>
+                            <p style="margin: 0; font-size: 12px; color: #666;">Certificado policial de antecedentes</p>
+                        </div>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="req_ambiental" name="req_ambiental" style="width: 18px; height: 18px;">
+                        <div>
+                            <strong>Evaluación Ambiental</strong>
+                            <p style="margin: 0; font-size: 12px; color: #666;">Adaptación al ambiente laboral</p>
+                        </div>
+                    </label>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                    <button type="button" onclick="document.getElementById('configureHiringModal').remove()" class="btn btn-secondary">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        💾 Guardar Configuración
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('hiringConfigForm').onsubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+            const config = {
+                requiere_aprobacion_medica: document.getElementById('req_medica').checked,
+                requiere_aprobacion_legal: document.getElementById('req_legal').checked,
+                requiere_aprobacion_rrhh: document.getElementById('req_rrhh').checked,
+                requiere_evaluacion_capacitacion: document.getElementById('req_capacitacion').checked,
+                requiere_certificado_conducta: document.getElementById('req_certificado').checked,
+                requiere_evaluacion_ambiental: document.getElementById('req_ambiental').checked
+            };
+
+            const response = await fetch(`/api/v1/users/${userId}/hiring-status`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showUserMessage('✅ Proceso de alta configurado exitosamente', 'success');
+                modal.remove();
+                loadHiringStatus(userId);
+            } else {
+                showUserMessage(`❌ Error: ${data.error}`, 'error');
+            }
+
+        } catch (error) {
+            console.error('Error configurando proceso de alta:', error);
+            showUserMessage('❌ Error al guardar configuración', 'error');
+        }
+    };
+}
+
+/**
+ * Iniciar proceso de baja del empleado
+ */
+function startOffboarding(userId) {
+    // Cerrar modal anterior si existe
+    document.getElementById('hiringStatusModal')?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'offboardingModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10002;';
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 12px; width: 700px; max-height: 90vh; overflow-y: auto;">
+            <h2 style="margin: 0 0 20px 0; color: #dc3545; display: flex; align-items: center; gap: 10px;">
+                ❌ Proceso de Baja de Empleado
+            </h2>
+
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #ffc107;">
+                <strong style="color: #856404;">⚠️ Atención:</strong>
+                <p style="margin: 5px 0 0 0; color: #856404;">
+                    Este proceso registrará la baja del empleado en el sistema. Asegúrese de completar todos los datos correctamente.
+                </p>
+            </div>
+
+            <form id="offboardingForm">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Tipo de Baja:</label>
+                    <select id="tipo_baja" class="form-control" required>
+                        <option value="">-- Seleccionar --</option>
+                        <option value="renuncia">Renuncia</option>
+                        <option value="despido">Despido</option>
+                        <option value="despido_causa">Despido con Causa</option>
+                        <option value="fin_contrato">Fin de Contrato</option>
+                        <option value="mutual_acuerdo">Mutuo Acuerdo</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Fecha de Baja:</label>
+                    <input type="date" id="fecha_baja" class="form-control" required>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Número de Documento (Telegrama, Carta, etc.):</label>
+                    <input type="text" id="nro_documento_baja" class="form-control" placeholder="Ej: TGRAM-2024-001">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Motivo de Baja:</label>
+                    <textarea id="motivo_baja" class="form-control" rows="4" required placeholder="Descripción detallada del motivo de baja..."></textarea>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="gestionado_por_legal" style="width: 18px; height: 18px;">
+                        <span>Esta baja está siendo gestionada por el departamento legal</span>
+                    </label>
+                </div>
+
+                <div id="caso_legal_container" style="margin-bottom: 20px; display: none;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">ID del Caso Legal (opcional):</label>
+                    <input type="number" id="caso_legal_id" class="form-control" placeholder="ID del caso en el dashboard legal">
+                </div>
+
+                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 2px solid #dee2e6;">
+                    <button type="button" onclick="document.getElementById('offboardingModal').remove()" class="btn btn-secondary">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        ❌ Confirmar Baja
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Mostrar/ocultar campo de caso legal
+    document.getElementById('gestionado_por_legal').onchange = (e) => {
+        document.getElementById('caso_legal_container').style.display = e.target.checked ? 'block' : 'none';
+    };
+
+    document.getElementById('offboardingForm').onsubmit = async (e) => {
+        e.preventDefault();
+
+        const confirm = window.confirm('¿Está seguro de dar de baja a este empleado? Esta acción quedará registrada en el sistema.');
+        if (!confirm) return;
+
+        try {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+            const formData = {
+                tipo_baja: document.getElementById('tipo_baja').value,
+                fecha_baja: document.getElementById('fecha_baja').value,
+                nro_documento_baja: document.getElementById('nro_documento_baja').value || null,
+                motivo_baja: document.getElementById('motivo_baja').value,
+                gestionado_por_legal: document.getElementById('gestionado_por_legal').checked,
+                caso_legal_id: document.getElementById('caso_legal_id').value || null
+            };
+
+            const response = await fetch(`/api/v1/users/${userId}/offboarding`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showUserMessage('✅ Proceso de baja registrado exitosamente', 'success');
+                modal.remove();
+                loadHiringStatus(userId);
+            } else {
+                showUserMessage(`❌ Error: ${data.error}`, 'error');
+            }
+
+        } catch (error) {
+            console.error('Error iniciando baja:', error);
+            showUserMessage('❌ Error al procesar baja', 'error');
+        }
+    };
+}
+
+/**
+ * Ver detalles del proceso de baja
+ */
+function viewOffboardingDetails(userId, offboardingData) {
+    const modal = document.createElement('div');
+    modal.id = 'offboardingDetailsModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10002;';
+
+    const tipoMap = {
+        'renuncia': 'Renuncia',
+        'despido': 'Despido',
+        'despido_causa': 'Despido con Causa',
+        'fin_contrato': 'Fin de Contrato',
+        'mutual_acuerdo': 'Mutuo Acuerdo'
+    };
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 12px; width: 700px; max-height: 90vh; overflow-y: auto;">
+            <h2 style="margin: 0 0 20px 0; color: #dc3545;">📄 Detalles de la Baja</h2>
+
+            <div style="background: #f8d7da; padding: 20px; border-radius: 8px; border: 2px solid #dc3545; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <strong>Tipo de Baja:</strong>
+                        <p style="margin: 5px 0 0 0;">${tipoMap[offboardingData.tipo_baja] || offboardingData.tipo_baja}</p>
+                    </div>
+                    <div>
+                        <strong>Fecha de Baja:</strong>
+                        <p style="margin: 5px 0 0 0;">${offboardingData.fecha_baja ? new Date(offboardingData.fecha_baja).toLocaleDateString() : 'Sin fecha'}</p>
+                    </div>
+                    ${offboardingData.nro_documento_baja ? `
+                        <div style="grid-column: 1 / -1;">
+                            <strong>Nro. Documento:</strong>
+                            <p style="margin: 5px 0 0 0;">${offboardingData.nro_documento_baja}</p>
+                        </div>
+                    ` : ''}
+                    <div style="grid-column: 1 / -1;">
+                        <strong>Motivo:</strong>
+                        <p style="margin: 5px 0 0 0; white-space: pre-wrap;">${offboardingData.motivo_baja || 'Sin motivo especificado'}</p>
+                    </div>
+                    ${offboardingData.gestionado_por_legal ? `
+                        <div style="grid-column: 1 / -1; background: #fff3cd; padding: 10px; border-radius: 6px;">
+                            <strong>⚖️ Gestionado por Legal</strong>
+                            ${offboardingData.caso_legal_id ? `<p style="margin: 5px 0 0 0;">ID Caso: ${offboardingData.caso_legal_id}</p>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <div style="text-align: right;">
+                <button onclick="document.getElementById('offboardingDetailsModal').remove()" class="btn btn-secondary">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
 // Exponer funciones globalmente para onclick handlers
 window.viewUser = viewUser;
 window.deleteUser = deleteUser;
@@ -13611,5 +15236,14 @@ window.openNationalLicenseModal = openNationalLicenseModal;
 window.addFamilyDocument = addFamilyDocument;
 window.loadFamilyDocuments = loadFamilyDocuments;
 window.renderFamilyDocuments = renderFamilyDocuments;
+
+// Hiring/Offboarding System
+window.loadHiringStatus = loadHiringStatus;
+window.manageHiringStatus = manageHiringStatus;
+window.configureHiringProcess = configureHiringProcess;
+window.startOffboarding = startOffboarding;
+window.approveHiringRequirement = approveHiringRequirement;
+window.viewOffboardingDetails = viewOffboardingDetails;
+window.createRequirementCard = createRequirementCard;
 
 } // Cierre del bloque else - previene re-ejecución en doble carga del módulo

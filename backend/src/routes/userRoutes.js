@@ -164,8 +164,10 @@ router.get('/', auth, supervisorOrAdmin, async (req, res) => {
     const where = {};
 
     // Filter by company for multi-tenant security
-    const companyId = req.user?.company_id || company_id || 1;
-    where.company_id = companyId;
+    // FIX 2025-12-20: Usar companyId (camelCase) que es el nombre del atributo Sequelize
+    // El modelo User tiene underscored: false, entonces requiere nombre de atributo, no de columna
+    const companyIdValue = req.user?.company_id || company_id || 1;
+    where.companyId = companyIdValue;
 
     if (search) {
       where[Op.or] = [
@@ -1209,6 +1211,381 @@ router.get('/:id/audit-logs/stats', auth, supervisorOrAdmin, async (req, res) =>
     res.status(500).json({
       success: false,
       error: 'Error al obtener estadísticas'
+    });
+  }
+});
+
+// ============================================================================
+// SISTEMA DE ALTA Y BAJA DE EMPLEADOS (ONBOARDING/OFFBOARDING)
+// ============================================================================
+
+/**
+ * @route GET /api/v1/users/:id/hiring-status
+ * @desc Obtener estado del proceso de alta del empleado
+ * @access Auth + Admin/Supervisor
+ */
+router.get('/:id/hiring-status', auth, supervisorOrAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const companyId = req.user.company_id || req.user.companyId;
+
+    console.log(`📋 [HIRING-STATUS] Obteniendo estado de alta para usuario: ${id}`);
+
+    // Verificar que el usuario existe y pertenece a la empresa
+    const user = await User.findOne({
+      where: {
+        user_id: id,
+        company_id: companyId
+      },
+      attributes: ['user_id', 'firstName', 'lastName', 'employeeId', 'isActive']
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuario no encontrado'
+      });
+    }
+
+    // Buscar estado de hiring en PostgreSQL directo
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+    });
+
+    const result = await pool.query(`
+      SELECT
+        *,
+        (SELECT puede_activarse, motivo_bloqueo, requisitos_pendientes
+         FROM calculate_hiring_status($1)) as calc_status
+      FROM employee_hiring_status
+      WHERE employee_id = $1
+    `, [id]);
+
+    await pool.end();
+
+    if (result.rows.length === 0) {
+      // No existe hiring status, retornar estado por defecto
+      return res.json({
+        success: true,
+        exists: false,
+        data: {
+          user: {
+            id: user.user_id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            employeeId: user.employeeId,
+            isActive: user.isActive
+          },
+          hiring_status: null,
+          message: 'No hay proceso de alta configurado para este empleado'
+        }
+      });
+    }
+
+    const hiringStatus = result.rows[0];
+
+    res.json({
+      success: true,
+      exists: true,
+      data: {
+        user: {
+          id: user.user_id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          employeeId: user.employeeId,
+          isActive: user.isActive
+        },
+        hiring_status: hiringStatus
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [HIRING-STATUS] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener estado de alta',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @route POST /api/v1/users/:id/hiring-status
+ * @desc Crear o actualizar proceso de alta del empleado
+ * @access Auth + Admin
+ */
+router.post('/:id/hiring-status', auth, adminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const companyId = req.user.company_id || req.user.companyId;
+    const {
+      requiere_aprobacion_medica,
+      requiere_aprobacion_legal,
+      requiere_aprobacion_rrhh,
+      requiere_evaluacion_capacitacion,
+      requiere_certificado_conducta,
+      requiere_evaluacion_ambiental
+    } = req.body;
+
+    console.log(`📋 [HIRING-STATUS] Creando/actualizando proceso de alta para usuario: ${id}`);
+
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+    });
+
+    // Verificar si ya existe
+    const existing = await pool.query('SELECT id FROM employee_hiring_status WHERE employee_id = $1', [id]);
+
+    let result;
+    if (existing.rows.length > 0) {
+      // Actualizar
+      result = await pool.query(`
+        UPDATE employee_hiring_status SET
+          requiere_aprobacion_medica = COALESCE($2, requiere_aprobacion_medica),
+          requiere_aprobacion_legal = COALESCE($3, requiere_aprobacion_legal),
+          requiere_aprobacion_rrhh = COALESCE($4, requiere_aprobacion_rrhh),
+          requiere_evaluacion_capacitacion = COALESCE($5, requiere_evaluacion_capacitacion),
+          requiere_certificado_conducta = COALESCE($6, requiere_certificado_conducta),
+          requiere_evaluacion_ambiental = COALESCE($7, requiere_evaluacion_ambiental),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE employee_id = $1
+        RETURNING *
+      `, [id, requiere_aprobacion_medica, requiere_aprobacion_legal, requiere_aprobacion_rrhh,
+          requiere_evaluacion_capacitacion, requiere_certificado_conducta, requiere_evaluacion_ambiental]);
+    } else {
+      // Crear nuevo
+      result = await pool.query(`
+        INSERT INTO employee_hiring_status (
+          employee_id, company_id,
+          requiere_aprobacion_medica, requiere_aprobacion_legal, requiere_aprobacion_rrhh,
+          requiere_evaluacion_capacitacion, requiere_certificado_conducta, requiere_evaluacion_ambiental
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *
+      `, [id, companyId, requiere_aprobacion_medica || false, requiere_aprobacion_legal || false,
+          requiere_aprobacion_rrhh || false, requiere_evaluacion_capacitacion || false,
+          requiere_certificado_conducta || false, requiere_evaluacion_ambiental || false]);
+    }
+
+    await pool.end();
+
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: 'Proceso de alta configurado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('❌ [HIRING-STATUS] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al configurar proceso de alta',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @route PUT /api/v1/users/:id/hiring-status/approve/:type
+ * @desc Aprobar o rechazar un requisito del proceso de alta
+ * @access Auth + Admin/Supervisor
+ */
+router.put('/:id/hiring-status/approve/:type', auth, supervisorOrAdmin, async (req, res) => {
+  try {
+    const { id, type } = req.params;
+    const { estado, observaciones } = req.body; // estado: 'aprobado', 'rechazado', 'pendiente'
+
+    console.log(`📋 [HIRING-APPROVE] Actualizando ${type} para usuario: ${id} - Estado: ${estado}`);
+
+    const validTypes = ['medica', 'legal', 'rrhh', 'capacitacion', 'certificado_conducta', 'evaluacion_ambiental'];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        error: `Tipo inválido. Debe ser uno de: ${validTypes.join(', ')}`
+      });
+    }
+
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+    });
+
+    const result = await pool.query(`
+      UPDATE employee_hiring_status SET
+        aprobacion_${type}_estado = $2,
+        aprobacion_${type}_fecha = CASE WHEN $2 IN ('aprobado', 'rechazado') THEN CURRENT_TIMESTAMP ELSE NULL END,
+        aprobacion_${type}_observaciones = $3,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE employee_id = $1
+      RETURNING *
+    `, [id, estado, observaciones || null]);
+
+    await pool.end();
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Proceso de alta no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: `${type} ${estado} exitosamente`
+    });
+
+  } catch (error) {
+    console.error('❌ [HIRING-APPROVE] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al aprobar requisito',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @route POST /api/v1/users/:id/offboarding
+ * @desc Iniciar proceso de baja del empleado
+ * @access Auth + Admin
+ */
+router.post('/:id/offboarding', auth, adminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const companyId = req.user.company_id || req.user.companyId;
+    const {
+      tipo_baja,
+      nro_documento_baja,
+      fecha_baja,
+      motivo_baja,
+      gestionado_por_legal,
+      caso_legal_id
+    } = req.body;
+
+    console.log(`📋 [OFFBOARDING] Iniciando baja para usuario: ${id} - Tipo: ${tipo_baja}`);
+
+    // Validar tipo de baja
+    const tiposValidos = ['renuncia', 'despido', 'despido_causa', 'fin_contrato', 'mutual_acuerdo'];
+    if (!tiposValidos.includes(tipo_baja)) {
+      return res.status(400).json({
+        success: false,
+        error: `Tipo de baja inválido. Debe ser uno de: ${tiposValidos.join(', ')}`
+      });
+    }
+
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+    });
+
+    // Actualizar tabla employees
+    const result = await pool.query(`
+      UPDATE employees SET
+        tipo_baja = $2,
+        nro_documento_baja = $3,
+        fecha_baja = $4,
+        motivo_baja = $5,
+        gestionado_por_legal = $6,
+        caso_legal_id = $7,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      RETURNING *
+    `, [id, tipo_baja, nro_documento_baja, fecha_baja, motivo_baja,
+        gestionado_por_legal || false, caso_legal_id || null]);
+
+    await pool.end();
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Empleado no encontrado'
+      });
+    }
+
+    // Registrar en auditoría
+    try {
+      await UserAuditLog.logChange({
+        userId: id,
+        changedByUserId: req.user.user_id,
+        companyId: companyId,
+        action: 'OFFBOARDING',
+        fieldName: 'tipo_baja',
+        oldValue: null,
+        newValue: tipo_baja,
+        description: `Proceso de baja iniciado: ${tipo_baja} - ${motivo_baja}`,
+        ipAddress: req.ip || req.connection?.remoteAddress,
+        userAgent: req.headers['user-agent']
+      });
+    } catch (auditError) {
+      console.error('⚠️ [AUDIT] Error registrando baja:', auditError.message);
+    }
+
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: 'Proceso de baja iniciado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('❌ [OFFBOARDING] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al iniciar proceso de baja',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @route GET /api/v1/users/:id/offboarding
+ * @desc Obtener datos del proceso de baja del empleado
+ * @access Auth + Admin/Supervisor
+ */
+router.get('/:id/offboarding', auth, supervisorOrAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log(`📋 [OFFBOARDING] Obteniendo datos de baja para usuario: ${id}`);
+
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+    });
+
+    const result = await pool.query(`
+      SELECT
+        tipo_baja, nro_documento_baja, fecha_baja, motivo_baja,
+        gestionado_por_legal, caso_legal_id
+      FROM employees
+      WHERE id = $1
+    `, [id]);
+
+    await pool.end();
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Empleado no encontrado'
+      });
+    }
+
+    const offboardingData = result.rows[0];
+    const hasBaja = offboardingData.tipo_baja !== null;
+
+    res.json({
+      success: true,
+      has_baja: hasBaja,
+      data: hasBaja ? offboardingData : null
+    });
+
+  } catch (error) {
+    console.error('❌ [OFFBOARDING] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener datos de baja',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

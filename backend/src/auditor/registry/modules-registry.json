@@ -2,7 +2,7 @@
   "version": "3.0.0",
   "generated_at": "2025-12-16",
   "description": "Registry SINCRONIZADO con system_modules (BD es SSOT)",
-  "total_modules": 46,
+  "total_modules": 48,
   "modules": [
     {
       "id": "licensing-management",
@@ -92,10 +92,22 @@
       "version": "2.0.0",
       "description": "Asistente conversacional con Ollama/Llama 3.1, sistema de tickets con SLA, auto-escalamiento, y aprendizaje global compartido entre empresas",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["notification-center"],
-        "integrates_with": ["notification-center", "auditor", "ALL"],
-        "provides_to": ["support-ai", "ALL"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "notification-center"
+        ],
+        "integrates_with": [
+          "notification-center",
+          "auditor",
+          "ALL"
+        ],
+        "provides_to": [
+          "support-ai",
+          "ALL"
+        ]
       },
       "fullCapabilities": {
         "summary": "Asistente IA enterprise con LLM local (Ollama + Llama 3.1), sistema de tickets con SLA completo, auto-escalamiento, y knowledge base GLOBAL compartida entre todas las empresas.",
@@ -134,16 +146,39 @@
         "ticketSystem": {
           "description": "Sistema de tickets integrado con el chat para consultas que requieren seguimiento",
           "slaLevels": [
-            { "priority": "critical", "responseTime": "2 horas", "escalation": "Gerencia" },
-            { "priority": "high", "responseTime": "8 horas", "escalation": "Supervisor" },
-            { "priority": "medium", "responseTime": "24 horas", "escalation": "RRHH" },
-            { "priority": "low", "responseTime": "48 horas", "escalation": "Auto-resuelto o cerrado" }
+            {
+              "priority": "critical",
+              "responseTime": "2 horas",
+              "escalation": "Gerencia"
+            },
+            {
+              "priority": "high",
+              "responseTime": "8 horas",
+              "escalation": "Supervisor"
+            },
+            {
+              "priority": "medium",
+              "responseTime": "24 horas",
+              "escalation": "RRHH"
+            },
+            {
+              "priority": "low",
+              "responseTime": "48 horas",
+              "escalation": "Auto-resuelto o cerrado"
+            }
           ],
           "autoEscalation": "Si no hay respuesta en el tiempo SLA, escala automáticamente al siguiente nivel"
         },
         "autoDiagnostic": {
           "description": "Auto-diagnóstico cuando detecta problemas",
-          "keywords": ["no funciona", "error", "problema", "roto", "no carga", "falla"],
+          "keywords": [
+            "no funciona",
+            "error",
+            "problema",
+            "roto",
+            "no carga",
+            "falla"
+          ],
           "action": "Ejecuta AuditorEngine.runModuleAudit() del módulo relevante",
           "response": "Incluye resultados del diagnóstico en la respuesta"
         },
@@ -171,8 +206,14 @@
       "help": {
         "quickStart": "1. Instalar Ollama en el servidor\n2. Descargar modelo llama3.1:8b\n3. Reiniciar backend\n4. Chat aparece automáticamente en panel-empresa.html",
         "commonIssues": [
-          { "problem": "Chat muestra 'Ollama no disponible'", "solution": "Verificar que Ollama esté corriendo: curl http://localhost:11434/api/tags" },
-          { "problem": "Respuestas muy lentas", "solution": "Reducir OLLAMA_MAX_TOKENS en .env o usar modelo más pequeño" }
+          {
+            "problem": "Chat muestra 'Ollama no disponible'",
+            "solution": "Verificar que Ollama esté corriendo: curl http://localhost:11434/api/tags"
+          },
+          {
+            "problem": "Respuestas muy lentas",
+            "solution": "Reducir OLLAMA_MAX_TOKENS en .env o usar modelo más pequeño"
+          }
         ]
       },
       "ui": {
@@ -452,22 +493,69 @@
             "Dashboard de SLA con alertas en tiempo real"
           ],
           "escalationLevels": [
-            {"level": 1, "trigger": "Sin respuesta en 24h", "action": "Recordatorio al destinatario"},
-            {"level": 2, "trigger": "Sin respuesta en 48h", "action": "Notificación al supervisor directo"},
-            {"level": 3, "trigger": "Sin respuesta en 72h", "action": "Escalamiento a RRHH/Gerencia"}
+            {
+              "level": 1,
+              "trigger": "Sin respuesta en 24h",
+              "action": "Recordatorio al destinatario"
+            },
+            {
+              "level": 2,
+              "trigger": "Sin respuesta en 48h",
+              "action": "Notificación al supervisor directo"
+            },
+            {
+              "level": 3,
+              "trigger": "Sin respuesta en 72h",
+              "action": "Escalamiento a RRHH/Gerencia"
+            }
           ]
         },
         "documentExpiration": {
           "description": "Notificaciones proactivas para documentos por vencer",
           "escalation": [
-            {"days": 30, "notify": ["Empleado"], "priority": "low"},
-            {"days": 15, "notify": ["Empleado", "Supervisor"], "priority": "medium"},
-            {"days": 7, "notify": ["Empleado", "Supervisor", "RRHH"], "priority": "high"},
-            {"days": 0, "notify": ["Empleado", "Supervisor", "RRHH", "Gerencia"], "priority": "critical"}
+            {
+              "days": 30,
+              "notify": [
+                "Empleado"
+              ],
+              "priority": "low"
+            },
+            {
+              "days": 15,
+              "notify": [
+                "Empleado",
+                "Supervisor"
+              ],
+              "priority": "medium"
+            },
+            {
+              "days": 7,
+              "notify": [
+                "Empleado",
+                "Supervisor",
+                "RRHH"
+              ],
+              "priority": "high"
+            },
+            {
+              "days": 0,
+              "notify": [
+                "Empleado",
+                "Supervisor",
+                "RRHH",
+                "Gerencia"
+              ],
+              "priority": "critical"
+            }
           ],
           "documentTypes": [
-            "Licencia de conducir", "Certificaciones técnicas", "Exámenes médicos",
-            "Carnet de salud", "Habilitaciones", "Seguros", "Contratos"
+            "Licencia de conducir",
+            "Certificaciones técnicas",
+            "Exámenes médicos",
+            "Carnet de salud",
+            "Habilitaciones",
+            "Seguros",
+            "Contratos"
           ]
         },
         "threads": {
@@ -482,10 +570,22 @@
         },
         "multiChannel": {
           "channels": [
-            {"name": "In-App", "description": "Notificaciones dentro del sistema"},
-            {"name": "Email", "description": "Emails automáticos configurables"},
-            {"name": "Push APK", "description": "Notificaciones push a app móvil"},
-            {"name": "WhatsApp", "description": "Integración con WhatsApp Business (opcional)"}
+            {
+              "name": "In-App",
+              "description": "Notificaciones dentro del sistema"
+            },
+            {
+              "name": "Email",
+              "description": "Emails automáticos configurables"
+            },
+            {
+              "name": "Push APK",
+              "description": "Notificaciones push a app móvil"
+            },
+            {
+              "name": "WhatsApp",
+              "description": "Integración con WhatsApp Business (opcional)"
+            }
           ]
         },
         "aiIntegration": {
@@ -600,10 +700,25 @@
             "discoveredAt": "2025-12-12T00:23:31.690Z"
           }
         ],
-        "inputs": []
+        "inputs": [],
+        "discoveredButtons": 0,
+        "discoveredInputs": 0,
+        "discoveredModals": 0,
+        "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
       },
       "lastBrainUpdate": "2025-12-12T13:41:27.685Z",
-      "autoHealedGaps": 4
+      "autoHealedGaps": 4,
+      "api": {
+        "discoveredEndpoints": [
+          "/api/audit-reports/types",
+          "/api/audit-reports/generate",
+          "/api/audit-reports/batch-generate",
+          "/api/audit-reports/verify/${code}",
+          "/api/audit-reports/history?limit=50",
+          "/api/audit-reports/${reportId}/info"
+        ],
+        "functionCount": 1
+      }
     },
     {
       "id": "biometric-consent",
@@ -699,10 +814,18 @@
             "discoveredAt": "2025-12-12T00:21:36.378Z"
           }
         ],
-        "inputs": []
+        "inputs": [],
+        "discoveredButtons": 0,
+        "discoveredInputs": 0,
+        "discoveredModals": 0,
+        "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
       },
       "lastBrainUpdate": "2025-12-12T13:39:34.128Z",
-      "autoHealedGaps": 13
+      "autoHealedGaps": 13,
+      "api": {
+        "discoveredEndpoints": [],
+        "functionCount": 16
+      }
     },
     {
       "id": "compliance-dashboard",
@@ -769,10 +892,23 @@
             "discoveredAt": "2025-12-12T00:21:55.822Z"
           }
         ],
-        "inputs": []
+        "inputs": [],
+        "discoveredButtons": 0,
+        "discoveredInputs": 0,
+        "discoveredModals": 0,
+        "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
       },
       "lastBrainUpdate": "2025-12-12T13:39:50.748Z",
-      "autoHealedGaps": 7
+      "autoHealedGaps": 7,
+      "api": {
+        "discoveredEndpoints": [
+          "${this.baseUrl}${endpoint}",
+          "/api/compliance/export/dashboard/${format}?period=${periodDays}&company_name=${companyName}",
+          "/api/compliance/export/violations/${format}?company_name=${companyName}",
+          "/api/compliance/export/employee/${employeeId}/pdf?period=${periodDays}&company_name=${companyName}"
+        ],
+        "functionCount": 19
+      }
     },
     {
       "id": "hse-management",
@@ -783,7 +919,13 @@
       "fullCapabilities": {
         "summary": "Sistema completo de Seguridad e Higiene que cumple con ISO 45001, OSHA, EU-OSHA y normativas locales (SRT Argentina). Gestiona todo el ciclo de vida de EPP desde requerimiento hasta inspección.",
         "standards": {
-          "supported": ["ISO 45001:2018", "OSHA (USA)", "EU-OSHA", "SRT Argentina", "NR Brasil"],
+          "supported": [
+            "ISO 45001:2018",
+            "OSHA (USA)",
+            "EU-OSHA",
+            "SRT Argentina",
+            "NR Brasil"
+          ],
           "certification": "El sistema genera reportes compatibles con auditorías de certificación"
         },
         "eppCatalog": {
@@ -891,8 +1033,14 @@
       "help": {
         "quickStart": "1. Configurar catálogo de EPP de la empresa\n2. Definir matriz rol-EPP por posición\n3. Registrar entregas a empleados\n4. Programar inspecciones periódicas\n5. Monitorear alertas de vencimiento",
         "commonIssues": [
-          {"problem": "Empleado sin EPP requerido", "solution": "Verificar que tenga posición asignada y que la matriz rol-EPP esté configurada"},
-          {"problem": "No llegan alertas de vencimiento", "solution": "Verificar que el módulo de notificaciones esté activo"}
+          {
+            "problem": "Empleado sin EPP requerido",
+            "solution": "Verificar que tenga posición asignada y que la matriz rol-EPP esté configurada"
+          },
+          {
+            "problem": "No llegan alertas de vencimiento",
+            "solution": "Verificar que el módulo de notificaciones esté activo"
+          }
         ]
       },
       "ui": {
@@ -949,7 +1097,7 @@
             "CASE_ARCHIVED"
           ],
           "auto_generated": true,
-          "generated_at": "2025-12-16T04:05:17.407Z",
+          "generated_at": "2025-12-22T03:21:01.134Z",
           "stats": {
             "total": 43,
             "core": 3,
@@ -959,7 +1107,7 @@
           }
         }
       },
-      "lastBrainUpdate": "2025-12-16T04:05:17.410Z"
+      "lastBrainUpdate": "2025-12-22T03:21:01.140Z"
     },
     {
       "id": "associate-marketplace",
@@ -987,10 +1135,27 @@
         "mainButtons": [],
         "tabs": [],
         "inputs": [],
-        "modals": []
+        "modals": [],
+        "discoveredButtons": 0,
+        "discoveredInputs": 0,
+        "discoveredModals": 0,
+        "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
       },
       "addedFromDB": true,
-      "addedAt": "2025-12-16T02:40:42.311Z"
+      "addedAt": "2025-12-16T02:40:42.311Z",
+      "api": {
+        "discoveredEndpoints": [
+          "${config.apiBase}/categories",
+          "${config.apiBase}/contracts/my-company",
+          "${config.apiBase}/search?${params}",
+          "${config.apiBase}/${associateId}",
+          "${config.apiBase}/contracts",
+          "${config.apiBase}/contracts/${contractId}/pause",
+          "${config.apiBase}/contracts/${contractId}/activate",
+          "${config.apiBase}/contracts/${contractId}"
+        ],
+        "functionCount": 24
+      }
     },
     {
       "id": "attendance",
@@ -1108,9 +1273,13 @@
             "discoveredAt": "2025-12-12T00:16:50.638Z"
           }
         ],
-        "inputs": []
+        "inputs": [],
+        "discoveredButtons": 0,
+        "discoveredInputs": 0,
+        "discoveredModals": 0,
+        "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
       },
-      "lastBrainUpdate": "2025-12-16T04:05:17.399Z",
+      "lastBrainUpdate": "2025-12-22T03:21:01.125Z",
       "autoHealedGaps": 14,
       "workflows": {
         "clock_in": {
@@ -1236,7 +1405,7 @@
           "entry_point": "BIOMETRIC_CAPTURE",
           "final_states": [],
           "auto_generated": true,
-          "generated_at": "2025-12-16T04:05:17.392Z",
+          "generated_at": "2025-12-22T03:21:01.118Z",
           "stats": {
             "total": 152,
             "core": 37,
@@ -1245,6 +1414,10 @@
             "outcomes": 0
           }
         }
+      },
+      "api": {
+        "discoveredEndpoints": [],
+        "functionCount": 29
       }
     },
     {
@@ -1379,10 +1552,24 @@
             "discoveredAt": "2025-12-12T00:17:17.976Z"
           }
         ],
-        "inputs": []
+        "inputs": [],
+        "discoveredButtons": 0,
+        "discoveredInputs": 0,
+        "discoveredModals": 0,
+        "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
       },
       "lastBrainUpdate": "2025-12-12T13:35:14.535Z",
-      "autoHealedGaps": 8
+      "autoHealedGaps": 8,
+      "api": {
+        "discoveredEndpoints": [
+          "/api/company-account/communications",
+          "/api/company-account/communications/${commId}/read",
+          "/api/company-account/${type}/${id}/download",
+          "/api/company-account/notifications/${notifId}/read",
+          "/api/company-account/notifications/read-all"
+        ],
+        "functionCount": 12
+      }
     },
     {
       "id": "dashboard",
@@ -1503,17 +1690,37 @@
       "version": "2.0.0",
       "description": "Sistema de gestión de kioscos biométricos parametrizables con geolocalización, vinculación a sucursales, y APK Android dedicada",
       "dependencies": {
-        "required": ["companies"],
-        "optional": ["branches", "attendance", "real-biometric-enterprise"],
-        "integrates_with": ["attendance", "real-biometric-enterprise", "emotional-analysis"],
-        "provides_to": ["attendance"]
+        "required": [
+          "companies"
+        ],
+        "optional": [
+          "branches",
+          "attendance",
+          "real-biometric-enterprise"
+        ],
+        "integrates_with": [
+          "attendance",
+          "real-biometric-enterprise",
+          "emotional-analysis"
+        ],
+        "provides_to": [
+          "attendance"
+        ]
       },
       "api": {
         "base_path": "/api/v1/kiosks",
-        "endpoints": ["/", "/:id", "/available", "/activate", "/deactivate"]
+        "endpoints": [
+          "/",
+          "/:id",
+          "/available",
+          "/activate",
+          "/deactivate"
+        ]
       },
       "database": {
-        "tables": ["kiosks"]
+        "tables": [
+          "kiosks"
+        ]
       },
       "fullCapabilities": {
         "summary": "Sistema de gestión de kioscos biométricos con configuración remota, geolocalización GPS, vinculación a sucursales, y APK Android dedicada para terminales de fichaje.",
@@ -1555,17 +1762,35 @@
           "alerts": "Notificación a supervisor si empleado ficha fuera de zona frecuentemente"
         },
         "states": [
-          { "state": "available", "description": "Kiosko creado, esperando que APK lo active" },
-          { "state": "configured", "description": "APK vinculada, pendiente de verificación" },
-          { "state": "active", "description": "Operativo, registrando fichajes" },
-          { "state": "maintenance", "description": "Temporalmente fuera de servicio" }
+          {
+            "state": "available",
+            "description": "Kiosko creado, esperando que APK lo active"
+          },
+          {
+            "state": "configured",
+            "description": "APK vinculada, pendiente de verificación"
+          },
+          {
+            "state": "active",
+            "description": "Operativo, registrando fichajes"
+          },
+          {
+            "state": "maintenance",
+            "description": "Temporalmente fuera de servicio"
+          }
         ]
       },
       "help": {
         "quickStart": "1. Crear kiosko desde panel → 2. Instalar APK en tablet → 3. En APK, seleccionar kiosko 'disponible' → 4. Kiosko se activa automáticamente → 5. Empleados pueden fichar",
         "commonIssues": [
-          { "problem": "APK no encuentra kioscos", "solution": "Verificar que haya kioscos con is_active = false para la empresa" },
-          { "problem": "GPS fuera de rango siempre", "solution": "Actualizar coordenadas del kiosko desde el panel" }
+          {
+            "problem": "APK no encuentra kioscos",
+            "solution": "Verificar que haya kioscos con is_active = false para la empresa"
+          },
+          {
+            "problem": "GPS fuera de rango siempre",
+            "solution": "Actualizar coordenadas del kiosko desde el panel"
+          }
         ]
       },
       "commercial": {
@@ -1720,31 +1945,31 @@
         "mainButtons": [
           {
             "text": "🚪 Salir",
-            "action": "exit",
-            "discoveredAt": "2025-12-12T00:18:03.210Z"
+            "selector": ".",
+            "type": "submit",
+            "discoveredAt": "2025-12-20T22:55:05.419Z"
           },
           {
-            "text": "Agregar Usuario",
-            "action": "create",
-            "discoveredAt": "2025-12-12T00:18:03.210Z"
+            "text": "",
+            "selector": "#unified-help-btn",
+            "type": "submit",
+            "discoveredAt": "2025-12-20T22:55:05.419Z"
           },
           {
-            "text": "🔔\n        1",
-            "action": "unknown",
-            "discoveredAt": "2025-12-12T00:18:03.210Z"
+            "text": "🔔\n        0",
+            "selector": "#notification-badge-button",
+            "type": "submit",
+            "discoveredAt": "2025-12-20T22:55:05.419Z"
           }
         ],
-        "tabs": [
-          {
-            "label": "0",
-            "id": "uhc-tickets-badge",
-            "discoveredAt": "2025-12-12T00:18:03.210Z"
-          }
-        ],
-        "inputs": []
+        "tabs": [],
+        "inputs": [],
+        "modals": [],
+        "tables": []
       },
       "lastBrainUpdate": "2025-12-13T19:13:47.482Z",
-      "autoHealedGaps": 4
+      "autoHealedGaps": 4,
+      "lastCrawl": "2025-12-20T22:55:05.419Z"
     },
     {
       "id": "auditor",
@@ -1941,10 +2166,24 @@
             "discoveredAt": "2025-12-12T00:19:15.676Z"
           }
         ],
-        "inputs": []
+        "inputs": [],
+        "discoveredButtons": 0,
+        "discoveredInputs": 0,
+        "discoveredModals": 0,
+        "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
       },
       "lastBrainUpdate": "2025-12-12T13:37:12.437Z",
-      "autoHealedGaps": 10
+      "autoHealedGaps": 10,
+      "api": {
+        "discoveredEndpoints": [
+          "/api/siac/tax-templates?country=${countryCode}",
+          "/api/siac/tax-conditions?country=${countryCode}",
+          "/api/siac/tax-templates",
+          "/api/siac/clientes",
+          "/api/siac/clientes?company_id=${clientesState.companyId}"
+        ],
+        "functionCount": 20
+      }
     },
     {
       "id": "facturacion",
@@ -2271,10 +2510,22 @@
         "conversionRates": {
           "description": "Tasas de conversión diferenciadas por tipo de hora",
           "rates": [
-            { "type": "normal", "example": "1.50x - 1 hora extra = 1.5 horas en banco" },
-            { "type": "weekend", "example": "2.00x - 1 hora sábado/domingo = 2 horas en banco" },
-            { "type": "holiday", "example": "2.00x - 1 hora feriado = 2 horas en banco" },
-            { "type": "night", "example": "1.20x - 1 hora nocturna = 1.2 horas en banco" }
+            {
+              "type": "normal",
+              "example": "1.50x - 1 hora extra = 1.5 horas en banco"
+            },
+            {
+              "type": "weekend",
+              "example": "2.00x - 1 hora sábado/domingo = 2 horas en banco"
+            },
+            {
+              "type": "holiday",
+              "example": "2.00x - 1 hora feriado = 2 horas en banco"
+            },
+            {
+              "type": "night",
+              "example": "1.20x - 1 hora nocturna = 1.2 horas en banco"
+            }
           ],
           "configurable": "Cada empresa configura sus propias tasas según convenio colectivo"
         },
@@ -2289,14 +2540,31 @@
         "expirationSystem": {
           "description": "Sistema de vencimiento con FIFO y alertas proactivas",
           "fifo": "Las horas más antiguas se usan/vencen primero",
-          "warningDays": [30, 15, 7],
-          "expiredAction": ["payout (pagar)", "forfeit (perder)", "transfer (transferir al siguiente año)"]
+          "warningDays": [
+            30,
+            15,
+            7
+          ],
+          "expiredAction": [
+            "payout (pagar)",
+            "forfeit (perder)",
+            "transfer (transferir al siguiente año)"
+          ]
         },
         "approvalWorkflow": {
           "levels": [
-            { "requiresSupervisor": true, "description": "Uso menor a X horas: Aprobación automática" },
-            { "requiresHR": false, "description": "Supervisor aprueba directamente" },
-            { "autoApproveUnder": 2, "description": "Menos de 2 horas: Auto-aprobado" }
+            {
+              "requiresSupervisor": true,
+              "description": "Uso menor a X horas: Aprobación automática"
+            },
+            {
+              "requiresHR": false,
+              "description": "Supervisor aprueba directamente"
+            },
+            {
+              "autoApproveUnder": 2,
+              "description": "Menos de 2 horas: Auto-aprobado"
+            }
           ]
         },
         "unionAgreements": {
@@ -2315,7 +2583,11 @@
         },
         "blackoutDates": {
           "description": "Fechas en que el banco no puede usarse",
-          "examples": ["Cierre fiscal", "Inventario anual", "Picos de demanda estacional"],
+          "examples": [
+            "Cierre fiscal",
+            "Inventario anual",
+            "Picos de demanda estacional"
+          ],
           "perBranch": "Configurable por sucursal"
         }
       },
@@ -2485,7 +2757,15 @@
           "behavior": "Si documento vence, el sistema: 1) Notifica al empleado y supervisor, 2) Suspende el concepto hasta renovación, 3) Escalamiento automático si no se renueva"
         },
         "internationalSupport": {
-          "currentCountries": ["Argentina", "Brasil", "Chile", "Uruguay", "México", "Perú", "Colombia"],
+          "currentCountries": [
+            "Argentina",
+            "Brasil",
+            "Chile",
+            "Uruguay",
+            "México",
+            "Perú",
+            "Colombia"
+          ],
           "addingNewCountry": "Solo requiere: 1) Crear PayrollCountry con código ISO, 2) Configurar convenios laborales, 3) Crear plantilla con conceptos locales - NO requiere código nuevo",
           "perCountryFeatures": [
             "Calendario de feriados específico",
@@ -3038,7 +3318,12 @@
             "12x4: 12 días trabajo + 4 descanso (minería)",
             "4x4: 4 días trabajo + 4 descanso (offshore)"
           ],
-          "shiftTypes": ["standard", "permanent", "flash", "rotative"],
+          "shiftTypes": [
+            "standard",
+            "permanent",
+            "flash",
+            "rotative"
+          ],
           "example": "Turno '5x2 Producción' arrancó 15/01 con ciclo mañana→descanso→tarde→descanso→noche→descanso. Juan se acopla el 22/01 al grupo 'Tarde'. Juan trabaja solo cuando el turno global está en fase 'Tarde' (días 7-11 del ciclo)."
         },
         "calendarioLaboral": {
@@ -3055,9 +3340,28 @@
             "3. ¿El turno indica que debe trabajar? → SÍ/NO según rotación y fase del usuario"
           ],
           "holidayDetection": {
-            "sources": ["BD local (holidays)", "API externa Nager.Date (fallback)"],
-            "granularity": ["Nacional", "Provincial/Estadual", "Municipal"],
-            "countriesSupported": ["AR", "BR", "CL", "UY", "MX", "PE", "CO", "US", "ES", "DE", "FR"],
+            "sources": [
+              "BD local (holidays)",
+              "API externa Nager.Date (fallback)"
+            ],
+            "granularity": [
+              "Nacional",
+              "Provincial/Estadual",
+              "Municipal"
+            ],
+            "countriesSupported": [
+              "AR",
+              "BR",
+              "CL",
+              "UY",
+              "MX",
+              "PE",
+              "CO",
+              "US",
+              "ES",
+              "DE",
+              "FR"
+            ],
             "autoSync": "Feriados se sincronizan automáticamente al configurar país de la sucursal"
           }
         },
@@ -3069,7 +3373,12 @@
             "Escalamiento automático: Si X > max_approval_days, escala al siguiente nivel",
             "Trazabilidad completa de aprobadores en cada nivel"
           ],
-          "usedBy": ["Vacaciones", "Permisos", "Horas extra", "Licencias"]
+          "usedBy": [
+            "Vacaciones",
+            "Permisos",
+            "Horas extra",
+            "Licencias"
+          ]
         },
         "plugAndPlayArchitecture": {
           "summary": "Arquitectura diseñada para ELIMINAR reimplementaciones costosas al agregar módulos nuevos",
@@ -3088,7 +3397,13 @@
           "newModuleFlow": "Nuevo módulo registra su integración en modules-registry.json → Sistema detecta dependencias → Flujo de datos se establece automáticamente → Sin código adicional"
         },
         "nonWorkingDays": {
-          "types": ["Feriados nacionales", "Feriados provinciales", "Días no laborables empresa", "Días no laborables sucursal", "Días no laborables departamento"],
+          "types": [
+            "Feriados nacionales",
+            "Feriados provinciales",
+            "Días no laborables empresa",
+            "Días no laborables sucursal",
+            "Días no laborables departamento"
+          ],
           "granularity": "Se puede definir que afecta a: ALL (toda empresa), BRANCH (una sucursal), DEPARTMENT (un departamento)",
           "exceptions": "Empleados específicos pueden tener excepciones para trabajar en feriados"
         },
@@ -3339,10 +3654,18 @@
             "discoveredAt": "2025-12-12T00:18:34.819Z"
           }
         ],
-        "inputs": []
+        "inputs": [],
+        "discoveredButtons": 0,
+        "discoveredInputs": 0,
+        "discoveredModals": 0,
+        "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
       },
       "lastBrainUpdate": "2025-12-12T13:36:31.476Z",
-      "autoHealedGaps": 20
+      "autoHealedGaps": 20,
+      "api": {
+        "discoveredEndpoints": [],
+        "functionCount": 24
+      }
     },
     {
       "id": "employee-360",
@@ -3355,12 +3678,36 @@
         "scoringSystem": {
           "description": "Sistema de scoring multidimensional que evalúa al empleado en 6 categorías + bonificaciones",
           "dimensions": [
-            {"name": "Puntualidad", "weight": "20%", "source": "Análisis de fichajes vs turno asignado"},
-            {"name": "Asistencia", "weight": "20%", "source": "Días trabajados vs días programados"},
-            {"name": "Comportamiento", "weight": "15%", "source": "Historial de sanciones y reconocimientos"},
-            {"name": "Capacitación", "weight": "15%", "source": "Cursos completados, certificaciones"},
-            {"name": "Salud", "weight": "15%", "source": "Exámenes médicos al día, licencias"},
-            {"name": "Vacaciones", "weight": "15%", "source": "Uso responsable de días, planificación"}
+            {
+              "name": "Puntualidad",
+              "weight": "20%",
+              "source": "Análisis de fichajes vs turno asignado"
+            },
+            {
+              "name": "Asistencia",
+              "weight": "20%",
+              "source": "Días trabajados vs días programados"
+            },
+            {
+              "name": "Comportamiento",
+              "weight": "15%",
+              "source": "Historial de sanciones y reconocimientos"
+            },
+            {
+              "name": "Capacitación",
+              "weight": "15%",
+              "source": "Cursos completados, certificaciones"
+            },
+            {
+              "name": "Salud",
+              "weight": "15%",
+              "source": "Exámenes médicos al día, licencias"
+            },
+            {
+              "name": "Vacaciones",
+              "weight": "15%",
+              "source": "Uso responsable de días, planificación"
+            }
           ],
           "bonuses": [
             "Roles adicionales internos (+puntos por responsabilidades extra)",
@@ -3467,8 +3814,14 @@
       "help": {
         "quickStart": "1. Seleccionar empleado desde lista o búsqueda\n2. Ver scoring general en dashboard\n3. Explorar cada dimensión con drill-down\n4. Ver timeline unificado de eventos\n5. Generar reporte PDF para legajo",
         "commonIssues": [
-          {"problem": "Scoring incompleto", "solution": "Verificar que el empleado tenga datos en todos los módulos (asistencia, capacitación, etc.)"},
-          {"problem": "IA no genera análisis", "solution": "Verificar que Ollama esté corriendo en el servidor"}
+          {
+            "problem": "Scoring incompleto",
+            "solution": "Verificar que el empleado tenga datos en todos los módulos (asistencia, capacitación, etc.)"
+          },
+          {
+            "problem": "IA no genera análisis",
+            "solution": "Verificar que Ollama esté corriendo en el servidor"
+          }
         ]
       },
       "ui": {
@@ -3487,10 +3840,25 @@
       "version": "2.0.0",
       "description": "Sistema completo de reclutamiento con portal público, pipeline de candidatos, matching interno con IA, y flujo integrado hasta alta del empleado",
       "dependencies": {
-        "required": ["companies", "users"],
-        "optional": ["notification-center", "medical", "employee-360"],
-        "integrates_with": ["medical", "employee-360", "notification-center", "organizational-structure"],
-        "provides_to": ["users", "medical"]
+        "required": [
+          "companies",
+          "users"
+        ],
+        "optional": [
+          "notification-center",
+          "medical",
+          "employee-360"
+        ],
+        "integrates_with": [
+          "medical",
+          "employee-360",
+          "notification-center",
+          "organizational-structure"
+        ],
+        "provides_to": [
+          "users",
+          "medical"
+        ]
       },
       "fullCapabilities": {
         "summary": "Sistema enterprise de reclutamiento en 6 IDIOMAS con portal público, pipeline Kanban, matching interno con IA, y flujo end-to-end hasta alta del empleado.",
@@ -3504,7 +3872,14 @@
         ],
         "multiLanguage": {
           "description": "Interfaz y portal en 6 idiomas",
-          "languages": ["Español", "English", "Português", "Français", "Deutsch", "Italiano"],
+          "languages": [
+            "Español",
+            "English",
+            "Português",
+            "Français",
+            "Deutsch",
+            "Italiano"
+          ],
           "autoDetect": "Detecta idioma del navegador del candidato"
         },
         "publicPortal": {
@@ -3521,14 +3896,38 @@
         "pipeline": {
           "description": "Pipeline visual estilo Kanban para gestión de candidatos",
           "stages": [
-            { "name": "Postulación", "description": "Candidato envió CV" },
-            { "name": "Revisión RRHH", "description": "CV en evaluación" },
-            { "name": "Entrevista 1", "description": "Primera entrevista" },
-            { "name": "Entrevista 2", "description": "Segunda entrevista (opcional)" },
-            { "name": "Evaluación técnica", "description": "Prueba técnica si aplica" },
-            { "name": "Aprobación admin", "description": "Decisión final" },
-            { "name": "Examen preocupacional", "description": "Notifica al servicio médico" },
-            { "name": "Alta empleado", "description": "Creación automática de usuario" }
+            {
+              "name": "Postulación",
+              "description": "Candidato envió CV"
+            },
+            {
+              "name": "Revisión RRHH",
+              "description": "CV en evaluación"
+            },
+            {
+              "name": "Entrevista 1",
+              "description": "Primera entrevista"
+            },
+            {
+              "name": "Entrevista 2",
+              "description": "Segunda entrevista (opcional)"
+            },
+            {
+              "name": "Evaluación técnica",
+              "description": "Prueba técnica si aplica"
+            },
+            {
+              "name": "Aprobación admin",
+              "description": "Decisión final"
+            },
+            {
+              "name": "Examen preocupacional",
+              "description": "Notifica al servicio médico"
+            },
+            {
+              "name": "Alta empleado",
+              "description": "Creación automática de usuario"
+            }
           ],
           "dragAndDrop": true
         },
@@ -3546,7 +3945,13 @@
           "description": "Integración automática con servicio médico",
           "flow": "Al aprobar candidato → Notifica al médico → Agenda examen preocupacional → Si apto → Genera alta"
         },
-        "jobTypes": ["full-time", "part-time", "contract", "temporary", "internship"]
+        "jobTypes": [
+          "full-time",
+          "part-time",
+          "contract",
+          "temporary",
+          "internship"
+        ]
       },
       "commercial": {
         "is_core": false,
@@ -3625,10 +4030,28 @@
       "version": "5.8.0",
       "description": "Dashboard médico completo con exámenes PRE/POST ocupacionales, historial clínico, datos antropométricos, condiciones crónicas, tratamientos psiquiátricos, y notificaciones proactivas",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["notification-center", "document-management-central", "art-management"],
-        "integrates_with": ["attendance", "vacation", "job-postings", "legal-dashboard", "employee-360", "payroll-liquidation"],
-        "provides_to": ["legal-dashboard", "job-postings", "payroll-liquidation"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "notification-center",
+          "document-management-central",
+          "art-management"
+        ],
+        "integrates_with": [
+          "attendance",
+          "vacation",
+          "job-postings",
+          "legal-dashboard",
+          "employee-360",
+          "payroll-liquidation"
+        ],
+        "provides_to": [
+          "legal-dashboard",
+          "job-postings",
+          "payroll-liquidation"
+        ]
       },
       "fullCapabilities": {
         "summary": "Dashboard médico enterprise con ciclo completo PRE→Ocupacional→POST, historial clínico avanzado, datos antropométricos, evaluaciones psiquiátricas, y notificaciones automáticas a candidatos RRHH.",
@@ -3645,11 +4068,28 @@
         "occupationalCycle": {
           "description": "Ciclo completo de salud ocupacional",
           "stages": [
-            { "name": "PRE-Ocupacional", "trigger": "Candidato aprobado por RRHH", "purpose": "Determinar aptitud para el puesto" },
-            { "name": "Ocupacional", "trigger": "Periódico según reglamentación", "purpose": "Monitoreo de salud del empleado" },
-            { "name": "POST-Ocupacional", "trigger": "Desvinculación del empleado", "purpose": "Estado de salud al momento de egreso" }
+            {
+              "name": "PRE-Ocupacional",
+              "trigger": "Candidato aprobado por RRHH",
+              "purpose": "Determinar aptitud para el puesto"
+            },
+            {
+              "name": "Ocupacional",
+              "trigger": "Periódico según reglamentación",
+              "purpose": "Monitoreo de salud del empleado"
+            },
+            {
+              "name": "POST-Ocupacional",
+              "trigger": "Desvinculación del empleado",
+              "purpose": "Estado de salud al momento de egreso"
+            }
           ],
-          "results": ["Apto", "Apto con restricciones", "No apto", "Pendiente estudios"],
+          "results": [
+            "Apto",
+            "Apto con restricciones",
+            "No apto",
+            "Pendiente estudios"
+          ],
           "workflow": "PRE negativo → No se produce el alta → Notifica a RRHH"
         },
         "candidateIntegration": {
@@ -3665,7 +4105,14 @@
         },
         "advancedMedicalData": {
           "anthropometric": {
-            "fields": ["Peso", "Altura", "IMC calculado", "Presión arterial", "Frecuencia cardíaca", "Circunferencia abdominal"],
+            "fields": [
+              "Peso",
+              "Altura",
+              "IMC calculado",
+              "Presión arterial",
+              "Frecuencia cardíaca",
+              "Circunferencia abdominal"
+            ],
             "history": "Historial completo con gráficos de evolución"
           },
           "chronicConditions": {
@@ -3686,7 +4133,12 @@
           }
         },
         "certificates": {
-          "types": ["Certificado médico por enfermedad", "Certificado de aptitud", "Certificado de reposo", "Recetas médicas"],
+          "types": [
+            "Certificado médico por enfermedad",
+            "Certificado de aptitud",
+            "Certificado de reposo",
+            "Recetas médicas"
+          ],
           "workflow": "Empleado sube certificado → RRHH valida → Afecta automáticamente asistencia y payroll"
         },
         "integrations": {
@@ -4292,28 +4744,58 @@
       "version": "2.0.0",
       "description": "Sistema completo de gestión de trabajo remoto, híbrido y presencial con detección de presencia NO INVASIVA",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["notification-center", "attendance"],
-        "integrates_with": ["attendance", "payroll-liquidation"],
-        "provides_to": ["attendance", "payroll-liquidation", "employee-360"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "notification-center",
+          "attendance"
+        ],
+        "integrates_with": [
+          "attendance",
+          "payroll-liquidation"
+        ],
+        "provides_to": [
+          "attendance",
+          "payroll-liquidation",
+          "employee-360"
+        ]
       },
       "api": {
         "base_path": "/api/v1/work-arrangements",
         "endpoints": [
-          "/types", "/policies/:companyId", "/policies",
-          "/users/:userId", "/company/:companyId/users", "/users/:userId/assign", "/users/bulk-assign",
-          "/consents/:userId", "/consents", "/consents/:consentId/revoke",
-          "/presence/detect", "/presence/:userId/today",
-          "/violations/:companyId", "/violations/:violationId/justify",
-          "/contingency/:companyId", "/contingency/:planId/activate",
-          "/dashboard/:companyId", "/history/:userId", "/check-remote/:userId/:date"
+          "/types",
+          "/policies/:companyId",
+          "/policies",
+          "/users/:userId",
+          "/company/:companyId/users",
+          "/users/:userId/assign",
+          "/users/bulk-assign",
+          "/consents/:userId",
+          "/consents",
+          "/consents/:consentId/revoke",
+          "/presence/detect",
+          "/presence/:userId/today",
+          "/violations/:companyId",
+          "/violations/:violationId/justify",
+          "/contingency/:companyId",
+          "/contingency/:planId/activate",
+          "/dashboard/:companyId",
+          "/history/:userId",
+          "/check-remote/:userId/:date"
         ]
       },
       "database": {
         "tables": [
-          "work_arrangement_types", "work_arrangement_policies", "user_work_arrangements",
-          "webcam_monitoring_consents", "remote_presence_detections", "remote_presence_violations",
-          "work_arrangement_contingency_plans", "work_arrangement_history"
+          "work_arrangement_types",
+          "work_arrangement_policies",
+          "user_work_arrangements",
+          "webcam_monitoring_consents",
+          "remote_presence_detections",
+          "remote_presence_violations",
+          "work_arrangement_contingency_plans",
+          "work_arrangement_history"
         ]
       },
       "fullCapabilities": {
@@ -4337,25 +4819,69 @@
         "consentsByCountry": {
           "description": "Consentimientos explícitos requeridos según legislación del país",
           "countries": {
-            "AR": { "law": "Ley 25.326", "requires": "Consentimiento escrito explícito" },
-            "BR": { "law": "LGPD", "requires": "Consentimiento informado con finalidad específica" },
-            "EU": { "law": "GDPR Art.7", "requires": "Consentimiento libre, específico, informado" },
-            "CL": { "law": "Ley 19.628", "requires": "Autorización escrita" },
-            "MX": { "law": "LFPDPPP", "requires": "Aviso de privacidad y consentimiento" }
+            "AR": {
+              "law": "Ley 25.326",
+              "requires": "Consentimiento escrito explícito"
+            },
+            "BR": {
+              "law": "LGPD",
+              "requires": "Consentimiento informado con finalidad específica"
+            },
+            "EU": {
+              "law": "GDPR Art.7",
+              "requires": "Consentimiento libre, específico, informado"
+            },
+            "CL": {
+              "law": "Ley 19.628",
+              "requires": "Autorización escrita"
+            },
+            "MX": {
+              "law": "LFPDPPP",
+              "requires": "Aviso de privacidad y consentimiento"
+            }
           },
           "revocable": "Empleado puede revocar consentimiento en cualquier momento",
           "alternativeMethods": "Si rechaza webcam, sistema ofrece métodos alternativos (check-in manual, GPS)"
         },
         "modalityTypes": [
-          { "code": "presencial", "requiresGPS": true, "requiresWebcam": false },
-          { "code": "remoto", "requiresGPS": false, "requiresWebcam": true },
-          { "code": "hibrido", "requiresGPS": true, "requiresWebcam": true, "configurable": "office_days + remote_days" },
-          { "code": "freelance", "requiresGPS": false, "requiresWebcam": false, "flexibleHours": true },
-          { "code": "nomade_digital", "requiresGPS": false, "requiresWebcam": true, "flexibleTimezone": true }
+          {
+            "code": "presencial",
+            "requiresGPS": true,
+            "requiresWebcam": false
+          },
+          {
+            "code": "remoto",
+            "requiresGPS": false,
+            "requiresWebcam": true
+          },
+          {
+            "code": "hibrido",
+            "requiresGPS": true,
+            "requiresWebcam": true,
+            "configurable": "office_days + remote_days"
+          },
+          {
+            "code": "freelance",
+            "requiresGPS": false,
+            "requiresWebcam": false,
+            "flexibleHours": true
+          },
+          {
+            "code": "nomade_digital",
+            "requiresGPS": false,
+            "requiresWebcam": true,
+            "flexibleTimezone": true
+          }
         ],
         "contingencyPlans": {
           "description": "Planes de contingencia para activación masiva de trabajo remoto",
-          "types": ["pandemic", "natural_disaster", "health_emergency", "infrastructure_failure", "custom"],
+          "types": [
+            "pandemic",
+            "natural_disaster",
+            "health_emergency",
+            "infrastructure_failure",
+            "custom"
+          ],
           "features": [
             "Activación con 1 click para toda la empresa",
             "Forzar modalidad remota para todos los empleados",
@@ -4377,11 +4903,22 @@
       "help": {
         "quickStart": "1. Configurar tipos de modalidad habilitados para la empresa\n2. Crear políticas (días remotos, horarios core, webcam)\n3. Asignar modalidad a empleados\n4. Si requiere webcam, obtener consentimiento explícito\n5. Monitorear presencia y gestionar violaciones",
         "commonIssues": [
-          { "problem": "Empleado rechaza consentimiento de webcam", "solution": "Sistema ofrece método alternativo (check-in manual). La modalidad sigue funcionando sin detección automática." },
-          { "problem": "Muchas violaciones de presencia", "solution": "Revisar: 1) Intervalos muy cortos 2) Breaks no configurados 3) Problemas de conectividad del empleado" }
+          {
+            "problem": "Empleado rechaza consentimiento de webcam",
+            "solution": "Sistema ofrece método alternativo (check-in manual). La modalidad sigue funcionando sin detección automática."
+          },
+          {
+            "problem": "Muchas violaciones de presencia",
+            "solution": "Revisar: 1) Intervalos muy cortos 2) Breaks no configurados 3) Problemas de conectividad del empleado"
+          }
         ]
       },
-      "ui": { "mainButtons": [], "tabs": [], "inputs": [], "modals": [] },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
       "addedAt": "2025-12-18"
     },
     {
@@ -4391,10 +4928,25 @@
       "version": "3.0.0",
       "description": "Sistema central de documentos como SSOT (Single Source of Truth) para toda la organización",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["notification-center", "hse-management", "medical"],
-        "integrates_with": ["payroll-liquidation", "hse-management", "medical", "employee-360", "legal-dashboard"],
-        "provides_to": ["ALL"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "notification-center",
+          "hse-management",
+          "medical"
+        ],
+        "integrates_with": [
+          "payroll-liquidation",
+          "hse-management",
+          "medical",
+          "employee-360",
+          "legal-dashboard"
+        ],
+        "provides_to": [
+          "ALL"
+        ]
       },
       "fullCapabilities": {
         "summary": "Sistema de gestión documental centralizado que actúa como ÚNICA FUENTE DE VERDAD para documentos de empleados, certificaciones, contratos y documentación legal.",
@@ -4418,27 +4970,91 @@
         "expirationSystem": {
           "description": "Sistema proactivo de vencimientos con escalamiento automático",
           "notifications": [
-            { "days": 30, "notify": ["Empleado"], "action": "Aviso preventivo" },
-            { "days": 15, "notify": ["Empleado", "Supervisor"], "action": "Recordatorio urgente" },
-            { "days": 7, "notify": ["Empleado", "Supervisor", "RRHH"], "action": "Alerta crítica" },
-            { "days": 0, "notify": ["ALL + Gerencia"], "action": "Bloqueo de funcionalidades dependientes" }
+            {
+              "days": 30,
+              "notify": [
+                "Empleado"
+              ],
+              "action": "Aviso preventivo"
+            },
+            {
+              "days": 15,
+              "notify": [
+                "Empleado",
+                "Supervisor"
+              ],
+              "action": "Recordatorio urgente"
+            },
+            {
+              "days": 7,
+              "notify": [
+                "Empleado",
+                "Supervisor",
+                "RRHH"
+              ],
+              "action": "Alerta crítica"
+            },
+            {
+              "days": 0,
+              "notify": [
+                "ALL + Gerencia"
+              ],
+              "action": "Bloqueo de funcionalidades dependientes"
+            }
           ],
           "autoRenewal": "Sistema puede solicitar renovación automática al empleado cuando detecta vencimiento próximo"
         },
         "dependencySystem": {
           "description": "Documentos pueden condicionar funcionalidades del sistema",
           "examples": [
-            { "document": "Licencia de conducir", "affects": "Adicional por conducción en Payroll", "ifExpired": "Concepto suspendido automáticamente" },
-            { "document": "Certificación técnica", "affects": "Puede operar maquinaria en HSE", "ifExpired": "Usuario no puede fichar en zona de maquinaria" },
-            { "document": "Carnet de salud", "affects": "Habilitación para manipular alimentos", "ifExpired": "Alerta a supervisor y RRHH" }
+            {
+              "document": "Licencia de conducir",
+              "affects": "Adicional por conducción en Payroll",
+              "ifExpired": "Concepto suspendido automáticamente"
+            },
+            {
+              "document": "Certificación técnica",
+              "affects": "Puede operar maquinaria en HSE",
+              "ifExpired": "Usuario no puede fichar en zona de maquinaria"
+            },
+            {
+              "document": "Carnet de salud",
+              "affects": "Habilitación para manipular alimentos",
+              "ifExpired": "Alerta a supervisor y RRHH"
+            }
           ]
         },
         "documentTypes": {
-          "personal": ["DNI", "Pasaporte", "Licencia conducir", "CUIL/CUIT", "Carnet salud"],
-          "laboral": ["Contrato trabajo", "Acuerdos confidencialidad", "Alta temprana", "Recibos sueldo"],
-          "academico": ["Títulos universitarios", "Certificaciones", "Cursos completados", "Idiomas"],
-          "medico": ["Exámenes preocupacionales", "Certificados médicos", "Estudios", "Aptitud física"],
-          "hse": ["Entregas EPP firmadas", "Capacitaciones seguridad", "Habilitaciones específicas"]
+          "personal": [
+            "DNI",
+            "Pasaporte",
+            "Licencia conducir",
+            "CUIL/CUIT",
+            "Carnet salud"
+          ],
+          "laboral": [
+            "Contrato trabajo",
+            "Acuerdos confidencialidad",
+            "Alta temprana",
+            "Recibos sueldo"
+          ],
+          "academico": [
+            "Títulos universitarios",
+            "Certificaciones",
+            "Cursos completados",
+            "Idiomas"
+          ],
+          "medico": [
+            "Exámenes preocupacionales",
+            "Certificados médicos",
+            "Estudios",
+            "Aptitud física"
+          ],
+          "hse": [
+            "Entregas EPP firmadas",
+            "Capacitaciones seguridad",
+            "Habilitaciones específicas"
+          ]
         },
         "accessControl": {
           "roles": {
@@ -4458,10 +5074,18 @@
       "help": {
         "quickStart": "1. Configurar tipos de documentos habilitados\n2. Definir reglas de vencimiento por tipo\n3. Configurar dependencias (qué afecta si vence)\n4. Empleados suben documentos\n5. Sistema monitorea vencimientos automáticamente",
         "commonIssues": [
-          { "problem": "Documento no aparece en otro módulo", "solution": "Verificar que el documento esté 'verificado' (no solo subido). Documentos pendientes de verificación no se comparten." }
+          {
+            "problem": "Documento no aparece en otro módulo",
+            "solution": "Verificar que el documento esté 'verificado' (no solo subido). Documentos pendientes de verificación no se comparten."
+          }
         ]
       },
-      "ui": { "mainButtons": [], "tabs": [], "inputs": [], "modals": [] },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
       "addedAt": "2025-12-18"
     },
     {
@@ -4471,10 +5095,27 @@
       "version": "1.5.0",
       "description": "Gestión completa de Aseguradoras de Riesgos del Trabajo con reportes automáticos y seguimiento de siniestros",
       "dependencies": {
-        "required": ["users", "companies", "medical"],
-        "optional": ["notification-center", "hse-management"],
-        "integrates_with": ["medical", "attendance", "hse-management", "legal-dashboard", "payroll-liquidation"],
-        "provides_to": ["medical", "payroll-liquidation", "legal-dashboard"]
+        "required": [
+          "users",
+          "companies",
+          "medical"
+        ],
+        "optional": [
+          "notification-center",
+          "hse-management"
+        ],
+        "integrates_with": [
+          "medical",
+          "attendance",
+          "hse-management",
+          "legal-dashboard",
+          "payroll-liquidation"
+        ],
+        "provides_to": [
+          "medical",
+          "payroll-liquidation",
+          "legal-dashboard"
+        ]
       },
       "fullCapabilities": {
         "summary": "Sistema de gestión de ART que integra reportes automáticos, seguimiento de siniestros, y comunicación bidireccional con aseguradoras.",
@@ -4498,11 +5139,20 @@
         },
         "srtIntegration": {
           "description": "Integración con Superintendencia de Riesgos del Trabajo (Argentina)",
-          "forms": ["Formulario 901", "Formulario 904", "Denuncia accidente in itinere"],
+          "forms": [
+            "Formulario 901",
+            "Formulario 904",
+            "Denuncia accidente in itinere"
+          ],
           "automatic": "Generación automática de formularios con datos del sistema"
         },
         "metrics": {
-          "dashboard": ["Índice de siniestralidad", "Días perdidos por accidente", "Accidentes por área", "Tendencias mensuales"],
+          "dashboard": [
+            "Índice de siniestralidad",
+            "Días perdidos por accidente",
+            "Accidentes por área",
+            "Tendencias mensuales"
+          ],
           "prevention": "Análisis de patrones para prevenir accidentes futuros"
         },
         "payrollIntegration": {
@@ -4517,15 +5167,26 @@
       "commercial": {
         "is_core": false,
         "standalone": false,
-        "bundles": ["rrhh-completo", "legal-completo"]
+        "bundles": [
+          "rrhh-completo",
+          "legal-completo"
+        ]
       },
       "help": {
         "quickStart": "1. Configurar datos de la ART contratada\n2. Definir responsables de seguridad por área\n3. Cuando ocurre accidente, iniciar reporte desde módulo\n4. Sistema guía el workflow hasta cierre",
         "commonIssues": [
-          { "problem": "No se genera formulario SRT", "solution": "Verificar que todos los datos obligatorios del siniestro estén completos" }
+          {
+            "problem": "No se genera formulario SRT",
+            "solution": "Verificar que todos los datos obligatorios del siniestro estén completos"
+          }
         ]
       },
-      "ui": { "mainButtons": [], "tabs": [], "inputs": [], "modals": [] },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
       "addedAt": "2025-12-18"
     },
     {
@@ -4535,28 +5196,64 @@
       "version": "2.0.0",
       "description": "Sistema completo de gestión de beneficios laborales, activos asignados (vehículos, laptops, teléfonos) y contratos de comodato por país",
       "dependencies": {
-        "required": ["users", "companies"],
-        "optional": ["notification-center", "document-management-central", "payroll-liquidation"],
-        "integrates_with": ["payroll-liquidation", "employee-360", "document-management-central"],
-        "provides_to": ["payroll-liquidation", "employee-360"]
+        "required": [
+          "users",
+          "companies"
+        ],
+        "optional": [
+          "notification-center",
+          "document-management-central",
+          "payroll-liquidation"
+        ],
+        "integrates_with": [
+          "payroll-liquidation",
+          "employee-360",
+          "document-management-central"
+        ],
+        "provides_to": [
+          "payroll-liquidation",
+          "employee-360"
+        ]
       },
       "api": {
         "base_path": "/api/benefits",
         "endpoints": [
-          "/types", "/types/:id",
-          "/policies/:companyId", "/policies",
-          "/employee/:userId", "/assign",
+          "/types",
+          "/types/:id",
+          "/policies/:companyId",
+          "/policies",
+          "/employee/:userId",
+          "/assign",
           "/approve/:benefitId",
-          "/assets/:userId", "/assets",
-          "/contract/generate", "/contract/templates",
-          "/expiring/:days", "/renew/:benefitId",
+          "/assets/:userId",
+          "/assets",
+          "/contract/generate",
+          "/contract/templates",
+          "/expiring/:days",
+          "/renew/:benefitId",
           "/stats/:companyId"
-        ]
+        ],
+        "discoveredEndpoints": [
+          "/api/benefits/stats/${companyId}",
+          "/api/benefits/policies/${companyId}",
+          "/api/benefits/policies",
+          "/api/v1/users",
+          "/api/benefits/types?active=true",
+          "/api/benefits/assign",
+          "/api/benefits/assets",
+          "/api/benefits/contract/templates",
+          "/api/benefits/expiring/${days}?companyId=${companyId}"
+        ],
+        "functionCount": 47
       },
       "database": {
         "tables": [
-          "benefit_types", "company_benefit_policies", "employee_benefits",
-          "employee_assigned_assets", "asset_contracts", "contract_templates",
+          "benefit_types",
+          "company_benefit_policies",
+          "employee_benefits",
+          "employee_assigned_assets",
+          "asset_contracts",
+          "contract_templates",
           "contract_template_types"
         ]
       },
@@ -4571,18 +5268,56 @@
           "Elegibilidad: Reglas por rol, antigüedad, departamento"
         ],
         "benefitCategories": [
-          { "code": "CHILDCARE", "name": "Cuidado infantil", "example": "Guardería, jardín maternal" },
-          { "code": "EDUCATION", "name": "Educación", "example": "Becas de estudio, idiomas, posgrados" },
-          { "code": "HOUSING", "name": "Vivienda", "example": "Subsidio alquiler, préstamo hipotecario" },
-          { "code": "TRANSPORT", "name": "Transporte", "example": "Vehículo empresa, combustible, estacionamiento" },
-          { "code": "HEALTH", "name": "Salud", "example": "Prepaga premium, gimnasio, wellness" },
-          { "code": "FOOD", "name": "Alimentación", "example": "Viáticos, comedor, tarjeta alimentaria" },
-          { "code": "TECHNOLOGY", "name": "Tecnología", "example": "Laptop, celular, home office setup" },
-          { "code": "RECREATION", "name": "Recreación", "example": "Club, vacaciones extra, experiencias" }
+          {
+            "code": "CHILDCARE",
+            "name": "Cuidado infantil",
+            "example": "Guardería, jardín maternal"
+          },
+          {
+            "code": "EDUCATION",
+            "name": "Educación",
+            "example": "Becas de estudio, idiomas, posgrados"
+          },
+          {
+            "code": "HOUSING",
+            "name": "Vivienda",
+            "example": "Subsidio alquiler, préstamo hipotecario"
+          },
+          {
+            "code": "TRANSPORT",
+            "name": "Transporte",
+            "example": "Vehículo empresa, combustible, estacionamiento"
+          },
+          {
+            "code": "HEALTH",
+            "name": "Salud",
+            "example": "Prepaga premium, gimnasio, wellness"
+          },
+          {
+            "code": "FOOD",
+            "name": "Alimentación",
+            "example": "Viáticos, comedor, tarjeta alimentaria"
+          },
+          {
+            "code": "TECHNOLOGY",
+            "name": "Tecnología",
+            "example": "Laptop, celular, home office setup"
+          },
+          {
+            "code": "RECREATION",
+            "name": "Recreación",
+            "example": "Club, vacaciones extra, experiencias"
+          }
         ],
         "assignedAssets": {
           "description": "Sistema de gestión de activos corporativos asignados a empleados",
-          "assetTypes": ["VEHICLE", "MOBILE_PHONE", "LAPTOP", "DESKTOP", "TABLET"],
+          "assetTypes": [
+            "VEHICLE",
+            "MOBILE_PHONE",
+            "LAPTOP",
+            "DESKTOP",
+            "TABLET"
+          ],
           "tracking": [
             "Marca, modelo, número de serie",
             "Patente/VIN (vehículos)",
@@ -4595,12 +5330,33 @@
         "contractGeneration": {
           "description": "Generación automática de contratos legales por país",
           "templateTypes": [
-            { "code": "COMODATO_VEHICULO", "description": "Préstamo de uso de vehículo empresa" },
-            { "code": "DESLINDE_RESPONSABILIDAD_VEHICULO", "description": "Declaración de responsabilidad" },
-            { "code": "CONTRATO_VIVIENDA", "description": "Subsidio o préstamo vivienda" },
-            { "code": "COMODATO_TECNOLOGIA", "description": "Laptop, teléfono, etc." }
+            {
+              "code": "COMODATO_VEHICULO",
+              "description": "Préstamo de uso de vehículo empresa"
+            },
+            {
+              "code": "DESLINDE_RESPONSABILIDAD_VEHICULO",
+              "description": "Declaración de responsabilidad"
+            },
+            {
+              "code": "CONTRATO_VIVIENDA",
+              "description": "Subsidio o préstamo vivienda"
+            },
+            {
+              "code": "COMODATO_TECNOLOGIA",
+              "description": "Laptop, teléfono, etc."
+            }
           ],
-          "countries": ["ARG", "MEX", "CHL", "BRA", "URY", "COL", "PER", "ESP"],
+          "countries": [
+            "ARG",
+            "MEX",
+            "CHL",
+            "BRA",
+            "URY",
+            "COL",
+            "PER",
+            "ESP"
+          ],
           "features": [
             "Templates con placeholders ({{EMPLOYEE_NAME}}, {{ASSET_MODEL}}, etc.)",
             "Versioning de templates",
@@ -4623,7 +5379,12 @@
         },
         "expirationTracking": {
           "description": "Sistema de alertas para beneficios próximos a vencer",
-          "alerts": [30, 15, 7, 0],
+          "alerts": [
+            30,
+            15,
+            7,
+            0
+          ],
           "renewal": "Renovación con 1 click desde el dashboard"
         },
         "payrollIntegration": {
@@ -4643,11 +5404,489 @@
       "help": {
         "quickStart": "1. Configurar tipos de beneficios habilitados\n2. Crear políticas por tipo con reglas de elegibilidad\n3. Asignar beneficios a empleados (solicitud o asignación directa)\n4. Si requiere activo, registrar detalles y generar contrato\n5. Monitorear vencimientos y renovaciones",
         "commonIssues": [
-          { "problem": "Empleado no elegible", "solution": "Verificar: antigüedad, rol, departamento, límites de la política" },
-          { "problem": "Contrato no se genera", "solution": "Verificar que exista template para el país y tipo de contrato" }
+          {
+            "problem": "Empleado no elegible",
+            "solution": "Verificar: antigüedad, rol, departamento, límites de la política"
+          },
+          {
+            "problem": "Contrato no se genera",
+            "solution": "Verificar que exista template para el país y tipo de contrato"
+          }
         ]
       },
-      "ui": { "mainButtons": [], "tabs": [], "inputs": [], "modals": [] },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": [],
+        "discoveredButtons": 0,
+        "discoveredInputs": 0,
+        "discoveredModals": 0,
+        "lastStaticAnalysis": "2025-12-20T23:05:21.774Z"
+      },
+      "addedAt": "2025-12-18"
+    },
+    {
+      "id": "lead-scoring",
+      "name": "Lead Scoring & Lifecycle Management",
+      "category": "commercial",
+      "version": "1.0.0",
+      "description": "Sistema enterprise de gestión de leads con scoring automático, lifecycle stages, BANT framework, behavioral tracking y decay por inactividad. Integrado con Sales Orchestration.",
+      "dependencies": {
+        "required": [
+          "sales-orchestration"
+        ],
+        "optional": [
+          "ai-assistant",
+          "notification-center"
+        ],
+        "integrates_with": [
+          "vendors",
+          "staff-commissions"
+        ],
+        "provides_to": [
+          "vendor-dashboard",
+          "engineering-dashboard"
+        ]
+      },
+      "commercial": {
+        "is_core": false,
+        "is_commercial": true,
+        "standalone": false,
+        "bundles": [
+          "sales-complete"
+        ],
+        "rubro": "Comercial APONNT"
+      },
+      "taxonomy": {
+        "panel": "admin",
+        "section": "Gestión Comercial",
+        "subsection": "CRM & Leads"
+      },
+      "api_endpoints": [
+        "GET /api/aponnt/leads",
+        "GET /api/aponnt/leads/:id",
+        "POST /api/aponnt/leads",
+        "PATCH /api/aponnt/leads/:id",
+        "POST /api/aponnt/leads/:id/activity",
+        "PATCH /api/aponnt/leads/:id/bant",
+        "POST /api/aponnt/leads/:id/lifecycle",
+        "POST /api/aponnt/leads/:id/disqualify",
+        "POST /api/aponnt/leads/:id/reactivate",
+        "POST /api/aponnt/leads/:id/assign",
+        "GET /api/aponnt/leads/pipeline/summary",
+        "GET /api/aponnt/leads/hot/urgent",
+        "GET /api/aponnt/leads/stats/vendor",
+        "POST /api/aponnt/leads/maintenance/decay"
+      ],
+      "database_tables": [
+        "sales_leads",
+        "sales_lead_activities",
+        "lead_scoring_config",
+        "lead_qualification_rules"
+      ],
+      "provides_capabilities": [
+        "lead_lifecycle_management",
+        "bant_scoring",
+        "behavioral_scoring",
+        "automatic_decay",
+        "temperature_tracking",
+        "pipeline_analytics",
+        "vendor_assignment"
+      ],
+      "fullCapabilities": {
+        "summary": "Sistema de categorización y scoring de leads basado en mejores prácticas de Salesforce/HubSpot. Permite clasificar leads por temperatura (Hot/Warm/Cold/Dead), etapa del funnel (Lead→MQL→SQL→Opportunity→Customer), y score compuesto (BANT + Behavioral). Incluye decay automático por inactividad.",
+        "keyDifferentiators": [
+          "LIFECYCLE STAGES: subscriber→lead→MQL→SAL→SQL→opportunity→customer→evangelist (o disqualified/lost)",
+          "TEMPERATURE AUTOMÁTICA: Hot(80+), Warm(40-79), Cold(1-39), Dead(0) - calculada en tiempo real",
+          "BANT FRAMEWORK: Budget(0-25) + Authority(0-25) + Need(0-25) + Timeline(0-25) = 0-100 puntos",
+          "BEHAVIORAL SCORING: +2 email open, +5 click, +30 demo, +50 reunión, +60 presupuesto, -30 no-show",
+          "DECAY AUTOMÁTICO: -10 puntos a 30 días, -20 a 60 días, -30 a 90 días de inactividad",
+          "TRANSICIONES AUTO: Lead→MQL cuando score≥30, MQL→SQL cuando score≥60+BANT≥50+reunión",
+          "13 RAZONES DE DESCALIFICACIÓN: budget_too_low, not_decision_maker, competitor_chosen, etc.",
+          "REACTIVACIÓN PROGRAMADA: Leads descalificados pueden agendarse para recontacto futuro",
+          "INTEGRACIÓN TOTAL: Se alimenta automáticamente de reuniones, encuestas, feedback del vendedor"
+        ],
+        "lifecycleStages": {
+          "subscriber": "Solo suscrito a newsletter/marketing",
+          "lead": "Mostró interés inicial (descargó algo, visitó web)",
+          "mql": "Marketing Qualified Lead - cumple criterios marketing (score ≥ 30)",
+          "sal": "Sales Accepted Lead - ventas lo tomó para trabajar",
+          "sql": "Sales Qualified Lead - ventas confirmó viable (score ≥ 60 + BANT ≥ 50)",
+          "opportunity": "En proceso activo de venta (pidió presupuesto)",
+          "customer": "Cerrado ganado",
+          "evangelist": "Cliente feliz que refiere otros",
+          "disqualified": "No es fit (con razón específica)",
+          "lost": "Eligió competencia o no decidió"
+        },
+        "scoringActivities": {
+          "positive": [
+            {
+              "activity": "email_opened",
+              "points": 2,
+              "description": "Abrió email de marketing/ventas"
+            },
+            {
+              "activity": "email_clicked",
+              "points": 5,
+              "description": "Click en link del email"
+            },
+            {
+              "activity": "website_visit",
+              "points": 3,
+              "description": "Visitó el website"
+            },
+            {
+              "activity": "page_view_pricing",
+              "points": 10,
+              "description": "Vio página de precios"
+            },
+            {
+              "activity": "demo_requested",
+              "points": 30,
+              "description": "Solicitó demo"
+            },
+            {
+              "activity": "demo_attended",
+              "points": 40,
+              "description": "Asistió a demo"
+            },
+            {
+              "activity": "survey_completed",
+              "points": 20,
+              "description": "Completó encuesta de interés"
+            },
+            {
+              "activity": "meeting_scheduled",
+              "points": 35,
+              "description": "Agendó reunión con ventas"
+            },
+            {
+              "activity": "meeting_attended",
+              "points": 50,
+              "description": "Asistió a la reunión"
+            },
+            {
+              "activity": "quote_requested",
+              "points": 60,
+              "description": "Solicitó presupuesto"
+            },
+            {
+              "activity": "trial_started",
+              "points": 40,
+              "description": "Inició período de prueba"
+            }
+          ],
+          "negative": [
+            {
+              "activity": "email_bounced",
+              "points": -20,
+              "description": "Email rebotó"
+            },
+            {
+              "activity": "email_unsubscribed",
+              "points": -50,
+              "description": "Se desuscribió"
+            },
+            {
+              "activity": "meeting_no_show",
+              "points": -30,
+              "description": "No asistió a reunión"
+            },
+            {
+              "activity": "negative_feedback",
+              "points": -15,
+              "description": "Feedback negativo"
+            }
+          ],
+          "decay": [
+            {
+              "activity": "inactivity_30_days",
+              "points": -10,
+              "description": "30 días sin interacción"
+            },
+            {
+              "activity": "inactivity_60_days",
+              "points": -20,
+              "description": "60 días sin interacción"
+            },
+            {
+              "activity": "inactivity_90_days",
+              "points": -30,
+              "description": "90 días - mover a Cold"
+            }
+          ]
+        },
+        "disqualificationReasons": [
+          {
+            "code": "budget_too_low",
+            "description": "No tiene presupuesto",
+            "reactivatable": true
+          },
+          {
+            "code": "not_decision_maker",
+            "description": "No es quien decide",
+            "reactivatable": true
+          },
+          {
+            "code": "no_need",
+            "description": "No tiene el problema que resolvemos",
+            "reactivatable": true
+          },
+          {
+            "code": "bad_timing",
+            "description": "Timing incorrecto",
+            "reactivatable": true
+          },
+          {
+            "code": "competitor_chosen",
+            "description": "Eligió competencia",
+            "reactivatable": true
+          },
+          {
+            "code": "company_too_small",
+            "description": "Empresa muy chica (<10 empleados)",
+            "reactivatable": false
+          },
+          {
+            "code": "company_too_large",
+            "description": "Necesitan enterprise",
+            "reactivatable": false
+          },
+          {
+            "code": "wrong_industry",
+            "description": "Industria que no atendemos",
+            "reactivatable": false
+          },
+          {
+            "code": "geographic_limitation",
+            "description": "Fuera de zona",
+            "reactivatable": false
+          },
+          {
+            "code": "unresponsive",
+            "description": "No responde después de X intentos",
+            "reactivatable": true
+          },
+          {
+            "code": "fake_spam",
+            "description": "Datos falsos o spam",
+            "reactivatable": false
+          },
+          {
+            "code": "duplicate",
+            "description": "Lead duplicado",
+            "reactivatable": false
+          }
+        ],
+        "retroalimentacion": {
+          "description": "El sistema se retroalimenta automáticamente desde múltiples fuentes",
+          "sources": [
+            {
+              "event": "Reunión agendada",
+              "action": "Crea lead si no existe, registra meeting_scheduled (+35)",
+              "trigger": "SalesOrchestrationService.createMeeting()"
+            },
+            {
+              "event": "Encuesta completada",
+              "action": "Registra survey_completed (+20), actualiza módulos de interés, infiere BANT Need",
+              "trigger": "SalesOrchestrationService.processSurveyResponse()"
+            },
+            {
+              "event": "Reunión asistida",
+              "action": "Registra meeting_attended (+50), actualiza BANT Authority si hay decision maker",
+              "trigger": "SalesOrchestrationService.endMeeting()"
+            },
+            {
+              "event": "Feedback del vendedor",
+              "action": "Actualiza BANT completo (B/A/N/T), registra quote_requested si aplica, cambia lifecycle si won/lost",
+              "trigger": "SalesOrchestrationService.submitFeedback()"
+            },
+            {
+              "event": "No-show a reunión",
+              "action": "Registra meeting_no_show (-30), penaliza score",
+              "trigger": "Manual o automático si pasa fecha sin marcar asistencia"
+            },
+            {
+              "event": "Inactividad",
+              "action": "Cron diario aplica decay (-10/-20/-30) según días sin actividad",
+              "trigger": "LeadScoringService.runInactivityDecay() (cron job)"
+            }
+          ],
+          "outputs": [
+            "Cambio automático de lifecycle stage cuando se cumplen condiciones",
+            "Cambio automático de temperatura basado en score",
+            "Notificación a vendedor cuando lead se vuelve HOT",
+            "Alerta a gerencia cuando hay leads descalificados para revisión",
+            "Reportes de pipeline y conversión"
+          ]
+        },
+        "integrationFlow": "Reunión → Lead creado → Encuesta → Score sube → MQL → Reunión asistida → SQL → Feedback → Opportunity → Quote → Customer"
+      },
+      "help": {
+        "quickStart": "Los leads se crean automáticamente al agendar reuniones. El score se actualiza con cada interacción. Usa el panel de Leads para ver pipeline, actualizar BANT, y gestionar lifecycle.",
+        "commonIssues": [
+          {
+            "problem": "Lead no aparece después de crear reunión",
+            "solution": "Verificar que la reunión tenga email de prospecto. El lead se crea async."
+          },
+          {
+            "problem": "Score no sube después de reunión",
+            "solution": "Verificar que se haya marcado 'Finalizar reunión' en el panel de ventas"
+          },
+          {
+            "problem": "Lead sigue como COLD aunque tuvo actividad",
+            "solution": "Revisar si las actividades se registraron correctamente en la tabla sales_lead_activities"
+          }
+        ]
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
+      "addedAt": "2025-12-18"
+    },
+    {
+      "id": "sales-orchestration",
+      "name": "Sales Orchestration Brain",
+      "category": "commercial",
+      "version": "2.0.0",
+      "description": "Sistema de orquestación inteligente de ventas: gestión de reuniones, encuestas de interés por módulo, generación de pitch con IA, y seguimiento post-venta.",
+      "dependencies": {
+        "required": [
+          "vendors"
+        ],
+        "optional": [
+          "ai-assistant",
+          "notification-center"
+        ],
+        "integrates_with": [
+          "lead-scoring",
+          "staff-commissions"
+        ],
+        "provides_to": [
+          "vendor-dashboard"
+        ]
+      },
+      "commercial": {
+        "is_core": false,
+        "is_commercial": true,
+        "standalone": false,
+        "bundles": [
+          "sales-complete"
+        ],
+        "rubro": "Comercial APONNT"
+      },
+      "taxonomy": {
+        "panel": "admin",
+        "section": "Gestión Comercial",
+        "subsection": "Ventas"
+      },
+      "api_endpoints": [
+        "POST /api/aponnt/sales/meetings",
+        "GET /api/aponnt/sales/meetings",
+        "GET /api/aponnt/sales/meetings/:id",
+        "PATCH /api/aponnt/sales/meetings/:id",
+        "POST /api/aponnt/sales/meetings/:id/confirm-survey",
+        "POST /api/aponnt/sales/meetings/:id/resend-surveys",
+        "POST /api/aponnt/sales/meetings/:id/start",
+        "POST /api/aponnt/sales/meetings/:id/end",
+        "POST /api/aponnt/sales/meetings/:id/feedback",
+        "POST /api/aponnt/sales/meetings/:id/send-pitches",
+        "POST /api/aponnt/sales/meetings/:id/send-demo-access",
+        "GET /api/aponnt/sales/survey/:token",
+        "POST /api/aponnt/sales/survey/:token"
+      ],
+      "database_tables": [
+        "sales_meetings",
+        "sales_meeting_attendees",
+        "sales_meeting_module_interests",
+        "sales_meeting_communications"
+      ],
+      "provides_capabilities": [
+        "meeting_scheduling",
+        "interest_surveys",
+        "ai_pitch_generation",
+        "email_automation",
+        "vendor_assignment",
+        "post_meeting_feedback"
+      ],
+      "fullCapabilities": {
+        "summary": "Orquestador completo del ciclo de ventas: desde agendar reunión hasta cerrar venta. Incluye encuestas de interés, generación de pitch personalizado con IA, emails automáticos, y feedback estructurado.",
+        "keyDifferentiators": [
+          "CICLO COMPLETO: Agendar → Encuesta → Pitch IA → Reunión → Feedback → Satisfacción",
+          "ENCUESTAS DE INTERÉS: Cada asistente indica qué módulos le interesan antes de la reunión",
+          "PITCH PERSONALIZADO: Brain genera pitch específico basado en industria, tamaño, e intereses",
+          "EMAILS AUTOMÁTICOS: Invitación, recordatorio 24h, bienvenida, agradecimiento, satisfacción",
+          "DETECCIÓN DE SUPERVISORES: Detecta automáticamente al supervisor del vendedor en organigrama",
+          "INTEGRACIÓN LEAD SCORING: Cada evento actualiza automáticamente el score del lead"
+        ],
+        "workflow": {
+          "steps": [
+            {
+              "step": 1,
+              "name": "Crear Reunión",
+              "description": "Vendedor agenda reunión con datos del prospecto y asistentes"
+            },
+            {
+              "step": 2,
+              "name": "Enviar Encuestas",
+              "description": "Sistema envía encuesta de interés a cada asistente"
+            },
+            {
+              "step": 3,
+              "name": "Generar Pitch",
+              "description": "Brain analiza respuestas y genera pitch personalizado"
+            },
+            {
+              "step": 4,
+              "name": "Recordatorio 24h",
+              "description": "Email automático un día antes de la reunión"
+            },
+            {
+              "step": 5,
+              "name": "Iniciar Reunión",
+              "description": "Vendedor marca inicio, se envía email de bienvenida"
+            },
+            {
+              "step": 6,
+              "name": "Finalizar Reunión",
+              "description": "Se envía email de agradecimiento a todos"
+            },
+            {
+              "step": 7,
+              "name": "Cargar Feedback",
+              "description": "Vendedor registra resultado, próximos pasos, BANT"
+            },
+            {
+              "step": 8,
+              "name": "Encuesta Satisfacción",
+              "description": "Se envía encuesta de satisfacción a asistentes"
+            }
+          ]
+        }
+      },
+      "help": {
+        "quickStart": "Crear reunión → Confirmar y enviar encuestas → Esperar respuestas → Revisar pitch → Dar reunión → Cargar feedback",
+        "commonIssues": [
+          {
+            "problem": "Encuestas no llegan",
+            "solution": "Verificar emails de asistentes y revisar carpeta spam"
+          },
+          {
+            "problem": "Pitch no se genera",
+            "solution": "Verificar que al menos un asistente haya respondido la encuesta"
+          }
+        ]
+      },
+      "ui": {
+        "mainButtons": [],
+        "tabs": [],
+        "inputs": [],
+        "modals": []
+      },
       "addedAt": "2025-12-18"
     }
   ],
@@ -4713,5 +5952,12 @@
       "color": "#795548"
     }
   },
-  "last_sync": "2025-12-16T02:40:42.311Z"
+  "last_sync": "2025-12-16T02:40:42.311Z",
+  "knowledgeStats": {
+    "lastDiscovery": "2025-12-20T23:05:21.774Z",
+    "totalButtons": 10,
+    "totalInputs": 12,
+    "totalModals": 1,
+    "modulesWithKnowledge": 9
+  }
 }

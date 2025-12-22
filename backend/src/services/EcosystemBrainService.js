@@ -4203,6 +4203,225 @@ class EcosystemBrainService {
 
     return usedBy;
   }
+
+  /**
+   * ============================================================================
+   * INTEGRACIÓN CON PHASE4 SMART E2E TESTING
+   * ============================================================================
+   * Métodos para que Phase4TestOrchestrator pueda consultar al Brain
+   * y hacer testing inteligente basado en módulos contratados.
+   */
+
+  /**
+   * Obtener módulos activos para una empresa
+   * @param {number} companyId - ID de la empresa
+   * @returns {Promise<Array>} Lista de módulos activos con metadata
+   */
+  async getActiveModulesForCompany(companyId) {
+    console.log(`\n🔍 [BRAIN] Consultando módulos activos para empresa ${companyId}...`);
+
+    try {
+      if (!this.db || !this.db.CompanyModule) {
+        console.log('   ⚠️ No hay acceso a CompanyModule model');
+        return [];
+      }
+
+      const { CompanyModule } = this.db;
+
+      const activeModules = await CompanyModule.findAll({
+        where: {
+          company_id: companyId,
+          is_active: true
+        },
+        raw: true
+      });
+
+      console.log(`   ✅ Encontrados ${activeModules.length} módulos activos`);
+
+      return activeModules.map(m => ({
+        module_key: m.module_key,
+        module_name: m.module_name,
+        category: m.category || 'general'
+      }));
+
+    } catch (error) {
+      console.error('❌ [BRAIN] Error consultando módulos activos:', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Obtener elementos UI esperados para un módulo
+   * Escanea archivos HTML/JS buscando elementos con data-module="moduleKey"
+   * @param {string} moduleKey - Clave del módulo (ej: 'users', 'vacations')
+   * @returns {Promise<Array>} Lista de elementos UI esperados
+   */
+  async getModuleUIElements(moduleKey) {
+    console.log(`\n🔍 [BRAIN] Escaneando elementos UI para módulo "${moduleKey}"...`);
+
+    const elements = [];
+
+    try {
+      // Escanear archivos HTML
+      const htmlFiles = this.scanDirectory(
+        path.join(this.baseDir, 'public'),
+        '.html',
+        true
+      );
+
+      for (const file of htmlFiles) {
+        try {
+          const content = fsSync.readFileSync(file, 'utf8');
+
+          // Regex para encontrar elementos con data-module
+          const patterns = [
+            // Botones: <button ... data-module="X" ...>
+            {
+              regex: /<button([^>]*)data-module=["']([^"']+)["']([^>]*)>/gi,
+              type: 'button'
+            },
+            // Inputs: <input ... data-module="X" ...>
+            {
+              regex: /<input([^>]*)data-module=["']([^"']+)["']([^>]*)>/gi,
+              type: 'input'
+            },
+            // Divs con data-module (contenedores de módulos)
+            {
+              regex: /<div([^>]*)data-module=["']([^"']+)["']([^>]*)>/gi,
+              type: 'container'
+            }
+          ];
+
+          for (const { regex, type } of patterns) {
+            let match;
+            while ((match = regex.exec(content)) !== null) {
+              const fullMatch = match[0];
+              const dataModuleValue = match[2];
+
+              if (dataModuleValue === moduleKey) {
+                // Extraer atributos importantes
+                const idMatch = fullMatch.match(/id=["']([^"']+)["']/);
+                const classMatch = fullMatch.match(/class=["']([^"']+)["']/);
+
+                // Para botones, intentar extraer el texto
+                let text = null;
+                if (type === 'button') {
+                  const textMatch = content.substring(match.index).match(/>([^<]+)</);
+                  text = textMatch ? textMatch[1].trim() : null;
+                }
+
+                // Para inputs, extraer placeholder
+                let placeholder = null;
+                if (type === 'input') {
+                  const placeholderMatch = fullMatch.match(/placeholder=["']([^"']+)["']/);
+                  placeholder = placeholderMatch ? placeholderMatch[1] : null;
+                }
+
+                elements.push({
+                  type,
+                  selector: idMatch ? `#${idMatch[1]}` : null,
+                  id: idMatch ? idMatch[1] : null,
+                  class: classMatch ? classMatch[1] : null,
+                  text,
+                  placeholder,
+                  dataModule: moduleKey,
+                  file: path.basename(file)
+                });
+              }
+            }
+          }
+
+        } catch (err) {
+          // Ignorar errores de lectura
+        }
+      }
+
+      console.log(`   ✅ Encontrados ${elements.length} elementos UI para "${moduleKey}"`);
+      if (elements.length > 0) {
+        console.log(`      Tipos: ${elements.filter(e => e.type === 'button').length} botones, ${elements.filter(e => e.type === 'input').length} inputs, ${elements.filter(e => e.type === 'container').length} containers`);
+      }
+
+      return elements;
+
+    } catch (error) {
+      console.error(`❌ [BRAIN] Error escaneando UI para módulo "${moduleKey}":`, error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Obtener endpoints esperados para un módulo
+   * Escanea archivos de routes buscando endpoints relacionados al módulo
+   * @param {string} moduleKey - Clave del módulo (ej: 'users', 'vacations')
+   * @returns {Promise<Array>} Lista de endpoints esperados
+   */
+  async getModuleEndpoints(moduleKey) {
+    console.log(`\n🔍 [BRAIN] Escaneando endpoints para módulo "${moduleKey}"...`);
+
+    const endpoints = [];
+
+    try {
+      // Escanear archivos de routes
+      const routesFiles = this.scanDirectory(
+        path.join(this.baseDir, 'src/routes'),
+        '.js',
+        true
+      );
+
+      for (const file of routesFiles) {
+        try {
+          const content = fsSync.readFileSync(file, 'utf8');
+          const fileName = path.basename(file, '.js');
+
+          // Verificar si el archivo está relacionado con el módulo
+          const isRelevant = fileName.toLowerCase().includes(moduleKey.toLowerCase()) ||
+                            content.toLowerCase().includes(`/${moduleKey}/`) ||
+                            content.toLowerCase().includes(`/${moduleKey}s/`) ||
+                            content.toLowerCase().includes(`module_key: '${moduleKey}'`);
+
+          if (!isRelevant && !content.includes(`'${moduleKey}'`) && !content.includes(`"${moduleKey}"`)) {
+            continue;
+          }
+
+          // Regex para encontrar definiciones de routes
+          const routeRegex = /router\.(get|post|put|patch|delete)\(['"]([^'"]+)['"]/gi;
+
+          let match;
+          while ((match = routeRegex.exec(content)) !== null) {
+            const method = match[1].toUpperCase();
+            const routePath = match[2];
+
+            // Verificar si el path está relacionado con el módulo
+            if (routePath.toLowerCase().includes(moduleKey.toLowerCase())) {
+              endpoints.push({
+                method,
+                path: routePath,
+                file: fileName
+              });
+            }
+          }
+
+        } catch (err) {
+          // Ignorar errores de lectura
+        }
+      }
+
+      console.log(`   ✅ Encontrados ${endpoints.length} endpoints para "${moduleKey}"`);
+      if (endpoints.length > 0) {
+        const methodCounts = endpoints.reduce((acc, e) => {
+          acc[e.method] = (acc[e.method] || 0) + 1;
+          return acc;
+        }, {});
+        console.log(`      Métodos: ${Object.entries(methodCounts).map(([k, v]) => `${k}:${v}`).join(', ')}`);
+      }
+
+      return endpoints;
+
+    } catch (error) {
+      console.error(`❌ [BRAIN] Error escaneando endpoints para módulo "${moduleKey}":`, error.message);
+      return [];
+    }
+  }
 }
 
 module.exports = EcosystemBrainService;

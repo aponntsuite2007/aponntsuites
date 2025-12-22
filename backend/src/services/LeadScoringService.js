@@ -484,7 +484,7 @@ class LeadScoringService {
         const [lead] = await sequelize.query(`
             SELECT l.*,
                    l.bant_budget + l.bant_authority + l.bant_need + l.bant_timeline AS bant_total,
-                   s.full_name AS vendor_name,
+                   COALESCE(s.first_name || ' ' || s.last_name, s.email) AS vendor_name,
                    s.email AS vendor_email
             FROM sales_leads l
             LEFT JOIN aponnt_staff s ON l.assigned_vendor_id = s.staff_id
@@ -579,7 +579,7 @@ class LeadScoringService {
         const leads = await sequelize.query(`
             SELECT l.*,
                    l.bant_budget + l.bant_authority + l.bant_need + l.bant_timeline AS bant_total,
-                   s.full_name AS vendor_name
+                   COALESCE(s.first_name || ' ' || s.last_name, s.email) AS vendor_name
             FROM sales_leads l
             LEFT JOIN aponnt_staff s ON l.assigned_vendor_id = s.staff_id
             WHERE ${whereClause}

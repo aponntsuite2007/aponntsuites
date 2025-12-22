@@ -17,6 +17,15 @@
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
+
+// ============================================================================
+// HELPER: Validar formato UUID
+// ============================================================================
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isValidUUID(str) {
+  return typeof str === 'string' && UUID_REGEX.test(str);
+}
+
 const {
     PayrollCountry,
     CompanyBranch,
@@ -2488,6 +2497,11 @@ router.get('/user/:userId/history', async (req, res) => {
         const { userId } = req.params;
         const { limit = 24, offset = 0 } = req.query; // Default: últimos 2 años
 
+        // ✅ FIX: Validar UUID
+        if (!isValidUUID(userId)) {
+            return res.json({ success: true, history: [], user: null });
+        }
+
         // Verificar que el usuario pertenece a la empresa
         const user = await User.findOne({
             where: { user_id: userId, company_id: req.companyId },
@@ -2534,7 +2548,7 @@ router.get('/user/:userId/history', async (req, res) => {
             LIMIT :limit OFFSET :offset
         `, {
             replacements: {
-                userId: parseInt(userId),
+                userId: userId,  // ✅ FIX: UUID, no parseInt
                 companyId: req.companyId,
                 limit: parseInt(limit),
                 offset: parseInt(offset)
@@ -2654,6 +2668,11 @@ router.get('/user/:userId/history/:detailId/concepts', async (req, res) => {
     try {
         const { userId, detailId } = req.params;
 
+        // ✅ FIX: Validar UUID
+        if (!isValidUUID(userId)) {
+            return res.json({ success: false, error: 'userId inválido' });
+        }
+
         // Verificar permisos
         const detail = await sequelize.query(`
             SELECT
@@ -2679,7 +2698,7 @@ router.get('/user/:userId/history/:detailId/concepts', async (req, res) => {
         `, {
             replacements: {
                 detailId: parseInt(detailId),
-                userId: parseInt(userId),
+                userId: userId,  // ✅ FIX: UUID, no parseInt
                 companyId: req.companyId
             },
             type: sequelize.QueryTypes.SELECT

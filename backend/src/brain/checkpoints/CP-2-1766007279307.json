@@ -1,0 +1,170 @@
+{
+  "id": "CP-2-1766007279307",
+  "phaseId": 2,
+  "description": "Inicio de fase 2: introspective-brain",
+  "createdAt": "2025-12-17T21:34:39.307Z",
+  "configSnapshot": {
+    "version": "1.0.0",
+    "currentPhase": 1,
+    "startedAt": "2025-12-17T21:33:41.609Z",
+    "lastUpdated": "2025-12-17T21:34:21.184Z",
+    "featureFlags": {
+      "useNewSchema": false,
+      "useIntrospectiveBrain": false,
+      "useNewApiRoutes": false,
+      "useSmartTesting": false,
+      "useAutoTutorials": false,
+      "useNewVisualization": false
+    },
+    "phases": {
+      "0": {
+        "status": "completed",
+        "startedAt": "2025-12-17T21:33:41.610Z",
+        "validations": [
+          {
+            "name": "BrainUpgradeController existe y es importable",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.587Z"
+          },
+          {
+            "name": "Controller inicializa correctamente",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.589Z"
+          },
+          {
+            "name": "Creación de checkpoints funciona",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.592Z"
+          },
+          {
+            "name": "Feature flags configurados correctamente",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.593Z"
+          },
+          {
+            "name": "Sistema de rollback disponible",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.593Z"
+          },
+          {
+            "name": "Generación de reportes funciona",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.593Z"
+          }
+        ],
+        "validatedAt": "2025-12-17T21:33:48.594Z",
+        "validationPassed": true,
+        "completedAt": "2025-12-17T21:33:59.416Z"
+      },
+      "1": {
+        "status": "completed",
+        "startedAt": "2025-12-17T21:34:06.174Z",
+        "validations": [
+          {
+            "name": "UniversalNode existe y exporta correctamente",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:34:13.252Z"
+          },
+          {
+            "name": "Creación de nodos funciona",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:34:13.254Z"
+          },
+          {
+            "name": "Gestión de capacidades funciona",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:34:13.255Z"
+          },
+          {
+            "name": "Serialización JSON funciona",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:34:13.256Z"
+          },
+          {
+            "name": "CapabilitiesVocabulary existe y exporta correctamente",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:34:13.256Z"
+          },
+          {
+            "name": "Estructura del vocabulario es válida",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:34:13.257Z"
+          },
+          {
+            "name": "Validación de capacidades funciona",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:34:13.257Z"
+          },
+          {
+            "name": "Chequeo de compatibilidad funciona",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:34:13.258Z"
+          },
+          {
+            "name": "Eventos estándar definidos correctamente",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:34:13.258Z"
+          },
+          {
+            "name": "Integración UniversalNode + Vocabulary funciona",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:34:13.259Z"
+          }
+        ],
+        "validatedAt": "2025-12-17T21:34:13.259Z",
+        "validationPassed": true,
+        "completedAt": "2025-12-17T21:34:21.182Z"
+      },
+      "2": {
+        "status": "pending"
+      },
+      "3": {
+        "status": "pending"
+      },
+      "4": {
+        "status": "pending"
+      },
+      "5": {
+        "status": "pending"
+      },
+      "6": {
+        "status": "pending"
+      },
+      "7": {
+        "status": "pending"
+      }
+    },
+    "checkpoints": [
+      {
+        "id": "CP-0-1766007228589",
+        "phaseId": 0,
+        "description": "Test checkpoint from validator",
+        "createdAt": "2025-12-17T21:33:48.589Z"
+      },
+      {
+        "id": "CP-1-1766007246171",
+        "phaseId": 1,
+        "description": "Inicio de fase 1: schema-vocabulary",
+        "createdAt": "2025-12-17T21:34:06.171Z"
+      }
+    ],
+    "rollbacks": []
+  },
+  "data": {}
+}

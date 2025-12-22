@@ -651,6 +651,275 @@
             color: white;
         }
 
+        /* ========== PORTAL TABS ========== */
+        .portal-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .portal-tab {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .portal-tab:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .portal-tab.active {
+            background: var(--accent-pink);
+            border-color: var(--accent-pink);
+        }
+
+        .portal-section {
+            display: none;
+        }
+
+        .portal-section.active {
+            display: block;
+        }
+
+        /* ========== CV REGISTRATION ========== */
+        .cv-registration {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .cv-registration h2 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .cv-registration .subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+        }
+
+        .step.active {
+            color: var(--accent-pink);
+        }
+
+        .step.completed {
+            color: var(--success);
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--bg-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .step.active .step-number {
+            background: var(--accent-pink);
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: var(--success);
+            color: white;
+        }
+
+        .verification-input {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+        }
+
+        .verification-input input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .verification-input input:focus {
+            outline: none;
+            border-color: var(--accent-pink);
+        }
+
+        .skills-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            min-height: 50px;
+        }
+
+        .skill-tag {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: var(--gradient-primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        .skill-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .skills-input input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+            padding: 0.5rem;
+        }
+
+        /* ========== CANDIDATE PROFILE ========== */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .profile-info h3 {
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-info p {
+            color: var(--text-secondary);
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+            margin-left: auto;
+        }
+
+        .profile-stat {
+            text-align: center;
+        }
+
+        .profile-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-pink);
+        }
+
+        .profile-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .visibility-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--border);
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--success);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
         /* ========== RESPONSIVE ========== */
         @media (max-width: 1024px) {
             .main {
@@ -707,10 +976,25 @@
 
     <!-- Hero -->
     <section class="hero">
-        <h1>Encuentra tu Trabajo Ideal</h1>
-        <p>Explora oportunidades laborales en empresas líderes. Tu siguiente paso profesional te espera.</p>
+        <h1>Portal de Empleo</h1>
+        <p>Explora oportunidades laborales o registra tu CV para que las empresas te encuentren.</p>
 
-        <div class="search-box">
+        <!-- Portal Tabs -->
+        <div class="portal-tabs">
+            <button class="portal-tab active" onclick="switchPortalTab('jobs')">
+                🔍 Buscar Empleos
+            </button>
+            <button class="portal-tab" onclick="switchPortalTab('register')">
+                📄 Registrar mi CV
+            </button>
+            <button class="portal-tab" onclick="switchPortalTab('profile')" id="profileTab" style="display: none;">
+                👤 Mi Perfil
+            </button>
+        </div>
+
+        <!-- SECTION: Job Search -->
+        <div class="portal-section active" id="section-jobs">
+            <div class="search-box">
             <input type="text" id="searchInput" placeholder="Buscar por cargo, empresa o palabra clave...">
             <select id="locationFilter">
                 <option value="">Todas las ubicaciones</option>
@@ -726,16 +1010,253 @@
             <button onclick="searchJobs()">Buscar</button>
         </div>
 
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-value" id="totalJobs">0</div>
-                <div class="stat-label">Ofertas Activas</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="totalCompanies">0</div>
-                <div class="stat-label">Empresas</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="totalJobs">0</div>
+                    <div class="stat-label">Ofertas Activas</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="totalCompanies">0</div>
+                    <div class="stat-label">Empresas</div>
+                </div>
             </div>
         </div>
+        <!-- END SECTION: Job Search -->
+
+        <!-- SECTION: Register CV -->
+        <div class="portal-section" id="section-register">
+            <div class="cv-registration">
+                <!-- Step 1: Basic Info -->
+                <div id="regStep1">
+                    <h2>Registra tu CV</h2>
+                    <p class="subtitle">Completa tus datos para que las empresas puedan encontrarte</p>
+
+                    <div class="step-indicator">
+                        <div class="step active">
+                            <span class="step-number">1</span>
+                            <span>Datos</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <span>Verificar</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <span>Perfil</span>
+                        </div>
+                    </div>
+
+                    <form id="registerForm" onsubmit="submitRegistration(event)">
+                        <div class="form-group">
+                            <label>Email <span class="required">*</span></label>
+                            <input type="email" id="regEmail" required placeholder="tu@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre Completo <span class="required">*</span></label>
+                            <input type="text" id="regFullName" required placeholder="Juan Pérez">
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="tel" id="regPhone" placeholder="+54 11 1234-5678">
+                        </div>
+                        <div class="form-group">
+                            <label>Título Profesional</label>
+                            <input type="text" id="regTitle" placeholder="Ej: Desarrollador Full Stack">
+                        </div>
+                        <button type="submit" class="btn-submit" id="regSubmitBtn">
+                            Continuar →
+                        </button>
+                    </form>
+
+                    <p style="margin-top: 1.5rem; text-align: center; color: var(--text-secondary);">
+                        ¿Ya tienes cuenta?
+                        <a href="#" onclick="showLogin()" style="color: var(--accent-pink);">Iniciar Sesión</a>
+                    </p>
+                </div>
+
+                <!-- Step 2: Verification -->
+                <div id="regStep2" style="display: none;">
+                    <h2>Verifica tu Email</h2>
+                    <p class="subtitle">Ingresa el código de 6 dígitos que enviamos a <strong id="verifyEmailDisplay"></strong></p>
+
+                    <div class="step-indicator">
+                        <div class="step completed">
+                            <span class="step-number">✓</span>
+                            <span>Datos</span>
+                        </div>
+                        <div class="step active">
+                            <span class="step-number">2</span>
+                            <span>Verificar</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <span>Perfil</span>
+                        </div>
+                    </div>
+
+                    <div class="verification-input">
+                        <input type="text" maxlength="1" class="code-input" data-index="0">
+                        <input type="text" maxlength="1" class="code-input" data-index="1">
+                        <input type="text" maxlength="1" class="code-input" data-index="2">
+                        <input type="text" maxlength="1" class="code-input" data-index="3">
+                        <input type="text" maxlength="1" class="code-input" data-index="4">
+                        <input type="text" maxlength="1" class="code-input" data-index="5">
+                    </div>
+
+                    <button class="btn-submit" onclick="verifyCode()" id="verifyBtn">
+                        Verificar Código
+                    </button>
+
+                    <p style="margin-top: 1.5rem; text-align: center; color: var(--text-secondary);">
+                        ¿No recibiste el código?
+                        <a href="#" onclick="resendCode()" style="color: var(--accent-pink);">Reenviar</a>
+                    </p>
+                </div>
+
+                <!-- Step 3: Complete Profile -->
+                <div id="regStep3" style="display: none;">
+                    <h2>Completa tu Perfil</h2>
+                    <p class="subtitle">Agrega más detalles para aumentar tus oportunidades</p>
+
+                    <div class="step-indicator">
+                        <div class="step completed">
+                            <span class="step-number">✓</span>
+                            <span>Datos</span>
+                        </div>
+                        <div class="step completed">
+                            <span class="step-number">✓</span>
+                            <span>Verificar</span>
+                        </div>
+                        <div class="step active">
+                            <span class="step-number">3</span>
+                            <span>Perfil</span>
+                        </div>
+                    </div>
+
+                    <form id="profileForm" onsubmit="submitProfile(event)">
+                        <div class="form-group">
+                            <label>Años de Experiencia</label>
+                            <input type="number" id="profExperience" min="0" max="50" placeholder="5">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Habilidades (presiona Enter para agregar)</label>
+                            <div class="skills-input" id="skillsContainer">
+                                <input type="text" id="skillInput" placeholder="Ej: JavaScript, React...">
+                            </div>
+                            <input type="hidden" id="skillsHidden">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ubicación</label>
+                            <div class="form-grid">
+                                <input type="text" id="profCity" placeholder="Ciudad">
+                                <input type="text" id="profProvince" placeholder="Provincia">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Modalidad de Trabajo Preferida</label>
+                            <select id="profWorkMode">
+                                <option value="">Seleccionar</option>
+                                <option value="remote">Remoto</option>
+                                <option value="hybrid">Híbrido</option>
+                                <option value="onsite">Presencial</option>
+                                <option value="any">Cualquiera</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Disponibilidad</label>
+                            <select id="profAvailability">
+                                <option value="">Seleccionar</option>
+                                <option value="immediate">Inmediata</option>
+                                <option value="2_weeks">En 2 semanas</option>
+                                <option value="1_month">En 1 mes</option>
+                                <option value="flexible">Flexible</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Subir CV (PDF, DOC, DOCX)</label>
+                            <div class="file-upload" id="profCvUpload" onclick="document.getElementById('profCvFile').click()">
+                                <input type="file" id="profCvFile" accept=".pdf,.doc,.docx" onchange="handleProfileCvSelect(this)">
+                                <div class="file-upload-icon">📄</div>
+                                <p id="profCvFileName">Haz clic para subir tu CV</p>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit" id="profileSubmitBtn">
+                            Guardar Perfil
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Login Form -->
+                <div id="loginForm" style="display: none;">
+                    <h2>Iniciar Sesión</h2>
+                    <p class="subtitle">Ingresa tu email para recibir un código de acceso</p>
+
+                    <form onsubmit="submitLogin(event)">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="loginEmail" required placeholder="tu@email.com">
+                        </div>
+                        <button type="submit" class="btn-submit" id="loginBtn">
+                            Enviar Código
+                        </button>
+                    </form>
+
+                    <p style="margin-top: 1.5rem; text-align: center; color: var(--text-secondary);">
+                        ¿No tienes cuenta?
+                        <a href="#" onclick="showRegister()" style="color: var(--accent-pink);">Registrarse</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- END SECTION: Register CV -->
+
+        <!-- SECTION: My Profile -->
+        <div class="portal-section" id="section-profile">
+            <div class="cv-registration" style="max-width: 800px;">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar">J</div>
+                    <div class="profile-info">
+                        <h3 id="profileName">Cargando...</h3>
+                        <p id="profileTitle">-</p>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-value" id="profileViews">0</div>
+                            <div class="profile-stat-label">Vistas de perfil</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="visibility-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="visibilityToggle" onchange="updateVisibility(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <div>
+                        <strong>Perfil Visible</strong>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0;">
+                            Las empresas pueden encontrarte en la bolsa de CVs
+                        </p>
+                    </div>
+                </div>
+
+                <div id="profileContent">
+                    <!-- Profile form will be loaded here -->
+                </div>
+
+                <button class="btn-submit" style="background: var(--text-secondary); margin-top: 1rem;" onclick="logout()">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+        <!-- END SECTION: My Profile -->
+
     </section>
 
     <!-- Main Content -->

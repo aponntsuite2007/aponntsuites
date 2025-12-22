@@ -9,6 +9,13 @@
  * - Integrado con sistema de turnos rotativos
  */
 
+// ============================================================================
+// GUARD: Evitar carga duplicada del script
+// ============================================================================
+if (window.UserCalendarTab) {
+    console.log('⚠️ [USER-CALENDAR-TAB] Script ya cargado, omitiendo re-declaración');
+} else {
+
 // ✅ FIX: Helpers inline para evitar ES6 modules (antes: import)
 const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
@@ -659,3 +666,5 @@ class UserCalendarTab {
 // ✅ FIX: Exponer clase e instancia en window (antes: export default - removido)
 window.UserCalendarTab = UserCalendarTab;
 window.userCalendarTab = new UserCalendarTab();
+
+} // Cierre del guard de carga duplicada

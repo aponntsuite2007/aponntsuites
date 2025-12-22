@@ -1,17 +1,17 @@
 /**
  * ============================================================================
- * UNIFIED HELP CENTER v1.0
+ * UNIFIED HELP CENTER v1.1
  * ============================================================================
  * Centro de Ayuda Unificado con 3 tabs:
- * 1. Chat IA - Preguntas rápidas con Ollama
- * 2. Mis Tickets - Sistema de soporte via notificaciones
- * 3. Guías - Ayuda contextual del módulo actual
+ * 1. Chat IA - Preguntas con Ollama
+ * 2. Inbox - Notificaciones del sistema
+ * 3. Tickets - Sistema de soporte
  *
  * PRINCIPIO: UN SOLO BOTÓN FLOTANTE para toda la ayuda
  * ============================================================================
  */
 
-console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
+console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.1 cargando...');
 
 (function() {
     'use strict';
@@ -40,7 +40,8 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
         currentModule: null,
         chatHistory: [],
         tickets: [],
-        contextualHelp: null,
+        notifications: [],
+        notificationCount: 0,
         stats: {},
         isLoading: false,
         ollamaStatus: 'checking'
@@ -87,15 +88,15 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
             fill: white;
         }
 
-        /* Badge de notificaciones */
-        #unified-help-badge {
+        /* Badge de notificaciones en botón principal */
+        .uhc-main-badge {
             position: absolute;
             top: -5px;
             right: -5px;
-            background: #ef4444;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             min-width: 20px;
             height: 20px;
             border-radius: 10px;
@@ -103,11 +104,13 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
             align-items: center;
             justify-content: center;
             padding: 0 5px;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+            animation: badgePulse 2s infinite;
         }
 
-        #unified-help-badge.visible {
-            display: flex;
-            animation: pulse 2s infinite;
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         @keyframes pulse {
@@ -517,81 +520,82 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
-        /* Tab: Guías */
-        .uhc-guide-section {
-            margin-bottom: 16px;
-        }
-
-        .uhc-guide-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #e2e8f0;
-            margin-bottom: 8px;
+        /* ========== NOTIFICACIONES ========== */
+        .uhc-notification-list {
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 8px;
         }
 
-        .uhc-guide-content {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 8px;
+        .uhc-notif-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
             padding: 12px;
-            font-size: 13px;
-            color: #94a3b8;
-            line-height: 1.6;
+            background: #1e293b;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
         }
 
-        .uhc-quick-start {
+        .uhc-notif-item:hover {
+            background: #334155;
+        }
+
+        .uhc-notif-item.unread {
             background: #1e3a5f;
-            border-color: #6366f1;
+            border-left-color: #3b82f6;
         }
 
-        .uhc-issues-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+        .uhc-notif-icon {
+            font-size: 20px;
+            flex-shrink: 0;
         }
 
-        .uhc-issue-item {
-            padding: 8px 0;
-            border-bottom: 1px solid #334155;
+        .uhc-notif-content {
+            flex: 1;
+            min-width: 0;
         }
 
-        .uhc-issue-item:last-child {
-            border-bottom: none;
-        }
-
-        .uhc-issue-q {
-            font-weight: 500;
+        .uhc-notif-title {
+            font-size: 13px;
+            font-weight: 600;
             color: #e2e8f0;
             margin-bottom: 4px;
         }
 
-        .uhc-issue-a {
-            color: #94a3b8;
+        .uhc-notif-message {
             font-size: 12px;
+            color: #94a3b8;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .uhc-walkthrough-btn {
-            width: 100%;
-            padding: 12px;
-            background: #334155;
-            border: 1px solid #475569;
-            border-radius: 8px;
-            color: #e2e8f0;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
+        .uhc-notif-time {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
         }
 
-        .uhc-walkthrough-btn:hover {
-            background: #475569;
-            border-color: #6366f1;
+        .uhc-notif-priority {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .uhc-notif-priority.high {
+            background: #ef4444;
+        }
+
+        .uhc-notif-priority.medium {
+            background: #f59e0b;
+        }
+
+        .uhc-notif-priority.low {
+            background: #22c55e;
         }
 
         /* Empty states */
@@ -767,12 +771,12 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
         const container = document.createElement('div');
         container.id = 'unified-help-container';
         container.innerHTML = `
-            <!-- Botón flotante único -->
-            <button id="unified-help-btn" title="Centro de Ayuda">
+            <!-- Botón flotante único (Chat + Inbox + Tickets) -->
+            <button id="unified-help-btn" title="Centro de Ayuda y Notificaciones">
                 <svg viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
                 </svg>
-                <span id="unified-help-badge"></span>
+                <span id="uhc-main-badge" class="uhc-main-badge" style="display:none">0</span>
             </button>
 
             <!-- Panel principal -->
@@ -800,14 +804,15 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
                     <!-- Tabs -->
                     <div class="uhc-tabs">
                         <button class="uhc-tab active" data-tab="chat">
-                            <span>💬</span> Chat IA
+                            <span>💬</span> Chat
+                        </button>
+                        <button class="uhc-tab" data-tab="notifications">
+                            <span>🔔</span> Inbox
+                            <span class="uhc-tab-badge" id="uhc-notif-badge" style="display:none">0</span>
                         </button>
                         <button class="uhc-tab" data-tab="tickets">
                             <span>🎫</span> Tickets
                             <span class="uhc-tab-badge" id="uhc-tickets-badge" style="display:none">0</span>
-                        </button>
-                        <button class="uhc-tab" data-tab="guides">
-                            <span>📖</span> Guías
                         </button>
                     </div>
                 </div>
@@ -1002,72 +1007,120 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
         content.innerHTML = html;
     }
 
-    function renderGuidesTab() {
+    function renderNotificationsTab() {
         const content = document.getElementById('uhc-content');
         const inputContainer = document.getElementById('uhc-chat-input-container');
 
         inputContainer.style.display = 'none';
 
-        const help = state.contextualHelp;
-
-        if (!help) {
+        if (state.isLoading) {
             content.innerHTML = `
                 <div class="uhc-loading">
                     <div class="uhc-spinner"></div>
-                    <span>Cargando guías...</span>
+                    <span>Cargando notificaciones...</span>
                 </div>
             `;
-            loadContextualHelp();
             return;
         }
 
-        let html = `
-            <div class="uhc-guide-section">
-                <div class="uhc-guide-title">📍 ${help.title || 'Ayuda del módulo'}</div>
-                <div class="uhc-guide-content">
-                    ${help.description || 'Información del módulo actual.'}
-                </div>
-            </div>
-        `;
-
-        if (help.quick_start) {
-            html += `
-                <div class="uhc-guide-section">
-                    <div class="uhc-guide-title">🚀 Inicio rápido</div>
-                    <div class="uhc-guide-content uhc-quick-start">
-                        ${help.quick_start}
+        if (state.notifications.length === 0) {
+            content.innerHTML = `
+                <div class="uhc-empty">
+                    <div class="uhc-empty-icon">🔔</div>
+                    <div class="uhc-empty-text">
+                        No tienes notificaciones pendientes.<br>
+                        ¡Todo al día!
                     </div>
                 </div>
             `;
+            return;
         }
 
-        if (help.common_issues && help.common_issues.length > 0) {
+        let html = '<div class="uhc-notification-list">';
+
+        state.notifications.forEach(notif => {
+            const priorityClass = notif.priority === 'high' ? 'high' :
+                                 notif.priority === 'medium' ? 'medium' : 'low';
+            const unreadClass = !notif.read_at ? 'unread' : '';
+
             html += `
-                <div class="uhc-guide-section">
-                    <div class="uhc-guide-title">❓ Problemas frecuentes</div>
-                    <div class="uhc-guide-content">
-                        <ul class="uhc-issues-list">
-                            ${help.common_issues.map(issue => `
-                                <li class="uhc-issue-item">
-                                    <div class="uhc-issue-q">${issue.issue}</div>
-                                    <div class="uhc-issue-a">${issue.solution}</div>
-                                </li>
-                            `).join('')}
-                        </ul>
+                <div class="uhc-notif-item ${unreadClass}" onclick="UnifiedHelpCenter.openNotification('${notif.id}')">
+                    <div class="uhc-notif-icon">${getNotifIcon(notif.type)}</div>
+                    <div class="uhc-notif-content">
+                        <div class="uhc-notif-title">${notif.title || 'Notificación'}</div>
+                        <div class="uhc-notif-message">${notif.message || ''}</div>
+                        <div class="uhc-notif-time">${formatDate(notif.created_at)}</div>
                     </div>
+                    <span class="uhc-notif-priority ${priorityClass}"></span>
                 </div>
             `;
-        }
+        });
 
-        if (help.walkthrough_steps && help.walkthrough_steps.length > 0) {
-            html += `
-                <button class="uhc-walkthrough-btn" onclick="UnifiedHelpCenter.startWalkthrough()">
-                    🎓 Iniciar tutorial guiado
-                </button>
-            `;
-        }
-
+        html += '</div>';
         content.innerHTML = html;
+    }
+
+    function getNotifIcon(type) {
+        const icons = {
+            'attendance': '⏰',
+            'vacation': '🏖️',
+            'approval': '✅',
+            'alert': '⚠️',
+            'message': '💬',
+            'system': '🔧',
+            'medical': '🏥',
+            'payroll': '💰'
+        };
+        return icons[type] || '📌';
+    }
+
+    async function loadNotifications() {
+        try {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            const response = await fetch('/api/inbox/pending-badge', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                state.notifications = data.notifications || [];
+                state.notificationCount = data.count || data.notifications?.length || 0;
+                updateNotificationBadge();
+
+                if (state.activeTab === 'notifications') {
+                    renderNotificationsTab();
+                }
+            }
+        } catch (error) {
+            console.warn('[UNIFIED-HELP] Error cargando notificaciones:', error);
+        }
+    }
+
+    function updateNotificationBadge() {
+        // Badge en la tab
+        const tabBadge = document.getElementById('uhc-notif-badge');
+        if (tabBadge) {
+            if (state.notificationCount > 0) {
+                tabBadge.textContent = state.notificationCount > 99 ? '99+' : state.notificationCount;
+                tabBadge.style.display = 'inline-flex';
+            } else {
+                tabBadge.style.display = 'none';
+            }
+        }
+
+        // Badge en el botón principal
+        const mainBadge = document.getElementById('uhc-main-badge');
+        if (mainBadge) {
+            if (state.notificationCount > 0) {
+                mainBadge.textContent = state.notificationCount > 99 ? '99+' : state.notificationCount;
+                mainBadge.style.display = 'flex';
+            } else {
+                mainBadge.style.display = 'none';
+            }
+        }
     }
 
     function showCreateTicketForm() {
@@ -1213,22 +1266,6 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
         renderTicketsTab();
     }
 
-    async function loadContextualHelp() {
-        try {
-            const moduleKey = getCurrentModule();
-            const result = await apiCall(`/module/${moduleKey}`);
-            state.contextualHelp = result.help || null;
-        } catch (error) {
-            console.error('[UNIFIED-HELP] Error cargando ayuda:', error);
-            state.contextualHelp = {
-                title: 'Ayuda del sistema',
-                description: 'Información general del módulo.',
-                quick_start: 'Navega por las opciones disponibles.'
-            };
-        }
-        renderGuidesTab();
-    }
-
     async function checkOllamaStatus() {
         try {
             const result = await apiCall('/health');
@@ -1354,12 +1391,12 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
             case 'chat':
                 renderChatTab();
                 break;
+            case 'notifications':
+                loadNotifications();
+                renderNotificationsTab();
+                break;
             case 'tickets':
                 loadTickets();
-                break;
-            case 'guides':
-                state.contextualHelp = null; // Forzar recarga
-                renderGuidesTab();
                 break;
         }
     }
@@ -1380,20 +1417,27 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
 
     window.UnifiedHelpCenter = {
         init() {
-            console.log('[UNIFIED-HELP] Inicializando...');
+            console.log('[UNIFIED-HELP] Inicializando Centro Unificado...');
             injectStyles();
             createContainer();
             setupEventListeners();
             checkOllamaStatus();
 
-            // Poll para actualizaciones
+            // Cargar notificaciones iniciales
+            loadNotifications();
+
+            // Poll para actualizaciones (notificaciones y tickets)
             setInterval(() => {
+                // Siempre actualizar contador de notificaciones
+                loadNotifications();
+
+                // Actualizar tickets si está en esa tab
                 if (state.isOpen && state.activeTab === 'tickets') {
                     loadTickets();
                 }
             }, CONFIG.pollInterval);
 
-            console.log('[UNIFIED-HELP] ✅ Inicializado correctamente');
+            console.log('[UNIFIED-HELP] ✅ Centro Unificado inicializado (Chat + Inbox + Tickets)');
         },
 
         open() {
@@ -1413,6 +1457,29 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
             switchTab('chat');
             if (!state.isOpen) togglePanel();
             sendMessage(question);
+        },
+
+        // 🔔 NOTIFICACIONES
+        async openNotification(notifId) {
+            try {
+                const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                // Marcar como leída
+                await fetch(`/api/inbox/mark-read/${notifId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                // Recargar notificaciones
+                loadNotifications();
+
+                // Si tiene un link, navegar
+                const notif = state.notifications.find(n => n.id === notifId);
+                if (notif?.link) {
+                    window.location.href = notif.link;
+                }
+            } catch (error) {
+                console.warn('[UNIFIED-HELP] Error abriendo notificación:', error);
+            }
         },
 
         showCreateTicket() {
@@ -1466,11 +1533,6 @@ console.log('🎯 [UNIFIED-HELP] Centro de Ayuda Unificado v1.0 cargando...');
             } catch (error) {
                 console.error('[UNIFIED-HELP] Error enviando feedback:', error);
             }
-        },
-
-        startWalkthrough() {
-            // TODO: Implementar walkthrough
-            console.log('Iniciando walkthrough...');
         }
     };
 

@@ -1,0 +1,53 @@
+{
+  "name": "delete-attendance",
+  "description": "Eliminar un attendance",
+  "steps": [
+    {
+      "action": "navigate",
+      "target": "module-attendance",
+      "description": "Ir al módulo de attendances"
+    },
+    {
+      "action": "click",
+      "target": "row-attendance",
+      "description": "Seleccionar attendance de la lista"
+    },
+    {
+      "action": "click",
+      "target": "btn-delete",
+      "description": "Click en \"Eliminar\""
+    },
+    {
+      "action": "wait",
+      "target": "confirm-dialog",
+      "description": "Esperar diálogo de confirmación"
+    },
+    {
+      "action": "click",
+      "target": "btn-confirm",
+      "description": "Confirmar eliminación"
+    },
+    {
+      "action": "verify",
+      "target": "success-message",
+      "description": "Verificar mensaje de éxito"
+    },
+    {
+      "action": "verify-not",
+      "target": "table-attendance",
+      "contains": "{entity-name}",
+      "description": "Verificar que no está en lista"
+    }
+  ],
+  "preconditions": [
+    "logged-in",
+    "attendance-exists",
+    "has-permission-delete-attendance"
+  ],
+  "postconditions": [
+    "attendance-deleted"
+  ],
+  "module": "attendance",
+  "generatedAt": "2025-12-22T03:21:02.724Z",
+  "source": "auto-generated"
+}

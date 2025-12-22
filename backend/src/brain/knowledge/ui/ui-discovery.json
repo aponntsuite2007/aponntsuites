@@ -1,0 +1,151 @@
+{
+  "crawledAt": "2025-12-20T22:55:07.693Z",
+  "stats": {
+    "pagesVisited": 1,
+    "elementsDiscovered": 4,
+    "modalsFound": 0,
+    "formsAnalyzed": 1,
+    "errorsEncountered": 0
+  },
+  "modules": {
+    "users": {
+      "key": "users",
+      "crawledAt": "2025-12-20T22:55:05.419Z",
+      "screens": [],
+      "elements": {
+        "buttons": [
+          {
+            "index": 5,
+            "text": "🚪 Salir",
+            "id": null,
+            "classes": "",
+            "type": "submit",
+            "disabled": false,
+            "selector": ".",
+            "position": {
+              "top": 120.59375,
+              "left": 1770
+            }
+          },
+          {
+            "index": 13,
+            "text": "",
+            "id": "unified-help-btn",
+            "classes": "",
+            "type": "submit",
+            "disabled": false,
+            "selector": "#unified-help-btn",
+            "position": {
+              "top": 1000,
+              "left": 1840
+            }
+          },
+          {
+            "index": 19,
+            "text": "🔔\n        0",
+            "id": "notification-badge-button",
+            "classes": "",
+            "type": "submit",
+            "disabled": false,
+            "selector": "#notification-badge-button",
+            "position": {
+              "top": 1010,
+              "left": 20
+            }
+          }
+        ],
+        "inputs": [],
+        "selects": [
+          {
+            "index": 1,
+            "name": null,
+            "id": "languageSelector",
+            "label": "",
+            "required": false,
+            "options": [
+              {
+                "value": "es",
+                "text": "🇪🇸 Español"
+              },
+              {
+                "value": "en",
+                "text": "🇺🇸 English"
+              },
+              {
+                "value": "pt",
+                "text": "🇧🇷 Português"
+              },
+              {
+                "value": "de",
+                "text": "🇩🇪 Deutsch"
+              },
+              {
+                "value": "it",
+                "text": "🇮🇹 Italiano"
+              },
+              {
+                "value": "fr",
+                "text": "🇫🇷 Français"
+              }
+            ],
+            "optionCount": 6,
+            "selector": "#languageSelector"
+          }
+        ],
+        "tables": [],
+        "modals": [],
+        "tabs": [],
+        "links": []
+      },
+      "flows": [],
+      "errors": [],
+      "forms": [
+        {
+          "index": 0,
+          "id": "multiTenantLoginForm",
+          "action": "http://localhost:9998/panel-empresa.html",
+          "method": "get",
+          "fieldCount": 3,
+          "fields": [
+            {
+              "name": "",
+              "type": "select-one",
+              "required": true,
+              "validation": {
+                "pattern": null,
+                "minLength": null,
+                "maxLength": null,
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "name": "",
+              "type": "text",
+              "required": true,
+              "validation": {
+                "pattern": null,
+                "minLength": null,
+                "maxLength": null,
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "name": "",
+              "type": "password",
+              "required": true,
+              "validation": {
+                "pattern": null,
+                "minLength": null,
+                "maxLength": null,
+                "min": null,
+                "max": null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,242 @@
+{
+  "generatedAt": "2025-12-22T03:21:02.725Z",
+  "count": 5,
+  "flows": {
+    "attendance-create": {
+      "name": "create-attendance",
+      "description": "Crear un nuevo attendance",
+      "steps": [
+        {
+          "action": "navigate",
+          "target": "module-attendance",
+          "description": "Ir al módulo de attendances"
+        },
+        {
+          "action": "click",
+          "target": "btn-new-attendance",
+          "description": "Click en \"Nuevo Attendance\""
+        },
+        {
+          "action": "wait",
+          "target": "modal-attendance",
+          "description": "Esperar que abra el modal"
+        },
+        {
+          "action": "fill-form",
+          "target": "form-attendance",
+          "description": "Completar formulario"
+        },
+        {
+          "action": "click",
+          "target": "btn-save",
+          "description": "Click en \"Guardar\""
+        },
+        {
+          "action": "verify",
+          "target": "success-message",
+          "description": "Verificar mensaje de éxito"
+        },
+        {
+          "action": "verify",
+          "target": "table-attendance",
+          "contains": "{entity-name}",
+          "description": "Verificar en lista"
+        }
+      ],
+      "preconditions": [
+        "logged-in",
+        "has-permission-create-attendance"
+      ],
+      "postconditions": [
+        "attendance-created"
+      ],
+      "module": "attendance",
+      "generatedAt": "2025-12-22T03:21:02.724Z",
+      "source": "auto-generated"
+    },
+    "attendance-edit": {
+      "name": "edit-attendance",
+      "description": "Editar un attendance existente",
+      "steps": [
+        {
+          "action": "navigate",
+          "target": "module-attendance",
+          "description": "Ir al módulo de attendances"
+        },
+        {
+          "action": "click",
+          "target": "row-attendance",
+          "description": "Seleccionar attendance de la lista"
+        },
+        {
+          "action": "click",
+          "target": "btn-edit",
+          "description": "Click en \"Editar\""
+        },
+        {
+          "action": "wait",
+          "target": "modal-attendance",
+          "description": "Esperar que abra el modal"
+        },
+        {
+          "action": "modify-form",
+          "target": "form-attendance",
+          "description": "Modificar campos"
+        },
+        {
+          "action": "click",
+          "target": "btn-save",
+          "description": "Click en \"Guardar\""
+        },
+        {
+          "action": "verify",
+          "target": "success-message",
+          "description": "Verificar mensaje de éxito"
+        }
+      ],
+      "preconditions": [
+        "logged-in",
+        "attendance-exists",
+        "has-permission-edit-attendance"
+      ],
+      "postconditions": [
+        "attendance-updated"
+      ],
+      "module": "attendance",
+      "generatedAt": "2025-12-22T03:21:02.724Z",
+      "source": "auto-generated"
+    },
+    "attendance-delete": {
+      "name": "delete-attendance",
+      "description": "Eliminar un attendance",
+      "steps": [
+        {
+          "action": "navigate",
+          "target": "module-attendance",
+          "description": "Ir al módulo de attendances"
+        },
+        {
+          "action": "click",
+          "target": "row-attendance",
+          "description": "Seleccionar attendance de la lista"
+        },
+        {
+          "action": "click",
+          "target": "btn-delete",
+          "description": "Click en \"Eliminar\""
+        },
+        {
+          "action": "wait",
+          "target": "confirm-dialog",
+          "description": "Esperar diálogo de confirmación"
+        },
+        {
+          "action": "click",
+          "target": "btn-confirm",
+          "description": "Confirmar eliminación"
+        },
+        {
+          "action": "verify",
+          "target": "success-message",
+          "description": "Verificar mensaje de éxito"
+        },
+        {
+          "action": "verify-not",
+          "target": "table-attendance",
+          "contains": "{entity-name}",
+          "description": "Verificar que no está en lista"
+        }
+      ],
+      "preconditions": [
+        "logged-in",
+        "attendance-exists",
+        "has-permission-delete-attendance"
+      ],
+      "postconditions": [
+        "attendance-deleted"
+      ],
+      "module": "attendance",
+      "generatedAt": "2025-12-22T03:21:02.724Z",
+      "source": "auto-generated"
+    },
+    "attendance-search": {
+      "name": "search-attendance",
+      "description": "Buscar attendances",
+      "steps": [
+        {
+          "action": "navigate",
+          "target": "module-attendance",
+          "description": "Ir al módulo de attendances"
+        },
+        {
+          "action": "fill",
+          "target": "input-search",
+          "value": "{search-term}",
+          "description": "Escribir término de búsqueda"
+        },
+        {
+          "action": "click",
+          "target": "btn-search",
+          "description": "Click en buscar (o Enter)"
+        },
+        {
+          "action": "wait",
+          "target": "table-attendance",
+          "description": "Esperar resultados"
+        },
+        {
+          "action": "verify",
+          "target": "table-attendance",
+          "contains": "{search-term}",
+          "description": "Verificar resultados"
+        }
+      ],
+      "preconditions": [
+        "logged-in"
+      ],
+      "postconditions": [
+        "results-displayed"
+      ],
+      "module": "attendance",
+      "generatedAt": "2025-12-22T03:21:02.724Z",
+      "source": "auto-generated"
+    },
+    "attendance-view": {
+      "name": "view-attendance",
+      "description": "Ver detalles de attendance",
+      "steps": [
+        {
+          "action": "navigate",
+          "target": "module-attendance",
+          "description": "Ir al módulo de attendances"
+        },
+        {
+          "action": "click",
+          "target": "row-attendance",
+          "description": "Click en attendance de la lista"
+        },
+        {
+          "action": "wait",
+          "target": "detail-panel",
+          "description": "Esperar panel de detalles"
+        },
+        {
+          "action": "verify",
+          "target": "detail-panel",
+          "hasContent": true,
+          "description": "Verificar que muestra datos"
+        }
+      ],
+      "preconditions": [
+        "logged-in",
+        "attendance-exists"
+      ],
+      "postconditions": [
+        "details-visible"
+      ],
+      "module": "attendance",
+      "generatedAt": "2025-12-22T03:21:02.724Z",
+      "source": "auto-generated"
+    }
+  }
+}

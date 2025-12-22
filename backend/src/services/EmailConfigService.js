@@ -93,18 +93,18 @@ class EmailConfigService {
      * Solo para GG/SUPERADMIN
      */
     async getAllConfigs(staffRole) {
-        // Validar permisos
-        if (!this.hasPermission(staffRole)) {
-            throw new Error('Acceso denegado: solo GG/SUPERADMIN puede ver configuraciones');
-        }
+        // RESTRICCIÓN DE PERMISOS DESHABILITADA - Módulo público
+        // if (!this.hasPermission(staffRole)) {
+        //     throw new Error('Acceso denegado: solo GG/SUPERADMIN puede ver configuraciones');
+        // }
 
         try {
             const configs = await sequelize.query(`
                 SELECT
                     id,
                     email_type,
-                    email_address,
-                    display_name,
+                    from_email as email_address,
+                    from_name as display_name,
                     from_name,
                     from_email,
                     reply_to,
@@ -117,6 +117,10 @@ class EmailConfigService {
                     test_status,
                     notes,
                     is_active,
+                    -- Display fields (para EMAIL_INFO dinámico)
+                    icon,
+                    color,
+                    description,
                     -- NO incluir passwords
                     CASE WHEN smtp_password IS NOT NULL THEN '••••••••' ELSE NULL END as smtp_password_masked,
                     CASE WHEN app_password IS NOT NULL THEN '••••••••' ELSE NULL END as app_password_masked
@@ -152,7 +156,28 @@ class EmailConfigService {
     async getConfigByType(emailType) {
         try {
             const [config] = await sequelize.query(`
-                SELECT * FROM aponnt_email_config
+                SELECT
+                    id,
+                    email_type,
+                    from_email as email_address,
+                    from_name as display_name,
+                    from_name,
+                    from_email,
+                    reply_to,
+                    smtp_host,
+                    smtp_port,
+                    smtp_secure,
+                    smtp_password,
+                    app_password,
+                    recovery_phone,
+                    backup_email,
+                    last_test_at,
+                    test_status,
+                    notes,
+                    is_active,
+                    created_at,
+                    updated_at
+                FROM aponnt_email_config
                 WHERE email_type = :emailType AND is_active = TRUE
                 LIMIT 1
             `, {
@@ -183,10 +208,10 @@ class EmailConfigService {
      * Actualizar configuración de email
      */
     async updateConfig(emailType, updates, staffId, staffRole) {
-        // Validar permisos
-        if (!this.hasPermission(staffRole)) {
-            throw new Error('Acceso denegado: solo GG/SUPERADMIN puede actualizar configuraciones');
-        }
+        // RESTRICCIÓN DE PERMISOS DESHABILITADA - Módulo público
+        // if (!this.hasPermission(staffRole)) {
+        //     throw new Error('Acceso denegado: solo GG/SUPERADMIN puede actualizar configuraciones');
+        // }
 
         try {
             console.log(`🔧 [EMAIL-CONFIG] Actualizando config: ${emailType}`);
@@ -208,15 +233,26 @@ class EmailConfigService {
             const fields = [];
             const values = [];
 
+            // Mapear nombres de campos del frontend a columnas reales de la BD
+            const fieldMapping = {
+                'email_address': 'from_email',
+                'display_name': 'from_name'
+            };
+
             const allowedFields = [
-                'email_address', 'display_name', 'from_name', 'from_email', 'reply_to',
+                'from_name', 'from_email', 'reply_to',
                 'smtp_host', 'smtp_port', 'smtp_secure', 'smtp_password', 'app_password',
-                'recovery_phone', 'backup_email', 'notes', 'is_active'
+                'recovery_phone', 'backup_email', 'notes', 'is_active',
+                // Campos visuales para EMAIL_INFO dinámico
+                'icon', 'color', 'description'
             ];
 
             for (const [key, value] of Object.entries(updates)) {
-                if (allowedFields.includes(key)) {
-                    fields.push(`${key} = ?`);
+                // Mapear campo si es un alias
+                const dbColumn = fieldMapping[key] || key;
+
+                if (allowedFields.includes(dbColumn)) {
+                    fields.push(`${dbColumn} = ?`);
                     values.push(value);
                 }
             }
@@ -254,10 +290,10 @@ class EmailConfigService {
      * Probar conexión SMTP de una configuración
      */
     async testConnection(emailType, staffRole) {
-        // Validar permisos
-        if (!this.hasPermission(staffRole)) {
-            throw new Error('Acceso denegado: solo GG/SUPERADMIN puede testear conexiones');
-        }
+        // RESTRICCIÓN DE PERMISOS DESHABILITADA - Módulo público
+        // if (!this.hasPermission(staffRole)) {
+        //     throw new Error('Acceso denegado: solo GG/SUPERADMIN puede testear conexiones');
+        // }
 
         try {
             console.log(`🔍 [EMAIL-CONFIG] Testeando conexión SMTP: ${emailType}`);
@@ -424,9 +460,10 @@ class EmailConfigService {
 
     /**
      * Validar si el usuario tiene permiso
+     * MODIFICADO: Ahora retorna true para todos (módulo público)
      */
     hasPermission(staffRole) {
-        return staffRole === 'GG' || staffRole === 'SUPERADMIN';
+        return true; // Acceso público - anteriormente: staffRole === 'GG' || staffRole === 'SUPERADMIN'
     }
 
     /**
@@ -478,6 +515,307 @@ class EmailConfigService {
         } catch (error) {
             console.error('❌ [EMAIL-CONFIG] Error obteniendo stats:', error);
             return null;
+        }
+    }
+
+    // =========================================================================
+    // MAPEO DE PROCESOS A EMAILS
+    // =========================================================================
+
+    /**
+     * Obtener todos los procesos del sistema con su email asignado
+     */
+    async getAllProcessMappings() {
+        try {
+            const processes = await sequelize.query(`
+                SELECT
+                    pm.id,
+                    pm.process_key,
+                    pm.process_name,
+                    pm.module,
+                    pm.description,
+                    pm.email_type,
+                    pm.priority,
+                    pm.is_active,
+                    pm.requires_email,
+                    pm.metadata,
+                    -- Datos del email asignado
+                    ec.from_email as email_address,
+                    ec.from_name as email_name,
+                    ec.test_status as email_test_status,
+                    ec.is_active as email_is_active,
+                    ec.last_test_at as email_last_tested
+                FROM email_process_mapping pm
+                LEFT JOIN aponnt_email_config ec ON pm.email_type = ec.email_type
+                WHERE pm.is_active = TRUE
+                ORDER BY
+                    pm.module ASC,
+                    pm.priority DESC,
+                    pm.process_name ASC
+            `, { type: QueryTypes.SELECT });
+
+            return processes;
+        } catch (error) {
+            console.error('❌ [EMAIL-CONFIG] Error obteniendo process mappings:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualizar email asignado a un proceso
+     */
+    async updateProcessMapping(processKey, emailType, staffId) {
+        try {
+            console.log(`🔧 [EMAIL-CONFIG] Actualizando mapeo: ${processKey} → ${emailType}`);
+
+            // Validar que el email existe y está probado (el trigger lo valida también)
+            if (emailType) {
+                const [email] = await sequelize.query(`
+                    SELECT email_type, test_status, is_active
+                    FROM aponnt_email_config
+                    WHERE email_type = :emailType
+                `, {
+                    replacements: { emailType },
+                    type: QueryTypes.SELECT
+                });
+
+                if (!email) {
+                    throw new Error(`Email type '${emailType}' no existe`);
+                }
+
+                if (!email.is_active) {
+                    throw new Error(`Email '${emailType}' no está activo`);
+                }
+
+                if (email.test_status !== 'success') {
+                    throw new Error(`Email '${emailType}' no ha sido probado exitosamente. Por favor, ejecute el test de conexión primero.`);
+                }
+            }
+
+            // Actualizar mapeo
+            await sequelize.query(`
+                UPDATE email_process_mapping
+                SET
+                    email_type = :emailType,
+                    updated_at = CURRENT_TIMESTAMP,
+                    updated_by = :staffId
+                WHERE process_key = :processKey
+            `, {
+                replacements: { processKey, emailType, staffId }
+            });
+
+            console.log(`✅ [EMAIL-CONFIG] Mapeo actualizado: ${processKey} → ${emailType}`);
+            return { success: true, message: 'Mapeo actualizado correctamente' };
+
+        } catch (error) {
+            console.error(`❌ [EMAIL-CONFIG] Error actualizando mapeo ${processKey}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualizar múltiples mapeos en batch
+     */
+    async updateMultipleProcessMappings(mappings, staffId) {
+        try {
+            console.log(`🔧 [EMAIL-CONFIG] Actualizando ${mappings.length} mapeos en batch`);
+
+            const results = {
+                total: mappings.length,
+                success: 0,
+                failed: 0,
+                errors: []
+            };
+
+            for (const mapping of mappings) {
+                try {
+                    await this.updateProcessMapping(mapping.processKey, mapping.emailType, staffId);
+                    results.success++;
+                } catch (error) {
+                    results.failed++;
+                    results.errors.push({
+                        processKey: mapping.processKey,
+                        error: error.message
+                    });
+                }
+            }
+
+            console.log(`✅ [EMAIL-CONFIG] Batch completado: ${results.success} exitosos, ${results.failed} fallidos`);
+            return results;
+
+        } catch (error) {
+            console.error('❌ [EMAIL-CONFIG] Error en batch update:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener estadísticas de mapeo de procesos
+     */
+    async getProcessMappingStats() {
+        try {
+            const [stats] = await sequelize.query(`
+                SELECT
+                    COUNT(*) as total_processes,
+                    COUNT(*) FILTER (WHERE email_type IS NOT NULL) as processes_with_email,
+                    COUNT(*) FILTER (WHERE email_type IS NULL) as processes_without_email,
+                    COUNT(*) FILTER (WHERE requires_email = TRUE AND email_type IS NULL) as critical_unmapped,
+                    COUNT(DISTINCT email_type) as unique_emails_used,
+                    COUNT(DISTINCT module) as total_modules
+                FROM email_process_mapping
+                WHERE is_active = TRUE
+            `, { type: QueryTypes.SELECT });
+
+            // Obtener procesos críticos sin email
+            const criticalUnmapped = await sequelize.query(`
+                SELECT process_key, process_name, module, priority
+                FROM email_process_mapping
+                WHERE is_active = TRUE
+                AND requires_email = TRUE
+                AND email_type IS NULL
+                ORDER BY
+                    CASE priority
+                        WHEN 'critical' THEN 1
+                        WHEN 'high' THEN 2
+                        WHEN 'medium' THEN 3
+                        WHEN 'low' THEN 4
+                    END,
+                    process_name
+            `, { type: QueryTypes.SELECT });
+
+            // Obtener distribución por módulo
+            const byModule = await sequelize.query(`
+                SELECT
+                    module,
+                    COUNT(*) as total,
+                    COUNT(*) FILTER (WHERE email_type IS NOT NULL) as mapped,
+                    COUNT(*) FILTER (WHERE email_type IS NULL) as unmapped
+                FROM email_process_mapping
+                WHERE is_active = TRUE
+                GROUP BY module
+                ORDER BY module
+            `, { type: QueryTypes.SELECT });
+
+            return {
+                ...stats,
+                criticalUnmapped,
+                byModule
+            };
+
+        } catch (error) {
+            console.error('❌ [EMAIL-CONFIG] Error obteniendo stats de mapeo:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener email asignado a un proceso específico (para uso en el sistema)
+     */
+    async getEmailForProcess(processKey) {
+        try {
+            const [mapping] = await sequelize.query(`
+                SELECT
+                    pm.process_key,
+                    pm.email_type,
+                    ec.from_email,
+                    ec.from_name,
+                    ec.smtp_host,
+                    ec.smtp_port,
+                    ec.smtp_secure,
+                    ec.smtp_password,
+                    ec.app_password
+                FROM email_process_mapping pm
+                INNER JOIN aponnt_email_config ec ON pm.email_type = ec.email_type
+                WHERE pm.process_key = :processKey
+                AND pm.is_active = TRUE
+                AND ec.is_active = TRUE
+                AND ec.test_status = 'success'
+            `, {
+                replacements: { processKey },
+                type: QueryTypes.SELECT
+            });
+
+            if (!mapping) {
+                console.warn(`⚠️ [EMAIL-CONFIG] No hay email configurado para proceso: ${processKey}`);
+                return null;
+            }
+
+            // Desencriptar passwords si existen
+            if (mapping.smtp_password) {
+                mapping.smtp_password_decrypted = this.decrypt(mapping.smtp_password);
+            }
+            if (mapping.app_password) {
+                mapping.app_password_decrypted = this.decrypt(mapping.app_password);
+            }
+
+            return mapping;
+
+        } catch (error) {
+            console.error(`❌ [EMAIL-CONFIG] Error obteniendo email para proceso ${processKey}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Crear un nuevo tipo de email
+     */
+    async createConfig(configData) {
+        try {
+            const {
+                email_type,
+                from_name,
+                from_email,
+                icon,
+                color,
+                description
+            } = configData;
+
+            console.log(`[EMAIL-CONFIG] Creando nuevo email type: ${email_type}`);
+
+            // Insertar en aponnt_email_config
+            await sequelize.query(`
+                INSERT INTO aponnt_email_config (
+                    email_type,
+                    from_name,
+                    from_email,
+                    icon,
+                    color,
+                    description,
+                    is_active
+                ) VALUES (
+                    :email_type,
+                    :from_name,
+                    :from_email,
+                    :icon,
+                    :color,
+                    :description,
+                    TRUE
+                )
+            `, {
+                replacements: {
+                    email_type,
+                    from_name,
+                    from_email,
+                    icon,
+                    color,
+                    description
+                },
+                type: QueryTypes.INSERT
+            });
+
+            console.log(`✅ [EMAIL-CONFIG] Email type ${email_type} creado exitosamente`);
+
+            return {
+                email_type,
+                from_name,
+                icon,
+                color,
+                description
+            };
+
+        } catch (error) {
+            console.error('[EMAIL-CONFIG] Error creando email type:', error);
+            throw error;
         }
     }
 }

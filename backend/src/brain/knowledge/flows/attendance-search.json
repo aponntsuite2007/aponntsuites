@@ -1,0 +1,42 @@
+{
+  "name": "search-attendance",
+  "description": "Buscar attendances",
+  "steps": [
+    {
+      "action": "navigate",
+      "target": "module-attendance",
+      "description": "Ir al módulo de attendances"
+    },
+    {
+      "action": "fill",
+      "target": "input-search",
+      "value": "{search-term}",
+      "description": "Escribir término de búsqueda"
+    },
+    {
+      "action": "click",
+      "target": "btn-search",
+      "description": "Click en buscar (o Enter)"
+    },
+    {
+      "action": "wait",
+      "target": "table-attendance",
+      "description": "Esperar resultados"
+    },
+    {
+      "action": "verify",
+      "target": "table-attendance",
+      "contains": "{search-term}",
+      "description": "Verificar resultados"
+    }
+  ],
+  "preconditions": [
+    "logged-in"
+  ],
+  "postconditions": [
+    "results-displayed"
+  ],
+  "module": "attendance",
+  "generatedAt": "2025-12-22T03:21:02.724Z",
+  "source": "auto-generated"
+}

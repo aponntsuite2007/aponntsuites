@@ -80,7 +80,7 @@ router.get('/', auth, async (req, res) => {
         {
           model: User,
           as: 'relatedUser',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['user_id', 'firstName', 'lastName'],
           required: false
         },
         {
@@ -246,7 +246,7 @@ router.get('/critical', auth, async (req, res) => {
         {
           model: User,
           as: 'relatedUser',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['user_id', 'firstName', 'lastName'],
           required: false
         },
         {
@@ -302,7 +302,7 @@ router.get('/:id', auth, async (req, res) => {
         {
           model: User,
           as: 'relatedUser',
-          attributes: ['id', 'first_name', 'last_name', 'email'],
+          attributes: ['user_id', 'first_name', 'last_name', 'email'],
           required: false
         },
         {

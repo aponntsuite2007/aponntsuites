@@ -402,5 +402,341 @@ module.exports = (database) => {
     }
   });
 
+  // ═══════════════════════════════════════════════════════════
+  // 🤖 AI TESTING ENGINE - TERCERA OLA (2025-12-20)
+  // ═══════════════════════════════════════════════════════════
+
+  let aiTestingEngine = null;
+
+  async function getAITestingEngine() {
+    if (!aiTestingEngine) {
+      console.log('🤖 [AI-TEST] Inicializando AI Testing Engine...');
+      const AITestingEngine = require('../auditor/ai/AITestingEngine');
+      aiTestingEngine = new AITestingEngine({
+        database,
+        baseUrl: process.env.BASE_URL || 'http://localhost:9998',
+        ollamaUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+        ollamaModel: process.env.OLLAMA_MODEL || 'llama3.1:8b',
+        headless: true
+      });
+      console.log('✅ [AI-TEST] AI Testing Engine listo');
+    }
+    return aiTestingEngine;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // POST /api/audit/phase4/ai-test
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Ejecutar test en LENGUAJE NATURAL con auto-reparación
+   *
+   * Body:
+   * {
+   *   "test": "Quiero verificar que puedo crear un usuario nuevo con email y password",
+   *   "module": "users" (opcional - para contexto),
+   *   "maxRetries": 3 (opcional, default 3)
+   * }
+   *
+   * Features:
+   * - Interpreta descripción en español/inglés con Ollama
+   * - Auto-genera pasos de test
+   * - Self-healing: si falla, intenta reparar hasta 3 veces
+   * - Aprende patrones exitosos para futuros tests
+   * - Alimenta Knowledge Base del Asistente IA
+   */
+  router.post('/ai-test', auth, requireAdmin, async (req, res) => {
+    try {
+      const engine = await getAITestingEngine();
+      const { test, module, maxRetries = 3 } = req.body;
+
+      if (!test || test.trim().length < 10) {
+        return res.status(400).json({
+          success: false,
+          error: 'Debe proporcionar una descripción del test (mínimo 10 caracteres)',
+          example: 'Quiero verificar que puedo crear un usuario con nombre, email y contraseña'
+        });
+      }
+
+      const companyId = req.user?.company_id || 11;
+      const testId = `ai-test-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+
+      console.log('🤖 [AI-TEST] Iniciando test en lenguaje natural...');
+      console.log(`   📝 Test: "${test.substring(0, 80)}..."`);
+      console.log(`   🎯 Módulo: ${module || 'auto-detect'}`);
+      console.log(`   🔄 Max retries: ${maxRetries}`);
+
+      // Ejecutar en background para respuesta rápida
+      (async () => {
+        try {
+          const result = await engine.runNaturalLanguageTest(test, {
+            module,
+            companyId,
+            testId,
+            maxRetries
+          });
+
+          console.log(`✅ [AI-TEST] Test completado: ${result.status}`);
+
+          // Emitir resultado via WebSocket
+          const io = req.app.get('io');
+          if (io) {
+            io.emit('ai-test-complete', {
+              testId,
+              result,
+              timestamp: new Date().toISOString()
+            });
+          }
+        } catch (error) {
+          console.error('❌ [AI-TEST] Error:', error);
+          const io = req.app.get('io');
+          if (io) {
+            io.emit('ai-test-error', {
+              testId,
+              error: error.message,
+              stack: error.stack
+            });
+          }
+        }
+      })();
+
+      res.json({
+        success: true,
+        message: 'Test en lenguaje natural iniciado',
+        testId,
+        description: test,
+        module: module || 'auto-detect',
+        status: 'running',
+        features: [
+          '🧠 Interpretación con Ollama/Llama 3.1',
+          '🔧 Self-healing (auto-reparación hasta 3 intentos)',
+          '📚 Enriquecido con Brain del ecosistema',
+          '💡 Aprendizaje de patrones exitosos',
+          '🤖 Alimenta Knowledge Base del Asistente'
+        ],
+        checkStatus: `/api/audit/phase4/ai-test/${testId}`
+      });
+
+    } catch (error) {
+      console.error('❌ [AI-TEST] Error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // GET /api/audit/phase4/ai-test/patterns
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Obtener patrones aprendidos por el AI Testing Engine
+   * Muestra qué ha aprendido de tests anteriores
+   */
+  router.get('/ai-test/patterns', auth, requireAdmin, async (req, res) => {
+    try {
+      const engine = await getAITestingEngine();
+      const patterns = engine.getLearnedPatterns();
+
+      res.json({
+        success: true,
+        totalPatterns: patterns.length,
+        patterns: patterns.slice(0, 50), // Limitar respuesta
+        usage: {
+          description: 'Patrones aprendidos de tests exitosos',
+          benefit: 'El engine usa estos patrones para mejorar tests futuros'
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ [AI-TEST] Error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // GET /api/audit/phase4/ai-test/history
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Historial de tests ejecutados con AI Testing Engine
+   */
+  router.get('/ai-test/history', auth, requireAdmin, async (req, res) => {
+    try {
+      const engine = await getAITestingEngine();
+      const history = engine.getTestHistory();
+      const limit = parseInt(req.query.limit) || 20;
+
+      res.json({
+        success: true,
+        total: history.length,
+        tests: history.slice(0, limit).map(t => ({
+          testId: t.testId,
+          description: t.description,
+          status: t.status,
+          attempts: t.attempts,
+          healingApplied: t.healingApplied,
+          duration: t.duration,
+          timestamp: t.timestamp
+        }))
+      });
+
+    } catch (error) {
+      console.error('❌ [AI-TEST] Error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // POST /api/audit/phase4/ai-test/batch
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Ejecutar múltiples tests en lenguaje natural (batch)
+   *
+   * Body:
+   * {
+   *   "tests": [
+   *     "Verificar que puedo crear un departamento",
+   *     "Verificar que puedo asignar un empleado a un departamento",
+   *     "Verificar que el dashboard muestra el contador de empleados correcto"
+   *   ],
+   *   "module": "departments"
+   * }
+   */
+  router.post('/ai-test/batch', auth, requireAdmin, async (req, res) => {
+    try {
+      const engine = await getAITestingEngine();
+      const { tests, module } = req.body;
+
+      if (!tests || !Array.isArray(tests) || tests.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Debe proporcionar un array de tests',
+          example: {
+            tests: [
+              'Verificar login con credenciales correctas',
+              'Verificar que el dashboard carga correctamente'
+            ]
+          }
+        });
+      }
+
+      const batchId = `batch-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+      const companyId = req.user?.company_id || 11;
+
+      console.log(`🤖 [AI-TEST-BATCH] Iniciando batch de ${tests.length} tests...`);
+
+      // Ejecutar batch en background
+      (async () => {
+        const results = [];
+        for (let i = 0; i < tests.length; i++) {
+          console.log(`   [${i + 1}/${tests.length}] ${tests[i].substring(0, 50)}...`);
+          try {
+            const result = await engine.runNaturalLanguageTest(tests[i], {
+              module,
+              companyId,
+              testId: `${batchId}-${i}`
+            });
+            results.push({ test: tests[i], ...result });
+          } catch (error) {
+            results.push({ test: tests[i], status: 'error', error: error.message });
+          }
+        }
+
+        const io = req.app.get('io');
+        if (io) {
+          io.emit('ai-test-batch-complete', {
+            batchId,
+            total: tests.length,
+            passed: results.filter(r => r.status === 'passed').length,
+            failed: results.filter(r => r.status === 'failed').length,
+            results
+          });
+        }
+      })();
+
+      res.json({
+        success: true,
+        message: `Batch de ${tests.length} tests iniciado`,
+        batchId,
+        testsCount: tests.length,
+        status: 'running'
+      });
+
+    } catch (error) {
+      console.error('❌ [AI-TEST-BATCH] Error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // POST /api/audit/phase4/ui-discovery
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Descubrir elementos UI de una URL (2025-12-20)
+   * Usa UIElementDiscoveryEngine para escaneo REAL
+   *
+   * Body:
+   * {
+   *   "url": "/panel-empresa.html" (opcional, default: página actual)
+   * }
+   */
+  router.post('/ui-discovery', auth, requireAdmin, async (req, res) => {
+    try {
+      const { url } = req.body;
+
+      const UIElementDiscoveryEngine = require('../auditor/collectors/UIElementDiscoveryEngine');
+
+      const engine = new UIElementDiscoveryEngine({
+        baseUrl: process.env.BASE_URL || 'http://localhost:9998',
+        database: database,
+        headless: true
+      });
+
+      console.log('🔍 [UI-DISCOVERY] Iniciando descubrimiento...');
+
+      await engine.start();
+
+      if (url) {
+        await engine.navigateTo(url);
+      }
+
+      const discovery = await engine.discoverAllElements();
+
+      await engine.stop();
+
+      res.json({
+        success: true,
+        discovery: discovery.summary,
+        elements: {
+          buttons: discovery.elements.buttons.slice(0, 20), // Limitar para respuesta
+          inputs: discovery.elements.inputs.slice(0, 20),
+          dynamicData: discovery.elements.dynamicData.slice(0, 20)
+        },
+        fullUrl: discovery.url,
+        timestamp: discovery.timestamp
+      });
+
+    } catch (error) {
+      console.error('❌ [UI-DISCOVERY] Error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
   return router;
 };

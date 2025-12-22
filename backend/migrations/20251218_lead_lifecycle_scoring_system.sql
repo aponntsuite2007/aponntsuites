@@ -232,9 +232,7 @@ CREATE TABLE IF NOT EXISTS sales_leads (
     -- Tracking de actividad
     first_activity_at TIMESTAMP WITH TIME ZONE,
     last_activity_at TIMESTAMP WITH TIME ZONE,
-    days_since_last_activity INTEGER GENERATED ALWAYS AS (
-        EXTRACT(DAY FROM (CURRENT_TIMESTAMP - COALESCE(last_activity_at, created_at)))
-    ) STORED,
+    days_since_last_activity INTEGER DEFAULT 0,  -- Calculado por trigger
 
     -- Notas y seguimiento
     notes TEXT,
@@ -688,7 +686,7 @@ SELECT
         WHEN l.bant_budget >= 15 AND l.bant_authority >= 15 AND l.bant_need >= 15 THEN true
         ELSE false
     END AS bant_qualified,
-    s.full_name AS vendor_name,
+    s.first_name || ' ' || s.last_name AS vendor_name,
     s.email AS vendor_email,
     (SELECT COUNT(*) FROM sales_lead_activities WHERE lead_id = l.id) AS total_activities,
     (SELECT MAX(created_at) FROM sales_lead_activities WHERE lead_id = l.id) AS last_activity_date
@@ -751,11 +749,13 @@ AND (reactivate_after IS NULL OR reactivate_after <= CURRENT_DATE);
 -- 8. TRIGGERS
 -- ===========================================
 
--- Trigger: Actualizar updated_at
+-- Trigger: Actualizar updated_at y days_since_last_activity
 CREATE OR REPLACE FUNCTION update_lead_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
+    -- Calcular días desde última actividad
+    NEW.days_since_last_activity = EXTRACT(DAY FROM (CURRENT_TIMESTAMP - COALESCE(NEW.last_activity_at, NEW.created_at)))::INTEGER;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -763,6 +763,12 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS trg_lead_updated ON sales_leads;
 CREATE TRIGGER trg_lead_updated
     BEFORE UPDATE ON sales_leads
+    FOR EACH ROW
+    EXECUTE FUNCTION update_lead_timestamp();
+
+DROP TRIGGER IF EXISTS trg_lead_inserted ON sales_leads;
+CREATE TRIGGER trg_lead_inserted
+    BEFORE INSERT ON sales_leads
     FOR EACH ROW
     EXECUTE FUNCTION update_lead_timestamp();
 

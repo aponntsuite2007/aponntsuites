@@ -100,6 +100,10 @@ class SLAEscalationService {
             const impacts = await this.recordEvaluationImpacts();
             console.log(`   📝 Impactos en evaluación: ${impacts.length}`);
 
+            // 6. Escalar notificaciones del sistema unificado (NUEVO - sin huecos)
+            const unifiedEscalated = await this.escalateUnifiedNotifications();
+            console.log(`   🔗 Notificaciones unificadas escaladas: ${unifiedEscalated.length}`);
+
             console.log('✅ [SLA-ESCALATION] Ciclo completado');
 
             return {
@@ -107,7 +111,8 @@ class SLAEscalationService {
                 escalated: escalated.length,
                 warnings: warnings.length,
                 senderNotifications: senderNotifications.length,
-                impacts: impacts.length
+                impacts: impacts.length,
+                unifiedEscalated: unifiedEscalated.length
             };
 
         } catch (error) {
@@ -758,6 +763,258 @@ El sistema ha registrado este incumplimiento y se están tomando las acciones co
         } catch (error) {
             console.error(`❌ [SLA-ESCALATION] Error resolviendo escalamiento a "${escalateTo}":`, error);
             return [];
+        }
+    }
+
+    /**
+     * ========================================================================
+     * ESCALAMIENTO PARA UNIFIED_NOTIFICATIONS (Sistema Central)
+     * ========================================================================
+     * Escala notificaciones del sistema unificado usando cadena completa SIN HUECOS
+     */
+
+    /**
+     * Escalar notificaciones del sistema unificado que excedieron SLA
+     * Usa get_complete_escalation_chain() para garantizar escalamiento hasta gerente general
+     */
+    async escalateUnifiedNotifications() {
+        const NotificationUnifiedService = require('./NotificationUnifiedService');
+        const EmailService = require('./EmailService');
+        const escalated = [];
+
+        try {
+            console.log('[SLA-ESCALATION-UNIFIED] 🔄 Buscando notificaciones vencidas...');
+
+            // Buscar notificaciones que:
+            // 1. Tienen SLA deadline vencido
+            // 2. Requieren acción
+            // 3. No han sido completadas
+            // 4. No han escalado al nivel máximo (3)
+            const [overdueNotifications] = await sequelize.query(`
+                SELECT
+                    id,
+                    company_id,
+                    thread_id,
+                    origin_id,
+                    recipient_id,
+                    notification_type,
+                    partner_category,
+                    title,
+                    message,
+                    priority,
+                    escalation_level,
+                    escalation_path,
+                    sla_deadline,
+                    created_at
+                FROM unified_notifications
+                WHERE requires_action = TRUE
+                  AND completed_at IS NULL
+                  AND sla_deadline IS NOT NULL
+                  AND sla_deadline < NOW()
+                  AND (escalation_level IS NULL OR escalation_level < 3)
+                  AND is_deleted = FALSE
+                ORDER BY sla_deadline ASC
+                LIMIT 100
+            `);
+
+            console.log(`[SLA-ESCALATION-UNIFIED] 📊 Encontradas ${overdueNotifications.length} notificaciones vencidas`);
+
+            for (const notification of overdueNotifications) {
+                try {
+                    // Obtener o generar cadena de escalamiento completa
+                    let escalationPath = notification.escalation_path;
+
+                    if (!escalationPath) {
+                        // Primera vez: Generar cadena completa
+                        console.log(`[SLA-ESCALATION-UNIFIED] 🔗 Generando cadena para notificación ${notification.id}`);
+
+                        const notificationService = new NotificationUnifiedService();
+                        const chain = await notificationService.getCompleteEscalationChain(
+                            notification.origin_id,
+                            notification.company_id,
+                            notification.notification_type,
+                            notification.partner_category
+                        );
+
+                        escalationPath = JSON.stringify(chain);
+
+                        // Guardar la cadena en la notificación
+                        await sequelize.query(`
+                            UPDATE unified_notifications
+                            SET escalation_path = $1, escalation_level = 0
+                            WHERE id = $2
+                        `, { bind: [escalationPath, notification.id] });
+                    }
+
+                    // Parsear cadena
+                    const chain = JSON.parse(escalationPath);
+                    const currentLevel = notification.escalation_level || 0;
+                    const nextLevel = currentLevel + 1;
+
+                    // Buscar siguiente nivel en la cadena
+                    const nextRecipient = chain.find(c => c.level === nextLevel);
+
+                    if (!nextRecipient) {
+                        console.log(`[SLA-ESCALATION-UNIFIED] ⚠️ No hay más niveles para escalar (notificación ${notification.id})`);
+                        // Marcar como escalada al máximo
+                        await sequelize.query(`
+                            UPDATE unified_notifications
+                            SET escalation_level = 99
+                            WHERE id = $1
+                        `, { bind: [notification.id] });
+                        continue;
+                    }
+
+                    console.log(`[SLA-ESCALATION-UNIFIED] 📤 Escalando notificación ${notification.id} a nivel ${nextLevel}: ${nextRecipient.userName} (${nextRecipient.roleType})`);
+
+                    // Actualizar notificación original
+                    await sequelize.query(`
+                        UPDATE unified_notifications
+                        SET escalation_level = $1, escalated_at = NOW()
+                        WHERE id = $2
+                    `, { bind: [nextLevel, notification.id] });
+
+                    // Crear notificación escalada para el siguiente nivel
+                    await sequelize.query(`
+                        INSERT INTO unified_notifications (
+                            company_id, thread_id, sequence_in_thread,
+                            origin_type, origin_id, origin_name,
+                            recipient_type, recipient_id, recipient_name,
+                            category, module, notification_type, priority,
+                            title, message, short_message,
+                            partner_category, partner_id,
+                            requires_action, escalation_level, escalation_path,
+                            metadata, created_by
+                        ) VALUES (
+                            $1, $2, (SELECT COALESCE(MAX(sequence_in_thread), 0) + 1 FROM unified_notifications WHERE thread_id = $2),
+                            'system', NULL, 'Sistema de Escalamiento',
+                            'user', $3, $4,
+                            'escalation', $5, $6, 'high',
+                            $7, $8, $9,
+                            $10, $11,
+                            TRUE, $12, $13,
+                            $14, 'sla_escalation_service'
+                        )
+                    `, {
+                        bind: [
+                            notification.company_id,
+                            notification.thread_id,
+                            nextRecipient.userId,
+                            nextRecipient.userName,
+                            notification.module || 'general',
+                            notification.notification_type,
+                            `🚨 ESCALAMIENTO AUTOMÁTICO - Nivel ${nextLevel}: ${nextRecipient.roleType}`,
+                            `Una notificación no fue respondida en el plazo establecido.\n\n` +
+                            `📋 Título original: ${notification.title}\n` +
+                            `📅 Venció: ${new Date(notification.sla_deadline).toLocaleString('es-AR')}\n` +
+                            `👤 Destinatario original: ${notification.recipient_id}\n\n` +
+                            `**Se requiere acción inmediata.**`,
+                            `Escalamiento automático nivel ${nextLevel}`,
+                            notification.partner_category,
+                            notification.partner_id,
+                            nextLevel,
+                            escalationPath,
+                            JSON.stringify({
+                                escalation_reason: 'sla_breach',
+                                original_notification_id: notification.id,
+                                escalation_level: nextLevel,
+                                escalated_from: notification.recipient_id,
+                                escalated_to: nextRecipient.userId
+                            })
+                        ]
+                    });
+
+                    // Enviar email si el destinatario tiene email
+                    if (nextRecipient.userEmail) {
+                        try {
+                            const emailService = require('./EmailService');
+                            let emailResult;
+
+                            // Determinar si es empleado de empresa o coordinador de partner
+                            const isPartnerCoordinator = nextRecipient.roleType.startsWith('coordinator_');
+
+                            if (isPartnerCoordinator) {
+                                // Coordinador de partners → enviar desde Aponnt (neutral)
+                                console.log(`[SLA-ESCALATION-UNIFIED] Enviando desde Aponnt a coordinador: ${nextRecipient.userName}`);
+                                emailResult = await emailService.sendFromAponnt('transactional', {
+                                    to: nextRecipient.userEmail,
+                                    subject: `🚨 Escalamiento Automático - ${notification.title}`,
+                                    html: `
+                                        <h2>Escalamiento Automático</h2>
+                                        <p>Hola <strong>${nextRecipient.userName}</strong>,</p>
+                                        <p>Se te ha escalado una notificación que no fue respondida en el plazo establecido.</p>
+                                        <hr>
+                                        <p><strong>Título:</strong> ${notification.title}</p>
+                                        <p><strong>Venció:</strong> ${new Date(notification.sla_deadline).toLocaleString('es-AR')}</p>
+                                        <p><strong>Destinatario original:</strong> ${notification.recipient_id}</p>
+                                        <hr>
+                                        <p><strong>Por favor, revisa el panel de notificaciones para tomar acción.</strong></p>
+                                        <p>Saludos,<br>Sistema de Notificaciones Aponnt</p>
+                                    `,
+                                    text: `Hola ${nextRecipient.userName},\n\nSe te ha escalado una notificación que no fue respondida en el plazo establecido.\n\nTítulo: ${notification.title}\nVenció: ${new Date(notification.sla_deadline).toLocaleString('es-AR')}\n\nPor favor, revisa el panel de notificaciones para tomar acción.\n\nSaludos,\nSistema de Notificaciones Aponnt`,
+                                    recipientName: nextRecipient.userName,
+                                    category: 'escalation',
+                                    notificationId: notification.id
+                                });
+                            } else {
+                                // Empleado de la empresa → enviar desde la empresa
+                                console.log(`[SLA-ESCALATION-UNIFIED] Enviando desde empresa ${notification.company_id} a empleado: ${nextRecipient.userName}`);
+                                emailResult = await emailService.sendFromCompany(notification.company_id, {
+                                    to: nextRecipient.userEmail,
+                                    subject: `🚨 Escalamiento Automático - ${notification.title}`,
+                                    html: `
+                                        <h2>Escalamiento Automático</h2>
+                                        <p>Hola <strong>${nextRecipient.userName}</strong>,</p>
+                                        <p>Se te ha escalado una notificación que no fue respondida en el plazo establecido.</p>
+                                        <hr>
+                                        <p><strong>Título:</strong> ${notification.title}</p>
+                                        <p><strong>Venció:</strong> ${new Date(notification.sla_deadline).toLocaleString('es-AR')}</p>
+                                        <hr>
+                                        <p><strong>Por favor, revisa el panel de notificaciones para tomar acción.</strong></p>
+                                        <p>Saludos,<br>Sistema de Notificaciones</p>
+                                    `,
+                                    text: `Hola ${nextRecipient.userName},\n\nSe te ha escalado una notificación que no fue respondida en el plazo establecido.\n\nTítulo: ${notification.title}\nVenció: ${new Date(notification.sla_deadline).toLocaleString('es-AR')}\n\nPor favor, revisa el panel de notificaciones para tomar acción.\n\nSaludos,\nSistema de Notificaciones`,
+                                    recipientName: nextRecipient.userName,
+                                    recipientType: 'employee',
+                                    recipientId: nextRecipient.userId,
+                                    category: 'escalation',
+                                    notificationId: notification.id
+                                });
+                            }
+
+                            // Marcar email como enviado en unified_notifications
+                            await sequelize.query(`
+                                UPDATE unified_notifications
+                                SET email_sent = TRUE, email_sent_at = NOW()
+                                WHERE id = $1
+                            `, { bind: [notification.id] });
+
+                            console.log(`[SLA-ESCALATION-UNIFIED] ✅ Email enviado a ${nextRecipient.userEmail}`);
+
+                        } catch (emailError) {
+                            console.error('[SLA-ESCALATION-UNIFIED] ❌ Error enviando email:', emailError.message);
+                        }
+                    }
+
+                    escalated.push({
+                        notificationId: notification.id,
+                        fromLevel: currentLevel,
+                        toLevel: nextLevel,
+                        recipient: nextRecipient.userName,
+                        roleType: nextRecipient.roleType
+                    });
+
+                } catch (notifError) {
+                    console.error(`[SLA-ESCALATION-UNIFIED] ❌ Error procesando notificación ${notification.id}:`, notifError);
+                }
+            }
+
+            console.log(`[SLA-ESCALATION-UNIFIED] ✅ Escaladas ${escalated.length} notificaciones`);
+            return escalated;
+
+        } catch (error) {
+            console.error('[SLA-ESCALATION-UNIFIED] ❌ Error general:', error);
+            return escalated;
         }
     }
 

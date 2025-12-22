@@ -14,6 +14,14 @@
 const express = require('express');
 const router = express.Router();
 
+// ============================================================================
+// HELPER: Validar formato UUID
+// ============================================================================
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isValidUUID(str) {
+  return typeof str === 'string' && UUID_REGEX.test(str);
+}
+
 // Servicios
 const HoursCubeService = require('../services/HoursCubeService');
 const ReplacementCostAnalyzer = require('../services/ReplacementCostAnalyzer');
@@ -821,6 +829,11 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
         const { companyId, userId } = req.params;
         const { startDate, endDate, period } = req.query;
 
+        // ✅ FIX: Validar UUID
+        if (!isValidUUID(userId)) {
+            return res.json({ success: false, error: 'userId inválido', employee: null, metrics: null });
+        }
+
         const db = require('../config/database');
         const { sequelize } = db;
         const OvertimeCalculatorService = require('../services/OvertimeCalculatorService');
@@ -850,12 +863,12 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
         // Obtener datos del empleado y su turno
         const [userInfo] = await sequelize.query(`
             SELECT
-                u.id,
-                u.first_name,
-                u.last_name,
+                u.user_id as id,
+                u."firstName" as first_name,
+                u."lastName" as last_name,
                 u.legajo,
                 u.email,
-                u.branch_id,
+                u.default_branch_id as branch_id,
                 u.department_id,
                 u.sector,
                 d.name as department_name,
@@ -868,10 +881,10 @@ router.get('/:companyId/employee/:userId/metrics', async (req, res) => {
                 s."toleranceConfig" as tolerance_config
             FROM users u
             LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN branches b ON u.branch_id = b.id
-            LEFT JOIN user_shift_assignments usa ON usa.user_id = u.id AND usa.is_active = true
+            LEFT JOIN branches b ON u.default_branch_id = b.id
+            LEFT JOIN user_shift_assignments usa ON usa.user_id = u.user_id AND usa.is_active = true
             LEFT JOIN shifts s ON s.id = usa.shift_id
-            WHERE u.id = :userId AND u.company_id = :companyId
+            WHERE u.user_id = :userId AND u.company_id = :companyId
             LIMIT 1
         `, {
             replacements: { userId, companyId },

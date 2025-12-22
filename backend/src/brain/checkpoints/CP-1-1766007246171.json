@@ -1,0 +1,98 @@
+{
+  "id": "CP-1-1766007246171",
+  "phaseId": 1,
+  "description": "Inicio de fase 1: schema-vocabulary",
+  "createdAt": "2025-12-17T21:34:06.171Z",
+  "configSnapshot": {
+    "version": "1.0.0",
+    "currentPhase": 0,
+    "startedAt": "2025-12-17T21:33:41.609Z",
+    "lastUpdated": "2025-12-17T21:33:59.417Z",
+    "featureFlags": {
+      "useNewSchema": false,
+      "useIntrospectiveBrain": false,
+      "useNewApiRoutes": false,
+      "useSmartTesting": false,
+      "useAutoTutorials": false,
+      "useNewVisualization": false
+    },
+    "phases": {
+      "0": {
+        "status": "completed",
+        "startedAt": "2025-12-17T21:33:41.610Z",
+        "validations": [
+          {
+            "name": "BrainUpgradeController existe y es importable",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.587Z"
+          },
+          {
+            "name": "Controller inicializa correctamente",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.589Z"
+          },
+          {
+            "name": "Creación de checkpoints funciona",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.592Z"
+          },
+          {
+            "name": "Feature flags configurados correctamente",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.593Z"
+          },
+          {
+            "name": "Sistema de rollback disponible",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.593Z"
+          },
+          {
+            "name": "Generación de reportes funciona",
+            "passed": true,
+            "error": null,
+            "timestamp": "2025-12-17T21:33:48.593Z"
+          }
+        ],
+        "validatedAt": "2025-12-17T21:33:48.594Z",
+        "validationPassed": true,
+        "completedAt": "2025-12-17T21:33:59.416Z"
+      },
+      "1": {
+        "status": "pending"
+      },
+      "2": {
+        "status": "pending"
+      },
+      "3": {
+        "status": "pending"
+      },
+      "4": {
+        "status": "pending"
+      },
+      "5": {
+        "status": "pending"
+      },
+      "6": {
+        "status": "pending"
+      },
+      "7": {
+        "status": "pending"
+      }
+    },
+    "checkpoints": [
+      {
+        "id": "CP-0-1766007228589",
+        "phaseId": 0,
+        "description": "Test checkpoint from validator",
+        "createdAt": "2025-12-17T21:33:48.589Z"
+      }
+    ],
+    "rollbacks": []
+  },
+  "data": {}
+}

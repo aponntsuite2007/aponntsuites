@@ -10,6 +10,15 @@
  * @author Sistema Biometrico Enterprise
  * @version 2.0.0
  */
+
+// ============================================================================
+// GUARD: Evitar carga duplicada del script
+// ============================================================================
+if (window._attendanceEngineLoaded) {
+    console.log('⚠️ [ATTENDANCE] Script ya cargado, omitiendo re-declaración');
+} else {
+window._attendanceEngineLoaded = true;
+
 console.log('%c ATTENDANCE ENGINE v2.0 ', 'background: linear-gradient(90deg, #0f2027 0%, #203a43 50%, #2c5364 100%); color: #00e5ff; font-size: 14px; padding: 8px 12px; border-radius: 4px; font-weight: bold;');
 
 // ============================================================================
@@ -5108,3 +5117,5 @@ function injectAttendanceStyles() {
 }
 
 console.log('✅ [ATTENDANCE] Modulo Attendance Engine v2.0 cargado');
+
+} // Cierre del guard de carga duplicada

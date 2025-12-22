@@ -23,8 +23,15 @@ const ConsentRegionService = require('../services/ConsentRegionService');
 // ========================================
 router.get('/consents', auth, authorize('admin', 'rrhh'), async (req, res) => {
     try {
-        // Obtener company_id de varias formas posibles (Sequelize)
-        const company_id = req.user.companyId || req.user.companyId || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
+        // ✅ FIX: Obtener company_id correctamente (corregido duplicado)
+        const company_id = req.user.company_id || req.user.companyId || req.user.dataValues?.company_id || req.user.dataValues?.companyId;
+
+        if (!company_id) {
+            return res.status(400).json({
+                success: false,
+                error: 'No se pudo determinar company_id del usuario'
+            });
+        }
         const { status, role: roleFilter, method } = req.query;
 
         // Construir WHERE clause dinámico

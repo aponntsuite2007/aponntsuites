@@ -381,9 +381,20 @@ router.post('/leads/:id/send-flyer', verifyStaffToken, async (req, res) => {
         const lead = leadResult.rows[0];
         let sendResult = { success: false };
 
+        // Obtener o generar tracking token
+        let trackingToken = lead.tracking_token;
+        if (!trackingToken) {
+            // Generar nuevo token si no existe
+            const tokenResult = await pool.query(
+                'UPDATE marketing_leads SET tracking_token = gen_random_uuid() WHERE id = $1 RETURNING tracking_token',
+                [id]
+            );
+            trackingToken = tokenResult.rows[0]?.tracking_token;
+        }
+
         if (via === 'email') {
-            // Generar flyer HTML personalizado con el nombre del lead
-            const flyerHtml = salesOrchestrationService.generateAskYourAIFlyer(lead.full_name, lead.language || 'es');
+            // Generar flyer HTML personalizado con el nombre del lead y tracking
+            const flyerHtml = salesOrchestrationService.generateAskYourAIFlyer(lead.full_name, lead.language || 'es', trackingToken);
 
             // Enviar email usando el método correcto
             try {
@@ -543,6 +554,359 @@ router.get('/stats', verifyStaffToken, async (req, res) => {
 
     } catch (error) {
         console.error('[MARKETING] Error getting stats:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================================
+// TRACKING DE VISITAS Y ENCUESTAS
+// ============================================================================
+
+/**
+ * GET /api/marketing/track/:token
+ * Tracking pixel - Registra cuando el lead visita la página
+ * El token se incluye en los links del flyer
+ */
+router.get('/track/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { event = 'page_visit' } = req.query;
+
+        // Buscar lead por tracking token
+        const leadResult = await pool.query(
+            'SELECT id, full_name, email, page_visit_count FROM marketing_leads WHERE tracking_token = $1',
+            [token]
+        );
+
+        if (leadResult.rows.length === 0) {
+            // Retornar pixel transparente aunque no exista el lead
+            res.set('Content-Type', 'image/gif');
+            res.send(Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'));
+            return;
+        }
+
+        const lead = leadResult.rows[0];
+        const now = new Date().toISOString();
+
+        // Actualizar lead con info de visita
+        await pool.query(
+            `UPDATE marketing_leads SET
+                page_visited_at = COALESCE(page_visited_at, $1),
+                page_visit_count = COALESCE(page_visit_count, 0) + 1,
+                last_contact_at = $1,
+                status = CASE WHEN status = 'new' THEN 'interested' ELSE status END
+             WHERE id = $2`,
+            [now, lead.id]
+        );
+
+        // Registrar evento
+        await pool.query(
+            `INSERT INTO marketing_lead_events (lead_id, event_type, event_data, ip_address, user_agent, referrer)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+                lead.id,
+                event,
+                JSON.stringify({ visit_number: (lead.page_visit_count || 0) + 1 }),
+                req.ip || req.connection?.remoteAddress,
+                req.headers['user-agent'],
+                req.headers['referer']
+            ]
+        );
+
+        console.log(`[MARKETING] 📍 Tracking: ${lead.email} visitó la página (visita #${(lead.page_visit_count || 0) + 1})`);
+
+        // Si es la primera visita, programar envío de encuesta
+        if (!lead.page_visit_count || lead.page_visit_count === 0) {
+            // Crear encuesta pendiente
+            await pool.query(
+                `INSERT INTO marketing_lead_surveys (lead_id) VALUES ($1)
+                 ON CONFLICT DO NOTHING`,
+                [lead.id]
+            );
+        }
+
+        // Retornar pixel transparente de 1x1
+        res.set('Content-Type', 'image/gif');
+        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.send(Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'));
+
+    } catch (error) {
+        console.error('[MARKETING] Error tracking:', error);
+        // Siempre retornar el pixel aunque haya error
+        res.set('Content-Type', 'image/gif');
+        res.send(Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'));
+    }
+});
+
+/**
+ * POST /api/marketing/leads/:id/send-survey
+ * Envía encuesta de satisfacción al lead (después de que visitó la página)
+ */
+router.post('/leads/:id/send-survey', verifyStaffToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Obtener lead
+        const leadResult = await pool.query(
+            'SELECT * FROM marketing_leads WHERE id = $1',
+            [id]
+        );
+
+        if (leadResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Lead no encontrado' });
+        }
+
+        const lead = leadResult.rows[0];
+
+        // Crear o obtener encuesta
+        let surveyResult = await pool.query(
+            'SELECT survey_token FROM marketing_lead_surveys WHERE lead_id = $1 AND status = \'pending\' ORDER BY created_at DESC LIMIT 1',
+            [id]
+        );
+
+        let surveyToken;
+        if (surveyResult.rows.length === 0) {
+            // Crear nueva encuesta
+            const newSurvey = await pool.query(
+                'INSERT INTO marketing_lead_surveys (lead_id) VALUES ($1) RETURNING survey_token',
+                [id]
+            );
+            surveyToken = newSurvey.rows[0].survey_token;
+        } else {
+            surveyToken = surveyResult.rows[0].survey_token;
+        }
+
+        // Generar email de encuesta
+        const surveyHtml = salesOrchestrationService.generateSurveyEmail(lead.full_name, surveyToken, lead.language || 'es');
+
+        // Enviar email
+        try {
+            await salesOrchestrationService.sendEmail({
+                to: lead.email,
+                subject: lead.language === 'en'
+                    ? `${lead.full_name.split(' ')[0]}, thanks for visiting! Quick survey`
+                    : `${lead.full_name.split(' ')[0]}, gracias por visitarnos! Breve encuesta`,
+                html: surveyHtml
+            });
+
+            // Actualizar lead
+            await pool.query(
+                'UPDATE marketing_leads SET survey_sent_at = NOW() WHERE id = $1',
+                [id]
+            );
+
+            // Registrar evento
+            await pool.query(
+                `INSERT INTO marketing_lead_events (lead_id, event_type, event_data)
+                 VALUES ($1, 'survey_sent', $2)`,
+                [id, JSON.stringify({ survey_token: surveyToken })]
+            );
+
+            console.log(`[MARKETING] 📧 Encuesta enviada a ${lead.email}`);
+
+            res.json({
+                success: true,
+                message: 'Encuesta enviada exitosamente'
+            });
+
+        } catch (emailError) {
+            console.error('[MARKETING] Error enviando encuesta:', emailError);
+            res.status(500).json({ success: false, error: 'Error enviando email' });
+        }
+
+    } catch (error) {
+        console.error('[MARKETING] Error send-survey:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/marketing/survey/:token
+ * Página de encuesta con emojis (pública, no requiere auth)
+ */
+router.get('/survey/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        // Buscar encuesta
+        const surveyResult = await pool.query(
+            `SELECT s.*, l.full_name, l.language
+             FROM marketing_lead_surveys s
+             JOIN marketing_leads l ON s.lead_id = l.id
+             WHERE s.survey_token = $1`,
+            [token]
+        );
+
+        if (surveyResult.rows.length === 0) {
+            return res.status(404).send('<h1>Encuesta no encontrada</h1>');
+        }
+
+        const survey = surveyResult.rows[0];
+
+        if (survey.status === 'completed') {
+            return res.send(salesOrchestrationService.generateSurveyThankYouPage(survey.full_name, survey.language || 'es'));
+        }
+
+        // Retornar página de encuesta con emojis
+        res.send(salesOrchestrationService.generateSurveyPage(survey.full_name, token, survey.language || 'es'));
+
+    } catch (error) {
+        console.error('[MARKETING] Error survey page:', error);
+        res.status(500).send('<h1>Error cargando encuesta</h1>');
+    }
+});
+
+/**
+ * POST /api/marketing/survey/:token
+ * Recibe respuestas de la encuesta
+ */
+router.post('/survey/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+        const {
+            rating_overall,
+            rating_design,
+            rating_clarity,
+            rating_interest,
+            contact_preference,
+            feedback_text
+        } = req.body;
+
+        // Buscar encuesta
+        const surveyResult = await pool.query(
+            `SELECT s.*, l.id as lead_id, l.full_name
+             FROM marketing_lead_surveys s
+             JOIN marketing_leads l ON s.lead_id = l.id
+             WHERE s.survey_token = $1 AND s.status = 'pending'`,
+            [token]
+        );
+
+        if (surveyResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Encuesta no encontrada o ya completada' });
+        }
+
+        const survey = surveyResult.rows[0];
+
+        // Guardar respuestas
+        await pool.query(
+            `UPDATE marketing_lead_surveys SET
+                rating_overall = $1,
+                rating_design = $2,
+                rating_clarity = $3,
+                rating_interest = $4,
+                contact_preference = $5,
+                feedback_text = $6,
+                completed_at = NOW(),
+                status = 'completed',
+                ip_address = $7,
+                user_agent = $8
+             WHERE survey_token = $9`,
+            [
+                rating_overall,
+                rating_design,
+                rating_clarity,
+                rating_interest,
+                contact_preference,
+                feedback_text,
+                req.ip || req.connection?.remoteAddress,
+                req.headers['user-agent'],
+                token
+            ]
+        );
+
+        // Actualizar lead
+        await pool.query(
+            `UPDATE marketing_leads SET
+                survey_completed_at = NOW(),
+                status = CASE
+                    WHEN $1 >= 4 THEN 'interested'
+                    WHEN $1 <= 2 THEN 'not_interested'
+                    ELSE status
+                END
+             WHERE id = $2`,
+            [rating_interest, survey.lead_id]
+        );
+
+        // Registrar evento
+        await pool.query(
+            `INSERT INTO marketing_lead_events (lead_id, event_type, event_data, ip_address, user_agent)
+             VALUES ($1, 'survey_completed', $2, $3, $4)`,
+            [
+                survey.lead_id,
+                JSON.stringify({
+                    rating_overall,
+                    rating_interest,
+                    contact_preference
+                }),
+                req.ip,
+                req.headers['user-agent']
+            ]
+        );
+
+        console.log(`[MARKETING] ✅ Encuesta completada por ${survey.full_name} - Rating: ${rating_overall}/5, Interés: ${rating_interest}/5`);
+
+        res.json({
+            success: true,
+            message: 'Gracias por completar la encuesta!'
+        });
+
+    } catch (error) {
+        console.error('[MARKETING] Error submitting survey:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/marketing/leads/:id/events
+ * Historial de eventos del lead (tracking)
+ */
+router.get('/leads/:id/events', verifyStaffToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const eventsResult = await pool.query(
+            `SELECT * FROM marketing_lead_events
+             WHERE lead_id = $1
+             ORDER BY created_at DESC
+             LIMIT 50`,
+            [id]
+        );
+
+        res.json({
+            success: true,
+            data: eventsResult.rows
+        });
+
+    } catch (error) {
+        console.error('[MARKETING] Error getting events:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/marketing/leads/pending-surveys
+ * Lista leads que visitaron pero no completaron encuesta
+ */
+router.get('/leads/pending-surveys', verifyStaffToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT l.*, s.created_at as survey_created_at
+             FROM marketing_leads l
+             LEFT JOIN marketing_lead_surveys s ON l.id = s.lead_id AND s.status = 'pending'
+             WHERE l.page_visited_at IS NOT NULL
+               AND l.survey_completed_at IS NULL
+             ORDER BY l.page_visited_at DESC
+             LIMIT 50`
+        );
+
+        res.json({
+            success: true,
+            count: result.rows.length,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error('[MARKETING] Error getting pending surveys:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

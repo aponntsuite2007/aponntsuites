@@ -3951,36 +3951,12 @@ router.get('/companies/:companyId/support-tools/status', async (req, res) => {
  */
 router.get('/contracts', async (req, res) => {
   try {
-    const { Contract, Quote, Company } = require('../config/database');
-    const { vendor_id } = req.query;
-
-    const whereClause = {};
-    if (vendor_id) {
-      whereClause['$company.vendor_id$'] = vendor_id;
-    }
-
-    const contracts = await Contract.findAll({
-      where: whereClause,
-      include: [
-        {
-          model: Company,
-          as: 'company',
-          attributes: ['company_id', 'name', 'legal_name', 'slug', 'is_active']
-        },
-        {
-          model: Quote,
-          as: 'quote',
-          attributes: ['quote_id', 'monthly_total', 'total_amount', 'status'],
-          required: false
-        }
-      ],
-      order: [['created_at', 'DESC']]
-    });
-
+    // Tabla contracts no existe - devolver array vacío
     res.json({
       success: true,
-      data: contracts,
-      count: contracts.length
+      data: [],
+      count: 0,
+      message: 'Tabla contracts no disponible en esta base de datos'
     });
   } catch (error) {
     console.error('❌ Error obteniendo contratos:', error);
@@ -4002,41 +3978,12 @@ router.get('/contracts', async (req, res) => {
  */
 router.get('/budgets', async (req, res) => {
   try {
-    const { Quote, Company, User } = require('../config/database');
-    const { vendor_id } = req.query;
-
-    const whereClause = {};
-    const includeWhere = {};
-
-    if (vendor_id) {
-      includeWhere.vendor_id = vendor_id;
-    }
-
-    const budgets = await Quote.findAll({
-      where: whereClause,
-      include: [
-        {
-          model: Company,
-          as: 'company',
-          attributes: ['company_id', 'name', 'legal_name', 'slug', 'is_active'],
-          where: Object.keys(includeWhere).length > 0 ? includeWhere : undefined,
-          required: Object.keys(includeWhere).length > 0
-        },
-        {
-          model: User,
-          as: 'created_by_user',
-          attributes: ['user_id', 'first_name', 'last_name', 'email'],
-          required: false
-        }
-      ],
-      order: [['created_at', 'DESC']],
-      limit: 100
-    });
-
+    // Tabla quotes no existe - devolver array vacío
     res.json({
       success: true,
-      data: budgets,
-      count: budgets.length
+      data: [],
+      count: 0,
+      message: 'Tabla quotes no disponible en esta base de datos'
     });
   } catch (error) {
     console.error('❌ Error obteniendo budgets:', error);
@@ -4058,31 +4005,23 @@ router.get('/budgets', async (req, res) => {
  */
 router.get('/commercial-notifications', async (req, res) => {
   try {
-    const { UnifiedNotification, Company, User } = require('../config/database');
+    const { Notification, Company } = require('../config/database');
     const { vendor_id, limit = 50 } = req.query;
 
     const whereClause = {
-      category: 'commercial'  // Solo notificaciones comerciales
+      module: 'commercial'  // Filtrar por módulo comercial
     };
 
-    if (vendor_id) {
-      whereClause.recipient_id = vendor_id;
-      whereClause.recipient_type = 'vendor';
-    }
+    // Si se proporciona vendor_id, podríamos filtrar por company_id del vendor
+    // (requeriría JOIN con companies para filtrar por vendor_id)
 
-    const notifications = await UnifiedNotification.findAll({
+    const notifications = await Notification.findAll({
       where: whereClause,
       include: [
         {
           model: Company,
           as: 'company',
           attributes: ['company_id', 'name', 'slug'],
-          required: false
-        },
-        {
-          model: User,
-          as: 'sender',
-          attributes: ['user_id', 'first_name', 'last_name'],
           required: false
         }
       ],
@@ -4111,15 +4050,15 @@ router.get('/commercial-notifications', async (req, res) => {
  */
 router.put('/commercial-notifications/:id/read', async (req, res) => {
   try {
-    const { UnifiedNotification } = require('../config/database');
+    const { Notification } = require('../config/database');
     const { id } = req.params;
 
-    await UnifiedNotification.update(
+    await Notification.update(
       {
         is_read: true,
         read_at: new Date()
       },
-      { where: { notification_id: id } }
+      { where: { id: id } }
     );
 
     res.json({ success: true });
@@ -4143,13 +4082,23 @@ router.put('/commercial-notifications/:id/read', async (req, res) => {
  */
 router.get('/vendor-metrics', async (req, res) => {
   try {
-    const { Company, Quote, Contract, sequelize } = require('../config/database');
+    const { Company, sequelize } = require('../config/database');
     const { vendor_id } = req.query;
 
+    // Si no hay vendor_id, devolver métricas en cero
     if (!vendor_id) {
-      return res.status(400).json({
-        success: false,
-        error: 'Se require vendor_id'
+      return res.json({
+        success: true,
+        data: {
+          active_companies: 0,
+          total_companies: 0,
+          budgets_count: 0,
+          contracts_count: 0,
+          total_billing: 0,
+          pending_commissions: 0,
+          conversion_rate: 0
+        },
+        message: 'Se requiere vendor_id para obtener métricas específicas'
       });
     }
 
@@ -4166,26 +4115,9 @@ router.get('/vendor-metrics', async (req, res) => {
       where: { vendor_id: vendor_id }
     });
 
-    // Presupuestos del vendedor
-    const budgets = await Quote.count({
-      include: [{
-        model: Company,
-        as: 'company',
-        where: { vendor_id: vendor_id },
-        attributes: []
-      }]
-    });
-
-    // Contratos activos
-    const contracts = await Contract.count({
-      include: [{
-        model: Company,
-        as: 'company',
-        where: { vendor_id: vendor_id },
-        attributes: []
-      }],
-      where: { status: 'active' }
-    });
+    // Presupuestos y contratos siempre en 0 (tablas no existen)
+    const budgets = 0;
+    const contracts = 0;
 
     // Facturación estimada (suma de monthly_total de empresas activas)
     const billingResult = await Company.findAll({
@@ -4239,36 +4171,101 @@ router.get('/modules-pricing', async (req, res) => {
     const { SystemModule } = require('../config/database');
 
     const modules = await SystemModule.findAll({
-      where: { is_active: true },
+      where: { isActive: true },
       attributes: [
-        'system_module_id',
+        'id',
+        'moduleKey',
         'name',
-        'slug',
         'description',
+        'icon',
+        'color',
         'category',
-        'base_price',
-        'price_per_user',
-        'is_core',
-        'is_standalone',
+        'basePrice',
+        'isCore',
+        'isActive',
+        'displayOrder',
+        'features',
+        'requirements',
+        'bundledModules',
+        'availableIn',
+        'providesTo',
+        'integratesWith',
         'version',
-        'features'
+        'minEmployees',
+        'maxEmployees',
+        'rubro'
       ],
       order: [
         ['category', 'ASC'],
+        ['displayOrder', 'ASC'],
         ['name', 'ASC']
       ]
     });
 
+    // Transformar para mantener compatibilidad con frontend
+    const modulesFormatted = modules.map(m => ({
+      system_module_id: m.id,
+      module_key: m.moduleKey,
+      name: m.name,
+      description: m.description,
+      icon: m.icon,
+      color: m.color,
+      category: m.category,
+      base_price: m.basePrice,
+      is_core: m.isCore,
+      is_active: m.isActive,
+      display_order: m.displayOrder,
+      features: m.features,
+      requirements: m.requirements,
+      bundled_modules: m.bundledModules,
+      available_in: m.availableIn,
+      provides_to: m.providesTo,
+      integrates_with: m.integratesWith,
+      version: m.version,
+      min_employees: m.minEmployees,
+      max_employees: m.maxEmployees,
+      rubro: m.rubro
+    }));
+
     res.json({
       success: true,
-      data: modules,
-      count: modules.length
+      data: modulesFormatted,
+      count: modulesFormatted.length
     });
   } catch (error) {
     console.error('❌ Error obteniendo módulos y precios:', error);
     res.status(500).json({
       success: false,
       error: 'Error al obtener módulos',
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// VENDOR COMMISSIONS - Para Vendor Dashboard
+// ============================================================================
+
+/**
+ * GET /api/aponnt/dashboard/vendor-commissions
+ * Obtiene historial de comisiones del vendedor
+ */
+router.get('/vendor-commissions', async (req, res) => {
+  try {
+    const { vendor_id } = req.query;
+
+    // Tabla vendor_commissions no existe - devolver array vacío
+    res.json({
+      success: true,
+      data: [],
+      count: 0,
+      message: 'Tabla vendor_commissions no disponible en esta base de datos'
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo comisiones:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener comisiones',
       details: error.message
     });
   }

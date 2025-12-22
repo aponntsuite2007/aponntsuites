@@ -1,0 +1,81 @@
+{
+  "summary": {
+    "passed": 9,
+    "failed": 4,
+    "skipped": 13,
+    "successRate": "69.2%",
+    "duration": "0.64s"
+  },
+  "tests": [
+    {
+      "name": "1.1 Login como admin",
+      "passed": true,
+      "companyId": 11,
+      "timestamp": "2025-12-20T23:27:24.359Z"
+    },
+    {
+      "name": "2.1 GET /users - Listar usuarios",
+      "passed": true,
+      "count": 10,
+      "timestamp": "2025-12-20T23:27:24.386Z"
+    },
+    {
+      "name": "2.2 POST /users - Crear usuario",
+      "passed": false,
+      "timestamp": "2025-12-20T23:27:24.393Z"
+    },
+    {
+      "name": "4.1 Validación: Usuario sin email rechazado",
+      "passed": true,
+      "timestamp": "2025-12-20T23:27:24.401Z"
+    },
+    {
+      "name": "4.2 Validación: Email duplicado rechazado",
+      "passed": true,
+      "timestamp": "2025-12-20T23:27:24.407Z"
+    },
+    {
+      "name": "4.3 Validación: Campos vacíos rechazados",
+      "passed": true,
+      "timestamp": "2025-12-20T23:27:24.414Z"
+    },
+    {
+      "name": "4.4 Validación: Password débil",
+      "passed": true,
+      "note": "Depende de política de passwords",
+      "timestamp": "2025-12-20T23:27:24.421Z"
+    },
+    {
+      "name": "5.1 Búsqueda por nombre",
+      "passed": true,
+      "timestamp": "2025-12-20T23:27:24.483Z"
+    },
+    {
+      "name": "5.2 Filtro por rol",
+      "passed": true,
+      "timestamp": "2025-12-20T23:27:24.501Z"
+    },
+    {
+      "name": "5.3 Paginación",
+      "passed": true,
+      "timestamp": "2025-12-20T23:27:24.516Z"
+    },
+    {
+      "name": "6.1 Brain Agents Health Check",
+      "passed": false,
+      "timestamp": "2025-12-20T23:27:24.520Z"
+    },
+    {
+      "name": "6.2 Support AI: Pregunta sobre usuarios",
+      "passed": false,
+      "hasAnswer": false,
+      "timestamp": "2025-12-20T23:27:24.523Z"
+    },
+    {
+      "name": "6.3 Tester AI: Edge cases para users",
+      "passed": false,
+      "timestamp": "2025-12-20T23:27:24.525Z"
+    }
+  ],
+  "timestamp": "2025-12-20T23:27:24.525Z"
+}

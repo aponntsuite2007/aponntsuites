@@ -422,13 +422,15 @@ class SalesOrchestrationService {
                 <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f0f23; color: #e5e5e5; border-radius: 12px; overflow: hidden;">
                     <!-- Header profesional -->
                     <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); padding: 25px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                        <div style="display: inline-flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-                            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                <span style="color: white; font-size: 22px; font-weight: bold;">A</span>
+                        <!-- Logo APONNT - Mismo estilo que index.html -->
+                        <div style="display: inline-block; margin-bottom: 10px;">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 3px;">
+                                <span style="color: #60a5fa; display: inline-block; transform: skewX(-12deg); font-size: 30px; font-weight: 400;">A</span>
+                                <span style="font-size: 24px; color: #ffffff; font-weight: 400;">ponnt</span>
+                                <span style="font-size: 13px; color: #60a5fa; font-weight: 600;">360º</span>
                             </div>
-                            <div style="text-align: left;">
-                                <div style="font-size: 22px; font-weight: 800; color: #f59e0b;">APONNT 360º</div>
-                                <div style="font-size: 9px; color: #8b5cf6; font-weight: 600; letter-spacing: 2px;">INTELLIGENT ECOSYSTEM</div>
+                            <div style="font-size: 10px; color: #60a5fa; margin-top: -2px; letter-spacing: 0.5px; font-weight: 500;">
+                                Intelligent Ecosystem
                             </div>
                         </div>
                         <div style="font-size: 9px; color: rgba(255,255,255,0.4);">SaaS B2B Multi-Tenant · Ecosistema Inteligente de Administración y Planificación de Recursos Empresariales</div>
@@ -924,13 +926,17 @@ class SalesOrchestrationService {
             <div style="margin: 30px 0; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
                 <!-- Header del Flyer -->
                 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%); padding: 30px; text-align: center;">
+                    <!-- Logo APONNT - Mismo estilo que index.html -->
                     <div style="display: inline-block; margin-bottom: 15px;">
-                        <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(245,158,11,0.4);">
-                            <span style="color: white; font-size: 38px; font-weight: bold;">A</span>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <span style="color: #60a5fa; display: inline-block; transform: skewX(-12deg); font-size: 42px; font-weight: 400;">A</span>
+                            <span style="font-size: 34px; color: #ffffff; font-weight: 400;">ponnt</span>
+                            <span style="font-size: 18px; color: #60a5fa; font-weight: 600;">360º</span>
+                        </div>
+                        <div style="font-size: 14px; color: #60a5fa; margin-top: -2px; letter-spacing: 0.5px; font-weight: 500;">
+                            Intelligent Ecosystem
                         </div>
                     </div>
-                    <h2 style="color: #f59e0b; font-size: 32px; margin: 0; font-weight: 800; letter-spacing: -1px;">APONNT 360º</h2>
-                    <p style="color: #8b5cf6; font-size: 14px; margin: 5px 0 0 0; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;">Intelligent Ecosystem</p>
                     <p style="color: rgba(255,255,255,0.5); font-size: 11px; margin: 10px 0 0 0; letter-spacing: 1px;">SaaS B2B Multi-Tenant</p>
                 </div>
 
@@ -1038,11 +1044,20 @@ class SalesOrchestrationService {
      * La página www.aponnt.com tiene metadata optimizada para que las IAs puedan evaluarnos
      * @param {string} leadName - Nombre del lead para personalizar el saludo
      * @param {string} language - Idioma del flyer (es, en, pt, etc.)
+     * @param {string} trackingToken - Token único para tracking de visitas (opcional)
      */
-    generateAskYourAIFlyer(leadName = '', language = 'es') {
+    generateAskYourAIFlyer(leadName = '', language = 'es', trackingToken = null) {
         // Extraer primer nombre para saludo más personal
         const firstName = leadName ? leadName.split(' ')[0] : '';
         const greeting = firstName ? `Hola ${firstName},` : 'Hola,';
+        // URL con tracking si está disponible
+        const aponntUrl = trackingToken
+            ? `https://www.aponnt.com?ref=${trackingToken}`
+            : 'https://www.aponnt.com';
+        // Tracking pixel (invisible 1x1 gif)
+        const trackingPixel = trackingToken
+            ? `<img src="https://www.aponnt.com/api/marketing/track/${trackingToken}" width="1" height="1" style="display:none" alt="" />`
+            : '';
 
         return `
             <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -1054,18 +1069,16 @@ class SalesOrchestrationService {
                 <!-- HEADER BRANDING APONNT -->
                 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
                 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%); padding: 30px; text-align: center;">
-                    <!-- Logo APONNT -->
-                    <div style="display: inline-flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
-                            <span style="color: white; font-size: 32px; font-weight: bold;">A</span>
+                    <!-- Logo APONNT - Mismo estilo que index.html -->
+                    <div style="display: inline-block; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <span style="color: #60a5fa; display: inline-block; transform: skewX(-12deg); font-size: 42px; font-weight: 400;">A</span>
+                            <span style="font-size: 34px; color: #ffffff; font-weight: 400;">ponnt</span>
+                            <span style="font-size: 18px; color: #60a5fa; font-weight: 600;">360º</span>
                         </div>
-                        <div style="text-align: left;">
-                            <div style="font-size: 32px; font-weight: 800; color: #f59e0b; letter-spacing: -0.5px;">APONNT</div>
-                            <div style="font-size: 18px; font-weight: 700; color: #8b5cf6;">360º</div>
+                        <div style="font-size: 14px; color: #60a5fa; margin-top: -2px; letter-spacing: 0.5px; font-weight: 500;">
+                            Intelligent Ecosystem
                         </div>
-                    </div>
-                    <div style="font-size: 14px; color: #a78bfa; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px;">
-                        Intelligent Ecosystem
                     </div>
                     <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 10px;">
                         <div style="font-size: 11px; color: rgba(255,255,255,0.6); line-height: 1.6; max-width: 450px; margin: 0 auto;">
@@ -1087,8 +1100,6 @@ class SalesOrchestrationService {
 
                 <!-- Header Llamativo -->
                 <div style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%); padding: 35px 30px; text-align: center; position: relative;">
-                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"20\" cy=\"20\" r=\"2\" fill=\"rgba(255,255,255,0.1)\"/><circle cx=\"80\" cy=\"80\" r=\"3\" fill=\"rgba(255,255,255,0.1)\"/><circle cx=\"60\" cy=\"30\" r=\"1.5\" fill=\"rgba(255,255,255,0.1)\"/></svg>'); opacity: 0.5;"></div>
-
                     <!-- Iconos de IAs -->
                     <div style="margin-bottom: 20px; position: relative;">
                         <span style="font-size: 50px; margin: 0 5px;">🤖</span>
@@ -1188,14 +1199,15 @@ class SalesOrchestrationService {
                 <!-- Demo gratuita -->
                 <div style="background: #1e293b; padding: 25px 30px;">
                     <h4 style="color: #f59e0b; font-size: 16px; margin: 0 0 15px 0; text-align: center;">
-                        🎮 O probá la demo gratuita ahora mismo
+                        🎮 Probá la demo gratuita ahora mismo
                     </h4>
                     <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; border: 1px solid rgba(255,255,255,0.1);">
                         <ol style="color: #e2e8f0; font-size: 13px; margin: 0; padding-left: 20px; line-height: 1.8;">
-                            <li>Ingresá a <a href="https://www.aponnt.com/panel-empresa.html" style="color: #a78bfa; text-decoration: none; font-weight: 600;">www.aponnt.com/panel-empresa.html</a></li>
-                            <li>En <strong>Empresa:</strong> escribí <code style="background: rgba(139,92,246,0.2); padding: 2px 6px; border-radius: 4px; color: #c4b5fd;">aponnt-empresa-demo</code></li>
-                            <li>En <strong>Usuario:</strong> escribí <code style="background: rgba(139,92,246,0.2); padding: 2px 6px; border-radius: 4px; color: #c4b5fd;">demo-viewer</code></li>
-                            <li>En <strong>Contraseña:</strong> escribí <code style="background: rgba(139,92,246,0.2); padding: 2px 6px; border-radius: 4px; color: #c4b5fd;">Demo2025!</code></li>
+                            <li>Ingresá a <a href="https://www.aponnt.com" style="color: #a78bfa; text-decoration: none; font-weight: 600;">www.aponnt.com</a></li>
+                            <li>Hacé clic en el botón <code style="background: rgba(96,165,250,0.3); padding: 4px 10px; border-radius: 6px; color: #93c5fd; font-weight: 600;">🔐 Acceso Clientes</code></li>
+                            <li>En <strong>Empresa:</strong> escribí <code style="background: rgba(139,92,246,0.2); padding: 2px 6px; border-radius: 4px; color: #c4b5fd;">DEMO</code></li>
+                            <li>En <strong>Usuario:</strong> escribí <code style="background: rgba(139,92,246,0.2); padding: 2px 6px; border-radius: 4px; color: #c4b5fd;">admin@democorp.com</code></li>
+                            <li>En <strong>Contraseña:</strong> escribí <code style="background: rgba(139,92,246,0.2); padding: 2px 6px; border-radius: 4px; color: #c4b5fd;">admin123</code></li>
                             <li>¡Listo! Explorá todos los módulos libremente 🚀</li>
                         </ol>
                     </div>
@@ -1203,12 +1215,13 @@ class SalesOrchestrationService {
 
                 <!-- CTA Footer -->
                 <div style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); padding: 20px; text-align: center;">
-                    <a href="https://www.aponnt.com" style="display: inline-block; background: white; color: #4f46e5; text-decoration: none; padding: 14px 35px; border-radius: 30px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <a href="${aponntUrl}" style="display: inline-block; background: white; color: #4f46e5; text-decoration: none; padding: 14px 35px; border-radius: 30px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                         🌐 Visitar www.aponnt.com
                     </a>
                     <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 15px 0 0 0;">
                         © ${new Date().getFullYear()} APONNT 360º • Intelligent Ecosystem • SaaS B2B Multi-Tenant
                     </p>
+                    ${trackingPixel}
                 </div>
             </div>
             <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -1263,20 +1276,454 @@ Si estás interesado, podés solicitar una *reunión presencial o virtual* con n
 📧 *aponntcomercial@gmail.com*
 
 ━━━━━━━━━━━━━━━━━━━━━
-🎮 *O probá la demo gratis:*
+🎮 *Probá la demo gratis:*
 ━━━━━━━━━━━━━━━━━━━━━
 
-1️⃣ Ingresá a: www.aponnt.com/panel-empresa.html
-2️⃣ Empresa: *aponnt-empresa-demo*
-3️⃣ Usuario: *demo-viewer*
-4️⃣ Clave: *Demo2025!*
-5️⃣ ¡Listo! Explorá todos los módulos 🚀
+1️⃣ Ingresá a: www.aponnt.com
+2️⃣ Hacé clic en *🔐 Acceso Clientes*
+3️⃣ Empresa: *DEMO*
+4️⃣ Usuario: *admin@democorp.com*
+5️⃣ Clave: *admin123*
+6️⃣ ¡Listo! Explorá todos los módulos 🚀
 
 🌐 www.aponnt.com
 
 ━━━━━━━━━━━━━━━━━━━━━
 _APONNT 360º - Intelligent Ecosystem_
 Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
+    }
+
+    /**
+     * 📧 EMAIL DE ENCUESTA DE SATISFACCIÓN
+     * Se envía después de que el lead visita la página
+     */
+    generateSurveyEmail(leadName, surveyToken, language = 'es') {
+        const firstName = leadName ? leadName.split(' ')[0] : '';
+        const surveyUrl = `https://www.aponnt.com/api/marketing/survey/${surveyToken}`;
+
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5;">
+                <div style="max-width: 500px; margin: 0 auto; background: #ffffff;">
+                    <!-- Header -->
+                    <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); padding: 25px; text-align: center;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <span style="color: #60a5fa; font-size: 32px; font-weight: 400; transform: skewX(-12deg); display: inline-block;">A</span>
+                            <span style="font-size: 26px; color: #ffffff; font-weight: 400;">ponnt</span>
+                            <span style="font-size: 14px; color: #60a5fa; font-weight: 600;">360º</span>
+                        </div>
+                    </div>
+
+                    <!-- Contenido -->
+                    <div style="padding: 30px; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🙏</div>
+
+                        <h1 style="color: #1f2937; font-size: 22px; margin: 0 0 15px 0;">
+                            ${firstName}, ¡gracias por visitarnos!
+                        </h1>
+
+                        <p style="color: #6b7280; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                            Tu opinión nos hace crecer. Si podés completar esta <strong>breve encuesta</strong> (30 segundos), nos ayudás muchísimo.
+                        </p>
+
+                        <!-- Emojis preview -->
+                        <div style="margin: 20px 0;">
+                            <span style="font-size: 28px; margin: 0 3px;">😐</span>
+                            <span style="font-size: 28px; margin: 0 3px;">🙂</span>
+                            <span style="font-size: 28px; margin: 0 3px;">😊</span>
+                            <span style="font-size: 28px; margin: 0 3px;">😃</span>
+                            <span style="font-size: 28px; margin: 0 3px;">🤩</span>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <a href="${surveyUrl}" style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; text-decoration: none; padding: 15px 40px; border-radius: 30px; font-weight: 700; font-size: 16px; margin: 20px 0;">
+                            ✨ Completar Encuesta
+                        </a>
+
+                        <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">
+                            Solo 4 preguntas rápidas con emojis
+                        </p>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                        <p style="color: #9ca3af; font-size: 11px; margin: 0;">
+                            © ${new Date().getFullYear()} APONNT 360º • Intelligent Ecosystem
+                        </p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    /**
+     * 📋 PÁGINA DE ENCUESTA CON EMOJIS
+     * Página web que el lead ve al hacer clic en el email
+     */
+    generateSurveyPage(leadName, surveyToken, language = 'es') {
+        const firstName = leadName ? leadName.split(' ')[0] : '';
+
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Encuesta APONNT - ${firstName}</title>
+                <style>
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    body {
+                        font-family: 'Segoe UI', system-ui, sans-serif;
+                        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+                        min-height: 100vh;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 20px;
+                    }
+                    .survey-card {
+                        background: white;
+                        border-radius: 24px;
+                        max-width: 500px;
+                        width: 100%;
+                        padding: 40px 30px;
+                        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 30px;
+                    }
+                    .logo {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 4px;
+                        margin-bottom: 20px;
+                    }
+                    .logo-a { color: #60a5fa; font-size: 28px; transform: skewX(-12deg); display: inline-block; }
+                    .logo-text { font-size: 22px; color: #1f2937; }
+                    .logo-360 { font-size: 12px; color: #60a5fa; font-weight: 600; }
+                    h1 { color: #1f2937; font-size: 22px; margin-bottom: 8px; }
+                    .subtitle { color: #6b7280; font-size: 14px; }
+
+                    .question {
+                        margin: 25px 0;
+                        padding: 20px;
+                        background: #f9fafb;
+                        border-radius: 16px;
+                    }
+                    .question-label {
+                        color: #374151; font-size: 15px; font-weight: 500; margin-bottom: 15px; display: block;
+                    }
+                    .emoji-options {
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 8px;
+                    }
+                    .emoji-option {
+                        flex: 1;
+                        text-align: center;
+                        padding: 12px 8px;
+                        border: 2px solid #e5e7eb;
+                        border-radius: 12px;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        background: white;
+                    }
+                    .emoji-option:hover { border-color: #8b5cf6; transform: scale(1.05); }
+                    .emoji-option.selected { border-color: #8b5cf6; background: #f3e8ff; }
+                    .emoji-option input { display: none; }
+                    .emoji { font-size: 28px; display: block; margin-bottom: 4px; }
+                    .emoji-label { font-size: 10px; color: #9ca3af; }
+
+                    .contact-options {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 10px;
+                    }
+                    .contact-option {
+                        padding: 12px;
+                        border: 2px solid #e5e7eb;
+                        border-radius: 10px;
+                        text-align: center;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        background: white;
+                    }
+                    .contact-option:hover { border-color: #22c55e; }
+                    .contact-option.selected { border-color: #22c55e; background: #f0fdf4; }
+                    .contact-option input { display: none; }
+                    .contact-icon { font-size: 20px; }
+                    .contact-label { font-size: 11px; color: #6b7280; display: block; margin-top: 4px; }
+
+                    textarea {
+                        width: 100%;
+                        padding: 12px;
+                        border: 2px solid #e5e7eb;
+                        border-radius: 10px;
+                        font-size: 14px;
+                        resize: vertical;
+                        min-height: 80px;
+                    }
+                    textarea:focus { outline: none; border-color: #8b5cf6; }
+
+                    .submit-btn {
+                        width: 100%;
+                        padding: 16px;
+                        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                        color: white;
+                        border: none;
+                        border-radius: 12px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        margin-top: 20px;
+                        transition: transform 0.2s;
+                    }
+                    .submit-btn:hover { transform: translateY(-2px); }
+                    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+                    .thanks-message { display: none; text-align: center; padding: 40px 0; }
+                    .thanks-emoji { font-size: 64px; margin-bottom: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="survey-card">
+                    <div id="surveyForm">
+                        <div class="header">
+                            <div class="logo">
+                                <span class="logo-a">A</span>
+                                <span class="logo-text">ponnt</span>
+                                <span class="logo-360">360º</span>
+                            </div>
+                            <h1>¡Hola ${firstName}! 👋</h1>
+                            <p class="subtitle">Tu opinión nos ayuda a mejorar</p>
+                        </div>
+
+                        <!-- Pregunta 1: Experiencia general -->
+                        <div class="question">
+                            <label class="question-label">¿Qué te pareció nuestra página?</label>
+                            <div class="emoji-options">
+                                <label class="emoji-option" onclick="selectEmoji(this, 'rating_overall', 1)">
+                                    <input type="radio" name="rating_overall" value="1">
+                                    <span class="emoji">😐</span>
+                                    <span class="emoji-label">Regular</span>
+                                </label>
+                                <label class="emoji-option" onclick="selectEmoji(this, 'rating_overall', 2)">
+                                    <input type="radio" name="rating_overall" value="2">
+                                    <span class="emoji">🙂</span>
+                                    <span class="emoji-label">Ok</span>
+                                </label>
+                                <label class="emoji-option" onclick="selectEmoji(this, 'rating_overall', 3)">
+                                    <input type="radio" name="rating_overall" value="3">
+                                    <span class="emoji">😊</span>
+                                    <span class="emoji-label">Buena</span>
+                                </label>
+                                <label class="emoji-option" onclick="selectEmoji(this, 'rating_overall', 4)">
+                                    <input type="radio" name="rating_overall" value="4">
+                                    <span class="emoji">😃</span>
+                                    <span class="emoji-label">Muy buena</span>
+                                </label>
+                                <label class="emoji-option" onclick="selectEmoji(this, 'rating_overall', 5)">
+                                    <input type="radio" name="rating_overall" value="5">
+                                    <span class="emoji">🤩</span>
+                                    <span class="emoji-label">Excelente</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Pregunta 2: Interés -->
+                        <div class="question">
+                            <label class="question-label">¿Qué tan interesado estás en APONNT?</label>
+                            <div class="emoji-options">
+                                <label class="emoji-option" onclick="selectEmoji(this, 'rating_interest', 1)">
+                                    <input type="radio" name="rating_interest" value="1">
+                                    <span class="emoji">🤔</span>
+                                    <span class="emoji-label">Poco</span>
+                                </label>
+                                <label class="emoji-option" onclick="selectEmoji(this, 'rating_interest', 2)">
+                                    <input type="radio" name="rating_interest" value="2">
+                                    <span class="emoji">😐</span>
+                                    <span class="emoji-label">Algo</span>
+                                </label>
+                                <label class="emoji-option" onclick="selectEmoji(this, 'rating_interest', 3)">
+                                    <input type="radio" name="rating_interest" value="3">
+                                    <span class="emoji">🙂</span>
+                                    <span class="emoji-label">Normal</span>
+                                </label>
+                                <label class="emoji-option" onclick="selectEmoji(this, 'rating_interest', 4)">
+                                    <input type="radio" name="rating_interest" value="4">
+                                    <span class="emoji">😊</span>
+                                    <span class="emoji-label">Bastante</span>
+                                </label>
+                                <label class="emoji-option" onclick="selectEmoji(this, 'rating_interest', 5)">
+                                    <input type="radio" name="rating_interest" value="5">
+                                    <span class="emoji">🔥</span>
+                                    <span class="emoji-label">Mucho!</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Pregunta 3: Cómo prefiere contacto -->
+                        <div class="question">
+                            <label class="question-label">¿Cómo preferís que te contactemos?</label>
+                            <div class="contact-options">
+                                <label class="contact-option" onclick="selectContact(this, 'email')">
+                                    <input type="radio" name="contact_preference" value="email">
+                                    <span class="contact-icon">📧</span>
+                                    <span class="contact-label">Email</span>
+                                </label>
+                                <label class="contact-option" onclick="selectContact(this, 'whatsapp')">
+                                    <input type="radio" name="contact_preference" value="whatsapp">
+                                    <span class="contact-icon">💬</span>
+                                    <span class="contact-label">WhatsApp</span>
+                                </label>
+                                <label class="contact-option" onclick="selectContact(this, 'call')">
+                                    <input type="radio" name="contact_preference" value="call">
+                                    <span class="contact-icon">📞</span>
+                                    <span class="contact-label">Llamada</span>
+                                </label>
+                                <label class="contact-option" onclick="selectContact(this, 'demo')">
+                                    <input type="radio" name="contact_preference" value="demo">
+                                    <span class="contact-icon">🖥️</span>
+                                    <span class="contact-label">Demo</span>
+                                </label>
+                                <label class="contact-option" onclick="selectContact(this, 'not_now')">
+                                    <input type="radio" name="contact_preference" value="not_now">
+                                    <span class="contact-icon">⏳</span>
+                                    <span class="contact-label">Más tarde</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Pregunta 4: Comentarios -->
+                        <div class="question">
+                            <label class="question-label">¿Algún comentario? (opcional)</label>
+                            <textarea id="feedback_text" placeholder="Contanos qué te pareció..."></textarea>
+                        </div>
+
+                        <button class="submit-btn" onclick="submitSurvey()">
+                            ✨ Enviar Encuesta
+                        </button>
+                    </div>
+
+                    <div class="thanks-message" id="thanksMessage">
+                        <div class="thanks-emoji">🎉</div>
+                        <h1>¡Muchas gracias ${firstName}!</h1>
+                        <p class="subtitle" style="margin-top: 10px;">Tu opinión nos ayuda a mejorar cada día</p>
+                    </div>
+                </div>
+
+                <script>
+                    const surveyData = {
+                        rating_overall: null,
+                        rating_interest: null,
+                        contact_preference: null,
+                        feedback_text: ''
+                    };
+
+                    function selectEmoji(element, field, value) {
+                        document.querySelectorAll(\`input[name="\${field}"]\`).forEach(el => {
+                            el.closest('.emoji-option').classList.remove('selected');
+                        });
+                        element.classList.add('selected');
+                        element.querySelector('input').checked = true;
+                        surveyData[field] = value;
+                    }
+
+                    function selectContact(element, value) {
+                        document.querySelectorAll('input[name="contact_preference"]').forEach(el => {
+                            el.closest('.contact-option').classList.remove('selected');
+                        });
+                        element.classList.add('selected');
+                        element.querySelector('input').checked = true;
+                        surveyData.contact_preference = value;
+                    }
+
+                    async function submitSurvey() {
+                        surveyData.feedback_text = document.getElementById('feedback_text').value;
+
+                        if (!surveyData.rating_overall || !surveyData.rating_interest) {
+                            alert('Por favor completá las preguntas con emojis');
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch('/api/marketing/survey/${surveyToken}', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(surveyData)
+                            });
+
+                            if (response.ok) {
+                                document.getElementById('surveyForm').style.display = 'none';
+                                document.getElementById('thanksMessage').style.display = 'block';
+                            } else {
+                                alert('Hubo un error, por favor intentá de nuevo');
+                            }
+                        } catch (err) {
+                            alert('Error de conexión');
+                        }
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+    }
+
+    /**
+     * ✅ PÁGINA DE AGRADECIMIENTO
+     * Se muestra si la encuesta ya fue completada
+     */
+    generateSurveyThankYouPage(leadName, language = 'es') {
+        const firstName = leadName ? leadName.split(' ')[0] : '';
+
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Gracias - APONNT</title>
+                <style>
+                    body {
+                        font-family: 'Segoe UI', system-ui, sans-serif;
+                        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+                        min-height: 100vh;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0;
+                    }
+                    .card {
+                        background: white;
+                        border-radius: 24px;
+                        padding: 50px;
+                        text-align: center;
+                        max-width: 400px;
+                    }
+                    .emoji { font-size: 64px; margin-bottom: 20px; }
+                    h1 { color: #1f2937; font-size: 24px; margin-bottom: 10px; }
+                    p { color: #6b7280; font-size: 15px; }
+                    a { color: #8b5cf6; text-decoration: none; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="emoji">✅</div>
+                    <h1>¡Gracias ${firstName}!</h1>
+                    <p>Ya completaste esta encuesta.<br>Tu opinión es muy valiosa para nosotros.</p>
+                    <p style="margin-top: 20px;"><a href="https://www.aponnt.com">Volver a APONNT</a></p>
+                </div>
+            </body>
+            </html>
+        `;
     }
 
     /**
@@ -1288,13 +1735,15 @@ Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
                 <!-- Header con branding APONNT -->
                 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%); padding: 35px 30px; text-align: center;">
                     <div style="margin-bottom: 15px;">
-                        <div style="display: inline-flex; align-items: center; gap: 15px;">
-                            <div style="width: 55px; height: 55px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
-                                <span style="color: white; font-size: 28px; font-weight: bold;">A</span>
+                        <!-- Logo APONNT - Mismo estilo que index.html -->
+                        <div style="display: inline-block;">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <span style="color: #60a5fa; display: inline-block; transform: skewX(-12deg); font-size: 38px; font-weight: 400;">A</span>
+                                <span style="font-size: 30px; color: #ffffff; font-weight: 400;">ponnt</span>
+                                <span style="font-size: 16px; color: #60a5fa; font-weight: 600;">360º</span>
                             </div>
-                            <div style="text-align: left;">
-                                <div style="font-size: 28px; font-weight: 800; color: #f59e0b; letter-spacing: -0.5px;">APONNT 360º</div>
-                                <div style="font-size: 11px; color: #8b5cf6; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Intelligent Ecosystem</div>
+                            <div style="font-size: 12px; color: #60a5fa; margin-top: -2px; letter-spacing: 0.5px; font-weight: 500;">
+                                Intelligent Ecosystem
                             </div>
                         </div>
                     </div>
@@ -2167,15 +2616,16 @@ Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
             <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff;">
                 <!-- Header con branding APONNT profesional -->
                 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%); padding: 35px 30px; text-align: center;">
-                    <!-- Logo y nombre -->
+                    <!-- Logo APONNT - Mismo estilo que index.html -->
                     <div style="margin-bottom: 15px;">
-                        <div style="display: inline-flex; align-items: center; gap: 15px;">
-                            <div style="width: 55px; height: 55px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
-                                <span style="color: white; font-size: 28px; font-weight: bold;">A</span>
+                        <div style="display: inline-block;">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <span style="color: #60a5fa; display: inline-block; transform: skewX(-12deg); font-size: 38px; font-weight: 400;">A</span>
+                                <span style="font-size: 30px; color: #ffffff; font-weight: 400;">ponnt</span>
+                                <span style="font-size: 16px; color: #60a5fa; font-weight: 600;">360º</span>
                             </div>
-                            <div style="text-align: left;">
-                                <div style="font-size: 28px; font-weight: 800; color: #f59e0b; letter-spacing: -0.5px;">APONNT 360º</div>
-                                <div style="font-size: 11px; color: #8b5cf6; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Intelligent Ecosystem</div>
+                            <div style="font-size: 12px; color: #60a5fa; margin-top: -2px; letter-spacing: 0.5px; font-weight: 500;">
+                                Intelligent Ecosystem
                             </div>
                         </div>
                     </div>
@@ -2360,13 +2810,15 @@ Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
                 <!-- Header con branding APONNT -->
                 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%); padding: 35px 30px; text-align: center;">
                     <div style="margin-bottom: 15px;">
-                        <div style="display: inline-flex; align-items: center; gap: 15px;">
-                            <div style="width: 55px; height: 55px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
-                                <span style="color: white; font-size: 28px; font-weight: bold;">A</span>
+                        <!-- Logo APONNT - Mismo estilo que index.html -->
+                        <div style="display: inline-block;">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <span style="color: #60a5fa; display: inline-block; transform: skewX(-12deg); font-size: 38px; font-weight: 400;">A</span>
+                                <span style="font-size: 30px; color: #ffffff; font-weight: 400;">ponnt</span>
+                                <span style="font-size: 16px; color: #60a5fa; font-weight: 600;">360º</span>
                             </div>
-                            <div style="text-align: left;">
-                                <div style="font-size: 28px; font-weight: 800; color: #f59e0b; letter-spacing: -0.5px;">APONNT 360º</div>
-                                <div style="font-size: 11px; color: #8b5cf6; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Intelligent Ecosystem</div>
+                            <div style="font-size: 12px; color: #60a5fa; margin-top: -2px; letter-spacing: 0.5px; font-weight: 500;">
+                                Intelligent Ecosystem
                             </div>
                         </div>
                     </div>
@@ -2700,13 +3152,15 @@ Plataforma SaaS B2B de gestión de asistencias, biometría y recursos humanos.`;
                 <!-- Header con branding APONNT -->
                 <div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%); padding: 35px 30px; text-align: center;">
                     <div style="margin-bottom: 15px;">
-                        <div style="display: inline-flex; align-items: center; gap: 15px;">
-                            <div style="width: 55px; height: 55px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
-                                <span style="color: white; font-size: 28px; font-weight: bold;">A</span>
+                        <!-- Logo APONNT - Mismo estilo que index.html -->
+                        <div style="display: inline-block;">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <span style="color: #60a5fa; display: inline-block; transform: skewX(-12deg); font-size: 38px; font-weight: 400;">A</span>
+                                <span style="font-size: 30px; color: #ffffff; font-weight: 400;">ponnt</span>
+                                <span style="font-size: 16px; color: #60a5fa; font-weight: 600;">360º</span>
                             </div>
-                            <div style="text-align: left;">
-                                <div style="font-size: 28px; font-weight: 800; color: #f59e0b; letter-spacing: -0.5px;">APONNT 360º</div>
-                                <div style="font-size: 11px; color: #8b5cf6; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Intelligent Ecosystem</div>
+                            <div style="font-size: 12px; color: #60a5fa; margin-top: -2px; letter-spacing: 0.5px; font-weight: 500;">
+                                Intelligent Ecosystem
                             </div>
                         </div>
                     </div>
