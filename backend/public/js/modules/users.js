@@ -1612,8 +1612,14 @@ async function editUser(userId) {
                             </select>
                         </div>
                         <div>
-                            <label>💼 Posición:</label>
-                            <input type="text" id="editPosition" style="width: 100%; padding: 8px; margin-top: 5px;" value="${user.position || ''}" placeholder="Cargo/Posición">
+                            <label>💼 Posición/Cargo:</label>
+                            <select id="editOrganizationalPositionId" style="width: 100%; padding: 8px; margin-top: 5px;">
+                                <option value="">-- Seleccionar Cargo --</option>
+                                <!-- Se carga dinámicamente desde /api/v1/organizational/positions -->
+                            </select>
+                            <small style="color: #666; font-size: 11px; display: block; margin-top: 5px;">
+                                💡 Administrar cargos en: Módulos > Estructura Organizacional
+                            </small>
                         </div>
                         <div>
                             <label>📅 Fecha de Contratación:</label>
@@ -1769,9 +1775,10 @@ async function editUser(userId) {
             window.moduleHelper.applyModuleVisibility();
         }
 
-        // Cargar departamentos dinámicamente y seleccionar el actual
+        // Cargar departamentos, positions y kioscos dinámicamente
         setTimeout(() => {
             populateDepartmentSelect('editDepartment', user.departmentId || '');
+            populateOrganizationalPositionsSelect('editOrganizationalPositionId', user.organizationalPositionId || '');
             populateAuthorizedDepartmentsList(user.authorizedDepartments || []);
             // Cargar kioscos para configuración de acceso
             populateKiosksList('editAuthorizedKiosksList', user.authorizedKiosks || []);
@@ -1841,7 +1848,7 @@ async function saveEditUser(userId) {
         const dni = document.getElementById('editDni').value.trim();
         const birthDate = document.getElementById('editBirthDate').value;
         const address = document.getElementById('editAddress').value.trim();
-        const position = document.getElementById('editPosition').value.trim();
+        const organizationalPositionId = document.getElementById('editOrganizationalPositionId').value;
         const hireDate = document.getElementById('editHireDate').value;
         const salary = document.getElementById('editSalary').value;
         const emergencyContact = document.getElementById('editEmergencyContact').value.trim();
@@ -1909,7 +1916,7 @@ async function saveEditUser(userId) {
             dni: dni || null,
             birthDate: birthDate || null,
             address: address || null,
-            position: position || null,
+            organizationalPositionId: organizationalPositionId || null,
             hireDate: hireDate || null,
             salary: salary ? parseFloat(salary) : null,
             emergencyContact: emergencyContact || null,
@@ -4139,6 +4146,57 @@ async function populateDepartmentSelect(selectId, selectedValue = '') {
     } catch (error) {
         console.error('Error poblando departamentos:', error);
         select.innerHTML = '<option value="">Error cargando departamentos</option>';
+    }
+}
+
+// Cargar posiciones organizacionales en select (SSOT v2.0)
+async function populateOrganizationalPositionsSelect(selectId, selectedValue = '') {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    // Mostrar estado de carga
+    select.innerHTML = '<option value="">Cargando cargos...</option>';
+
+    try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+            select.innerHTML = '<option value="">Error: No hay token de autenticación</option>';
+            return;
+        }
+
+        const apiUrl = window.progressiveAdmin.getApiUrl('/api/v1/organizational/positions');
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al cargar posiciones');
+        }
+
+        const positions = await response.json();
+
+        // Limpiar select
+        select.innerHTML = '<option value="">-- Seleccionar Cargo --</option>';
+
+        // Agregar posiciones ordenadas por jerarquía
+        positions.forEach(pos => {
+            const option = document.createElement('option');
+            option.value = pos.id;
+            option.textContent = `${pos.position_code} - ${pos.position_name}`;
+            if (pos.id == selectedValue) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+
+        console.log(`✅ Se cargaron ${positions.length} posiciones organizacionales en select ${selectId}`);
+
+    } catch (error) {
+        console.error('Error poblando posiciones organizacionales:', error);
+        select.innerHTML = '<option value="">Error cargando cargos</option>';
     }
 }
 

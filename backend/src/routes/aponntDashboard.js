@@ -2793,7 +2793,7 @@ router.post('/users', async (req, res) => {
       role = 'employee',
       departmentId,
       phone,
-      position,
+      organizationalPositionId,
       hireDate,
       salary
     } = sanitizedData;
@@ -2864,7 +2864,7 @@ router.post('/users', async (req, res) => {
       companyId: parseInt(companyId),
       departmentId: departmentId ? parseInt(departmentId) : null,
       phone,
-      position,
+      organizationalPositionId: organizationalPositionId ? parseInt(organizationalPositionId) : null,
       hireDate: hireDate,
       salary: salary ? parseFloat(salary) : null,
       isActive: true
@@ -2911,7 +2911,7 @@ router.put('/users/:id', async (req, res) => {
       email,
       employeeId,
       phone,
-      position,
+      organizationalPositionId,
       role,
       departmentId,
       salary,
@@ -2962,7 +2962,7 @@ router.put('/users/:id', async (req, res) => {
     if (email !== undefined) updateData.email = email;
     if (employeeId !== undefined) updateData.employeeId = employeeId;
     if (phone !== undefined) updateData.phone = phone;
-    if (position !== undefined) updateData.position = position;
+    if (organizationalPositionId !== undefined) updateData.organizationalPositionId = organizationalPositionId ? parseInt(organizationalPositionId) : null;
     if (role !== undefined) updateData.role = role;
     if (departmentId !== undefined) updateData.departmentId = departmentId ? parseInt(departmentId) : null;
     if (salary !== undefined) updateData.salary = salary ? parseFloat(salary) : null;
