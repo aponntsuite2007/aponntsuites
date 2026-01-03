@@ -1,7 +1,36 @@
 const express = require('express');
 const router = express.Router();
-const { Visitor, VisitorGpsTracking, AccessNotification, User, Department, Kiosk } = require('../config/database');
-const { auth } = require('../middleware/auth');
+const { Visitor, VisitorGpsTracking, AccessNotification, User, Department, Kiosk, Company } = require('../config/database');
+const { auth, adminOnly } = require('../middleware/auth');
+const rateLimit = require('express-rate-limit');
+
+// Rate limiter para GPS tracking (max 60 requests por minuto por IP)
+const gpsTrackingLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuto
+  max: 60, // 60 requests por minuto
+  message: {
+    success: false,
+    error: 'Demasiadas solicitudes de GPS tracking. Intente nuevamente en 1 minuto.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Helper: Calcular distancia entre dos coordenadas GPS (fórmula de Haversine)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3; // Radio de la Tierra en metros
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distancia en metros
+}
 
 // Helper: Transformar visitante al formato del frontend
 function formatVisitor(visitor) {
@@ -226,6 +255,29 @@ router.post('/', auth, async (req, res) => {
       });
     }
 
+    // ENTERPRISE VALIDATION: Validar fecha programada no sea en el pasado
+    const scheduledDate = new Date(scheduledVisitDate);
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutos de tolerancia
+
+    if (scheduledDate < fiveMinutesAgo) {
+      return res.status(400).json({
+        error: 'La fecha de visita no puede ser en el pasado',
+        success: false
+      });
+    }
+
+    // ENTERPRISE VALIDATION: Validar duración esperada (entre 5 minutos y 24 horas)
+    if (expectedDurationMinutes) {
+      const durationNum = parseInt(expectedDurationMinutes);
+      if (isNaN(durationNum) || durationNum < 5 || durationNum > 1440) {
+        return res.status(400).json({
+          error: 'La duración esperada debe estar entre 5 y 1440 minutos (24 horas)',
+          success: false
+        });
+      }
+    }
+
     // Verificar que el empleado responsable existe y pertenece a la empresa
     const responsibleEmployee = await User.findOne({
       where: {
@@ -321,6 +373,8 @@ router.post('/', auth, async (req, res) => {
 /**
  * @route PUT /api/v1/visitors/:id/authorize
  * @desc Autorizar o rechazar visita
+ * @access Admin OR responsable del visitante
+ * @security ENTERPRISE: Solo admin o empleado responsable puede autorizar
  */
 router.put('/:id/authorize', auth, async (req, res) => {
   try {
@@ -347,6 +401,17 @@ router.put('/:id/authorize', auth, async (req, res) => {
     if (!visitor) {
       return res.status(404).json({
         error: 'Visitante no encontrado',
+        success: false
+      });
+    }
+
+    // ENTERPRISE SECURITY: Validar permisos de autorización
+    const isAdmin = req.user?.role === 'admin';
+    const isResponsible = visitor.responsible_employee_id === userId;
+
+    if (!isAdmin && !isResponsible) {
+      return res.status(403).json({
+        error: 'No tiene permisos para autorizar esta visita. Solo el administrador o el empleado responsable pueden hacerlo.',
         success: false
       });
     }
@@ -618,8 +683,9 @@ router.get('/:id/gps-history', auth, async (req, res) => {
 /**
  * @route POST /api/v1/visitors/:id/gps-tracking
  * @desc Enviar lectura GPS de visitante (desde llavero GPS)
+ * @security Rate limited: 60 requests/minute
  */
-router.post('/:id/gps-tracking', auth, async (req, res) => {
+router.post('/:id/gps-tracking', auth, gpsTrackingLimiter, async (req, res) => {
   try {
     const {
       gpsLat,
@@ -662,10 +728,31 @@ router.post('/:id/gps-tracking', auth, async (req, res) => {
       });
     }
 
-    // TODO: Calcular si está dentro del perímetro de la empresa
-    // Por ahora asumimos que sí
-    const isInsideFacility = true;
-    const distanceFromFacility = 0;
+    // GEOFENCING: Calcular si está dentro del perímetro de la empresa
+    const company = await Company.findByPk(companyId);
+
+    let isInsideFacility = true;
+    let distanceFromFacility = 0;
+
+    if (company && company.latitude && company.longitude) {
+      // Calcular distancia real usando fórmula de Haversine
+      distanceFromFacility = calculateDistance(
+        parseFloat(gpsLat),
+        parseFloat(gpsLng),
+        parseFloat(company.latitude),
+        parseFloat(company.longitude)
+      );
+
+      // Radio de seguridad (default 500 metros si no está configurado)
+      const securityRadiusMeters = company.security_radius_meters || 500;
+
+      // Determinar si está dentro del perímetro
+      isInsideFacility = distanceFromFacility <= securityRadiusMeters;
+
+      console.log(`🌍 [GPS] Visitante ${visitor.id}: ${distanceFromFacility.toFixed(2)}m de la empresa (límite: ${securityRadiusMeters}m) - ${isInsideFacility ? 'DENTRO' : 'FUERA'}`);
+    } else {
+      console.warn(`⚠️ [GPS] Empresa ${companyId} sin coordenadas GPS configuradas. Geofencing deshabilitado.`);
+    }
 
     const trackingData = {
       visitor_id: visitor.id,
