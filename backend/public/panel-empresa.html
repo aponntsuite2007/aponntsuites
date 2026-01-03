@@ -119,6 +119,9 @@
     <!-- 🏆 TECH STACK BADGES - Marketing Subliminal Profesional -->
     <link rel="stylesheet" href="css/tech-badges.css">
 
+    <!-- 🚚 LOGÍSTICA AVANZADA - WMS + TMS Dashboard -->
+    <link rel="stylesheet" href="css/logistics-dashboard.css">
+
     <!-- 📐 BALANCEADO - CSS balanceado sin romper el diseño original -->
     <!-- COMENTADO TEMPORALMENTE - CSS muy agresivo que rompió el diseño
     <link rel="stylesheet" href="css/module-buttons-compact.css">
@@ -2227,6 +2230,9 @@
     <!-- Legal & Compliance Modules -->
     <!-- <script src="js/modules/legal-dashboard.js"></script> --> <!-- CARGA DINÁMICA -->
     <script src="js/modules/dms-dashboard.js"></script> <!-- DMS - FUENTE ÚNICA DE VERDAD DOCUMENTAL -->
+
+    <!-- 🚚 Logística Avanzada - WMS + TMS -->
+    <script src="js/modules/logistics-dashboard.js"></script>
 
     <!-- 🎯 Brain Tour Guide - ACTIVADO con verificación de prerrequisitos -->
     <script src="js/modules/brain-tour-guide.js"></script>
@@ -4986,6 +4992,15 @@
                             AssociateMarketplace.init('associate-marketplace-container');
                         } else {
                             showModuleFallback(moduleId, moduleName, 'associate-marketplace.js no cargado');
+                        }
+                        break;
+                    case 'logistics-dashboard':
+                        // Sistema de Logística Avanzada WMS + TMS
+                        moduleContainer.innerHTML = '<div id="logistics-dashboard-container" style="padding:20px;"></div>';
+                        if (typeof LogisticsDashboard !== 'undefined') {
+                            LogisticsDashboard.init('logistics-dashboard-container');
+                        } else {
+                            showModuleFallback(moduleId, moduleName, 'logistics-dashboard.js no cargado');
                         }
                         break;
                     case 'contextual-help':

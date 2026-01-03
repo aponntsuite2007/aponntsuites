@@ -25,6 +25,9 @@ const { auth } = require('./src/middleware/auth');
 const app = express();
 const server = http.createServer(app);
 
+// Registrar sequelize en la app para acceso desde rutas (usado por Procurement, Finance, etc.)
+app.set('sequelize', database.sequelize);
+
 // AUTO-DETECCIÓN DE IP
 function getServerIP() {
   const interfaces = os.networkInterfaces();
@@ -2526,6 +2529,10 @@ const transportRoutes = require('./src/routes/transportRoutes');
 const transportFleetRoutes = require('./src/routes/transportFleetRoutes');
 const transportTripsRoutes = require('./src/routes/transportTripsRoutes');
 
+// 🚚 IMPORTAR RUTAS DE LOGÍSTICA AVANZADA (WMS + TMS)
+const logisticsRoutes = require('./src/routes/logisticsRoutes');
+const warehouseRoutes = require('./src/routes/warehouseRoutes'); // 📦 WMS - Gestión de Almacenes multi-tenant
+
 // 💼 IMPORTAR RUTAS DE SIAC ERP
 const siacConfiguradorRoutes = require('./src/routes/siac/configurador');
 const siacSesionesRoutes = require('./src/routes/siac/sesiones');
@@ -2533,6 +2540,16 @@ const siacTaxTemplatesRoutes = require('./src/routes/siac/taxTemplates');
 const debugDbRoutes = require('./src/routes/debug-db');
 const siacClientesRoutes = require('./src/routes/siac/clientes');
 const siacFacturacionRoutes = require('./src/routes/siac/facturacion');
+const siacRemitosRoutes = require('./src/routes/siac/remitosRoutes');
+const siacCuentaCorrienteRoutes = require('./src/routes/siac/cuentaCorrienteRoutes');
+const siacCobranzasRoutes = require('./src/routes/siac/cobranzasRoutes');
+const siacCajaRoutes = require('./src/routes/siac/cajaRoutes');
+
+// 🛒 IMPORTAR RUTAS DE PROCUREMENT P2P (Compras y Proveedores)
+const procurementRoutes = require('./src/routes/procurementRoutes');
+
+// 💰 IMPORTAR RUTAS DE FINANZAS (Finance Enterprise)
+const financeRoutes = require('./src/routes/financeRoutes');
 
 // 🔐 IMPORTAR RUTAS DE ACCESOS TEMPORALES (Auditores, Asesores, Médicos Externos)
 const temporaryAccessRoutes = require('./src/routes/temporaryAccessRoutes');
@@ -3472,6 +3489,22 @@ console.log('🚛 [TRANSPORT] Rutas de transporte ganadero configuradas:');
 console.log('   📋 /api/transport/* - Rutas principales');
 console.log('   🚗 /api/transport/fleet/* - Gestión de flota');
 
+// 🚚 CONFIGURAR API DE LOGÍSTICA AVANZADA (WMS + TMS)
+app.use('/api/logistics', logisticsRoutes);
+console.log('🚚 [LOGISTICS] Rutas de logística avanzada configuradas:');
+console.log('   📦 /api/logistics/warehouses/* - Gestión de almacenes');
+console.log('   🏭 /api/logistics/picking/* - Wave picking y órdenes');
+console.log('   🚛 /api/logistics/routes/* - Planificación de rutas');
+console.log('   📬 /api/logistics/shipments/* - Gestión de envíos');
+
+// 📦 CONFIGURAR API DE WMS (Warehouse Management System)
+app.use('/api/warehouse', warehouseRoutes);
+console.log('📦 [WMS] Rutas de gestión de almacenes configuradas:');
+console.log('   🏢 /api/warehouse/branches/* - Sucursales multi-tenant');
+console.log('   🏭 /api/warehouse/warehouses/* - Depósitos y ubicaciones');
+console.log('   📦 /api/warehouse/products/* - Productos y categorías');
+console.log('   📊 /api/warehouse/stock/* - Stock y movimientos');
+
 // 💼 CONFIGURAR API DE SIAC ERP
 app.use('/api/debug', debugDbRoutes);
 app.use('/api/siac/configurador', siacConfiguradorRoutes);
@@ -3479,6 +3512,17 @@ app.use('/api/siac/sesiones', siacSesionesRoutes);
 app.use('/api/siac/tax-templates', siacTaxTemplatesRoutes);
 app.use('/api/siac/clientes', siacClientesRoutes);
 app.use('/api/siac/facturacion', siacFacturacionRoutes);
+app.use('/api/siac/remitos', siacRemitosRoutes);
+app.use('/api/siac/cuenta-corriente', siacCuentaCorrienteRoutes);
+app.use('/api/siac/cobranzas', siacCobranzasRoutes);
+app.use('/api/siac/caja', siacCajaRoutes);
+
+// 🛒 PROCUREMENT P2P (Compras y Proveedores) - Enero 2026
+app.use('/api/procurement', procurementRoutes);
+
+// 💰 FINANCE ENTERPRISE (Finanzas Empresariales) - Enero 2026
+app.use('/api/finance', financeRoutes);
+console.log('💰 [FINANCE] Rutas de finanzas configuradas: /api/finance/*');
 
 // 📧 FORMULARIO DE CONTACTO PUBLICO (Landing Page)
 const contactRoutes = require('./src/routes/contactRoutes');
